@@ -183,6 +183,13 @@ void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const time_t_vector_type *time_points,
                                      double *data);
+void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
+                                   const rd_sum_vector_type *keywords,
+                                   FILE *fp);
+void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
+                              const rd_sum_vector_type *key_words,
+                              double_vector_type *data);
+
 UTIL_IS_INSTANCE_HEADER(rd_sum);
 
 #ifdef __cplusplus

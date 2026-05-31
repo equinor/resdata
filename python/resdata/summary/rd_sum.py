@@ -8,7 +8,6 @@ in the C source files rd_sum.c, rd_smspec.c and rd_sum_data in the
 resdata/src directory.
 """
 
-import ctypes
 import datetime
 import os.path
 import re
@@ -25,7 +24,8 @@ import pandas as pd
 from cwrap import CFILE, BaseCClass
 from typing_extensions import deprecated
 
-from resdata import ResdataPrototype, UnitSystem
+import resdata.summary._rd_sum as _rd_sum
+from resdata import UnitSystem
 from resdata.util.util import (
     CTime,
     DoubleVector,
@@ -87,141 +87,17 @@ def date2num(dt):
 
 class Summary(BaseCClass):
     TYPE_NAME = "rd_sum"
-    _fread_alloc_case = ResdataPrototype(
-        "void*     rd_sum_fread_alloc_case(char*, char*, bool, bool, int)",
-        bind=False,
-    )
-    _fread_alloc = ResdataPrototype(
-        "void*     rd_sum_fread_alloc(char*, rd_stringlist, char*, bool)", bind=False
-    )
-    _create_restart_writer = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, rd_time_t, bool, int, int, int)",
-        bind=False,
-    )
-    _create_writer = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_writer(char*, bool, bool, char*, rd_time_t, bool, int, int, int)",
-        bind=False,
-    )
-    _resample = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_resample( rd_sum, char*, rd_time_t_vector, bool, bool)"
-    )
-    _iiget = ResdataPrototype("double   rd_sum_iget(rd_sum, int, int)")
-    _free = ResdataPrototype("void     rd_sum_free(rd_sum)")
-    _data_length = ResdataPrototype("int      rd_sum_get_data_length(rd_sum)")
-    _iget_sim_days = ResdataPrototype("double   rd_sum_iget_sim_days(rd_sum, int) ")
-    _iget_report_step = ResdataPrototype(
-        "int      rd_sum_iget_report_step(rd_sum, int) "
-    )
-    _iget_sim_time = ResdataPrototype("rd_time_t   rd_sum_iget_sim_time(rd_sum, int) ")
-    _get_report_end = ResdataPrototype("int      rd_sum_iget_report_end(rd_sum, int)")
-    _get_general_var = ResdataPrototype(
-        "double   rd_sum_get_general_var(rd_sum, int, char*)"
-    )
-    _get_general_var_index = ResdataPrototype(
-        "int      rd_sum_get_general_var_params_index(rd_sum, char*)"
-    )
-    _get_general_var_from_sim_days = ResdataPrototype(
-        "double   rd_sum_get_general_var_from_sim_days(rd_sum, double, char*)"
-    )
-    _get_general_var_from_sim_time = ResdataPrototype(
-        "double   rd_sum_get_general_var_from_sim_time(rd_sum, rd_time_t, char*)"
-    )
-    _solve_days = ResdataPrototype(
-        "rd_double_vector_obj  rd_sum_alloc_days_solution(rd_sum, char*, double, bool)"
-    )
-    _solve_dates = ResdataPrototype(
-        "rd_time_t_vector_obj  rd_sum_alloc_time_solution(rd_sum, char*, double, bool)"
-    )
-    _get_first_gt = ResdataPrototype(
-        "int      rd_sum_get_first_gt(rd_sum, int, double)"
-    )
-    _get_first_lt = ResdataPrototype(
-        "int      rd_sum_get_first_lt(rd_sum, int, double)"
-    )
-    _get_start_date = ResdataPrototype("rd_time_t   rd_sum_get_start_time(rd_sum)")
-    _get_end_date = ResdataPrototype("rd_time_t   rd_sum_get_end_time(rd_sum)")
-    _get_last_report_step = ResdataPrototype(
-        "int      rd_sum_get_last_report_step(rd_sum)"
-    )
-    _get_first_report_step = ResdataPrototype(
-        "int      rd_sum_get_first_report_step(rd_sum)"
-    )
-    _select_matching_keys = ResdataPrototype(
-        "void     rd_sum_select_matching_general_var_list(rd_sum, char*, rd_stringlist)"
-    )
-    _has_key = ResdataPrototype("bool     rd_sum_has_general_var(rd_sum, char*)")
-    _check_sim_time = ResdataPrototype("bool rd_sum_check_sim_time(rd_sum, rd_time_t)")
-    _check_sim_days = ResdataPrototype("bool     rd_sum_check_sim_days(rd_sum, double)")
-    _sim_length = ResdataPrototype("double   rd_sum_get_sim_length(rd_sum)")
-    _get_first_day = ResdataPrototype("double   rd_sum_get_first_day(rd_sum)")
-    _get_data_start = ResdataPrototype("rd_time_t   rd_sum_get_data_start(rd_sum)")
-    _get_unit = ResdataPrototype("char*    rd_sum_get_unit(rd_sum, char*)")
-    _get_restart_case = ResdataPrototype("rd_sum_ref rd_sum_get_restart_case(rd_sum)")
-    _get_restart_step = ResdataPrototype("int      rd_sum_get_restart_step(rd_sum)")
-    _get_simcase = ResdataPrototype("char*    rd_sum_get_case(rd_sum)")
-    _get_unit_system = ResdataPrototype("rd_unit_enum rd_sum_get_unit_system(rd_sum)")
-    _get_base = ResdataPrototype("char*    rd_sum_get_base(rd_sum)")
-    _get_path = ResdataPrototype("char*    rd_sum_get_path(rd_sum)")
-    _get_abs_path = ResdataPrototype("char*    rd_sum_get_abs_path(rd_sum)")
-    _get_report_step_from_time = ResdataPrototype(
-        "int rd_sum_get_report_step_from_time(rd_sum, rd_time_t)"
-    )
-    _get_report_step_from_days = ResdataPrototype(
-        "int rd_sum_get_report_step_from_days(rd_sum, double)"
-    )
-    _get_report_time = ResdataPrototype("rd_time_t rd_sum_get_report_time(rd_sum, int)")
-    _fwrite_sum = ResdataPrototype("void rd_sum_fwrite(rd_sum)")
-    _can_write = ResdataPrototype("bool rd_sum_can_write(rd_sum)")
-    _set_case = ResdataPrototype("void rd_sum_set_case(rd_sum, char*)")
-    _alloc_time_vector = ResdataPrototype(
-        "rd_time_t_vector_obj rd_sum_alloc_time_vector(rd_sum, bool)"
-    )
-    _alloc_data_vector = ResdataPrototype(
-        "rd_double_vector_obj rd_sum_alloc_data_vector(rd_sum, int, bool)"
-    )
-    _get_var_node = ResdataPrototype(
-        "rd_smspec_node_ref rd_sum_get_general_var_node(rd_sum, char*)"
-    )
-    _create_well_list = ResdataPrototype(
-        "rd_stringlist_obj rd_sum_alloc_well_list(rd_sum, char*)"
-    )
-    _create_group_list = ResdataPrototype(
-        "rd_stringlist_obj rd_sum_alloc_group_list(rd_sum, char*)"
-    )
-    _add_variable = ResdataPrototype(
-        "rd_smspec_node_ref   rd_sum_add_var(rd_sum, char*, char*, int, char*, double)"
-    )
-    _add_local_variable = ResdataPrototype(
-        "rd_smspec_node_ref   rd_sum_add_local_var(rd_sum, char*, char*, int, char*, char*, int, int, int, double)"
-    )
-    _add_tstep = ResdataPrototype(
-        "rd_sum_tstep_ref rd_sum_add_tstep(rd_sum, int, double)"
-    )
-    _export_csv = ResdataPrototype(
-        "void rd_sum_export_csv(rd_sum, char*, rd_stringlist, char*, char*)"
-    )
-    _identify_var_type = ResdataPrototype(
-        "rd_sum_var_type rd_sum_identify_var_type(char*)", bind=False
-    )
-    _is_rate = ResdataPrototype("bool smspec_node_identify_rate(char*)", bind=False)
-    _is_total = ResdataPrototype(
-        "bool smspec_node_identify_total(char*, rd_sum_var_type)", bind=False
-    )
-    _get_last_value = ResdataPrototype(
-        "double rd_sum_get_last_value_gen_key(rd_sum, char*)"
-    )
-    _get_first_value = ResdataPrototype(
-        "double rd_sum_get_first_value_gen_key(rd_sum, char*)"
-    )
-    _init_numpy_vector = ResdataPrototype(
-        "void rd_sum_init_double_vector(rd_sum, char*, double*)"
-    )
-    _init_numpy_vector_interp = ResdataPrototype(
-        "void rd_sum_init_double_vector_interp(rd_sum, char*, rd_time_t_vector, double*)"
-    )
-    _init_numpy_datetime64 = ResdataPrototype(
-        "void rd_sum_init_datetime64_vector(rd_sum, int64*, int)"
-    )
+
+    @classmethod
+    def _python_object_from_ptr(cls, ptr):
+        if not ptr:
+            return None
+        return cls.createPythonObject(ptr)
+
+    def _reference_from_ptr(self, ptr):
+        if not ptr:
+            return None
+        return self.createCReference(ptr, parent=self)
 
     def __init__(
         self,
@@ -259,10 +135,10 @@ class Summary(BaseCClass):
         """
         if not load_case:
             raise ValueError("load_case must be the basename of the simulation")
-        c_pointer = self._fread_alloc_case(
+        c_pointer = _rd_sum._fread_alloc_case(
             load_case, join_string, include_restart, lazy_load, file_options
         )
-        if c_pointer is None:
+        if not c_pointer:
             raise OSError(
                 "Failed to create summary instance from argument:%s" % load_case
             )
@@ -280,10 +156,10 @@ class Summary(BaseCClass):
 
         data_files = StringList()
         data_files.append(unsmry_file)
-        c_ptr = cls._fread_alloc(
-            smspec_file, data_files, key_join_string, include_restart
+        c_ptr = _rd_sum._fread_alloc(
+            smspec_file, data_files, key_join_string, include_restart, False, 0
         )
-        if c_ptr is None:
+        if not c_ptr:
             raise OSError("Failed to create summary instance")
 
         rd_sum = cls.createPythonObject(c_ptr)
@@ -302,15 +178,15 @@ class Summary(BaseCClass):
 
     @staticmethod
     def var_type(keyword):
-        return Summary._identify_var_type(keyword)
+        return SummaryVarType(_rd_sum._identify_var_type(keyword))
 
     @staticmethod
     def is_rate(keyword):
-        return Summary._is_rate(keyword)
+        return _rd_sum._is_rate(keyword)
 
     @staticmethod
     def is_total(keyword):
-        return Summary._is_total(keyword, Summary.var_type(keyword))
+        return _rd_sum._is_total(keyword, int(Summary.var_type(keyword)))
 
     @staticmethod
     def writer(
@@ -330,9 +206,18 @@ class Summary(BaseCClass):
 
         start = CTime(start_time)
 
-        smry = Summary._create_writer(
-            case, fmt_output, unified, key_join_string, start, time_in_days, nx, ny, nz
+        ptr = _rd_sum._create_writer(
+            case,
+            fmt_output,
+            unified,
+            key_join_string,
+            start.ctime(),
+            time_in_days,
+            nx,
+            ny,
+            nz,
         )
+        smry = Summary._python_object_from_ptr(ptr)
         smry._load_case = "writer"
         return smry
 
@@ -356,19 +241,20 @@ class Summary(BaseCClass):
 
         start = CTime(start_time)
 
-        smry = Summary._create_restart_writer(
+        ptr = _rd_sum._create_restart_writer(
             case,
             restart_case,
             restart_step,
             fmt_output,
             unified,
             key_join_string,
-            start,
+            start.ctime(),
             time_in_days,
             nx,
             ny,
             nz,
         )
+        smry = Summary._python_object_from_ptr(ptr)
         smry._load_case = "restart_writer"
         return smry
 
@@ -383,13 +269,13 @@ class Summary(BaseCClass):
         lgr_ijk=None,
     ):
         if lgr is not None:
-            return self._add_local_variable(
-                variable, wgname, num, unit, lgr, *lgr_ijk, default_value
-            ).setParent(parent=self)
+            ptr = _rd_sum._add_local_variable(
+                self, variable, wgname, num, unit, lgr, *lgr_ijk, default_value
+            )
+            return ResdataSMSPECNode.createCReference(ptr, parent=self)
 
-        return self._add_variable(variable, wgname, num, unit, default_value).setParent(
-            parent=self
-        )
+        ptr = _rd_sum._add_variable(self, variable, wgname, num, unit, default_value)
+        return ResdataSMSPECNode.createCReference(ptr, parent=self)
 
     def add_t_step(self, report_step, sim_days) -> SummaryTStep:
         # report_step int
@@ -401,8 +287,8 @@ class Summary(BaseCClass):
             raise TypeError("Parameter sim_days should be float, was %r" % sim_days)
 
         sim_seconds = sim_days * 24 * 60 * 60
-        tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
-        return tstep
+        ptr = _rd_sum._add_tstep(self, report_step, sim_seconds)
+        return SummaryTStep.createCReference(ptr, parent=self)
 
     @deprecated(
         "The method get_vector() is deprecated, and will be removed in version 7."
@@ -429,7 +315,7 @@ class Summary(BaseCClass):
         last_report = self.last_report
         index_list = IntVector()
         for report_step in range(first_report, last_report + 1):
-            time_index = self._get_report_end(report_step)
+            time_index = _rd_sum._get_report_end(self, report_step)
             index_list.append(time_index)
         return index_list
 
@@ -441,7 +327,7 @@ class Summary(BaseCClass):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        return self._create_well_list(pattern)
+        return StringList.createPythonObject(_rd_sum._create_well_list(self, pattern))
 
     def groups(self, pattern=None):
         """
@@ -451,7 +337,7 @@ class Summary(BaseCClass):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        return self._create_group_list(pattern)
+        return StringList.createPythonObject(_rd_sum._create_group_list(self, pattern))
 
     @deprecated(
         "The method get_values() is deprecated, and will be removed in version 7."
@@ -467,18 +353,18 @@ class Summary(BaseCClass):
         instance.
         """
         if self.has_key(key):
-            key_index = self._get_general_var_index(key)
+            key_index = _rd_sum._get_general_var_index(self, key)
             if report_only:
                 index_list = self.report_index_list()
                 values = np.zeros(len(index_list))
                 for i in range(len(index_list)):
                     time_index = index_list[i]
-                    values[i] = self._iiget(time_index, key_index)
+                    values[i] = _rd_sum._iiget(self, time_index, key_index)
             else:
-                length = self._data_length()
+                length = _rd_sum._data_length(self)
                 values = np.zeros(length)
                 for i in range(length):
-                    values[i] = self._iiget(i, key_index)
+                    values[i] = _rd_sum._iiget(self, i, key_index)
 
             return values
         else:
@@ -526,18 +412,12 @@ class Summary(BaseCClass):
 
         if time_index is None:
             np_vector = np.zeros(len(self))
-            self._init_numpy_vector(
-                key, np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            )
+            _rd_sum._init_numpy_vector(self, key, np_vector)
             return np_vector
         else:
             time_vector = self._make_time_vector(time_index)
             np_vector = np.zeros(len(time_vector))
-            self._init_numpy_vector_interp(
-                key,
-                time_vector,
-                np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            )
+            _rd_sum._init_numpy_vector_interp(self, key, time_vector, np_vector)
             return np_vector
 
     @property
@@ -546,9 +426,7 @@ class Summary(BaseCClass):
         Will return numpy vector of numpy.datetime64() values for all the simulated timepoints.
         """
         np_dates = np.zeros(len(self), dtype="datetime64[ms]")
-        self._init_numpy_datetime64(
-            np_dates.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), 1000
-        )
+        _rd_sum._init_numpy_datetime64(self, np_dates.view(np.int64), 1000)
         return np_dates
 
     @property
@@ -615,18 +493,11 @@ class Summary(BaseCClass):
         if time_index is None:
             time_index = self.dates
             data = np.zeros([len(time_index), len(keywords)])
-            Summary._init_pandas_frame(
-                self, keywords, data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            )
+            _rd_sum._init_pandas_frame(self, keywords, data)
         else:
             time_points = self._make_time_vector(time_index)
             data = np.zeros([len(time_points), len(keywords)])
-            Summary._init_pandas_frame_interp(
-                self,
-                keywords,
-                time_points,
-                data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            )
+            _rd_sum._init_pandas_frame_interp(self, keywords, time_points, data)
 
         return pd.DataFrame(index=list(time_index), columns=list(keywords), data=data)
 
@@ -775,7 +646,7 @@ class Summary(BaseCClass):
         Quite low-level function, should probably rather use a
         SummaryVector based function?
         """
-        index = self._get_general_var_index(key)
+        index = _rd_sum._get_general_var_index(self, key)
         if index >= 0:
             return index
         else:
@@ -796,7 +667,7 @@ class Summary(BaseCClass):
         if key not in self:
             raise KeyError("No such key:%s" % key)
 
-        return self._get_last_value(key)
+        return _rd_sum._get_last_value(self, key)
 
     def first_value(self, key):
         """
@@ -805,7 +676,7 @@ class Summary(BaseCClass):
         if key not in self:
             raise KeyError("No such key:%s" % key)
 
-        return self._get_first_value(key)
+        return _rd_sum._get_first_value(self, key)
 
     @deprecated(
         "The function get_last_value() is deprecated, and will be removed in"
@@ -837,7 +708,7 @@ class Summary(BaseCClass):
         This is a quite low level function, in most cases it will be
         natural to go via e.g. an SummaryVector instance.
         """
-        return self._iiget(time_index, key_index)
+        return _rd_sum._iiget(self, time_index, key_index)
 
     def iget(self, key, time_index):
         """
@@ -853,7 +724,7 @@ class Summary(BaseCClass):
         This is a quite low level function, in most cases it will be
         natural to go via e.g. an SummaryVector instance.
         """
-        return self._get_general_var(time_index, key)
+        return _rd_sum._get_general_var(self, time_index, key)
 
     def __len__(self):
         """
@@ -861,10 +732,10 @@ class Summary(BaseCClass):
         len(case).
 
         """
-        return self._data_length()
+        return _rd_sum._data_length(self)
 
     def __contains__(self, key):
-        if self._has_key(key):
+        if _rd_sum._has_key(self, key):
             return True
         else:
             return False
@@ -915,12 +786,12 @@ class Summary(BaseCClass):
         """
         if not isinstance(date, CTime):
             date = CTime(date)
-        return self._check_sim_time(date)
+        return _rd_sum._check_sim_time(self, date.ctime())
 
     def get_interp_direct(self, key, date):
         if not isinstance(date, CTime):
             date = CTime(date)
-        return self._get_general_var_from_sim_time(date, key)
+        return _rd_sum._get_general_var_from_sim_time(self, date.ctime(), key)
 
     def get_interp(self, key, days=None, date=None):
         """
@@ -943,12 +814,12 @@ class Summary(BaseCClass):
         if days is None:
             t = CTime(date)
             if self.check_sim_time(t):
-                return self._get_general_var_from_sim_time(t, key)
+                return _rd_sum._get_general_var_from_sim_time(self, t.ctime(), key)
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
         elif date is None:
-            if self._check_sim_days(days):
-                return self._get_general_var_from_sim_days(days, key)
+            if _rd_sum._check_sim_days(self, days):
+                return _rd_sum._get_general_var_from_sim_days(self, days, key)
             else:
                 raise ValueError(
                     "days:%s is outside range of simulation: [%g,%g]"
@@ -960,7 +831,7 @@ class Summary(BaseCClass):
     def get_interp_row(self, key_list, sim_time, invalid_value=-1):
         ctime = CTime(sim_time)
         data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
-        Summary._get_interp_vector(self, ctime, key_list, data)
+        _rd_sum._get_interp_vector(self, ctime.ctime(), key_list, data)
         return data
 
     def time_range(
@@ -1075,9 +946,9 @@ class Summary(BaseCClass):
         if date:
             if days:
                 raise ValueError("Must supply either days or date")
-            step = self._get_report_step_from_time(CTime(date))
+            step = _rd_sum._get_report_step_from_time(self, CTime(date).ctime())
         elif days:
-            step = self._get_report_step_from_days(days)
+            step = _rd_sum._get_report_step_from_days(self, days)
 
         return step
 
@@ -1085,7 +956,7 @@ class Summary(BaseCClass):
         """
         Will return the datetime corresponding to the report_step @report.
         """
-        return CTime(self._get_report_time(report)).date()
+        return CTime(_rd_sum._get_report_time(self, report)).date()
 
     def get_interp_vector(self, key, days_list=None, date_list=None):
         """
@@ -1112,7 +983,9 @@ class Summary(BaseCClass):
                 index = 0
                 for days in days_list:
                     if (days >= sim_start) and (days <= sim_length):
-                        vector[index] = self._get_general_var_from_sim_days(days, key)
+                        vector[index] = _rd_sum._get_general_var_from_sim_days(
+                            self, days, key
+                        )
                     else:
                         raise ValueError("Invalid days value")
                     index += 1
@@ -1125,7 +998,9 @@ class Summary(BaseCClass):
             for date in date_list:
                 ct = CTime(date)
                 if start_time <= ct <= end_time:
-                    vector[index] = self._get_general_var_from_sim_time(ct, key)
+                    vector[index] = _rd_sum._get_general_var_from_sim_time(
+                        self, ct.ctime(), key
+                    )
                 else:
                     raise ValueError("Invalid date value")
                 index += 1
@@ -1137,8 +1012,8 @@ class Summary(BaseCClass):
         """
         Return summary value of @key at time @report_step.
         """
-        time_index = self._get_report_end(report_step)
-        return self._get_general_var(time_index, key)
+        time_index = _rd_sum._get_report_end(self, report_step)
+        return _rd_sum._get_general_var(self, time_index, key)
 
     def has_key(self, key):
         """
@@ -1156,8 +1031,8 @@ class Summary(BaseCClass):
         on.
         """
         if self.has_key(key):
-            node = self._get_var_node(key).setParent(self)
-            return node
+            ptr = _rd_sum._get_var_node(self, key)
+            return ResdataSMSPECNode.createCReference(ptr, parent=self)
         else:
             raise KeyError("Summary case does not have key:%s" % key)
 
@@ -1173,28 +1048,28 @@ class Summary(BaseCClass):
         """
         Will return the unit system in use for this case.
         """
-        return self._get_unit_system()
+        return UnitSystem(_rd_sum._get_unit_system(self))
 
     @property
     def case(self):
         """
         Will return the case name of the current instance - optionally including path.
         """
-        return self._get_simcase()
+        return _rd_sum._get_simcase(self)
 
     @property
     def restart_step(self):
         """
         Will return the report step this case has been restarted from, or -1.
         """
-        return self._get_restart_step()
+        return _rd_sum._get_restart_step(self)
 
     @property
     def restart_case(self):
-        restart_case = self._get_restart_case()
-        if restart_case:
-            restart_case.setParent(parent=self)
-        return restart_case
+        ptr = _rd_sum._get_restart_case(self)
+        if not ptr:
+            return None
+        return Summary.createCReference(ptr, parent=self)
 
     @property
     def path(self):
@@ -1202,21 +1077,21 @@ class Summary(BaseCClass):
         Will return the path to the current case. Will be None for
         case in CWD. See also abs_path.
         """
-        return self._get_path()
+        return _rd_sum._get_path(self)
 
     @property
     def base(self):
         """
         Will return the basename of the current case - no path.
         """
-        return self._get_base()
+        return _rd_sum._get_base(self)
 
     @property
     def abs_path(self):
         """
         Will return the absolute path to the current case.
         """
-        return self._get_abs_path()
+        return _rd_sum._get_abs_path(self)
 
     # -----------------------------------------------------------------
     # Here comes functions for getting vectors of the time
@@ -1250,7 +1125,7 @@ class Summary(BaseCClass):
             start = datetime.date(start_date.year, start_date.month, start_date.day)
             return [(x - start).total_seconds() / 86400 for x in dates]
         else:
-            return [self._iget_sim_days(index) for index in range(len(self))]
+            return [_rd_sum._iget_sim_days(self, index) for index in range(len(self))]
 
     def get_dates(self, report_only=False):
         """
@@ -1322,7 +1197,7 @@ class Summary(BaseCClass):
         else:
             report_steps = []
             for index in range(len(self)):
-                report_steps.append(self._iget_report_step(index))
+                report_steps.append(_rd_sum._iget_report_step(self, index))
 
         return report_steps
 
@@ -1332,13 +1207,13 @@ class Summary(BaseCClass):
         """
         Returns the number of simulation days for element nr @time_index.
         """
-        return self._iget_sim_days(time_index)
+        return _rd_sum._iget_sim_days(self, time_index)
 
     def iget_date(self, time_index):
         """
         Returns the simulation date for element nr @time_index.
         """
-        long_time = self._iget_sim_time(time_index)
+        long_time = _rd_sum._iget_sim_time(self, time_index)
         ct = CTime(long_time)
         return ct.datetime()
 
@@ -1348,21 +1223,21 @@ class Summary(BaseCClass):
 
         One report step will in general contain many ministeps.
         """
-        return self._iget_report_step(time_index)
+        return _rd_sum._iget_report_step(self, time_index)
 
     @property
     def length(self):
         """
         The number of timesteps in the dataset.
         """
-        return self._data_length()
+        return _rd_sum._data_length(self)
 
     @property
     def first_day(self):
         """
         The first day we have simulation data for; normally 0.
         """
-        return self._get_first_day()
+        return _rd_sum._get_first_day(self)
 
     @property
     def sim_length(self):
@@ -1383,7 +1258,7 @@ class Summary(BaseCClass):
         returned start_date might be different from the datetime of
         the first (loaded) timestep.
         """
-        ct = self._get_start_date()
+        ct = _rd_sum._get_start_date(self)
         return CTime(ct).date()
 
     @property
@@ -1391,7 +1266,7 @@ class Summary(BaseCClass):
         """
         The date of the last (loaded) time step.
         """
-        return CTime(self._get_end_date()).date()
+        return CTime(_rd_sum._get_end_date(self)).date()
 
     @property
     def data_start(self):
@@ -1416,7 +1291,7 @@ class Summary(BaseCClass):
         found, this time will be later than the true start of the
         field.
         """
-        return CTime(self._get_data_start()).datetime()
+        return CTime(_rd_sum._get_data_start(self)).datetime()
 
     def get_start_time(self):
         """
@@ -1424,13 +1299,13 @@ class Summary(BaseCClass):
 
         See start_date() for further details.
         """
-        return CTime(self._get_start_date()).datetime()
+        return CTime(_rd_sum._get_start_date(self)).datetime()
 
     def get_end_time(self):
         """
         A Python datetime instance with the last loaded time.
         """
-        return CTime(self._get_end_date()).datetime()
+        return CTime(_rd_sum._get_end_date(self)).datetime()
 
     def getSimulationLength(self):
         """
@@ -1439,36 +1314,36 @@ class Summary(BaseCClass):
         Will include the length of a leading restart section,
         irrespective of whether we have data for this or not.
         """
-        return self._sim_length()
+        return _rd_sum._sim_length(self)
 
     @property
     def last_report(self):
         """
         The number of the last report step in the dataset.
         """
-        return self._get_last_report_step()
+        return _rd_sum._get_last_report_step(self)
 
     @property
     def first_report(self):
         """
         The number of the first report step in the dataset.
         """
-        return self._get_first_report_step()
+        return _rd_sum._get_first_report_step(self)
 
     def first_gt_index(self, key, limit):
         """
         Returns the first index where @key is above @limit.
         """
-        key_index = self._get_general_var_index(key)
-        time_index = self._get_first_gt(key_index, limit)
+        key_index = _rd_sum._get_general_var_index(self, key)
+        time_index = _rd_sum._get_first_gt(self, key_index, limit)
         return time_index
 
     def first_lt_index(self, key, limit):
         """
         Returns the first index where @key is below @limit.
         """
-        key_index = self._get_general_var_index(key)
-        time_index = self._get_first_lt(key_index, limit)
+        key_index = _rd_sum._get_general_var_index(self, key)
+        time_index = _rd_sum._get_first_lt(self, key_index, limit)
         return time_index
 
     def first_gt(self, key, limit):
@@ -1496,7 +1371,12 @@ class Summary(BaseCClass):
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
 
-        return [x.datetime() for x in self._solve_dates(key, value, rates_clamp_lower)]
+        return [
+            x.datetime()
+            for x in TimeVector.createPythonObject(
+                _rd_sum._solve_dates(self, key, value, rates_clamp_lower)
+            )
+        ]
 
     def solve_days(self, key, value, rates_clamp_lower=True):
         """Will solve the equation vector[@key] == value.
@@ -1587,7 +1467,9 @@ class Summary(BaseCClass):
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
 
-        return self._solve_days(key, value, rates_clamp_lower)
+        return DoubleVector.createPythonObject(
+            _rd_sum._solve_days(self, key, value, rates_clamp_lower)
+        )
 
     def keys(self, pattern=None):
         """
@@ -1602,11 +1484,11 @@ class Summary(BaseCClass):
         object.
         """
         s = StringList()
-        self._select_matching_keys(pattern, s)
+        _rd_sum._select_matching_keys(self, pattern, s)
         return s
 
     def can_write(self):
-        return self._can_write()
+        return _rd_sum._can_write(self)
 
     def fwrite(self, rd_case=None):
         if not self.can_write():
@@ -1615,21 +1497,25 @@ class Summary(BaseCClass):
             )
 
         if rd_case:
-            self._set_case(rd_case)
+            _rd_sum._set_case(self, rd_case)
 
-        self._fwrite_sum()
+        _rd_sum._fwrite_sum(self)
 
     def alloc_time_vector(self, report_only):
-        return self._alloc_time_vector(report_only)
+        return TimeVector.createPythonObject(
+            _rd_sum._alloc_time_vector(self, report_only)
+        )
 
     def alloc_data_vector(self, data_index, report_only):
-        return self._alloc_data_vector(data_index, report_only)
+        return DoubleVector.createPythonObject(
+            _rd_sum._alloc_data_vector(self, data_index, report_only)
+        )
 
     def get_general_var_index(self, key):
-        return self._get_general_var_index(key)
+        return _rd_sum._get_general_var_index(self, key)
 
     def free(self):
-        self._free()
+        _rd_sum._free(self)
 
     def _nicename(self):
         """load_case is often full path to summary file,
@@ -1658,7 +1544,7 @@ class Summary(BaseCClass):
         """
         cfile = CFILE(pfile)
         ctime = CTime(time)
-        Summary._dump_csv_line(self, ctime, keywords, cfile)
+        _rd_sum._dump_csv_line(self, ctime.ctime(), keywords, cfile)
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
         """Will create a CSV file with summary data.
@@ -1680,7 +1566,7 @@ class Summary(BaseCClass):
             var_list = StringList()
             for key in keys:
                 var_list |= self.keys(pattern=key)
-        self._export_csv(filename, var_list, date_format, sep)
+        _rd_sum._export_csv(self, filename, var_list, date_format, sep)
 
     def resample(
         self,
@@ -1689,9 +1575,14 @@ class Summary(BaseCClass):
         lower_extrapolation=False,
         upper_extrapolation=False,
     ):
-        new_case = self._resample(
-            new_case_name, time_points, lower_extrapolation, upper_extrapolation
+        ptr = _rd_sum._resample(
+            self,
+            new_case_name,
+            time_points,
+            lower_extrapolation,
+            upper_extrapolation,
         )
+        new_case = Summary._python_object_from_ptr(ptr)
         if new_case is None:
             raise ValueError(f"Failed to create new resampled case:{new_case_name}")
 
@@ -1699,22 +1590,6 @@ class Summary(BaseCClass):
 
 
 import resdata.summary.rd_sum_keyword_vector  # noqa
-
-Summary._dump_csv_line = ResdataPrototype(
-    "void rd_sum_fwrite_interp_csv_line(rd_sum, rd_time_t, rd_sum_vector, FILE)",
-    bind=False,
-)
-Summary._get_interp_vector = ResdataPrototype(
-    "void rd_sum_get_interp_vector(rd_sum, rd_time_t, rd_sum_vector, rd_double_vector)",
-    bind=False,
-)
-Summary._init_pandas_frame = ResdataPrototype(
-    "void rd_sum_init_double_frame(rd_sum, rd_sum_vector, double*)", bind=False
-)
-Summary._init_pandas_frame_interp = ResdataPrototype(
-    "void rd_sum_init_double_frame_interp(rd_sum, rd_sum_vector, rd_time_t_vector, double*)",
-    bind=False,
-)
 
 monkey_the_camel(Summary, "varType", Summary.var_type, classmethod)
 monkey_the_camel(Summary, "addVariable", Summary.add_variable)

@@ -665,9 +665,6 @@ double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
     return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
 }
 
-#ifdef __cplusplus
-extern "C" {
-
 void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
                               const rd_sum_vector_type *key_words,
                               double_vector_type *data) {
@@ -681,8 +678,6 @@ void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
     rd_sum_data_fwrite_interp_csv_line(rd_sum->data.get(), sim_time, key_words,
                                        fp);
 }
-}
-#endif
 
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
                                             time_t sim_time, const char *var) {
