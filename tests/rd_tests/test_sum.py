@@ -761,7 +761,7 @@ class SumTest(ResdataTest):
             if t < rd_sum.get_data_start_time():
                 self.assertFloatEqual(
                     resampled.iget(key_not_rate, time_index),
-                    rd_sum._get_first_value(key_not_rate),
+                    rd_sum.first_value(key_not_rate),
                 )
             elif t > rd_sum.get_end_time():
                 self.assertFloatEqual(

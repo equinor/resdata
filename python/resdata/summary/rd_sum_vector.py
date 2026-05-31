@@ -238,9 +238,7 @@ class SummaryVector:
         called from a vector instance with report_only = True.
         """
         if not self.report_only:
-            key_index = self.parent._get_general_var_index(self.key)
-            time_index = self.parent._get_first_gt(key_index, limit)
-            return time_index
+            return self.parent.first_gt_index(self.key, limit)
         else:
             raise Exception(
                 "Sorry - first_gt_index() can not be called for vectors with report_only=True"
@@ -271,9 +269,7 @@ class SummaryVector:
         See first_gt_index() for further details.
         """
         if not self.report_only:
-            key_index = self.parent._get_general_var_index(self.key)
-            time_index = self.parent._get_first_lt(key_index, limit)
-            return time_index
+            return self.parent.first_lt_index(self.key, limit)
         else:
             raise Exception(
                 "Sorry - first_lt_index() can not be called for vectors with report_only=True"
