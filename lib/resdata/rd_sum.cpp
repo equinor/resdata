@@ -807,11 +807,6 @@ void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                           data);
 }
 
-void rd_sum_init_datetime64_vector(const rd_sum_type *rd_sum, int64_t *data,
-                                   int multiplier) {
-    rd_sum_data_init_datetime64_vector(rd_sum->data.get(), data, multiplier);
-}
-
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const time_t_vector_type *time_points,

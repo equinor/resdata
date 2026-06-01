@@ -969,12 +969,6 @@ static void rd_sum_data_init_double_vector__(const rd_sum_data_type *data,
     }
 }
 
-void rd_sum_data_init_datetime64_vector(const rd_sum_data_type *data,
-                                        int64_t *output_data, int multiplier) {
-    for (int i = 0; i < rd_sum_data_get_length(data); i++)
-        output_data[i] = rd_sum_data_iget_sim_time(data, i) * multiplier;
-}
-
 void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
                                     int params_index, double *output_data) {
     rd_sum_data_init_double_vector__(data, params_index, output_data, false);

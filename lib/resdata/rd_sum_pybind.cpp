@@ -409,8 +409,13 @@ PYBIND11_MODULE(_rd_sum, m) {
         [](py::handle self,
            py::array_t<int64_t, py::array::c_style | py::array::forcecast> data,
            int multiplier) {
-            rd_sum_init_datetime64_vector(from_cwrap<rd_sum_type>(self),
-                                          data.mutable_data(), multiplier);
+            int64_t *out = data.mutable_data();
+            auto rd_sum = from_cwrap<rd_sum_type>(self);
+            int len = rd_sum_get_data_length(rd_sum);
+            if (data.request().size < len)
+                throw std::invalid_argument("Incorrect size of buffer");
+            for (int i = 0; i < len; i++)
+                out[i] = rd_sum_iget_sim_time(rd_sum, i) * multiplier;
         });
 }
 } // namespace
