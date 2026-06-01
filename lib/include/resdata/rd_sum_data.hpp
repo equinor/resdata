@@ -84,9 +84,6 @@ void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
 void rd_sum_data_init_datetime64_vector(const rd_sum_data_type *data,
                                         int64_t *output_data, int multiplier);
 
-void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
-                                   const rd_sum_vector_type *keywords,
-                                   double *output_data);
 double_vector_type *
 rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
                                    const rd::smspec_node &node, double value,
