@@ -916,148 +916,85 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
 #define DATE_HEADER "-- Days   dd/mm/yyyy   "
 #define DATE_STRING_LENGTH 128
 
-typedef struct {
-    char *locale;
-    const char *sep;
-    const char *newline;
-    const char *value_fmt;
-    const char *date_fmt;
-    const char *days_fmt;
-    const char *header_fmt;
-    bool print_header;
-    bool print_dash;
-    const char *date_header;
-    const char *date_dash;
-    const char *value_dash;
-} rd_sum_fmt_type;
-
 static void __rd_sum_fprintf_line(const rd_sum_type *rd_sum, FILE *stream,
                                   int internal_index,
                                   const bool_vector_type *has_var,
                                   const int_vector_type *var_index,
-                                  char *date_string,
-                                  const rd_sum_fmt_type *fmt) {
-    fprintf(stream, fmt->days_fmt,
-            rd_sum_iget_sim_days(rd_sum, internal_index));
-    fprintf(stream, "%s", fmt->sep);
+                                  char *date_string, const char *date_format,
+                                  const char *sep) {
+    fprintf(stream, "%7.2f", rd_sum_iget_sim_days(rd_sum, internal_index));
+    fprintf(stream, "%s", sep);
 
     {
         struct tm ts;
         time_t sim_time = rd_sum_iget_sim_time(rd_sum, internal_index);
         util_time_utc(&sim_time, &ts);
-        strftime(date_string, DATE_STRING_LENGTH - 1, fmt->date_fmt, &ts);
+        strftime(date_string, DATE_STRING_LENGTH - 1, date_format, &ts);
         fprintf(stream, "%s", date_string);
     }
 
-    {
-        int ivar;
-        for (ivar = 0; ivar < int_vector_size(var_index); ivar++) {
-            if (bool_vector_iget(has_var, ivar)) {
-                fprintf(stream, "%s", fmt->sep);
-                fprintf(stream, fmt->value_fmt,
-                        rd_sum_iget(rd_sum, internal_index,
-                                    int_vector_iget(var_index, ivar)));
-            }
+    for (int ivar = 0; ivar < int_vector_size(var_index); ivar++) {
+        if (bool_vector_iget(has_var, ivar)) {
+            fprintf(stream, "%s", sep);
+            fprintf(stream, "%g",
+                    rd_sum_iget(rd_sum, internal_index,
+                                int_vector_iget(var_index, ivar)));
         }
     }
 
-    fprintf(stream, "%s", fmt->newline);
+    fprintf(stream, "\r\n");
 }
 
 static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
                                   const stringlist_type *key_list,
                                   const bool_vector_type *has_var, FILE *stream,
-                                  const rd_sum_fmt_type *fmt) {
-    fprintf(stream, "%s", fmt->date_header);
-    {
-        int i;
-        for (i = 0; i < stringlist_get_size(key_list); i++)
-            if (bool_vector_iget(has_var, i)) {
-                fprintf(stream, "%s", fmt->sep);
-                fprintf(stream, fmt->header_fmt, stringlist_iget(key_list, i));
-            }
-    }
-
-    fprintf(stream, "%s", fmt->newline);
-    if (fmt->print_dash) {
-        fprintf(stream, "%s", fmt->date_dash);
-
-        {
-            int i;
-            for (i = 0; i < stringlist_get_size(key_list); i++)
-                if (bool_vector_iget(has_var, i))
-                    fprintf(stream, "%s", fmt->value_dash);
+                                  const char *sep) {
+    fprintf(stream, "DAYS%sDATE", sep);
+    for (int i = 0; i < stringlist_get_size(key_list); i++)
+        if (bool_vector_iget(has_var, i)) {
+            fprintf(stream, "%s", sep);
+            fprintf(stream, "%s", stringlist_iget(key_list, i));
         }
-        fprintf(stream, "%s", fmt->newline);
-    }
+    fprintf(stream, "\r\n");
 }
 
 static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
                            const stringlist_type *var_list,
-                           const rd_sum_fmt_type *fmt) {
+                           const char *date_format, const char *sep) {
     auto has_var = make_bool_vector(stringlist_get_size(var_list), false);
     auto var_index = make_int_vector(stringlist_get_size(var_list), -1);
     auto date_string = rd::checked_calloc<char>(DATE_STRING_LENGTH);
 
-    char *current_locale = NULL;
-    if (fmt->locale != NULL)
-        current_locale = setlocale(LC_NUMERIC, fmt->locale);
-
-    {
-        int ivar;
-        for (ivar = 0; ivar < stringlist_get_size(var_list); ivar++) {
-            if (rd_sum_has_general_var(rd_sum,
-                                       stringlist_iget(var_list, ivar))) {
-                bool_vector_iset(has_var.get(), ivar, true);
-                int_vector_iset(var_index.get(), ivar,
-                                rd_sum_get_general_var_params_index(
-                                    rd_sum, stringlist_iget(var_list, ivar)));
-            } else {
-                fprintf(stderr,
-                        "** Warning: could not find variable: \'%s\' in "
-                        "summary file \n",
-                        stringlist_iget(var_list, ivar));
-                bool_vector_iset(has_var.get(), ivar, false);
-            }
+    for (int ivar = 0; ivar < stringlist_get_size(var_list); ivar++) {
+        if (rd_sum_has_general_var(rd_sum, stringlist_iget(var_list, ivar))) {
+            bool_vector_iset(has_var.get(), ivar, true);
+            int_vector_iset(var_index.get(), ivar,
+                            rd_sum_get_general_var_params_index(
+                                rd_sum, stringlist_iget(var_list, ivar)));
+        } else {
+            fprintf(stderr,
+                    "** Warning: could not find variable: \'%s\' in "
+                    "summary file \n",
+                    stringlist_iget(var_list, ivar));
+            bool_vector_iset(has_var.get(), ivar, false);
         }
     }
 
-    if (fmt->print_header)
-        rd_sum_fprintf_header(rd_sum, var_list, has_var.get(), stream, fmt);
+    rd_sum_fprintf_header(rd_sum, var_list, has_var.get(), stream, sep);
 
     for (int time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
          time_index++)
         __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
-                              var_index.get(), date_string.get(), fmt);
-
-    if (current_locale != NULL)
-        setlocale(LC_NUMERIC, current_locale);
+                              var_index.get(), date_string.get(), date_format,
+                              sep);
 }
 #undef DATE_STRING_LENGTH
-
-static void rd_sum_fmt_init_csv(rd_sum_fmt_type *fmt, const char *date_format,
-                                const char *date_header, const char *sep) {
-    fmt->locale = NULL; //"Norwegian";
-    fmt->sep = sep;
-    fmt->date_fmt = date_format;
-    fmt->value_fmt = "%g";
-    fmt->days_fmt = "%7.2f";
-    fmt->header_fmt = "%s";
-
-    fmt->newline = "\r\n";
-    fmt->date_header = date_header;
-    fmt->print_header = true;
-    fmt->print_dash = false;
-}
 
 void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
                        const stringlist_type *var_list, const char *date_format,
                        const char *sep) {
     FILE *stream = util_mkdir_fopen(filename, "w");
-    std::string date_header = fmt::format("DAYS{}DATE", sep);
-    rd_sum_fmt_type fmt;
-    rd_sum_fmt_init_csv(&fmt, date_format, date_header.c_str(), sep);
-    rd_sum_fprintf(rd_sum, stream, var_list, &fmt);
+    rd_sum_fprintf(rd_sum, stream, var_list, date_format, sep);
     fclose(stream);
 }
 
