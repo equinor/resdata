@@ -142,8 +142,6 @@ double rd_sum_get_last_value_gen_key(const rd_sum_type *rd_sum,
                                      const char *gen_key);
 double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
                                       const char *gen_key);
-void rd_sum_init_datetime64_vector(const rd_sum_type *rd_sum, int64_t *data,
-                                   int multiplier);
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       const char *gen_key,
                                       const time_t_vector_type *time_points,

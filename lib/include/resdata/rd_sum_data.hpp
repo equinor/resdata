@@ -81,9 +81,6 @@ double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
                                     int param_index);
 void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
                                     int params_index, double *output_data);
-void rd_sum_data_init_datetime64_vector(const rd_sum_data_type *data,
-                                        int64_t *output_data, int multiplier);
-
 double_vector_type *
 rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
                                    const rd::smspec_node &node, double value,
