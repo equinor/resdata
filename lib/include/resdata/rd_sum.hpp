@@ -19,21 +19,6 @@
 #include <resdata/smspec_node.hpp>
 #include "resdata/rd_util.hpp"
 
-typedef struct {
-    char *locale;
-    const char *sep;
-    const char *newline;
-    const char *value_fmt;
-    const char *date_fmt;
-    const char *days_fmt;
-    const char *header_fmt;
-    bool print_header;
-    bool print_dash;
-    const char *date_header;
-    const char *date_dash;
-    const char *value_dash;
-} rd_sum_fmt_type;
-
 typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
 typedef struct rd_sum_struct rd_sum_type;

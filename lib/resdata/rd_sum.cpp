@@ -916,6 +916,21 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
 #define DATE_HEADER "-- Days   dd/mm/yyyy   "
 #define DATE_STRING_LENGTH 128
 
+typedef struct {
+    char *locale;
+    const char *sep;
+    const char *newline;
+    const char *value_fmt;
+    const char *date_fmt;
+    const char *days_fmt;
+    const char *header_fmt;
+    bool print_header;
+    bool print_dash;
+    const char *date_header;
+    const char *date_dash;
+    const char *value_dash;
+} rd_sum_fmt_type;
+
 static void __rd_sum_fprintf_line(const rd_sum_type *rd_sum, FILE *stream,
                                   int internal_index,
                                   const bool_vector_type *has_var,
