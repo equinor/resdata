@@ -343,9 +343,22 @@ PYBIND11_MODULE(_rd_sum, m) {
           [](py::handle self, py::handle keywords,
              py::array_t<double, py::array::c_style | py::array::forcecast>
                  data) {
-              rd_sum_init_double_frame(from_cwrap<rd_sum_type>(self),
-                                       from_cwrap<rd_sum_vector_type>(keywords),
-                                       data.mutable_data());
+              auto keyvec = from_cwrap<rd_sum_vector_type>(keywords);
+              auto rd_sum = from_cwrap<rd_sum_type>(self);
+              double *out = data.mutable_data();
+              int keylen = rd_sum_vector_get_size(keyvec);
+              int timelen = rd_sum_get_data_length(rd_sum);
+              if (data.request().size < timelen * keylen)
+                  throw std::invalid_argument("Incorrect size of buffer");
+              for (int time_index = 0; time_index < timelen; time_index++) {
+                  for (int key_index = 0; key_index < keylen; key_index++) {
+                      int param_index =
+                          rd_sum_vector_iget_param_index(keyvec, key_index);
+                      int data_index = key_index + time_index * keylen;
+                      out[data_index] =
+                          rd_sum_iget(rd_sum, time_index, param_index);
+                  }
+              }
           });
     m.def("_init_pandas_frame_interp",
           [](py::handle self, py::handle keywords, py::handle time_points,

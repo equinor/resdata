@@ -150,8 +150,6 @@ void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       double *data);
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
                                double *data);
-void rd_sum_init_double_frame(const rd_sum_type *rd_sum,
-                              const rd_sum_vector_type *keywords, double *data);
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const time_t_vector_type *time_points,

@@ -1297,33 +1297,6 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                 check_vector(sum.get(), "BPR:2", total_case3_bpr[1]);
                 check_vector(sum.get(), "BPR:3", total_case3_bpr[2]);
             }
-
-            THEN("Reading CASE3 into a double frame matches per-key access") {
-                auto sum = read_summary(case3_path);
-
-                auto keywords = std::unique_ptr<rd_sum_vector_type,
-                                                void (*)(rd_sum_vector_type *)>(
-                    rd_sum_vector_alloc(sum.get(), true), &rd_sum_vector_free);
-                const int nkeys = rd_sum_vector_get_size(keywords.get());
-                const int nsteps = rd_sum_get_data_length(sum.get());
-                REQUIRE(nkeys == 3);
-                REQUIRE(nsteps == 9);
-
-                std::vector<double> frame(nkeys * nsteps);
-                rd_sum_init_double_frame(sum.get(), keywords.get(),
-                                         frame.data());
-
-                for (int t = 0; t < nsteps; ++t) {
-                    for (int k = 0; k < nkeys; ++k) {
-                        const std::string key =
-                            rd_sum_vector_iget_key(keywords.get(), k);
-                        REQUIRE_THAT(frame[t * nkeys + k],
-                                     WithinAbs(rd_sum_get_general_var(
-                                                   sum.get(), t, key.c_str()),
-                                               1e-6));
-                    }
-                }
-            }
         }
 
         WHEN("CASE2 is loaded without including its restart") {
@@ -1441,33 +1414,6 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
 
                 check_vector(sum.get(), "BPR:1", total_case3_bpr[0]);
                 check_vector(sum.get(), "BPR:2", total_case3_bpr[1]);
-            }
-
-            THEN("rd_sum_init_double_frame holds the frame values") {
-                auto sum = read_summary(case4_path);
-
-                auto keywords_vec =
-                    std::unique_ptr<rd_sum_vector_type,
-                                    void (*)(rd_sum_vector_type *)>(
-                        rd_sum_vector_alloc(sum.get(), true),
-                        &rd_sum_vector_free);
-                const int nkeys = rd_sum_vector_get_size(keywords_vec.get());
-                const int nsteps = rd_sum_get_data_length(sum.get());
-
-                std::vector<double> frame(nkeys * nsteps);
-                rd_sum_init_double_frame(sum.get(), keywords_vec.get(),
-                                         frame.data());
-
-                for (int t = 0; t < nsteps; ++t) {
-                    for (int k = 0; k < nkeys; ++k) {
-                        const char *key =
-                            rd_sum_vector_iget_key(keywords_vec.get(), k);
-                        REQUIRE_THAT(
-                            frame[t * nkeys + k],
-                            WithinAbs(rd_sum_get_general_var(sum.get(), t, key),
-                                      1e-6));
-                    }
-                }
             }
         }
     }

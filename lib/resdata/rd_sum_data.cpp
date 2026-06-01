@@ -1044,25 +1044,6 @@ void rd_sum_data_init_double_vector_interp(
     }
 }
 
-void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
-                                   const rd_sum_vector_type *keywords,
-                                   double *output_data) {
-    int time_stride = rd_sum_vector_get_size(keywords);
-    int key_stride = 1;
-    for (int time_index = 0; time_index < rd_sum_data_get_length(data);
-         time_index++) {
-        for (int key_index = 0; key_index < rd_sum_vector_get_size(keywords);
-             key_index++) {
-            int param_index =
-                rd_sum_vector_iget_param_index(keywords, key_index);
-            int data_index = key_index * key_stride + time_index * time_stride;
-
-            output_data[data_index] =
-                rd_sum_data_iget(data, time_index, param_index);
-        }
-    }
-}
-
 void rd_sum_data_init_double_frame_interp(const rd_sum_data_type *data,
                                           const rd_sum_vector_type *keywords,
                                           const time_t_vector_type *time_points,
