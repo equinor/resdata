@@ -10,7 +10,11 @@ from cwrap import open as copen
 from hypothesis import assume, given
 from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
-from resdata.summary import Summary, SummaryKeyWordVector
+from resdata.summary import (
+    Summary,
+    SummaryKeyWordVector,
+    SummaryVarType,
+)
 from resdata.summary.rd_sum import date2num
 from resdata.util.util import DoubleVector, StringList, TimeVector
 from resfo_utilities.testing import (
@@ -350,6 +354,7 @@ def test_summary_first_and_last_value():
     summary = Summary("TEST")
     assert summary.first_value("FOPT") == pytest.approx(100.0)
     assert summary.last_value("FOPT") == pytest.approx(300.0)
+    assert summary.get_last("FOPT").value == pytest.approx(300.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -491,9 +496,17 @@ def test_summary_iget_days():
 
 
 def test_summary_var_type():
-    assert Summary.var_type("FOPT") is not None
-    assert Summary.var_type("WOPR") is not None
-    assert Summary.var_type("BPR") is not None
+    assert Summary.var_type("AAQR") == SummaryVarType.RD_SMSPEC_AQUIFER_VAR
+    assert Summary.var_type("BPR") == SummaryVarType.RD_SMSPEC_BLOCK_VAR
+    assert Summary.var_type("FOPT") == SummaryVarType.RD_SMSPEC_FIELD_VAR
+    assert Summary.var_type("GWPR") == SummaryVarType.RD_SMSPEC_GROUP_VAR
+    assert Summary.var_type("RPR") == SummaryVarType.RD_SMSPEC_REGION_VAR
+    assert Summary.var_type("WOPR") == SummaryVarType.RD_SMSPEC_WELL_VAR
+    assert Summary.var_type("CGORL") == SummaryVarType.RD_SMSPEC_COMPLETION_VAR
+    assert Summary.var_type("SOPR") == SummaryVarType.RD_SMSPEC_SEGMENT_VAR
+    assert Summary.var_type("LBPR") == SummaryVarType.RD_SMSPEC_LOCAL_BLOCK_VAR
+    assert Summary.var_type("LCGOR") == SummaryVarType.RD_SMSPEC_LOCAL_COMPLETION_VAR
+    assert Summary.var_type("LWOPR") == SummaryVarType.RD_SMSPEC_LOCAL_WELL_VAR
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -579,25 +592,163 @@ def test_summary_writer_basic():
 def test_summary_writer_multiple_variables():
     start_date = datetime.datetime(2005, 5, 10)
     writer = Summary.writer("MULTI_VAR", start_date, 5, 5, 5)
+    assert writer.base == "MULTI_VAR"
+    assert writer.path is None
 
     fopt = writer.add_variable("FOPT", unit="SM3")
     fopr = writer.add_variable("FOPR", unit="SM3/DAY")
     fwpt = writer.add_variable("FWPT", unit="SM3")
+    wopt = writer.add_variable("WOPT", unit="SM3", wgname="OP1")
+    rpr = writer.add_variable("RPR", unit="SM3/DAY", num=1)
+    aaqr = writer.add_variable("AAQR", unit="SM3/DAY", num=1)
+    boft = writer.add_variable("BOFT", unit="SM3/DAY", num=1)
+    gvpr = writer.add_variable("GVPR", unit="SM3/DAY", wgname="GROUP1")
+    sofr = writer.add_variable("SOFR", unit="SM3/DAY", wgname="OP1", num=2)
+    cgor = writer.add_variable("CGOR", unit="SM3/SM3", wgname="OP1", num=2)
+    rsft = writer.add_variable("RSFT", unit="SM3", num=2)
 
     for i in range(1, 5):
         t_step = writer.add_t_step(i, float(i))
         t_step[fopt.get_key1()] = 100.0 * i
         t_step[fopr.get_key1()] = 10.0 * i
         t_step[fwpt.get_key1()] = 50.0 * i
+        t_step[wopt.get_key1()] = 30.0 * i
+        t_step[rpr.get_key1()] = 1000.0 * i
+        t_step[aaqr.get_key1()] = 2000.0 * i
+        t_step[boft.get_key1()] = 0.1 * i
+        t_step[gvpr.get_key1()] = 0.3 * i
+        t_step[sofr.get_key1()] = 1.0 * i
+        t_step[cgor.get_key1()] = 0.9 * i
+        t_step[rsft.get_key1()] = 3000.0 * i
 
     writer.fwrite()
 
     loaded = Summary("MULTI_VAR")
     assert len(loaded) == 4
 
-    fopt_data = loaded.numpy_vector("FOPT")
-    assert fopt_data[0] == pytest.approx(100.0)
-    assert fopt_data[3] == pytest.approx(400.0)
+    assert loaded.get_values("FOPT") == pytest.approx([100.0 * i for i in range(1, 5)])
+    assert loaded.groups() == ["GROUP1"]
+    assert loaded.groups("*") == ["GROUP1"]
+    assert loaded.groups("NO") == []
+
+    assert loaded.pandas_frame().to_dict() == {
+        "FOPT": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(100.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(200.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(300.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(400.0),
+        },
+        "FOPR": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(10.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(20.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(30.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(40.0),
+        },
+        "FWPT": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(50.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(100.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(150.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(200.0),
+        },
+        "WOPT:OP1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(30.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(60.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(90.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(120.0),
+        },
+        "RPR:1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(1000.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(2000.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(3000.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(4000.0),
+        },
+        "AAQR:1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(2000.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(4000.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(6000.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(8000.0),
+        },
+        "BOFT:1,1,1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(0.1),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(0.2),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(0.3),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(0.4),
+        },
+        "GVPR:GROUP1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(0.3),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(0.6),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(0.9),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(1.2),
+        },
+        "SOFR:OP1:2": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(1.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(2.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(3.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(4.0),
+        },
+        "CGOR:OP1:2,1,1": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(0.9),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(1.8),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(2.7),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(3.6),
+        },
+        "RSFT:2--10": {
+            pd.Timestamp("2005-05-11 00:00:00"): pytest.approx(3000.0),
+            pd.Timestamp("2005-05-12 00:00:00"): pytest.approx(6000.0),
+            pd.Timestamp("2005-05-13 00:00:00"): pytest.approx(9000.0),
+            pd.Timestamp("2005-05-14 00:00:00"): pytest.approx(12000.0),
+        },
+    }
+    np.testing.assert_allclose(
+        loaded.numpy_vector("FOPT"), [100.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector("FOPR"), [10.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector("FWPT"), [50.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(wopt.get_key1()), [30.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(rpr.get_key1()), [1000.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(aaqr.get_key1()), [2000.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(boft.get_key1()), [0.1 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(gvpr.get_key1()), [0.3 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(sofr.get_key1()), [1.0 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(cgor.get_key1()), [0.9 * i for i in range(1, 5)]
+    )
+    np.testing.assert_allclose(
+        loaded.numpy_vector(rsft.get_key1()), [3000.0 * i for i in range(1, 5)]
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_writer_local_variables():
+    start_date = datetime.datetime(2005, 5, 10)
+    # writer does not actually support writing local
+    # variables but will add them
+    writer = Summary.writer("MULTI_VAR", start_date, 5, 5, 5)
+    lwopt = writer.add_variable(
+        "LWOPT", unit="SM3", wgname="OP1", lgr="LGR1", lgr_ijk=(0, 0, 0)
+    )
+    assert lwopt.get_key1() == "LWOPT:LGR1:OP1"
+    assert writer.has_key(lwopt.get_key1())
+
+    for i in range(1, 5):
+        t_step = writer.add_t_step(i, float(i))
+        t_step[lwopt.get_key1()] = 100.0 * i
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -717,6 +868,13 @@ def test_summary_get_interp():
     value_at_4 = summary.get_interp("FOPR", days=4.0)
     assert value_at_4 == pytest.approx(300.0)
 
+    assert summary.get_interp_direct("FOPR", date=datetime.date(2000, 1, 1)) == 100.0
+    keyvec = SummaryKeyWordVector(summary)
+    keyvec.add_keyword("FOPR")
+    assert list(
+        summary.get_interp_row(keyvec, datetime.date(2000, 1, 1))
+    ) == pytest.approx([100.0])
+
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_interp_vector():
@@ -781,6 +939,7 @@ def test_summary_get_key_index():
     summary = Summary("TEST")
 
     assert summary.get_key_index("FOPR") == 1
+    assert summary.get_key_index("FOPT") == 2
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1223,3 +1382,28 @@ def test_summary_resample():
 
     assert resampled.alloc_time_vector(False) == time_points
     assert resampled["FOPR"].values.tolist() == pytest.approx([100.0, 150.0, 200.0])
+
+
+def test_that_reading_non_existent_summary_raises_oserror(tmp_path):
+    with pytest.raises(OSError, match="Failed to create summary"):
+        Summary(str(tmp_path / "does_not_exist"))
+
+    with pytest.raises(OSError, match="No such file"):
+        Summary.load(
+            str(tmp_path / "does_not_exist.SMSPEC"),
+            str(tmp_path / "does_not_exist.UNSMRY"),
+        )
+
+
+def test_that_missing_permissions_raises_oserror(tmp_path):
+    (smspec_path := tmp_path / "CASE.SMSPEC").write_text("", encoding="utf-8")
+    (unsmry_path := tmp_path / "CASE.UNSMRY").write_text("", encoding="utf-8")
+    mode = smspec_path.stat().st_mode
+    smspec_path.chmod(0o000)  # no permissions
+    try:
+        with pytest.raises(OSError, match="Failed to create summary"):
+            Summary(str(smspec_path))
+        with pytest.raises(OSError, match="Failed to create summary"):
+            Summary.load(str(smspec_path), str(unsmry_path))
+    finally:
+        smspec_path.chmod(mode)
