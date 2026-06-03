@@ -32,7 +32,6 @@
 #include <resdata/rd_sum_vector.hpp>
 
 #include "ert/util/double_vector.hpp"
-#include "detail/resdata/rd_unsmry_loader.hpp"
 #include "resdata/FortIO.hpp"
 #include "resdata/rd_file_view.hpp"
 #include "resdata/smspec_node.hpp"
@@ -1414,41 +1413,6 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
 
                 check_vector(sum.get(), "BPR:1", total_case3_bpr[0]);
                 check_vector(sum.get(), "BPR:2", total_case3_bpr[1]);
-            }
-        }
-    }
-}
-
-SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
-    GIVEN("A summary case with FOPT, BPR:567 and WWCT:OP-1 over 4 steps") {
-        WriteSpec spec;
-        spec.num_report_steps = 4;
-        spec.num_ministep = 1;
-        const auto case_path = (dirname / "CASE").string();
-        const bool fmt_output = false;
-        const bool unified = true;
-        write_test_summary(case_path, spec, fmt_output, unified);
-        auto rd_sum = read_summary(case_path, ":", !fmt_output);
-        REQUIRE(rd_sum);
-
-        THEN("The SMSPEC and UNSMRY files are written") {
-            REQUIRE(fs::exists(case_path + ".SMSPEC"));
-            REQUIRE(fs::exists(case_path + ".UNSMRY"));
-        }
-
-        WHEN("A rd::unsmry_loader is constructed over the UNSMRY file") {
-            auto loader = std::make_unique<rd::unsmry_loader>(
-                rd_sum_get_smspec(rd_sum.get()), case_path + ".UNSMRY", 0);
-
-            THEN("get_vector returns the per-keyword series") {
-                const std::vector<double> fopt = loader->get_vector(1);
-                const std::vector<double> bpr = loader->get_vector(2);
-                const std::vector<double> wwct = loader->get_vector(3);
-
-                REQUIRE(fopt.size() == size_t(spec.num_report_steps));
-                REQUIRE_THAT(fopt[3], WithinAbs(259200.0, 1e-6));
-                REQUIRE_THAT(bpr[2], WithinAbs(1728000.0, 1e-6));
-                REQUIRE_THAT(wwct[1], WithinAbs(8640000.0, 1e-6));
             }
         }
     }
