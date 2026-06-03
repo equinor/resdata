@@ -57,17 +57,12 @@ add_library(
   util/cxx_string_util.cpp
   ${opt_srcs}
   resdata/rd_rsthead.cpp
-  resdata/rd_sum_tstep.cpp
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
   resdata/rd_kw_grdecl.cpp
   resdata/rd_file_kw.cpp
   resdata/rd_file_view.cpp
   resdata/rd_grav.cpp
-  resdata/rd_smspec.cpp
-  resdata/rd_unsmry_loader.cpp
-  resdata/rd_sum_data.cpp
-  resdata/rd_sum_file_data.cpp
   resdata/rd_util.cpp
   resdata/rd_kw.cpp
   resdata/rd_sum.cpp

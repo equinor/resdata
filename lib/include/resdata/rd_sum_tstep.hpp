@@ -13,13 +13,6 @@ extern "C" {
 typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep);
-void rd_sum_tstep_free__(void *__ministep);
-rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
-                                                int ministep_nr,
-                                                const rd_kw_type *params_kw,
-                                                const char *src_file,
-                                                const rd_smspec_type *smspec);
-
 rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
                                           float sim_seconds,
                                           const rd_smspec_type *smspec);
@@ -30,18 +23,11 @@ void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
 double rd_sum_tstep_get_from_node(const rd_sum_tstep_type *tstep,
                                   const rd::smspec_node &smspec_node);
 
-double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index);
 time_t rd_sum_tstep_get_sim_time(const rd_sum_tstep_type *ministep);
 double rd_sum_tstep_get_sim_days(const rd_sum_tstep_type *ministep);
-double rd_sum_tstep_get_sim_seconds(const rd_sum_tstep_type *ministep);
 
 int rd_sum_tstep_get_report(const rd_sum_tstep_type *ministep);
 int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep);
-
-void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
-                         const int *index_map, int index_map_size,
-                         fortio_type *fortio);
-void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value);
 
 void rd_sum_tstep_set_from_key(rd_sum_tstep_type *tstep, const char *gen_key,
                                float value);

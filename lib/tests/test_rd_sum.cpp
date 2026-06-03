@@ -32,7 +32,6 @@
 #include <resdata/rd_sum_vector.hpp>
 
 #include "ert/util/double_vector.hpp"
-#include "detail/resdata/rd_unsmry_loader.hpp"
 #include "resdata/FortIO.hpp"
 #include "resdata/rd_file_view.hpp"
 #include "resdata/smspec_node.hpp"
@@ -703,13 +702,10 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
         auto restart_sum = make_summary_writer(
             restart_name, fmt_output, unified, ":", spec.start_time, true,
             spec.nx, spec.ny, spec.nz, base_name);
-        rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
-        REQUIRE(rd_smspec_get_params_size(smspec) == 1);
         const rd::smspec_node *fopt =
             rd_sum_add_var(restart_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
         rd_sum_add_var(restart_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
         rd_sum_add_var(restart_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0f);
-        REQUIRE(rd_smspec_get_params_size(smspec) == 4);
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
         rd_sum_tstep_set_from_node(tstep, *fopt, 0.0);
         REQUIRE(rd_sum_tstep_get_from_node(tstep, *fopt) == 0.0);
@@ -771,16 +767,6 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
         const std::string expected = "WWWWGGG" + std::to_string(n);
         REQUIRE(std::string(rd_kw_iget_char_ptr(restart_kw, n)) == expected);
     }
-}
-
-TEST_CASE_METHOD(Tmpdir, "Restart names >64 characters are ignored") {
-    const time_t start_time = util_make_date_utc(1, 1, 2010);
-    const std::string too_long(72, 'A');
-    auto smspec = std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>(
-        rd_smspec_alloc_restart_writer(":", too_long.c_str(), 10, start_time,
-                                       true, 3, 3, 3),
-        &rd_smspec_free);
-    REQUIRE(rd_smspec_get_restart_case(smspec.get()) == nullptr);
 }
 
 namespace {
@@ -1414,41 +1400,6 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
 
                 check_vector(sum.get(), "BPR:1", total_case3_bpr[0]);
                 check_vector(sum.get(), "BPR:2", total_case3_bpr[1]);
-            }
-        }
-    }
-}
-
-SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
-    GIVEN("A summary case with FOPT, BPR:567 and WWCT:OP-1 over 4 steps") {
-        WriteSpec spec;
-        spec.num_report_steps = 4;
-        spec.num_ministep = 1;
-        const auto case_path = (dirname / "CASE").string();
-        const bool fmt_output = false;
-        const bool unified = true;
-        write_test_summary(case_path, spec, fmt_output, unified);
-        auto rd_sum = read_summary(case_path, ":", !fmt_output);
-        REQUIRE(rd_sum);
-
-        THEN("The SMSPEC and UNSMRY files are written") {
-            REQUIRE(fs::exists(case_path + ".SMSPEC"));
-            REQUIRE(fs::exists(case_path + ".UNSMRY"));
-        }
-
-        WHEN("A rd::unsmry_loader is constructed over the UNSMRY file") {
-            auto loader = std::make_unique<rd::unsmry_loader>(
-                rd_sum_get_smspec(rd_sum.get()), case_path + ".UNSMRY", 0);
-
-            THEN("get_vector returns the per-keyword series") {
-                const std::vector<double> fopt = loader->get_vector(1);
-                const std::vector<double> bpr = loader->get_vector(2);
-                const std::vector<double> wwct = loader->get_vector(3);
-
-                REQUIRE(fopt.size() == size_t(spec.num_report_steps));
-                REQUIRE_THAT(fopt[3], WithinAbs(259200.0, 1e-6));
-                REQUIRE_THAT(bpr[2], WithinAbs(1728000.0, 1e-6));
-                REQUIRE_THAT(wwct[1], WithinAbs(8640000.0, 1e-6));
             }
         }
     }
