@@ -39,7 +39,6 @@
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
-#include <resdata/rd_sum_data.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -54,8 +53,150 @@
 
 namespace fs = std::filesystem;
 
+#define RD_SMSPEC_ID 806647
+#define PARAMS_GLOBAL_DEFAULT -99
+
+typedef std::map<std::string, const rd::smspec_node *> node_map;
+
+struct rd_smspec_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    /*
+    All the hash tables listed below here are different ways to access
+    smspec_node instances. The actual smspec_node instances are
+    owned by the smspec_nodes vector;
+  */
+    node_map field_var_index;
+    node_map misc_var_index; /* Variables like 'TCPU' and 'NEWTON'. */
+    node_map
+        gen_var_index /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
+        ;
+
+    std::map<std::string, node_map>
+        well_var_index; /* Indexes for all well variables:
+                                                     {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
+    std::map<std::string, node_map>
+        group_var_index; /* Indexes for group variables.*/
+    std::map<int, node_map>
+        region_var_index; /* The stored index is an offset. */
+    std::map<int, node_map> block_var_index; /* Block variables like BPR */
+    std::map<std::string, std::map<int, node_map>>
+        well_completion_var_index; /* Indexes for completion indexes .*/
+
+    std::vector<std::unique_ptr<rd::smspec_node>> smspec_nodes;
+    bool write_mode;
+    bool need_nums;
+    std::vector<int> index_map;
+    std::map<int, int> inv_index_map;
+    int params_size;
+
+    int time_seconds;
+    int grid_dims[3]; /* Grid dimensions - in DIMENS[1,2,3] */
+    int num_regions;
+    int Nwells, param_offset;
+    std::string
+        key_join_string; /* The string used to join keys when building gen_key keys - typically ":" -
+                                                      but arbitrary - NOT necessary to be able to invert the joining. */
+    std::string
+        header_file; /* FULL path to the currenbtly loaded header_file. */
+
+    bool
+        formatted; /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
+    time_t sim_start_time; /* When did the simulation start - worldtime. */
+
+    int time_index; /* The fields time_index, day_index, month_index and year_index */
+    int day_index; /* are used by the rd_sum_data object to locate per. timestep */
+    int month_index; /* time information. */
+    int year_index;
+    bool has_lgr;
+    std::vector<float> params_default;
+
+    std::string restart_case;
+    ert_rd_unit_enum unit_system;
+    int restart_step;
+};
+
+struct rd_sum_tstep_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    std::vector<float>
+        data; /* A memcpy copy of the PARAMS vector in rd_kw instance - the raw data. */
+    time_t
+        sim_time; /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */
+    int ministep; /* The simulator time-step number; one ministep per numerical timestep. */
+    int report_step; /* The report step this time-step is part of - in general there can be many timestep for each report step. */
+    double sim_seconds; /* Accumulated simulation time up to this ministep. */
+    int internal_index; /* Used for lookups of the next / previous ministep based on an existing ministep. */
+    const rd_smspec_type *
+        smspec; /* The smespec header information for this tstep - must be compatible. */
+};
+
+#define RD_SUM_TSTEP_ID 88631
+
 namespace rd {
 
+struct IndexNode {
+
+    IndexNode(time_t sim_time, double sim_seconds, int report_step)
+        : sim_time(sim_time), sim_seconds(sim_seconds),
+          report_step(report_step) {}
+
+    time_t sim_time;
+    double sim_seconds;
+    int report_step;
+};
+
+class TimeIndex {
+public:
+    void add(time_t sim_time, double sim_seconds, int report_step) {
+        int internal_index = static_cast<int>(this->nodes.size());
+        this->nodes.emplace_back(sim_time, sim_seconds, report_step);
+
+        /* Indexing internal_index - report_step */
+        if (static_cast<int>(this->report_map.size()) <= report_step)
+            this->report_map.resize(
+                report_step + 1,
+                std::pair<int, int>(std::numeric_limits<int>::max(), -1));
+
+        auto &range = this->report_map[report_step];
+        range.first = std::min(range.first, internal_index);
+        range.second = std::max(range.second, internal_index);
+    }
+
+    bool has_report(int report_step) const {
+        if (report_step >= static_cast<int>(this->report_map.size()))
+            return false;
+
+        const auto &range_pair = this->report_map[report_step];
+        if (range_pair.second < 0)
+            return false;
+
+        return true;
+    }
+
+    void clear() {
+        this->nodes.clear();
+        this->report_map.clear();
+    }
+
+    const IndexNode &operator[](size_t index) const {
+        return this->nodes[index];
+    }
+
+    const IndexNode &back() const { return this->nodes.back(); }
+
+    size_t size() const { return this->nodes.size(); }
+
+    std::pair<int, int> &report_range(int report_step) {
+        return this->report_map[report_step];
+    }
+
+    const std::pair<int, int> &report_range(int report_step) const {
+        return this->report_map[report_step];
+    }
+
+private:
+    std::vector<IndexNode> nodes;
+    std::vector<std::pair<int, int>> report_map;
+};
 class unsmry_loader {
 public:
     unsmry_loader(const rd_smspec_type *smspec, const std::string &filename,
@@ -84,12 +225,341 @@ private:
     rd_file_view_type *file_view;
 };
 
+class rd_sum_file_data {
+
+public:
+    rd_sum_file_data(const rd_smspec_type *smspec);
+    ~rd_sum_file_data();
+    const rd_smspec_type *smspec() const;
+
+    int length_before(time_t end_time) const;
+    void get_time(int length, time_t *data);
+    void get_data(int params_index, int length, double *data);
+    int length() const;
+    time_t get_data_start() const;
+    time_t get_sim_end() const;
+    double iget(int time_index, int params_index) const;
+    time_t iget_sim_time(int time_index) const;
+    double iget_sim_days(int time_index) const;
+    double iget_sim_seconds(int time_index) const;
+    rd_sum_tstep_type *iget_ministep(int internal_index) const;
+    double get_days_start() const;
+    double get_sim_length() const;
+
+    std::pair<int, int> report_range(int report_step) const;
+    bool report_step_equal(const rd_sum_file_data &other, bool strict) const;
+    int report_before(time_t end_time) const;
+    int get_time_report(int max_internal_index, time_t *data);
+    int get_data_report(int params_index, int max_internal_index, double *data,
+                        double default_value);
+    int first_report() const;
+    int last_report() const;
+    int iget_report(int time_index) const;
+    bool has_report(int report_step) const;
+    int report_step_from_days(double sim_days) const;
+    int report_step_from_time(time_t sim_time) const;
+
+    rd_sum_tstep_type *add_new_tstep(int report_step, double sim_seconds);
+    bool can_write() const;
+    void fwrite_unified(fortio_type *fortio) const;
+    void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
+    bool fread(const stringlist_type *filelist, bool lazy_load,
+               int file_options);
+
+private:
+    const rd_smspec_type *rd_smspec;
+
+    TimeIndex index;
+    vector_type *data;
+
+    std::unique_ptr<rd::unsmry_loader> loader;
+
+    void append_tstep(rd_sum_tstep_type *tstep);
+    void build_index();
+    void fwrite_report(int report_step, fortio_type *fortio) const;
+    bool check_file(rd_file_type *rd_file);
+    void add_rd_file(int report_step, const rd_file_view_type *summary_view);
+};
+
+} // namespace rd
+namespace {
+
+/*
+  The class CaseIndex and the struct IndexNode are used to maintain a list of
+  the rd_sum_file_data instances, and lookup the correct one based one various
+  time related arguments.
+*/
+
+struct IndexNode {
+    IndexNode(int d, int o, int l) {
+        this->data_index = d;
+        this->offset = o;
+        this->length = l;
+    }
+
+    int end() const { return this->offset + this->length; }
+
+    int data_index;
+    int offset;
+    int length;
+    int report1;
+    int report2;
+    time_t time1;
+    time_t time2;
+    double days1;
+    double days2;
+    std::vector<int> params_map;
+};
+
+class CaseIndex {
+public:
+    IndexNode &add(int length) {
+        int offset = 0;
+        int data_index = this->index.size();
+
+        if (!this->index.empty())
+            offset = this->index.back().end();
+
+        this->index.emplace_back(data_index, offset, length);
+        return this->index.back();
+    }
+
+    /*
+  The lookup_time() and lookup_report() methods will lookup which file_data
+  instance corresponds to the time/report argument. The methods will return two
+  pointers to file_data instances, if the argument is inside one file_data
+  instance the pointers will be equal - otherwise they will point to the
+  file_data instance before and after the argument:
+
+  File 1                     File 2
+  |------|-----|------|      |----|----------|---|
+      /|\                /|\
+       |                  |
+       |                  |
+       A                  B
+
+  For time A the lookup_time function will return <file1,file1> whereas for time
+  B the function will return <file1,file2>.
+ */
+
+    std::pair<const IndexNode *, const IndexNode *>
+    lookup_time(time_t sim_time) const {
+        auto iter = this->index.begin();
+        auto next = this->index.begin();
+        if (sim_time < iter->time1)
+            throw std::invalid_argument("Simulation time out of range");
+
+        ++next;
+        while (true) {
+            double t1 = iter->time1;
+            double t2 = iter->time2;
+
+            if (sim_time >= t1) {
+                if (sim_time <= t2)
+                    return std::make_pair<const IndexNode *, const IndexNode *>(
+                        &(*iter), &(*iter));
+
+                if (next == this->index.end())
+                    throw std::invalid_argument("Simulation days out of range");
+
+                if (sim_time < next->time1)
+                    return std::make_pair<const IndexNode *, const IndexNode *>(
+                        &(*iter), &(*next));
+            }
+            ++next;
+            ++iter;
+        }
+    }
+
+    std::pair<const IndexNode *, const IndexNode *>
+    lookup_days(double days) const {
+        auto iter = this->index.begin();
+        auto next = this->index.begin();
+        if (days < iter->days1)
+            throw std::invalid_argument("Simulation days out of range");
+
+        ++next;
+        while (true) {
+            double d1 = iter->days1;
+            double d2 = iter->days2;
+
+            if (days >= d1) {
+                if (days <= d2)
+                    return std::make_pair<const IndexNode *, const IndexNode *>(
+                        &(*iter), &(*iter));
+
+                if (next == this->index.end())
+                    throw std::invalid_argument("Simulation days out of range");
+
+                if (days < next->days1)
+                    return std::make_pair<const IndexNode *, const IndexNode *>(
+                        &(*iter), &(*next));
+            }
+            ++next;
+            ++iter;
+        }
+    }
+
+    const IndexNode &lookup(int internal_index) const {
+        for (const auto &node : this->index)
+            if (internal_index >= node.offset && internal_index < node.end())
+                return node;
+
+        throw std::invalid_argument("Internal error when looking up index: " +
+                                    std::to_string(internal_index));
+    }
+
+    const IndexNode &lookup_report(int report) const {
+        for (const auto &node : this->index)
+            if (node.report1 <= report && node.report2 >= report)
+                return node;
+
+        throw std::invalid_argument("Internal error when looking up report: " +
+                                    std::to_string(report));
+    }
+
+    /*
+      This will check that we have a datafile which report range covers the
+      report argument, in adition there can be 'holes' in the series - that must
+      be checked by actually querying the data_file object.
+    */
+
+    bool has_report(int report) const {
+        for (const auto &node : this->index)
+            if (node.report1 <= report && node.report2 >= report)
+                return true;
+
+        return false;
+    }
+
+    IndexNode &back() { return this->index.back(); }
+
+    void clear() { this->index.clear(); }
+
+    int length() const { return this->index.back().end(); }
+
+    std::vector<IndexNode>::const_iterator begin() const {
+        return this->index.begin();
+    }
+
+    std::vector<IndexNode>::const_iterator end() const {
+        return this->index.end();
+    }
+
+private:
+    std::vector<IndexNode> index;
+};
+
+} // namespace
+
+typedef struct rd_sum_data_struct rd_sum_data_type;
+
+struct rd_sum_data_struct {
+    const rd_smspec_type *smspec;
+    std::vector<std::shared_ptr<rd::rd_sum_file_data>>
+        data_files; /** These data files are shared_ptr
+                       as rd_sum_data_add_case makes file_data
+                       ownership shared among rd_sum_data. */
+    CaseIndex index;
+};
+
+using rd_smspec_ptr =
+    std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>;
+
+#define RD_SUM_ID 89067
+
+using rd_sum_data_ptr = std::unique_ptr<rd_sum_data_type>;
+
+struct rd_sum_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    rd_smspec_ptr smspec{
+        nullptr,
+        &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
+    rd_sum_data_ptr data{nullptr};
+    rd_sum_ptr restart_case{nullptr, &rd_sum_free};
+
+    bool fmt_case;
+    bool unified;
+    std::string key_join_string;
+    std::string path;     /* Path as given for the case input */
+    std::string abs_path; /* Absolute path. */
+    std::string base;     /* Only the basename. */
+    std::string
+        rd_case; /* This is the current case, with optional path component. == path + base*/
+    std::string
+        ext; /* Only to support selective loading of formatted|unformatted and unified|multiple. */
+};
+
+UTIL_SAFE_CAST_FUNCTION(rd_sum, RD_SUM_ID);
+UTIL_IS_INSTANCE_FUNCTION(rd_sum, RD_SUM_ID);
+
+static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
+                                             const rd_smspec_type *smspec) {
+    rd_sum_tstep_type *tstep = new rd_sum_tstep_type();
+    UTIL_TYPE_ID_INIT(tstep, RD_SUM_TSTEP_ID);
+    tstep->smspec = smspec;
+    tstep->report_step = report_step;
+    tstep->ministep = ministep_nr;
+    tstep->data.resize(smspec->params_size);
+    return tstep;
+}
+
+static void rd_sum_tstep_set_time_info_from_seconds(rd_sum_tstep_type *tstep,
+                                                    time_t sim_start,
+                                                    double sim_seconds) {
+    tstep->sim_seconds = sim_seconds;
+    tstep->sim_time = sim_start;
+    util_inplace_forward_seconds_utc(&tstep->sim_time, tstep->sim_seconds);
+}
+
+static void rd_sum_tstep_set_time_info_from_date(rd_sum_tstep_type *tstep,
+                                                 time_t sim_start,
+                                                 time_t sim_time) {
+    tstep->sim_time = sim_time;
+    tstep->sim_seconds = util_difftime_seconds(sim_start, tstep->sim_time);
+}
+
+static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
+                                       const rd_smspec_type *smspec) {
+    int date_day_index = smspec->day_index;
+    int date_month_index = smspec->month_index;
+    int date_year_index = smspec->year_index;
+    int sim_time_index = smspec->time_index;
+    time_t sim_start = smspec->sim_start_time;
+
+    if (sim_time_index >= 0) {
+        double sim_time = tstep->data[sim_time_index];
+        double sim_seconds = sim_time * smspec->time_seconds;
+        rd_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
+    } else if (date_day_index >= 0) {
+        int day = util_roundf(tstep->data[date_day_index]);
+        int month = util_roundf(tstep->data[date_month_index]);
+        int year = util_roundf(tstep->data[date_year_index]);
+
+        time_t sim_time = rd_make_date(day, month, year);
+        rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
+    } else
+        util_abort("%s: Hmmm - could not extract date/time information from "
+                   "SMSPEC header file? \n",
+                   __func__);
+}
+
+static double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
+    if ((index >= 0) && (index < (int)ministep->data.size()))
+        return ministep->data[index];
+    else {
+        util_abort("%s: param index:%d invalid: Valid range: [0,%d) \n",
+                   __func__, index, ministep->data.size());
+        return -1;
+    }
+}
+
+namespace rd {
+
 unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
                              const std::string &filename, int file_options)
-    : size(rd_smspec_get_params_size(smspec)),
-      time_index(rd_smspec_get_time_index(smspec)),
-      time_seconds(rd_smspec_get_time_seconds(smspec)),
-      sim_start(rd_smspec_get_start_time(smspec)) {
+    : size(smspec->params_size), time_index(smspec->time_index),
+      time_seconds(smspec->time_seconds), sim_start(smspec->sim_start_time) {
     rd_file_type *file = rd_file_open(filename.c_str(), file_options);
     if (!file)
         throw std::bad_alloc();
@@ -105,9 +575,8 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
         throw std::bad_alloc();
     }
 
-    this->date_index = {{rd_smspec_get_date_day_index(smspec),
-                         rd_smspec_get_date_month_index(smspec),
-                         rd_smspec_get_date_year_index(smspec)}};
+    this->date_index = {
+        {smspec->day_index, smspec->month_index, smspec->year_index}};
     this->file = file;
     this->file_view = rd_file_get_global_view(this->file);
     this->m_length = rd_file_view_get_num_named_kw(this->file_view, PARAMS_KW);
@@ -432,132 +901,6 @@ std::vector<double> unsmry_loader::sim_seconds() const {
 
 */
 
-#define INVALID_MINISTEP_NR -1
-#define INVALID_TIME_T 0
-
-struct IndexNode {
-
-    IndexNode(time_t sim_time, double sim_seconds, int report_step)
-        : sim_time(sim_time), sim_seconds(sim_seconds),
-          report_step(report_step) {}
-
-    time_t sim_time;
-    double sim_seconds;
-    int report_step;
-};
-
-class TimeIndex {
-public:
-    void add(time_t sim_time, double sim_seconds, int report_step) {
-        int internal_index = static_cast<int>(this->nodes.size());
-        this->nodes.emplace_back(sim_time, sim_seconds, report_step);
-
-        /* Indexing internal_index - report_step */
-        if (static_cast<int>(this->report_map.size()) <= report_step)
-            this->report_map.resize(
-                report_step + 1,
-                std::pair<int, int>(std::numeric_limits<int>::max(), -1));
-
-        auto &range = this->report_map[report_step];
-        range.first = std::min(range.first, internal_index);
-        range.second = std::max(range.second, internal_index);
-    }
-
-    bool has_report(int report_step) const {
-        if (report_step >= static_cast<int>(this->report_map.size()))
-            return false;
-
-        const auto &range_pair = this->report_map[report_step];
-        if (range_pair.second < 0)
-            return false;
-
-        return true;
-    }
-
-    void clear() {
-        this->nodes.clear();
-        this->report_map.clear();
-    }
-
-    const IndexNode &operator[](size_t index) const {
-        return this->nodes[index];
-    }
-
-    const IndexNode &back() const { return this->nodes.back(); }
-
-    size_t size() const { return this->nodes.size(); }
-
-    std::pair<int, int> &report_range(int report_step) {
-        return this->report_map[report_step];
-    }
-
-    const std::pair<int, int> &report_range(int report_step) const {
-        return this->report_map[report_step];
-    }
-
-private:
-    std::vector<IndexNode> nodes;
-    std::vector<std::pair<int, int>> report_map;
-};
-
-class unsmry_loader;
-
-class rd_sum_file_data {
-
-public:
-    rd_sum_file_data(const rd_smspec_type *smspec);
-    ~rd_sum_file_data();
-    const rd_smspec_type *smspec() const;
-
-    int length_before(time_t end_time) const;
-    void get_time(int length, time_t *data);
-    void get_data(int params_index, int length, double *data);
-    int length() const;
-    time_t get_data_start() const;
-    time_t get_sim_end() const;
-    double iget(int time_index, int params_index) const;
-    time_t iget_sim_time(int time_index) const;
-    double iget_sim_days(int time_index) const;
-    double iget_sim_seconds(int time_index) const;
-    rd_sum_tstep_type *iget_ministep(int internal_index) const;
-    double get_days_start() const;
-    double get_sim_length() const;
-
-    std::pair<int, int> report_range(int report_step) const;
-    bool report_step_equal(const rd_sum_file_data &other, bool strict) const;
-    int report_before(time_t end_time) const;
-    int get_time_report(int max_internal_index, time_t *data);
-    int get_data_report(int params_index, int max_internal_index, double *data,
-                        double default_value);
-    int first_report() const;
-    int last_report() const;
-    int iget_report(int time_index) const;
-    bool has_report(int report_step) const;
-    int report_step_from_days(double sim_days) const;
-    int report_step_from_time(time_t sim_time) const;
-
-    rd_sum_tstep_type *add_new_tstep(int report_step, double sim_seconds);
-    bool can_write() const;
-    void fwrite_unified(fortio_type *fortio) const;
-    void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
-    bool fread(const stringlist_type *filelist, bool lazy_load,
-               int file_options);
-
-private:
-    const rd_smspec_type *rd_smspec;
-
-    TimeIndex index;
-    vector_type *data;
-
-    std::unique_ptr<rd::unsmry_loader> loader;
-
-    void append_tstep(rd_sum_tstep_type *tstep);
-    void build_index();
-    void fwrite_report(int report_step, fortio_type *fortio) const;
-    bool check_file(rd_file_type *rd_file);
-    void add_rd_file(int report_step, const rd_file_view_type *summary_view);
-};
-
 rd_sum_file_data::rd_sum_file_data(const rd_smspec_type *smspec)
     : rd_smspec(smspec), data(vector_alloc_new()) {}
 
@@ -636,7 +979,7 @@ time_t rd_sum_file_data::iget_sim_time(int time_index) const {
 */
 double rd_sum_file_data::get_sim_length() const {
     const auto &node = this->index.back();
-    return node.sim_seconds / rd_smspec_get_time_seconds(this->rd_smspec);
+    return node.sim_seconds / this->rd_smspec->time_seconds;
 }
 
 double rd_sum_file_data::iget(int time_index, int params_index) const {
@@ -646,6 +989,11 @@ double rd_sum_file_data::iget(int time_index, int params_index) const {
         const rd_sum_tstep_type *ministep_data = iget_ministep(time_index);
         return rd_sum_tstep_iget(ministep_data, params_index);
     }
+}
+
+static void rd_sum_tstep_free__(void *__ministep) {
+    rd_sum_tstep_type *ministep = rd_sum_tstep_safe_cast(__ministep);
+    rd_sum_tstep_free(ministep);
 }
 
 void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
@@ -732,11 +1080,18 @@ static int cmp_ministep(const void *arg1, const void *arg2) {
         return 1;
 }
 
+static int first_step(const rd_smspec_type *rd_smspec) {
+    if (rd_smspec->restart_step > 0)
+        return rd_smspec->restart_step + 1;
+    else
+        return 1;
+}
+
 void rd_sum_file_data::build_index() {
     this->index.clear();
 
     if (this->loader) {
-        int offset = rd_smspec_get_first_step(this->rd_smspec) - 1;
+        int offset = first_step(this->rd_smspec) - 1;
         std::vector<int> report_steps = this->loader->report_steps(offset);
         std::vector<time_t> sim_time = this->loader->sim_time();
         std::vector<double> sim_seconds = this->loader->sim_seconds();
@@ -750,7 +1105,7 @@ void rd_sum_file_data::build_index() {
              internal_index++) {
             const rd_sum_tstep_type *ministep = iget_ministep(internal_index);
             this->index.add(rd_sum_tstep_get_sim_time(ministep),
-                            rd_sum_tstep_get_sim_seconds(ministep),
+                            ministep->sim_seconds,
                             rd_sum_tstep_get_report(ministep));
         }
     }
@@ -816,6 +1171,32 @@ std::pair<int, int> rd_sum_file_data::report_range(int report_step) const {
     return this->index.report_range(report_step);
 }
 
+static void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
+                                const int *index_map, int index_map_size,
+                                fortio_type *fortio) {
+    {
+        rd_kw_type *ministep_kw = rd_kw_alloc(MINISTEP_KW, 1, RD_INT);
+        rd_kw_iset_int(ministep_kw, 0, ministep->ministep);
+        rd_kw_fwrite(ministep_kw, fortio);
+        rd_kw_free(ministep_kw);
+    }
+
+    {
+        int compact_size = index_map_size;
+        rd_kw_type *params_kw = rd_kw_alloc(PARAMS_KW, compact_size, RD_FLOAT);
+
+        float *data = (float *)rd_kw_get_ptr(params_kw);
+
+        {
+            int i;
+            for (i = 0; i < compact_size; i++)
+                data[i] = ministep->data[index_map[i]];
+        }
+        rd_kw_fwrite(params_kw, fortio);
+        rd_kw_free(params_kw);
+    }
+}
+
 void rd_sum_file_data::fwrite_report(int report_step,
                                      fortio_type *fortio) const {
     {
@@ -829,8 +1210,7 @@ void rd_sum_file_data::fwrite_report(int report_step,
         auto range = this->report_range(report_step);
         for (int index = range.first; index <= range.second; index++) {
             const rd_sum_tstep_type *tstep = iget_ministep(index);
-            //rd_sum_tstep_fwrite( tstep , rd_smspec_get_index_map( rd_smspec ) , fortio );
-            rd_sum_tstep_fwrite(tstep, rd_smspec_get_index_map(rd_smspec),
+            rd_sum_tstep_fwrite(tstep, rd_smspec->index_map.data(),
                                 rd_smspec_num_nodes(rd_smspec), fortio);
         }
     }
@@ -880,6 +1260,40 @@ bool rd_sum_file_data::check_file(rd_file_type *rd_file) {
     return rd_file_has_kw(rd_file, PARAMS_KW) &&
            (rd_file_get_num_named_kw(rd_file, PARAMS_KW) ==
             rd_file_get_num_named_kw(rd_file, MINISTEP_KW));
+}
+
+/**
+   If the rd_kw instance is in some way invalid (i.e. wrong size);
+   the function will return NULL:
+*/
+rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
+                                                int ministep_nr,
+                                                const rd_kw_type *params_kw,
+                                                const char *src_file,
+                                                const rd_smspec_type *smspec) {
+
+    int data_size = rd_kw_get_size(params_kw);
+
+    if (data_size == smspec->params_size) {
+        rd_sum_tstep_type *ministep =
+            rd_sum_tstep_alloc(report_step, ministep_nr, smspec);
+        rd_kw_get_memcpy_data(params_kw, ministep->data.data());
+        rd_sum_tstep_set_time_info(ministep, smspec);
+        return ministep;
+    } else {
+        /*
+       This is actually a fatal error / bug; the difference in smspec
+       header structure should have been detected already in the
+       rd_smspec_load_restart() function and the restart case
+       discarded.
+    */
+        fprintf(stderr,
+                "** Warning size mismatch between timestep loaded from:%s(%d) "
+                "and header:%s(%d) - timestep discarded.\n",
+                src_file, data_size, smspec->header_file.c_str(),
+                smspec->params_size);
+        return NULL;
+    }
 }
 
 /**
@@ -981,8 +1395,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             rd_file_type *rd_file =
                 rd_file_open(stringlist_iget(filelist, 0), 0);
             if (rd_file && check_file(rd_file)) {
-                int first_report_step =
-                    rd_smspec_get_first_step(this->rd_smspec);
+                int first_report_step = first_step(this->rd_smspec);
                 int block_index = 0;
                 while (true) {
                     /*
@@ -1013,6 +1426,9 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
 const rd_smspec_type *rd_sum_file_data::smspec() const {
     return this->rd_smspec;
 }
+
+#define INVALID_MINISTEP_NR -1
+#define INVALID_TIME_T 0
 
 bool rd_sum_file_data::report_step_equal(const rd_sum_file_data &other,
                                          bool strict) const {
@@ -1089,68 +1505,6 @@ int rd_sum_file_data::iget_report(int time_index) const {
 }
 
 } // namespace rd
-
-#define RD_SMSPEC_ID 806647
-#define PARAMS_GLOBAL_DEFAULT -99
-
-typedef std::map<std::string, const rd::smspec_node *> node_map;
-
-struct rd_smspec_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    /*
-    All the hash tables listed below here are different ways to access
-    smspec_node instances. The actual smspec_node instances are
-    owned by the smspec_nodes vector;
-  */
-    node_map field_var_index;
-    node_map misc_var_index; /* Variables like 'TCPU' and 'NEWTON'. */
-    node_map
-        gen_var_index /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
-        ;
-
-    std::map<std::string, node_map>
-        well_var_index; /* Indexes for all well variables:
-                                                     {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
-    std::map<std::string, node_map>
-        group_var_index; /* Indexes for group variables.*/
-    std::map<int, node_map>
-        region_var_index; /* The stored index is an offset. */
-    std::map<int, node_map> block_var_index; /* Block variables like BPR */
-    std::map<std::string, std::map<int, node_map>>
-        well_completion_var_index; /* Indexes for completion indexes .*/
-
-    std::vector<std::unique_ptr<rd::smspec_node>> smspec_nodes;
-    bool write_mode;
-    bool need_nums;
-    std::vector<int> index_map;
-    std::map<int, int> inv_index_map;
-    int params_size;
-
-    int time_seconds;
-    int grid_dims[3]; /* Grid dimensions - in DIMENS[1,2,3] */
-    int num_regions;
-    int Nwells, param_offset;
-    std::string
-        key_join_string; /* The string used to join keys when building gen_key keys - typically ":" -
-                                                      but arbitrary - NOT necessary to be able to invert the joining. */
-    std::string
-        header_file; /* FULL path to the currenbtly loaded header_file. */
-
-    bool
-        formatted; /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
-    time_t sim_start_time; /* When did the simulation start - worldtime. */
-
-    int time_index; /* The fields time_index, day_index, month_index and year_index */
-    int day_index; /* are used by the rd_sum_data object to locate per. timestep */
-    int month_index; /* time information. */
-    int year_index;
-    bool has_lgr;
-    std::vector<float> params_default;
-
-    std::string restart_case;
-    ert_rd_unit_enum unit_system;
-    int restart_step;
-};
 
 /**
 About indexing:
@@ -1236,16 +1590,16 @@ int rd_smspec_num_nodes(const rd_smspec_type *smspec) {
     return smspec->smspec_nodes.size();
 }
 
+rd_smspec_var_type rd_smspec_identify_var_type(const char *var) {
+    return rd::smspec_node::identify_var_type(var);
+}
+
 /*
   When loading a summary case from file many of the nodes can be ignored, in
   that case the size of PARAMS vector in the data files is larger than the
   number of internalized nodes. Therefor we need to maintain the
   params_size member.
 */
-
-int rd_smspec_get_params_size(const rd_smspec_type *smspec) {
-    return smspec->params_size;
-}
 
 static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
                                            const std::string &key_join_string) {
@@ -1277,25 +1631,19 @@ static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
     return rd_smspec;
 }
 
-std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
-                                         const rd_smspec_type *other) {
-    int params_size = rd_smspec_get_params_size(self);
-    std::vector<int> mapping(params_size, -1);
+/* There is a quite wide range of error which are just returned as
+   "Not found" (i.e. -1). */
+/* Completions not supported yet. */
 
-    for (int i = 0; i < rd_smspec_num_nodes(self); i++) {
-        const rd::smspec_node &self_node =
-            rd_smspec_iget_node_w_node_index(self, i);
-        int self_index = self_node.get_params_index();
-        const char *key = self_node.get_gen_key1();
-        if (rd_smspec_has_general_var(other, key)) {
-            const rd::smspec_node &other_node =
-                rd_smspec_get_general_var_node(other, key);
-            int other_index = other_node.get_params_index();
-            mapping[self_index] = other_index;
-        }
-    }
+static const rd::smspec_node &
+rd_smspec_get_general_var_node(const rd_smspec_type *smspec,
+                               const char *lookup_kw) {
+    const auto node_ptr =
+        rd_smspec_get_var_node(smspec->gen_var_index, lookup_kw);
+    if (!node_ptr)
+        throw std::out_of_range("No such variable: " + std::string(lookup_kw));
 
-    return mapping;
+    return *node_ptr;
 }
 
 /**
@@ -1475,8 +1823,8 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     rd_smspec_fwrite_STARTDAT(smspec, fortio);
 }
 
-void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
-                      bool fmt_file) {
+static void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
+                             bool fmt_file) {
     std::string filename =
         rd::filename(rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
@@ -1540,10 +1888,6 @@ rd_smspec_type *rd_smspec_alloc_writer(const char *key_join_string,
 }
 
 UTIL_SAFE_CAST_FUNCTION(rd_smspec, RD_SMSPEC_ID)
-
-rd_smspec_var_type rd_smspec_identify_var_type(const char *var) {
-    return rd::smspec_node::identify_var_type(var);
-}
 
 static bool rd_smspec_lgr_var_type(rd_smspec_var_type var_type) {
     if ((var_type == RD_SMSPEC_LOCAL_BLOCK_VAR) ||
@@ -2087,67 +2431,14 @@ int node_valid_index(const rd::smspec_node *node_ptr) {
 
 } // namespace
 
-/* There is a quite wide range of error which are just returned as
-   "Not found" (i.e. -1). */
-/* Completions not supported yet. */
-
-const rd::smspec_node &
-rd_smspec_get_general_var_node(const rd_smspec_type *smspec,
-                               const char *lookup_kw) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(smspec->gen_var_index, lookup_kw);
-    if (!node_ptr)
-        throw std::out_of_range("No such variable: " + std::string(lookup_kw));
-
-    return *node_ptr;
-}
-
-int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
-                                           const char *lookup_kw) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->gen_var_index, lookup_kw);
-    return node_valid_index(node_ptr);
-}
-
-bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
-                               const char *lookup_kw) {
+static bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
+                                      const char *lookup_kw) {
     const auto node_ptr =
         rd_smspec_get_var_node(rd_smspec->gen_var_index, lookup_kw);
     return node_exists(node_ptr);
 }
 
-int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->time_seconds;
-}
-
-int rd_smspec_get_time_index(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->time_index;
-}
-
-time_t rd_smspec_get_start_time(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->sim_start_time;
-}
-
-bool rd_smspec_get_formatted(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->formatted;
-}
-
-const char *rd_smspec_get_header_file(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->header_file.c_str();
-}
-
-int rd_smspec_get_restart_step(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->restart_step;
-}
-
-int rd_smspec_get_first_step(const rd_smspec_type *rd_smspec) {
-    if (rd_smspec->restart_step > 0)
-        return rd_smspec->restart_step + 1;
-    else
-        return 1;
-}
-
-const char *rd_smspec_get_restart_case(const rd_smspec_type *rd_smspec) {
+static const char *rd_smspec_get_restart_case(const rd_smspec_type *rd_smspec) {
     if (rd_smspec->restart_case.size() > 0)
         return rd_smspec->restart_case.c_str();
     else
@@ -2161,23 +2452,11 @@ rd_smspec_get_params_default(const rd_smspec_type *rd_smspec) {
 
 void rd_smspec_free(rd_smspec_type *rd_smspec) { delete rd_smspec; }
 
-int rd_smspec_get_date_day_index(const rd_smspec_type *smspec) {
-    return smspec->day_index;
-}
-
-int rd_smspec_get_date_month_index(const rd_smspec_type *smspec) {
-    return smspec->month_index;
-}
-
-int rd_smspec_get_date_year_index(const rd_smspec_type *smspec) {
-    return smspec->year_index;
-}
-
 /**
    Fills a stringlist instance with all the gen_key string matching
    the supplied pattern. I.e.
 
-     rd_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
+     rd_sum_alloc_matching_general_var_list( smspec , "WGOR:*");
 
    will give a list of WGOR for ALL the wells. The function is
    unfortunately not as useful as one might think because ECLIPSE
@@ -2189,10 +2468,8 @@ int rd_smspec_get_date_year_index(const rd_smspec_type *smspec) {
    unique - keys are not added multiple times. If pattern == NULL all
    keys will match.
 */
-
-void rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
-                                                const char *pattern,
-                                                stringlist_type *keys) {
+static void rd_smspec_select_matching_general_var_list(
+    const rd_smspec_type *smspec, const char *pattern, stringlist_type *keys) {
     std::set<std::string> ex_keys;
     for (int i = 0; i < stringlist_get_size(keys); i++)
         ex_keys.insert(stringlist_iget(keys, i));
@@ -2218,19 +2495,6 @@ void rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
     }
 
     stringlist_sort(keys, (string_cmp_ftype *)util_strcmp_int);
-}
-
-/**
-   Allocates a new stringlist and initializes it with the
-   rd_smspec_select_matching_general_var_list() function.
-*/
-
-stringlist_type *
-rd_smspec_alloc_matching_general_var_list(const rd_smspec_type *smspec,
-                                          const char *pattern) {
-    stringlist_type *keys = stringlist_alloc_new();
-    rd_smspec_select_matching_general_var_list(smspec, pattern, keys);
-    return keys;
 }
 
 /**
@@ -2262,66 +2526,10 @@ rd_smspec_alloc_map_list(const std::map<std::string, node_map> &mp,
     return map_list;
 }
 
-stringlist_type *rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
-                                           const char *pattern) {
-    return rd_smspec_alloc_map_list(smspec->well_var_index, pattern);
-}
-
-/**
-    Returns a stringlist instance with all the (valid) group names. It
-    is the responsability of the calling scope to free the stringlist
-    with stringlist_free();
-*/
-
-stringlist_type *rd_smspec_alloc_group_list(const rd_smspec_type *smspec,
-                                            const char *pattern) {
-    return rd_smspec_alloc_map_list(smspec->group_var_index, pattern);
-}
-
-const int *rd_smspec_get_grid_dims(const rd_smspec_type *smspec) {
-    return smspec->grid_dims;
-}
-
-ert_rd_unit_enum rd_smspec_get_unit_system(const rd_smspec_type *smspec) {
-    return smspec->unit_system;
-}
-
-struct rd_sum_tstep_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    std::vector<float>
-        data; /* A memcpy copy of the PARAMS vector in rd_kw instance - the raw data. */
-    time_t
-        sim_time; /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */
-    int ministep; /* The simulator time-step number; one ministep per numerical timestep. */
-    int report_step; /* The report step this time-step is part of - in general there can be many timestep for each report step. */
-    double sim_seconds; /* Accumulated simulation time up to this ministep. */
-    int internal_index; /* Used for lookups of the next / previous ministep based on an existing ministep. */
-    const rd_smspec_type *
-        smspec; /* The smespec header information for this tstep - must be compatible. */
-};
-
-#define RD_SUM_TSTEP_ID 88631
-
-static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
-                                             const rd_smspec_type *smspec) {
-    rd_sum_tstep_type *tstep = new rd_sum_tstep_type();
-    UTIL_TYPE_ID_INIT(tstep, RD_SUM_TSTEP_ID);
-    tstep->smspec = smspec;
-    tstep->report_step = report_step;
-    tstep->ministep = ministep_nr;
-    tstep->data.resize(rd_smspec_get_params_size(smspec));
-    return tstep;
-}
-
 UTIL_SAFE_CAST_FUNCTION(rd_sum_tstep, RD_SUM_TSTEP_ID)
 UTIL_SAFE_CAST_FUNCTION_CONST(rd_sum_tstep, RD_SUM_TSTEP_ID)
 
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep) { delete ministep; }
-
-void rd_sum_tstep_free__(void *__ministep) {
-    rd_sum_tstep_type *ministep = rd_sum_tstep_safe_cast(__ministep);
-    rd_sum_tstep_free(ministep);
-}
 
 /**
    This function sets the internal time representation in the
@@ -2345,79 +2553,13 @@ void rd_sum_tstep_free__(void *__ministep) {
    will select the DAYS variety if both are present.
 */
 
-static void rd_sum_tstep_set_time_info_from_seconds(rd_sum_tstep_type *tstep,
-                                                    time_t sim_start,
-                                                    double sim_seconds) {
-    tstep->sim_seconds = sim_seconds;
-    tstep->sim_time = sim_start;
-    util_inplace_forward_seconds_utc(&tstep->sim_time, tstep->sim_seconds);
-}
-
-static void rd_sum_tstep_set_time_info_from_date(rd_sum_tstep_type *tstep,
-                                                 time_t sim_start,
-                                                 time_t sim_time) {
-    tstep->sim_time = sim_time;
-    tstep->sim_seconds = util_difftime_seconds(sim_start, tstep->sim_time);
-}
-
-static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
-                                       const rd_smspec_type *smspec) {
-    int date_day_index = rd_smspec_get_date_day_index(smspec);
-    int date_month_index = rd_smspec_get_date_month_index(smspec);
-    int date_year_index = rd_smspec_get_date_year_index(smspec);
-    int sim_time_index = rd_smspec_get_time_index(smspec);
-    time_t sim_start = rd_smspec_get_start_time(smspec);
-
-    if (sim_time_index >= 0) {
-        double sim_time = tstep->data[sim_time_index];
-        double sim_seconds = sim_time * rd_smspec_get_time_seconds(smspec);
-        rd_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
-    } else if (date_day_index >= 0) {
-        int day = util_roundf(tstep->data[date_day_index]);
-        int month = util_roundf(tstep->data[date_month_index]);
-        int year = util_roundf(tstep->data[date_year_index]);
-
-        time_t sim_time = rd_make_date(day, month, year);
-        rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
-    } else
-        util_abort("%s: Hmmm - could not extract date/time information from "
-                   "SMSPEC header file? \n",
-                   __func__);
-}
-
-/**
-   If the rd_kw instance is in some way invalid (i.e. wrong size);
-   the function will return NULL:
-*/
-
-rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
-                                                int ministep_nr,
-                                                const rd_kw_type *params_kw,
-                                                const char *src_file,
-                                                const rd_smspec_type *smspec) {
-
-    int data_size = rd_kw_get_size(params_kw);
-
-    if (data_size == rd_smspec_get_params_size(smspec)) {
-        rd_sum_tstep_type *ministep =
-            rd_sum_tstep_alloc(report_step, ministep_nr, smspec);
-        rd_kw_get_memcpy_data(params_kw, ministep->data.data());
-        rd_sum_tstep_set_time_info(ministep, smspec);
-        return ministep;
-    } else {
-        /*
-       This is actually a fatal error / bug; the difference in smspec
-       header structure should have been detected already in the
-       rd_smspec_load_restart() function and the restart case
-       discarded.
-    */
-        fprintf(stderr,
-                "** Warning size mismatch between timestep loaded from:%s(%d) "
-                "and header:%s(%d) - timestep discarded.\n",
-                src_file, data_size, rd_smspec_get_header_file(smspec),
-                rd_smspec_get_params_size(smspec));
-        return NULL;
-    }
+static void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index,
+                              float value) {
+    if ((index < static_cast<int>(tstep->data.size())) && (index >= 0))
+        tstep->data[index] = value;
+    else
+        util_abort("%s: index:%d invalid. Valid range: [0,%d) \n", __func__,
+                   index, tstep->data.size());
 }
 
 /*
@@ -2431,21 +2573,11 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
         rd_sum_tstep_alloc(report_step, ministep, smspec);
     tstep->data = rd_smspec_get_params_default(smspec);
 
-    rd_sum_tstep_set_time_info_from_seconds(
-        tstep, rd_smspec_get_start_time(smspec), sim_seconds);
-    rd_sum_tstep_iset(tstep, rd_smspec_get_time_index(smspec),
-                      sim_seconds / rd_smspec_get_time_seconds(smspec));
+    rd_sum_tstep_set_time_info_from_seconds(tstep, smspec->sim_start_time,
+                                            sim_seconds);
+    rd_sum_tstep_iset(tstep, smspec->time_index,
+                      sim_seconds / smspec->time_seconds);
     return tstep;
-}
-
-double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
-    if ((index >= 0) && (index < (int)ministep->data.size()))
-        return ministep->data[index];
-    else {
-        util_abort("%s: param index:%d invalid: Valid range: [0,%d) \n",
-                   __func__, index, ministep->data.size());
-        return -1;
-    }
 }
 
 time_t rd_sum_tstep_get_sim_time(const rd_sum_tstep_type *ministep) {
@@ -2456,50 +2588,12 @@ double rd_sum_tstep_get_sim_days(const rd_sum_tstep_type *ministep) {
     return ministep->sim_seconds / (24 * 3600);
 }
 
-double rd_sum_tstep_get_sim_seconds(const rd_sum_tstep_type *ministep) {
-    return ministep->sim_seconds;
-}
-
 int rd_sum_tstep_get_report(const rd_sum_tstep_type *ministep) {
     return ministep->report_step;
 }
 
 int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep) {
     return ministep->ministep;
-}
-
-void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
-                         const int *index_map, int index_map_size,
-                         fortio_type *fortio) {
-    {
-        rd_kw_type *ministep_kw = rd_kw_alloc(MINISTEP_KW, 1, RD_INT);
-        rd_kw_iset_int(ministep_kw, 0, ministep->ministep);
-        rd_kw_fwrite(ministep_kw, fortio);
-        rd_kw_free(ministep_kw);
-    }
-
-    {
-        int compact_size = index_map_size;
-        rd_kw_type *params_kw = rd_kw_alloc(PARAMS_KW, compact_size, RD_FLOAT);
-
-        float *data = (float *)rd_kw_get_ptr(params_kw);
-
-        {
-            int i;
-            for (i = 0; i < compact_size; i++)
-                data[i] = ministep->data[index_map[i]];
-        }
-        rd_kw_fwrite(params_kw, fortio);
-        rd_kw_free(params_kw);
-    }
-}
-
-void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
-    if ((index < static_cast<int>(tstep->data.size())) && (index >= 0))
-        tstep->data[index] = value;
-    else
-        util_abort("%s: index:%d invalid. Valid range: [0,%d) \n", __func__,
-                   index, tstep->data.size());
 }
 
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
@@ -2533,197 +2627,8 @@ bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key) {
     return rd_smspec_has_general_var(tstep->smspec, gen_key);
 }
 
-namespace {
-
-/*
-  The class CaseIndex and the struct IndexNode are used to maintain a list of
-  the rd_sum_file_data instances, and lookup the correct one based one various
-  time related arguments.
-*/
-
-struct IndexNode {
-    IndexNode(int d, int o, int l) {
-        this->data_index = d;
-        this->offset = o;
-        this->length = l;
-    }
-
-    int end() const { return this->offset + this->length; }
-
-    int data_index;
-    int offset;
-    int length;
-    int report1;
-    int report2;
-    time_t time1;
-    time_t time2;
-    double days1;
-    double days2;
-    std::vector<int> params_map;
-};
-
-class CaseIndex {
-public:
-    IndexNode &add(int length) {
-        int offset = 0;
-        int data_index = this->index.size();
-
-        if (!this->index.empty())
-            offset = this->index.back().end();
-
-        this->index.emplace_back(data_index, offset, length);
-        return this->index.back();
-    }
-
-    /*
-  The lookup_time() and lookup_report() methods will lookup which file_data
-  instance corresponds to the time/report argument. The methods will return two
-  pointers to file_data instances, if the argument is inside one file_data
-  instance the pointers will be equal - otherwise they will point to the
-  file_data instance before and after the argument:
-
-  File 1                     File 2
-  |------|-----|------|      |----|----------|---|
-      /|\                /|\
-       |                  |
-       |                  |
-       A                  B
-
-  For time A the lookup_time function will return <file1,file1> whereas for time
-  B the function will return <file1,file2>.
- */
-
-    std::pair<const IndexNode *, const IndexNode *>
-    lookup_time(time_t sim_time) const {
-        auto iter = this->index.begin();
-        auto next = this->index.begin();
-        if (sim_time < iter->time1)
-            throw std::invalid_argument("Simulation time out of range");
-
-        ++next;
-        while (true) {
-            double t1 = iter->time1;
-            double t2 = iter->time2;
-
-            if (sim_time >= t1) {
-                if (sim_time <= t2)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*iter));
-
-                if (next == this->index.end())
-                    throw std::invalid_argument("Simulation days out of range");
-
-                if (sim_time < next->time1)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*next));
-            }
-            ++next;
-            ++iter;
-        }
-    }
-
-    std::pair<const IndexNode *, const IndexNode *>
-    lookup_days(double days) const {
-        auto iter = this->index.begin();
-        auto next = this->index.begin();
-        if (days < iter->days1)
-            throw std::invalid_argument("Simulation days out of range");
-
-        ++next;
-        while (true) {
-            double d1 = iter->days1;
-            double d2 = iter->days2;
-
-            if (days >= d1) {
-                if (days <= d2)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*iter));
-
-                if (next == this->index.end())
-                    throw std::invalid_argument("Simulation days out of range");
-
-                if (days < next->days1)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*next));
-            }
-            ++next;
-            ++iter;
-        }
-    }
-
-    const IndexNode &lookup(int internal_index) const {
-        for (const auto &node : this->index)
-            if (internal_index >= node.offset && internal_index < node.end())
-                return node;
-
-        throw std::invalid_argument("Internal error when looking up index: " +
-                                    std::to_string(internal_index));
-    }
-
-    const IndexNode &lookup_report(int report) const {
-        for (const auto &node : this->index)
-            if (node.report1 <= report && node.report2 >= report)
-                return node;
-
-        throw std::invalid_argument("Internal error when looking up report: " +
-                                    std::to_string(report));
-    }
-
-    /*
-      This will check that we have a datafile which report range covers the
-      report argument, in adition there can be 'holes' in the series - that must
-      be checked by actually querying the data_file object.
-    */
-
-    bool has_report(int report) const {
-        for (const auto &node : this->index)
-            if (node.report1 <= report && node.report2 >= report)
-                return true;
-
-        return false;
-    }
-
-    IndexNode &back() { return this->index.back(); }
-
-    void clear() { this->index.clear(); }
-
-    int length() const { return this->index.back().end(); }
-
-    std::vector<IndexNode>::const_iterator begin() const {
-        return this->index.begin();
-    }
-
-    std::vector<IndexNode>::const_iterator end() const {
-        return this->index.end();
-    }
-
-private:
-    std::vector<IndexNode> index;
-};
-
-} // namespace
-
-struct rd_sum_data_struct {
-    const rd_smspec_type *smspec;
-    std::vector<std::shared_ptr<rd::rd_sum_file_data>>
-        data_files; /** These data files are shared_ptr
-                       as rd_sum_data_add_case makes file_data
-                       ownership shared among rd_sum_data. */
-    CaseIndex index;
-};
-
 static void rd_sum_data_build_index(rd_sum_data_type *self);
-static double rd_sum_data_iget_sim_seconds(const rd_sum_data_type *data,
-                                           int internal_index);
-
-void rd_sum_data_free(rd_sum_data_type *data) {
-    if (!data)
-        throw std::invalid_argument(__func__ + std::string(": invalid delete"));
-
-    delete data;
-}
-
-rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
+static rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
     rd_sum_data_type *data = new rd_sum_data_type();
     data->smspec = smspec;
     return data;
@@ -2756,20 +2661,6 @@ static double rd_sum_data_iget_sim_seconds(const rd_sum_data_type *data,
     return data_file->iget_sim_seconds(internal_index - index_node.offset);
 }
 
-double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
-                                 int internal_index) {
-    const auto index_node = data->index.lookup(internal_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_days(internal_index - index_node.offset);
-}
-
-rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
-    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
-    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
-    rd_sum_data_build_index(data);
-    return data;
-}
-
 static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
                                        const fs::path &rd_case, bool fmt_case) {
     std::string filename =
@@ -2788,8 +2679,9 @@ static void rd_sum_data_fwrite_multiple(const rd_sum_data_type *data,
         data_file->fwrite_multiple(rd_case.string(), fmt_case);
 }
 
-void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
-                        bool fmt_case, bool unified) {
+static void rd_sum_data_fwrite(const rd_sum_data_type *data,
+                               const char *rd_case, bool fmt_case,
+                               bool unified) {
     fs::path case_path(rd_case);
     if (unified)
         rd_sum_data_fwrite_unified(data, case_path, fmt_case);
@@ -2797,7 +2689,7 @@ void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
         rd_sum_data_fwrite_multiple(data, case_path, fmt_case);
 }
 
-bool rd_sum_data_can_write(const rd_sum_data_type *data) {
+static bool rd_sum_data_can_write(const rd_sum_data_type *data) {
     bool can_write = true;
     for (const auto &file_ptr : data->data_files)
         can_write &= file_ptr->can_write();
@@ -2805,7 +2697,7 @@ bool rd_sum_data_can_write(const rd_sum_data_type *data) {
     return can_write;
 }
 
-time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
+static time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
     if (data->data_files.empty())
         throw std::out_of_range("rd_sum_data_get_sim_end: data_files empty");
 
@@ -2813,14 +2705,14 @@ time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
     return file_data->get_sim_end();
 }
 
-time_t rd_sum_data_get_data_start(const rd_sum_data_type *data) {
+static time_t rd_sum_data_get_data_start(const rd_sum_data_type *data) {
     if (data->data_files.empty())
         throw std::out_of_range("rd_sum_data_get_data_start: data_files empty");
     const auto &file_data = data->data_files[0];
     return file_data->get_data_start();
 }
 
-double rd_sum_data_get_first_day(const rd_sum_data_type *data) {
+static double rd_sum_data_get_first_day(const rd_sum_data_type *data) {
     const auto &file_data = data->data_files[0];
     return file_data->get_days_start();
 }
@@ -2830,8 +2722,7 @@ double rd_sum_data_get_first_day(const rd_sum_data_type *data) {
    simulation (irrespective of whether the that summary data has
    actually been loaded) to the last loaded simulation step.
 */
-
-double rd_sum_data_get_sim_length(const rd_sum_data_type *data) {
+static double rd_sum_data_get_sim_length(const rd_sum_data_type *data) {
     const auto &file_data = data->data_files.back();
     return file_data->get_sim_length();
 }
@@ -2844,7 +2735,8 @@ double rd_sum_data_get_sim_length(const rd_sum_data_type *data) {
    start with no data.
 */
 
-bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time) {
+static bool rd_sum_data_check_sim_time(const rd_sum_data_type *data,
+                                       time_t sim_time) {
     if (sim_time < rd_sum_data_get_data_start(data))
         return false;
 
@@ -2854,9 +2746,11 @@ bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time) {
     return true;
 }
 
-bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days) {
-    return sim_days >= rd_sum_data_get_first_day(data) &&
-           sim_days <= rd_sum_data_get_sim_length(data);
+static time_t rd_sum_data_iget_sim_time(const rd_sum_data_type *data,
+                                        int ministep_index) {
+    const auto &index_node = data->index.lookup(ministep_index);
+    const auto data_file = data->data_files[index_node.data_index];
+    return data_file->iget_sim_time(ministep_index - index_node.offset);
 }
 
 /**
@@ -2865,7 +2759,7 @@ bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days) {
    before the simulation start, or after the end of the
    simulation. Check with
 
-       rd_smspec_get_start_time() and rd_sum_data_get_sim_end()
+       smspec->sim_start_time and rd_sum_data_get_sim_end()
 
    first.
 
@@ -2902,8 +2796,7 @@ static int rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
         time_t end_time = rd_sum_data_get_sim_end(data);
         throw std::out_of_range(fmt::format(
             "Invalid time_t instance:{} interval:[{},{}] (simulation start:{})",
-            sim_time, start_time, end_time,
-            rd_smspec_get_start_time(data->smspec)));
+            sim_time, start_time, end_time, data->smspec->sim_start_time));
     }
 
     /*
@@ -2914,7 +2807,7 @@ static int rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
   */
 
     int low_index = 0;
-    int high_index = rd_sum_data_get_length(data) - 1;
+    int high_index = data->index.length() - 1;
 
     // perform binary search
     while (low_index + 1 < high_index) {
@@ -2988,43 +2881,55 @@ static void rd_sum_data_init_interp_from_sim_time(const rd_sum_data_type *data,
     *weight2 = time_dist1 / time_diff;
 }
 
-double_vector_type *
-rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
-                                   const rd::smspec_node &node,
-                                   double cmp_value, bool rates_clamp_lower) {
-    double_vector_type *solution = double_vector_alloc(0, 0);
-    const int param_index = smspec_node_get_params_index(&node);
-    const int size = rd_sum_data_get_length(data);
+/**
+    This will look up a value based on an internal index. The internal
+    index will ALWAYS run in the interval [0,num_ministep), without
+    any holes.
+*/
+static double rd_sum_data_iget(const rd_sum_data_type *data, int time_index,
+                               int params_index) {
+    const auto &index_node = data->index.lookup(time_index);
+    const auto &file_data = data->data_files[index_node.data_index];
+    const auto &params_map = index_node.params_map;
+    if (params_map[params_index] >= 0)
+        return file_data->iget(time_index - index_node.offset,
+                               params_map[params_index]);
+    else {
+        const rd::smspec_node &smspec_node =
+            rd_smspec_iget_node_w_params_index(data->smspec, params_index);
+        return smspec_node.get_default();
+    }
+}
 
-    if (size <= 1)
-        return solution;
+static double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
+                                          int param_index) {
+    return rd_sum_data_iget(data, data->index.length() - 1, param_index);
+}
 
-    for (int index = 0; index < size; ++index) {
-        int prev_index = util_int_max(0, index - 1);
-        double value = rd_sum_data_iget(data, index, param_index);
-        double prev_value = rd_sum_data_iget(data, prev_index, param_index);
+static double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
+                                           int param_index) {
+    return rd_sum_data_iget(data, 0, param_index);
+}
 
-        // cmp_value in interval value (closed) and prev_value (open)
-        bool contained = (value == cmp_value);
-        contained |= (util_double_min(prev_value, value) < cmp_value) &&
-                     (cmp_value < util_double_max(prev_value, value));
+static std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
+                                                const rd_smspec_type *other) {
+    int params_size = self->params_size;
+    std::vector<int> mapping(params_size, -1);
 
-        if (!contained)
-            continue;
-
-        double prev_time = rd_sum_data_iget_sim_seconds(data, prev_index);
-        double time = rd_sum_data_iget_sim_seconds(data, index);
-
-        if (smspec_node_is_rate(&node)) {
-            double_vector_append(solution,
-                                 rates_clamp_lower ? prev_time + 1 : time);
-        } else {
-            double slope = (value - prev_value) / (time - prev_time);
-            double seconds = (cmp_value - prev_value) / slope + prev_time;
-            double_vector_append(solution, seconds);
+    for (int i = 0; i < rd_smspec_num_nodes(self); i++) {
+        const rd::smspec_node &self_node =
+            rd_smspec_iget_node_w_node_index(self, i);
+        int self_index = self_node.get_params_index();
+        const char *key = self_node.get_gen_key1();
+        if (rd_smspec_has_general_var(other, key)) {
+            const rd::smspec_node &other_node =
+                rd_smspec_get_general_var_node(other, key);
+            int other_index = other_node.get_params_index();
+            mapping[self_index] = other_index;
         }
     }
-    return solution;
+
+    return mapping;
 }
 
 static void rd_sum_data_build_index(rd_sum_data_type *self) {
@@ -3067,25 +2972,15 @@ static void rd_sum_data_build_index(rd_sum_data_type *self) {
     }
 }
 
-/*
-  This function is meant to be called in write mode; and will create a
-  new and empty tstep which is appended to the current data. The tstep
-  will also be returned, so the calling scope can call
-  rd_sum_tstep_iset() to set elements in the tstep.
-*/
-
-rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
-                                             int report_step,
-                                             double sim_seconds) {
-    const auto &file_data = data->data_files.back();
-    rd_sum_tstep_type *tstep =
-        file_data->add_new_tstep(report_step, sim_seconds);
+static rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
+    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
+    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
     rd_sum_data_build_index(data);
-    return tstep;
+    return data;
 }
 
-void rd_sum_data_add_case(rd_sum_data_type *self,
-                          const rd_sum_data_type *other) {
+static void rd_sum_data_add_case(rd_sum_data_type *self,
+                                 const rd_sum_data_type *other) {
     for (auto &other_file : other->data_files)
         self->data_files.push_back(other_file);
 
@@ -3101,8 +2996,9 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
   call to rd_sum_data_build_index().
 */
 
-bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
-                       bool lazy_load, int file_options) {
+static bool rd_sum_data_fread(rd_sum_data_type *data,
+                              const stringlist_type *filelist, bool lazy_load,
+                              int file_options) {
     auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
     if (file_data->fread(filelist, lazy_load, file_options)) {
         data->data_files.push_back(file_data);
@@ -3110,48 +3006,6 @@ bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
         return true;
     }
     return false;
-}
-
-/**
-   Returns the last index included in report step @report_step.
-   Observe that if the dataset does not include @report_step at all,
-   the function will return INVALID_MINISTEP_NR; this must be checked for in the
-   calling scope.
-*/
-
-int rd_sum_data_iget_report_end(const rd_sum_data_type *data, int report_step) {
-    const auto &index_node = data->index.lookup_report(report_step);
-    const auto &file_data = data->data_files[index_node.data_index];
-    auto range = file_data->report_range(report_step);
-    return range.second;
-}
-
-int rd_sum_data_iget_report_step(const rd_sum_data_type *data,
-                                 int internal_index) {
-    const auto &index_node = data->index.lookup(internal_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    return file_data->iget_report(internal_index - index_node.offset);
-}
-
-/**
-    This will look up a value based on an internal index. The internal
-    index will ALWAYS run in the interval [0,num_ministep), without
-    any holes.
-*/
-
-double rd_sum_data_iget(const rd_sum_data_type *data, int time_index,
-                        int params_index) {
-    const auto &index_node = data->index.lookup(time_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto &params_map = index_node.params_map;
-    if (params_map[params_index] >= 0)
-        return file_data->iget(time_index - index_node.offset,
-                               params_map[params_index]);
-    else {
-        const rd::smspec_node &smspec_node =
-            rd_smspec_iget_node_w_params_index(data->smspec, params_index);
-        return smspec_node.get_default();
-    }
 }
 
 /**
@@ -3193,74 +3047,9 @@ static double rd_sum_data_vector_iget(const rd_sum_data_type *data,
     return value;
 }
 
-void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
-                                        time_t sim_time,
-                                        const rd_sum_vector_type *keylist,
-                                        FILE *fp) {
-    int num_keywords = rd_sum_vector_get_size(keylist);
-    double weight1, weight2;
-    int time_index1, time_index2;
-
-    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
-                                          &time_index2, &weight1, &weight2);
-
-    for (int i = 0; i < num_keywords; i++) {
-        if (rd_sum_vector_iget_valid(keylist, i)) {
-            int params_index = rd_sum_vector_iget_param_index(keylist, i);
-            bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
-            double value = rd_sum_data_vector_iget(
-                data, sim_time, params_index, is_rate, time_index1, time_index2,
-                weight1, weight2);
-
-            if (i == 0)
-                fprintf(fp, "%f", value);
-            else
-                fprintf(fp, ",%f", value);
-        } else {
-            if (i == 0)
-                fputs("", fp);
-            else
-                fputs(",", fp);
-        }
-    }
-}
-
-/*
-  If the keylist contains invalid indices the corresponding element in the
-  results vector will *not* be updated; i.e. it is smart to initialize the
-  results vector with an invalid-value marker before calling this function:
-
-  double_vector_type * results = double_vector_alloc( rd_sum_vector_get_size(keys), NAN);
-  rd_sum_data_get_interp_vector( data, sim_time, keys, results);
-
-*/
-
-void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
-                                   time_t sim_time,
-                                   const rd_sum_vector_type *keylist,
-                                   double_vector_type *results) {
-    int num_keywords = rd_sum_vector_get_size(keylist);
-    double weight1, weight2;
-    int time_index1, time_index2;
-
-    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
-                                          &time_index2, &weight1, &weight2);
-    double_vector_reset(results);
-    for (int i = 0; i < num_keywords; i++) {
-        if (rd_sum_vector_iget_valid(keylist, i)) {
-            int params_index = rd_sum_vector_iget_param_index(keylist, i);
-            bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
-            double value = rd_sum_data_vector_iget(
-                data, sim_time, params_index, is_rate, time_index1, time_index2,
-                weight1, weight2);
-            double_vector_iset(results, i, value);
-        }
-    }
-}
-
-double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
-                                     time_t sim_time,
-                                     const rd::smspec_node &smspec_node) {
+static double
+rd_sum_data_get_from_sim_time(const rd_sum_data_type *data, time_t sim_time,
+                              const rd::smspec_node &smspec_node) {
     int params_index = smspec_node_get_params_index(&smspec_node);
     if (smspec_node_is_rate(&smspec_node)) {
         /*
@@ -3290,21 +3079,6 @@ double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
     }
 }
 
-int rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
-                                          double sim_days) {
-    if ((sim_days < rd_sum_data_get_first_day(data)) ||
-        (sim_days > rd_sum_data_get_sim_length(data)))
-        return -1;
-    else {
-        auto files = data->index.lookup_days(sim_days);
-        if (files.first != files.second)
-            return -1;
-
-        const auto &data_file = data->data_files[files.first->data_index];
-        return data_file->report_step_from_days(sim_days);
-    }
-}
-
 /**
    Will go through the data and find the report step which EXACTLY
    matches the input sim_time. If no report step matches exactly the
@@ -3324,8 +3098,8 @@ int rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
    report_step input.
 */
 
-int rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
-                                          time_t sim_time) {
+static int rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
+                                                 time_t sim_time) {
     if (!rd_sum_data_check_sim_time(data, sim_time))
         return -1;
     else {
@@ -3338,49 +3112,18 @@ int rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
     }
 }
 
-double rd_sum_data_time2days(const rd_sum_data_type *data, time_t sim_time) {
-    time_t start_time = rd_smspec_get_start_time(data->smspec);
+static double rd_sum_data_time2days(const rd_sum_data_type *data,
+                                    time_t sim_time) {
+    time_t start_time = data->smspec->sim_start_time;
     return util_difftime_days(start_time, sim_time);
 }
 
-double rd_sum_data_get_from_sim_days(const rd_sum_data_type *data,
-                                     double sim_days,
-                                     const rd::smspec_node &smspec_node) {
-    time_t sim_time = rd_smspec_get_start_time(data->smspec);
-    util_inplace_forward_days_utc(&sim_time, sim_days);
-    return rd_sum_data_get_from_sim_time(data, sim_time, smspec_node);
-}
-
-time_t rd_sum_data_iget_sim_time(const rd_sum_data_type *data,
-                                 int ministep_index) {
-    const auto &index_node = data->index.lookup(ministep_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_time(ministep_index - index_node.offset);
-}
-
-time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,
-                                   int report_step) {
-    if (report_step == 0)
-        return rd_smspec_get_start_time(data->smspec);
-    else {
-        int internal_index = rd_sum_data_iget_report_end(data, report_step);
-        if (internal_index == -1)
-            throw std::out_of_range(
-                "Tried to look up step nr: " + std::to_string(report_step) +
-                " from the restart file in summary file, but it does not "
-                "exist. \n" +
-                "The step entries in summary file must cover all entries "
-                "in the restart file.");
-        return rd_sum_data_iget_sim_time(data, internal_index);
-    }
-}
-
-int rd_sum_data_get_first_report_step(const rd_sum_data_type *data) {
+static int rd_sum_data_get_first_report_step(const rd_sum_data_type *data) {
     const auto &data_file = data->data_files[0];
     return data_file->first_report();
 }
 
-int rd_sum_data_get_last_report_step(const rd_sum_data_type *data) {
+static int rd_sum_data_get_last_report_step(const rd_sum_data_type *data) {
     const auto &data_file = data->data_files.back();
     return data_file->last_report();
 }
@@ -3402,30 +3145,10 @@ static void rd_sum_data_init_time_vector__(const rd_sum_data_type *data,
     }
 }
 
-time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
-                                                  bool report_only) {
-    std::vector<time_t> output_data;
-    if (report_only)
-        output_data.resize(1 + rd_sum_data_get_last_report_step(data) -
-                           rd_sum_data_get_first_report_step(data));
-    else
-        output_data.resize(rd_sum_data_get_length(data));
-
-    rd_sum_data_init_time_vector__(data, output_data.data(), report_only);
-    time_t_vector_type *time_vector =
-        time_t_vector_alloc(output_data.size(), 0);
-    {
-        time_t *tmp_data = time_t_vector_get_ptr(time_vector);
-        memcpy(tmp_data, output_data.data(),
-               output_data.size() * sizeof(time_t));
-    }
-    return time_vector;
-}
-
-static void rd_sum_data_init_double_vector__(const rd_sum_data_type *data,
-                                             int main_params_index,
-                                             double *output_data,
-                                             bool report_only) {
+static void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
+                                           int main_params_index,
+                                           double *output_data,
+                                           bool report_only = false) {
     int offset = 0;
     for (const auto &index_node : data->index) {
         const auto &data_file = data->data_files[index_node.data_index];
@@ -3456,182 +3179,6 @@ static void rd_sum_data_init_double_vector__(const rd_sum_data_type *data,
         }
     }
 }
-
-void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
-                                    int params_index, double *output_data) {
-    rd_sum_data_init_double_vector__(data, params_index, output_data, false);
-}
-
-double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
-                                                  int params_index,
-                                                  bool report_only) {
-    std::vector<double> output_data;
-    if (report_only)
-        output_data.resize(1 + rd_sum_data_get_last_report_step(data) -
-                           rd_sum_data_get_first_report_step(data));
-    else
-        output_data.resize(rd_sum_data_get_length(data));
-
-    if (params_index >= rd_smspec_get_params_size(data->smspec))
-        throw std::out_of_range("Out of range");
-
-    rd_sum_data_init_double_vector__(data, params_index, output_data.data(),
-                                     report_only);
-    double_vector_type *data_vector =
-        double_vector_alloc(output_data.size(), 0);
-    {
-        double *tmp_data = double_vector_get_ptr(data_vector);
-        memcpy(tmp_data, output_data.data(),
-               output_data.size() * sizeof(double));
-    }
-    return data_vector;
-}
-
-void rd_sum_data_init_double_vector_interp(
-    const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
-    const time_t_vector_type *time_points, double *output_data) {
-    bool is_rate = smspec_node_is_rate(&smspec_node);
-    int params_index = smspec_node_get_params_index(&smspec_node);
-    time_t start_time = rd_sum_data_get_data_start(data);
-    time_t end_time = rd_sum_data_get_sim_end(data);
-    double start_value = 0;
-    double end_value = 0;
-
-    if (!is_rate) {
-        start_value = rd_sum_data_iget_first_value(data, params_index);
-        end_value = rd_sum_data_iget_last_value(data, params_index);
-    }
-
-    for (int time_index = 0; time_index < time_t_vector_size(time_points);
-         time_index++) {
-        time_t sim_time = time_t_vector_iget(time_points, time_index);
-        double value;
-        if (sim_time < start_time)
-            value = start_value;
-
-        else if (sim_time > end_time)
-            value = end_value;
-
-        else {
-            int time_index1, time_index2;
-            double weight1, weight2;
-            rd_sum_data_init_interp_from_sim_time(
-                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
-            value = rd_sum_data_vector_iget(data, sim_time, params_index,
-                                            is_rate, time_index1, time_index2,
-                                            weight1, weight2);
-        }
-
-        output_data[time_index] = value;
-    }
-}
-
-void rd_sum_data_init_double_frame_interp(const rd_sum_data_type *data,
-                                          const rd_sum_vector_type *keywords,
-                                          const time_t_vector_type *time_points,
-                                          double *output_data) {
-    int num_keywords = rd_sum_vector_get_size(keywords);
-    int time_stride = num_keywords;
-    int key_stride = 1;
-    time_t start_time = rd_sum_data_get_data_start(data);
-    time_t end_time = rd_sum_data_get_sim_end(data);
-
-    for (int time_index = 0; time_index < time_t_vector_size(time_points);
-         time_index++) {
-        time_t sim_time = time_t_vector_iget(time_points, time_index);
-        if (sim_time < start_time) {
-            for (int key_index = 0; key_index < num_keywords; key_index++) {
-                int param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                int data_index =
-                    key_index * key_stride + time_index * time_stride;
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                if (is_rate)
-                    output_data[data_index] = 0;
-                else
-                    output_data[data_index] =
-                        rd_sum_data_iget_first_value(data, param_index);
-            }
-        } else if (sim_time > end_time) {
-            for (int key_index = 0; key_index < num_keywords; key_index++) {
-                int param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                int data_index =
-                    key_index * key_stride + time_index * time_stride;
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                if (is_rate)
-                    output_data[data_index] = 0;
-                else
-                    output_data[data_index] =
-                        rd_sum_data_iget_last_value(data, param_index);
-            }
-        } else {
-            double weight1, weight2;
-            int time_index1, time_index2;
-
-            rd_sum_data_init_interp_from_sim_time(
-                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
-
-            for (int key_index = 0; key_index < num_keywords; key_index++) {
-                int param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                int data_index =
-                    key_index * key_stride + time_index * time_stride;
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                double value = rd_sum_data_vector_iget(
-                    data, sim_time, param_index, is_rate, time_index1,
-                    time_index2, weight1, weight2);
-                output_data[data_index] = value;
-            }
-        }
-    }
-}
-
-/**
-   This function will return the total number of ministeps in the
-   current rd_sum_data instance; but observe that actual series of
-   ministeps can have non-zero offset and also "holes" in the series.
-*/
-
-int rd_sum_data_get_length(const rd_sum_data_type *data) {
-    return data->index.length();
-}
-
-double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
-                                   int param_index) {
-    return rd_sum_data_iget(data, rd_sum_data_get_length(data) - 1,
-                            param_index);
-}
-
-double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
-                                    int param_index) {
-    return rd_sum_data_iget(data, 0, param_index);
-}
-
-#define RD_SUM_ID 89067
-
-struct rd_sum_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    rd_smspec_ptr smspec{
-        nullptr,
-        &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
-    rd_sum_data_ptr data{nullptr, &rd_sum_data_free};
-    rd_sum_ptr restart_case{nullptr, &rd_sum_free};
-
-    bool fmt_case;
-    bool unified;
-    std::string key_join_string;
-    std::string path;     /* Path as given for the case input */
-    std::string abs_path; /* Absolute path. */
-    std::string base;     /* Only the basename. */
-    std::string
-        rd_case; /* This is the current case, with optional path component. == path + base*/
-    std::string
-        ext; /* Only to support selective loading of formatted|unformatted and unified|multiple. */
-};
-
-UTIL_SAFE_CAST_FUNCTION(rd_sum, RD_SUM_ID);
-UTIL_IS_INSTANCE_FUNCTION(rd_sum, RD_SUM_ID);
 
 /**
    Reads the data from summary files, can either be a list of
@@ -3692,7 +3239,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
 
     fs::path restart_path =
         rd::filename(fs::path(restart_header), RD_SUMMARY_HEADER_FILE,
-                     rd_smspec_get_formatted(rd_sum->smspec.get()), -1);
+                     rd_sum->smspec->formatted, -1);
     rd_sum_ptr restart_case =
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
@@ -3700,6 +3247,14 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
         rd_sum_data_add_case(rd_sum->data.get(),
                              rd_sum->restart_case->data.get());
     }
+}
+
+static rd_smspec_ptr read_smspec(const std::string &header_file,
+                                 const std::string &key_join_string,
+                                 bool include_restart) {
+    return {
+        rd_smspec_fread_alloc(header_file, key_join_string, include_restart),
+        &rd_smspec_free};
 }
 
 static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
@@ -4001,7 +3556,7 @@ rd_sum_type *rd_sum_fread_alloc(const char *header_file,
 const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
                                       const char *wgname, int num,
                                       const char *unit, float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
+    if (rd_sum->data.get()->index.length() > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -4015,7 +3570,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
                                             const char *unit, const char *lgr,
                                             int lgr_i, int lgr_j, int lgr_k,
                                             float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
+    if (rd_sum->data.get()->index.length() > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -4044,9 +3599,12 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
 
 rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
                                     double sim_seconds) {
-    rd_sum_tstep_type *new_tstep =
-        rd_sum_data_add_new_tstep(rd_sum->data.get(), report_step, sim_seconds);
-    return new_tstep;
+    auto data = rd_sum->data.get();
+    const auto &file_data = data->data_files.back();
+    rd_sum_tstep_type *tstep =
+        file_data->add_new_tstep(report_step, sim_seconds);
+    rd_sum_data_build_index(data);
+    return tstep;
 }
 
 rd_sum_ptr make_summary_writer(std::string rd_case, bool fmt_output,
@@ -4138,8 +3696,9 @@ const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
 
 int rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
                                         const char *lookup_kw) {
-    return rd_smspec_get_general_var_params_index(rd_sum->smspec.get(),
-                                                  lookup_kw);
+    const auto node_ptr =
+        rd_smspec_get_var_node(rd_sum->smspec->gen_var_index, lookup_kw);
+    return node_valid_index(node_ptr);
 }
 
 bool rd_sum_has_general_var(const rd_sum_type *rd_sum, const char *lookup_kw) {
@@ -4156,18 +3715,67 @@ double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
     return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
 }
 
+/**
+  If the keylist contains invalid indices the corresponding element in the
+  results vector will *not* be updated; i.e. it is smart to initialize the
+  results vector with an invalid-value marker before calling this function:
+
+  double_vector_type * results = double_vector_alloc( rd_sum_vector_get_size(keys), NAN);
+  rd_sum_get_interp_vector( data, sim_time, keys, results);
+*/
 void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
-                              const rd_sum_vector_type *key_words,
-                              double_vector_type *data) {
-    rd_sum_data_get_interp_vector(rd_sum->data.get(), sim_time, key_words,
-                                  data);
+                              const rd_sum_vector_type *keylist,
+                              double_vector_type *results) {
+    auto data = rd_sum->data.get();
+    int num_keywords = rd_sum_vector_get_size(keylist);
+    double weight1, weight2;
+    int time_index1, time_index2;
+
+    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
+                                          &time_index2, &weight1, &weight2);
+    double_vector_reset(results);
+    for (int i = 0; i < num_keywords; i++) {
+        if (rd_sum_vector_iget_valid(keylist, i)) {
+            int params_index = rd_sum_vector_iget_param_index(keylist, i);
+            bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
+            double value = rd_sum_data_vector_iget(
+                data, sim_time, params_index, is_rate, time_index1, time_index2,
+                weight1, weight2);
+            double_vector_iset(results, i, value);
+        }
+    }
 }
 
 void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
                                    const rd_sum_vector_type *key_words,
                                    FILE *fp) {
-    rd_sum_data_fwrite_interp_csv_line(rd_sum->data.get(), sim_time, key_words,
-                                       fp);
+    auto data = rd_sum->data.get();
+    int num_keywords = rd_sum_vector_get_size(key_words);
+    double weight1, weight2;
+    int time_index1, time_index2;
+
+    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
+                                          &time_index2, &weight1, &weight2);
+
+    for (int i = 0; i < num_keywords; i++) {
+        if (rd_sum_vector_iget_valid(key_words, i)) {
+            int params_index = rd_sum_vector_iget_param_index(key_words, i);
+            bool is_rate = rd_sum_vector_iget_is_rate(key_words, i);
+            double value = rd_sum_data_vector_iget(
+                data, sim_time, params_index, is_rate, time_index1, time_index2,
+                weight1, weight2);
+
+            if (i == 0)
+                fprintf(fp, "%f", value);
+            else
+                fprintf(fp, ",%f", value);
+        } else {
+            if (i == 0)
+                fputs("", fp);
+            else
+                fputs(",", fp);
+        }
+    }
 }
 
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
@@ -4175,11 +3783,12 @@ double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, var);
     return rd_sum_get_from_sim_time(rd_sum, sim_time, node);
 }
-
 double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
                                             double sim_days, const char *var) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, var);
-    return rd_sum_data_get_from_sim_days(rd_sum->data.get(), sim_days, *node);
+    time_t sim_time = rd_sum->data->smspec->sim_start_time;
+    util_inplace_forward_days_utc(&sim_time, sim_days);
+    return rd_sum_data_get_from_sim_time(rd_sum->data.get(), sim_time, *node);
 }
 
 rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
@@ -4203,7 +3812,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
     if (!time_t_vector_is_sorted(times, false))
         return {nullptr, &rd_sum_free};
 
-    const int *grid_dims = rd_smspec_get_grid_dims(rd_sum->smspec.get());
+    const int *grid_dims = rd_sum->smspec->grid_dims;
 
     bool time_in_days = false;
     const rd::smspec_node &node =
@@ -4306,17 +3915,50 @@ int rd_sum_get_first_report_step(const rd_sum_type *rd_sum) {
     return rd_sum_data_get_first_report_step(rd_sum->data.get());
 }
 
+/**
+   Returns the last index included in report step @report_step.
+   Observe that if the dataset does not include @report_step at all,
+   the function will return INVALID_MINISTEP_NR; this must be checked for in the
+   calling scope.
+*/
+static int rd_sum_data_iget_report_end(const rd_sum_data_type *data,
+                                       int report_step) {
+    const auto &index_node = data->index.lookup_report(report_step);
+    const auto &file_data = data->data_files[index_node.data_index];
+    auto range = file_data->report_range(report_step);
+    return range.second;
+}
+
 int rd_sum_iget_report_end(const rd_sum_type *rd_sum, int report_step) {
     return rd_sum_data_iget_report_end(rd_sum->data.get(), report_step);
 }
 
 int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index) {
-    return rd_sum_data_iget_report_step(rd_sum->data.get(), internal_index);
+    auto data = rd_sum->data.get();
+    const auto &index_node = data->index.lookup(internal_index);
+    const auto &file_data = data->data_files[index_node.data_index];
+    return file_data->iget_report(internal_index - index_node.offset);
 }
 
 time_t_vector_type *rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only) {
-    return rd_sum_data_alloc_time_vector(rd_sum->data.get(), report_only);
+    auto data = rd_sum->data.get();
+    std::vector<time_t> output_data;
+    if (report_only)
+        output_data.resize(1 + rd_sum_data_get_last_report_step(data) -
+                           rd_sum_data_get_first_report_step(data));
+    else
+        output_data.resize(data->index.length());
+
+    rd_sum_data_init_time_vector__(data, output_data.data(), report_only);
+    time_t_vector_type *time_vector =
+        time_t_vector_alloc(output_data.size(), 0);
+    {
+        time_t *tmp_data = time_t_vector_get_ptr(time_vector);
+        memcpy(tmp_data, output_data.data(),
+               output_data.size() * sizeof(time_t));
+    }
+    return time_vector;
 }
 
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
@@ -4328,25 +3970,131 @@ void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       const char *gen_key,
                                       const time_t_vector_type *time_points,
-                                      double *data) {
-    const rd::smspec_node &node =
+                                      double *output_data) {
+    const rd::smspec_node &smspec_node =
         rd_smspec_get_general_var_node(rd_sum->smspec.get(), gen_key);
-    rd_sum_data_init_double_vector_interp(rd_sum->data.get(), node, time_points,
-                                          data);
+    auto data = rd_sum->data.get();
+    bool is_rate = smspec_node_is_rate(&smspec_node);
+    int params_index = smspec_node_get_params_index(&smspec_node);
+    time_t start_time = rd_sum_data_get_data_start(data);
+    time_t end_time = rd_sum_data_get_sim_end(data);
+    double start_value = 0;
+    double end_value = 0;
+
+    if (!is_rate) {
+        start_value = rd_sum_data_iget_first_value(data, params_index);
+        end_value = rd_sum_data_iget_last_value(data, params_index);
+    }
+
+    for (int time_index = 0; time_index < time_t_vector_size(time_points);
+         time_index++) {
+        time_t sim_time = time_t_vector_iget(time_points, time_index);
+        double value;
+        if (sim_time < start_time)
+            value = start_value;
+
+        else if (sim_time > end_time)
+            value = end_value;
+
+        else {
+            int time_index1, time_index2;
+            double weight1, weight2;
+            rd_sum_data_init_interp_from_sim_time(
+                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
+            value = rd_sum_data_vector_iget(data, sim_time, params_index,
+                                            is_rate, time_index1, time_index2,
+                                            weight1, weight2);
+        }
+
+        output_data[time_index] = value;
+    }
 }
 
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const time_t_vector_type *time_points,
-                                     double *data) {
-    rd_sum_data_init_double_frame_interp(rd_sum->data.get(), keywords,
-                                         time_points, data);
+                                     double *output_data) {
+    auto data = rd_sum->data.get();
+    int num_keywords = rd_sum_vector_get_size(keywords);
+    int time_stride = num_keywords;
+    int key_stride = 1;
+    time_t start_time = rd_sum_data_get_data_start(data);
+    time_t end_time = rd_sum_data_get_sim_end(data);
+
+    for (int time_index = 0; time_index < time_t_vector_size(time_points);
+         time_index++) {
+        time_t sim_time = time_t_vector_iget(time_points, time_index);
+        if (sim_time < start_time) {
+            for (int key_index = 0; key_index < num_keywords; key_index++) {
+                int param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                int data_index =
+                    key_index * key_stride + time_index * time_stride;
+                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
+                if (is_rate)
+                    output_data[data_index] = 0;
+                else
+                    output_data[data_index] =
+                        rd_sum_data_iget_first_value(data, param_index);
+            }
+        } else if (sim_time > end_time) {
+            for (int key_index = 0; key_index < num_keywords; key_index++) {
+                int param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                int data_index =
+                    key_index * key_stride + time_index * time_stride;
+                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
+                if (is_rate)
+                    output_data[data_index] = 0;
+                else
+                    output_data[data_index] =
+                        rd_sum_data_iget_last_value(data, param_index);
+            }
+        } else {
+            double weight1, weight2;
+            int time_index1, time_index2;
+
+            rd_sum_data_init_interp_from_sim_time(
+                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
+
+            for (int key_index = 0; key_index < num_keywords; key_index++) {
+                int param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                int data_index =
+                    key_index * key_stride + time_index * time_stride;
+                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
+                double value = rd_sum_data_vector_iget(
+                    data, sim_time, param_index, is_rate, time_index1,
+                    time_index2, weight1, weight2);
+                output_data[data_index] = value;
+            }
+        }
+    }
 }
 
 double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              int data_index, bool report_only) {
-    return rd_sum_data_alloc_data_vector(rd_sum->data.get(), data_index,
-                                         report_only);
+    auto data = rd_sum->data.get();
+    std::vector<double> output_data;
+    if (report_only)
+        output_data.resize(1 + rd_sum_data_get_last_report_step(data) -
+                           rd_sum_data_get_first_report_step(data));
+    else
+        output_data.resize(data->index.length());
+
+    if (data_index >= data->smspec->params_size)
+        throw std::out_of_range("Out of range");
+
+    rd_sum_data_init_double_vector(data, data_index, output_data.data(),
+                                   report_only);
+    double_vector_type *data_vector =
+        double_vector_alloc(output_data.size(), 0);
+    {
+        double *tmp_data = double_vector_get_ptr(data_vector);
+        memcpy(tmp_data, output_data.data(),
+               output_data.size() * sizeof(double));
+    }
+    return data_vector;
 }
 
 /**
@@ -4363,7 +4111,7 @@ double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
 
 static int rd_sum_get_limiting(const rd_sum_type *rd_sum, int smspec_index,
                                double limit, bool gt) {
-    const int length = rd_sum_data_get_length(rd_sum->data.get());
+    const int length = rd_sum->data->index.length();
     int internal_index = 0;
     do {
         double value =
@@ -4395,7 +4143,20 @@ int rd_sum_get_first_lt(const rd_sum_type *rd_sum, int param_index,
 }
 
 time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, int report_step) {
-    return rd_sum_data_get_report_time(rd_sum->data.get(), report_step);
+    auto data = rd_sum->data.get();
+    if (report_step == 0)
+        return data->smspec->sim_start_time;
+    else {
+        int internal_index = rd_sum_data_iget_report_end(data, report_step);
+        if (internal_index == -1)
+            throw std::out_of_range(
+                "Tried to look up step nr: " + std::to_string(report_step) +
+                " from the restart file in summary file, but it does not "
+                "exist. \n" +
+                "The step entries in summary file must cover all entries "
+                "in the restart file.");
+        return rd_sum_data_iget_sim_time(data, internal_index);
+    }
 }
 
 time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, int index) {
@@ -4407,19 +4168,22 @@ time_t rd_sum_get_data_start(const rd_sum_type *rd_sum) {
 }
 
 time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
-    return rd_smspec_get_start_time(rd_sum->smspec.get());
+    return rd_sum->smspec->sim_start_time;
 }
 
 time_t rd_sum_get_end_time(const rd_sum_type *rd_sum) {
     try {
         return rd_sum_data_get_sim_end(rd_sum->data.get());
     } catch (std::out_of_range const &) {
-        return rd_smspec_get_start_time(rd_sum->smspec.get());
+        return rd_sum->smspec->sim_start_time;
     }
 }
 
 double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
-    return rd_sum_data_iget_sim_days(rd_sum->data.get(), index);
+    auto data = rd_sum->data.get();
+    const auto index_node = data->index.lookup(index);
+    const auto data_file = data->data_files[index_node.data_index];
+    return data_file->iget_sim_days(index - index_node.offset);
 }
 
 /*#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
@@ -4519,7 +4283,7 @@ const rd_sum_type *rd_sum_get_restart_case(const rd_sum_type *rd_sum) {
 }
 
 int rd_sum_get_restart_step(const rd_sum_type *rd_sum) {
-    return rd_smspec_get_restart_step(rd_sum->smspec.get());
+    return rd_sum->smspec->restart_step;
 }
 
 const char *rd_sum_get_case(const rd_sum_type *rd_sum) {
@@ -4547,8 +4311,10 @@ const char *rd_sum_get_base(const rd_sum_type *rd_sum) {
 stringlist_type *
 rd_sum_alloc_matching_general_var_list(const rd_sum_type *rd_sum,
                                        const char *pattern) {
-    return rd_smspec_alloc_matching_general_var_list(rd_sum->smspec.get(),
-                                                     pattern);
+    stringlist_type *keys = stringlist_alloc_new();
+    rd_smspec_select_matching_general_var_list(rd_sum->smspec.get(), pattern,
+                                               keys);
+    return keys;
 }
 
 void rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
@@ -4560,12 +4326,12 @@ void rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
 
 stringlist_type *rd_sum_alloc_well_list(const rd_sum_type *rd_sum,
                                         const char *pattern) {
-    return rd_smspec_alloc_well_list(rd_sum->smspec.get(), pattern);
+    return rd_smspec_alloc_map_list(rd_sum->smspec->well_var_index, pattern);
 }
 
 stringlist_type *rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
                                          const char *pattern) {
-    return rd_smspec_alloc_group_list(rd_sum->smspec.get(), pattern);
+    return rd_smspec_alloc_map_list(rd_sum->smspec->group_var_index, pattern);
 }
 
 double rd_sum_get_first_day(const rd_sum_type *rd_sum) {
@@ -4580,7 +4346,7 @@ double rd_sum_get_sim_length(const rd_sum_type *rd_sum) {
    Will return the number of data blocks.
 */
 int rd_sum_get_data_length(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_length(rd_sum->data.get());
+    return rd_sum->data->index.length();
 }
 
 bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time) {
@@ -4588,7 +4354,9 @@ bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time) {
 }
 
 bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days) {
-    return rd_sum_data_check_sim_days(sum->data.get(), sim_days);
+    auto data = sum->data.get();
+    return sim_days >= rd_sum_data_get_first_day(data) &&
+           sim_days <= rd_sum_data_get_sim_length(data);
 }
 
 int rd_sum_get_report_step_from_time(const rd_sum_type *sum, time_t sim_time) {
@@ -4596,7 +4364,18 @@ int rd_sum_get_report_step_from_time(const rd_sum_type *sum, time_t sim_time) {
 }
 
 int rd_sum_get_report_step_from_days(const rd_sum_type *sum, double sim_days) {
-    return rd_sum_data_get_report_step_from_days(sum->data.get(), sim_days);
+    auto data = sum->data.get();
+    if ((sim_days < rd_sum_data_get_first_day(data)) ||
+        (sim_days > rd_sum_data_get_sim_length(data)))
+        return -1;
+    else {
+        auto files = data->index.lookup_days(sim_days);
+        if (files.first != files.second)
+            return -1;
+
+        const auto &data_file = data->data_files[files.first->data_index];
+        return data_file->report_step_from_days(sim_days);
+    }
 }
 
 rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum) {
@@ -4613,8 +4392,40 @@ static double_vector_type *
 rd_sum_alloc_seconds_solution(const rd_sum_type *rd_sum, const char *gen_key,
                               double cmp_value, bool rates_clamp_lower) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_alloc_seconds_solution(rd_sum->data.get(), *node,
-                                              cmp_value, rates_clamp_lower);
+    auto data = rd_sum->data.get();
+    double_vector_type *solution = double_vector_alloc(0, 0);
+    const int param_index = smspec_node_get_params_index(node);
+    const int size = data->index.length();
+
+    if (size <= 1)
+        return solution;
+
+    for (int index = 0; index < size; ++index) {
+        int prev_index = util_int_max(0, index - 1);
+        double value = rd_sum_data_iget(data, index, param_index);
+        double prev_value = rd_sum_data_iget(data, prev_index, param_index);
+
+        // cmp_value in interval value (closed) and prev_value (open)
+        bool contained = (value == cmp_value);
+        contained |= (util_double_min(prev_value, value) < cmp_value) &&
+                     (cmp_value < util_double_max(prev_value, value));
+
+        if (!contained)
+            continue;
+
+        double prev_time = rd_sum_data_iget_sim_seconds(data, prev_index);
+        double time = rd_sum_data_iget_sim_seconds(data, index);
+
+        if (smspec_node_is_rate(node)) {
+            double_vector_append(solution,
+                                 rates_clamp_lower ? prev_time + 1 : time);
+        } else {
+            double slope = (value - prev_value) / (time - prev_time);
+            double seconds = (cmp_value - prev_value) / slope + prev_time;
+            double_vector_append(solution, seconds);
+        }
+    }
+    return solution;
 }
 
 double_vector_type *rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
@@ -4649,7 +4460,7 @@ time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
 }
 
 ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
-    return rd_smspec_get_unit_system(rd_sum->smspec.get());
+    return rd_sum->smspec->unit_system;
 }
 
 double rd_sum_get_last_value_gen_key(const rd_sum_type *rd_sum,

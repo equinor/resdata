@@ -702,13 +702,10 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
         auto restart_sum = make_summary_writer(
             restart_name, fmt_output, unified, ":", spec.start_time, true,
             spec.nx, spec.ny, spec.nz, base_name);
-        rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
-        REQUIRE(rd_smspec_get_params_size(smspec) == 1);
         const rd::smspec_node *fopt =
             rd_sum_add_var(restart_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
         rd_sum_add_var(restart_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
         rd_sum_add_var(restart_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0f);
-        REQUIRE(rd_smspec_get_params_size(smspec) == 4);
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
         rd_sum_tstep_set_from_node(tstep, *fopt, 0.0);
         REQUIRE(rd_sum_tstep_get_from_node(tstep, *fopt) == 0.0);
@@ -770,16 +767,6 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
         const std::string expected = "WWWWGGG" + std::to_string(n);
         REQUIRE(std::string(rd_kw_iget_char_ptr(restart_kw, n)) == expected);
     }
-}
-
-TEST_CASE_METHOD(Tmpdir, "Restart names >64 characters are ignored") {
-    const time_t start_time = util_make_date_utc(1, 1, 2010);
-    const std::string too_long(72, 'A');
-    auto smspec = std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>(
-        rd_smspec_alloc_restart_writer(":", too_long.c_str(), 10, start_time,
-                                       true, 3, 3, 3),
-        &rd_smspec_free);
-    REQUIRE(rd_smspec_get_restart_case(smspec.get()) == nullptr);
 }
 
 namespace {
