@@ -40,7 +40,7 @@ jobs:
         cache: 'pip'
 
     - name: Install Conan
-      uses: conan-io/setup-conan@2f4bd34e8e0af00e1a77a66e1d284e06d71d703f # v1.3.0
+      uses: conan-io/setup-conan@ed3942a6883243f4af84e13e49c972f9440fa1c2 # v1.4.0
       with:
         cache_packages: true
 
