@@ -3,6 +3,7 @@ import os
 from random import randint
 
 import cwrap
+import pytest
 from resdata import ResDataType
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
@@ -66,6 +67,10 @@ class FortIOTest(ResdataTest):
             with openFortIO("file", mode=FortIO.READ_AND_WRITE_MODE) as f:
                 f.seek(pos1)
                 f.truncate()
+
+            with openFortIO("file", mode=FortIO.READ_MODE) as f:
+                with pytest.raises(ValueError, match="invalid whence"):
+                    f.seek(pos1, whence=2000)
 
             f = ResdataFile("file")
             self.assertEqual(len(f), 1)

@@ -1,3 +1,8 @@
+#include <ios>
+#include <stdexcept>
+#include <string>
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <cstdlib>
 #include <cstdio>
@@ -437,11 +442,11 @@ bool fortio_data_fskip(fortio_type *fortio, const int element_size,
 void fortio_data_fseek(fortio_type *fortio, offset_type data_offset,
                        size_t data_element, const int element_size,
                        const int element_count, const int block_size) {
-    if (element_count < 0 ||
-        data_element >= static_cast<size_t>(element_count)) {
-        util_abort("%s: Element index is out of range: 0 <= %zu < %d \n",
-                   __func__, data_element, element_count);
-    }
+    if (element_count < 0 || data_element >= static_cast<size_t>(element_count))
+        throw std::invalid_argument(
+            fmt::format("Element index is out of range: 0 <= {} < {}",
+                        data_element, element_count));
+
     {
         offset_type block_index = data_element / block_size;
         offset_type headers = (block_index + 1) * 4;
@@ -581,7 +586,8 @@ bool fortio_fseek(fortio_type *fortio, offset_type offset, int whence) {
             new_offset = offset;
             break;
         default:
-            util_abort("%s: invalid seek flag \n", __func__);
+            throw std::invalid_argument(
+                fmt::format("invalid whence in fortio_fseek: {}", whence));
         }
 
         if (new_offset <= fortio->read_size)
