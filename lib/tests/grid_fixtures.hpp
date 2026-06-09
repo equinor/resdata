@@ -5,7 +5,9 @@
  */
 
 #include <array>
+#include <fstream>
 #include <filesystem>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,6 +18,7 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_type.hpp>
 
 namespace fs = std::filesystem;
 

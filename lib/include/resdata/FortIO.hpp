@@ -1,15 +1,12 @@
 #pragma once
 
-#include <fstream>
+#include <ios>
 #include <string>
-#include <memory>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
-#include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <ert/util/ert_unique_ptr.hpp>
 
