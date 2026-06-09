@@ -252,6 +252,7 @@ add_executable(
   tests/test_rd_grid_bounds_checking.cpp
   tests/test_rd_sum.cpp
   tests/test_rd_util.cpp
+  tests/test_fortio.cpp
   tests/test_geometry.cpp
   tests/testsuite.cpp
   tests/test_util.cpp

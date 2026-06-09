@@ -502,7 +502,7 @@ bool fortio_fread_buffer(fortio_type *fortio, char *buffer, int buffer_size) {
         return false;
     char *end = buffer + buffer_size;
     char *itr = buffer;
-    while (itr < end) {
+    do {
         int record_size = fortio_init_read(fortio);
         if (record_size < 0)
             return false;
@@ -515,7 +515,7 @@ bool fortio_fread_buffer(fortio_type *fortio, char *buffer, int buffer_size) {
             !fortio_complete_read(fortio, record_size))
             return false;
         itr += record_size;
-    }
+    } while (itr < end);
     return itr == end;
 }
 
