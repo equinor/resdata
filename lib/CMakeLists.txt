@@ -166,6 +166,7 @@ add_executable(
   rd_test_suite
   tests/test_rd_grid.cpp
   tests/test_rd_util.cpp
+  tests/test_fortio.cpp
   tests/test_geometry.cpp
   tests/testsuite.cpp
   tests/test_util.cpp
