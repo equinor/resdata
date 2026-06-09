@@ -624,7 +624,6 @@ void fortio_fwrite_error(fortio_type *fortio) {
 
 void fortio_fflush(fortio_type *fortio) { fflush(fortio->stream); }
 FILE *fortio_get_FILE(const fortio_type *fortio) { return fortio->stream; }
-//bool          fortio_endian_flip(const fortio_type *fortio)   { return fortio->endian_flip_header; }
 bool fortio_fmt_file(const fortio_type *fortio) { return fortio->fmt_file; }
 void fortio_rewind(const fortio_type *fortio) { util_rewind(fortio->stream); }
 const char *fortio_filename_ref(const fortio_type *fortio) {
