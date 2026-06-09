@@ -704,3 +704,116 @@ def test_read_grdecl_empty_body_returns_zero_len_kw(tmp_path):
     assert len(kw) == 0
     assert len(kw.numpy_view()) == 0
     assert repr(kw).startswith('ResdataKW(size=0, name="PORO", min=nan, max=nan)')
+
+
+def read_kw_from_bytes(tmp_path, kw_bytes: bytes) -> ResdataKW:
+    filepath = tmp_path / "test.bin"
+    filepath.write_bytes(kw_bytes)
+    # Avoid using the openFortIO context manager to get around
+    # https://github.com/equinor/resdata/issues/1186
+    fortio = None
+    try:
+        fortio = FortIO(str(filepath), fmt_file=False, endian_flip_header=True)
+        kw = ResdataKW.fread(fortio)
+    finally:
+        if fortio is not None:
+            fortio.close()
+    return kw
+
+
+def test_that_single_element_keyword_can_be_read(tmp_path):
+    kw = read_kw_from_bytes(
+        tmp_path,
+        b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
+        b"\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00\x04",
+    )
+    assert len(kw) == 1
+    assert kw.name == "KEYWORD1"
+    assert kw[0] == 1
+
+
+def test_that_zero_sized_keywords_can_be_read(tmp_path):
+    kw = read_kw_from_bytes(
+        tmp_path, b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x00INTE\x00\x00\x00\x10"
+    )
+    assert len(kw) == 0
+    assert kw.name == "KEYWORD1"
+
+
+def test_that_short_data_section_raises_value_error(tmp_path):
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        _ = read_kw_from_bytes(
+            tmp_path, b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
+        )
+
+
+def test_that_oversized_record_size_raises_value_error(tmp_path):
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        _ = read_kw_from_bytes(
+            tmp_path,
+            b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
+            b"\x00\x00\x00\x0f" + b"\x00" * 1000,
+        )
+
+
+def test_that_negative_record_size_raises_value_error(tmp_path):
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        _ = read_kw_from_bytes(
+            tmp_path,
+            b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10\xf0\x00\x00\x00",
+        )
+
+
+def test_that_mismatch_in_end_record_raises_value_error(tmp_path):
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        _ = read_kw_from_bytes(
+            tmp_path,
+            b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
+            b"\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x05",
+        )
+
+
+def test_that_unformatted_rd_files_are_read_in_blocks(tmp_path):
+    kw = read_kw_from_bytes(
+        tmp_path,
+        b"\x00\x00\x00\x10KEYWORD1"
+        + (2300).to_bytes(4, byteorder="big")
+        + b"INTE\x00\x00\x00\x10"
+        + (
+            (4000).to_bytes(4, byteorder="big")
+            + b"\x00\x00\x00\x01" * 1000
+            + (4000).to_bytes(4, byteorder="big")
+        )
+        * 2
+        + (
+            (4 * 300).to_bytes(4, byteorder="big")
+            + b"\x00\x00\x00\x01" * 300
+            + (4 * 300).to_bytes(4, byteorder="big")
+        ),
+    )
+    assert len(kw) == 2300
+    assert kw.name == "KEYWORD1"
+
+
+def test_that_non_zero_kw_can_be_read_after_zero_kw(tmp_path):
+    filepath = tmp_path / "test.bin"
+    filepath.write_bytes(
+        b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x00INTE\x00\x00\x00\x10"
+        b"\x00\x00\x00\x10KEYWORD2\x00\x00\x00\x01INTE\x00\x00\x00\x10"
+        b"\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00\x04",
+    )
+    # Avoid using the openFortIO context manager to get around
+    # https://github.com/equinor/resdata/issues/1186
+    fortio = None
+    try:
+        fortio = FortIO(str(filepath), fmt_file=False, endian_flip_header=True)
+        kw1 = ResdataKW.fread(fortio)
+        kw2 = ResdataKW.fread(fortio)
+    finally:
+        if fortio is not None:
+            fortio.close()
+
+    assert kw1.name == "KEYWORD1"
+    assert len(kw1) == 0
+    assert kw2.name == "KEYWORD2"
+    assert len(kw2) == 1
