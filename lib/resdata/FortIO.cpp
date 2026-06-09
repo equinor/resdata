@@ -113,9 +113,6 @@ struct fortio_struct {
     char opts[3];
 };
 
-UTIL_IS_INSTANCE_FUNCTION(fortio, FORTIO_ID);
-UTIL_SAFE_CAST_FUNCTION(fortio, FORTIO_ID);
-
 static fortio_type *fortio_alloc__(const char *filename, bool fmt_file,
                                    bool endian_flip_header, bool stream_owner,
                                    bool writable) {
