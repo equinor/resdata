@@ -62,7 +62,7 @@ bool FortIO::ftruncate(offset_type new_size) {
 /**
 The fortio struct is implemented to handle fortran io. The problem is
 that when a Fortran program writes unformatted data to file in a
-statemente like:
+statement like:
 
    integer array(100)
    write(unit) array
@@ -107,7 +107,7 @@ struct fortio_struct {
 
     Observe that the semantics of the fortio_fseek() function depends
     on whether the file is writable.
-  */
+    */
     bool writable;
     offset_type read_size;
     char opts[3];
@@ -135,9 +135,8 @@ static fortio_type *fortio_alloc__(const char *filename, bool fmt_file,
 /**
    Helper function for fortio_is_fortran_stream__().
 */
-
 static bool __read_int(FILE *stream, int *value, bool endian_flip) {
-    /* This fread() can legitemately fail - can not use util_fread() here. */
+    /* This fread() can fail - can not use util_fread() here. */
     if (fread(value, sizeof *value, 1, stream) == 1) {
         if (endian_flip)
             util_endian_flip_vector(value, sizeof *value, 1);
@@ -147,11 +146,10 @@ static bool __read_int(FILE *stream, int *value, bool endian_flip) {
 }
 
 /**
-   Helper function for fortio_is_fortran_file(). Checks whether a
+   Helper function for fortio_looks_like_fortran_file(). Checks whether a
    particular stream is formatted according to fortran io, for a fixed
-   endian ness.
+   endianness.
 */
-
 static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
     const bool strict_checking =
         true; /* True: requires that *ALL* records in the file are fortran formatted */
@@ -167,22 +165,19 @@ static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
                 if (util_fseek(stream, (offset_type)header, SEEK_CUR) == 0) {
                     if (__read_int(stream, &tail, endian_flip)) {
                         cont = true;
-                        /*
-               OK - now we have read a header and a tail - it might be
-               a fortran file.
-            */
+                        // Read a header and a tail so it might be a fortran file.
                         if (header == tail) {
                             if (header != 0) {
-                                /* This is (most probably) a fortran file */
+                                // This is (most probably) a fortran file
                                 is_fortran_stream = true;
                                 if (strict_checking)
                                     cont = true;
                                 else
                                     cont = false;
                             }
-                            /* Header == tail == 0 - we don't make any inference on this. */
+                            // Header == tail == 0 - we don't make any inference on this.
                         } else {
-                            /* Header != tail => this is *not* a fortran file */
+                            // Header != tail => this is *not* a fortran file
                             cont = false;
                             is_fortran_stream = false;
                         }
@@ -208,11 +203,10 @@ static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
    Now, when this is done we do the following test:
 
    If header == tail. This is (probably) a fortran file, however if
-   header == 0, we might have a normal file with two consequitive
+   header == 0, we might have a normal file with two consecutive
    zeroes. In that case it is difficult to determine, and we continue.
 
 */
-
 bool fortio_looks_like_fortran_file(const char *filename, bool endian_flip) {
     FILE *stream = util_fopen(filename, "rb");
     bool is_fortran_stream = fortio_is_fortran_stream__(stream, endian_flip);
@@ -237,7 +231,7 @@ fortio_type *fortio_alloc_FILE_wrapper(const char *filename,
 
 /*
   Observe that the stream open functions accept a failure, and call
-  the fopen() function driectly.
+  the fopen() function directly.
 */
 
 static const char *fortio_fopen_read_mode(bool fmt_file) {
@@ -418,7 +412,6 @@ void fortio_fclose(fortio_type *fortio) {
   also returns it. If the function fails to read a header (i.e. EOF)
   it will return -1.
 */
-
 int fortio_init_read(fortio_type *fortio) {
     int elm_read;
     int record_size;
@@ -495,7 +488,6 @@ bool fortio_complete_read(fortio_type *fortio, int record_size) {
    fortio stream. The point of this is to handle the ECLIPSE system with blocks
    of e.g. 1000 floats (which then become one fortran record).
 */
-
 bool fortio_fread_buffer(fortio_type *fortio, char *buffer, int buffer_size) {
     if (buffer == nullptr && buffer_size != 0)
         return false;
@@ -564,8 +556,8 @@ static bool fortio_fseek__(fortio_type *fortio, offset_type offset,
         return false;
 }
 
-/*
-  The semantics of this function depends on the readbale flag of the
+/**
+  The semantics of this function depends on the readable flag of the
   fortio structure:
 
     writable == true: Ordinary fseek() semantics which can potentially
@@ -575,7 +567,6 @@ static bool fortio_fseek__(fortio_type *fortio, offset_type offset,
        the file, and fail if you try to seek beyond the EOF marker.
 
 */
-
 bool fortio_fseek(fortio_type *fortio, offset_type offset, int whence) {
     if (fortio->writable)
         return fortio_fseek__(fortio, offset, whence);
@@ -608,12 +599,11 @@ bool fortio_ftruncate(fortio_type *fortio, offset_type size) {
     return util_ftruncate(fortio->stream, size);
 }
 
-/*
-  It is massively undefined behaviour to call this function for a file
+/**
+  It is undefined behaviour to call this function for a file
   which has been updated; in that case the util_fd_size() function
   will return the size of the file *when it was opened*.
 */
-
 bool fortio_read_at_eof(fortio_type *fortio) {
 
     if (fortio_ftell(fortio) == fortio->read_size)
@@ -622,12 +612,11 @@ bool fortio_read_at_eof(fortio_type *fortio) {
         return false;
 }
 
-/*
+/**
   When this function is called the underlying file is unlinked, and
-  the entry will be removed from the filsystem. Subsequent calls which
+  the entry will be removed from the filesystem. Subsequent calls which
   write to this file will still (superficially) succeed.
 */
-
 void fortio_fwrite_error(fortio_type *fortio) {
     if (fortio->writable)
         util_unlink(fortio->filename);
