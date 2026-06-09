@@ -1,12 +1,14 @@
-#include <stdexcept>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cerrno>
 
-#include <ert/util/util.hpp>
-#include <resdata/FortIO.hpp>
+#include <ios>
+#include <stdexcept>
+#include <string>
+
+#include <ert/util/util_unlink.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
 #include <resdata/FortIO.hpp>
@@ -75,14 +77,7 @@ Where the "400" head and tail is the number of bytes in the following
 record. Fortran IO handles this transparently, but when mixing with
 other programming languages care must be taken. This file implements
 functionality to read and write these fortran generated files
-transparently. The three functions:
-
-  1. fortio_fopen()
-  2. fortio_fread_record()
-  3. fortio_fwrite_record()
-
-together constitute something very similar to fopen() , fread() and
-fwrite() from the standard library.
+transparently.
 */
 
 #define READ_MODE_TXT "r"
@@ -495,59 +490,33 @@ bool fortio_complete_read(fortio_type *fortio, int record_size) {
 }
 
 /**
-   This function reads one record from the fortio stream, and fills
-   the buffer with the content. The return value is the number of
-   bytes read; the function will return -1 on failure.
-*/
-
-static int fortio_fread_record(fortio_type *fortio, char *buffer) {
-    int record_size = fortio_init_read(fortio);
-    if (record_size >= 0) {
-        size_t items_read = fread(buffer, 1, record_size, fortio->stream);
-        if (items_read == record_size) {
-            bool complete_ok = fortio_complete_read(fortio, record_size);
-            if (!complete_ok)
-                record_size = -1;
-        } else
-            record_size = -1; /* Failure */
-    }
-    return record_size;
-}
-
-/**
    This function fills the buffer with 'buffer_size' bytes from the
-   fortio stream. The function works by repeated calls to
-   fortio_read_record(), until the desired number of bytes of been
-   read. The point of this is to handle the ECLIPSE system with blocks
-   of e.g. 1000 floats (which then become one fortran record), in a
-   transparent, low-level way.
+   fortio stream. The point of this is to handle the ECLIPSE system with blocks
+   of e.g. 1000 floats (which then become one fortran record).
 */
 
 bool fortio_fread_buffer(fortio_type *fortio, char *buffer, int buffer_size) {
-    int total_bytes_read = 0;
-
-    while (true) {
-        char *buffer_ptr = &buffer[total_bytes_read];
-        int bytes_read = fortio_fread_record(fortio, buffer_ptr);
-
-        if (bytes_read < 0)
-            break;
-        else {
-            total_bytes_read += bytes_read;
-            if (total_bytes_read >= buffer_size)
-                break;
-        }
-    }
-
-    if (total_bytes_read == buffer_size)
-        return true;
-
-    if (total_bytes_read < buffer_size)
+    if (buffer == nullptr && buffer_size != 0)
         return false;
-
-    util_abort("%s: internal inconsistency: buffer_size:%d  read %d bytes \n",
-               __func__, buffer_size, total_bytes_read);
-    return false;
+    if (buffer_size < 0)
+        return false;
+    char *end = buffer + buffer_size;
+    char *itr = buffer;
+    while (itr < end) {
+        int record_size = fortio_init_read(fortio);
+        if (record_size < 0)
+            return false;
+        if (end - itr < static_cast<ptrdiff_t>(record_size))
+            return false;
+        size_t items_read = 0;
+        if (record_size > 0)
+            items_read = fread(itr, 1, record_size, fortio->stream);
+        if (items_read != static_cast<size_t>(record_size) ||
+            !fortio_complete_read(fortio, record_size))
+            return false;
+        itr += record_size;
+    }
+    return itr == end;
 }
 
 int fortio_fskip_record(fortio_type *fortio) {
