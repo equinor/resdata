@@ -1,5 +1,4 @@
-#ifndef OPM_ERT_FORTIO_KW
-#define OPM_ERT_FORTIO_KW
+#pragma once
 
 #include <fstream>
 #include <string>
@@ -13,10 +12,6 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <ert/util/ert_unique_ptr.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef enum {
     FORTIO_NOENTRY = 0, /* File does not exists at all - application error. */
@@ -74,10 +69,6 @@ void fortio_fwrite_error(fortio_type *fortio);
 UTIL_IS_INSTANCE_HEADER(fortio);
 UTIL_SAFE_CAST_HEADER(fortio);
 
-#ifdef __cplusplus
-}
-#endif
-
 namespace ERT {
 class FortIO {
 public:
@@ -96,5 +87,3 @@ private:
     ert_unique_ptr<fortio_type, fortio_fclose> m_fortio;
 };
 } // namespace ERT
-
-#endif
