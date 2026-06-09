@@ -29,6 +29,21 @@ TEST_CASE_METHOD(Tmpdir, "Basic FortIO operations") {
         THEN("The stream is open") {
             REQUIRE(fortio_stream_is_open(fortio.get()));
         }
+        THEN("Seeking with unknown whence fails") {
+            if (mode == std::ios_base::in)
+                REQUIRE_THROWS_AS(fortio_fseek(fortio.get(), 0, 2000),
+                                  std::invalid_argument);
+            else
+                REQUIRE_FALSE(fortio_fseek(fortio.get(), 0, 2000));
+        }
+        THEN("Seeking data with negative count raises") {
+            REQUIRE_THROWS_AS(fortio_data_fseek(fortio.get(), 0, 1, 1, -1, 1),
+                              std::invalid_argument);
+        }
+        THEN("Seeking data beyond count raises") {
+            REQUIRE_THROWS_AS(fortio_data_fseek(fortio.get(), 0, 6, 1, 5, 1),
+                              std::invalid_argument);
+        }
     }
 }
 
