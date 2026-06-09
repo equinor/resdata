@@ -26,7 +26,7 @@ import os
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.resfile._fortio as _fortio
 from resdata.util.util import monkey_the_camel
 
 
@@ -37,29 +37,6 @@ class FortIO(BaseCClass):
     WRITE_MODE = 2
     READ_AND_WRITE_MODE = 3
     APPEND_MODE = 4
-
-    _open_reader = ResdataPrototype(
-        "void* fortio_open_reader(char*, bool, bool)", bind=False
-    )
-    _open_writer = ResdataPrototype(
-        "void* fortio_open_writer(char*, bool, bool)", bind=False
-    )
-    _open_readwrite = ResdataPrototype(
-        "void* fortio_open_readwrite(char*, bool, bool)", bind=False
-    )
-    _open_append = ResdataPrototype(
-        "void* fortio_open_append(char*, bool, bool)", bind=False
-    )
-    _guess_fortran = ResdataPrototype(
-        "bool fortio_looks_like_fortran_file(char*, bool)", bind=False
-    )
-
-    _write_record = ResdataPrototype("void fortio_fwrite_record(rd_fortio, char*, int)")
-    _get_position = ResdataPrototype("long fortio_ftell(rd_fortio)")
-    _seek = ResdataPrototype("void fortio_fseek(rd_fortio, long, int)")
-    _close = ResdataPrototype("bool fortio_fclose(rd_fortio)")
-    _truncate = ResdataPrototype("bool fortio_ftruncate(rd_fortio, long)")
-    _filename = ResdataPrototype("char* fortio_filename_ref(rd_fortio)")
 
     def __init__(
         self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True
@@ -102,13 +79,13 @@ class FortIO(BaseCClass):
         if mode in read_modes and not os.path.exists(file_name):
             raise OSError('No such file "%s".' % file_name)
         if mode == FortIO.READ_MODE:
-            c_pointer = self._open_reader(file_name, fmt_file, endian_flip_header)
+            c_pointer = _fortio._open_reader(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.WRITE_MODE:
-            c_pointer = self._open_writer(file_name, fmt_file, endian_flip_header)
+            c_pointer = _fortio._open_writer(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.READ_AND_WRITE_MODE:
-            c_pointer = self._open_readwrite(file_name, fmt_file, endian_flip_header)
+            c_pointer = _fortio._open_readwrite(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.APPEND_MODE:
-            c_pointer = self._open_append(file_name, fmt_file, endian_flip_header)
+            c_pointer = _fortio._open_append(file_name, fmt_file, endian_flip_header)
         else:
             raise UserWarning("Unknown mode: %d" % mode)
 
@@ -119,11 +96,11 @@ class FortIO(BaseCClass):
 
     def close(self):
         if self:
-            self._close()
+            _fortio._close(self)
             self._invalidateCPointer()
 
     def get_position(self) -> int:
-        return self._get_position()
+        return _fortio._get_position(self)
 
     def truncate(self, size=None):
         """Will truncate the file to new size.
@@ -134,17 +111,17 @@ class FortIO(BaseCClass):
         if size is None:
             size = self.get_position()
 
-        if not self._truncate(size):
+        if not _fortio._truncate(self, size):
             raise OSError("Truncate of fortran filehandle:%s failed" % self.filename())
 
     def filename(self):
-        return self._filename()
+        return _fortio._filename(self)
 
     def seek(self, position, whence=0):
         # SEEK_SET = 0
         # SEEK_CUR = 1
         # SEEK_END = 2
-        self._seek(position, whence)
+        _fortio._seek(self, position, whence)
 
     @classmethod
     def is_fortran_file(cls, filename: str, endian_flip: bool = True) -> bool:
@@ -153,7 +130,7 @@ class FortIO(BaseCClass):
         file written in fortran style. ASCII files will return false,
         even if they are structured as ECLIPSE keywords.
         """
-        return cls._guess_fortran(filename, endian_flip)
+        return _fortio._guess_fortran(filename, endian_flip)
 
     def free(self):
         self.close()
