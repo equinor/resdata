@@ -214,6 +214,29 @@ set_target_properties(
                  ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
 
 # -----------------------------------------------------------------
+# Pybind11 extension module: resdata.resfile._fortio
+# -----------------------------------------------------------------
+pybind11_add_module(_fortio resdata/fortio_pybind.cpp)
+target_link_libraries(_fortio PRIVATE resdata fmt::fmt)
+target_include_directories(_fortio PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                           ${CMAKE_CURRENT_BINARY_DIR}/include)
+if(SKBUILD)
+  set(_fortio_install_dir "python/resdata/resfile")
+  if(APPLE)
+    set_target_properties(_fortio PROPERTIES INSTALL_RPATH
+                                             "@loader_path/../.libs")
+  else()
+    set_target_properties(_fortio PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_fortio_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _fortio LIBRARY DESTINATION ${_fortio_install_dir})
+set_target_properties(
+  _fortio PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                     ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
+
+# -----------------------------------------------------------------
 # Pybind11 extension module: resdata.summary._rd_sum
 # -----------------------------------------------------------------
 pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp)
