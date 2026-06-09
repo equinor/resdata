@@ -11,6 +11,7 @@
 #include <ert/util/util_unlink.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
+
 #include <resdata/FortIO.hpp>
 
 namespace ERT {
