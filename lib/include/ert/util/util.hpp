@@ -26,6 +26,7 @@
 #include <ctime>
 
 #include <ert/util/ert_api_config.hpp>
+#include <ert/util/build_config.hpp>
 
 #include <sys/stat.h>
 

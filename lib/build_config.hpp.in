@@ -17,6 +17,7 @@
 #cmakedefine HAVE_PID_T
 #cmakedefine HAVE_EXECINFO
 #cmakedefine HAVE_FORK
+#cmakedefine HAVE_FSEEKO
 #cmakedefine HAVE_POSIX_MKDIR
 #cmakedefine HAVE_WINDOWS_MKDIR
 #cmakedefine HAVE_GETPWUID
