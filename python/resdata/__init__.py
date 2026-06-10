@@ -60,7 +60,7 @@ def _dlopen_resdata():
     else:
         raise NotImplementedError("Invalid platform")
 
-    return ctypes.CDLL(path, ctypes.RTLD_GLOBAL)
+    return ctypes.CDLL(str(path), ctypes.RTLD_GLOBAL)
 
 
 # Need to keep the function as a global variable so that we don't give C a
