@@ -44,3 +44,8 @@ before-all = "brew install zlib"
 before-build = "rm -rf {package}/_skbuild"
 test-groups = ["test"]
 test-command = "pytest {package}/tests"
+
+[tool.cibuildwheel.windows]
+# repair-wheel doesn't find the libresdata.dll on windows, so we have to ignore this error
+repair-wheel-command = "delvewheel repair --no-dll libresdata.dll -w {dest_dir} -v {wheel}"
+test-command = "python -c \"import resdata.grid\""
