@@ -1198,7 +1198,7 @@ char *util_fread_alloc_file_content(const char *filename, int *buffer_size) {
 
 /**
    If abort_on_error = true the function will abort if the read/write
-   fails (although the write will try the disk_full hack). If
+   fails (although the write will try the disk_full workaround). If
    abort_on_error == false the function will just return false if the
    write fails, in this case the calling scope must do the right
    thing.

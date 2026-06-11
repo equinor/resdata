@@ -447,8 +447,8 @@ class ResdataFile(BaseCClass):
                 dates.append(self.iget_restart_sim_time(index))
             return dates
         elif "INTEHEAD" in self:
-            # This is a uber-hack; should export the rd_rsthead
-            # object as ctypes structure.
+            # This is a workaround; consider exporting the rd_rsthead
+            # object as a ctypes structure.
             intehead = self["INTEHEAD"][0]
             year = intehead[66]
             month = intehead[65]
@@ -513,10 +513,9 @@ class ResdataFile(BaseCClass):
         """
         Checks if the current ResdataFile has data for time @dtime.
 
-        The implementation goes through all the INTEHEAD headers in
-        the ResdataFile, i.e. it can be fooled (and probably crash and
-        burn) if the ResdataFile instance in question is has INTEHEAD
-        keyword(s), but is still not a restart file. The @dtime
+        The implementation goes through all the INTEHEAD headers in the
+        ResdataFile, i.e. it can fail if the ResdataFile instance in question
+        has INTEHEAD keyword(s), but is still not a restart file. The @dtime
         argument should be a normal python datetime instance.
         """
         return self._has_sim_time(CTime(dtime))

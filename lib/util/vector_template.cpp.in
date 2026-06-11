@@ -518,7 +518,7 @@ void @TYPE@_vector_scale(@TYPE@_vector_type * vector, @TYPE@ factor) {
 }
 
 
-/* Vector / scalar; seperate _div function to ensure correct integer division. */
+/* Vector / scalar; separate _div function to ensure correct integer division. */
 void @TYPE@_vector_div(@TYPE@_vector_type * vector, @TYPE@ divisor) {
   int i;
   for (i=0; i < vector->size; i++)

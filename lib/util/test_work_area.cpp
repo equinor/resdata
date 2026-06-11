@@ -45,9 +45,9 @@
   --------------------
 
 
-  -- Create directory /tmp/$USER/ert-test/my/funn/test and call
+  -- Create directory /tmp/$USER/ert-test/my/example/test and call
   -- chdir() to the newly created directory.
-  test_work_area_type * work_area = test_work_area_alloc("my/funny/test" , true);
+  test_work_area_type * work_area = test_work_area_alloc("my/example/test" , true);
 
   -- Make files available from the test directory.
   test_work_area_install_file(work_area , "/home/user/build/test-data/file1");

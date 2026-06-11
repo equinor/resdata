@@ -61,8 +61,8 @@ node_data_alloc_buffer(const void *data,
 }
 
 /*
-  When calling deep_copy the node MUST have a registered constructor,
-  otherwise it will go belly up. HARD.
+  When calling deep_copy the node MUST have a registered constructor;
+  otherwise the operation will fail.
 */
 
 static node_data_type *node_data_copyc(const node_data_type *src,

@@ -4417,8 +4417,8 @@ double rd_grid_get_property(const rd_grid_type *rd_grid,
    set beforehand.
 
    The column vector will be filled with double values, the content of
-   rd_kw will be converted to double in the case INTE,REAL and DOUB
-   types, otherwsie it is crash and burn.
+   rd_kw will be converted to double in the case INTE, REAL and DOUB
+   types, otherwise it raises std::invalid_argument.
 */
 
 void rd_grid_get_column_property(const rd_grid_type *rd_grid,

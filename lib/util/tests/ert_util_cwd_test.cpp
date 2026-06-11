@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     printf("argv[1]:%s\n", argv[1]);
 
     if (!util_is_cwd(cwd_alloc))
-        test_error_exit("Hmmm did not recognize:%s as cwd\n", cwd);
+        test_error_exit("did not recognize:%s as cwd\n", cwd);
 
     if (util_is_cwd("/some/path"))
         test_error_exit("Took /whatver/ as CWD\n");

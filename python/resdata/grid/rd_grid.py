@@ -118,7 +118,6 @@ class Grid(BaseCClass):
 
           >> grid = Grid.create(specgrid_kw, zcorn_kw, coord_kw, actnum_kw)
 
-        If you are so inclined ...
         """
         return cls._python_object_from_ptr(
             _grid._grdecl_create(
@@ -189,15 +188,11 @@ class Grid(BaseCClass):
         )
 
     def __len__(self):
-        """
-        len(grid) wil return the total number of cells.
-        """
+        """Will return the total number of cells."""
         return _grid._get_global_size(self)
 
     def equal(self, other, include_lgr=True, include_nnc=False, verbose=False):
-        """
-        Compare the current grid with the other grid.
-        """
+        """Compare the current grid with the other grid."""
         if not isinstance(other, Grid):
             raise TypeError("The other argument must be an Grid instance")
         return _grid._equal(self, other, include_lgr, include_nnc, verbose)
@@ -428,16 +423,14 @@ class Grid(BaseCClass):
         return result
 
     def cell_invalid(self, ijk=None, global_index=None, active_index=None):
-        """
-        Tries to check if a cell is invalid.
+        """Tries to check if a cell is invalid.
 
-        Cells which are used to represent numerical aquifers are
-        typically located in UTM position (0,0); these cells have
-        completely whacked up shape and size, and should **NOT** be
-        used in calculations involving real world coordinates. To
-        protect against this a heuristic is used identify such cells
-        and mark them as invalid. There might be other sources than
-        numerical aquifers to this problem.
+        Cells which are used to represent numerical aquifers are typically
+        located in UTM position (0,0) and have abnormal shape and
+        size, and should not be used in calculations involving real-world
+        coordinates. To protect against this, a heuristic is used to identify
+        such cells and mark them as invalid. There may be other causes for this
+        problem.
         """
         gi = self.__global_index(
             global_index=global_index, ijk=ijk, active_index=active_index
@@ -448,17 +441,16 @@ class Grid(BaseCClass):
         """Checks if the cell has valid geometry.
 
         There are at least two reasons why a cell might have invalid
-        gemetry:
+        geometry:
 
           1. In the case of GRID files it is not necessary to supply
              the geometry for all the cells; in that case this
              function will return false for cells which do not have
              valid coordinates.
 
-          2. Cells which are used to represent numerical aquifers are
-             typically located in UTM position (0,0); these cells have
-             completely whacked up shape and size; these cells are
-             identified by a heuristic - which might fail
+          2. Cells which are used to represent numerical aquifers are typically
+             located in UTM position (0,0) and have abnormal shape and size;
+             these cells are identified by a heuristic - which might fail.
 
         If the valid_cell_geometry() returns false for a particular
         cell functions which calculate cell volumes, real world
@@ -526,7 +518,7 @@ class Grid(BaseCClass):
             pos1 = grid.get_xyz(active_index=100)
             pos2 = grid.get_xyz(ijk=(10,20,7))
 
-        Crash and burn:
+        Invalid usage examples:
             pos3 = grid.get_xyz(ijk=(10,20,7), global_index=10)
             pos4 = grid.get_xyz()
 
@@ -684,12 +676,11 @@ class Grid(BaseCClass):
         """
         Lookup cell containg true position (x,y,z).
 
-        Will locate the cell in the grid which contains the true
-        position (@x,@y,@z), the return value is as a triplet
-        (i,j,k). The underlying C implementation is not veeery
-        efficient, and can potentially take quite long time. If you
-        provide a good intial guess with the parameter @start_ijk (a
-        tuple (i,j,k)) things can speed up quite substantially.
+        Will locate the cell in the grid which contains the true position
+        (@x,@y,@z), the return value is as a triplet (i,j,k). The underlying C
+        implementation is not very efficient and can potentially take a long
+        time. If you provide a good initial guess with the parameter @start_ijk
+        (a tuple (i,j,k)) things can speed up quite substantially.
 
         If the location (@x,@y,@z) can not be found in the grid, the
         method will return None.
@@ -1167,7 +1158,7 @@ class Grid(BaseCClass):
         column 3 contains the active_index
         if active_only == True, only active cells are listed,
         otherwise all cells are listed.
-        This index frame should typically be passed to the epxport_data(),
+        This index frame should typically be passed to the export_data(),
         export_volume() and export_corners() functions.
         """
         indx, data = _grid._export_index_frame(self, active_only)

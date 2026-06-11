@@ -302,8 +302,7 @@ static void rd_alloc_summary_data_files(const fs::path &path,
         then choose either a list of files or unified files according
         to which is the newest.
 
-   This algorithm should work in most practical cases, but it is
-   surely possible to fool it.
+   This algorithm should work in most practical cases, but not all.
 */
 static std::optional<fs::path>
 rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
