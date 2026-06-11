@@ -131,8 +131,8 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
         time_t sim_time = rd_make_date(day, month, year);
         rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
     } else
-        util_abort("%s: Hmmm - could not extract date/time information from "
-                   "SMSPEC header file? \n",
+        util_abort("%s: Could not extract date/time information from "
+                   "SMSPEC header file. \n",
                    __func__);
 }
 

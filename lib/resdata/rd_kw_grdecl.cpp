@@ -115,7 +115,7 @@ static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
   This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
   rd_kw_fseek_kw(). Observe that the GRDECL files are extremely
-  weakly structured, it is therefore veeeery easy to fool this function
+  weakly structured, it is therefore very easy to fool this function
   with a malformed GRDECL file.
 
   In particular the comparison is case sensitive; that is probably not

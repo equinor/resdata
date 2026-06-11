@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
             test_error_exit("Wrong stack size");
 
         if (!path_stack_push(path_stack, NULL))
-            test_error_exit("Hmmm - push(NULL) failed \n");
+            test_error_exit("push(NULL) failed \n");
 
         if (path_stack_size(path_stack) != 1)
             test_error_exit("Wrong stack size");

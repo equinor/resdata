@@ -420,22 +420,22 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
         const rd::smspec_node &smspec_node =
             rd_smspec_iget_node_w_node_index(smspec, i);
         /*
-      It is possible to add variables with deferred initialisation
+      It is possible to add variables with deferred initialization
       with the rd_sum_add_blank_var() function. Before these
       variables can be actually used for anything interesting they
       must be initialized with the rd_sum_init_var() function.
 
-      If a call to save the smspec file comes before all the
-      variable have been initialized things will potentially go
-      belly up. This is solved with the following uber-hack:
+      If a call to save the smspec file occurs before all the
+      variables have been initialized the save operation may fail.
+      This is addressed with the following workaround:
 
-      o One of the well related keywords is chosen; in
+      o One of the well-related keywords is chosen; in
         particular 'WWCT' in this case.
 
-      o The wgname value is set to DUMMY_WELL
+      o The wgname value is set to DUMMY_WELL.
 
       The use of DUMMY_WELL ensures that this field will be
-      ignored when/if this smspec file is read in at a later
+      ignored when/if this smspec file is read at a later
       stage.
     */
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {

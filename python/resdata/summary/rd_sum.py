@@ -115,7 +115,7 @@ class Summary(BaseCClass):
         component, and also an extension - the latter will be ignored.
 
         The @join_string is the string used when combining elements
-        from the WGNAMES, KEYWORDS and NUMS vectors into a composit
+        from the WGNAMES, KEYWORDS and NUMS vectors into a composite
         key; with @join_string == ":" the water cut in well OP_1 will
         be available as "WWCT:OP_1".
 
@@ -129,7 +129,7 @@ class Summary(BaseCClass):
         whereas getting a vector will be slower. When the summary data is split
         over multiple CASE.Snnn files all the data will be loaded at
         construction time, and the @lazy_load option is ignored. If the
-        lazy_load functionality is used the file_options intege flag is passed
+        lazy_load functionality is used the file_options integer flag is passed
         when opening the UNSMRY file.
 
         """
@@ -410,7 +410,7 @@ class Summary(BaseCClass):
             if time_index is None:
                 time_index = self.report_dates
             else:
-                raise ValueError("Can not suuply both time_index and report_only=True")
+                raise ValueError("Cannot supply both time_index and report_only=True")
 
         if time_index is None:
             np_vector = np.zeros(len(self))
@@ -799,10 +799,10 @@ class Summary(BaseCClass):
         """
         Will lookup vector @key at time given by @days or @date.
 
-        Requiers exactly one input argument @days or @date; will raise
-        exception ValueError if this is not satisfied.
+        Requires exactly one input argument, days or date; raises ValueError if
+        not satisfied.
 
-        The method will check that the time argument is within the
+        The method checks that the time argument is within the
         time limits of the simulation; if else the method will raise
         exception ValueError.
 
@@ -844,7 +844,7 @@ class Summary(BaseCClass):
         By default the timepoints will be regularly sampled based on the
         interval given by the @interval string. Alternatively the total number
         of timesteps can be specified, if the @num_timestep option is specified
-        that will take presedence.
+        that will take precedence.
         """
         num, timeUnit = TimeVector.parseTimeUnit(interval)
 
@@ -964,10 +964,10 @@ class Summary(BaseCClass):
         """
         Will return numpy vector with interpolated values.
 
-        Requiers exactly one input argument @days or @date; will raise
-        exception ValueError if this is not satisfied.
+        Requires exactly one input argument, days_list or date_list; raises
+        ValueError if not satisfied.
 
-        The method will check that the time arguments are within the
+        The method checks that the time arguments are within the
         time limits of the simulation; if else the method will raise
         exception ValueError.
 
@@ -1105,7 +1105,7 @@ class Summary(BaseCClass):
     # In addition to the get_xxx() methods there are properties with
     # the same name (excluding the 'get'); these properties correspond
     # to an get_xxx() invocation with optional argument report_only
-    # set to False (i.e. the defualt).
+    # set to False (i.e. the default).
 
     @property
     def days(self):
@@ -1185,7 +1185,7 @@ class Summary(BaseCClass):
         The simulator will typically use several simulation timesteps
         for each report step, and the number will change between
         different report steps. So - assuming that the first report
-        step one has five simulations timesteps and the next two have
+        step one has five simulation timesteps and the next two have
         three the report_step vector can look like:
 
           [...,1,1,1,1,1,2,2,2,3,3,3,....]
@@ -1245,8 +1245,8 @@ class Summary(BaseCClass):
     def sim_length(self):
         """Will return the total time span for the simulation data.
 
-        The lengt will be returned in time unit used in the simulation data;
-        i.e. typically days.
+        The length is returned in the time unit used in the simulation data
+        (typically days).
         """
         return self.getSimulationLength()
 
@@ -1288,10 +1288,9 @@ class Summary(BaseCClass):
     def get_data_start_time(self):
         """The first date we have data for.
 
-        Thiw will mostly be equal to get_start_time(), but in the case
-        of restarts, where the case we have restarted from is not
-        found, this time will be later than the true start of the
-        field.
+        This will usually equal get_start_time(), but for restarts where the
+        previous case is not found, this time will be later than the true field
+        start.
         """
         return CTime(_rd_sum._get_data_start(self)).datetime()
 
@@ -1460,7 +1459,7 @@ class Summary(BaseCClass):
 
                       tx = t3
 
-        corresponding to the arrow 'B* in the figure.
+        corresponding to the arrow 'B' in the figure.
 
         """
         if key not in self:
@@ -1541,8 +1540,9 @@ class Summary(BaseCClass):
 
     def dump_csv_line(self, time, keywords, pfile):
         """
-        Will dump a csv formatted line of the keywords in @keywords,
-        evaluated at the intertpolated time @time. @pfile should point to an open Python file handle.
+        Will dump a csv formatted line of the keywords in keywords, evaluated
+        at the interpolated time. pfile should point to an open Python
+        file handle.
         """
         cfile = CFILE(pfile)
         ctime = CTime(time)

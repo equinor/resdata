@@ -536,7 +536,7 @@ int rd_select_filelist(const char *path, const char *base,
 
 bool rd_fmt_file(const char *filename, bool *__fmt_file) {
     /*const int min_size = 32768;*/
-    const int min_size = 256; /* Veeeery small */
+    const int min_size = 256; /* Very small */
 
     int report_nr;
     rd_file_enum file_type;

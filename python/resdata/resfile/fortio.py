@@ -1,25 +1,22 @@
 """
 Module to support transparent binary IO of Fortran created files.
 
-Fortran is a a funny language; when writing binary blobs of data to
-file the Fortran runtime will silently add a header and footer around
-the date. The Fortran code:
+In Fortran, when writing binary blobs of data to file the Fortran runtime will
+add a header and footer around the data. The Fortran code:
 
    integer array(100)
    write(unit) array
 
-it actually writes a head and tail in addition to the actual
-data. The header and tail is a 4 byte integer, which value is the
-number of bytes in the immediately following record. I.e. what is
-actually found on disk after the Fortran code above is:
+writes a head and tail in addition to the actual data. The header and tail are
+4-byte integers whose value is the number of bytes in the immediately following
+record. I.e. what is actually found on disk after the Fortran code above is:
 
   | 400 | array ...... | 400 |
 
-The fortio.c file implements the fortio_type C structure which can be
-used to read and write these structures transparently. The current
-python module is a minimal wrapping of this datastructure; mainly to
-support passing of FortIO handles to the underlying C functions. A
-more extensive wrapping of the fortio implementation would be easy.
+The FortIO.cpp file implements the fortio_type struct which can be used to read
+and write these. The current Python module is a minimal wrapping of this data
+structure; mainly to support passing FortIO handles to the underlying cpp
+functions.
 """
 
 import os
@@ -64,7 +61,7 @@ class FortIO(BaseCClass):
     def __init__(
         self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True
     ):
-        """Will open a new FortIO handle to @file_name - default for reading.
+        """Open a FortIO handle for the given file_name.
 
         The newly created FortIO handle will open the underlying FILE*
         for reading, but if you pass the flag mode=FortIO.WRITE_MODE
@@ -75,9 +72,9 @@ class FortIO(BaseCClass):
         flipping of the actual data blocks must be handled at a higher
         level.
 
-        When you are finished working with the FortIO instance you can
-        manually close it with the close() method, alternatively that
-        will happen automagically when it goes out of scope.
+        When you are finished working with the FortIO instance you can manually
+        close it with the close() method. Alternatively, the FortIO instance
+        will close automatically when it goes out of scope.
 
         Small example script opening a restart file, and then writing
         all the pressure keywords to another file:
@@ -174,10 +171,10 @@ class FortIOContextManager:
 def openFortIO(
     file_name, mode=FortIO.READ_MODE, fmt_file=False, endian_flip_header=True
 ):
-    """Will create FortIO based context manager for use with with.
+    """Create a FortIO-based context manager for use with the "with" statement.
 
-    The with: statement and context managers is a good alternative in
-    the situation where you need to ensure resource cleanup.
+    The with statement and context managers are a good alternative in
+    situations where you need to ensure resource cleanup.
 
        import sys
        from resdata.resfile import FortIO, openFortIO, ResdataFile

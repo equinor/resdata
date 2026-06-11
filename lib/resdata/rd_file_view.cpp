@@ -413,23 +413,23 @@ This restart file has the following features:
 
  o It contains 5 blocks of collected keywords corresponding to one
    time instant, each of these blocks is called a report_step,
-   typcially coming from one DATES keyword in the ECLIPSE
+   typically coming from one DATES keyword in the ECLIPSE
    datafile. Observe that the file does not have the block structure
-   visualized on this figure, the only thing separating the blocks in
-   the file is the occurence of a SEQNUM keyword.
+   visualized on this figure; the only thing separating the blocks in
+   the file is the occurrence of a SEQNUM keyword.
 
  o Only a few of the report steps are present, namely 0, 5, 10, 20 and
    40.
 
- o The different blocks are not equally long, the fourth block has an
+ o The different blocks are not equally long; the fourth block has an
    extra keyword OIL_DEN.
 
-To adress these keywords and blocks using different time coordinates
+To address these keywords and blocks using different time coordinates
 we have introduced the following concepts:
 
- report_step: This corresponds to the value of the SEQNUM keword,
-    i.e. to do queries based on the report_step we must load the
-    seqnum kewyord and read the value.
+ report_step: This corresponds to the value of the SEQNUM keyword;
+    i.e. to perform queries based on the report_step we must load the
+    SEQNUM keyword and read its value.
 
         rd_file_get_unrstmap_report_step( rd_file , 0 ) => A
         rd_file_get_unrstmap_report_step( rd_file , 1 ) => NULL
@@ -437,8 +437,8 @@ we have introduced the following concepts:
         rd_file_has_report_step( rd_file , 5 ) => True
         rd_file_has_report_step( rd_file , 2 ) => False
 
- sim_time: This correpsonds to the true simulation time of the report
-    step, the simulation time is stored as integers DAY, MONTH, YEAR
+ sim_time: This corresponds to the true simulation time of the report
+    step. The simulation time is stored as integers DAY, MONTH, YEAR
     in the INTEHEAD keyword; the function INTEHEAD_date() will extract
     the DAY, MONTH and YEAR values from an INTEHEAD keyword instance
     and convert to a time_t instance. The functions:
@@ -452,10 +452,10 @@ we have introduced the following concepts:
     the keyword in the file; this is the unique address of the keyword
     which is used for the final lookup.
 
- occurence: The nth' time a particular keyword has occured in the
-    file, i.e. the SEQNUM keyword in block C is the third occurence of
-    SEQNUM. Instead of occurence xxxx_index is also used to indicate
-    the occurence of keyword xxxx. The occurence number is the integer
+ occurrence: The nth time a particular keyword has occurred in the
+    file, i.e. the SEQNUM keyword in block C is the third occurrence of
+    SEQNUM. Instead of occurrence, xxxx_index is also used to indicate
+    the occurrence of keyword xxxx. The occurrence number is the integer
     argument to the xxx_iget_named_kw() function, and also the final
     call to create blockmaps.
 

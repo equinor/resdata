@@ -393,14 +393,14 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
                                 "-------------------\n");
                 fprintf(stderr, "INIT PORV : %g \n", init_porv);
                 fprintf(stderr, "RPORV     : %g \n", rporv);
-                fprintf(stderr, "Hmmm - the RPORV values extracted from the "
-                                "restart file seem to be \n");
-                fprintf(stderr, "veeery different from the initial porv value. "
-                                "This might indicate \n");
-                fprintf(stderr, "an ECLIPSE bug in the RPORV handling. Try "
-                                "using another ECLIPSE version,\n");
+                fprintf(stderr, "The RPORV values extracted from the "
+                                "restart file appear to be \n");
                 fprintf(stderr,
-                        "or alternatively the PORMOD approach instead\n");
+                        "substantially different from the initial porv value. "
+                        "This might indicate \n");
+                fprintf(stderr, "an inconsistency in the RPORV handling. Try "
+                                "using a different simulator version,\n");
+                fprintf(stderr, "or alternatively the PORMOD approach. \n");
                 fprintf(stderr, "----------------------------------------------"
                                 "-------------------\n");
                 exit(1);

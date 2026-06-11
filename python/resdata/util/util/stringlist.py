@@ -232,8 +232,8 @@ class StringList(BaseCClass):
         """
         The strings in as a normal Python list of strings.
 
-        The content is copied, so the StringList() instance can safely go
-        out of scope after the call has completed. Hmmmm - is that true?
+        The content is copied, so the StringList() instance can safely go out
+        of scope after the call has completed.
         """
         slist = []
         for s in self:
