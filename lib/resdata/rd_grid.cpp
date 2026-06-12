@@ -41,8 +41,6 @@
 namespace fs = std::filesystem;
 
 /**
-  this function implements functionality to load eclispe grid files,
-  both .egrid and .grid files - in a transparent fashion.
 
   observe the following convention:
 
@@ -66,9 +64,6 @@ namespace fs = std::filesystem;
     rd_grid_get_pos1()  - 1:  this function expects a global index
     rd_grid_get_pos1a() - 1a: this function expects an active index.
 
-*/
-
-/**
    note about lgr
    --------------
 
@@ -243,9 +238,6 @@ namespace fs = std::filesystem;
          stringlist_free( lgr_names );
      }
 
-*/
-
-/*
   About coarse groups
   -------------------
 
@@ -282,9 +274,7 @@ namespace fs = std::filesystem;
     - rd_coarse_cell_type * rd_grid_iget_coarse_group( const rd_grid_type * rd_grid , int coarse_nr );
 
   In addition to the API presented by the rd_coarse_cell.c implementation.
-*/
 
-/*
   About dual porosity
   -------------------
 
@@ -342,9 +332,7 @@ namespace fs = std::filesystem;
          rd_kw_type * M = rd_kw_alloc_sub_copy( swat , matrix_kw   , 0  , matrix_size );
          rd_kw_type * F = rd_kw_alloc_sub_copy( swat , fracture_kw , matrix_size  , fracture_size );
       }
-*/
 
-/*
   About nnc
   ---------
 
@@ -404,9 +392,7 @@ namespace fs = std::filesystem;
   2*nz*ny*nz). In ert we we have not implemented this double covering
   in the case of dual porosity models so NNC involving
   fracture cells are not considered.
-*/
 
-/*
   about tetraheder decomposition
   ------------------------------
 
@@ -445,9 +431,7 @@ namespace fs = std::filesystem;
 
    table entries are ripped from resdatapost code - file: kvpvos.f in
    klib/
-*/
 
-/*
 About ordering of the corners in the cell
 -----------------------------------------
 
@@ -487,6 +471,14 @@ the lower layer along the 1-2 diagonal and the upper layer along the
 4-7 diagonal, method 1 corresponds to the alternative decomposition
 which splits the lower face along the 0-3 diagnoal and the upper face
 along the 5-6 diagonal.
+
+
+  the implementation is based on a hierarchy of three datatypes:
+
+   1. rd_grid   - this is the only exported datatype
+   2. rd_cell   - internal
+   3. point      - internal
+
 */
 
 static const int tetrahedron_permutations[2][12][3] = {{// K-
@@ -525,16 +517,6 @@ static const int tetrahedron_permutations[2][12][3] = {{// K-
                                                         // K+
                                                         {7, 5, 6},
                                                         {4, 6, 5}}};
-
-/*
-
-  the implementation is based on a hierarchy of three datatypes:
-
-   1. rd_grid   - this is the only exported datatype
-   2. rd_cell   - internal
-   3. point      - internal
-
-*/
 
 typedef struct point_struct point_type;
 
@@ -586,10 +568,7 @@ static void point_inplace_scale(point_type *point, double scale_factor) {
     point->z *= scale_factor;
 }
 
-/**
-   Will compute the vector cross product B x C and store the result in A.
-*/
-
+/** Will compute the vector cross product B x C and store the result in A. */
 static void point_vector_cross(point_type *A, const point_type *B,
                                const point_type *C) {
     A->x = B->y * C->z - B->z * C->y;
@@ -638,9 +617,7 @@ static void point_copy_values(point_type *p, const point_type *src) {
     point_set(p, src->x, src->y, src->z);
 }
 
-/*
-  Indices used in the cell->active_index[] array.
-*/
+/* Indices used in the cell->active_index[] array. */
 #define MATRIX_INDEX 0
 #define FRACTURE_INDEX 1
 
@@ -650,7 +627,7 @@ static void point_copy_values(point_type *p, const point_type *src) {
 #define CELL_FLAG_VALID                                                        \
     1 /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
 #define CELL_FLAG_CENTER                                                       \
-    2 /* Has the center value been calculated - this is by default not done to speed up loading a tiny bit. */
+    2 /* Has the center value been calculated. This is by default not done to speed up loading. */
 #define CELL_FLAG_TAINTED                                                      \
     4 /* Keep invalid cells out of real-world calculations with some heuristics.*/
 #define CELL_FLAG_VOLUME 8
@@ -716,43 +693,43 @@ static const float *rd_grid_get_mapaxes(const rd_grid_type *grid);
 struct rd_grid_struct {
     UTIL_TYPE_ID_DECLARATION;
     int lgr_nr; /* EGRID files: corresponds to item 4 in gridhead - 0 for the main grid.
-                                          GRID files: 0 for the main grid, then 1 -> number of LGRs in order read from file*/
-    std::string
-        name; /* the name of the file for the main grid - name of the lgr for lgrs. */
+                   GRID files: 0 for the main grid, then 1 -> number of LGRs in
+                               order read from file*/
+    std::string name; /* the name of the file for the main grid
+                        - name of the lgr for lgrs. */
     int ny, nz, nx;
     int size; /* == nx*ny*nz */
     int total_active;
     int total_active_fracture;
-    std::vector<bool>
-        visited; /* internal helper struct used when searching for index - empty when unused. */
+    std::vector<bool> visited;  /* internal helper used when searching for index
+                                 - empty when unused. */
+    std::vector<int> index_map; /* this a list of nx*ny*nz elements,
+                                   where value -1 means inactive cell. */
+    std::vector<int> inv_index_map; /* this is list of total_active elements
+                                       - which point back to the index_map. */
     std::vector<int>
-        index_map; /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
+        fracture_index_map; /* For fractures: this a list of nx*ny*nz elements,
+                               where value -1 means inactive cell .*/
     std::vector<int>
-        inv_index_map; /* this is list of total_active elements - which point back to the index_map. */
-
-    std::vector<int>
-        fracture_index_map; /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-    std::vector<int>
-        inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
-
+        inv_fracture_index_map; /* For fractures: this is list of total_active elements
+                                   - which point back to the index_map. */
     std::vector<rd_cell_type> cells;
 
     std::optional<std::string>
-        parent_name; /* the name of the parent for a nested lgr - for the main grid, and also a
-                                          lgr descending directly from the main grid this will be nullopt. */
+        parent_name; /* the name of the parent for a nested lgr
+                        - for the main grid, and also a lgr descending directly
+                        from the main grid this will be nullopt. */
     std::unordered_map<std::string, rd_grid_type *> children;
-    const rd_grid_type *
-        parent_grid; /* the parent grid for this (lgr) - NULL for the main grid. */
-    const rd_grid_type
-        *global_grid; /* the global grid - NULL for the main grid. */
+    const rd_grid_type *parent_grid; /* the parent grid for this (lgr)
+                                         - NULL for the main grid. */
+    const rd_grid_type *global_grid; /* the global grid
+                                        - NULL for the main grid. */
 
     bool coarsening_active;
     std::vector<rd_coarse_cell_ptr> coarse_cells;
-    /*
-    the two fields below are for *storing* lgr grid instances. observe
+    /* the two fields below are for *storing* lgr grid instances. observe
     that these fields will be NULL for lgr grids, i.e. grids with
-    lgr_nr > 0.
-  */
+    lgr_nr > 0. */
     std::vector<rd_grid_ptr>
         LGR_list; /* a vector of rd_grid instances for LGRs. The index
                      corresponds to the order LGRs are read from file.
@@ -761,9 +738,8 @@ struct rd_grid_struct {
         lgr_index_map; /* a vector that maps LGR-nr for EGRID files to index into the LGR_list.*/
     std::unordered_map<std::string, rd_grid_type *>
         LGR_hash; /* a hash of pointers to rd_grid instances - for name based lookup of lgr. */
-    int parent_box
-        [6]; /* integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this lgr. the indices are inclusive - zero offset */
-             /* not used yet .. */
+    int parent_box[6]; /* integers i1,i2, j1,j2, k1,k2 of the parent grid region
+                          containing this lgr. the indices are inclusive - zero offset */
 
     int dualp_flag;
     bool use_mapaxes;
@@ -990,9 +966,7 @@ static void rd_cell_taint_cell(rd_cell_type *cell) {
         }
     }
 
-    /*
-    Second heuristic to invalidate cells.
-  */
+    /* Second heuristic to invalidate cells. */
     if (cell->active == CELL_NOT_ACTIVE) {
         if (!GET_CELL_FLAG(cell, CELL_FLAG_TAINTED)) {
             const point_type p0 = cell->corner_list[0];
@@ -1033,7 +1007,6 @@ static int rd_cell_get_twist(const rd_cell_type &cell) {
    necessarily accessed beyond this function. In general not all cells
    will have a coords/corners section in the grid file.
 */
-
 static void rd_cell_init(rd_cell_type *cell, bool init_valid) {
     cell->active = CELL_NOT_ACTIVE;
     cell->lgr = NULL;
@@ -1047,14 +1020,6 @@ static void rd_cell_init(rd_cell_type *cell, bool init_valid) {
 
     cell->nnc_info.reset();
 }
-
-/*
-#define mod(x,n) ((x) % (n))
-static int rd_cell_get_tetrahedron_method( int i , int j , int k) {
-  return (1 + (1 - 2*mod(i,2)) * (1 - 2 * mod(j,2)) * (1 - 2*mod(k,2))) / 2;
-}
-#undef mod
-*/
 
 static void rd_cell_set_center(rd_cell_type &cell) {
     point_set(&cell.center, 0, 0, 0);
@@ -1146,7 +1111,7 @@ struct tetrahedron_struct {
     point_type p3;
 };
 
-/*
+/**
   Calculates the volume of a tetrahedron, a normalization of 1/6 is
   omitted.
 */
@@ -1175,9 +1140,7 @@ static inline double tetrahedron_volume6(tetrahedron_type tet) {
     return tet.p0.x * bxc.x + tet.p0.y * bxc.y + tet.p0.z * bxc.z;
 }
 
-/*
- Returns true if and only if the point p is inside the tetrahedron tet.
-*/
+/** Returns true if and only if the point p is inside the tetrahedron tet. */
 static bool tetrahedron_contains(tetrahedron_type tet, const point_type p) {
     const double epsilon = 1e-9;
     double tetra_volume = fabs(tetrahedron_volume6(tet));
@@ -1218,7 +1181,7 @@ static double parallelogram_area3d(const point_type *p0, const point_type *p1,
     return sqrt(point_dot_product(&c, &c));
 }
 
-/*
+/**
  * Returns true if and only if point p is contained in the triangle denoted by
  * p0, p1 and p2. Note that if the triangle is a line, the function will still
  * return true if the point lies on the line segment.
@@ -1294,7 +1257,6 @@ UTIL_IS_INSTANCE_FUNCTION(rd_grid, RD_GRID_ID);
    wrong geometry - see further comments in the function
    rd_cell_taint_cell() which actually does it.
 */
-
 static void rd_grid_taint_cells(rd_grid_type *rd_grid) {
     for (auto &cell : rd_grid->cells) {
         rd_cell_taint_cell(&cell);
@@ -1321,7 +1283,6 @@ static bool rd_grid_alloc_cells(rd_grid_type *grid, bool init_valid) {
    instance. apart from that no further lgr-relationsip initialisation
    is performed.
 */
-
 static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
                                          ert_rd_unit_enum unit_system,
                                          int dualp_flag, int nx, int ny, int nz,
@@ -1351,10 +1312,10 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
 
     if (global_grid != NULL) {
         /*
-       this is an lgr instance, and we inherit the global grid
-       transformations from the main grid. The underlying mapaxes
-       pointer is jest left at NULL for lgr instances.
-    */
+        this is an lgr instance, and we inherit the global grid
+        transformations from the main grid. The underlying mapaxes
+        pointer is jest left at NULL for lgr instances.
+        */
         grid->unit_x[0] = global_grid->unit_x[0];
         grid->unit_x[1] = global_grid->unit_x[1];
         grid->unit_y[0] = global_grid->unit_y[0];
@@ -1413,7 +1374,7 @@ static void rd_grid_set_cell_EGRID(rd_grid_type *rd_grid, int i, int j, int k,
 
     for normal runs actnum will be 1 for active cells,
     for dual porosity models it can also be 2 and 3.
-  */
+    */
     if (actnum == NULL)
         cell.active = CELL_ACTIVE;
     else
@@ -1439,8 +1400,7 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
     grid. For these cell the cell properties are not recalculated, but
     the active flag is updated to include the active|inactive
     properties of the fracture.
-  */
-
+    */
     if (k >= rd_grid->nz) {
         k -= rd_grid->nz;
         matrix_cell = false;
@@ -1466,17 +1426,16 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
         an LGR - this only duplicates the information which can be
         learned from the coords[5] element, and is not used in the
         current code.
-  */
-
+    */
     {
         int c;
 
         /*
-       The RD_GRID_MAINGRID_LGR_NR != rd_grid->lgr_nr test checks if
-       this is a LGR; if this test applies we either have bug - or a
-       GRID file with LGRs and only 4/5 elements in the coords keywords.
-       In the latter case we must start using the LGRILG keyword.
-    */
+        The RD_GRID_MAINGRID_LGR_NR != rd_grid->lgr_nr test checks if
+        this is a LGR; if this test applies we either have bug - or a
+        GRID file with LGRs and only 4/5 elements in the coords keywords.
+        In the latter case we must start using the LGRILG keyword.
+        */
         if ((RD_GRID_MAINGRID_LGR_NR != rd_grid->lgr_nr) && (coords_size != 7))
             throw std::invalid_argument(
                 "Need 7 element coords keywords for LGR - or reimplement to "
@@ -1522,7 +1481,6 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
    prior to calling this function, to ensure that
    rd_grid->total_active is correct.
 */
-
 static void rd_grid_init_index_map__(rd_grid_type *rd_grid,
                                      std::vector<int> &index_map,
                                      std::vector<int> &inv_index_map,
@@ -1561,7 +1519,7 @@ static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
      in the case of coarse cells with more than one active cell in the
      main grid, the inverse active -> global mapping will map to the
      first active cell in the coarse cell.
-  */
+    */
     int size = rd_grid_get_num_coarse_groups(rd_grid);
     for (int coarse_group = 0; coarse_group < size; coarse_group++) {
         rd_coarse_cell_type *coarse_cell =
@@ -1605,12 +1563,11 @@ static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
     }
 }
 
-/*
+/**
   This function goes through the entire grid and sets the active_index
   of all the cells. The functione rd_grid_realloc_index_map()
   subsequently reads this to create and initialize the index map.
 */
-
 static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
     int active_index = 0;
     int active_fracture_index = 0;
@@ -1649,7 +1606,7 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
         /* 2: Go through all the cells and set the active index. In the
           case of coarse cells we only set the common active index of
           the entire coarse cell.
-    */
+        */
         for (int global_index = 0; global_index < rd_grid->size;
              global_index++) {
             rd_cell_type &cell = rd_grid->cells.at(global_index);
@@ -1678,10 +1635,10 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
         }
 
         /*
-      3: Go through all the coarse cells and set the active index and
+        3: Go through all the coarse cells and set the active index and
          active value of all the cells in the coarse cell to the
          common value for the coarse cell.
-    */
+        */
 
         int size = rd_grid_get_num_coarse_groups(rd_grid);
         for (int coarse_group = 0; coarse_group < size; coarse_group++) {
@@ -1793,7 +1750,6 @@ static void rd_grid_pillar_cross_planes(const point_type *p0, double e_x,
    instance, and not for lgrs; the lgrs will inherit the mapaxes
    settings from the global grid.
  */
-
 static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
                                  const float *mapaxes) {
     if (rd_grid->global_grid != NULL)
@@ -1860,7 +1816,6 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
     all the lgr instances. the cell->lgr relationship is established
     in the _install_egrid / install_grid functions further down.
 */
-
 static rd_grid_type *rd_grid_add_lgr(rd_grid_type *main_grid,
                                      rd_grid_ptr lgr_grid) {
     auto ptr = lgr_grid.get();
@@ -1887,7 +1842,6 @@ static void rd_grid_install_lgr_common(rd_grid_type *host_grid,
    instances do *not* own the lgr_grid - all lgr_grid instances are
    owned by the main grid.
 */
-
 static void rd_grid_install_lgr_EGRID(rd_grid_type *host_grid,
                                       rd_grid_type *lgr_grid,
                                       const int *hostnum) {
@@ -1902,9 +1856,7 @@ static void rd_grid_install_lgr_EGRID(rd_grid_type *host_grid,
     rd_grid_install_lgr_common(host_grid, lgr_grid);
 }
 
-/**
-   similar to rd_grid_install_lgr_egrid for grid based instances.
-*/
+/** similar to rd_grid_install_lgr_egrid for grid based instances. */
 static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
                                      rd_grid_type *lgr_grid) {
     for (const rd_cell_type &lgr_cell : lgr_grid->cells) {
@@ -1943,18 +1895,17 @@ static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
    will supply 'global' (whereas for egrid it will return '' -
    cool?). anyway global -> NULL.
 */
-
 static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
                                       const rd_file_type *rd_file,
                                       int grid_nr) {
     rd_kw_type *lgr_kw = rd_file_iget_named_kw(rd_file, LGR_KW, grid_nr - 1);
     lgr_grid->name = rd_kw_iget_stripped_string(lgr_kw, 0);
     {
-        /**
-       the lgr keyword can have one or two elements; in the case of two elements
-       the second element will be the name of the parent grid - in the case of
-       only one element the current lgr is assumed to descend from the main grid
-    */
+        /*
+        the lgr keyword can have one or two elements; in the case of two elements
+        the second element will be the name of the parent grid - in the case of
+        only one element the current lgr is assumed to descend from the main grid
+        */
         if (rd_kw_get_size(lgr_kw) == 2) {
             std::string parent = rd_kw_iget_stripped_string(lgr_kw, 1);
 
@@ -1964,14 +1915,13 @@ static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
     }
 }
 
-/*
+/**
   This function will calculate the index of a corner in the the zcorn
   array.  The corner is given with i,j,k indices of the cell, and
   corner number [0...8). The function is mainly a convenience function
   for testing, and should not be used in a tight inner loop unrolling
   the zcorn vector.
 */
-
 int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c) {
     int zcorn_index = k * 8 * nx * ny + j * 4 * nx + 2 * i;
     if ((c % 2) == 1)
@@ -2201,7 +2151,7 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
           util_abort("%s: internal error in grid loader - lgr index mismatch\n",__func__);
 
     But then suddenly a EGRID file where this did not apply appeared :-(
-  */
+    */
 
     if (gtype != GRIDHEAD_GRIDTYPE_CORNERPOINT)
         throw std::invalid_argument(fmt::format(
@@ -2280,7 +2230,6 @@ static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
    through a GRID/EGRID file. Does not support LGR or coarsening
    hierarchies.
 */
-
 rd_grid_type *
 rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
                         const rd_kw_type *coord_kw,
@@ -2323,7 +2272,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
         grid_cell.nnc_info.reset(nnc_info_alloc(rd_grid->lgr_nr));
 }
 
-/*
+/**
   The function rd_grid_add_self_nnc() will add a NNC connection
   between two cells in the same grid. Observe that there are two
   peculiarities with this implementation:
@@ -2365,7 +2314,6 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
          rd_kw_fwrite( trannnc_kw , init_file );
 
 */
-
 void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
                           int nnc_index) {
     const rd_cell_type &grid_cell = grid->cells.at(cell_index1);
@@ -2374,7 +2322,7 @@ void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
                      nnc_index);
 }
 
-/*
+/**
   This function populates nnc_info for cells with non neighbour
   connections. For cells C1 and C2 the function will only add the directed link:
 
@@ -2387,7 +2335,6 @@ void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
     NNCG -> NNCL   For global -> lgr connection
     NNA1 -> NNA2   For links between different LGRs
 */
-
 static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
                                    const rd_kw_type *keyword1,
                                    const rd_kw_type *keyword2) {
@@ -2401,18 +2348,18 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
         int grid2_cell_index = grid2_nnc_cells[nnc_index] - 1;
 
         /*
-    In the EGRID file, grids with dual porosity are (to some
-    extent ...) modeled as two independent grids stacked on top of
-    eachother, where the fracture cells have global index in the range
-    [nx*ny*nz, 2*nx*ny*nz).
+        In the EGRID file, grids with dual porosity are (to some
+        extent ...) modeled as two independent grids stacked on top of
+        eachother, where the fracture cells have global index in the range
+        [nx*ny*nz, 2*nx*ny*nz).
 
-    The physical connection between the matrix and the fractures in
-    cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In
-    the ert ecl library we only have cells in the range [0,nx*ny*nz),
-    and fracture is a property of a cell. We therefore do not include
-    nnc connections involving fracture cells (i.e. cell_index >=
-    nx*ny*nz).
-  */
+        The physical connection between the matrix and the fractures in
+        cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In
+        the ert ecl library we only have cells in the range [0,nx*ny*nz),
+        and fracture is a property of a cell. We therefore do not include
+        nnc connections involving fracture cells (i.e. cell_index >=
+        nx*ny*nz).
+        */
         if ((FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&
             ((grid1_cell_index >= grid1->size) ||
              (grid2_cell_index >= grid2->size)))
@@ -2425,7 +2372,7 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
     }
 }
 
-/*
+/**
   This function reads the non-neighbour connection data from file and initializes the grid structure with the the nnc data
 */
 static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
@@ -2435,12 +2382,12 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
     NB: There is a bug in Eclipse version 2015.1, for MPI runs with
         six or more processors (I think ...) the NNC datastructures
         are in an internally inconsistent state; and will lead to a
-        hard crash. The issue has been fixed in version 2015.2, but
+        failure. The issue has been fixed in version 2015.2, but
         unfortunately it is not possible to test for micro version.
 
         if(num_nnchead_kw > 0 && main_grid->eclipse_version == 2015)
            return;
-  */
+    */
 
     for (int i = 0; i < num_nnchead_kw; i++) {
         auto lgr_view = rd_file_view_ptr(
@@ -2481,7 +2428,7 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
     }
 }
 
-/*
+/**
   This function reads the non-neighbour connection data for
   amalgamated LGRs (that is, non-neighbour connections between two
   LGRs) and initializes the grid structure with the nnc data.
@@ -2521,7 +2468,6 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
    rd_grid_alloc_grdecl_kw() and rd_grid_alloc_grdecl_data() do not
    support LGRs.
 */
-
 static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
                                          const rd_file_type *rd_file,
                                          int grid_nr, bool apply_mapaxes,
@@ -2769,7 +2715,7 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     the loop stops at nx*ny*nz. Additionally the LGR cells should be
     discarded (by checking coords[5]) in the rd_grid_set_cell_GRID()
     function.
-  */
+    */
 
     int num_coords;
 
@@ -2909,7 +2855,6 @@ static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
    cells and 0 for inactive cells. The actnum array can be NULL, in
    which case all cells will be active.
 */
-
 rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
                                         double dy, double dz,
                                         const int *actnum) {
@@ -2930,7 +2875,6 @@ rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
    called with these keywords. This function can be called directly
    with these keywords.
 */
-
 static rd_grid_ptr rd_grid_alloc__(const char *grid_file, bool apply_mapaxes) {
     rd_file_enum file_type;
     rd_grid_ptr rd_grid{nullptr, &rd_grid_free};
@@ -2975,7 +2919,6 @@ rd_grid_type *rd_grid_alloc(const char *grid_file) {
    and stop with the first success. Will return NULL if no GRID/EGRID
    files can be found.
 */
-
 static std::optional<std::string>
 rd_grid_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
@@ -3167,7 +3110,6 @@ static bool rd_grid_compare_mapaxes(const rd_grid_type *g1,
    Return true if grids g1 and g2 are equal, and false otherwise. To
    return true all cells must be identical.
 */
-
 static bool rd_grid_compare__(rd_grid_type *g1, rd_grid_type *g2,
                               bool include_nnc, bool verbose) {
 
@@ -3187,7 +3129,7 @@ static bool rd_grid_compare__(rd_grid_type *g1, rd_grid_type *g2,
 
     /*
     When .GRID files are involved this is hardwired to FILEHEAD_SINGLE_POROSITY.
-  */
+    */
     if (g1->dualp_flag != g2->dualp_flag) {
         equal = false;
         if (verbose)
@@ -3238,7 +3180,7 @@ typedef enum {
     BELONGS_TO_OTHER
 } face_status_enum;
 
-/*
+/**
     Returns whether the given point is contained within the minimal cube
     encapsulating the cell that has all faces parallel to a coordinate plane.
 */
@@ -3265,7 +3207,7 @@ static bool rd_grid_cube_contains(const rd_cell_type &cell,
     return true;
 }
 
-/*
+/**
    Returns true if and only if p is on plane "plane" of cell when decomposed by "method".
 */
 static bool rd_grid_on_plane(const rd_cell_type &cell, const int method,
@@ -3279,7 +3221,7 @@ static bool rd_grid_on_plane(const rd_cell_type &cell, const int method,
     return triangle_contains3d(p0, p1, p2, p);
 }
 
-/*
+/**
    Returns true if and only if p is on one of the cells faces and
    "belongs" to this cell. This is done such that every point is contained in at most
    one point.
@@ -3348,7 +3290,7 @@ static face_status_enum rd_grid_on_cell_face(const rd_cell_type &cell,
     return BELONGS_TO_OTHER;
 }
 
-/*
+/**
  Returns true if and only if the tetrahedron defined by p0, p1, p2, p3
  contains p.
 
@@ -3370,7 +3312,7 @@ static bool tetrahedron_by_points_contains(const point_type *p0,
     return tetrahedron_contains(pro_tet, *p);
 }
 
-/*
+/**
  Returns true if and only if the cell "cell" decomposed by "method" contains the point "p".
  This is done by decomposing the cell into 5 tetrahedrons according to the decomposition
  method for the faces.
@@ -3413,7 +3355,7 @@ static bool concave_cell_contains(const rd_cell_type &cell, int method,
     return false;
 }
 
-/*
+/**
   Observe the following quirks with this functions:
 
   - It is quite simple to create a cell where the center point is
@@ -3481,9 +3423,7 @@ static void rd_grid_clear_visited(rd_grid_type *grid) {
     grid->visited.assign(grid->size, false);
 }
 
-/*
-   Box coordinates are not inclusive, i.e. [i1,i2)
-*/
+/** Box coordinates are not inclusive, i.e. [i1,i2) */
 static int rd_grid_box_contains_xyz(rd_grid_type *grid, int i1, int i2, int j1,
                                     int j2, int k1, int k2,
                                     const point_type *p) {
@@ -3504,9 +3444,7 @@ static int rd_grid_box_contains_xyz(rd_grid_type *grid, int i1, int i2, int j1,
     return -1; /* Returning -1; did not find xyz. */
 }
 
-/**
- * Search for given xyz coordinate around global start_index in a box of size bx
- */
+/** Search for given xyz coordinate around global start_index in a box of size bx */
 static int rd_grid_get_global_index_from_xyz_around_box(rd_grid_type *grid,
                                                         double x, double y,
                                                         double z,
@@ -3578,9 +3516,7 @@ int rd_grid_get_global_index_from_xyz(rd_grid_type *grid, double x, double y,
         }
     }
 
-    /*
-    OK - the attempted shortcuts did not pay off. Perform full linear search.
-  */
+    /* the attempted shortcuts did not pay off. Perform full linear search. */
 
     global_index = -1;
 
@@ -3707,7 +3643,6 @@ void rd_grid_get_distance(rd_grid_type *grid, int global_index1,
       0 <= k < nz
 
 */
-
 bool rd_grid_ijk_valid(const rd_grid_type *grid, int i, int j, int k) {
     bool OK = false;
 
@@ -3752,7 +3687,6 @@ static int rd_grid_get_parent_cell1(const rd_grid_type *grid,
 /**
    Converts: (i,j,k) -> global_index. i,j,k are zero offset.
 */
-
 int rd_grid_get_global_index3(const rd_grid_type *rd_grid, int i, int j,
                               int k) {
     if (rd_grid_ijk_valid(rd_grid, i, j, k))
@@ -3765,10 +3699,7 @@ int rd_grid_get_global_index3(const rd_grid_type *rd_grid, int i, int j,
     }
 }
 
-/**
-   Converts: active_index -> global_index
-*/
-
+/** Converts: active_index -> global_index */
 int rd_grid_get_global_index1A(const rd_grid_type *rd_grid, int active_index) {
     return rd_grid->inv_index_map[active_index];
 }
@@ -3787,7 +3718,6 @@ int rd_grid_get_global_index1F(const rd_grid_type *rd_grid,
 
    Will return -1 if the cell is not active.
 */
-
 int rd_grid_get_active_index3(const rd_grid_type *rd_grid, int i, int j,
                               int k) {
     int global_index = rd_grid_get_global_index3(
@@ -3800,7 +3730,6 @@ int rd_grid_get_active_index3(const rd_grid_type *rd_grid, int i, int j,
 
    Will return -1 if the cell is not active.
 */
-
 int rd_grid_get_active_index1(const rd_grid_type *rd_grid, int global_index) {
     return rd_grid->index_map[global_index];
 }
@@ -3810,7 +3739,6 @@ int rd_grid_get_active_index1(const rd_grid_type *rd_grid, int global_index) {
 
    Will return -1 if the cell is not active.
 */
-
 int rd_grid_get_active_fracture_index1(const rd_grid_type *rd_grid,
                                        int global_index) {
     if (rd_grid->fracture_index_map.empty())
@@ -3819,12 +3747,11 @@ int rd_grid_get_active_fracture_index1(const rd_grid_type *rd_grid,
         return rd_grid->fracture_index_map[global_index];
 }
 
-/*
+/**
   Converts global_index -> (i,j,k)
 
   This function returns C-based zero offset indices. cell_
 */
-
 void rd_grid_get_ijk1(const rd_grid_type *grid, int global_index, int *i,
                       int *j, int *k) {
     *k = global_index / (grid->nx * grid->ny);
@@ -3834,10 +3761,7 @@ void rd_grid_get_ijk1(const rd_grid_type *grid, int global_index, int *i,
     *i = global_index;
 }
 
-/*
-  Converts active_index -> (i,j,k)
-*/
-
+/** Converts active_index -> (i,j,k) */
 void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, int active_index, int *i,
                        int *j, int *k) {
     if (active_index >= 0 && active_index < rd_grid->total_active) {
@@ -3849,7 +3773,7 @@ void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, int active_index, int *i,
             active_index, rd_grid->total_active));
 }
 
-/*
+/**
   Functions to get the 'true' (i.e. UTM or whatever) position (x,y,z).
 
   The cell center is calculated as the plain average of the eight
@@ -3858,7 +3782,6 @@ void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, int active_index, int *i,
   guarantee that the (x,y,z) position returned from this function
   actually is on the inside of the cell.
 */
-
 void rd_grid_get_xyz1(rd_grid_type *grid, int global_index, double *xpos,
                       double *ypos, double *zpos) {
     rd_cell_type &cell = grid->cells.at(global_index);
@@ -3881,7 +3804,6 @@ void rd_grid_get_xyz3(rd_grid_type *grid, int i, int j, int k, double *xpos,
    nr 'corner_nr' in cell 'global_index'. See the documentation of
    tetraheder decomposition for the numbering of the corners.
 */
-
 void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, int global_index,
                                   int corner_nr, double *xpos, double *ypos,
                                   double *zpos) {
@@ -3966,10 +3888,7 @@ double rd_grid_get_cdepth1A(rd_grid_type *grid, int active_index) {
     return rd_grid_get_cdepth1(grid, global_index);
 }
 
-/**
-   Returns the depth of the top surface of the cell.
-*/
-
+/** Returns the depth of the top surface of the cell. */
 static double rd_grid_get_top1(const rd_grid_type *grid, int global_index) {
     const rd_cell_type &cell = grid->cells.at(global_index);
     double depth = 0;
@@ -3985,10 +3904,7 @@ static double rd_grid_get_top3(const rd_grid_type *grid, int i, int j, int k) {
     return rd_grid_get_top1(grid, global_index);
 }
 
-/**
-   Returns the depth of the bottom surface of the cell.
-*/
-
+/** Returns the depth of the bottom surface of the cell. */
 static double rd_grid_get_bottom1(const rd_grid_type *grid, int global_index) {
     const rd_cell_type &cell = grid->cells.at(global_index);
     double depth = 0;
@@ -4084,7 +4000,7 @@ double rd_grid_get_cell_dx1A(const rd_grid_type *grid, int active_index) {
     return rd_grid_get_cell_dx1(grid, global_index);
 }
 
-/*
+/**
   The current algorithm for calculating the cell dimensions DX,DY and DZ
   reproduces the Eclipse results from the INIT file quite well, relative error
   on the order 1e-4 for DX and DY and 1e-3 for DZ.
@@ -4096,7 +4012,6 @@ double rd_grid_get_cell_dx1A(const rd_grid_type *grid, int active_index) {
 
   does generally not hold.
 */
-
 double rd_grid_get_cell_dy1(const rd_grid_type *grid, int global_index) {
     const rd_cell_type &cell = grid->cells.at(global_index);
     double dx = 0;
@@ -4171,7 +4086,6 @@ static void __assert_main_grid(const rd_grid_type *rd_grid) {
 
    Leading/trailing spaces on lgr_name are stripped prior to the hash lookup.
 */
-
 rd_grid_type *rd_grid_get_lgr(const rd_grid_type *main_grid,
                               const char *__lgr_name) {
     __assert_main_grid(main_grid);
@@ -4182,7 +4096,6 @@ rd_grid_type *rd_grid_get_lgr(const rd_grid_type *main_grid,
    Returns true/false if the main grid has a a lgr with name
    __lgr_name. Leading/trailing spaces are stripped before checking.
 */
-
 bool rd_grid_has_lgr(const rd_grid_type *main_grid, const char *__lgr_name) {
     if (!__lgr_name)
         return false;
@@ -4219,13 +4132,12 @@ int rd_grid_get_num_lgr(const rd_grid_type *main_grid) {
    rd_grid_iget_lgr( rd_grid , 1); will return the second lgr
    The method will fail HARD if lgr_index is out of bounds.
 */
-
 rd_grid_type *rd_grid_iget_lgr(const rd_grid_type *main_grid, int lgr_index) {
     __assert_main_grid(main_grid);
     return main_grid->LGR_list.at(lgr_index).get();
 }
 
-/*
+/**
    This function returns the lgr with the given lgr_nr. The lgr_nr is
    the fourth element in the GRIDHEAD for EGRID files.  The lgr nr is
    equal to the grid nr if the grid's are consecutive numbered and
@@ -4234,7 +4146,6 @@ rd_grid_type *rd_grid_iget_lgr(const rd_grid_type *main_grid, int lgr_index) {
    This method can only be used for EGRID files. For GRID files the
    lgr_nr is 0 for all grids.
 */
-
 rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
                                           int lgr_nr) {
     __assert_main_grid(main_grid);
@@ -4257,7 +4168,6 @@ rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
       return value can can be used for repeated calls to descend
       deeper into the refinement hierarchy.
 */
-
 const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
                                           int global_index) {
     const rd_cell_type &cell = grid->cells.at(global_index);
@@ -4301,7 +4211,6 @@ int rd_grid_get_lgr_nr_from_name(const rd_grid_type *grid, const char *name) {
    For EGRID files, this is the LGR number (fourth element in the
    gridhead).
 */
-
 int rd_grid_get_lgr_nr(const rd_grid_type *rd_grid) { return rd_grid->lgr_nr; }
 
 const char *rd_grid_get_name(const rd_grid_type *rd_grid) {
@@ -4336,7 +4245,6 @@ double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
 }
 
 /**
-
    This function is used to translate (with the help of the rd_grid
    functionality) i,j,k to an index which can be used to look up an
    element in the rd_kw instance. It is just a minor convenience
@@ -4366,7 +4274,6 @@ double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
    * i,j,k: C-based zero offset grid coordinates.
 
 */
-
 static int rd_grid_get_property_index__(const rd_grid_type *rd_grid,
                                         const rd_kw_type *rd_kw, int i, int j,
                                         int k) {
@@ -4420,7 +4327,6 @@ double rd_grid_get_property(const rd_grid_type *rd_grid,
    rd_kw will be converted to double in the case INTE, REAL and DOUB
    types, otherwise it raises std::invalid_argument.
 */
-
 void rd_grid_get_column_property(const rd_grid_type *rd_grid,
                                  const rd_kw_type *rd_kw, int i, int j,
                                  double_vector_type *column) {
@@ -4794,7 +4700,6 @@ ENDGRID             0:INTE
    argument, so that it can be called from an external scope to create
    a standard EGRID header without creating a grid instance first.
 */
-
 static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
                                              ERT::FortIO &fortio,
                                              ert_rd_unit_enum output_unit) {
@@ -4836,11 +4741,10 @@ static void rd_grid_fwrite_gridhead_kw(int nx, int ny, int nz, int grid_nr,
     rd_kw_free(gridhead_kw);
 }
 
-/*
+/**
   Will scan the halfopen k-interval [k1,k2) to find a cell which has
   valid geometry. If no cell is found the function will return -1.
 */
-
 static int rd_grid_get_valid_index(const rd_grid_type *grid, int i, int j,
                                    int k1, int k2) {
     int global_index;
@@ -4891,10 +4795,10 @@ static bool rd_grid_init_coord_section__(const rd_grid_type *grid, int i, int j,
         const rd_cell_type &top_cell = grid->cells.at(top_index);
 
         /*
-      2---3
-      |   |
-      0---1
-    */
+        2---3
+        |   |
+        0---1
+        */
         int corner_index = j_corner * 2 + i_corner;
         int coord_offset =
             6 * ((j + j_corner) * (grid->nx + 1) + (i + i_corner));
@@ -4965,7 +4869,7 @@ void rd_grid_init_coord_data(const rd_grid_type *grid, float *coord) {
     of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
     chunks of data, where each chunk contains the coordinates (x,y,z)
     of the top and the bottom of the pillar.
-  */
+    */
     for (int j = 0; j <= grid->ny; j++) {
         for (int i = 0; i <= grid->nx; i++)
             rd_grid_init_coord_section(grid, i, j, coord, NULL);
@@ -4978,7 +4882,7 @@ void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord) {
     of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
     chunks of data, where each chunk contains the coordinates (x,y,z)
     f the top and the bottom of the pillar.
-  */
+    */
     for (int j = 0; j <= grid->ny; j++) {
         for (int i = 0; i <= grid->nx; i++)
             rd_grid_init_coord_section(grid, i, j, NULL, coord);
@@ -5081,7 +4985,7 @@ void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
             actnum[i] = cell.active;
         else {
             /* In the case of coarse cells we must query the coarse cell for
-         the original, uncoarsened distribution of actnum values. */
+            the original, uncoarsened distribution of actnum values. */
             rd_coarse_cell_type *coarse_cell =
                 rd_grid_iget_coarse_group(grid, cell.coarse_group);
 
@@ -5347,12 +5251,11 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
     }
 }
 
-/*
+/**
    The construction with rd_grid_fwrite_EGRID() and
    rd_grid_fwrite_EGRID2() is an attempt to create API stability. New
    code should use the rd_grid_fwrite_EGRID2() function.
 */
-
 void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
                           bool output_metric) {
     ert_rd_unit_enum output_unit = RD_METRIC_UNITS;
@@ -5367,7 +5270,6 @@ void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
    Writes the current grid as grdecl keywords. This function will only write the main grid and not
    possible LGRs which are attached.
 */
-
 void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
                              ert_rd_unit_enum output_unit) {
     {
@@ -5393,7 +5295,7 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
     /*
      The specgrid header is not properly internalized; the fourth and
      fifth elements are just set to hardcoded values.
-  */
+    */
     {
         int numres = 1;
         char coord_type = 'F';
@@ -5495,6 +5397,10 @@ rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
             &rd_grid_free};
 }
 
+/**
+  this function implements functionality to load eclipse grid files,
+  both .egrid and .grid files - in a transparent fashion.
+*/
 rd_grid_ptr read_grid(const std::filesystem::path &filename) {
     return {rd_grid_alloc(filename.string().c_str()), &rd_grid_free};
 }
