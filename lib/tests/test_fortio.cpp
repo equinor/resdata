@@ -1,18 +1,16 @@
-#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
+
+#include <array>
 #include <fstream>
 #include <ios>
 #include <stdexcept>
 #include <vector>
 
 #include <resdata/FortIO.hpp>
-#include <resdata/rd_endian_flip.hpp>
-#include <ert/util/util.hpp>
 
 #include "tmpdir.hpp"
 
