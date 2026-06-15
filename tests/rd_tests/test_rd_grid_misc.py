@@ -204,7 +204,7 @@ def test_that_load_column_with_mismatched_kw_size_raises_value_error(
     bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
     column = DoubleVector()
     with pytest.raises(ValueError, match="incommensurable sizes"):
-        _grid._load_column(rectangular_grid, bad_kw, 0, 0, column)
+        rectangular_grid.load_column(bad_kw, 0, 0, column)
 
 
 def test_that_load_column_with_non_numeric_kw_raises_value_error(rectangular_grid):
@@ -212,7 +212,26 @@ def test_that_load_column_with_non_numeric_kw_raises_value_error(rectangular_gri
     char_kw = ResdataKW("CHARKW", size, ResDataType.RD_CHAR)
     column = DoubleVector()
     with pytest.raises(ValueError, match="can not lookup type"):
-        _grid._load_column(rectangular_grid, char_kw, 0, 0, column)
+        rectangular_grid.load_column(char_kw, 0, 0, column)
+
+
+@pytest.mark.parametrize("bad_kw", [5, None, DoubleVector()])
+def test_that_load_column_with_wrong_type_kw_raises_type_error(
+    rectangular_grid, bad_kw
+):
+    column = DoubleVector()
+    with pytest.raises(TypeError, match="Expected ResdataKW"):
+        rectangular_grid.load_column(bad_kw, 0, 0, column)
+
+
+@pytest.mark.parametrize("bad_column", [5, None, ResdataKW("X", 1, ResDataType.RD_INT)])
+def test_that_load_column_with_wrong_type_column_raises_type_error(
+    rectangular_grid, bad_column
+):
+    size = rectangular_grid.get_global_size()
+    kw = ResdataKW("PORO", size, ResDataType.RD_FLOAT)
+    with pytest.raises(TypeError, match="Expected DoubleVector"):
+        rectangular_grid.load_column(kw, 0, 0, bad_column)
 
 
 def test_that_fwrite_grdecl_with_invalid_bool_default_raises_value_error(

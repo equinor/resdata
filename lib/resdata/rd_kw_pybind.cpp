@@ -24,8 +24,6 @@ PYBIND11_MODULE(_kw, m) {
            py::handle data_type) {
             auto *stream = from_cwrap<FILE>(file);
             auto *rd_data_type = from_cwrap<::rd_data_type>(data_type);
-            if (rd_data_type == nullptr)
-                throw std::invalid_argument("data_type must not be None");
             if (kw.has_value())
                 return reinterpret_cast<std::uintptr_t>(
                     rd_kw_fscanf_alloc_grdecl(stream, kw->c_str(),

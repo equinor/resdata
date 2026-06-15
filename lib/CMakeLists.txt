@@ -163,7 +163,7 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
 # -----------------------------------------------------------------
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
-pybind11_add_module(_grid resdata/rd_grid_pybind.cpp)
+pybind11_add_module(_grid resdata/rd_grid_pybind.cpp resdata/cwrap_pybind.cpp)
 target_link_libraries(_grid PRIVATE resdata fmt::fmt)
 target_include_directories(
   _grid
@@ -193,7 +193,7 @@ set_target_properties(
 # -----------------------------------------------------------------
 # Pybind11 extension module: resdata.resfile._kw
 # -----------------------------------------------------------------
-pybind11_add_module(_kw resdata/rd_kw_pybind.cpp)
+pybind11_add_module(_kw resdata/rd_kw_pybind.cpp resdata/cwrap_pybind.cpp)
 target_link_libraries(_kw PRIVATE resdata fmt::fmt)
 target_include_directories(
   _kw
@@ -222,7 +222,7 @@ set_target_properties(
 # -----------------------------------------------------------------
 # Pybind11 extension module: resdata.resfile._fortio
 # -----------------------------------------------------------------
-pybind11_add_module(_fortio resdata/fortio_pybind.cpp)
+pybind11_add_module(_fortio resdata/fortio_pybind.cpp resdata/cwrap_pybind.cpp)
 target_link_libraries(_fortio PRIVATE resdata fmt::fmt)
 target_include_directories(
   _fortio
@@ -248,7 +248,7 @@ set_target_properties(
 # -----------------------------------------------------------------
 # Pybind11 extension module: resdata.summary._rd_sum
 # -----------------------------------------------------------------
-pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp)
+pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp resdata/cwrap_pybind.cpp)
 target_link_libraries(_rd_sum PRIVATE resdata fmt::fmt)
 target_include_directories(
   _rd_sum

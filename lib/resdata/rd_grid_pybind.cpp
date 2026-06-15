@@ -32,8 +32,8 @@ PYBIND11_MODULE(_grid, m) {
            py::handle actnum, py::handle mapaxes) {
             return reinterpret_cast<std::uintptr_t>(rd_grid_alloc_GRDECL_kw(
                 nx, ny, nz, from_cwrap<rd_kw_type>(zcorn),
-                from_cwrap<rd_kw_type>(coord), from_cwrap<rd_kw_type>(actnum),
-                from_cwrap<rd_kw_type>(mapaxes)));
+                from_cwrap<rd_kw_type>(coord), from_cwrap_opt_kw(actnum),
+                from_cwrap_opt_kw(mapaxes)));
         },
         py::return_value_policy::reference);
     m.def(
