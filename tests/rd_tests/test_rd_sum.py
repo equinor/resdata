@@ -85,6 +85,21 @@ def test_dump_csv_line():
     assert os.path.getsize(out_path) > 0
 
 
+@pytest.mark.parametrize("bad_keywords", [5, None, StringList()])
+def test_dump_csv_line_with_wrong_type_keywords_raises_type_error(bad_keywords):
+    case = createSummary(
+        "CASE2",
+        [("FOPT", None, 0, "SM3")],
+    )
+    case.fwrite()
+
+    rd_sum = Summary("CASE2")
+    dtime = datetime.datetime(2010, 6, 1, 0, 0, 0)
+    with copen("dump_bad.csv", "w") as out_handle:
+        with pytest.raises(TypeError, match="Expected SummaryKeyWordVector"):
+            rd_sum.dump_csv_line(dtime, bad_keywords, out_handle)
+
+
 @equinor_test()
 class SummaryTest(ResdataTest):
     def setUp(self):
@@ -1382,6 +1397,21 @@ def test_summary_resample():
 
     assert resampled.alloc_time_vector(False) == time_points
     assert resampled["FOPR"].values.tolist() == pytest.approx([100.0, 150.0, 200.0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("bad_time_points", [5, None, DoubleVector()])
+def test_summary_resample_with_wrong_type_time_points_raises_type_error(
+    bad_time_points,
+):
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 5.0, 10.0),
+        values=[[100.0], [150.0], [200.0]],
+    )
+    summary = Summary("TEST")
+    with pytest.raises(TypeError, match="Expected TimeVector"):
+        summary.resample("RESAMPLED", bad_time_points)
 
 
 def test_that_reading_non_existent_summary_raises_oserror(tmp_path):

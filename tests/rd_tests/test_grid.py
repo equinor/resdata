@@ -963,3 +963,39 @@ def kws(
 def test_grid_create(specgrid, zcorn, coord, actnum, mapaxes):
     with suppress(ValueError, IndexError):
         Grid.create(specgrid, zcorn, coord, actnum, mapaxes)
+
+
+@pytest.mark.parametrize("bad", [5, None, IntVector(initial_size=1)])
+def test_that_grid_create_with_wrong_type_zcorn_raises_type_error(bad):
+    dims = (2, 2, 2)
+    coord = GridGen.create_coord(dims, (1, 1, 1))
+    with pytest.raises(TypeError, match="Expected ResdataKW"):
+        Grid.create(dims, bad, coord, None)
+
+
+@pytest.mark.parametrize("bad", [5, None, IntVector(initial_size=1)])
+def test_that_grid_create_with_wrong_type_coord_raises_type_error(bad):
+    dims = (2, 2, 2)
+    zcorn = GridGen.create_zcorn(dims, (1, 1, 1), offset=0)
+    with pytest.raises(TypeError, match="Expected ResdataKW"):
+        Grid.create(dims, zcorn, bad, None)
+
+
+@pytest.mark.parametrize("bad", [5, IntVector(initial_size=1)])
+def test_that_grid_create_with_wrong_type_actnum_or_mapaxes_raises_type_error(bad):
+    dims = (2, 2, 2)
+    coord = GridGen.create_coord(dims, (1, 1, 1))
+    zcorn = GridGen.create_zcorn(dims, (1, 1, 1), offset=0)
+    with pytest.raises(TypeError, match="Expected ResdataKW"):
+        Grid.create(dims, zcorn, coord, bad)
+    with pytest.raises(TypeError, match="Expected ResdataKW"):
+        Grid.create(dims, zcorn, coord, None, bad)
+
+
+def test_that_grid_create_accepts_none_actnum_and_mapaxes():
+    dims = (2, 2, 2)
+    coord = GridGen.create_coord(dims, (1, 1, 1))
+    zcorn = GridGen.create_zcorn(dims, (1, 1, 1), offset=0)
+    grid = Grid.create(dims, zcorn, coord, None, None)
+    assert grid is not None
+    assert grid.get_num_active() == 2 * 2 * 2
