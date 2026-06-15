@@ -1401,15 +1401,6 @@ bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
     return kw_found;
 }
 
-bool rd_kw_ifseek_kw(const char *kw, fortio_type *fortio, int index) {
-    int i = 0;
-    do {
-        rd_kw_fseek_kw(kw, false, true, fortio);
-        i++;
-    } while (i <= index);
-    return true;
-}
-
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data) {
     if (!rd_kw->shared_data)
         free(rd_kw->data);
