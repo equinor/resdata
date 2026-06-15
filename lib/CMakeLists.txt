@@ -165,8 +165,11 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(_grid resdata/rd_grid_pybind.cpp)
 target_link_libraries(_grid PRIVATE resdata fmt::fmt)
-target_include_directories(_grid PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-                                         ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  _grid
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 if(SKBUILD)
   set(_grid_install_dir "python/resdata/grid")
   # libresdata.so.6 is installed at python/resdata/.libs/ make _grid.so find it
@@ -192,8 +195,11 @@ set_target_properties(
 # -----------------------------------------------------------------
 pybind11_add_module(_kw resdata/rd_kw_pybind.cpp)
 target_link_libraries(_kw PRIVATE resdata fmt::fmt)
-target_include_directories(_kw PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-                                       ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  _kw
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 if(SKBUILD)
   set(_kw_install_dir "python/resdata/resfile")
   # libresdata.so.6 is installed at python/resdata/.libs/ make _kw.so find it
@@ -218,8 +224,11 @@ set_target_properties(
 # -----------------------------------------------------------------
 pybind11_add_module(_fortio resdata/fortio_pybind.cpp)
 target_link_libraries(_fortio PRIVATE resdata fmt::fmt)
-target_include_directories(_fortio PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-                                           ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  _fortio
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 if(SKBUILD)
   set(_fortio_install_dir "python/resdata/resfile")
   if(APPLE)
@@ -241,8 +250,11 @@ set_target_properties(
 # -----------------------------------------------------------------
 pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp)
 target_link_libraries(_rd_sum PRIVATE resdata fmt::fmt)
-target_include_directories(_rd_sum PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-                                           ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  _rd_sum
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 if(SKBUILD)
   set(_rd_sum_install_dir "python/resdata/summary")
   if(APPLE)

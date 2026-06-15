@@ -10,19 +10,11 @@
 #include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/rd_type.hpp>
 
+#include <detail/resdata/cwrap_pybind.hpp>
+
 namespace py = pybind11;
 
 namespace {
-template <typename T> T *from_cwrap(py::handle obj) {
-    if (obj.is_none())
-        return nullptr;
-
-    py::int_ address = obj.attr("_BaseCClass__c_pointer");
-    void *pointer = PyLong_AsVoidPtr(address.ptr());
-
-    return reinterpret_cast<T *>(pointer);
-}
-
 PYBIND11_MODULE(_kw, m) {
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 
