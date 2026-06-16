@@ -27,6 +27,7 @@ rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type);
 
 namespace {
 PYBIND11_MODULE(_kw, m) {
+    register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 
     m.def(

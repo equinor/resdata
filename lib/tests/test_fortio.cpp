@@ -20,28 +20,25 @@ TEST_CASE_METHOD(Tmpdir, "Basic FortIO operations") {
         auto mode =
             GENERATE(std::ios_base::out, std::ios_base::app, std::ios_base::in);
         if (mode == std::ios_base::in) {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out, false);
-            fortio_fwrite_record(fortio.get(), "", 0);
+            ERT::FortIO fortio(filename.string(), std::ios_base::out);
+            fortio.fwrite_record("", 0);
         }
 
-        ERT::FortIO fortio(filename.string(), mode, false);
+        ERT::FortIO fortio(filename.string(), mode);
 
-        THEN("The stream is open") {
-            REQUIRE(fortio_stream_is_open(fortio.get()));
-        }
+        THEN("The stream is open") { REQUIRE(fortio.stream_is_open()); }
         THEN("Seeking with unknown whence fails") {
             if (mode == std::ios_base::in)
-                REQUIRE_THROWS_AS(fortio_fseek(fortio.get(), 0, 2000),
-                                  std::invalid_argument);
+                REQUIRE_THROWS_AS(fortio.fseek(0, 2000), std::invalid_argument);
             else
-                REQUIRE_FALSE(fortio_fseek(fortio.get(), 0, 2000));
+                REQUIRE_FALSE(fortio.fseek(0, 2000));
         }
         THEN("Seeking data with negative count raises") {
-            REQUIRE_THROWS_AS(fortio_data_fseek(fortio.get(), 0, 1, 1, -1, 1),
+            REQUIRE_THROWS_AS(fortio.data_fseek(0, 1, 1, -1, 1),
                               std::invalid_argument);
         }
         THEN("Seeking data beyond count raises") {
-            REQUIRE_THROWS_AS(fortio_data_fseek(fortio.get(), 0, 6, 1, 5, 1),
+            REQUIRE_THROWS_AS(fortio.data_fseek(0, 6, 1, 5, 1),
                               std::invalid_argument);
         }
     }
@@ -51,14 +48,11 @@ TEST_CASE_METHOD(Tmpdir, "opening FortIO into non-existent entries") {
     GIVEN("A non-existent directory") {
         auto filename = (dirname / "does_not_exist" / "CASE.EGRID");
         bool fmt = GENERATE(false, true);
-        THEN("Using read mode throws") {
-            REQUIRE_THROWS_AS(
-                ERT::FortIO(filename.string(), std::ios_base::in, fmt),
-                std::invalid_argument);
-        }
-        THEN("Other modes will return nullptr") {
-            auto mode = GENERATE(std::ios_base::out, std::ios_base::app);
-            REQUIRE(ERT::FortIO(filename.string(), mode, fmt).get() == nullptr);
+        auto mode =
+            GENERATE(std::ios_base::out, std::ios_base::in, std::ios_base::app);
+        THEN("Opening throws") {
+            REQUIRE_THROWS_AS(ERT::FortIO(filename.string(), mode, fmt),
+                              std::ios_base::failure);
         }
     }
     GIVEN("A non-existent file") {
@@ -67,11 +61,11 @@ TEST_CASE_METHOD(Tmpdir, "opening FortIO into non-existent entries") {
         SECTION("Using read mode throws") {
             REQUIRE_THROWS_AS(
                 ERT::FortIO(filename.string(), std::ios_base::in, fmt),
-                std::invalid_argument);
+                std::ios_base::failure);
         }
         SECTION("Append and write succeeds") {
             auto mode = GENERATE(std::ios_base::out, std::ios_base::app);
-            REQUIRE(ERT::FortIO(filename.string(), mode, fmt).get());
+            REQUIRE_NOTHROW(ERT::FortIO(filename.string(), mode, fmt).get());
         }
     }
 }
@@ -95,63 +89,63 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
     GIVEN("A fortio file with a zero record") {
         auto filename = (dirname / "CASE.EGRID");
         {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out, false);
-            fortio_fwrite_record(fortio.get(), "", 0);
+            ERT::FortIO fortio(filename.string(), std::ios_base::out);
+            fortio.fwrite_record("", 0);
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in, false);
+        ERT::FortIO fortio(filename.string(), std::ios_base::in);
 
         THEN("Reading zero sized buffer moves the stream past the markers") {
-            auto pos = fortio_ftell(fortio.get());
-            fortio_fread_buffer(fortio.get(), nullptr, 0);
-            REQUIRE(fortio_ftell(fortio.get()) == pos + 2 * 4);
+            auto pos = fortio.ftell();
+            fortio.fread_buffer(nullptr, 0);
+            REQUIRE(fortio.ftell() == pos + 2 * 4);
         }
     }
     GIVEN("A fortio file with a record of length 1") {
         auto filename = (dirname / "CASE.EGRID");
         {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out, false);
-            fortio_fwrite_record(fortio.get(), "A", 1);
+            ERT::FortIO fortio(filename.string(), std::ios_base::out);
+            fortio.fwrite_record("A", 1);
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in, false);
+        ERT::FortIO fortio(filename.string(), std::ios_base::in);
 
         THEN("Reading zero sized buffer moves the stream past the markers") {
-            auto pos = fortio_ftell(fortio.get());
+            auto pos = fortio.ftell();
             std::array<char, 1> buffer = {0};
-            bool ok = fortio_fread_buffer(fortio.get(), buffer.data(), 1);
+            bool ok = fortio.fread_buffer(buffer.data(), 1);
             REQUIRE(ok);
-            REQUIRE(fortio_ftell(fortio.get()) == pos + 2 * 4 + 1);
+            REQUIRE(fortio.ftell() == pos + 2 * 4 + 1);
             REQUIRE(buffer[0] == 'A');
         }
     }
     GIVEN("A fortio file with two records") {
         auto filename = (dirname / "CASE.EGRID");
         {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out, false);
-            fortio_fwrite_record(fortio.get(), "A", 1);
-            fortio_fwrite_record(fortio.get(), "BB", 2);
+            ERT::FortIO fortio(filename.string(), std::ios_base::out);
+            fortio.fwrite_record("A", 1);
+            fortio.fwrite_record("BB", 2);
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in, false);
+        ERT::FortIO fortio(filename.string(), std::ios_base::in);
 
         THEN("read_buffer will read records until size is filled") {
-            auto pos = fortio_ftell(fortio.get());
+            auto pos = fortio.ftell();
             std::array<char, 1> buffer = {0};
 
-            bool ok = fortio_fread_buffer(fortio.get(), buffer.data(), 1);
+            bool ok = fortio.fread_buffer(buffer.data(), 1);
             REQUIRE(ok);
-            REQUIRE(fortio_ftell(fortio.get()) == pos + 2 * 4 + 1);
+            REQUIRE(fortio.ftell() == pos + 2 * 4 + 1);
             REQUIRE(buffer[0] == 'A');
         }
 
         THEN("read_buffer will read all records to fill size") {
-            auto pos = fortio_ftell(fortio.get());
+            auto pos = fortio.ftell();
             std::array<char, 3> buffer = {0, 0, 0};
 
-            bool ok = fortio_fread_buffer(fortio.get(), buffer.data(), 3);
+            bool ok = fortio.fread_buffer(buffer.data(), 3);
             REQUIRE(ok);
-            REQUIRE(fortio_ftell(fortio.get()) == pos + 4 * 4 + 3);
+            REQUIRE(fortio.ftell() == pos + 4 * 4 + 3);
             REQUIRE(buffer[0] == 'A');
             REQUIRE(buffer[1] == 'B');
             REQUIRE(buffer[2] == 'B');
@@ -159,12 +153,12 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
 
         THEN("read_buffer will fail if not enough data in records") {
             std::array<char, 4> buffer = {0, 0, 0, 0};
-            REQUIRE_FALSE(fortio_fread_buffer(fortio.get(), buffer.data(), 4));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 4));
         }
 
         THEN("read_buffer will fail if record exceeds remaining buffer size") {
             std::array<char, 2> buffer = {0, 0};
-            REQUIRE_FALSE(fortio_fread_buffer(fortio.get(), buffer.data(), 2));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 2));
         }
     }
 
@@ -177,11 +171,11 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
                        content.size());
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in, false);
+        ERT::FortIO fortio(filename.string(), std::ios_base::in);
 
         THEN("read_buffer will fail") {
             std::array<char, 1> buffer = {0};
-            REQUIRE_FALSE(fortio_fread_buffer(fortio.get(), buffer.data(), 1));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 1));
         }
     }
     GIVEN("A fortio file with mismatched records") {
@@ -193,11 +187,11 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
                        content.size());
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in, false);
+        ERT::FortIO fortio(filename.string(), std::ios_base::in);
 
         THEN("read_buffer will fail") {
             std::array<char, 1> buffer = {0};
-            REQUIRE_FALSE(fortio_fread_buffer(fortio.get(), buffer.data(), 1));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 1));
         }
     }
 }

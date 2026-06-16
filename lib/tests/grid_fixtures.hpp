@@ -170,7 +170,7 @@ inline void write_grid_cell(const ERT::FortIO &fortio, int i, int j, int k,
 
 inline ERT::FortIO make_fortio_writer(const fs::path &filename,
                                       bool fmt = false) {
-    return {filename.c_str(), std::fstream::out, fmt,
+    return {filename.string(), std::ios_base::out, fmt,
             fmt ? false : RD_ENDIAN_FLIP};
 }
 

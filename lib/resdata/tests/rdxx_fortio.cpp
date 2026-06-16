@@ -15,8 +15,7 @@ void test_open() {
         for (size_t i = 0; i < 1000; i++)
             data.push_back(i);
 
-        fortio_fwrite_record(fortio.get(),
-                             reinterpret_cast<char *>(data.data()), 1000 * 4);
+        fortio.fwrite_record(reinterpret_cast<char *>(data.data()), 1000 * 4);
     }
     fortio.close();
 
@@ -26,8 +25,7 @@ void test_open() {
         for (size_t i = 0; i < 1000; i++)
             data.push_back(i);
 
-        fortio_fwrite_record(fortio.get(),
-                             reinterpret_cast<char *>(data.data()), 1000 * 4);
+        fortio.fwrite_record(reinterpret_cast<char *>(data.data()), 1000 * 4);
     }
     fortio.close();
 
@@ -37,13 +35,13 @@ void test_open() {
         for (size_t i = 0; i < 1000; i++)
             data.push_back(99);
 
-        test_assert_true(fortio_fread_buffer(
-            fortio.get(), reinterpret_cast<char *>(data.data()), 1000 * 4));
+        test_assert_true(fortio.fread_buffer(
+            reinterpret_cast<char *>(data.data()), 1000 * 4));
         for (size_t i = 0; i < 1000; i++)
             test_assert_size_t_equal(data[i], i);
 
-        test_assert_true(fortio_fread_buffer(
-            fortio.get(), reinterpret_cast<char *>(data.data()), 1000 * 4));
+        test_assert_true(fortio.fread_buffer(
+            reinterpret_cast<char *>(data.data()), 1000 * 4));
         for (size_t i = 0; i < 1000; i++)
             test_assert_size_t_equal(data[i], i);
     }
@@ -59,8 +57,7 @@ void test_fortio() {
         for (size_t i = 0; i < 1000; i++)
             data.push_back(i);
 
-        fortio_fwrite_record(fortio.get(),
-                             reinterpret_cast<char *>(data.data()), 1000 * 4);
+        fortio.fwrite_record(reinterpret_cast<char *>(data.data()), 1000 * 4);
     }
     fortio.close();
 
@@ -70,8 +67,8 @@ void test_fortio() {
         for (size_t i = 0; i < 1000; i++)
             data.push_back(99);
 
-        test_assert_true(fortio_fread_buffer(
-            fortio.get(), reinterpret_cast<char *>(data.data()), 1000 * 4));
+        test_assert_true(fortio.fread_buffer(
+            reinterpret_cast<char *>(data.data()), 1000 * 4));
         for (size_t i = 0; i < 1000; i++)
             test_assert_size_t_equal(data[i], i);
     }
@@ -79,7 +76,7 @@ void test_fortio() {
 
     test_assert_throw(
         ERT::FortIO fortio("file/does/not/exists", std::fstream::in),
-        std::invalid_argument);
+        std::ios_base::failure);
 }
 
 void test_fortio_kw() {

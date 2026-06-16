@@ -45,7 +45,7 @@ void test_transaction() {
         for (int i = 0; i < data_size; i++)
             rd_kw_iset_float(kw3, i, 0.45 * i);
         rd_kw_fwrite(kw3, fortio.get());
-        fortio_fflush(fortio.get());
+        fortio.fflush();
 
         //finished creating data file
 

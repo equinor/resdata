@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     {
         ERT::FortIO fortio("LARGE_FILE.UNRST", std::ios_base::in);
         printf("Seeking to file end: ");
-        fortio_fseek(fortio.get(), file_size, SEEK_SET);
+        fortio.fseek(file_size, SEEK_SET);
         printf("Seek OK \n");
     }
 

@@ -44,7 +44,7 @@ bool rd_file_view_flags_set(const rd_file_view_type *file_view,
 }
 
 const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
-    return fortio_filename_ref(file_view->fortio);
+    return file_view->fortio->filename_ref();
 }
 
 rd_file_view_type *rd_file_view_alloc(fortio_type *fortio, int *flags,
@@ -127,13 +127,13 @@ static rd_kw_type *rd_file_view_get_kw(const rd_file_view_type *rd_file_view,
                                        rd_file_kw_type *file_kw) {
     rd_kw_type *rd_kw = rd_file_kw_get_kw_ptr(file_kw);
     if (!rd_kw) {
-        if (fortio_assert_stream_open(rd_file_view->fortio)) {
+        if (rd_file_view->fortio->assert_stream_open()) {
 
             rd_kw = rd_file_kw_get_kw(file_kw, rd_file_view->fortio,
                                       rd_file_view->inv_map);
 
             if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
-                fortio_fclose_stream(rd_file_view->fortio);
+                rd_file_view->fortio->fclose_stream();
         }
     }
     return rd_kw;
@@ -152,7 +152,7 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
     rd_file_kw_type *file_kw =
         rd_file_view_iget_named_file_kw(rd_file_view, kw, index);
 
-    if (fortio_assert_stream_open(rd_file_view->fortio)) {
+    if (rd_file_view->fortio->assert_stream_open()) {
         offset_type offset = rd_file_kw_get_offset(file_kw);
         rd_data_type data_type = rd_file_kw_get_data_type(file_kw);
         int element_count = rd_file_kw_get_size(file_kw);
@@ -206,7 +206,7 @@ rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
 bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
     bool loadOK = false;
 
-    if (fortio_assert_stream_open(rd_file_view->fortio)) {
+    if (rd_file_view->fortio->assert_stream_open()) {
         for (rd_file_kw_type *file_kw : rd_file_view->kw_list)
             rd_file_kw_get_kw(file_kw, rd_file_view->fortio,
                               rd_file_view->inv_map);
@@ -214,7 +214,7 @@ bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
     }
 
     if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
-        fortio_fclose_stream(rd_file_view->fortio);
+        rd_file_view->fortio->fclose_stream();
 
     return loadOK;
 }
@@ -701,7 +701,7 @@ rd_file_view_type *rd_file_view_add_summary_view(rd_file_view_type *file_view,
 }
 
 void rd_file_view_fclose_stream(rd_file_view_type *file_view) {
-    fortio_fclose_stream(file_view->fortio);
+    file_view->fortio->fclose_stream();
 }
 
 void rd_file_view_write_index(const rd_file_view_type *file_view,

@@ -25,6 +25,7 @@ namespace py = pybind11;
 namespace {
 
 PYBIND11_MODULE(_rd_sum, m) {
+    register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_sum.py and rd_sum.cpp";
 
     m.def(

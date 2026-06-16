@@ -48,7 +48,7 @@ void file_convert(const std::string &src_file, const std::string &target_file,
     ERT::FortIO src(src_file, std::ios_base::in, formatted_src);
 
     while (true) {
-        if (fortio_read_at_eof(src.get()))
+        if (src.read_at_eof())
             break;
 
         {
