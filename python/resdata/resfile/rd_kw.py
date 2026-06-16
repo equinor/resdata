@@ -31,7 +31,7 @@ from cwrap import CFILE, BaseCClass
 from typing_extensions import Self, deprecated
 
 import resdata.resfile._kw as _kw
-from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
+from resdata import ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
 
 
@@ -97,94 +97,6 @@ class ResdataKW(BaseCClass):
     )
 
     TYPE_NAME = "rd_kw"
-    _alloc_new = ResdataPrototype(
-        "void* rd_kw_alloc_python(char*, int, rd_data_type)", bind=False
-    )
-    _fread_alloc = ResdataPrototype(
-        "rd_kw_obj rd_kw_fread_alloc(rd_fortio)", bind=False
-    )
-    _sub_copy = ResdataPrototype(
-        "rd_kw_obj rd_kw_alloc_sub_copy(rd_kw, char*, int, int)"
-    )
-    _copyc = ResdataPrototype("rd_kw_obj rd_kw_alloc_copy(rd_kw)")
-    _slice_copyc = ResdataPrototype(
-        "rd_kw_obj rd_kw_alloc_slice_copy(rd_kw, int, int, int)"
-    )
-    _global_copy = ResdataPrototype("rd_kw_obj rd_kw_alloc_global_copy(rd_kw, rd_kw)")
-    _fprintf_data = ResdataPrototype("void     rd_kw_fprintf_data(rd_kw, char*, FILE)")
-
-    _get_size = ResdataPrototype("int      rd_kw_get_size(rd_kw)")
-    _get_fortio_size = ResdataPrototype("size_t   rd_kw_fortio_size(rd_kw)")
-    _get_type = ResdataPrototype("rd_type_enum rd_kw_get_type(rd_kw)")
-    _iget_char_ptr = ResdataPrototype("char*    rd_kw_iget_char_ptr(rd_kw, int)")
-    _iset_char_ptr = ResdataPrototype("void     rd_kw_iset_char_ptr(rd_kw, int, char*)")
-    _iget_string_ptr = ResdataPrototype("char*    rd_kw_iget_string_ptr(rd_kw, int)")
-    _iset_string_ptr = ResdataPrototype(
-        "void     rd_kw_iset_string_ptr(rd_kw, int, char*)"
-    )
-    _iget_bool = ResdataPrototype("bool     rd_kw_iget_bool(rd_kw, int)")
-    _iset_bool = ResdataPrototype("bool     rd_kw_iset_bool(rd_kw, int, bool)")
-    _iget_int = ResdataPrototype("int      rd_kw_iget_int(rd_kw, int)")
-    _iget_double = ResdataPrototype("double   rd_kw_iget_double(rd_kw, int)")
-    _iget_float = ResdataPrototype("float    rd_kw_iget_float(rd_kw, int)")
-    _float_ptr = ResdataPrototype("float*   rd_kw_get_float_ptr(rd_kw)")
-    _int_ptr = ResdataPrototype("int*     rd_kw_get_int_ptr(rd_kw)")
-    _double_ptr = ResdataPrototype("double*  rd_kw_get_double_ptr(rd_kw)")
-    _free = ResdataPrototype("void     rd_kw_free(rd_kw)")
-    _fwrite = ResdataPrototype("void     rd_kw_fwrite(rd_kw, rd_fortio)")
-    _get_header = ResdataPrototype("char*    rd_kw_get_header (rd_kw)")
-    _set_header = ResdataPrototype("void     rd_kw_set_header_name (rd_kw, char*)")
-    _get_data_type = ResdataPrototype(
-        "rd_data_type_obj rd_kw_get_data_type_python(rd_kw)"
-    )
-
-    _int_sum = ResdataPrototype("int      rd_kw_element_sum_int(rd_kw)")
-    _float_sum = ResdataPrototype("double   rd_kw_element_sum_float(rd_kw)")
-    _iadd_squared = ResdataPrototype("void     rd_kw_inplace_add_squared(rd_kw, rd_kw)")
-    _isqrt = ResdataPrototype("void     rd_kw_inplace_sqrt(rd_kw)")
-    _iadd = ResdataPrototype("void     rd_kw_inplace_add(rd_kw, rd_kw)")
-    _imul = ResdataPrototype("void     rd_kw_inplace_mul(rd_kw, rd_kw)")
-    _idiv = ResdataPrototype("void     rd_kw_inplace_div(rd_kw, rd_kw)")
-    _isub = ResdataPrototype("void     rd_kw_inplace_sub(rd_kw, rd_kw)")
-    _iabs = ResdataPrototype("void     rd_kw_inplace_abs(rd_kw)")
-    _equal = ResdataPrototype("bool     rd_kw_equal(rd_kw, rd_kw)")
-    _equal_numeric = ResdataPrototype(
-        "bool     rd_kw_numeric_equal(rd_kw, rd_kw, double, double)"
-    )
-
-    _assert_binary = ResdataPrototype(
-        "bool     rd_kw_size_and_numeric_type_equal(rd_kw, rd_kw)"
-    )
-    _scale_int = ResdataPrototype("void     rd_kw_scale_int(rd_kw, int)")
-    _scale_float = ResdataPrototype(
-        "void     rd_kw_scale_float_or_double(rd_kw, double)"
-    )
-    _shift_int = ResdataPrototype("void     rd_kw_shift_int(rd_kw, int)")
-    _shift_float = ResdataPrototype(
-        "void     rd_kw_shift_float_or_double(rd_kw, double)"
-    )
-    _copy_data = ResdataPrototype("void     rd_kw_memcpy_data(rd_kw, rd_kw)")
-    _set_int = ResdataPrototype("void     rd_kw_scalar_set_int(rd_kw, int)")
-    _set_float = ResdataPrototype(
-        "void     rd_kw_scalar_set_float_or_double(rd_kw, double)"
-    )
-
-    _max_min_int = ResdataPrototype("void     rd_kw_max_min_int(rd_kw, int*, int*)")
-    _max_min_float = ResdataPrototype(
-        "void     rd_kw_max_min_float(rd_kw, float*, float*)"
-    )
-    _max_min_double = ResdataPrototype(
-        "void     rd_kw_max_min_double(rd_kw, double*, double*)"
-    )
-    _fix_uninitialized = ResdataPrototype(
-        "void     rd_kw_fix_uninitialized(rd_kw,int, int, int, int*)"
-    )
-    _create_actnum = ResdataPrototype("rd_kw_obj rd_kw_alloc_actnum(rd_kw, float)")
-    _first_different = ResdataPrototype(
-        "int      rd_kw_first_different(rd_kw, rd_kw, int, double, double)"
-    )
-    _resize = ResdataPrototype("void     rd_kw_resize(rd_kw, int)")
-    _safe_div = ResdataPrototype("bool     rd_kw_inplace_safe_div(rd_kw,rd_kw)")
 
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
@@ -222,7 +134,9 @@ class ResdataKW(BaseCClass):
     def slice_copy(self, slice_range):
         start, stop, step = slice_range.indices(len(self))
         if stop > start:
-            return self._slice_copyc(start, stop, step)
+            return ResdataKW.createPythonObject(
+                _kw._slice_copyc(self, start, stop, step)
+            )
         else:
             return None
 
@@ -230,7 +144,7 @@ class ResdataKW(BaseCClass):
         """
         Will create a deep copy of the current kw instance.
         """
-        return self._copyc()
+        return ResdataKW.createPythonObject(_kw._copyc(self))
 
     @classmethod
     def read_grdecl(
@@ -373,10 +287,10 @@ class ResdataKW(BaseCClass):
         """
         Will read a new ResdataKW instance from the open FortIO file.
         """
-        return cls._fread_alloc(fortio)
+        return cls.createPythonObject(_kw._fread_alloc(fortio))
 
     def free(self):
-        self._free()
+        _kw._free(self)
 
     def __repr__(self):
         si = len(self)
@@ -408,7 +322,7 @@ class ResdataKW(BaseCClass):
         if not isinstance(data_type, ResDataType):
             raise TypeError("Expected an ResDataType, received: %s" % type(data_type))
 
-        c_ptr = self._alloc_new(name, size, data_type)
+        c_ptr = _kw._alloc_new(name, size, data_type)
         super().__init__(c_ptr)
         self.__private_init()
 
@@ -416,15 +330,21 @@ class ResdataKW(BaseCClass):
         self.data_ptr = None
 
         if self.data_type.is_int():
-            self.data_ptr = self._int_ptr()
+            self.data_ptr = ctypes.cast(
+                _kw._int_ptr(self), ctypes.POINTER(ctypes.c_int)
+            )
             self.dtype = np.int32
             self.str_fmt = "%8d"
         elif self.data_type.is_float():
-            self.data_ptr = self._float_ptr()
+            self.data_ptr = ctypes.cast(
+                _kw._float_ptr(self), ctypes.POINTER(ctypes.c_float)
+            )
             self.dtype = np.float32
             self.str_fmt = "%13.4f"
         elif self.data_type.is_double():
-            self.data_ptr = self._double_ptr()
+            self.data_ptr = ctypes.cast(
+                _kw._double_ptr(self), ctypes.POINTER(ctypes.c_double)
+            )
             self.dtype = np.float64
             self.str_fmt = "%13.4f"
         else:
@@ -468,7 +388,9 @@ class ResdataKW(BaseCClass):
         if offset + count > len(self):
             raise IndexError("Invalid value of (offset + count):%d" % (offset + count))
 
-        return self._sub_copy(new_header, offset, count)
+        return ResdataKW.createPythonObject(
+            _kw._sub_copy(self, new_header, offset, count)
+        )
 
     def is_numeric(self):
         """
@@ -483,7 +405,7 @@ class ResdataKW(BaseCClass):
         """
         Returns the number of elements. Implements len()
         """
-        return self._get_size()
+        return _kw._get_size(self)
 
     def __deep_copy__(self, memo):
         """
@@ -509,11 +431,11 @@ class ResdataKW(BaseCClass):
                     return self.data_ptr[index]
                 else:
                     if self.data_type.is_bool():
-                        return self._iget_bool(index)
+                        return _kw._iget_bool(self, index)
                     elif self.data_type.is_char():
-                        return self._iget_char_ptr(index)
+                        return _kw._iget_char_ptr(self, index)
                     elif self.data_type.is_string():
-                        return self._iget_string_ptr(index)
+                        return _kw._iget_string_ptr(self, index)
                     else:
                         raise TypeError("Internal implementation error ...")
         elif isinstance(index, slice):
@@ -538,11 +460,11 @@ class ResdataKW(BaseCClass):
                     self.data_ptr[index] = value
                 else:
                     if self.data_type.is_bool():
-                        self._iset_bool(index, value)
+                        _kw._iset_bool(self, index, value)
                     elif self.data_type.is_char():
-                        return self._iset_char_ptr(index, value)
+                        return _kw._iset_char_ptr(self, index, value)
                     elif self.data_type.is_string():
-                        return self._iset_string_ptr(index, value)
+                        return _kw._iset_string_ptr(self, index, value)
                     else:
                         raise SystemError("Internal implementation error ...")
         elif isinstance(index, slice):
@@ -561,9 +483,9 @@ class ResdataKW(BaseCClass):
             if hasattr(factor, "rd_kw_instance"):
                 if self.assert_binary(factor):
                     if mul:
-                        self._imul(factor)
+                        _kw._imul(self, factor)
                     else:
-                        self._idiv(factor)
+                        _kw._idiv(self, factor)
                 else:
                     raise TypeError("Type mismatch")
             else:
@@ -572,12 +494,12 @@ class ResdataKW(BaseCClass):
 
                 if self.data_type.is_int():
                     if isinstance(factor, int):
-                        self._scale_int(factor)
+                        _kw._scale_int(self, factor)
                     else:
                         raise TypeError("Type mismatch")
                 else:
                     if isinstance(factor, int) or isinstance(factor, float):
-                        self._scale_float(factor)
+                        _kw._scale_float(self, factor)
                     else:
                         raise TypeError("Only muliplication with scalar supported")
         else:
@@ -590,9 +512,9 @@ class ResdataKW(BaseCClass):
             if type(self) == type(delta):
                 if self.assert_binary(delta):
                     if add:
-                        self._iadd(delta)
+                        _kw._iadd(self, delta)
                     else:
-                        self._isub(delta)
+                        _kw._isub(self, delta)
                 else:
                     raise TypeError("Type / size mismatch")
             else:
@@ -603,13 +525,13 @@ class ResdataKW(BaseCClass):
 
                 if self.data_type.is_int():
                     if isinstance(delta, int):
-                        self._shift_int(delta * sign)
+                        _kw._shift_int(self, delta * sign)
                     else:
                         raise TypeError("Type mismatch")
                 else:
                     if isinstance(delta, int) or isinstance(delta, float):
-                        self._shift_float(
-                            delta * sign
+                        _kw._shift_float(
+                            self, delta * sign
                         )  # Will call the _float() or _double() function in the C layer.
                     else:
                         raise TypeError("Type mismatch")
@@ -635,7 +557,7 @@ class ResdataKW(BaseCClass):
     def __abs__(self):
         if self.is_numeric():
             copy = self.copy()
-            copy._iabs()
+            _kw._iabs(copy)
             return copy
         else:
             raise TypeError(
@@ -680,13 +602,13 @@ class ResdataKW(BaseCClass):
         if not self.assert_binary(other):
             raise ValueError("Invalid argument to method add_squared")
 
-        self._iadd_squared(other)
+        _kw._iadd_squared(self, other)
 
     def isqrt(self):
         if not self.is_numeric():
             raise TypeError("Can only be called on numeric types")
 
-        self._isqrt()
+        _kw._isqrt(self)
 
     def sum(self, mask=None, force_active=False):
         """
@@ -697,11 +619,11 @@ class ResdataKW(BaseCClass):
         """
         if mask is None:
             if self.data_type.is_int():
-                return self._int_sum()
+                return _kw._int_sum(self)
             elif self.data_type.is_float():
-                return self._float_sum()
+                return _kw._float_sum(self)
             elif self.data_type.is_double():
-                return self._float_sum()
+                return _kw._float_sum(self)
             elif self.data_type.is_bool():
                 _sum = 0
                 for elm in self:
@@ -721,7 +643,7 @@ class ResdataKW(BaseCClass):
         Utility function to assert that keywords @self and @other can
         be combined.
         """
-        return self._assert_binary(other)
+        return _kw._assert_binary(self, other)
 
     #################################################################
 
@@ -769,7 +691,7 @@ class ResdataKW(BaseCClass):
                     mask.copy_kw(self, value, force_active)
                 else:
                     if self.assert_binary(value):
-                        self._copy_data(value)
+                        _kw._copy_data(self, value)
                     else:
                         raise TypeError("Type / size mismatch")
             else:
@@ -778,12 +700,12 @@ class ResdataKW(BaseCClass):
                 else:
                     if self.data_type.is_int():
                         if isinstance(value, int):
-                            self._set_int(value)
+                            _kw._set_int(self, value)
                         else:
                             raise TypeError("Type mismatch")
                     else:
                         if isinstance(value, int) or isinstance(value, float):
-                            self._set_float(value)
+                            _kw._set_float(self, value)
                         else:
                             raise TypeError("Only muliplication with scalar supported")
 
@@ -874,7 +796,7 @@ class ResdataKW(BaseCClass):
         pointer comparison.
         """
         if isinstance(other, ResdataKW):
-            return self._equal(other)
+            return _kw._equal(self, other)
         else:
             raise TypeError("Can only compare with another ResdataKW")
 
@@ -882,7 +804,7 @@ class ResdataKW(BaseCClass):
         return self.equal(other)
 
     def __hash__(self):
-        return hash(self._get_header())
+        return hash(_kw._get_header(self))
 
     def equal_numeric(self, other, epsilon=1e-6, abs_epsilon=None, rel_epsilon=None):
         """Will check if two numerical keywords are ~nearly equal.
@@ -902,7 +824,7 @@ class ResdataKW(BaseCClass):
             if rel_epsilon is None:
                 rel_epsilon = epsilon
 
-            return self._equal_numeric(other, abs_epsilon, rel_epsilon)
+            return _kw._equal_numeric(self, other, abs_epsilon, rel_epsilon)
         else:
             raise TypeError("Can only compare with another ResdataKW")
 
@@ -916,18 +838,18 @@ class ResdataKW(BaseCClass):
         """
         The number of bytes this keyword would occupy in a BINARY file.
         """
-        return self._get_fortio_size()
+        return _kw._get_fortio_size(self)
 
     def set_name(self, name):
         if len(name) > 8:
             raise ValueError(
                 "Sorry: the name property must be max 8 characters long :-("
             )
-        self._set_header(name)
+        _kw._set_header(self, name)
 
     @property
     def name(self):
-        n = self._get_header()
+        n = _kw._get_header(self)
         return str(n) if n else ""
 
     @name.setter
@@ -942,7 +864,7 @@ class ResdataKW(BaseCClass):
         Will set the new size of the kw to @new_size.
         """
         if new_size >= 0:
-            self._resize(int(new_size))
+            _kw._resize(self, int(new_size))
 
         # Iteration is based on a pointer to the underlying storage,
         # that will generally by reset by the resize() call; i.e. we
@@ -959,22 +881,16 @@ class ResdataKW(BaseCClass):
         if len(self) == 0:
             return (np.nan, np.nan)
         if self.data_type.is_float():
-            min_ = ctypes.c_float()
-            max_ = ctypes.c_float()
-            self._max_min_float(ctypes.byref(max_), ctypes.byref(min_))
+            max_, min_ = _kw._max_min_float(self)
         elif self.data_type.is_double():
-            min_ = ctypes.c_double()
-            max_ = ctypes.c_double()
-            self._max_min_double(ctypes.byref(max_), ctypes.byref(min_))
+            max_, min_ = _kw._max_min_double(self)
         elif self.data_type.is_int():
-            min_ = ctypes.c_int()
-            max_ = ctypes.c_int()
-            self._max_min_int(ctypes.byref(max_), ctypes.byref(min_))
+            max_, min_ = _kw._max_min_int(self)
         else:
             raise TypeError(
                 "min_max property not defined for keywords of type: %s" % self.type
             )
-        return (min_.value, max_.value)
+        return (min_, max_)
 
     def get_max(self):
         mm = self.get_min_max()
@@ -989,11 +905,11 @@ class ResdataKW(BaseCClass):
         "rd_kw.type is deprecated, it will be removed in version 7. Use .data_type."
     )
     def type(self):
-        return self._get_type()
+        return ResdataTypeEnum(_kw._get_type(self))
 
     @property
     def data_type(self):
-        return self._get_data_type()
+        return ResDataType.createPythonObject(_kw._get_data_type(self))
 
     def type_name(self):
         return self.data_type.type_name
@@ -1002,7 +918,7 @@ class ResdataKW(BaseCClass):
         "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
     )
     def get_rd_type(self):
-        return self._get_type()
+        return ResdataTypeEnum(_kw._get_type(self))
 
     @property
     def header(self):
@@ -1108,7 +1024,7 @@ class ResdataKW(BaseCClass):
         return np.copy(view)
 
     def fwrite(self, fortio):
-        self._fwrite(fortio)
+        _kw._fwrite(self, fortio)
 
     def write_grdecl(self, file):
         """
@@ -1154,7 +1070,7 @@ class ResdataKW(BaseCClass):
         if fmt is None:
             fmt = self.str_fmt + "\n"
         cfile = CFILE(file)
-        self._fprintf_data(fmt, cfile)
+        _kw._fprintf_data(self, fmt, cfile)
 
     def create_actnum(self, porv_limit=0):
         """Will create ACTNUM keyword from PORV keyword.
@@ -1173,7 +1089,7 @@ class ResdataKW(BaseCClass):
         if not self.get_name() == "PORV":
             raise ValueError("Input argument must be PORV keyword")
 
-        return self._create_actnum(porv_limit)
+        return ResdataKW.createPythonObject(_kw._create_actnum(self, porv_limit))
 
     def fix_uninitialized(self, grid):
         """
@@ -1181,16 +1097,16 @@ class ResdataKW(BaseCClass):
         """
         dims = grid.get_dims()
         actnum = grid.exportACTNUM()
-        self._fix_uninitialized(dims[0], dims[1], dims[2], actnum._get_data_ptr())
+        _kw._fix_uninitialized(self, dims[0], dims[1], dims[2], actnum)
 
     @deprecated("get_data_ptr is deprecated and will be removed in version 7.")
     def get_data_ptr(self):
         if self.data_type.is_int():
-            return self._int_ptr()
+            return ctypes.cast(_kw._int_ptr(self), ctypes.POINTER(ctypes.c_int))
         elif self.data_type.is_float():
-            return self._float_ptr()
+            return ctypes.cast(_kw._float_ptr(self), ctypes.POINTER(ctypes.c_float))
         elif self.data_type.is_double():
-            return self._double_ptr()
+            return ctypes.cast(_kw._double_ptr(self), ctypes.POINTER(ctypes.c_double))
         else:
             raise ValueError("Only numeric types can export data pointer")
 
@@ -1212,13 +1128,13 @@ class ResdataKW(BaseCClass):
         if rel_epsilon is None:
             rel_epsilon = epsilon
 
-        return self._first_different(other, offset, abs_epsilon, rel_epsilon)
+        return _kw._first_different(self, other, offset, abs_epsilon, rel_epsilon)
 
     def scatter_copy(self, actnum):
         if not isinstance(actnum, ResdataKW):
             raise TypeError("The actnum argument must be of type ResdataKW")
 
-        return self._global_copy(actnum)
+        return ResdataKW.createPythonObject(_kw._global_copy(self, actnum))
 
     def safe_div(self, divisor):
         if not len(self) == len(divisor):
@@ -1232,7 +1148,7 @@ class ResdataKW(BaseCClass):
         if not divisor.is_numeric():
             raise TypeError("Must divide by numeric keyword")
 
-        ok = self._safe_div(divisor)
+        ok = _kw._safe_div(self, divisor)
         if not ok:
             raise NotImplementedError(
                 "safe_div not implemented for this type combination"
