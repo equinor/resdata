@@ -1,14 +1,21 @@
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <cctype>
+
 #include <optional>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
-#include <ert/util/util.hpp>
 #include <fmt/format.h>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
+#include <resdata/FortIO.hpp>
+
+#include <ert/util/util.hpp>
 
 #define MAX_GRDECL_HEADER_SIZE 512
 #define MAX_GRDECL_HEADER_SCANF_FMT "%511s"
@@ -399,10 +406,7 @@ void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream,
         fprintf(stream, "%s\n", rd_kw_get_header(rd_kw));
 
     {
-        auto fortio =
-            std::unique_ptr<fortio_type, decltype(&fortio_free_FILE_wrapper)>(
-                fortio_alloc_FILE_wrapper(nullptr, false, true, true, stream),
-                &fortio_free_FILE_wrapper);
+        ERT::FortIO fortio("", true, true, stream, false);
         rd_kw_fwrite_data(rd_kw, fortio.get());
     }
     fprintf(stream, "/\n");

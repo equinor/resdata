@@ -4,6 +4,8 @@
 #include <cerrno>
 #include <ctime>
 
+#include <ios>
+
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
@@ -187,7 +189,7 @@ bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
 }
 
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
-    return fortio_filename_ref(rd_file->fortio);
+    return rd_file->fortio->filename_ref();
 }
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
@@ -269,16 +271,16 @@ rd_file_view_type *rd_file_get_summary_view(rd_file_type *rd_file,
 */
 
 static void rd_file_scan(rd_file_type *rd_file) {
-    fortio_fseek(rd_file->fortio, 0, SEEK_SET);
+    rd_file->fortio->fseek(0, SEEK_SET);
     {
         rd_kw_type *work_kw = rd_kw_alloc_new("WORK-KW", 0, RD_INT, NULL);
 
         while (true) {
-            if (fortio_read_at_eof(rd_file->fortio))
+            if (rd_file->fortio->read_at_eof())
                 break;
 
             {
-                offset_type current_offset = fortio_ftell(rd_file->fortio);
+                offset_type current_offset = rd_file->fortio->ftell();
                 rd_read_status_enum read_status =
                     rd_kw_fread_header(work_kw, rd_file->fortio);
                 if (read_status == RD_KW_READ_FAIL)
@@ -325,9 +327,10 @@ static fortio_type *rd_file_alloc_fortio(const char *filename, int flags) {
     rd_fmt_file(filename, &fmt_file);
 
     if (rd_file_view_check_flags(flags, RD_FILE_WRITABLE))
-        fortio = fortio_open_readwrite(filename, fmt_file, RD_ENDIAN_FLIP);
+        fortio = new ERT::FortIO(
+            filename, std::ios_base::in | std::ios_base::out, fmt_file);
     else
-        fortio = fortio_open_reader(filename, fmt_file, RD_ENDIAN_FLIP);
+        fortio = new ERT::FortIO(filename, std::ios_base::in, fmt_file);
 
     return fortio;
 }
@@ -345,7 +348,7 @@ rd_file_type *rd_file_open(const char *filename, int flags) {
         rd_file_select_global(rd_file);
 
         if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
-            fortio_fclose_stream(rd_file->fortio);
+            rd_file->fortio->fclose_stream();
 
         return rd_file;
     } else
@@ -364,7 +367,7 @@ bool rd_file_writable(const rd_file_type *rd_file) {
 
 void rd_file_close(rd_file_type *rd_file) {
     if (rd_file->fortio != NULL)
-        fortio_fclose(rd_file->fortio);
+        delete rd_file->fortio;
 
     if (rd_file->global_view)
         rd_file_view_free(rd_file->global_view);
@@ -527,13 +530,13 @@ bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
         rd_kw); // We just verify that the input rd_kw points to an rd_kw
     if (file_kw !=
         NULL) { // we manage; from then on we use the reference contained in
-        if (fortio_assert_stream_open(
-                rd_file->fortio)) { // the corresponding rd_file_kw instance.
+        if (rd_file->fortio
+                ->assert_stream_open()) { // the corresponding rd_file_kw instance.
 
             rd_file_kw_inplace_fwrite(file_kw, rd_file->fortio);
 
             if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
-                fortio_fclose_stream(rd_file->fortio);
+                rd_file->fortio->fclose_stream();
 
             return true;
         } else
@@ -611,7 +614,7 @@ bool rd_file_write_index(const rd_file_type *rd_file,
         return false;
     {
         char *filename =
-            util_split_alloc_filename(fortio_filename_ref(rd_file->fortio));
+            util_split_alloc_filename(rd_file->fortio->filename_ref());
         util_fwrite_string(filename, ostream);
         free(filename);
     }
@@ -642,7 +645,7 @@ rd_file_type *rd_file_fast_open(const char *file_name,
                 rd_file_select_global(rd_file);
                 if (rd_file_view_check_flags(rd_file->flags,
                                              RD_FILE_CLOSE_STREAM))
-                    fortio_fclose_stream(rd_file->fortio);
+                    rd_file->fortio->fclose_stream();
             } else {
                 rd_file_close(rd_file);
                 rd_file = NULL;

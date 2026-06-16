@@ -19,6 +19,7 @@ namespace py = pybind11;
 
 namespace {
 PYBIND11_MODULE(_file, m) {
+    register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_file.py and rd_file.cpp";
 
     m.def("_open", [](std::string filename, int flags) -> py::object {

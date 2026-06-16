@@ -16,6 +16,7 @@ using fmt::format;
 
 namespace {
 PYBIND11_MODULE(_grid, m) {
+    register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 
     m.def(

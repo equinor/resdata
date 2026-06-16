@@ -39,7 +39,7 @@ void test_create_and_load_index_file() {
         for (int i = 0; i < data_size; ++i)
             rd_kw_iset_float(kw2, i, 0.15 * i);
         rd_kw_fwrite(kw2, fortio.get());
-        fortio_fflush(fortio.get());
+        fortio.fflush();
         //finished creating data file
 
         //creating rd_file

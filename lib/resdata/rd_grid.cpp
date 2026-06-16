@@ -2297,7 +2297,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
       transmissibility values in parallell with adding NNC information
       to the grid:
 
-         fortio_type * init_file = fortio_open_writer( "CASE.INIT" , ...
+         ERT::FortIO init_file("CASE.INIT", std::ios_base::out, ...
          rd_grid_type * grid ...
          rd_kw_type * trannnc_kw = rd_kw_alloc( "TRANNNC" , num_nnc , RD_FLOAT_TYPE );
 
@@ -2311,7 +2311,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
          }
          ...
          rd_grid_fwrite_EGRID( grid , ... );
-         rd_kw_fwrite( trannnc_kw , init_file );
+         rd_kw_fwrite( trannnc_kw , init_file.get() );
 
 */
 void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
@@ -4669,7 +4669,7 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
     int coords_size = 5;
     bool fmt_file = false;
 
-    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file, RD_ENDIAN_FLIP);
+    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
     if (grid->children.size() > 0)
         coords_size = 7;
 
@@ -5243,7 +5243,7 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
         if (rd_get_file_type(filename, &is_fmt, NULL) != RD_OTHER_FILE)
             fmt_file = is_fmt;
     }
-    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file, RD_ENDIAN_FLIP);
+    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
 
     rd_grid_fwrite_EGRID__(grid, fortio, output_unit);
     for (const auto &igrid : grid->LGR_list) {

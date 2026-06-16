@@ -194,7 +194,7 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, fortio_type *fortio,
         rd_file_kw_drop_kw(file_kw, inv_map);
 
     {
-        fortio_fseek(fortio, file_kw->file_offset, SEEK_SET);
+        fortio->fseek(file_kw->file_offset, SEEK_SET);
         file_kw->kw = rd_kw_fread_alloc(fortio);
         rd_file_kw_assert_kw(file_kw);
         inv_map_add_kw(inv_map, file_kw, file_kw->kw);
@@ -271,9 +271,9 @@ bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw,
 
 void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, fortio_type *fortio) {
     rd_file_kw_assert_kw(file_kw);
-    fortio_fseek(fortio, file_kw->file_offset, SEEK_SET);
+    fortio->fseek(file_kw->file_offset, SEEK_SET);
     rd_kw_fskip_header(fortio);
-    fortio_fclean(fortio);
+    fortio->fclean();
     rd_kw_fwrite_data(file_kw->kw, fortio);
 }
 

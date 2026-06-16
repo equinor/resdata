@@ -6,9 +6,7 @@
 #include <cstdio>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
 #include <resdata/rd_endian_flip.hpp>
-#include <ert/util/ert_unique_ptr.hpp>
 
 typedef enum {
     FORTIO_NOENTRY = 0, /* File does not exists at all - application error. */
@@ -19,49 +17,6 @@ typedef enum {
     FORTIO_MISSING_TAIL = 4,
     FORTIO_HEADER_MISMATCH = 5
 } fortio_status_type;
-
-typedef struct fortio_struct fortio_type;
-
-bool fortio_looks_like_fortran_file(const char *, bool);
-fortio_type *fortio_open_reader(const char *, bool fmt_file,
-                                bool endian_flip_header);
-fortio_type *fortio_open_writer(const char *, bool fmt_file,
-                                bool endian_flip_header);
-fortio_type *fortio_open_readwrite(const char *, bool fmt_file,
-                                   bool endian_flip_header);
-fortio_type *fortio_open_append(const char *filename, bool fmt_file,
-                                bool endian_flip_header);
-fortio_type *fortio_alloc_FILE_wrapper(const char *, bool, bool, bool, FILE *);
-void fortio_free_FILE_wrapper(fortio_type *);
-void fortio_fclose(fortio_type *);
-int fortio_init_read(fortio_type *);
-bool fortio_complete_read(fortio_type *, int record_size);
-void fortio_init_write(fortio_type *, int);
-void fortio_complete_write(fortio_type *, int record_size);
-int fortio_fskip_record(fortio_type *);
-bool fortio_fread_buffer(fortio_type *, char *buffer, int buffer_size);
-void fortio_fwrite_record(fortio_type *, const char *buffer, int buffer_size);
-FILE *fortio_get_FILE(const fortio_type *);
-void fortio_fflush(fortio_type *);
-void fortio_rewind(const fortio_type *fortio);
-const char *fortio_filename_ref(const fortio_type *);
-bool fortio_fmt_file(const fortio_type *);
-offset_type fortio_ftell(const fortio_type *fortio);
-bool fortio_fseek(fortio_type *fortio, offset_type offset, int whence);
-bool fortio_data_fskip(fortio_type *fortio, const int element_size,
-                       const int element_count, const int block_count);
-void fortio_data_fseek(fortio_type *fortio, offset_type data_offset,
-                       size_t data_element, const int element_size,
-                       const int element_count, const int block_size);
-bool fortio_ftruncate(fortio_type *fortio, offset_type size);
-int fortio_fclean(fortio_type *fortio);
-
-bool fortio_fclose_stream(fortio_type *fortio);
-bool fortio_fopen_stream(fortio_type *fortio);
-bool fortio_stream_is_open(const fortio_type *fortio);
-bool fortio_assert_stream_open(fortio_type *fortio);
-bool fortio_read_at_eof(fortio_type *fortio);
-void fortio_fwrite_error(fortio_type *fortio);
 
 namespace ERT {
 
@@ -91,15 +46,68 @@ public:
     FortIO() = delete;
     FortIO(const std::string &filename, std::ios_base::openmode mode,
            bool fmt_file = false, bool endian_flip_header = RD_ENDIAN_FLIP);
+    FortIO(const std::string &filename, bool fmt_file, bool writable,
+           FILE *stream, bool endian_flip_header = RD_ENDIAN_FLIP);
+    ~FortIO();
+
+    FortIO(FortIO &&other) noexcept;
+    FortIO &operator=(FortIO &&other) noexcept;
+    FortIO(const FortIO &) = delete;
+    FortIO &operator=(const FortIO &) = delete;
+
+    static bool looks_like_fortran_file(const char *filename, bool endian_flip);
     void open(const std::string &filename, std::ios_base::openmode mode,
               bool fmt_file = false, bool endian_flip_header = RD_ENDIAN_FLIP);
-    void fflush() const;
-    bool ftruncate(offset_type new_size);
-
-    fortio_type *get() const;
     void close();
 
+    [[nodiscard]] FortIO *get() const;
+
+    int init_read();
+    bool complete_read(int record_size);
+    void init_write(int record_size);
+    void complete_write(int record_size);
+    int fskip_record();
+    bool fread_buffer(char *buffer, int buffer_size);
+    void fwrite_record(const char *buffer, int buffer_size);
+    [[nodiscard]] FILE *get_FILE() const;
+    void fflush() const;
+    void rewind() const;
+    [[nodiscard]] const char *filename_ref() const;
+    [[nodiscard]] bool fmt_file() const;
+    [[nodiscard]] offset_type ftell() const;
+    bool fseek(offset_type offset, int whence);
+    bool data_fskip(int element_size, int element_count, int block_count);
+    void data_fseek(offset_type data_offset, size_t data_element,
+                    int element_size, int element_count, int block_size);
+    bool ftruncate(offset_type size);
+    int fclean();
+    bool fclose_stream();
+    bool fopen_stream();
+    [[nodiscard]] bool stream_is_open() const;
+    bool assert_stream_open();
+    bool read_at_eof();
+    void fwrite_error();
+
 private:
-    ert_unique_ptr<fortio_type, fortio_fclose> m_fortio;
+    bool fseek_(offset_type offset, int whence);
+
+    FILE *m_stream = nullptr;
+    std::string m_filename;
+    bool m_endian_flip_header = false;
+    bool m_fmt_file = false;
+    const char *m_fopen_mode = nullptr;
+    bool m_stream_owner = false;
+
+    /*
+    The internal variable m_read_size is used in the functions fseek() and
+    read_at_eof() - if-and-only-if - the file is opened in read only mode.
+
+    Observe that the semantics of the fseek() function depends on whether the
+    file is writable.
+    */
+    bool m_writable = false;
+    offset_type m_read_size = 0;
 };
 } // namespace ERT
+
+using fortio_type = ERT::FortIO;

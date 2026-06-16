@@ -1,4 +1,9 @@
+#include <cstdio>
 #include <cstdlib>
+
+#include <exception>
+#include <ios>
+#include <string>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -9,53 +14,46 @@
 #include <resdata/rd_endian_flip.hpp>
 
 void test_existing_read(const char *filename) {
-    fortio_type *fortio = fortio_open_reader(filename, false, RD_ENDIAN_FLIP);
-    test_assert_not_NULL(fortio);
-    fortio_fclose(fortio);
+    // should not raise
+    ERT::FortIO fortio(filename, std::ios_base::in);
 }
 
 void test_not_existing_read() {
-    fortio_type *fortio =
-        fortio_open_reader("/does/not/exist", false, RD_ENDIAN_FLIP);
-    test_assert_NULL(fortio);
+    test_assert_throw(ERT::FortIO("/does/not/exist", std::ios_base::in),
+                      std::ios_base::failure);
 }
 
 void test_write(const char *filename, bool path_exists) {
-    fortio_type *fortio = fortio_open_writer(filename, false, RD_ENDIAN_FLIP);
-    if (path_exists) {
-        test_assert_not_NULL(fortio);
-        fortio_fclose(fortio);
-    } else
-        test_assert_NULL(fortio);
+    bool raised = false;
+    try {
+        ERT::FortIO fortio(filename, std::ios_base::out);
+    } catch (const std::exception &) {
+        raised = true;
+    }
+    test_assert_true(raised == !path_exists);
 }
 
 void test_wrapper(const char *filename) {
     FILE *stream = util_fopen(filename, "r");
-    fortio_type *fortio =
-        fortio_alloc_FILE_wrapper(filename, false, false, false, stream);
+    ERT::FortIO fortio(filename, false, false, stream, false);
 
-    test_assert_not_NULL(fortio);
-    test_assert_false(fortio_fclose_stream(fortio));
-    test_assert_false(fortio_fopen_stream(fortio));
-    test_assert_true(fortio_stream_is_open(fortio));
-    fortio_free_FILE_wrapper(fortio);
+    test_assert_false(fortio.fclose_stream());
+    test_assert_false(fortio.fopen_stream());
+    test_assert_true(fortio.stream_is_open());
 
     fclose(stream);
 }
 
 void test_open_close_read(const char *filename) {
-    fortio_type *fortio = fortio_open_reader(filename, false, RD_ENDIAN_FLIP);
-    test_assert_not_NULL(fortio);
+    ERT::FortIO fortio(filename, std::ios_base::in);
 
-    test_assert_true(fortio_stream_is_open(fortio));
-    test_assert_true(fortio_fclose_stream(fortio));
-    test_assert_false(fortio_stream_is_open(fortio));
-    test_assert_false(fortio_fclose_stream(fortio));
-    test_assert_true(fortio_fopen_stream(fortio));
-    test_assert_true(fortio_stream_is_open(fortio));
-    test_assert_false(fortio_fopen_stream(fortio));
-
-    fortio_fclose(fortio);
+    test_assert_true(fortio.stream_is_open());
+    test_assert_true(fortio.fclose_stream());
+    test_assert_false(fortio.stream_is_open());
+    test_assert_false(fortio.fclose_stream());
+    test_assert_true(fortio.fopen_stream());
+    test_assert_true(fortio.stream_is_open());
+    test_assert_false(fortio.fopen_stream());
 }
 
 void test_fread_truncated_data() {
@@ -64,24 +62,22 @@ void test_fread_truncated_data() {
         const size_t buffer_size = 1000;
         char *buffer = (char *)util_malloc(buffer_size);
         {
-            fortio_type *fortio = fortio_open_writer("PRESSURE", false, true);
+            ERT::FortIO fortio("PRESSURE", std::ios_base::out, false, true);
 
-            fortio_fwrite_record(fortio, buffer, buffer_size);
-            fortio_fwrite_record(fortio, buffer, buffer_size);
+            fortio.fwrite_record(buffer, buffer_size);
+            fortio.fwrite_record(buffer, buffer_size);
 
-            fortio_fseek(fortio, 0, SEEK_SET);
-            util_ftruncate(fortio_get_FILE(fortio), 2 * buffer_size - 100);
-            fortio_fclose(fortio);
+            fortio.fseek(0, SEEK_SET);
+            util_ftruncate(fortio.get_FILE(), 2 * buffer_size - 100);
         }
 
         test_assert_long_equal(util_file_size("PRESSURE"),
                                2 * buffer_size - 100);
 
         {
-            fortio_type *fortio = fortio_open_reader("PRESSURE", false, true);
-            test_assert_true(fortio_fread_buffer(fortio, buffer, buffer_size));
-            test_assert_false(fortio_fread_buffer(fortio, buffer, buffer_size));
-            fortio_fclose(fortio);
+            ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, true);
+            test_assert_true(fortio.fread_buffer(buffer, buffer_size));
+            test_assert_false(fortio.fread_buffer(buffer, buffer_size));
         }
         free(buffer);
     }
@@ -96,12 +92,11 @@ void test_fread_truncated_head() {
         }
 
         {
-            fortio_type *fortio = fortio_open_reader("PRESSURE", false, true);
+            ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, true);
             char *buffer = NULL;
             int buffer_size = 10;
-            test_assert_false(fortio_fread_buffer(fortio, buffer, buffer_size));
-            test_assert_true(fortio_read_at_eof(fortio));
-            fortio_fclose(fortio);
+            test_assert_false(fortio.fread_buffer(buffer, buffer_size));
+            test_assert_true(fortio.read_at_eof());
         }
     }
 }
@@ -112,20 +107,18 @@ void test_fread_truncated_tail() {
         const size_t buffer_size = 1000;
         char *buffer = (char *)util_malloc(buffer_size);
         {
-            fortio_type *fortio = fortio_open_writer("PRESSURE", false, true);
+            ERT::FortIO fortio("PRESSURE", std::ios_base::out, false, true);
 
-            fortio_fwrite_record(fortio, buffer, buffer_size);
-            fortio_fseek(fortio, 0, SEEK_SET);
-            util_ftruncate(fortio_get_FILE(fortio), buffer_size + 4);
-            fortio_fclose(fortio);
+            fortio.fwrite_record(buffer, buffer_size);
+            fortio.fseek(0, SEEK_SET);
+            util_ftruncate(fortio.get_FILE(), buffer_size + 4);
         }
 
         test_assert_long_equal(util_file_size("PRESSURE"), buffer_size + 4);
 
         {
-            fortio_type *fortio = fortio_open_reader("PRESSURE", false, true);
-            test_assert_false(fortio_fread_buffer(fortio, buffer, buffer_size));
-            fortio_fclose(fortio);
+            ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, true);
+            test_assert_false(fortio.fread_buffer(buffer, buffer_size));
         }
         free(buffer);
     }
@@ -150,11 +143,10 @@ void test_fread_invalid_tail() {
         fclose(stream);
     }
     {
-        fortio_type *fortio = fortio_open_reader("PRESSURE", false, false);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, false);
         record_size -= 1;
-        test_assert_true(fortio_fread_buffer(fortio, buffer, record_size));
-        test_assert_false(fortio_fread_buffer(fortio, buffer, record_size));
-        fortio_fclose(fortio);
+        test_assert_true(fortio.fread_buffer(buffer, record_size));
+        test_assert_false(fortio.fread_buffer(buffer, record_size));
     }
 
     free(buffer);
@@ -163,63 +155,54 @@ void test_fread_invalid_tail() {
 void test_at_eof() {
     rd::util::TestArea work_area("fortio_truncated3");
     {
-        fortio_type *fortio = fortio_open_writer("PRESSURE", false, true);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::out, false, true);
         char *buffer = (char *)util_malloc(100);
 
-        fortio_fwrite_record(fortio, buffer, 100);
+        fortio.fwrite_record(buffer, 100);
         free(buffer);
-
-        fortio_fclose(fortio);
     }
     {
-        fortio_type *fortio = fortio_open_reader("PRESSURE", false, true);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, true);
 
-        test_assert_false(fortio_read_at_eof(fortio));
-        fortio_fseek(fortio, 50, SEEK_SET);
-        test_assert_false(fortio_read_at_eof(fortio));
-        fortio_fseek(fortio, 0, SEEK_END);
-        test_assert_true(fortio_read_at_eof(fortio));
-
-        fortio_fclose(fortio);
+        test_assert_false(fortio.read_at_eof());
+        fortio.fseek(50, SEEK_SET);
+        test_assert_false(fortio.read_at_eof());
+        fortio.fseek(0, SEEK_END);
+        test_assert_true(fortio.read_at_eof());
     }
 }
 
 void test_fseek() {
     rd::util::TestArea work_area("fortio_fseek");
     {
-        fortio_type *fortio = fortio_open_writer("PRESSURE", false, true);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::out, false, true);
         char *buffer = (char *)util_malloc(100);
 
-        fortio_fwrite_record(fortio, buffer, 100);
+        fortio.fwrite_record(buffer, 100);
         free(buffer);
-
-        fortio_fclose(fortio);
     }
     {
-        fortio_type *fortio = fortio_open_reader("PRESSURE", false, true);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::in, false, true);
 
-        test_assert_true(fortio_fseek(fortio, 0, SEEK_SET));
-        test_assert_true(fortio_fseek(fortio, 0, SEEK_END));
-        test_assert_false(fortio_fseek(fortio, 100000, SEEK_END));
-        test_assert_false(fortio_fseek(fortio, 100000, SEEK_SET));
-
-        fortio_fclose(fortio);
+        test_assert_true(fortio.fseek(0, SEEK_SET));
+        test_assert_true(fortio.fseek(0, SEEK_END));
+        test_assert_false(fortio.fseek(100000, SEEK_END));
+        test_assert_false(fortio.fseek(100000, SEEK_SET));
     }
 }
 
 void test_write_failure() {
     rd::util::TestArea work_area("fortio_truncated");
     {
-        fortio_type *fortio = fortio_open_writer("PRESSURE", false, true);
+        ERT::FortIO fortio("PRESSURE", std::ios_base::out, false, true);
         char *buffer = (char *)util_malloc(100);
 
-        fortio_fwrite_record(fortio, buffer, 100);
+        fortio.fwrite_record(buffer, 100);
         test_assert_true(util_file_exists("PRESSURE"));
-        fortio_fwrite_error(fortio);
+        fortio.fwrite_error();
         test_assert_false(util_file_exists("PRESSURE"));
-        fortio_fwrite_record(fortio, buffer, 100);
+        fortio.fwrite_record(buffer, 100);
         free(buffer);
-        fortio_fclose(fortio);
         test_assert_false(util_file_exists("PRESSURE"));
     }
 }
