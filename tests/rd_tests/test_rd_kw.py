@@ -1015,8 +1015,7 @@ class StatefulKwTest(RuleBasedStateMachine):
 
         npt.assert_allclose(kw.numpy_view(), res_data[1], rtol=1e-2, atol=1e-6)
 
-        # For formatted files, we get truncated numbers which
-        # will causes a difference which may eventually exceed tolerance.
+        # will cause a difference which may eventually exceed tolerance.
         # Therefore, the truncated values are assigned to the model values.
         match file_format:
             case resfo.Format.FORMATTED:
