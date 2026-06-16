@@ -13,7 +13,7 @@
 #ifdef __cplusplus
 extern "C" {
 
-static rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type) {
+rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type) {
     rd_data_type *data_type = (rd_data_type *)util_malloc(sizeof *src_type);
     memcpy(data_type, src_type, sizeof *data_type);
     return data_type;
@@ -84,16 +84,6 @@ bool rd_type_is_bool_python(const rd_data_type *rd_type) {
 
 bool rd_type_is_string_python(const rd_data_type *rd_type) {
     return rd_type_is_string(*rd_type);
-}
-
-rd_kw_type *rd_kw_alloc_python(const char *header, int size,
-                               const rd_data_type *data_type) {
-    return rd_kw_alloc(header, size, *data_type);
-}
-
-rd_data_type *rd_kw_get_data_type_python(const rd_kw_type *rd_kw) {
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-    return rd_type_alloc_copy_python(&data_type);
 }
 }
 #endif

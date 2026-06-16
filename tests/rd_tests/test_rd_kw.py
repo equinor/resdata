@@ -794,14 +794,14 @@ def test_that_zero_sized_keywords_can_be_read(tmp_path):
 
 
 def test_that_short_data_section_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
         _ = read_kw_from_bytes(
             tmp_path, b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
         )
 
 
 def test_that_oversized_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
@@ -810,7 +810,7 @@ def test_that_oversized_record_size_raises_value_error(tmp_path):
 
 
 def test_that_negative_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10\xf0\x00\x00\x00",
@@ -818,7 +818,7 @@ def test_that_negative_record_size_raises_value_error(tmp_path):
 
 
 def test_that_mismatch_in_end_record_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
@@ -1364,6 +1364,9 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw, (_, model_values) = kw
         actual_delta, delta = self.draw_scalar(data, model_values.dtype)
 
+        # Avoid overflow on negation
+        assume(delta > -(2**31))
+
         actual_kw -= actual_delta
         model_values -= delta
 
@@ -1431,6 +1434,9 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw, (_, model_values) = kw
         actual_delta, delta = self.draw_scalar(data, model_values.dtype)
 
+        # Avoid overflow on negation
+        assume(delta > -(2**31))
+
         new_kw = actual_kw - actual_delta
         expected = model_values - delta
 
@@ -1444,6 +1450,9 @@ class StatefulKwTest(RuleBasedStateMachine):
     def rsub(self, data, kw):
         actual_kw, (_, model_values) = kw
         actual_delta, delta = self.draw_scalar(data, model_values.dtype)
+
+        # Avoid overflow on negation
+        assume(delta > -(2**31))
 
         new_kw = actual_delta - actual_kw
         # __rsub__ is implemented as (self - delta) * -1
