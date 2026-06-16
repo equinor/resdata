@@ -9,6 +9,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_sum.hpp>
+#include <resdata/rd_file.hpp>
 #include <resdata/FortIO.hpp>
 
 #include <ert/util/double_vector.hpp>
@@ -201,3 +202,17 @@ template <> int_vector_type *from_cwrap<int_vector_type>(py::handle obj) {
     return cast_cwrap<int_vector_type>(obj);
 }
 
+py::object ResdataFile() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.resfile").attr("ResdataFile");
+    }
+    return cls;
+}
+
+template <> rd_file_type *from_cwrap<rd_file_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataFile()))
+        throw py::type_error("Expected ResdataFile, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<rd_file_type>(obj);
+}

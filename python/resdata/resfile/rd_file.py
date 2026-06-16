@@ -21,14 +21,14 @@ implementation from the resdata library.
      RestartFile class, there is some specialized functionality.
 """
 
-import ctypes
 import datetime
 import re
 
 from cwrap import BaseCClass
 from typing_extensions import deprecated
 
-from resdata import FileMode, FileType, ResdataPrototype
+import resdata.resfile._file as _file
+from resdata import FileMode, FileType
 from resdata.util.util import CTime, monkey_the_camel
 
 from .rd_file_view import ResdataFileView
@@ -37,54 +37,19 @@ from .rd_kw import ResdataKW
 
 class ResdataFile(BaseCClass):
     TYPE_NAME = "rd_file"
-    _open = ResdataPrototype("void* rd_file_open(char*, rd_file_flag_enum)", bind=False)
-    _get_file_type = ResdataPrototype(
-        "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
-    )
-    _writable = ResdataPrototype("bool rd_file_writable(rd_file)")
-    _save_kw = ResdataPrototype("void rd_file_save_kw(rd_file, rd_kw)")
-    _close = ResdataPrototype("void rd_file_close(rd_file)")
-    _iget_restart_time = ResdataPrototype(
-        "rd_time_t rd_file_iget_restart_sim_date(rd_file, int)"
-    )
-    _iget_restart_days = ResdataPrototype(
-        "double rd_file_iget_restart_sim_days(rd_file, int)"
-    )
-    _get_restart_index = ResdataPrototype(
-        "int rd_file_get_restart_index(rd_file, rd_time_t)"
-    )
-    _get_src_file = ResdataPrototype("char* rd_file_get_src_file(rd_file)")
-    _fwrite = ResdataPrototype("void rd_file_fwrite_fortio(rd_file, rd_fortio, int)")
-    _has_report_step = ResdataPrototype("bool rd_file_has_report_step(rd_file, int)")
-    _has_sim_time = ResdataPrototype("bool rd_file_has_sim_time(rd_file, rd_time_t)")
-    _get_global_view = ResdataPrototype(
-        "rd_file_view_ref rd_file_get_global_view(rd_file)"
-    )
-    _write_index = ResdataPrototype("bool rd_file_write_index(rd_file, char*)")
-    _fast_open = ResdataPrototype(
-        "void* rd_file_fast_open(char*, char*, int)", bind=False
-    )
 
     @staticmethod
     def get_filetype(filename):
-        fmt_file = ctypes.c_bool()
-        report_step = ctypes.c_int()
-
-        file_type = ResdataFile._get_file_type(
-            filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
-        )
-        if file_type in [
+        file_type, fmt_file, report_step = _file._get_file_type(filename)
+        file_type = FileType(file_type)
+        if file_type not in [
             FileType.RESTART,
             FileType.SUMMARY,
         ]:
-            report_step = report_step.value
-        else:
             report_step = None
 
         if file_type in [FileType.OTHER, FileType.DATA]:
             fmt_file = None
-        else:
-            fmt_file = fmt_file.value
 
         return (file_type, report_step, fmt_file)
 
@@ -152,7 +117,7 @@ class ResdataFile(BaseCClass):
 
     def __repr__(self):
         fn = self.get_filename()
-        wr = ", read/write" if self._writable() else ""
+        wr = ", read/write" if _file._writable(self) else ""
         return self._create_repr('"%s"%s' % (fn, wr))
 
     def __init__(self, filename, flags=FileMode.DEFAULT, index_filename=None):
@@ -180,16 +145,17 @@ class ResdataFile(BaseCClass):
         FIPNUM from an INIT file.
         """
         if index_filename is None:
-            c_ptr = self._open(filename, flags)
+            c_ptr = _file._open(filename, flags)
         else:
-            c_ptr = self._fast_open(filename, index_filename, flags)
+            c_ptr = _file._fast_open(filename, index_filename, flags)
 
         if c_ptr is None:
             raise OSError('Failed to open file "%s"' % filename)
         else:
             super().__init__(c_ptr)
-            self.global_view: ResdataFileView = self._get_global_view()
-            self.global_view.setParent(self)
+            self.global_view: ResdataFileView = ResdataFileView.createCReference(
+                _file._get_global_view(self), self
+            )
 
     def save_kw(self, kw):
         """
@@ -214,8 +180,8 @@ class ResdataFile(BaseCClass):
              keyword you got from this ResdataFile instance, otherwise the
              function will fail.
         """
-        if self._writable():
-            self._save_kw(kw)
+        if _file._writable(self):
+            _file._save_kw(self, kw)
         else:
             raise OSError(
                 'save_kw: the file "%s" has been opened read only.'
@@ -227,7 +193,7 @@ class ResdataFile(BaseCClass):
 
     def close(self):
         if self:
-            self._close()
+            _file._close(self)
             self._invalidateCPointer()
 
     def free(self):
@@ -361,7 +327,7 @@ class ResdataFile(BaseCClass):
         the function will raise IndexError(); if the file does not
         have the keyword at all - KeyError will be raised.
         """
-        index = self._get_restart_index(CTime(dtime))
+        index = _file._get_restart_index(self, CTime(dtime).value())
         if index >= 0:
             if self.num_named_kw(kw_name) > index:
                 kw = self.iget_named_kw(kw_name, index)
@@ -495,7 +461,7 @@ class ResdataFile(BaseCClass):
         actual report_step before loading the file, you should use the
         classmethod contains_report_step() instead.
         """
-        return self._has_report_step(report_step)
+        return _file._has_report_step(self, report_step)
 
     def num_report_steps(self):
         """
@@ -518,14 +484,14 @@ class ResdataFile(BaseCClass):
         has INTEHEAD keyword(s), but is still not a restart file. The @dtime
         argument should be a normal python datetime instance.
         """
-        return self._has_sim_time(CTime(dtime))
+        return _file._has_sim_time(self, CTime(dtime).value())
 
     def iget_restart_sim_time(self, index):
         """
         Will locate restart block nr @index and return the true time
         as a datetime instance.
         """
-        ct = CTime(self._iget_restart_time(index))
+        ct = CTime(_file._iget_restart_time(self, index))
         return ct.datetime()
 
     def iget_restart_sim_days(self, index):
@@ -534,13 +500,13 @@ class ResdataFile(BaseCClass):
         (in METRIC at least ...) since the simulation started.
 
         """
-        return self._iget_restart_days(index)
+        return _file._iget_restart_days(self, index)
 
     def get_filename(self):
         """
         Name of the file currently loaded.
         """
-        fn = self._get_src_file()
+        fn = _file._get_src_file(self)
         return str(fn) if fn else ""
 
     def fwrite(self, fortio):
@@ -559,10 +525,10 @@ class ResdataFile(BaseCClass):
            >>> fortio.close()
 
         """
-        self._fwrite(fortio, 0)
+        _file._fwrite(self, fortio, 0)
 
     def write_index(self, index_file_name):
-        if not self or not self._write_index(index_file_name):
+        if not self or not _file._write_index(self, index_file_name):
             raise OSError("Failed to write index file:%s" % index_file_name)
 
 
