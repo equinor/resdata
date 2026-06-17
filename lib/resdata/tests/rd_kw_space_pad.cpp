@@ -1,9 +1,15 @@
+#include <cstdio>
 #include <cstdlib>
+
+#include <ios>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_type.hpp>
 
 int main(int argc, char **argv) {
     rd::util::TestArea ta("grid_unit_system");
@@ -11,9 +17,8 @@ int main(int argc, char **argv) {
     // 1. Write a rd_kw instance with string data - uninitialized.
     {
         rd_kw_type *rd_kw = rd_kw_alloc("SPACE", 1, RD_CHAR);
-        fortio_type *f = fortio_open_writer("file", false, true);
-        rd_kw_fwrite(rd_kw, f);
-        fortio_fclose(f);
+        ERT::FortIO f("file", std::ios_base::out, false, true);
+        rd_kw_fwrite(rd_kw, f.get());
         rd_kw_free(rd_kw);
     }
 
