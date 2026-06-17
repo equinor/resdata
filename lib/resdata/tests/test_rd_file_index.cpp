@@ -1,12 +1,17 @@
 #include <cstdio>
 #include <utime.h>
 
+#include <ios>
+
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
 
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_type.hpp>
 
 void test_load_nonexisting_file() {
     rd_file_type *rd_file =
@@ -26,16 +31,15 @@ void test_create_and_load_index_file() {
         rd_kw_type *kw1 = rd_kw_alloc("TEST1_KW", data_size, RD_INT);
         for (int i = 0; i < data_size; ++i)
             rd_kw_iset_int(kw1, i, 537 + i);
-        fortio_type *fortio =
-            fortio_open_writer(file_name, false, RD_ENDIAN_FLIP);
-        rd_kw_fwrite(kw1, fortio);
+        ERT::FortIO fortio(file_name, std::ios_base::out);
+        rd_kw_fwrite(kw1, fortio.get());
 
         data_size = 5;
         rd_kw_type *kw2 = rd_kw_alloc("TEST2_KW", data_size, RD_FLOAT);
         for (int i = 0; i < data_size; ++i)
             rd_kw_iset_float(kw2, i, 0.15 * i);
-        rd_kw_fwrite(kw2, fortio);
-        fortio_fclose(fortio);
+        rd_kw_fwrite(kw2, fortio.get());
+        fortio_fflush(fortio.get());
         //finished creating data file
 
         //creating rd_file
