@@ -1,7 +1,7 @@
-#ifndef ERT_RD_FILE_H
-#define ERT_RD_FILE_H
-
+#pragma once
 #include <ctime>
+
+#include <memory>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
@@ -9,10 +9,6 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define RD_FILE_FLAGS_ENUM_DEFS                                                \
     {.value = 1, .name = "RD_FILE_CLOSE_STREAM"},                              \
@@ -74,15 +70,7 @@ UTIL_IS_INSTANCE_HEADER(rd_file);
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);
 
-#ifdef __cplusplus
-}
-
-#include <memory>
-
 using rd_file_view_ptr =
     std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
 
 using rd_file_ptr = std::unique_ptr<rd_file_type, decltype(&rd_file_close)>;
-
-#endif
-#endif
