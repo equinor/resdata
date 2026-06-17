@@ -1,5 +1,8 @@
+#include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
+
+#include <ios>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -10,6 +13,9 @@
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_endian_flip.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_type.hpp>
 
 void test_writable(size_t data_size) {
     rd::util::TestArea ta("file_writable");
@@ -19,9 +25,10 @@ void test_writable(size_t data_size) {
     for (size_t i = 0; i < data_size; ++i)
         rd_kw_iset_int(kw, i, ((i * 37) + 11) % data_size);
 
-    fortio_type *fortio = fortio_open_writer(data_file_name, false, true);
-    rd_kw_fwrite(kw, fortio);
-    fortio_fclose(fortio);
+    {
+        ERT::FortIO fortio(data_file_name, std::ios_base::out, false, true);
+        rd_kw_fwrite(kw, fortio.get());
+    }
 
     for (int i = 0; i < 4; ++i) {
         rd_file_type *rd_file = rd_file_open(data_file_name, RD_FILE_WRITABLE);
