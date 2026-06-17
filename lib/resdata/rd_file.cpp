@@ -5,6 +5,7 @@
 #include <ctime>
 
 #include <ios>
+#include <memory>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
@@ -628,19 +629,21 @@ rd_file_type *rd_file_fast_open(const char *file_name,
     if (!rd_file_index_valid0(file_name, index_file_name))
         return NULL;
 
-    FILE *istream = fopen(index_file_name, "rb");
+    std::unique_ptr<FILE, decltype(&fclose)> istream(
+        fopen(index_file_name, "rb"), fclose);
     if (!istream)
         return NULL;
 
     rd_file_type *rd_file = NULL;
 
-    if (rd_file_index_valid1(file_name, istream)) {
+    if (rd_file_index_valid1(file_name, istream.get())) {
         ERT::FortIO *fortio = rd_file_alloc_fortio(file_name, flags);
         if (fortio) {
             rd_file = rd_file_alloc_empty(flags);
             rd_file->fortio = fortio;
-            rd_file->global_view = rd_file_view_fread_alloc(
-                rd_file->fortio, &rd_file->flags, rd_file->inv_view, istream);
+            rd_file->global_view =
+                rd_file_view_fread_alloc(rd_file->fortio, &rd_file->flags,
+                                         rd_file->inv_view, istream.get());
             if (rd_file->global_view) {
                 rd_file_select_global(rd_file);
                 if (rd_file_view_check_flags(rd_file->flags,
@@ -652,6 +655,5 @@ rd_file_type *rd_file_fast_open(const char *file_name,
             }
         }
     }
-    fclose(istream);
     return rd_file;
 }
