@@ -65,7 +65,7 @@ void write_egrid_with_sized_mapaxes(const fs::path &filename, int nx, int ny,
 
     write_egrid_filehead(fortio);
     std::vector<float> mapaxes(mapaxes_size, 0.0f);
-    write_float_kw(fortio.get(), MAPAXES_KW, mapaxes.data(), mapaxes_size);
+    write_float_kw(fortio, MAPAXES_KW, mapaxes.data(), mapaxes_size);
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
     write_egrid_grid_body(grid.get(), fortio);
     write_empty_kw(fortio, ENDGRID_KW);
@@ -80,7 +80,7 @@ void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
     write_egrid_grid_body(grid.get(), fortio);
     std::vector<int> corsnum(corsnum_size, 0);
-    write_int_kw(fortio.get(), CORSNUM_KW, corsnum.data(), corsnum_size);
+    write_int_kw(fortio, CORSNUM_KW, corsnum.data(), corsnum_size);
     write_empty_kw(fortio, ENDGRID_KW);
 }
 

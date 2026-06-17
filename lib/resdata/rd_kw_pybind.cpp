@@ -69,7 +69,7 @@ PYBIND11_MODULE(_kw, m) {
     m.def(
         "_fread_alloc",
         [](ERT::FortIO &fortio) {
-            return reinterpret_cast<std::uintptr_t>(rd_kw_fread_alloc(&fortio));
+            return reinterpret_cast<std::uintptr_t>(rd_kw_fread_alloc(fortio));
         },
         py::return_value_policy::reference);
     m.def(
@@ -166,7 +166,7 @@ PYBIND11_MODULE(_kw, m) {
     m.def("_free",
           [](py::handle self) { rd_kw_free(from_cwrap<rd_kw_type>(self)); });
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
-        rd_kw_fwrite(from_cwrap<rd_kw_type>(self), &fortio);
+        rd_kw_fwrite(from_cwrap<rd_kw_type>(self), fortio);
     });
     m.def("_get_header", [](py::handle self) {
         return rd_kw_get_header(from_cwrap<rd_kw_type>(self));

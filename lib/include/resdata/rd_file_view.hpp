@@ -31,7 +31,7 @@ bool rd_file_view_flags_set(const rd_file_view_type *file_view,
                             int query_flags);
 bool rd_file_view_check_flags(int state_flags, int query_flags);
 
-rd_file_view_type *rd_file_view_alloc(fortio_type *fortio, int *flags,
+rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
                                       inv_map_type *inv_map, bool owner);
 void rd_file_view_make_index(rd_file_view_type *rd_file_view);
 bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view, const char *kw);
@@ -57,7 +57,7 @@ void rd_file_view_free(rd_file_view_type *rd_file_view);
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw);
 void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
-                         fortio_type *target, int offset);
+                         ERT::FortIO &target, int offset);
 rd_file_view_type *rd_file_view_add_blockview(rd_file_view_type *rd_file_view,
                                               const char *header,
                                               int occurence);
@@ -96,7 +96,7 @@ void rd_file_view_fclose_stream(rd_file_view_type *file_view);
 
 void rd_file_view_write_index(const rd_file_view_type *file_view,
                               FILE *ostream);
-rd_file_view_type *rd_file_view_fread_alloc(fortio_type *fortio, int *flags,
+rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             inv_map_type *inv_map,
                                             FILE *istream);
 

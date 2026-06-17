@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     {
         rd_kw_type *rd_kw = rd_kw_alloc("SPACE", 1, RD_CHAR);
         ERT::FortIO f("file", std::ios_base::out, false, true);
-        rd_kw_fwrite(rd_kw, f.get());
+        rd_kw_fwrite(rd_kw, f);
         rd_kw_free(rd_kw);
     }
 

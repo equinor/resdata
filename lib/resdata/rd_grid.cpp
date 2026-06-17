@@ -840,7 +840,7 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
         rd_kw_iset_int(coords_kw.get(), 6, cell.coarse_group + 1);
     }
 
-    rd_kw_fwrite(coords_kw.get(), fortio.get());
+    rd_kw_fwrite(coords_kw.get(), fortio);
     {
         float *corners =
             static_cast<float *>(rd_kw_get_void_ptr(corners_kw.get()));
@@ -857,7 +857,7 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
             corners[3 * c + 2] = point.z;
         }
     }
-    rd_kw_fwrite(corners_kw.get(), fortio.get());
+    rd_kw_fwrite(corners_kw.get(), fortio);
 }
 
 static double max2(double x1, double x2) { return (x1 > x2) ? x1 : x2; }
@@ -2311,7 +2311,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
          }
          ...
          rd_grid_fwrite_EGRID( grid , ... );
-         rd_kw_fwrite( trannnc_kw , init_file.get() );
+         rd_kw_fwrite( trannnc_kw , init_file );
 
 */
 void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
@@ -4571,20 +4571,20 @@ float rd_grid_output_scaling(const rd_grid_type *grid,
 }
 
 static void rd_grid_fwrite_mapaxes(const rd_grid_type *grid,
-                                   fortio_type *fortio) {
+                                   ERT::FortIO &fortio) {
     rd_kw_type *mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid);
     rd_kw_fwrite(mapaxes_kw, fortio);
     rd_kw_free(mapaxes_kw);
 }
 
-static void rd_grid_fwrite_mapunits(fortio_type *fortio,
+static void rd_grid_fwrite_mapunits(ERT::FortIO &fortio,
                                     ert_rd_unit_enum output_unit) {
     rd_kw_type *mapunits_kw = rd_grid_alloc_mapunits_kw(output_unit);
     rd_kw_fwrite(mapunits_kw, fortio);
     rd_kw_free(mapunits_kw);
 }
 
-static void rd_grid_fwrite_gridunits(fortio_type *fortio,
+static void rd_grid_fwrite_gridunits(ERT::FortIO &fortio,
                                      ert_rd_unit_enum output_unit) {
     rd_kw_type *gridunits_kw = rd_grid_alloc_gridunits_kw(output_unit);
     rd_kw_fwrite(gridunits_kw, fortio);
@@ -4592,7 +4592,7 @@ static void rd_grid_fwrite_gridunits(fortio_type *fortio,
 }
 
 static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
-                                             fortio_type *fortio,
+                                             ERT::FortIO &fortio,
                                              ert_rd_unit_enum output_unit) {
     rd_grid_fwrite_mapunits(fortio, output_unit);
 
@@ -4608,7 +4608,7 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
     if (grid->parent_grid != NULL) {
         auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
         rd_kw_iset_string8(lgr_kw.get(), 0, grid->name.c_str());
-        rd_kw_fwrite(lgr_kw.get(), fortio.get());
+        rd_kw_fwrite(lgr_kw.get(), fortio);
     }
 
     {
@@ -4620,16 +4620,16 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
         else
             rd_kw_iset_int(dimens_kw.get(), 2, 2 * grid->nz);
 
-        rd_kw_fwrite(dimens_kw.get(), fortio.get());
+        rd_kw_fwrite(dimens_kw.get(), fortio);
     }
 
     if (grid->parent_grid == NULL)
-        rd_grid_fwrite_main_GRID_headers(grid, fortio.get(), output_unit);
+        rd_grid_fwrite_main_GRID_headers(grid, fortio, output_unit);
 
     {
         auto radial_kw = make_rd_kw(RADIAL_KW, 1, RD_CHAR);
         rd_kw_iset_string8(radial_kw.get(), 0, "FALSE");
-        rd_kw_fwrite(radial_kw.get(), fortio.get());
+        rd_kw_fwrite(radial_kw.get(), fortio);
     }
 
     auto coords_kw = make_rd_kw(COORDS_KW, coords_size, RD_INT);
@@ -4724,18 +4724,18 @@ static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
         rd_kw_iset_int(filehead_kw.get(), FILEHEAD_ORGFORMAT_INDEX,
                        FILEHEAD_ORGTYPE_CORNERPOINT);
 
-        rd_kw_fwrite(filehead_kw.get(), fortio.get());
+        rd_kw_fwrite(filehead_kw.get(), fortio);
     }
 
-    rd_grid_fwrite_mapunits(fortio.get(), output_unit);
+    rd_grid_fwrite_mapunits(fortio, output_unit);
     if (mapaxes != NULL)
-        rd_grid_fwrite_mapaxes(grid, fortio.get());
+        rd_grid_fwrite_mapaxes(grid, fortio);
 
-    rd_grid_fwrite_gridunits(fortio.get(), output_unit);
+    rd_grid_fwrite_gridunits(fortio, output_unit);
 }
 
 static void rd_grid_fwrite_gridhead_kw(int nx, int ny, int nz, int grid_nr,
-                                       fortio_type *fortio) {
+                                       ERT::FortIO &fortio) {
     rd_kw_type *gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, grid_nr);
     rd_kw_fwrite(gridhead_kw, fortio);
     rd_kw_free(gridhead_kw);
@@ -5101,7 +5101,7 @@ void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
 }
 
 static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
-                                    const ERT::FortIO &fortio) {
+                                    ERT::FortIO &fortio) {
     const int default_index = 1;
     std::vector<int> g1(0, default_index);
     std::vector<int> g2(0, default_index);
@@ -5153,9 +5153,9 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
     rd_kw_iset_int(nnchead_kw.get(), NNCHEAD_NUMNNC_INDEX, num_nnc);
     rd_kw_iset_int(nnchead_kw.get(), NNCHEAD_LGR_INDEX, grid->lgr_nr);
 
-    rd_kw_fwrite(nnchead_kw.get(), fortio.get());
-    rd_kw_fwrite(nnc1_kw.get(), fortio.get());
-    rd_kw_fwrite(nnc2_kw.get(), fortio.get());
+    rd_kw_fwrite(nnchead_kw.get(), fortio);
+    rd_kw_fwrite(nnc1_kw.get(), fortio);
+    rd_kw_fwrite(nnc2_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
@@ -5171,7 +5171,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
         {
             auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
             rd_kw_iset_string8(lgr_kw.get(), 0, grid->name.c_str());
-            rd_kw_fwrite(lgr_kw.get(), fortio.get());
+            rd_kw_fwrite(lgr_kw.get(), fortio);
         }
 
         {
@@ -5182,12 +5182,12 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
             else
                 rd_kw_iset_string8(lgr_parent_kw.get(), 0, "");
 
-            rd_kw_fwrite(lgr_parent_kw.get(), fortio.get());
+            rd_kw_fwrite(lgr_parent_kw.get(), fortio);
         }
     }
 
     rd_grid_fwrite_gridhead_kw(grid->nx, grid->ny, grid->nz, grid->lgr_nr,
-                               fortio.get());
+                               fortio);
     /* Writing main grid data */
     {
         rd_grid_assert_coord_kw(grid);
@@ -5202,34 +5202,34 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
                 rd_kw_scale_float(coord_kw.get(), scale_factor);
                 rd_kw_scale_float(zcorn_kw.get(), scale_factor);
             }
-            rd_kw_fwrite(coord_kw.get(), fortio.get());
-            rd_kw_fwrite(zcorn_kw.get(), fortio.get());
+            rd_kw_fwrite(coord_kw.get(), fortio);
+            rd_kw_fwrite(zcorn_kw.get(), fortio);
         }
         {
             auto actnum_kw =
                 rd_kw_ptr(rd_grid_alloc_actnum_kw(grid), &rd_kw_free);
-            rd_kw_fwrite(actnum_kw.get(), fortio.get());
+            rd_kw_fwrite(actnum_kw.get(), fortio);
         }
         if (is_lgr) {
             auto hostnum_kw =
                 rd_kw_ptr(rd_grid_alloc_hostnum_kw(grid), &rd_kw_free);
-            rd_kw_fwrite(hostnum_kw.get(), fortio.get());
+            rd_kw_fwrite(hostnum_kw.get(), fortio);
         }
         if (grid->coarsening_active) {
             auto corsnum_kw =
                 rd_kw_ptr(rd_grid_alloc_corsnum_kw(grid), &rd_kw_free);
-            rd_kw_fwrite(corsnum_kw.get(), fortio.get());
+            rd_kw_fwrite(corsnum_kw.get(), fortio);
         }
 
         {
             auto endgrid_kw = make_rd_kw(ENDGRID_KW, 0, RD_INT);
-            rd_kw_fwrite(endgrid_kw.get(), fortio.get());
+            rd_kw_fwrite(endgrid_kw.get(), fortio);
         }
     }
 
     if (is_lgr) {
         auto endlgr_kw = make_rd_kw(ENDLGR_KW, 0, RD_INT);
-        rd_kw_fwrite(endlgr_kw.get(), fortio.get());
+        rd_kw_fwrite(endlgr_kw.get(), fortio);
     }
     rd_grid_fwrite_self_nnc(grid, fortio);
 }

@@ -81,7 +81,7 @@ static void unpack_file(const fs::path &filepath) {
         fs::path target_file =
             rd::filename(filepath.stem(), target_type, fmt_file, report_step);
         ERT::FortIO fortio_target(target_file, std::ios_base::out, fmt_file);
-        rd_file_view_fwrite(active_view, fortio_target.get(), offset);
+        rd_file_view_fwrite(active_view, fortio_target, offset);
     }
 }
 

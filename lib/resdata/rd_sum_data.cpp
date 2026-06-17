@@ -289,7 +289,7 @@ static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_case);
 
     for (auto &data_file : data->data_files)
-        data_file->fwrite_unified(fortio.get());
+        data_file->fwrite_unified(fortio);
 }
 
 static void rd_sum_data_fwrite_multiple(const rd_sum_data_type *data,

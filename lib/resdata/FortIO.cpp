@@ -209,10 +209,6 @@ void FortIO::close() {
     m_read_size = 0;
 }
 
-FortIO *FortIO::get() const {
-    return const_cast<FortIO *>(this);
-}
-
 /**
    This function tries (using some heuristic) to guess whether a
    particular file is a Fortran file.

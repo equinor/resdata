@@ -27,7 +27,7 @@ void test_writable(size_t data_size) {
 
     {
         ERT::FortIO fortio(data_file_name, std::ios_base::out, false, true);
-        rd_kw_fwrite(kw, fortio.get());
+        rd_kw_fwrite(kw, fortio);
     }
 
     for (int i = 0; i < 4; ++i) {

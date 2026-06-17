@@ -43,19 +43,19 @@ int rd_kw_first_different(const rd_kw_type *kw1, const rd_kw_type *kw2,
 size_t rd_kw_fortio_size(const rd_kw_type *rd_kw);
 void *rd_kw_get_ptr(const rd_kw_type *rd_kw);
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data);
-void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, fortio_type *fortio);
-bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, fortio_type *fortio);
+void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio);
+bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
 rd_data_type rd_kw_get_data_type(const rd_kw_type *);
 const char *rd_kw_get_header(const rd_kw_type *rd_kw);
 rd_kw_type *rd_kw_alloc_empty(void);
-rd_read_status_enum rd_kw_fread_header(rd_kw_type *, fortio_type *);
+rd_read_status_enum rd_kw_fread_header(rd_kw_type *, ERT::FortIO &);
 void rd_kw_set_header_name(rd_kw_type *, const char *);
-bool rd_kw_fseek_kw(const char *, bool, bool, fortio_type *);
-void rd_kw_fskip(fortio_type *);
-bool rd_kw_fread_realloc(rd_kw_type *, fortio_type *);
-rd_kw_type *rd_kw_fread_alloc(fortio_type *);
+bool rd_kw_fseek_kw(const char *, bool, bool, ERT::FortIO &);
+void rd_kw_fskip(ERT::FortIO &);
+bool rd_kw_fread_realloc(rd_kw_type *, ERT::FortIO &);
+rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &);
 rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
-void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
+void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type data_offset,
                               rd_data_type, int element_count,
                               const int_vector_type *index_map, char *buffer);
 void rd_kw_free(rd_kw_type *);
@@ -68,7 +68,7 @@ void rd_kw_resize(rd_kw_type *rd_kw, int new_size);
 void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_get_memcpy_data(const rd_kw_type *, void *);
 void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
-bool rd_kw_fwrite(const rd_kw_type *, fortio_type *);
+bool rd_kw_fwrite(const rd_kw_type *, ERT::FortIO &);
 void rd_kw_iget(const rd_kw_type *, int, void *);
 void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr);
 void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s);
@@ -94,9 +94,9 @@ bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
                          double abs_diff, double rel_diff);
 bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data);
 bool rd_kw_content_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
-bool rd_kw_fskip_data__(rd_data_type, int, fortio_type *);
-bool rd_kw_fskip_data(rd_kw_type *rd_kw, fortio_type *fortio);
-void rd_kw_fskip_header(fortio_type *fortio);
+bool rd_kw_fskip_data__(rd_data_type, int, ERT::FortIO &);
+bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
+void rd_kw_fskip_header(ERT::FortIO &fortio);
 bool rd_kw_size_and_numeric_type_equal(const rd_kw_type *kw1,
                                        const rd_kw_type *kw2);
 bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor);

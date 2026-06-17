@@ -1098,15 +1098,15 @@ static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     return value;
 }
 
-static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
-    bool fmt_file = fortio->fmt_file();
+static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+    bool fmt_file = fortio.fmt_file();
     if (rd_kw->size > 0) {
         const int blocksize = get_blocksize(rd_kw->data_type);
         if (fmt_file) {
             const int blocks = rd_kw->size / blocksize +
                                (rd_kw->size % blocksize == 0 ? 0 : 1);
             char *read_fmt = alloc_read_fmt(rd_kw->data_type);
-            FILE *stream = fortio->get_FILE();
+            FILE *stream = fortio.get_FILE();
             int offset = 0;
             int index = 0;
             int ib, ir;
@@ -1135,7 +1135,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
                                 __func__,
                                 offset /
                                     rd_type_get_sizeof_ctype(rd_kw->data_type),
-                                rd_kw->header8, fortio->filename_ref());
+                                rd_kw->header8, fortio.filename_ref());
                     } break;
                     case (RD_FLOAT_TYPE): {
                         int iread = fscanf(stream, read_fmt,
@@ -1147,7 +1147,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
                                 __func__,
                                 offset /
                                     rd_type_get_sizeof_ctype(rd_kw->data_type),
-                                rd_kw->header8, fortio->filename_ref());
+                                rd_kw->header8, fortio.filename_ref());
                         }
                     } break;
                     case (RD_DOUBLE_TYPE): {
@@ -1185,7 +1185,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
             }
 
             /* Skip the trailing newline */
-            fortio->fseek(1, SEEK_CUR);
+            fortio.fseek(1, SEEK_CUR);
             free(read_fmt);
             return true;
         } else {
@@ -1193,7 +1193,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
             const int sizeof_iotype =
                 rd_type_get_sizeof_iotype(rd_kw->data_type);
             bool read_ok =
-                fortio->fread_buffer(buffer, rd_kw->size * sizeof_iotype);
+                fortio.fread_buffer(buffer, rd_kw->size * sizeof_iotype);
 
             if (read_ok)
                 rd_kw_load_from_input_buffer(rd_kw, buffer);
@@ -1206,12 +1206,12 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
         return true;
 }
 
-void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
+void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type data_offset,
                               rd_data_type data_type, int element_count,
                               const int_vector_type *index_map,
                               char *io_buffer) {
     const int block_size = get_blocksize(data_type);
-    FILE *stream = fortio->get_FILE();
+    FILE *stream = fortio.get_FILE();
     int index;
     int sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
@@ -1222,8 +1222,8 @@ void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
             util_abort("%s: Element index is out of range 0 <= %d < %d\n",
                        __func__, element_index, element_count);
 
-        fortio->data_fseek(data_offset, element_index, sizeof_iotype,
-                           element_count, block_size);
+        fortio.data_fseek(data_offset, element_index, sizeof_iotype,
+                          element_count, block_size);
         util_fread(&io_buffer[index * sizeof_iotype], sizeof_iotype, 1, stream,
                    __func__);
     }
@@ -1236,7 +1236,7 @@ void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
 /**
    Allocates storage and reads data.
 */
-bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, fortio_type *fortio) {
+bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     rd_kw_alloc_data(rd_kw);
     return rd_kw_fread_data(rd_kw, fortio);
 }
@@ -1246,11 +1246,11 @@ bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, fortio_type *fortio) {
 */
 
 bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
-                        fortio_type *fortio) {
+                        ERT::FortIO &fortio) {
     if (element_count <= 0)
         return true;
 
-    bool fmt_file = fortio->fmt_file();
+    bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
         /* Formatted skipping actually involves reading the data - nice ??? */
         rd_kw_type *tmp_kw = rd_kw_alloc_empty();
@@ -1264,14 +1264,14 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
             element_count / blocksize + (element_count % blocksize != 0);
         int element_size = rd_type_get_sizeof_iotype(data_type);
 
-        if (!fortio->data_fskip(element_size, element_count, block_count))
+        if (!fortio.data_fskip(element_size, element_count, block_count))
             return false;
     }
 
     return true;
 }
 
-bool rd_kw_fskip_data(rd_kw_type *rd_kw, fortio_type *fortio) {
+bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     return rd_kw_fskip_data__(rd_kw_get_data_type(rd_kw), rd_kw->size, fortio);
 }
 
@@ -1283,20 +1283,20 @@ bool rd_kw_fskip_data(rd_kw_type *rd_kw, fortio_type *fortio) {
    will be complete crash and burn.
 */
 
-void rd_kw_fskip_header(fortio_type *fortio) {
-    bool fmt_file = fortio->fmt_file();
+void rd_kw_fskip_header(ERT::FortIO &fortio) {
+    bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
         rd_kw_type *rd_kw = rd_kw_alloc_empty();
         rd_kw_fread_header(rd_kw, fortio);
         rd_kw_free(rd_kw);
     } else
-        fortio->fskip_record();
+        fortio.fskip_record();
 }
 
-rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, fortio_type *fortio) {
+rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     const char null_char = '\0';
-    FILE *stream = fortio->get_FILE();
-    bool fmt_file = fortio->fmt_file();
+    FILE *stream = fortio.get_FILE();
+    bool fmt_file = fortio.fmt_file();
     char header[RD_STRING8_LENGTH + 1];
     char rd_type_str[RD_TYPE_LENGTH + 1];
     int record_size;
@@ -1317,7 +1317,7 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, fortio_type *fortio) {
     } else {
         header[RD_STRING8_LENGTH] = null_char;
         rd_type_str[RD_TYPE_LENGTH] = null_char;
-        record_size = fortio->init_read();
+        record_size = fortio.init_read();
 
         if (record_size <= 0)
             return RD_KW_READ_FAIL;
@@ -1335,7 +1335,7 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, fortio_type *fortio) {
         memcpy(rd_type_str, &buffer[RD_STRING8_LENGTH + sizeof(size)],
                RD_TYPE_LENGTH);
 
-        if (!fortio->complete_read(record_size))
+        if (!fortio.complete_read(record_size))
             return RD_KW_READ_FAIL;
 
         if (RD_ENDIAN_FLIP)
@@ -1363,25 +1363,25 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, fortio_type *fortio) {
 */
 
 bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
-                    fortio_type *fortio) {
+                    ERT::FortIO &fortio) {
     rd_kw_type *tmp_kw = rd_kw_alloc_empty();
-    long int init_pos = fortio->ftell();
+    long int init_pos = fortio.ftell();
     bool cont, kw_found;
 
     cont = true;
     kw_found = false;
     while (cont) {
-        long current_pos = fortio->ftell();
+        long current_pos = fortio.ftell();
         if (rd_kw_fread_header(tmp_kw, fortio) == RD_KW_READ_OK) {
             if (rd_kw_string_eq(rd_kw_get_header8(tmp_kw), kw)) {
-                fortio->fseek(current_pos, SEEK_SET);
+                fortio.fseek(current_pos, SEEK_SET);
                 kw_found = true;
                 cont = false;
             } else
                 rd_kw_fskip_data(tmp_kw, fortio);
         } else {
             if (rewind) {
-                fortio->rewind();
+                fortio.rewind();
                 rewind = false;
             } else
                 cont = false;
@@ -1391,9 +1391,9 @@ bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
         if (abort_on_error)
             util_abort(
                 "%s: failed to locate keyword:%s in file:%s - aborting \n",
-                __func__, kw, fortio->filename_ref());
+                __func__, kw, fortio.filename_ref());
 
-        fortio->fseek(init_pos, SEEK_SET);
+        fortio.fseek(init_pos, SEEK_SET);
     }
 
     rd_kw_free(tmp_kw);
@@ -1424,14 +1424,14 @@ void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type) {
     memcpy(&rd_kw->data_type, &data_type, sizeof data_type);
 }
 
-bool rd_kw_fread_realloc(rd_kw_type *rd_kw, fortio_type *fortio) {
+bool rd_kw_fread_realloc(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     if (rd_kw_fread_header(rd_kw, fortio) == RD_KW_READ_OK)
         return rd_kw_fread_realloc_data(rd_kw, fortio);
     else
         return false;
 }
 
-rd_kw_type *rd_kw_fread_alloc(fortio_type *fortio) {
+rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &fortio) {
     bool OK;
     rd_kw_type *rd_kw = rd_kw_alloc_empty();
     OK = rd_kw_fread_realloc(rd_kw, fortio);
@@ -1443,14 +1443,14 @@ rd_kw_type *rd_kw_fread_alloc(fortio_type *fortio) {
     return rd_kw;
 }
 
-void rd_kw_fskip(fortio_type *fortio) {
+void rd_kw_fskip(ERT::FortIO &fortio) {
     rd_kw_type *tmp_kw;
     tmp_kw = rd_kw_fread_alloc(fortio);
     rd_kw_free(tmp_kw);
 }
 
 static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
-                                          fortio_type *fortio) {
+                                          ERT::FortIO &fortio) {
     char *iobuffer = rd_kw_alloc_output_buffer(rd_kw);
     int sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
     {
@@ -1466,7 +1466,7 @@ static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
             int record_size =
                 this_blocksize *
                 sizeof_iotype; /* The total size in bytes of the record written by the fortio layer. */
-            fortio->fwrite_record(
+            fortio.fwrite_record(
                 &iobuffer[block_nr * blocksize * sizeof_iotype], record_size);
         }
     }
@@ -1509,11 +1509,11 @@ static void __fprintf_scientific(FILE *stream, const char *fmt, double x) {
 }
 
 static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
-                                        fortio_type *fortio) {
+                                        ERT::FortIO &fortio) {
 
     {
 
-        FILE *stream = fortio->get_FILE();
+        FILE *stream = fortio.get_FILE();
         const int blocksize = get_blocksize(rd_kw->data_type);
         const int columns = get_columns(rd_kw->data_type);
         char *write_fmt = alloc_write_fmt(rd_kw->data_type);
@@ -1578,9 +1578,9 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
     }
 }
 
-void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, fortio_type *fortio) {
+void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio) {
     rd_kw_type *rd_kw = (rd_kw_type *)_rd_kw;
-    bool fmt_file = fortio->fmt_file();
+    bool fmt_file = fortio.fmt_file();
 
     if (fmt_file)
         rd_kw_fwrite_data_formatted(rd_kw, fortio);
@@ -1588,9 +1588,9 @@ void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, fortio_type *fortio) {
         rd_kw_fwrite_data_unformatted(rd_kw, fortio);
 }
 
-void rd_kw_fwrite_header(const rd_kw_type *rd_kw, fortio_type *fortio) {
-    FILE *stream = fortio->get_FILE();
-    bool fmt_file = fortio->fmt_file();
+void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+    FILE *stream = fortio.get_FILE();
+    bool fmt_file = fortio.fmt_file();
     char *type_name = rd_type_alloc_name(rd_kw->data_type);
 
     if (fmt_file)
@@ -1601,21 +1601,21 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, fortio_type *fortio) {
         if (RD_ENDIAN_FLIP)
             util_endian_flip_vector(&size, sizeof size, 1);
 
-        fortio->init_write(RD_KW_HEADER_DATA_SIZE);
+        fortio.init_write(RD_KW_HEADER_DATA_SIZE);
 
         fwrite(rd_kw->header8, sizeof(char), RD_STRING8_LENGTH, stream);
         fwrite(&size, sizeof(int), 1, stream);
         fwrite(type_name, sizeof(char), RD_TYPE_LENGTH, stream);
 
-        fortio->complete_write(RD_KW_HEADER_DATA_SIZE);
+        fortio.complete_write(RD_KW_HEADER_DATA_SIZE);
     }
 
     free(type_name);
 }
 
-bool rd_kw_fwrite(const rd_kw_type *rd_kw, fortio_type *fortio) {
+bool rd_kw_fwrite(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     if (strlen(rd_kw_get_header(rd_kw)) > RD_STRING8_LENGTH) {
-        fortio->fwrite_error();
+        fortio.fwrite_error();
         return false;
     }
     rd_kw_fwrite_header(rd_kw, fortio);

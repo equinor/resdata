@@ -65,7 +65,7 @@ TEST_CASE_METHOD(Tmpdir, "opening FortIO into non-existent entries") {
         }
         SECTION("Append and write succeeds") {
             auto mode = GENERATE(std::ios_base::out, std::ios_base::app);
-            REQUIRE_NOTHROW(ERT::FortIO(filename.string(), mode, fmt).get());
+            REQUIRE_NOTHROW(ERT::FortIO(filename.string(), mode, fmt));
         }
     }
 }

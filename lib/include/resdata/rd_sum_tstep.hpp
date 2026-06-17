@@ -40,7 +40,7 @@ int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep);
 
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
                          const int *index_map, int index_map_size,
-                         fortio_type *fortio);
+                         ERT::FortIO &fortio);
 void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value);
 
 void rd_sum_tstep_set_from_key(rd_sum_tstep_type *tstep, const char *gen_key,

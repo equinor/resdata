@@ -28,12 +28,12 @@ namespace fs = std::filesystem;
  * -----------------------------------------------------------------------
  */
 
-inline void write_empty_kw(const ERT::FortIO &fortio, const char *name) {
+inline void write_empty_kw(ERT::FortIO &fortio, const char *name) {
     auto kw = make_rd_kw(name, 0, RD_INT);
-    rd_kw_fwrite(kw.get(), fortio.get());
+    rd_kw_fwrite(kw.get(), fortio);
 }
 
-inline void write_egrid_filehead(const ERT::FortIO &fortio,
+inline void write_egrid_filehead(ERT::FortIO &fortio,
                                  int dualp_flag = FILEHEAD_SINGLE_POROSITY) {
     auto filehead = make_rd_kw(FILEHEAD_KW, 100, RD_INT);
     rd_kw_scalar_set_int(filehead.get(), 0);
@@ -44,11 +44,11 @@ inline void write_egrid_filehead(const ERT::FortIO &fortio,
     rd_kw_iset_int(filehead.get(), FILEHEAD_DUALP_INDEX, dualp_flag);
     rd_kw_iset_int(filehead.get(), FILEHEAD_ORGFORMAT_INDEX,
                    FILEHEAD_ORGTYPE_CORNERPOINT);
-    rd_kw_fwrite(filehead.get(), fortio.get());
+    rd_kw_fwrite(filehead.get(), fortio);
 }
 
-inline void write_egrid_gridhead(const ERT::FortIO &fortio, int gnx, int gny,
-                                 int gnz, int grid_nr) {
+inline void write_egrid_gridhead(ERT::FortIO &fortio, int gnx, int gny, int gnz,
+                                 int grid_nr) {
     auto kw = make_rd_kw(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
     rd_kw_scalar_set_int(kw.get(), 0);
     rd_kw_iset_int(kw.get(), GRIDHEAD_TYPE_INDEX,
@@ -58,20 +58,19 @@ inline void write_egrid_gridhead(const ERT::FortIO &fortio, int gnx, int gny,
     rd_kw_iset_int(kw.get(), GRIDHEAD_NZ_INDEX, gnz);
     rd_kw_iset_int(kw.get(), GRIDHEAD_NUMRES_INDEX, 1);
     rd_kw_iset_int(kw.get(), GRIDHEAD_LGR_INDEX, grid_nr);
-    rd_kw_fwrite(kw.get(), fortio.get());
+    rd_kw_fwrite(kw.get(), fortio);
 }
 
-inline void write_egrid_grid_body(rd_grid_type *grid,
-                                  const ERT::FortIO &fortio) {
+inline void write_egrid_grid_body(rd_grid_type *grid, ERT::FortIO &fortio) {
     auto coord = rd_kw_ptr(rd_grid_alloc_coord_kw(grid), &rd_kw_free);
-    rd_kw_fwrite(coord.get(), fortio.get());
+    rd_kw_fwrite(coord.get(), fortio);
     auto zcorn = rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid), &rd_kw_free);
-    rd_kw_fwrite(zcorn.get(), fortio.get());
+    rd_kw_fwrite(zcorn.get(), fortio);
     auto actnum = rd_kw_ptr(rd_grid_alloc_actnum_kw(grid), &rd_kw_free);
-    rd_kw_fwrite(actnum.get(), fortio.get());
+    rd_kw_fwrite(actnum.get(), fortio);
 }
 
-inline void write_int_kw(fortio_type *fortio, const char *name,
+inline void write_int_kw(ERT::FortIO &fortio, const char *name,
                          const int *values, int size) {
     auto kw = make_rd_kw(name, size, RD_INT);
     for (int i = 0; i < size; i++)
@@ -79,12 +78,12 @@ inline void write_int_kw(fortio_type *fortio, const char *name,
     rd_kw_fwrite(kw.get(), fortio);
 }
 
-inline void write_int_kw(fortio_type *fortio, const char *name,
+inline void write_int_kw(ERT::FortIO &fortio, const char *name,
                          const std::vector<int> &values) {
     write_int_kw(fortio, name, values.data(), static_cast<int>(values.size()));
 }
 
-inline void write_float_kw(fortio_type *fortio, const char *name,
+inline void write_float_kw(ERT::FortIO &fortio, const char *name,
                            const float *values, int size) {
     auto kw = make_rd_kw(name, size, RD_FLOAT);
     for (int i = 0; i < size; i++)
@@ -92,7 +91,7 @@ inline void write_float_kw(fortio_type *fortio, const char *name,
     rd_kw_fwrite(kw.get(), fortio);
 }
 
-inline void write_char8_kw(fortio_type *fortio, const char *name,
+inline void write_char8_kw(ERT::FortIO &fortio, const char *name,
                            std::initializer_list<const char *> values) {
     auto kw = make_rd_kw(name, static_cast<int>(values.size()), RD_CHAR);
     int i = 0;
@@ -101,7 +100,7 @@ inline void write_char8_kw(fortio_type *fortio, const char *name,
     rd_kw_fwrite(kw.get(), fortio);
 }
 
-inline void write_nnc_pair_section(const ERT::FortIO &fortio, int lgr_nr,
+inline void write_nnc_pair_section(ERT::FortIO &fortio, int lgr_nr,
                                    const char *first_kw, const char *second_kw,
                                    const std::vector<int> &first,
                                    const std::vector<int> &second) {
@@ -112,17 +111,17 @@ inline void write_nnc_pair_section(const ERT::FortIO &fortio, int lgr_nr,
     rd_kw_iset_int(nnchead.get(), NNCHEAD_NUMNNC_INDEX,
                    static_cast<int>(first.size()));
     rd_kw_iset_int(nnchead.get(), NNCHEAD_LGR_INDEX, lgr_nr);
-    rd_kw_fwrite(nnchead.get(), fortio.get());
-    write_int_kw(fortio.get(), first_kw, first);
-    write_int_kw(fortio.get(), second_kw, second);
+    rd_kw_fwrite(nnchead.get(), fortio);
+    write_int_kw(fortio, first_kw, first);
+    write_int_kw(fortio, second_kw, second);
 }
 
-inline void write_lgr_egrid_section(const ERT::FortIO &fortio,
+inline void write_lgr_egrid_section(ERT::FortIO &fortio,
                                     const std::string &name,
                                     const std::string &parent, int grid_nr,
                                     const rd_grid_ptr &lgr, int host_global) {
-    write_char8_kw(fortio.get(), LGR_KW, {name.c_str()});
-    write_char8_kw(fortio.get(), LGR_PARENT_KW, {parent.c_str()});
+    write_char8_kw(fortio, LGR_KW, {name.c_str()});
+    write_char8_kw(fortio, LGR_PARENT_KW, {parent.c_str()});
     write_egrid_gridhead(fortio, rd_grid_get_nx(lgr.get()),
                          rd_grid_get_ny(lgr.get()), rd_grid_get_nz(lgr.get()),
                          grid_nr);
@@ -130,7 +129,7 @@ inline void write_lgr_egrid_section(const ERT::FortIO &fortio,
 
     const int lgr_size = rd_grid_get_global_size(lgr.get());
     std::vector<int> hostnum(lgr_size, host_global);
-    write_int_kw(fortio.get(), HOSTNUM_KW, hostnum);
+    write_int_kw(fortio, HOSTNUM_KW, hostnum);
 
     write_empty_kw(fortio, ENDGRID_KW);
     write_empty_kw(fortio, ENDLGR_KW);
@@ -141,31 +140,30 @@ inline constexpr float UNIT_CELL_CORNERS[24] = {
     0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
 };
 
-inline void write_grid_dimens(const ERT::FortIO &fortio, int nx, int ny,
-                              int nz) {
+inline void write_grid_dimens(ERT::FortIO &fortio, int nx, int ny, int nz) {
     const int dims[3] = {nx, ny, nz};
-    write_int_kw(fortio.get(), DIMENS_KW, dims, 3);
+    write_int_kw(fortio, DIMENS_KW, dims, 3);
 }
 
-inline void write_grid_radial_false(const ERT::FortIO &fortio) {
-    write_char8_kw(fortio.get(), RADIAL_KW, {"FALSE"});
+inline void write_grid_radial_false(ERT::FortIO &fortio) {
+    write_char8_kw(fortio, RADIAL_KW, {"FALSE"});
 }
 
-inline void write_grid_mapunits(const ERT::FortIO &fortio) {
-    write_char8_kw(fortio.get(), MAPUNITS_KW, {"METRES"});
+inline void write_grid_mapunits(ERT::FortIO &fortio) {
+    write_char8_kw(fortio, MAPUNITS_KW, {"METRES"});
 }
 
-inline void write_grid_gridunit(const ERT::FortIO &fortio) {
-    write_char8_kw(fortio.get(), GRIDUNIT_KW, {"METRES", ""});
+inline void write_grid_gridunit(ERT::FortIO &fortio) {
+    write_char8_kw(fortio, GRIDUNIT_KW, {"METRES", ""});
 }
 
-inline void write_grid_cell(const ERT::FortIO &fortio, int i, int j, int k,
+inline void write_grid_cell(ERT::FortIO &fortio, int i, int j, int k,
                             int global_index, int host_cell,
                             const float corners[24]) {
     const int coords[7] = {i + 1, j + 1,     k + 1, global_index + 1,
                            1,     host_cell, 0};
-    write_int_kw(fortio.get(), COORDS_KW, coords, 7);
-    write_float_kw(fortio.get(), CORNERS_KW, corners, 24);
+    write_int_kw(fortio, COORDS_KW, coords, 7);
+    write_float_kw(fortio, CORNERS_KW, corners, 24);
 }
 
 inline ERT::FortIO make_fortio_writer(const fs::path &filename,
@@ -270,7 +268,7 @@ inline void write_egrid_with_single_lgr(
     write_egrid_filehead(fortio);
 
     if (mapaxes != nullptr)
-        write_float_kw(fortio.get(), MAPAXES_KW, mapaxes, 6);
+        write_float_kw(fortio, MAPAXES_KW, mapaxes, 6);
 
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
     write_egrid_grid_body(main_grid.get(), fortio);
@@ -355,9 +353,9 @@ inline void write_egrid_with_two_lgrs_and_amalgamated_nnc(
         rd_kw_scalar_set_int(nncheada_kw.get(), 0);
         rd_kw_iset_int(nncheada_kw.get(), NNCHEADA_ILOC1_INDEX, 1);
         rd_kw_iset_int(nncheada_kw.get(), NNCHEADA_ILOC2_INDEX, 2);
-        rd_kw_fwrite(nncheada_kw.get(), fortio.get());
-        write_int_kw(fortio.get(), NNA1_KW, nna1);
-        write_int_kw(fortio.get(), NNA2_KW, nna2);
+        rd_kw_fwrite(nncheada_kw.get(), fortio);
+        write_int_kw(fortio, NNA1_KW, nna1);
+        write_int_kw(fortio, NNA2_KW, nna2);
     }
 }
 
@@ -382,7 +380,7 @@ inline void write_egrid_with_coarse_groups(const fs::path &filename, int nx,
     write_egrid_filehead(fortio);
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
     write_egrid_grid_body(grid.get(), fortio);
-    write_int_kw(fortio.get(), CORSNUM_KW, corsnum, nx * ny * nz);
+    write_int_kw(fortio, CORSNUM_KW, corsnum, nx * ny * nz);
     write_empty_kw(fortio, ENDGRID_KW);
 }
 
@@ -404,15 +402,15 @@ inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
 
     auto coord = rd_kw_ptr(rd_grid_alloc_coord_kw(grid.get()), &rd_kw_free);
-    rd_kw_fwrite(coord.get(), fortio.get());
+    rd_kw_fwrite(coord.get(), fortio);
     auto zcorn = rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid.get()), &rd_kw_free);
-    rd_kw_fwrite(zcorn.get(), fortio.get());
+    rd_kw_fwrite(zcorn.get(), fortio);
 
     const int size = nx * ny * nz;
-    write_int_kw(fortio.get(), ACTNUM_KW, actnum, size);
+    write_int_kw(fortio, ACTNUM_KW, actnum, size);
 
     if (corsnum != nullptr)
-        write_int_kw(fortio.get(), CORSNUM_KW, corsnum, size);
+        write_int_kw(fortio, CORSNUM_KW, corsnum, size);
 
     write_empty_kw(fortio, ENDGRID_KW);
 
@@ -466,7 +464,7 @@ inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
     write_grid_dimens(fortio, nx, ny, nz);
     write_grid_mapunits(fortio);
     if (mapaxes)
-        write_float_kw(fortio.get(), MAPAXES_KW, mapaxes, 6);
+        write_float_kw(fortio, MAPAXES_KW, mapaxes, 6);
     write_grid_gridunit(fortio);
     write_grid_radial_false(fortio);
 
@@ -481,10 +479,10 @@ inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
 
     for (const auto &lgr : lgrs) {
         if (lgr.emit_parent)
-            write_char8_kw(fortio.get(), LGR_KW,
+            write_char8_kw(fortio, LGR_KW,
                            {lgr.lgr_name.c_str(), lgr.parent_name.c_str()});
         else
-            write_char8_kw(fortio.get(), LGR_KW, {lgr.lgr_name.c_str()});
+            write_char8_kw(fortio, LGR_KW, {lgr.lgr_name.c_str()});
 
         write_grid_dimens(fortio, lgr.nx, lgr.ny, lgr.nz);
         write_grid_radial_false(fortio);
@@ -507,15 +505,15 @@ inline void write_grid_file_with_mapaxes(const fs::path &filename,
 
     write_grid_dimens(fortio, 1, 1, 1);
     write_grid_mapunits(fortio);
-    write_float_kw(fortio.get(), MAPAXES_KW, mapaxes, 6);
+    write_float_kw(fortio, MAPAXES_KW, mapaxes, 6);
     write_grid_gridunit(fortio);
     write_grid_radial_false(fortio);
 
     // COORDS-5 (no host-cell field) is the minimal variant accepted
     // when no LGR follows.
     const int coords5[5] = {1, 1, 1, 1, 1};
-    write_int_kw(fortio.get(), COORDS_KW, coords5, 5);
-    write_float_kw(fortio.get(), CORNERS_KW, UNIT_CELL_CORNERS, 24);
+    write_int_kw(fortio, COORDS_KW, coords5, 5);
+    write_float_kw(fortio, CORNERS_KW, UNIT_CELL_CORNERS, 24);
 }
 
 /**
@@ -535,7 +533,7 @@ write_egrid_with_single_lgr_no_parent_kw(const fs::path &filename,
 
     auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
     rd_kw_iset_string8(lgr_kw.get(), 0, lgr_name.c_str());
-    rd_kw_fwrite(lgr_kw.get(), fortio.get());
+    rd_kw_fwrite(lgr_kw.get(), fortio);
 
     // Deliberately NO LGR_PARENT_KW here.
 
@@ -544,7 +542,7 @@ write_egrid_with_single_lgr_no_parent_kw(const fs::path &filename,
 
     auto hostnum_kw = make_rd_kw(HOSTNUM_KW, 1, RD_INT);
     rd_kw_iset_int(hostnum_kw.get(), 0, 1);
-    rd_kw_fwrite(hostnum_kw.get(), fortio.get());
+    rd_kw_fwrite(hostnum_kw.get(), fortio);
 
     write_empty_kw(fortio, ENDGRID_KW);
     write_empty_kw(fortio, ENDLGR_KW);
