@@ -71,6 +71,67 @@ bool FortIO::ftruncate(offset_type new_size) {
 #define APPEND_MODE_TXT "a"
 #define APPEND_MODE_BINARY "ab"
 
+/*
+  Observe that the stream open functions accept a failure, and call
+  the fopen() function directly.
+*/
+
+static const char *fortio_fopen_read_mode(bool fmt_file) {
+    if (fmt_file)
+        return READ_MODE_TXT;
+    else
+        return READ_MODE_BINARY;
+}
+
+static FILE *fortio_fopen_read(const char *filename, bool fmt_file) {
+    FILE *stream;
+    const char *mode = fortio_fopen_read_mode(fmt_file);
+    stream = fopen(filename, mode);
+    return stream;
+}
+
+static const char *fortio_fopen_write_mode(bool fmt_file) {
+    if (fmt_file)
+        return WRITE_MODE_TXT;
+    else
+        return WRITE_MODE_BINARY;
+}
+
+static FILE *fortio_fopen_write(const char *filename, bool fmt_file) {
+    FILE *stream;
+    const char *mode = fortio_fopen_write_mode(fmt_file);
+    stream = fopen(filename, mode);
+    return stream;
+}
+
+static const char *fortio_fopen_readwrite_mode(bool fmt_file) {
+    if (fmt_file)
+        return READ_WRITE_MODE_TXT;
+    else
+        return READ_WRITE_MODE_BINARY;
+}
+
+static FILE *fortio_fopen_readwrite(const char *filename, bool fmt_file) {
+    FILE *stream;
+    const char *mode = fortio_fopen_readwrite_mode(fmt_file);
+    stream = fopen(filename, mode);
+    return stream;
+}
+
+static const char *fortio_fopen_append_mode(bool fmt_file) {
+    if (fmt_file)
+        return APPEND_MODE_TXT;
+    else
+        return APPEND_MODE_BINARY;
+}
+
+static FILE *fortio_fopen_append(const char *filename, bool fmt_file) {
+    FILE *stream;
+    const char *mode = fortio_fopen_append_mode(fmt_file);
+    stream = fopen(filename, mode);
+    return stream;
+}
+
 struct fortio_struct {
     UTIL_TYPE_ID_DECLARATION;
     FILE *stream;
@@ -205,67 +266,6 @@ fortio_type *fortio_alloc_FILE_wrapper(const char *filename,
         fortio_alloc__(filename, fmt_file, endian_flip_header, false, writable);
     fortio->stream = stream;
     return fortio;
-}
-
-/*
-  Observe that the stream open functions accept a failure, and call
-  the fopen() function directly.
-*/
-
-static const char *fortio_fopen_read_mode(bool fmt_file) {
-    if (fmt_file)
-        return READ_MODE_TXT;
-    else
-        return READ_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_read(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_read_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
-}
-
-static const char *fortio_fopen_write_mode(bool fmt_file) {
-    if (fmt_file)
-        return WRITE_MODE_TXT;
-    else
-        return WRITE_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_write(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_write_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
-}
-
-static const char *fortio_fopen_readwrite_mode(bool fmt_file) {
-    if (fmt_file)
-        return READ_WRITE_MODE_TXT;
-    else
-        return READ_WRITE_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_readwrite(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_readwrite_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
-}
-
-static const char *fortio_fopen_append_mode(bool fmt_file) {
-    if (fmt_file)
-        return APPEND_MODE_TXT;
-    else
-        return APPEND_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_append(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_append_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
 }
 
 fortio_type *fortio_open_reader(const char *filename, bool fmt_file,
