@@ -20,28 +20,28 @@
 #include <cstdio>
 #include <cstring>
 
+#include <ios>
+
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
 void kw_list(const char *filename) {
-    fortio_type *fortio;
-    rd_kw_type *rd_kw = rd_kw_alloc_empty();
     bool fmt_file;
     if (rd_fmt_file(filename, &fmt_file)) {
 
         printf("---------------------------------------------------------------"
                "--\n");
         printf("%s: \n", filename);
-        fortio = fortio_open_reader(filename, fmt_file, RD_ENDIAN_FLIP);
-        while (rd_kw_fread_realloc(rd_kw, fortio))
+        ERT::FortIO fortio = ERT::FortIO(filename, std::ios_base::in, fmt_file);
+        rd_kw_type *rd_kw = rd_kw_alloc_empty();
+        while (rd_kw_fread_realloc(rd_kw, fortio.get()))
             rd_kw_summarize(rd_kw);
         printf("---------------------------------------------------------------"
                "--\n");
 
         rd_kw_free(rd_kw);
-        fortio_fclose(fortio);
     } else
         fprintf(stderr,
                 "Could not determine formatted/unformatted status of:%s - "
