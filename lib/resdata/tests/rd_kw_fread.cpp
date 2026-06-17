@@ -1,5 +1,7 @@
 #include <cstdlib>
 
+#include <ios>
+
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
@@ -18,10 +20,9 @@ void test_truncated(const char *filename, offset_type truncate_size) {
         fclose(stream);
     }
     {
-        fortio_type *fortio = fortio_open_reader(filename, false, true);
-        rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);
+        ERT::FortIO fortio(filename, std::ios_base::in, false, true);
+        rd_kw_type *kw2 = rd_kw_fread_alloc(fortio.get());
         test_assert_NULL(kw2);
-        fortio_fclose(fortio);
     }
 }
 
@@ -33,17 +34,15 @@ void test_fread_alloc() {
         for (i = 0; i < 100; i++)
             rd_kw_iset_int(kw1, i, i);
         {
-            fortio_type *fortio = fortio_open_writer("INT", false, true);
-            rd_kw_fwrite(kw1, fortio);
-            fortio_fclose(fortio);
+            ERT::FortIO fortio("INT", std::ios_base::out, false, true);
+            rd_kw_fwrite(kw1, fortio.get());
         }
         {
-            fortio_type *fortio = fortio_open_reader("INT", false, true);
-            rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);
+            ERT::FortIO fortio("INT", std::ios_base::in, false, true);
+            rd_kw_type *kw2 = rd_kw_fread_alloc(fortio.get());
             test_assert_true(rd_kw_is_instance(kw2));
             test_assert_true(rd_kw_equal(kw1, kw2));
             rd_kw_free(kw2);
-            fortio_fclose(fortio);
         }
 
         {
@@ -70,10 +69,9 @@ void test_kw_io_charlength() {
         }
 
         {
-            fortio_type *f = fortio_open_writer("TEST1", false, RD_ENDIAN_FLIP);
-            test_assert_true(rd_kw_fwrite(rd_kw_out0, f));
-            test_assert_false(rd_kw_fwrite(rd_kw_out1, f));
-            fortio_fclose(f);
+            ERT::FortIO f("TEST1", std::ios_base::out);
+            test_assert_true(rd_kw_fwrite(rd_kw_out0, f.get()));
+            test_assert_false(rd_kw_fwrite(rd_kw_out1, f.get()));
         }
 
         {
