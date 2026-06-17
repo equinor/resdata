@@ -1,20 +1,16 @@
-#ifndef ERT_RD_KW_H
-#define ERT_RD_KW_H
+#pragma once
 #include <cstdlib>
 #include <cstdio>
 #include <climits>
+
+#include <memory>
+#include <string>
 
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
-
-#ifdef __cplusplus
-#include <memory>
-#include <string>
-extern "C" {
-#endif
 
 UTIL_IS_INSTANCE_HEADER(rd_kw);
 
@@ -240,16 +236,9 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
-#ifdef __cplusplus
-}
-#endif
-#ifdef __cplusplus
 using rd_kw_ptr = std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>;
 rd_kw_ptr make_rd_kw(const char *header, int size, rd_data_type data_type);
 inline std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {
     return rd::strip_spaces(
         static_cast<const char *>(rd_kw_iget_ptr(kw, index)));
 }
-
-#endif
-#endif
