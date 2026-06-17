@@ -226,10 +226,8 @@ bool fortio_looks_like_fortran_file(const char *filename, bool endian_flip) {
     return is_fortran_stream;
 }
 
-static int fortio_fileno(fortio_type *fortio) { return fileno(fortio->stream); }
-
 static void fortio_init_size(fortio_type *fortio) {
-    fortio->read_size = util_fd_size(fortio_fileno(fortio));
+    fortio->read_size = util_fd_size(fileno(fortio->stream));
 }
 
 fortio_type *fortio_alloc_FILE_wrapper(const char *filename,
