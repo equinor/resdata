@@ -32,19 +32,19 @@ void test_transaction() {
         rd_kw_type *kw1 = rd_kw_alloc("TEST1_KW", data_size, RD_INT);
         for (int i = 0; i < data_size; ++i)
             rd_kw_iset_int(kw1, i, 537 + i);
-        rd_kw_fwrite(kw1, fortio.get());
+        rd_kw_fwrite(kw1, fortio);
 
         data_size = 5;
         rd_kw_type *kw2 = rd_kw_alloc("TEST2_KW", data_size, RD_FLOAT);
         for (int i = 0; i < data_size; ++i)
             rd_kw_iset_float(kw2, i, 0.15 * i);
-        rd_kw_fwrite(kw2, fortio.get());
+        rd_kw_fwrite(kw2, fortio);
 
         data_size = 3;
         rd_kw_type *kw3 = rd_kw_alloc("TEST3_KW", data_size, RD_FLOAT);
         for (int i = 0; i < data_size; i++)
             rd_kw_iset_float(kw3, i, 0.45 * i);
-        rd_kw_fwrite(kw3, fortio.get());
+        rd_kw_fwrite(kw3, fortio);
         fortio.fflush();
 
         //finished creating data file

@@ -16,7 +16,7 @@ struct rd_file_view_struct {
     std::map<std::string, std::vector<int>> kw_index;
     std::vector<std::string>
         distinct_kw; /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
-    fortio_type *
+    ERT::FortIO *
         fortio; /* The same fortio instance pointer as in the rd_file styructure. */
     bool
         owner; /* Is this map the owner of the rd_file_kw instances; only true for the global_map. */
@@ -47,7 +47,7 @@ const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
     return file_view->fortio->filename_ref();
 }
 
-rd_file_view_type *rd_file_view_alloc(fortio_type *fortio, int *flags,
+rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
                                       inv_map_type *inv_map, bool owner) {
     rd_file_view_type *rd_file_view = new rd_file_view_type();
 
@@ -129,7 +129,7 @@ static rd_kw_type *rd_file_view_get_kw(const rd_file_view_type *rd_file_view,
     if (!rd_kw) {
         if (rd_file_view->fortio->assert_stream_open()) {
 
-            rd_kw = rd_file_kw_get_kw(file_kw, rd_file_view->fortio,
+            rd_kw = rd_file_kw_get_kw(file_kw, *rd_file_view->fortio,
                                       rd_file_view->inv_map);
 
             if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
@@ -157,7 +157,7 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
         rd_data_type data_type = rd_file_kw_get_data_type(file_kw);
         int element_count = rd_file_kw_get_size(file_kw);
 
-        rd_kw_fread_indexed_data(rd_file_view->fortio,
+        rd_kw_fread_indexed_data(*rd_file_view->fortio,
                                  offset + RD_KW_HEADER_FORTIO_SIZE, data_type,
                                  element_count, index_map, io_buffer);
     }
@@ -208,7 +208,7 @@ bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
 
     if (rd_file_view->fortio->assert_stream_open()) {
         for (rd_file_kw_type *file_kw : rd_file_view->kw_list)
-            rd_file_kw_get_kw(file_kw, rd_file_view->fortio,
+            rd_file_kw_get_kw(file_kw, *rd_file_view->fortio,
                               rd_file_view->inv_map);
         loadOK = true;
     }
@@ -247,7 +247,7 @@ int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
 }
 
 void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
-                         fortio_type *target, int offset) {
+                         ERT::FortIO &target, int offset) {
     for (size_t index = offset; index < rd_file_view->kw_list.size(); index++) {
         rd_kw_type *rd_kw = rd_file_view_iget_kw(rd_file_view, index);
         rd_kw_fwrite(rd_kw, target);
@@ -716,7 +716,7 @@ void rd_file_view_write_index(const rd_file_view_type *file_view,
     }
 }
 
-rd_file_view_type *rd_file_view_fread_alloc(fortio_type *fortio, int *flags,
+rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             inv_map_type *inv_map,
                                             FILE *istream) {
 

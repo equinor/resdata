@@ -439,7 +439,7 @@ std::pair<int, int> rd_sum_file_data::report_range(int report_step) const {
 }
 
 void rd_sum_file_data::fwrite_report(int report_step,
-                                     fortio_type *fortio) const {
+                                     ERT::FortIO &fortio) const {
     {
         rd_kw_type *seqhdr_kw = rd_kw_alloc(SEQHDR_KW, SEQHDR_SIZE, RD_INT);
         rd_kw_iset_int(seqhdr_kw, 0, 0);
@@ -458,7 +458,7 @@ void rd_sum_file_data::fwrite_report(int report_step,
     }
 }
 
-void rd_sum_file_data::fwrite_unified(fortio_type *fortio) const {
+void rd_sum_file_data::fwrite_unified(ERT::FortIO &fortio) const {
     if (this->length() == 0)
         return;
 
@@ -481,7 +481,7 @@ void rd_sum_file_data::fwrite_multiple(const std::string &rd_case,
                 rd::filename(rd_case, RD_SUMMARY_FILE, fmt_case, report_step);
             ERT::FortIO fortio(filename.string(), std::ios_base::out, fmt_case);
 
-            fwrite_report(report_step, fortio.get());
+            fwrite_report(report_step, fortio);
         }
     }
 }

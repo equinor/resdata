@@ -67,9 +67,7 @@ public:
 
     size_t size() const { return size_t(rd_kw_get_size(this->m_kw)); }
 
-    void fwrite(FortIO &fortio) const {
-        rd_kw_fwrite(this->m_kw, fortio.get());
-    }
+    void fwrite(FortIO &fortio) const { rd_kw_fwrite(this->m_kw, fortio); }
 
     T at(size_t i) const {
         return *static_cast<T *>(rd_kw_iget_ptr(this->m_kw, i));
@@ -156,7 +154,7 @@ public:
     }
 
     static ResdataKW load(FortIO &fortio) {
-        rd_kw_type *c_ptr = rd_kw_fread_alloc(fortio.get());
+        rd_kw_type *c_ptr = rd_kw_fread_alloc(fortio);
 
         if (!c_ptr)
             throw std::invalid_argument("fread kw failed - EOF?");
@@ -229,7 +227,7 @@ template <typename T>
 void write_kw(FortIO &fortio, const std::string &kw,
               const std::vector<T> &data) {
     ResdataKW<T> rd_kw(kw, data);
-    rd_kw_fwrite(rd_kw.get(), fortio.get());
+    rd_kw_fwrite(rd_kw.get(), fortio);
 }
 
 /*
@@ -237,7 +235,7 @@ void write_kw(FortIO &fortio, const std::string &kw,
 */
 inline void write_mess(FortIO &fortio, const std::string &kw) {
     rd_kw_type *rd_kw = rd_kw_alloc(kw.c_str(), 0, RD_MESS);
-    rd_kw_fwrite(rd_kw, fortio.get());
+    rd_kw_fwrite(rd_kw, fortio);
 }
 
 } // namespace ERT

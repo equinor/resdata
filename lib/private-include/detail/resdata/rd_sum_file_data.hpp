@@ -118,7 +118,7 @@ public:
 
     rd_sum_tstep_type *add_new_tstep(int report_step, double sim_seconds);
     bool can_write() const;
-    void fwrite_unified(fortio_type *fortio) const;
+    void fwrite_unified(ERT::FortIO &fortio) const;
     void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
     bool fread(const stringlist_type *filelist, bool lazy_load,
                int file_options);
@@ -133,7 +133,7 @@ private:
 
     void append_tstep(rd_sum_tstep_type *tstep);
     void build_index();
-    void fwrite_report(int report_step, fortio_type *fortio) const;
+    void fwrite_report(int report_step, ERT::FortIO &fortio) const;
     bool check_file(rd_file_type *rd_file);
     void add_rd_file(int report_step, const rd_file_view_type *summary_view);
 };

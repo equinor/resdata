@@ -183,9 +183,9 @@ static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
     }
 }
 
-static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, fortio_type *fortio,
+static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                                inv_map_type *inv_map) {
-    if (fortio == NULL)
+    if (!fortio.assert_stream_open())
         util_abort("%s: trying to load a keyword after the backing file has "
                    "been detached.\n",
                    __func__);
@@ -194,7 +194,7 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, fortio_type *fortio,
         rd_file_kw_drop_kw(file_kw, inv_map);
 
     {
-        fortio->fseek(file_kw->file_offset, SEEK_SET);
+        fortio.fseek(file_kw->file_offset, SEEK_SET);
         file_kw->kw = rd_kw_fread_alloc(fortio);
         rd_file_kw_assert_kw(file_kw);
         inv_map_add_kw(inv_map, file_kw, file_kw->kw);
@@ -229,7 +229,7 @@ rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw) {
   rd_file_kw_get_kw() function.
 */
 
-rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, fortio_type *fortio,
+rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                               inv_map_type *inv_map) {
     if (file_kw->ref_count == 0)
         rd_file_kw_load_kw(file_kw, fortio, inv_map);
@@ -257,7 +257,7 @@ offset_type rd_file_kw_get_offset(const rd_file_kw_type *file_kw) {
 }
 
 bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw,
-                           fortio_type *fortio) {
+                           ERT::FortIO &fortio) {
     return rd_kw_fskip_data__(rd_file_kw_get_data_type(file_kw),
                               file_kw->kw_size, fortio);
 }
@@ -269,11 +269,11 @@ bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw,
    present in the file.
 */
 
-void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, fortio_type *fortio) {
+void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio) {
     rd_file_kw_assert_kw(file_kw);
-    fortio->fseek(file_kw->file_offset, SEEK_SET);
+    fortio.fseek(file_kw->file_offset, SEEK_SET);
     rd_kw_fskip_header(fortio);
-    fortio->fclean();
+    fortio.fclean();
     rd_kw_fwrite_data(file_kw->kw, fortio);
 }
 

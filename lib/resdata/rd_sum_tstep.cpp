@@ -221,7 +221,7 @@ int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep) {
 
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
                          const int *index_map, int index_map_size,
-                         fortio_type *fortio) {
+                         ERT::FortIO &fortio) {
     {
         rd_kw_type *ministep_kw = rd_kw_alloc(MINISTEP_KW, 1, RD_INT);
         rd_kw_iset_int(ministep_kw, 0, ministep->ministep);

@@ -96,9 +96,9 @@
 
 struct rd_file_struct {
     UTIL_TYPE_ID_DECLARATION;
-    fortio_type *fortio; /* The source of all the keywords - must be retained
-                                       open for reading for the entire lifetime of the
-                                       rd_file object. */
+    ERT::FortIO *fortio; /* The source of all the keywords - must be retained
+                            open for reading for the entire lifetime of the
+                            rd_file object. */
     rd_file_view_type
         *global_view; /* The index of all the rd_kw instances in the file. */
     rd_file_view_type *active_view; /* The currently active index. */
@@ -143,7 +143,7 @@ static rd_file_type *rd_file_alloc_empty(int flags) {
     return rd_file;
 }
 
-void rd_file_fwrite_fortio(const rd_file_type *rd_file, fortio_type *target,
+void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
                            int offset) {
     rd_file_view_fwrite(rd_file->active_view, target, offset);
 }
@@ -282,7 +282,7 @@ static void rd_file_scan(rd_file_type *rd_file) {
             {
                 offset_type current_offset = rd_file->fortio->ftell();
                 rd_read_status_enum read_status =
-                    rd_kw_fread_header(work_kw, rd_file->fortio);
+                    rd_kw_fread_header(work_kw, *rd_file->fortio);
                 if (read_status == RD_KW_READ_FAIL)
                     break;
 
@@ -290,7 +290,7 @@ static void rd_file_scan(rd_file_type *rd_file) {
                     rd_file_kw_type *file_kw =
                         rd_file_kw_alloc(work_kw, current_offset);
 
-                    if (rd_file_kw_fskip_data(file_kw, rd_file->fortio))
+                    if (rd_file_kw_fskip_data(file_kw, *rd_file->fortio))
                         rd_file_view_add_kw(rd_file->global_view, file_kw);
                     else {
                         rd_file_kw_free(file_kw);
@@ -320,8 +320,8 @@ static void rd_file_select_global(rd_file_type *rd_file) {
    file until rd_file_close() is called.
 */
 
-static fortio_type *rd_file_alloc_fortio(const char *filename, int flags) {
-    fortio_type *fortio = NULL;
+static ERT::FortIO *rd_file_alloc_fortio(const char *filename, int flags) {
+    ERT::FortIO *fortio = NULL;
     bool fmt_file;
 
     rd_fmt_file(filename, &fmt_file);
@@ -336,7 +336,7 @@ static fortio_type *rd_file_alloc_fortio(const char *filename, int flags) {
 }
 
 rd_file_type *rd_file_open(const char *filename, int flags) {
-    fortio_type *fortio = rd_file_alloc_fortio(filename, flags);
+    ERT::FortIO *fortio = rd_file_alloc_fortio(filename, flags);
 
     if (fortio) {
         rd_file_type *rd_file = rd_file_alloc_empty(flags);
@@ -533,7 +533,7 @@ bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
         if (rd_file->fortio
                 ->assert_stream_open()) { // the corresponding rd_file_kw instance.
 
-            rd_file_kw_inplace_fwrite(file_kw, rd_file->fortio);
+            rd_file_kw_inplace_fwrite(file_kw, *rd_file->fortio);
 
             if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
                 rd_file->fortio->fclose_stream();
@@ -635,7 +635,7 @@ rd_file_type *rd_file_fast_open(const char *file_name,
     rd_file_type *rd_file = NULL;
 
     if (rd_file_index_valid1(file_name, istream)) {
-        fortio_type *fortio = rd_file_alloc_fortio(file_name, flags);
+        ERT::FortIO *fortio = rd_file_alloc_fortio(file_name, flags);
         if (fortio) {
             rd_file = rd_file_alloc_empty(flags);
             rd_file->fortio = fortio;

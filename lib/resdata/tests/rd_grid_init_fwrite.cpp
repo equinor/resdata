@@ -15,7 +15,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
 
-static void rd_grid_fwrite_depth(rd_grid_type *grid, fortio_type *init_file,
+static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
                                  ert_rd_unit_enum output_unit) {
     rd_kw_type *depth_kw =
         rd_kw_alloc("DEPTH", rd_grid_get_nactive(grid), RD_FLOAT);
@@ -33,7 +33,7 @@ void test_write_depth(rd_grid_type *grid) {
     rd::util::TestArea ta("write_depth");
     {
         ERT::FortIO init_file("INIT", std::ios_base::out);
-        rd_grid_fwrite_depth(grid, init_file.get(), RD_METRIC_UNITS);
+        rd_grid_fwrite_depth(grid, init_file, RD_METRIC_UNITS);
     }
     {
         rd_file_type *init_file = rd_file_open("INIT", 0);
@@ -49,7 +49,7 @@ void test_write_depth(rd_grid_type *grid) {
 }
 
 static void rd_grid_fwrite_dims(const rd_grid_type *grid,
-                                fortio_type *init_file,
+                                ERT::FortIO &init_file,
                                 ert_rd_unit_enum output_unit) {
     rd_kw_type *dx = rd_kw_alloc("DX", rd_grid_get_nactive(grid), RD_FLOAT);
     rd_kw_type *dy = rd_kw_alloc("DY", rd_grid_get_nactive(grid), RD_FLOAT);
@@ -86,7 +86,7 @@ void test_write_dims(const rd_grid_type *grid) {
     rd::util::TestArea ta("write_dims");
     {
         ERT::FortIO init_file("INIT", std::ios_base::out);
-        rd_grid_fwrite_dims(grid, init_file.get(), RD_METRIC_UNITS);
+        rd_grid_fwrite_dims(grid, init_file, RD_METRIC_UNITS);
     }
     {
         rd_file_type *init_file = rd_file_open("INIT", 0);

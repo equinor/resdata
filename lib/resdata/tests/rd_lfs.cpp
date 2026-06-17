@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
         for (i = 0; i < num_kw; i++) {
             printf("Writing keyword %d/%d to file:LARGE_FILE.UNRST \n", i + 1,
                    num_kw);
-            rd_kw_fwrite(kw, fortio.get());
+            rd_kw_fwrite(kw, fortio);
         }
     }
 

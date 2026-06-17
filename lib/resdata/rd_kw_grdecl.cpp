@@ -407,7 +407,7 @@ void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream,
 
     {
         ERT::FortIO fortio("", true, true, stream, false);
-        rd_kw_fwrite_data(rd_kw, fortio.get());
+        rd_kw_fwrite_data(rd_kw, fortio);
     }
     fprintf(stream, "/\n");
 }

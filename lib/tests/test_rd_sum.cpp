@@ -1378,12 +1378,12 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             {
                 ERT::FortIO out(case4_path + ".UNSMRY", std::ios_base::out,
                                 false);
-                rd_file_fwrite_fortio(sum_in.get(), out.get(), 0);
+                rd_file_fwrite_fortio(sum_in.get(), out, 0);
             }
             {
                 ERT::FortIO out(case4_path + ".SMSPEC", std::ios_base::out,
                                 false);
-                rd_file_fwrite_fortio(smspec_in.get(), out.get(), 0);
+                rd_file_fwrite_fortio(smspec_in.get(), out, 0);
             }
 
             THEN("The duplicate BPR:8 key is copied from BPR:3 "

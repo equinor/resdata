@@ -95,9 +95,9 @@ int main(int argc, char **argv) {
                 if (target_type == RD_UNIFIED_RESTART_FILE) {
                     /* Must insert the SEQNUM keyword first. */
                     rd_kw_iset_int(seqnum_kw.get(), 0, report_step);
-                    rd_kw_fwrite(seqnum_kw.get(), target.get());
+                    rd_kw_fwrite(seqnum_kw.get(), target);
                 }
-                rd_file_fwrite_fortio(src_file.get(), target.get(), 0);
+                rd_file_fwrite_fortio(src_file.get(), target, 0);
             } /* Else skipping file of incorrect type. */
         }
     }

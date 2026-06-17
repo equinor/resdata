@@ -60,8 +60,6 @@ public:
               bool fmt_file = false, bool endian_flip_header = RD_ENDIAN_FLIP);
     void close();
 
-    [[nodiscard]] FortIO *get() const;
-
     int init_read();
     bool complete_read(int record_size);
     void init_write(int record_size);
@@ -109,5 +107,3 @@ private:
     offset_type m_read_size = 0;
 };
 } // namespace ERT
-
-using fortio_type = ERT::FortIO;

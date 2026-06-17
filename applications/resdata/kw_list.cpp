@@ -36,7 +36,7 @@ void kw_list(const char *filename) {
         printf("%s: \n", filename);
         ERT::FortIO fortio = ERT::FortIO(filename, std::ios_base::in, fmt_file);
         rd_kw_type *rd_kw = rd_kw_alloc_empty();
-        while (rd_kw_fread_realloc(rd_kw, fortio.get()))
+        while (rd_kw_fread_realloc(rd_kw, fortio))
             rd_kw_summarize(rd_kw);
         printf("---------------------------------------------------------------"
                "--\n");

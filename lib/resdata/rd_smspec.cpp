@@ -328,7 +328,7 @@ static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
 }
 
 static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
-                                      fortio_type *fortio) {
+                                      ERT::FortIO &fortio) {
     rd_kw_ptr intehead = make_rd_kw(INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, RD_INT);
     rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_UNIT_INDEX,
                    smspec->unit_system);
@@ -339,7 +339,7 @@ static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
 }
 
 static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
-                                     fortio_type *fortio) {
+                                     ERT::FortIO &fortio) {
     rd_kw_ptr restart_kw =
         make_rd_kw(RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR);
     for (int i = 0; i < SUMMARY_RESTART_SIZE; i++)
@@ -360,7 +360,7 @@ static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
 }
 
 static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
-                                    fortio_type *fortio) {
+                                    ERT::FortIO &fortio) {
     rd_kw_ptr dimens_kw = make_rd_kw(DIMENS_KW, DIMENS_SIZE, RD_INT);
     int num_nodes = rd_smspec_num_nodes(smspec);
     rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_SIZE_INDEX, num_nodes);
@@ -378,7 +378,7 @@ static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
 }
 
 static void rd_smspec_fwrite_STARTDAT(const rd_smspec_type *smspec,
-                                      fortio_type *fortio) {
+                                      ERT::FortIO &fortio) {
     auto startdat_kw = make_rd_kw(STARTDAT_KW, STARTDAT_SIZE, RD_INT);
     int second, minute, hour, mday, month, year;
     rd_set_datetime_values(smspec->sim_start_time, &second, &minute, &hour,
@@ -396,7 +396,7 @@ static void rd_smspec_fwrite_STARTDAT(const rd_smspec_type *smspec,
 }
 
 static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
-                                    fortio_type *fortio) {
+                                    ERT::FortIO &fortio) {
     rd_smspec_fwrite_INTEHEAD(smspec, fortio);
     rd_smspec_fwrite_RESTART(smspec, fortio);
     rd_smspec_fwrite_DIMENS(smspec, fortio);
@@ -473,12 +473,7 @@ void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
         rd::filename(rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
 
-    if (!fortio.get())
-        throw std::runtime_error(
-            fmt::format("Unable to open fortio file {}, error: {}", filename,
-                        strerror(errno)));
-
-    rd_smspec_fortio_fwrite(smspec, fortio.get());
+    rd_smspec_fortio_fwrite(smspec, fortio);
 }
 
 static rd_smspec_type *
