@@ -42,25 +42,11 @@ static const char *fortio_fopen_read_mode(bool fmt_file) {
         return READ_MODE_BINARY;
 }
 
-static FILE *fortio_fopen_read(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_read_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
-}
-
 static const char *fortio_fopen_write_mode(bool fmt_file) {
     if (fmt_file)
         return WRITE_MODE_TXT;
     else
         return WRITE_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_write(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_write_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
 }
 
 static const char *fortio_fopen_readwrite_mode(bool fmt_file) {
@@ -70,25 +56,11 @@ static const char *fortio_fopen_readwrite_mode(bool fmt_file) {
         return READ_WRITE_MODE_BINARY;
 }
 
-static FILE *fortio_fopen_readwrite(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_readwrite_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
-}
-
 static const char *fortio_fopen_append_mode(bool fmt_file) {
     if (fmt_file)
         return APPEND_MODE_TXT;
     else
         return APPEND_MODE_BINARY;
-}
-
-static FILE *fortio_fopen_append(const char *filename, bool fmt_file) {
-    FILE *stream;
-    const char *mode = fortio_fopen_append_mode(fmt_file);
-    stream = fopen(filename, mode);
-    return stream;
 }
 
 struct fortio_struct {
@@ -271,12 +243,13 @@ fortio_type *fortio_alloc_FILE_wrapper(const char *filename,
 
 fortio_type *fortio_open_reader(const char *filename, bool fmt_file,
                                 bool endian_flip_header) {
-    FILE *stream = fortio_fopen_read(filename, fmt_file);
+    const char *mode = fortio_fopen_read_mode(fmt_file);
+    FILE *stream = fopen(filename, mode);
     if (stream) {
         fortio_type *fortio =
             fortio_alloc__(filename, fmt_file, endian_flip_header, true, false);
         fortio->stream = stream;
-        fortio->fopen_mode = fortio_fopen_read_mode(fmt_file);
+        fortio->fopen_mode = mode;
         fortio_init_size(fortio);
         return fortio;
     } else
@@ -285,12 +258,13 @@ fortio_type *fortio_open_reader(const char *filename, bool fmt_file,
 
 fortio_type *fortio_open_writer(const char *filename, bool fmt_file,
                                 bool endian_flip_header) {
-    FILE *stream = fortio_fopen_write(filename, fmt_file);
+    const char *mode = fortio_fopen_write_mode(fmt_file);
+    FILE *stream = fopen(filename, mode);
     if (stream) {
         fortio_type *fortio =
             fortio_alloc__(filename, fmt_file, endian_flip_header, true, true);
         fortio->stream = stream;
-        fortio->fopen_mode = fortio_fopen_write_mode(fmt_file);
+        fortio->fopen_mode = mode;
         fortio_init_size(fortio);
         return fortio;
     } else
@@ -299,12 +273,13 @@ fortio_type *fortio_open_writer(const char *filename, bool fmt_file,
 
 fortio_type *fortio_open_readwrite(const char *filename, bool fmt_file,
                                    bool endian_flip_header) {
-    FILE *stream = fortio_fopen_readwrite(filename, fmt_file);
+    const char *mode = fortio_fopen_readwrite_mode(fmt_file);
+    FILE *stream = fopen(filename, mode);
     if (stream) {
         fortio_type *fortio =
             fortio_alloc__(filename, fmt_file, endian_flip_header, true, true);
         fortio->stream = stream;
-        fortio->fopen_mode = fortio_fopen_readwrite_mode(fmt_file);
+        fortio->fopen_mode = mode;
         fortio_init_size(fortio);
         return fortio;
     } else
@@ -313,13 +288,14 @@ fortio_type *fortio_open_readwrite(const char *filename, bool fmt_file,
 
 fortio_type *fortio_open_append(const char *filename, bool fmt_file,
                                 bool endian_flip_header) {
-    FILE *stream = fortio_fopen_append(filename, fmt_file);
+    const char *mode = fortio_fopen_append_mode(fmt_file);
+    FILE *stream = fopen(filename, mode);
     if (stream) {
         fortio_type *fortio =
             fortio_alloc__(filename, fmt_file, endian_flip_header, true, true);
 
         fortio->stream = stream;
-        fortio->fopen_mode = fortio_fopen_append_mode(fmt_file);
+        fortio->fopen_mode = mode;
         fortio_init_size(fortio);
 
         return fortio;
