@@ -169,7 +169,11 @@ FortIO::FortIO(const std::string &filename, std::ios_base::openmode mode,
 
 void FortIO::open(const std::string &filename, std::ios_base::openmode mode,
                   bool fmt_file, bool endian_flip_header) {
-    if (mode == std::ios_base::in) {
+    if (mode == (std::ios_base::in | std::ios_base::out)) {
+        fortio_type *c_ptr = fortio_open_readwrite(filename.c_str(), fmt_file,
+                                                   endian_flip_header);
+        m_fortio.reset(c_ptr);
+    } else if (mode == std::ios_base::in) {
         if (util_file_exists(filename.c_str())) {
             fortio_type *c_ptr = fortio_open_reader(filename.c_str(), fmt_file,
                                                     endian_flip_header);
@@ -200,7 +204,6 @@ bool FortIO::ftruncate(offset_type new_size) {
     return fortio_ftruncate(m_fortio.get(), new_size);
 }
 } // namespace ERT
-
 
 /**
    This function tries (using some heuristic) to guess whether a
