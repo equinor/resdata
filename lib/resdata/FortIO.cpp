@@ -21,8 +21,6 @@
 
 namespace ERT {
 
-FortIO::FortIO() {}
-
 FortIO::FortIO(const std::string &filename, std::ios_base::openmode mode,
                bool fmt_file, bool endian_flip_header) {
     open(filename, mode, fmt_file, endian_flip_header);
