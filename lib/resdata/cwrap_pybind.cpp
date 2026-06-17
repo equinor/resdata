@@ -157,21 +157,6 @@ template <> FILE *from_cwrap<FILE>(py::handle obj) {
     return cast_cwrap<FILE>(obj);
 }
 
-py::object FortIO() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.resfile").attr("FortIO");
-    }
-    return cls;
-}
-
-template <> fortio_type *from_cwrap<fortio_type>(py::handle obj) {
-    if (!py::isinstance(obj, FortIO()))
-        throw py::type_error("Expected FortIO, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<fortio_type>(obj);
-}
-
 py::object ResDataType() {
     static py::object cls;
     if (!cls) {
