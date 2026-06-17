@@ -64,6 +64,28 @@ bool fortio_read_at_eof(fortio_type *fortio);
 void fortio_fwrite_error(fortio_type *fortio);
 
 namespace ERT {
+
+/**
+The fortio class handles fortran io. The problem is
+that when a Fortran program writes unformatted data to file in a
+statement like:
+
+   integer array(100)
+   write(unit) array
+
+it actually writes a head and tail in addition to the actual
+data. The header and tail is a 4 byte integer, which value is the
+number of bytes in the immediately following record. I.e. what is
+actually found on disk after the Fortran code above is:
+
+  | 400 | array ...... | 400 |
+
+Where the "400" head and tail is the number of bytes in the following
+record. Fortran IO handles this transparently, but when mixing with
+other programming languages care must be taken. This class implements
+functionality to read and write these fortran generated files
+transparently.
+*/
 class FortIO {
 public:
     FortIO();
