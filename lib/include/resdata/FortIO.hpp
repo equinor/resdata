@@ -88,7 +88,7 @@ transparently.
 */
 class FortIO {
 public:
-    FortIO();
+    FortIO() = delete;
     FortIO(const std::string &filename, std::ios_base::openmode mode,
            bool fmt_file = false, bool endian_flip_header = RD_ENDIAN_FLIP);
     void open(const std::string &filename, std::ios_base::openmode mode,

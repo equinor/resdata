@@ -8,8 +8,7 @@
 
 void test_open() {
     rd::util::TestArea ta("fortioxx");
-    ERT::FortIO fortio;
-    fortio.open("new_file", std::fstream::out);
+    ERT::FortIO fortio("new_file", std::fstream::out);
 
     {
         std::vector<int> data;
