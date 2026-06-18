@@ -885,7 +885,7 @@ def keywords(draw, size=8):
 
 @st.composite
 def str_arrays(draw):
-    size = draw(st.integers(min_value=8, max_value=16))
+    size = draw(st.integers(min_value=1, max_value=98))
     return draw(st.builds(np.array, st.lists(keywords(size), min_size=1))).astype(
         "|S" + str(size)
     )
