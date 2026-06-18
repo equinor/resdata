@@ -624,13 +624,6 @@ add_test(
   COMMAND rd_fault_block_layer_equinor ${_resdatapath}/Mariner/MARINER.EGRID
           ${_resdatapath}/Mariner/faultblock.grdecl)
 
-if(HAVE_UTIL_ABORT_INTERCEPT)
-  add_executable(rd_fortio resdata/tests/rd_fortio.cpp util/test_util.cpp)
-  target_link_libraries(rd_fortio resdata)
-  add_test(NAME rd_fortio COMMAND rd_fortio
-                                  ${_resdatapath}/Gurbat/ECLIPSE.UNRST)
-endif()
-
 add_test(NAME well_state_load1
          COMMAND well_state_load ${_resdatapath}/Gurbat/ECLIPSE.EGRID
                  ${_resdatapath}/Gurbat/ECLIPSE.X0030)

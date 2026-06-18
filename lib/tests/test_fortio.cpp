@@ -5,12 +5,20 @@
 #include <cstdint>
 
 #include <array>
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <ios>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <resdata/FortIO.hpp>
+
+#include <ert/util/util.hpp>
 
 #include "tmpdir.hpp"
 
@@ -40,6 +48,15 @@ TEST_CASE_METHOD(Tmpdir, "Basic FortIO operations") {
         THEN("Seeking data beyond count raises") {
             REQUIRE_THROWS_AS(fortio.data_fseek(0, 6, 1, 5, 1),
                               std::invalid_argument);
+        }
+        THEN("The stream cycles correctly through close and reopen") {
+            REQUIRE(fortio.stream_is_open());
+            REQUIRE(fortio.fclose_stream());
+            REQUIRE_FALSE(fortio.stream_is_open());
+            REQUIRE_FALSE(fortio.fclose_stream());
+            REQUIRE(fortio.fopen_stream());
+            REQUIRE(fortio.stream_is_open());
+            REQUIRE_FALSE(fortio.fopen_stream());
         }
     }
 }
@@ -85,15 +102,24 @@ std::vector<std::byte> concat(const Buffers &...buffers) {
     return result;
 }
 
-TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
-    GIVEN("A fortio file with a zero record") {
-        auto filename = (dirname / "CASE.EGRID");
-        {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out);
-            fortio.fwrite_record("", 0);
-        }
+template <typename T> const char *as_char(const T *p) {
+    return reinterpret_cast<const char *>(p);
+}
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in);
+void write_records(
+    const std::string &filename,
+    std::initializer_list<std::pair<const char *, int>> records) {
+    ERT::FortIO fortio(filename, std::ios_base::out);
+    for (const auto &[data, size] : records)
+        fortio.fwrite_record(data, size);
+}
+
+TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
+    auto filename = (dirname / "CASE.EGRID").string();
+    GIVEN("A fortio file with a zero record") {
+        write_records(filename, {{"", 0}});
+
+        ERT::FortIO fortio(filename, std::ios_base::in);
 
         THEN("Reading zero sized buffer moves the stream past the markers") {
             auto pos = fortio.ftell();
@@ -102,13 +128,9 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
         }
     }
     GIVEN("A fortio file with a record of length 1") {
-        auto filename = (dirname / "CASE.EGRID");
-        {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out);
-            fortio.fwrite_record("A", 1);
-        }
+        write_records(filename, {{"A", 1}});
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in);
+        ERT::FortIO fortio(filename, std::ios_base::in);
 
         THEN("Reading zero sized buffer moves the stream past the markers") {
             auto pos = fortio.ftell();
@@ -120,14 +142,9 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
         }
     }
     GIVEN("A fortio file with two records") {
-        auto filename = (dirname / "CASE.EGRID");
-        {
-            ERT::FortIO fortio(filename.string(), std::ios_base::out);
-            fortio.fwrite_record("A", 1);
-            fortio.fwrite_record("BB", 2);
-        }
+        write_records(filename, {{"A", 1}, {"BB", 2}});
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in);
+        ERT::FortIO fortio(filename, std::ios_base::in);
 
         THEN("read_buffer will read records until size is filled") {
             auto pos = fortio.ftell();
@@ -162,36 +179,142 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
         }
     }
 
-    GIVEN("A fortio file with a negative record") {
-        auto filename = (dirname / "CASE.EGRID");
+    GIVEN("A fortio file with invalid record markers") {
+        auto [head, tail] = GENERATE(std::pair{-1, -1}, std::pair{1, 3});
         {
-            auto content = concat(to_bytes_big(-1), to_bytes_big(-1));
+            auto content = concat(to_bytes_big(head), to_bytes_big(tail));
             std::ofstream file(filename, std::ios::binary);
-            file.write(reinterpret_cast<const char *>(content.data()),
-                       content.size());
+            file.write(as_char(content.data()), content.size());
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in);
+        ERT::FortIO fortio(filename, std::ios_base::in);
 
         THEN("read_buffer will fail") {
             std::array<char, 1> buffer = {0};
             REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 1));
         }
     }
-    GIVEN("A fortio file with mismatched records") {
-        auto filename = (dirname / "file.bin");
+    GIVEN("An externally managed FILE*") {
+        write_records(filename, {{"", 0}});
+        std::unique_ptr<FILE, decltype(&fclose)> stream(
+            fopen(filename.c_str(), "r"), fclose);
+        REQUIRE(stream);
+        WHEN("Constructing a FortIO from the FILE*") {
+            ERT::FortIO fortio(filename, false, false, stream.get(), false);
+
+            THEN("fclose_stream returns false since the stream is not owned") {
+                REQUIRE_FALSE(fortio.fclose_stream());
+            }
+            THEN("fopen_stream returns false since the stream is already set") {
+                REQUIRE_FALSE(fortio.fopen_stream());
+            }
+            THEN("stream_is_open returns true") {
+                REQUIRE(fortio.stream_is_open());
+            }
+        }
+    }
+    GIVEN("A file with two records where the second is truncated mid-data") {
+        const int record_size = 1000;
+        std::vector<char> buffer(record_size, 0);
         {
-            auto content = concat(to_bytes_big(1), to_bytes_big(3));
-            std::ofstream file(filename, std::ios::binary);
-            file.write(reinterpret_cast<const char *>(content.data()),
-                       content.size());
+            ERT::FortIO fortio(filename, std::ios_base::out, false, false);
+            fortio.fwrite_record(buffer.data(), record_size);
+            fortio.fwrite_record(buffer.data(), record_size);
+            fortio.ftruncate(2 * record_size - 100);
         }
 
-        ERT::FortIO fortio(filename.string(), std::ios_base::in);
+        REQUIRE(util_file_size(filename.c_str()) == 2 * record_size - 100);
 
-        THEN("read_buffer will fail") {
-            std::array<char, 1> buffer = {0};
-            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 1));
+        THEN("The first record reads successfully but the second fails") {
+            ERT::FortIO fortio(filename, std::ios_base::in, false, false);
+            REQUIRE(fortio.fread_buffer(buffer.data(), record_size));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), record_size));
+        }
+    }
+    GIVEN("An empty file") {
+        std::ofstream(filename).close();
+
+        ERT::FortIO fortio(filename, std::ios_base::in, false, true);
+        char buf = 0;
+
+        THEN("fread_buffer fails and the stream is at EOF") {
+            REQUIRE_FALSE(fortio.fread_buffer(&buf, 1));
+            REQUIRE(fortio.read_at_eof());
+        }
+    }
+    GIVEN("A file with a record whose tail marker is truncated") {
+        const int record_size = 1000;
+        std::vector<char> buffer(record_size, 0);
+        {
+            ERT::FortIO fortio(filename, std::ios_base::out, false, false);
+            fortio.fwrite_record(buffer.data(), record_size);
+            fortio.ftruncate(record_size + 4);
+        }
+
+        THEN("fread_buffer returns false") {
+            ERT::FortIO fortio(filename, std::ios_base::in, false, false);
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), record_size));
+        }
+    }
+    GIVEN("A file with a second record whose tail does not match its head") {
+        const int record_size = 10;
+        std::vector<char> buffer(record_size, 0);
+        {
+            std::ofstream file(filename, std::ios::binary);
+            // First record: head=10, data, tail=10 (valid)
+            file.write(as_char(&record_size), sizeof record_size);
+            file.write(buffer.data(), record_size);
+            file.write(as_char(&record_size), sizeof record_size);
+            // Second record: head=10, data, tail=11 (mismatched)
+            file.write(as_char(&record_size), sizeof record_size);
+            file.write(buffer.data(), record_size);
+            const int bad_tail = record_size + 1;
+            file.write(as_char(&bad_tail), sizeof bad_tail);
+        }
+
+        ERT::FortIO fortio(filename, std::ios_base::in, false, false);
+
+        THEN("The first record reads successfully but the second fails") {
+            REQUIRE(fortio.fread_buffer(buffer.data(), record_size));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), record_size));
+        }
+    }
+
+    GIVEN("A fortio file with one record") {
+        {
+            ERT::FortIO fortio(filename, std::ios_base::out, false, false);
+            std::vector<char> buffer(100, 0);
+            fortio.fwrite_record(buffer.data(), 100);
+        }
+        ERT::FortIO fortio(filename, std::ios_base::in, false, false);
+
+        THEN("read_at_eof is false at the start and middle, true at the end") {
+            REQUIRE_FALSE(fortio.read_at_eof());
+            fortio.fseek(50, SEEK_SET);
+            REQUIRE_FALSE(fortio.read_at_eof());
+            fortio.fseek(0, SEEK_END);
+            REQUIRE(fortio.read_at_eof());
+        }
+        THEN("Seeking to start and end of file succeeds") {
+            REQUIRE(fortio.fseek(0, SEEK_SET));
+            REQUIRE(fortio.fseek(0, SEEK_END));
+        }
+        THEN("Seeking far beyond the end of file fails") {
+            REQUIRE_FALSE(fortio.fseek(100000, SEEK_END));
+            REQUIRE_FALSE(fortio.fseek(100000, SEEK_SET));
+        }
+    }
+    GIVEN("A writeable fortio file with one record written") {
+        ERT::FortIO fortio(filename, std::ios_base::out, false, false);
+        std::vector<char> buffer(100, 0);
+        fortio.fwrite_record(buffer.data(), 100);
+
+        THEN("After fwrite_error the file is deleted and writes are no-ops") {
+            REQUIRE(std::filesystem::exists(filename));
+            fortio.fwrite_error();
+            REQUIRE_FALSE(std::filesystem::exists(filename));
+            fortio.fwrite_record(buffer.data(), 100);
+            REQUIRE_FALSE(std::filesystem::exists(filename));
         }
     }
 }
