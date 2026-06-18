@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <ios>
 #include <memory>
 #include <filesystem>
 #include <string>
@@ -314,9 +315,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
                                  RD_METRIC_UNITS);
             REQUIRE(fs::exists(grid_filename));
 
-            fortio_type *fortio = fortio_open_reader(grid_filename.c_str(),
-                                                     false, RD_ENDIAN_FLIP);
-            REQUIRE(fortio != nullptr);
+            ERT::FortIO fortio(grid_filename.c_str(), std::ios_base::in);
 
             rd_kw_ptr first_corners(nullptr, &rd_kw_free);
             while (true) {
@@ -329,7 +328,6 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
                 }
                 rd_kw_free(kw);
             }
-            fortio_fclose(fortio);
 
             REQUIRE(first_corners != nullptr);
             REQUIRE(rd_kw_get_size(first_corners.get()) == 24);
