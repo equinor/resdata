@@ -1,13 +1,20 @@
+#include <cstddef>
+
+#include <ios>
 #include <stdexcept>
 #include <fstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
+#include <ert/util/test_work_area.hpp>
 
 #include <resdata/rd_file.hpp>
-
 #include <resdata/ResdataKW.hpp>
 #include <resdata/FortIO.hpp>
-#include <ert/util/test_work_area.hpp>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_type.hpp>
 
 void test_kw_name() {
     ERT::ResdataKW<int> kw1("short", 1);
@@ -188,6 +195,30 @@ void test_read_write() {
     }
 }
 
+void test_fortio_kw() {
+    rd::util::TestArea ta("fortio_kw");
+    std::vector<int> vec(1000);
+
+    for (size_t i = 0; i < vec.size(); i++)
+        vec[i] = i;
+
+    ERT::ResdataKW<int> kw("XYZ", vec);
+
+    {
+        ERT::FortIO fortio("new_file", std::fstream::out);
+        kw.fwrite(fortio);
+        fortio.close();
+    }
+
+    {
+        ERT::FortIO fortio("new_file", std::fstream::in);
+        ERT::ResdataKW<int> kw2 = ERT::ResdataKW<int>::load(fortio);
+        fortio.close();
+        for (size_t i = 0; i < kw.size(); i++)
+            test_assert_int_equal(kw.at(i), kw2.at(i));
+    }
+}
+
 int main(int argc, char **argv) {
     test_kw_name();
     test_kw_vector_assign();
@@ -199,4 +230,5 @@ int main(int argc, char **argv) {
     test_resize();
     test_data();
     test_read_write();
+    test_fortio_kw();
 }

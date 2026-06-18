@@ -11,6 +11,7 @@
 #include <initializer_list>
 #include <ios>
 #include <memory>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -317,4 +318,44 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
             REQUIRE_FALSE(std::filesystem::exists(filename));
         }
     }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Reading and writing with FortIO") {
+    ERT::FortIO fortio("new_file", std::fstream::out);
+    {
+        std::vector<int> data(1000);
+        std::iota(data.begin(), data.end(), 0);
+
+        fortio.fwrite_record(as_char(data.data()), 1000 * 4);
+    }
+    fortio.close();
+
+    fortio.open("new_file", std::fstream::app);
+    {
+        std::vector<int> data(1000);
+        std::iota(data.begin(), data.end(), 0);
+
+        fortio.fwrite_record(as_char(data.data()), 1000 * 4);
+    }
+    fortio.close();
+
+    fortio.open("new_file", std::fstream::in);
+    {
+        std::vector<int> data(1000, 99);
+
+        std::vector<int> expected(1000);
+        std::iota(expected.begin(), expected.end(), 0);
+
+        bool ok = fortio.fread_buffer(reinterpret_cast<char *>(data.data()),
+                                      1000 * 4);
+        REQUIRE(ok);
+        REQUIRE(data == expected);
+
+        ok = fortio.fread_buffer(reinterpret_cast<char *>(data.data()),
+                                 1000 * 4);
+        REQUIRE(ok);
+        REQUIRE(data == expected);
+    }
+    REQUIRE_FALSE(fortio.ftruncate(0));
+    fortio.close();
 }
