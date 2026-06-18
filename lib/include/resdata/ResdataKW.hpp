@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <ert/util/ert_unique_ptr.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/FortIO.hpp>
