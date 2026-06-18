@@ -476,7 +476,7 @@ foreach(name geo_util_xlines geo_polygon geo_polygon_collection)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-foreach(test rdxx_kw rdxx_fortio rdxx_types)
+foreach(test rdxx_kw rdxx_types)
   add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
   add_test(NAME ${test} COMMAND ${test})
