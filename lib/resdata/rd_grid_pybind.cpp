@@ -1,3 +1,4 @@
+#include <optional>
 #include <tuple>
 #include <algorithm>
 
@@ -349,9 +350,12 @@ PYBIND11_MODULE(_grid, m) {
         py::return_value_policy::reference);
     m.def(
         "_export_mapaxes",
-        [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
-                rd_grid_alloc_mapaxes_kw(from_cwrap<rd_grid_type>(self)));
+        [](py::handle self) -> std::optional<std::uintptr_t> {
+            if (auto mapaxes =
+                    rd_grid_alloc_mapaxes_kw(from_cwrap<rd_grid_type>(self)))
+                return reinterpret_cast<std::uintptr_t>(mapaxes->release());
+            else
+                return std::nullopt;
         },
         py::return_value_policy::reference);
     m.def("_get_unit_system", [](py::handle self) {

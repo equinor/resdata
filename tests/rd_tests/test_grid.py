@@ -999,3 +999,9 @@ def test_that_grid_create_accepts_none_actnum_and_mapaxes():
     grid = Grid.create(dims, zcorn, coord, None, None)
     assert grid is not None
     assert grid.get_num_active() == 2 * 2 * 2
+
+
+def test_rectangular_grid_does_not_have_mapaxes():
+    grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
+    assert grid is not None
+    assert grid.export_mapaxes() is None

@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <memory>
 #include <filesystem>
+#include <optional>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
@@ -88,7 +89,7 @@ rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
                                         double dy, double dz,
                                         const int *actnum);
 rd_kw_type *rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size);
-rd_kw_type *rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
+std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
 rd_kw_type *rd_grid_alloc_coord_kw(const rd_grid_type *grid);
 
 bool rd_grid_exists(const char *case_input);

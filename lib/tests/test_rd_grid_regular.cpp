@@ -37,6 +37,9 @@ TEST_CASE("Test unfractured grids", "[unittest]") {
             auto i = GENERATE(0, 1, 10, 20);
             REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), i) == -1);
         }
+        THEN("It does not have mapaxes") {
+            REQUIRE_FALSE(rd_grid_alloc_mapaxes_kw(grid.get()));
+        }
     }
 }
 

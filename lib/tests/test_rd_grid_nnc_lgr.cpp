@@ -357,11 +357,10 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
         }
 
         THEN("rd_grid_alloc_mapaxes_kw returns kw with mapaxes") {
-            auto kw =
-                rd_kw_ptr(rd_grid_alloc_mapaxes_kw(grid.get()), &rd_kw_free);
+            auto kw = rd_grid_alloc_mapaxes_kw(grid.get());
             REQUIRE(kw != nullptr);
-            REQUIRE(rd_kw_get_size(kw.get()) == 6);
-            const float *data = rd_kw_get_float_ptr(kw.get());
+            REQUIRE(rd_kw_get_size(kw->get()) == 6);
+            const float *data = rd_kw_get_float_ptr(kw->get());
             for (int i = 0; i < 6; i++)
                 REQUIRE(data[i] == mapaxes[i]);
         }
