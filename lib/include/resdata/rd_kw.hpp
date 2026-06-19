@@ -237,7 +237,16 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
 using rd_kw_ptr = std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>;
-rd_kw_ptr make_rd_kw(const char *header, int size, rd_data_type data_type);
+inline rd_kw_ptr make_rd_kw(const char *header, int size,
+                            rd_data_type data_type) {
+    return {rd_kw_alloc(header, size, data_type), rd_kw_free};
+}
+
+inline rd_kw_ptr make_rd_kw(const char *header, int size,
+                            rd_data_type data_type, const void *data) {
+    return {rd_kw_alloc_new(header, size, data_type, data), rd_kw_free};
+}
+
 inline std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {
     return rd::strip_spaces(
         static_cast<const char *>(rd_kw_iget_ptr(kw, index)));

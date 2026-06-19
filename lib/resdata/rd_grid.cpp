@@ -686,8 +686,6 @@ struct rd_cell_struct {
 
 static ert_rd_unit_enum
 rd_grid_check_unit_system(const rd_kw_type *gridunit_kw);
-static const float *rd_grid_get_mapaxes(const rd_grid_type *grid);
-
 #define RD_GRID_ID 991010
 
 struct rd_grid_struct {
@@ -4495,12 +4493,11 @@ void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
             mapaxes[i] = grid->mapaxes.value()[i];
 }
 
-static const float *rd_grid_get_mapaxes(const rd_grid_type *grid) {
-    return grid->mapaxes ? grid->mapaxes->data() : NULL;
-}
-
-rd_kw_type *rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
-    return rd_kw_alloc_new(MAPAXES_KW, 6, RD_FLOAT, rd_grid_get_mapaxes(grid));
+std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
+    if (grid->mapaxes)
+        return make_rd_kw(MAPAXES_KW, 6, RD_FLOAT, grid->mapaxes->data());
+    else
+        return std::nullopt;
 }
 
 static rd_kw_type *rd_grid_alloc_mapunits_kw(ert_rd_unit_enum output_unit) {
@@ -4572,9 +4569,8 @@ float rd_grid_output_scaling(const rd_grid_type *grid,
 
 static void rd_grid_fwrite_mapaxes(const rd_grid_type *grid,
                                    ERT::FortIO &fortio) {
-    rd_kw_type *mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid);
-    rd_kw_fwrite(mapaxes_kw, fortio);
-    rd_kw_free(mapaxes_kw);
+    if (auto mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid))
+        rd_kw_fwrite(mapaxes_kw->get(), fortio);
 }
 
 static void rd_grid_fwrite_mapunits(ERT::FortIO &fortio,
@@ -4706,8 +4702,6 @@ static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
     int EGRID_VERSION = 3;
     int RELEASE_YEAR = 2007;
     int COMPAT_VERSION = 0;
-    const float *mapaxes = rd_grid_get_mapaxes(grid);
-
     {
         auto filehead_kw = make_rd_kw(FILEHEAD_KW, 100, RD_INT);
         rd_kw_scalar_set_int(filehead_kw.get(), 0);
@@ -4728,8 +4722,8 @@ static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
     }
 
     rd_grid_fwrite_mapunits(fortio, output_unit);
-    if (mapaxes != NULL)
-        rd_grid_fwrite_mapaxes(grid, fortio);
+
+    rd_grid_fwrite_mapaxes(grid, fortio);
 
     rd_grid_fwrite_gridunits(fortio, output_unit);
 }
@@ -5279,10 +5273,8 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
         fprintf(stream, "\n");
     }
 
-    if (grid->mapaxes.has_value()) {
-        rd_kw_type *mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid);
-        rd_kw_fprintf_grdecl(mapaxes_kw, stream);
-        rd_kw_free(mapaxes_kw);
+    if (auto mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid)) {
+        rd_kw_fprintf_grdecl(mapaxes_kw->get(), stream);
     }
 
     {
