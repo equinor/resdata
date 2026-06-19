@@ -1202,31 +1202,57 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
         return true;
 }
 
-void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type data_offset,
+/**
+   Reads a selection of elements (given by @index_map) from the data
+   section of a single keyword. The @kw_offset argument is the byte
+   offset of the start of the keyword (i.e. its header) in the file,
+   as stored by rd_file_kw.
+*/
+void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                               rd_data_type data_type, int element_count,
                               const int_vector_type *index_map,
                               char *io_buffer) {
-    const int block_size = get_blocksize(data_type);
-    FILE *stream = fortio.get_FILE();
-    int index;
     int sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
-    for (index = 0; index < int_vector_size(index_map); index++) {
-        int element_index = int_vector_iget(index_map, index);
+    // For unformatted (binary) files the individual elements have a fixed
+    // on-disk size, so we can seek directly to each requested element. For
+    // formatted (ASCII) files the elements have a variable text width and
+    // direct seeking is not possible; in that case we read the whole
+    // keyword and extract the requested elements afterwards.
+    if (fortio.fmt_file()) {
+        fortio.fseek(kw_offset, SEEK_SET);
+        rd_kw_ptr rd_kw(rd_kw_fread_alloc(fortio), rd_kw_free);
+        if (rd_kw == NULL)
+            util_abort("%s: failed to load keyword at offset:%ld\n", __func__,
+                       (long)kw_offset);
 
-        if (element_index < 0 || element_index >= element_count)
-            util_abort("%s: Element index is out of range 0 <= %d < %d\n",
-                       __func__, element_index, element_count);
+        for (int index = 0; index < int_vector_size(index_map); index++) {
+            int element_index = int_vector_iget(index_map, index);
+            memcpy(&io_buffer[index * sizeof_iotype],
+                   rd_kw_iget_ptr(rd_kw.get(), element_index), sizeof_iotype);
+        }
+    } else {
+        const int block_size = get_blocksize(data_type);
+        FILE *stream = fortio.get_FILE();
+        offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
-        fortio.data_fseek(data_offset, element_index, sizeof_iotype,
-                          element_count, block_size);
-        util_fread(&io_buffer[index * sizeof_iotype], sizeof_iotype, 1, stream,
-                   __func__);
+        for (int index = 0; index < int_vector_size(index_map); index++) {
+            int element_index = int_vector_iget(index_map, index);
+
+            if (element_index < 0 || element_index >= element_count)
+                util_abort("%s: Element index is out of range 0 <= %d < %d\n",
+                           __func__, element_index, element_count);
+
+            fortio.data_fseek(data_offset, element_index, sizeof_iotype,
+                              element_count, block_size);
+            util_fread(&io_buffer[index * sizeof_iotype], sizeof_iotype, 1,
+                       stream, __func__);
+        }
+
+        if (RD_ENDIAN_FLIP)
+            util_endian_flip_vector(io_buffer, sizeof_iotype,
+                                    int_vector_size(index_map));
     }
-
-    if (RD_ENDIAN_FLIP)
-        util_endian_flip_vector(io_buffer, sizeof_iotype,
-                                int_vector_size(index_map));
 }
 
 /**

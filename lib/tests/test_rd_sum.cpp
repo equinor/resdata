@@ -111,12 +111,13 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
     GIVEN("A summary case") {
         const bool fmt_output = GENERATE(true, false);
         const bool unified = GENERATE(true, false);
+        const bool lazy = GENERATE(true, false);
         WriteSpec spec;
         auto case_path = (dirname / "CASE").string();
         const time_t end_time =
             write_test_summary(case_path, spec, fmt_output, unified);
 
-        auto rd_sum = read_summary(case_path, ":", !fmt_output);
+        auto rd_sum = read_summary(case_path, ":", lazy);
 
         SECTION("time range") {
             REQUIRE(rd_sum_get_start_time(rd_sum.get()) == spec.start_time);
@@ -816,8 +817,7 @@ TEST_CASE_METHOD(Tmpdir, "Explicit extension picks specific summary header") {
     }
 
     SECTION("'.FSMSPEC' selects the formatted case") {
-        auto rd_sum =
-            read_summary(case_path + ".FSMSPEC", ":", /*lazy_load=*/false);
+        auto rd_sum = read_summary(case_path + ".FSMSPEC", ":");
         REQUIRE(rd_sum != nullptr);
         REQUIRE_THAT(rd_sum_get_last_value_gen_key(rd_sum.get(), "FOPT"),
                      WithinAbs(expected_last_fopt(fmt_spec), 1e-3));
@@ -847,7 +847,7 @@ TEST_CASE_METHOD(Tmpdir,
 
     SECTION("binary newer than formatted -> formatted is loaded") {
         make_older(dirname / "CASE.FSMSPEC", dirname / "CASE.SMSPEC");
-        auto rd_sum = read_summary(case_path, ":", /*lazy_load=*/false);
+        auto rd_sum = read_summary(case_path, ":");
         REQUIRE(rd_sum != nullptr);
         REQUIRE_THAT(rd_sum_get_last_value_gen_key(rd_sum.get(), "FOPT"),
                      WithinAbs(expected_last_fopt(fmt_spec), 1e-3));
@@ -1427,8 +1427,9 @@ SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
         const auto case_path = (dirname / "CASE").string();
         const bool fmt_output = false;
         const bool unified = true;
+        const bool lazy = GENERATE(true, false);
         write_test_summary(case_path, spec, fmt_output, unified);
-        auto rd_sum = read_summary(case_path, ":", !fmt_output);
+        auto rd_sum = read_summary(case_path, ":", lazy);
         REQUIRE(rd_sum);
 
         THEN("The SMSPEC and UNSMRY files are written") {
