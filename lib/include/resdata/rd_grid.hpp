@@ -1,17 +1,18 @@
-#ifndef ERT_RD_GRID_H
-#define ERT_RD_GRID_H
+#pragma once
+
+#include <cstdio>
+#include <memory>
+#include <filesystem>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/stringlist.hpp>
+#include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/nnc_info.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <resdata/rd_util.hpp>
 
 #define RD_GRID_COORD_SIZE(nx, ny) (((nx) + 1) * ((ny) + 1) * 6)
 #define RD_GRID_ZCORN_SIZE(nx, ny, nz) (((nx) * (ny) * (nz) * 8))
@@ -196,12 +197,6 @@ float rd_grid_output_scaling(const rd_grid_type *grid,
 UTIL_IS_INSTANCE_HEADER(rd_grid);
 UTIL_SAFE_CAST_HEADER(rd_grid);
 
-#ifdef __cplusplus
-}
-
-#include <memory>
-#include <filesystem>
-
 using rd_grid_ptr = std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>;
 rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
                                   double dz, const int *actnum);
@@ -209,5 +204,3 @@ rd_grid_ptr read_grid(const std::filesystem::path &filename);
 inline rd_grid_ptr copy_grid(const rd_grid_type *src_grid) {
     return {rd_grid_alloc_copy(src_grid), &rd_grid_free};
 }
-#endif
-#endif
