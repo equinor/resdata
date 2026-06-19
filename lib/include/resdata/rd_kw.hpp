@@ -55,7 +55,7 @@ void rd_kw_fskip(ERT::FortIO &);
 bool rd_kw_fread_realloc(rd_kw_type *, ERT::FortIO &);
 rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &);
 rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
-void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type data_offset,
+void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                               rd_data_type, int element_count,
                               const int_vector_type *index_map, char *buffer);
 void rd_kw_free(rd_kw_type *);

@@ -157,8 +157,7 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
         rd_data_type data_type = rd_file_kw_get_data_type(file_kw);
         int element_count = rd_file_kw_get_size(file_kw);
 
-        rd_kw_fread_indexed_data(*rd_file_view->fortio,
-                                 offset + RD_KW_HEADER_FORTIO_SIZE, data_type,
+        rd_kw_fread_indexed_data(*rd_file_view->fortio, offset, data_type,
                                  element_count, index_map, io_buffer);
     }
 }
