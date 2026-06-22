@@ -20,5 +20,7 @@ well_state_type *well_ts_get_last_state(const well_ts_type *well_ts);
 #ifdef __cplusplus
 }
 #endif
+#include <memory>
 
+using well_ts_ptr = std::unique_ptr<well_ts_type, decltype(&well_ts_free)>;
 #endif
