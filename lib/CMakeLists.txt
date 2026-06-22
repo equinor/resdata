@@ -272,6 +272,34 @@ set_target_properties(
                    ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
 
 # -----------------------------------------------------------------
+# Pybind11 extension module: resdata.well._well_info
+# -----------------------------------------------------------------
+pybind11_add_module(_well_info resdata/well_info_pybind.cpp
+                    resdata/cwrap_pybind.cpp)
+target_link_libraries(_well_info PRIVATE resdata fmt::fmt)
+target_include_directories(
+  _well_info
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+if(SKBUILD)
+  set(_well_info_install_dir "python/resdata/well")
+  if(APPLE)
+    set_target_properties(_well_info PROPERTIES INSTALL_RPATH
+                                                "@loader_path/../.libs")
+  else()
+    set_target_properties(_well_info PROPERTIES INSTALL_RPATH
+                                                "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_well_info_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _well_info LIBRARY DESTINATION ${_well_info_install_dir})
+set_target_properties(
+  _well_info PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                        ${PROJECT_SOURCE_DIR}/python/resdata/well)
+
+# -----------------------------------------------------------------
 # Pybind11 extension module: resdata.summary._rd_sum
 # -----------------------------------------------------------------
 pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp resdata/cwrap_pybind.cpp)

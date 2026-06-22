@@ -3,7 +3,7 @@ from os.path import isfile
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.well._well_info as _well_info
 from resdata.grid import Grid
 from resdata.resfile.rd_file import ResdataFile
 
@@ -13,30 +13,13 @@ from .well_time_line import WellTimeLine
 class WellInfo(BaseCClass):
     TYPE_NAME = "rd_well_info"
 
-    _alloc = ResdataPrototype("void* well_info_alloc(rd_grid)", bind=False)
-    _free = ResdataPrototype("void well_info_free(rd_well_info)")
-    _load_rstfile = ResdataPrototype(
-        "void well_info_load_rstfile(rd_well_info, char*, bool)"
-    )
-    _load_rst_resfile = ResdataPrototype(
-        "void well_info_load_rst_resfile(rd_well_info, rd_file, bool)"
-    )
-    _get_well_count = ResdataPrototype("int well_info_get_num_wells(rd_well_info)")
-    _iget_well_name = ResdataPrototype(
-        "char* well_info_iget_well_name(rd_well_info, int)"
-    )
-    _has_well = ResdataPrototype("bool well_info_has_well(rd_well_info, char*)")
-    _get_ts = ResdataPrototype(
-        "rd_well_time_line_ref well_info_get_ts(rd_well_info, char*)"
-    )
-
     def __init__(
         self,
         grid: Grid,
         rst_file: None | list[str | ResdataFile] | str | ResdataFile = None,
         load_segment_information: bool = True,
     ):
-        c_ptr = self._alloc(grid)
+        c_ptr = _well_info._alloc(grid)
         super().__init__(c_ptr)
         if not c_ptr:
             raise ValueError("Unable to construct WellInfo from grid %s." % str(grid))
@@ -52,7 +35,7 @@ class WellInfo(BaseCClass):
         return "WellInfo(well_count = %d) at 0x%x" % (len(self), self._address())
 
     def __len__(self) -> int:
-        return self._get_well_count()
+        return _well_info._get_well_count(self)
 
     def __getitem__(self, item: int | str) -> WellTimeLine:
         if isinstance(item, str):
@@ -65,9 +48,9 @@ class WellInfo(BaseCClass):
                 raise IndexError(
                     "Index must be in range 0 <= %d < %d" % (item, len(self))
                 )
-            well_name = self._iget_well_name(item)
+            well_name = _well_info._iget_well_name(self, item)
 
-        return self._get_ts(well_name).setParent(self)
+        return WellTimeLine.createCReference(_well_info._get_ts(self, well_name), self)
 
     def __iter__(self) -> Iterator[WellTimeLine]:
         index = 0
@@ -77,10 +60,12 @@ class WellInfo(BaseCClass):
             index += 1
 
     def allWellNames(self) -> list[str]:
-        return [self._iget_well_name(index) for index in range(0, len(self))]
+        return [
+            _well_info._iget_well_name(self, index) for index in range(0, len(self))
+        ]
 
     def __contains__(self, item: str) -> bool:
-        return self._has_well(item)
+        return _well_info._has_well(self, item)
 
     def _assert_file_exists(self, rst_file):
         if not isfile(rst_file):
@@ -91,9 +76,9 @@ class WellInfo(BaseCClass):
     ) -> None:
         if isinstance(rst_file, str):
             self._assert_file_exists(rst_file)
-            self._load_rstfile(rst_file, load_segment_information)
+            _well_info._load_rstfile(self, rst_file, load_segment_information)
         elif isinstance(rst_file, ResdataFile):
-            self._load_rst_resfile(rst_file, load_segment_information)
+            _well_info._load_rst_resfile(self, rst_file, load_segment_information)
         else:
             raise TypeError(
                 "Expected the RST file to be a filename or an ResdataFile instance."
@@ -103,4 +88,4 @@ class WellInfo(BaseCClass):
         return well_name in self
 
     def free(self):
-        self._free()
+        _well_info._free(self)
