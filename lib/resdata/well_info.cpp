@@ -25,10 +25,10 @@
 #include <resdata/well/well_ts.hpp>
 
 /*
-  The library libwell contains functionality to read and interpret
+  This file contains functionality to read and interpret
   some of the well related keywords from a restart
   file. Roughly speaking the implementation is spread between three
-  six datatypes; users of the libwell library are mainly conserned
+  six datatypes; users of the interface are mainly concerned
   with three first.
 
     well_info_type: This is the container type which holds information
@@ -114,7 +114,7 @@
 
 
  [*] Observe that wells in LGR is quite constrained in ECLIPSE; the
-     current libwell implementation handles the illustrated case - but
+     current implementation handles the illustrated case - but
      it might not be supported by ECLIPSE.
 
 
@@ -124,7 +124,7 @@
      Read-only: The well properties for ECLIPSE is specified through
        the SCHEDULE section of the ECLIPSE datafile. The information
        found in restart files is only for reporting/visaulization+++,
-       i.e. the code in libwell can unfortunately not be used for well
+       i.e. the code herein can unfortunately not be used for well
        modelling.
 
      segmented wells: The segment information is used to understand
@@ -160,7 +160,7 @@
 
 struct well_info_struct {
     std::map<std::string, well_ts_ptr>
-        wells; /* std::map of well_ts_type instances; indexed by well name. */
+        wells;                           /* well_ts indexed by well name. */
     std::vector<std::string> well_names; /* A list of all the well names. */
     const rd_grid_type *grid;
 };
@@ -169,7 +169,6 @@ struct well_info_struct {
    The grid pointer is currently not used; but the intention is to use
    it to resolve lgr names.
 */
-
 well_info_type *well_info_alloc(const rd_grid_type *grid) {
     well_info_type *well_info = new well_info_type();
     well_info->grid = grid;
@@ -207,7 +206,7 @@ static void well_info_add_state(well_info_type *well_info,
     }
 }
 
-/**
+/*
    Which function to use for adding wells?
 
    There are three different functions which can be used to add wells
@@ -253,7 +252,6 @@ static void well_info_add_state(well_info_type *well_info,
    grids, the global grid special-cased to determine is consulted to
    determine the number of wells.
  */
-
 static void well_info_add_wells2(well_info_type *well_info,
                                  rd_file_view_type *rst_view, int report_nr,
                                  bool load_segment_information) {
@@ -284,7 +282,6 @@ static void well_info_add_wells(well_info_type *well_info,
    corresponds to a non-unified restart file, because these files do
    not have the SEQNUM keyword.
 */
-
 static void well_info_add_UNRST_wells2(well_info_type *well_info,
                                        rd_file_view_type *rst_view,
                                        bool load_segment_information) {
@@ -317,7 +314,6 @@ static void well_info_add_UNRST_wells(well_info_type *well_info,
    unified or not-unified format - if that is not the case we will
    have crash and burn.
 */
-
 void well_info_load_rstfile(well_info_type *well_info, const char *filename,
                             bool load_segment_information) {
     rd_file_ptr rd_file(rd_file_open(filename, 0), rd_file_close);
