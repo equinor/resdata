@@ -1,0 +1,784 @@
+"""Tests for the ``resdata.well`` Python bindings.
+
+The specification for the restart file format can be found
+in [OPM flow 2025.04 manual Appendix F.8](https://opm-project.org/?page_id=955)
+
+"""
+
+import os
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+from typing import TypeAlias
+
+import pytest
+from resdata import ResDataType
+from resdata.grid import GridGenerator
+from resdata.resfile import FortIO, ResdataKW
+from resdata.resfile.rd_file import ResdataFile
+from resdata.well import (
+    WellConnectionDirection,
+    WellInfo,
+    WellSegment,
+    WellState,
+    WellTimeLine,
+    WellType,
+)
+
+# These are the per-array sizes that is stored in the INTEHEAD
+NIWELZ = 105  # Number of values per well in IWEL
+NZWELZ = 3  # 8-character words per well in ZWEL
+NXWELZ = 8  # Number of values per well in XWEL
+NICONZ = 25  # Number of values per connection in ICON
+NCWMAX = 5  # max connections per well
+NSCONZ = 25  # Number of values per connection in SCON
+NXCONZ = 60  # Number of values per connection in XCON
+NISEGZ = 22  # Number of values per segment in ISEG
+NRSEGZ = 140  # Number of values per segment in RSEG
+NSEGMX = 10  # max segments per well
+NSWLMX = 2  # max segmented wells
+NLBRMX = 2  # max lateral branches per well
+NILBRZ = 10  # Number of values per branch in ILBR
+
+# Grid dimensions used both for the INTEHEAD keyword and the generated grid.
+NX, NY, NZ = 20, 20, 10
+
+# IWEL indices
+IWEL_HEADI, IWEL_HEADJ, IWEL_HEADK = 0, 1, 2
+IWEL_CONNECTIONS = 4
+IWEL_TYPE = 6
+IWEL_STATUS = 10
+IWEL_SEGMENTED_WELL_NR = 70
+
+# ICON indices.
+ICON_IC, ICON_I, ICON_J, ICON_K = 0, 1, 2, 3
+ICON_STATUS = 5
+ICON_DIRECTION = 13
+ICON_SEGMENT = 14
+
+# ISEG indices.
+ISEG_OUTLET = 1
+ISEG_BRANCH = 3
+
+# RSEG indices.
+RSEG_LENGTH = 0
+RSEG_DIAMETER = 2
+RSEG_TOTAL_LENGTH = 6
+RSEG_DEPTH = 7
+
+# XWEL items (reservoir rates).
+XWEL_WRAT, XWEL_GRAT, XWEL_ORAT, XWEL_RESV = 1, 2, 3, 4
+
+# IWEL well-type values, matching the WellType enum.
+IWEL_PRODUCER = 1
+IWEL_OIL_INJECTOR = 2
+IWEL_WATER_INJECTOR = 3
+IWEL_GAS_INJECTOR = 4
+
+# A connection direction value of 0 in ICON is interpreted as "Z".
+ICON_DIR_DEFAULT = 0
+
+
+@dataclass
+class Connection:
+    i: int
+    j: int
+    k: int
+    status: int = 1
+    direction: int = ICON_DIR_DEFAULT
+    segment: int = 0
+
+
+@dataclass
+class Segment:
+    outlet: int
+    branch: int
+    length: float = 0.0
+    diameter: float = 0.0
+    total_length: float = 0.0
+    depth: float = 0.0
+
+
+@dataclass
+class Well:
+    name: str
+    headi: int = 1
+    headj: int = 1
+    headk: int = 1
+    well_type: int = IWEL_PRODUCER
+    status: int = 1
+    connections: list = field(default_factory=list)
+    segments: list = field(default_factory=list)
+    rates: tuple | None = None  # (water, gas, oil, resv) reservoir rates
+
+
+def _int_kw(name, size):
+    kw = ResdataKW(name, size, ResDataType.RD_INT)
+    for i in range(size):
+        kw[i] = 0
+    return kw
+
+
+def _double_kw(name, size):
+    kw = ResdataKW(name, size, ResDataType.RD_DOUBLE)
+    for i in range(size):
+        kw[i] = 0.0
+    return kw
+
+
+def _float_kw(name, size):
+    kw = ResdataKW(name, size, ResDataType.RD_FLOAT)
+    for i in range(size):
+        kw[i] = 0.0
+    return kw
+
+
+def _bool_kw(name, size):
+    kw = ResdataKW(name, size, ResDataType.RD_BOOL)
+    for i in range(size):
+        kw[i] = False
+    return kw
+
+
+def _char_kw(name, size):
+    kw = ResdataKW(name, size, ResDataType.RD_CHAR)
+    for i in range(size):
+        kw[i] = " " * 8
+    return kw
+
+
+def _intehead_kw(year, month, day):
+    kw = _int_kw("INTEHEAD", 412)
+    kw[2] = 1  # metric unit system
+    kw[8], kw[9], kw[10] = NX, NY, NZ
+    kw[11] = NX * NY * NZ  # nactive
+    kw[14] = 7  # oil + gas + water
+    kw[16] = 0  # nwells, filled in by caller
+    kw[17] = NCWMAX
+    kw[24] = NIWELZ
+    kw[26] = NXWELZ
+    kw[27] = NZWELZ
+    kw[32] = NICONZ
+    kw[33] = NSCONZ
+    kw[34] = NXCONZ
+    kw[64], kw[65], kw[66] = day, month, year
+    kw[94] = 100  # IPROG / simulator version
+    kw[175] = NSWLMX
+    kw[176] = NSEGMX
+    kw[177] = NLBRMX
+    kw[178] = NISEGZ
+    kw[179] = NRSEGZ
+    kw[180] = NILBRZ
+    return kw
+
+
+def _iwel_kw(wells: list[Well]) -> ResdataKW:
+    kw = _int_kw("IWEL", NIWELZ * len(wells))
+    for i, well in enumerate(wells):
+        off = NIWELZ * i
+        kw[off + IWEL_HEADI] = well.headi
+        kw[off + IWEL_HEADJ] = well.headj
+        kw[off + IWEL_HEADK] = well.headk
+        kw[off + IWEL_CONNECTIONS] = len(well.connections)
+        kw[off + IWEL_TYPE] = well.well_type
+        kw[off + IWEL_STATUS] = well.status
+        # A value of -1 (==0 after the implicit -1 offset) marks a non-segmented
+        # well; any other value flags the well as multi-segmented.
+        kw[off + IWEL_SEGMENTED_WELL_NR] = i + 1 if well.segments else -1
+    return kw
+
+
+def _zwel_kw(wells):
+    kw = _char_kw("ZWEL", NZWELZ * len(wells))
+    for i, well in enumerate(wells):
+        kw[NZWELZ * i] = well.name.ljust(8)
+    return kw
+
+
+def _icon_kw(wells):
+    kw = _int_kw("ICON", NICONZ * NCWMAX * len(wells))
+    for i, well in enumerate(wells):
+        for j, conn in enumerate(well.connections):
+            off = NICONZ * (NCWMAX * i + j)
+            kw[off + ICON_IC] = j + 1
+            kw[off + ICON_I] = conn.i
+            kw[off + ICON_J] = conn.j
+            kw[off + ICON_K] = conn.k
+            kw[off + ICON_STATUS] = conn.status
+            kw[off + ICON_DIRECTION] = conn.direction
+            kw[off + ICON_SEGMENT] = conn.segment
+    return kw
+
+
+def _scon_kw(wells):
+    kw = _float_kw("SCON", NSCONZ * NCWMAX * len(wells))
+    for i, well in enumerate(wells):
+        for j, _ in enumerate(well.connections):
+            off = NSCONZ * (NCWMAX * i + j)
+            kw[off + 0] = float(j + 1)  # connection factor
+    return kw
+
+
+def _iseg_kw(wells):
+    kw = _int_kw("ISEG", NISEGZ * NSEGMX * len(wells))
+    for i, well in enumerate(wells):
+        for seg_index, segment in enumerate(well.segments):
+            off = NISEGZ * (NSEGMX * i + seg_index)
+            kw[off + ISEG_OUTLET] = segment.outlet
+            kw[off + ISEG_BRANCH] = segment.branch
+    return kw
+
+
+def _rseg_kw(wells):
+    # RSEG is read into a double buffer by the C rseg-loader, so it must be
+    # written with double precision for the indexed read to line up.
+    kw = _double_kw("RSEG", NRSEGZ * NSEGMX * len(wells))
+    for i, well in enumerate(wells):
+        for seg_index, segment in enumerate(well.segments):
+            off = NRSEGZ * (NSEGMX * i + seg_index)
+            kw[off + RSEG_LENGTH] = segment.length
+            kw[off + RSEG_DIAMETER] = segment.diameter
+            kw[off + RSEG_TOTAL_LENGTH] = segment.total_length
+            kw[off + RSEG_DEPTH] = segment.depth
+    return kw
+
+
+def _xwel_kw(wells):
+    kw = _double_kw("XWEL", NXWELZ * len(wells))
+    for i, well in enumerate(wells):
+        if well.rates is None:
+            continue
+        water, gas, oil, resv = well.rates
+        off = NXWELZ * i
+        kw[off + XWEL_WRAT] = water
+        kw[off + XWEL_GRAT] = gas
+        kw[off + XWEL_ORAT] = oil
+        kw[off + XWEL_RESV] = resv
+    return kw
+
+
+Year: TypeAlias = int
+Month: TypeAlias = int
+Day: TypeAlias = int
+Date: TypeAlias = tuple[Year, Month, Day]
+
+
+def _step_keywords(
+    wells: list[Well],
+    date: Date,
+    seqnum: int | None = None,
+    include_icon: bool = True,
+):
+    year, month, day = date
+    intehead = _intehead_kw(year, month, day)
+    intehead[16] = len(wells)
+
+    keywords = []
+    if seqnum is not None:
+        seqnum_kw = _int_kw("SEQNUM", 1)
+        seqnum_kw[0] = seqnum
+        keywords.append(seqnum_kw)
+
+    keywords += [
+        intehead,
+        _bool_kw("LOGIHEAD", 30),
+        _double_kw("DOUBHEAD", 50),
+        _iwel_kw(wells),
+        _zwel_kw(wells),
+    ]
+    # Some restart files (e.g. certain E300 outputs) omit the ICON keyword
+    # altogether. In that case the well still has a wellhead from IWEL, but no
+    # global connections, and well_state.hasGlobalConnections() returns False.
+    if include_icon:
+        keywords.append(_icon_kw(wells))
+        keywords.append(_scon_kw(wells))
+    if any(well.rates is not None for well in wells):
+        keywords.append(_xwel_kw(wells))
+    if any(well.segments for well in wells):
+        keywords.append(_iseg_kw(wells))
+        keywords.append(_rseg_kw(wells))
+    return keywords
+
+
+def _fwrite_keywords(path, keywords):
+    scratch = path + ".scratch"
+    fortio = FortIO(scratch, mode=FortIO.WRITE_MODE)
+    for kw in keywords:
+        kw.fwrite(fortio)
+    fortio.close()
+
+    rd_file = ResdataFile(scratch)
+    fortio = FortIO(path, mode=FortIO.WRITE_MODE)
+    rd_file.fwrite(fortio)
+    fortio.close()
+    os.remove(scratch)
+
+
+def write_restart(
+    path,
+    wells: list[Well],
+    date: Date = (2020, 1, 1),
+    include_icon: bool = True,
+):
+    """Write a non-unified restart file (``.X#### ``) with a single report step."""
+    _fwrite_keywords(path, _step_keywords(wells, date, include_icon=include_icon))
+
+
+def write_unified_restart(path, steps: Iterable[tuple[int, Date, list[Well]]]):
+    """Write a unified restart file (``.UNRST``)."""
+    keywords = []
+    for report_idx, date, wells in steps:
+        keywords += _step_keywords(wells, date, seqnum=report_idx)
+    _fwrite_keywords(path, keywords)
+
+
+@pytest.fixture
+def grid():
+    return GridGenerator.create_rectangular((NX, NY, NZ), (1.0, 1.0, 1.0))
+
+
+@pytest.fixture
+def producer():
+    return Well(
+        name="OP1",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        status=1,
+        connections=[
+            Connection(i=2, j=3, k=1),
+            Connection(i=2, j=3, k=2),
+        ],
+    )
+
+
+def test_that_a_single_producer_well_is_loaded_with_correct_metadata(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_info = WellInfo(grid, path)
+
+    assert len(well_info) == 1
+    assert "OP1" in well_info
+    assert well_info.allWellNames() == ["OP1"]
+
+    well_state = well_info["OP1"][0]
+    assert well_state.name() == "OP1"
+    assert well_state.wellType() == WellType.PRODUCER
+    assert well_state.isOpen()
+    assert well_state.wellNumber() == 0
+    assert well_state.hasGlobalConnections()
+
+
+@pytest.mark.parametrize(
+    "iwel_type, expected_type",
+    [
+        (IWEL_PRODUCER, WellType.PRODUCER),
+        (IWEL_OIL_INJECTOR, WellType.OIL_INJECTOR),
+        (IWEL_WATER_INJECTOR, WellType.WATER_INJECTOR),
+        (IWEL_GAS_INJECTOR, WellType.GAS_INJECTOR),
+    ],
+)
+def test_that_the_well_type_is_read_from_iwel(tmp_path, grid, iwel_type, expected_type):
+    well = Well(name="W1", well_type=iwel_type, connections=[Connection(1, 1, 1)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["W1"][0]
+
+    assert well_state.wellType() == expected_type
+
+
+def test_that_status_0_means_closed_well(tmp_path, grid):
+    well = Well(
+        name="SHUT",
+        well_type=IWEL_PRODUCER,
+        status=0,
+        connections=[Connection(1, 1, 1)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["SHUT"][0]
+
+    assert not well_state.isOpen()
+
+
+def test_that_well_connections_are_loaded_with_ijk_and_status(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert len(connections) == 2
+    # ICON indices are 1-based; the bindings return 0-based ijk.
+    assert connections[0].ijk() == (1, 2, 0)
+    assert connections[1].ijk() == (1, 2, 1)
+    assert all(conn.isOpen() for conn in connections)
+    assert all(conn.isMatrixConnection() for conn in connections)
+    assert all(not conn.isFractureConnection() for conn in connections)
+
+
+def test_that_a_well_without_an_icon_keyword_has_no_global_connections(
+    tmp_path, grid, producer
+):
+    # Some restart files (e.g. certain E300 outputs) lack the ICON keyword.
+    # The well is still present with a wellhead, but exposes no global
+    # connections.
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer], include_icon=False)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert not well_state.hasGlobalConnections()
+    assert well_state.globalConnections() == []
+
+
+def test_that_a_well_without_an_icon_keyword_still_has_metadata_and_wellhead(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer], include_icon=False)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.name() == "OP1"
+    assert well_state.wellType() == WellType.PRODUCER
+    assert well_state.isOpen()
+    # The wellhead is taken from IWEL and is therefore available even without
+    # the ICON keyword.
+    assert well_state.wellHead().ijk() == (1, 2, 0)
+
+
+def test_that_a_well_with_an_icon_keyword_has_global_connections(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer], include_icon=True)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.hasGlobalConnections()
+    assert len(well_state.globalConnections()) == 2
+
+
+def test_that_a_well_with_an_empty_icon_keyword_has_zero_global_connections(
+    tmp_path, grid
+):
+    # A well with no perforations still writes an (all-zero) ICON keyword, so
+    # the global connection collection exists but is empty. This is distinct
+    # from a file that omits ICON entirely.
+    well = Well(name="DRY", well_type=IWEL_PRODUCER, connections=[])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], include_icon=True)
+
+    well_state = WellInfo(grid, path)["DRY"][0]
+
+    assert well_state.hasGlobalConnections()
+    assert well_state.globalConnections() == []
+
+
+@pytest.mark.parametrize(
+    "icon_direction, expected_direction",
+    [
+        (1, WellConnectionDirection.well_conn_dirX),
+        (2, WellConnectionDirection.well_conn_dirY),
+        (3, WellConnectionDirection.well_conn_dirZ),
+        (ICON_DIR_DEFAULT, WellConnectionDirection.well_conn_dirZ),
+    ],
+)
+def test_that_connection_direction_is_read_from_icon(
+    tmp_path, grid, icon_direction, expected_direction
+):
+    well = Well(
+        name="W1",
+        connections=[Connection(i=1, j=1, k=1, direction=icon_direction)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connection = WellInfo(grid, path)["W1"][0].globalConnections()[0]
+
+    assert connection.direction() == expected_direction
+
+
+def test_that_connection_factor_is_read_from_scon(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert connections[0].connectionFactor() == 1.0
+    assert connections[1].connectionFactor() == 2.0
+
+
+def test_that_well_head_returns_the_global_connection_head(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_head = WellInfo(grid, path)["OP1"][0].wellHead()
+
+    # IWEL stores the head as (2, 3, 1) using 1-based indices.
+    assert well_head.ijk() == (1, 2, 0)
+    assert well_head.isOpen()
+
+
+def test_that_multiple_wells_are_all_available_by_name_and_index(tmp_path, grid):
+    wells = [
+        Well(name="PROD", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]),
+        Well(
+            name="INJ",
+            well_type=IWEL_WATER_INJECTOR,
+            connections=[Connection(5, 5, 1)],
+        ),
+    ]
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, wells)
+
+    well_info = WellInfo(grid, path)
+
+    assert len(well_info) == 2
+    assert set(well_info.allWellNames()) == {"PROD", "INJ"}
+    assert well_info.hasWell("PROD")
+    assert well_info.hasWell("INJ")
+    assert [time_line.getName() for time_line in well_info] == ["PROD", "INJ"]
+
+
+def test_that_querying_an_unknown_well_raises_keyerror(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_info = WellInfo(grid, path)
+
+    assert "NOPE" not in well_info
+    with pytest.raises(KeyError):
+        _ = well_info["NOPE"]
+
+
+def test_that_indexing_a_well_out_of_range_raises_indexerror(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_info = WellInfo(grid, path)
+
+    with pytest.raises(IndexError):
+        _ = well_info[5]
+
+
+def test_that_a_unified_restart_builds_a_time_line_with_all_report_steps(
+    tmp_path, grid
+):
+    producer = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, 1)],
+    )
+
+    steps = [
+        (0, (2020, 1, 1), [producer]),
+        (1, (2021, 1, 1), [producer]),
+        (2, (2022, 1, 1), [producer]),
+    ]
+    path = str(tmp_path / "CASE.UNRST")
+    write_unified_restart(path, steps)
+
+    time_line = WellInfo(grid, path)["OP1"]
+
+    assert repr(time_line).startswith("WellTimeLine(name = OP1, size = 3)")
+
+    assert len(time_line) == 3
+    assert (
+        time_line[-1].simulationTime() == time_line[len(time_line) - 1].simulationTime()
+    )
+    assert [state.reportNumber() for state in time_line] == [0, 1, 2]
+    assert [state.simulationTime().datetime().year for state in time_line] == [
+        2020,
+        2021,
+        2022,
+    ]
+
+
+def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+            Segment(outlet=2, branch=1, length=15.0, total_length=45.0, depth=135.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state.isMultiSegmentWell()
+    assert well_state.hasSegmentData()
+    assert well_state.numSegments() == 3
+    assert len(well_state) == 3
+
+    segments = well_state.segments()
+    assert [segment.id() for segment in segments] == [
+        well_state[i].id() for i in range(len(well_state))
+    ]
+    assert well_state[-1].id() == well_state[len(well_state) - 1].id()
+    assert repr(well_state).startswith(
+        'WellState(MSW (multi segment), number = 0, type = "PRODUCER", state = open)'
+    )
+    assert [segment.id() for segment in segments] == [1, 2, 3]
+    assert all(segment.branchId() == 1 for segment in segments)
+    assert all(segment.isMainStem() for segment in segments)
+    # The first segment is closest to the wellhead (outlet == 0).
+    assert segments[0].isNearestWellHead()
+    assert segments[1].outletId() == 1
+
+
+def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i=1, j=1, k=1, segment=1)],
+        segments=[
+            Segment(
+                outlet=0,
+                branch=1,
+                length=12.5,
+                diameter=0.25,
+                total_length=12.5,
+                depth=2500.0,
+            ),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segment = WellInfo(grid, path)["MSW"][0].segments()[0]
+
+    assert segment.length() == 12.5
+    assert segment.diameter() == 0.25
+    assert segment.totalLength() == 12.5
+    assert segment.depth() == 2500.0
+    assert segment.linkCount() == 0
+    assert segment.isActive()
+    assert repr(segment).startswith(
+        "WellSegment({Segment ID:1   BranchID:1  Length:12.5})"
+    )
+    assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
+
+
+def test_that_a_non_segmented_well_has_no_segments(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert not well_state.isMultiSegmentWell()
+    assert not well_state.hasSegmentData()
+    assert well_state.numSegments() == 0
+    assert well_state.segments() == []
+    assert len(well_state) == 0
+    with pytest.raises(IndexError):
+        assert well_state[0]
+
+
+def test_that_disabling_segment_loading_skips_segment_data(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i=1, j=1, k=1, segment=1)],
+        segments=[Segment(outlet=0, branch=1, length=10.0)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_info = WellInfo(grid, path, load_segment_information=False)
+    well_state = well_info["MSW"][0]
+
+    assert not well_state.hasSegmentData()
+    assert well_state.numSegments() == 0
+
+
+def test_that_well_rates_are_read_from_xwel(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, 1)],
+        rates=(10.0, 20.0, 30.0, 40.0),  # water, gas, oil, resv
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.waterRate() == 10.0
+    assert well_state.gasRate() == 20.0
+    assert well_state.oilRate() == 30.0
+    assert well_state.volumeRate() == 40.0
+    # The reservoir volume rate is unit-independent and equals its SI value.
+    assert well_state.volumeRateSI() == well_state.volumeRate()
+
+
+def test_that_a_well_without_rate_data_reports_zero_rates(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.oilRate() == 0
+    assert well_state.gasRate() == 0
+    assert well_state.waterRate() == 0
+    assert well_state.volumeRate() == 0
+    assert well_state.oilRateSI() == 0
+    assert well_state.gasRateSI() == 0
+    assert well_state.waterRateSI() == 0
+    assert well_state.volumeRateSI() == 0
+
+
+def test_that_a_restart_file_can_be_loaded_from_a_resdatafile_instance(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_info = WellInfo(grid, ResdataFile(path))
+
+    assert "OP1" in well_info
+    assert well_info["OP1"][0].wellType() == WellType.PRODUCER
+
+
+def test_that_an_unknown_rate_data_argument_type_is_rejected(grid):
+    well_info = WellInfo(grid)
+
+    with pytest.raises(TypeError):
+        well_info.addWellFile(42, load_segment_information=True)
+
+
+def test_that_well_state_cannot_directly_be_constructed():
+    with pytest.raises(NotImplementedError):
+        WellState()
+
+
+def test_that_well_segment_cannot_directly_be_constructed():
+    with pytest.raises(NotImplementedError):
+        WellSegment()
+
+
+def test_that_well_timeline_cannot_directly_be_constructed():
+    with pytest.raises(NotImplementedError):
+        WellTimeLine()
+
+
+def test_that_non_existent_well_file_raises_os_error(grid, tmp_path):
+    well_info = WellInfo(grid)
+    with pytest.raises(OSError, match="No such file"):
+        well_info.addWellFile(str(tmp_path / "DOES_NOT_EXIST"), False)
