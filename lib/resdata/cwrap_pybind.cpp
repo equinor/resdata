@@ -10,6 +10,7 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/well/well_info.hpp>
 #include <resdata/FortIO.hpp>
 
 #include <ert/util/double_vector.hpp>
@@ -200,4 +201,19 @@ template <> rd_file_type *from_cwrap<rd_file_type>(py::handle obj) {
         throw py::type_error("Expected ResdataFile, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<rd_file_type>(obj);
+}
+
+py::object WellInfo() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.well").attr("WellInfo");
+    }
+    return cls;
+}
+
+template <> well_info_type *from_cwrap<well_info_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellInfo()))
+        throw py::type_error("Expected WellInfo, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<well_info_type>(obj);
 }
