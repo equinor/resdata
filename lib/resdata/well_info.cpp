@@ -1,10 +1,13 @@
 #include <ctime>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
 #include <algorithm>
+
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 
@@ -338,8 +341,8 @@ void well_info_load_rst_resfile(well_info_type *well_info,
                                       load_segment_information);
 
     } else
-        util_abort("%s: invalid file type: %s - must be a restart file\n",
-                   __func__, filename);
+        throw std::invalid_argument(fmt::format(
+            "invalid file type: {} - must be a restart file", filename));
 }
 
 void well_info_free(well_info_type *well_info) { delete well_info; }
