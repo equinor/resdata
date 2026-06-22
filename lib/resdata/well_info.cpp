@@ -1,5 +1,6 @@
 #include <ctime>
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <map>
@@ -10,10 +11,10 @@
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
+#include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_util.hpp>
-
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_state.hpp>
@@ -155,7 +156,7 @@
 #define WELL_INFO_TYPE_ID 91777451
 
 struct well_info_struct {
-    std::map<std::string, well_ts_type *>
+    std::map<std::string, well_ts_ptr>
         wells; /* std::map of well_ts_type instances; indexed by well name. */
     std::vector<std::string> well_names; /* A list of all the well names. */
     const rd_grid_type *grid;
@@ -181,13 +182,13 @@ bool well_info_has_well(well_info_type *well_info, const char *well_name) {
 
 well_ts_type *well_info_get_ts(const well_info_type *well_info,
                                const char *well_name) {
-    return well_info->wells.at(well_name);
+    return well_info->wells.at(well_name).get();
 }
 
 static void well_info_add_new_ts(well_info_type *well_info,
                                  const char *well_name) {
-    well_ts_type *well_ts = well_ts_alloc(well_name);
-    well_info->wells[well_name] = well_ts;
+    well_info->wells.emplace(
+        well_name, well_ts_ptr{well_ts_alloc(well_name), well_ts_free});
     well_info->well_names.push_back(well_name);
 }
 
@@ -254,7 +255,8 @@ static void well_info_add_wells2(well_info_type *well_info,
                                  rd_file_view_type *rst_view, int report_nr,
                                  bool load_segment_information) {
     bool close_stream = rd_file_view_drop_flag(rst_view, RD_FILE_CLOSE_STREAM);
-    rd_rsthead_type *global_header = rd_rsthead_alloc(rst_view, report_nr);
+    std::unique_ptr<rd_rsthead_type, decltype(&rd_rsthead_free)> global_header(
+        rd_rsthead_alloc(rst_view, report_nr), rd_rsthead_free);
     int well_nr;
     for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
         well_state_type *well_state =
@@ -263,7 +265,6 @@ static void well_info_add_wells2(well_info_type *well_info,
         if (well_state != NULL)
             well_info_add_state(well_info, well_state);
     }
-    rd_rsthead_free(global_header);
     if (close_stream)
         rd_file_view_add_flag(rst_view, RD_FILE_CLOSE_STREAM);
 }
@@ -316,9 +317,9 @@ static void well_info_add_UNRST_wells(well_info_type *well_info,
 
 void well_info_load_rstfile(well_info_type *well_info, const char *filename,
                             bool load_segment_information) {
-    rd_file_type *rd_file = rd_file_open(filename, 0);
-    well_info_load_rst_resfile(well_info, rd_file, load_segment_information);
-    rd_file_close(rd_file);
+    rd_file_ptr rd_file(rd_file_open(filename, 0), rd_file_close);
+    well_info_load_rst_resfile(well_info, rd_file.get(),
+                               load_segment_information);
 }
 
 void well_info_load_rst_resfile(well_info_type *well_info,
@@ -341,12 +342,7 @@ void well_info_load_rst_resfile(well_info_type *well_info,
                    __func__, filename);
 }
 
-void well_info_free(well_info_type *well_info) {
-    for (const auto &pair : well_info->wells)
-        well_ts_free(pair.second);
-
-    delete well_info;
-}
+void well_info_free(well_info_type *well_info) { delete well_info; }
 
 int well_info_get_num_wells(const well_info_type *well_info) {
     return well_info->well_names.size();
