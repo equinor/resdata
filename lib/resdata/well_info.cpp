@@ -258,8 +258,7 @@ static void well_info_add_wells2(well_info_type *well_info,
     bool close_stream = rd_file_view_drop_flag(rst_view, RD_FILE_CLOSE_STREAM);
     std::unique_ptr<rd_rsthead_type, decltype(&rd_rsthead_free)> global_header(
         rd_rsthead_alloc(rst_view, report_nr), rd_rsthead_free);
-    int well_nr;
-    for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
+    for (int well_nr = 0; well_nr < global_header->nwells; well_nr++) {
         well_state_type *well_state =
             well_state_alloc_from_file2(rst_view, well_info->grid, report_nr,
                                         well_nr, load_segment_information);
@@ -286,8 +285,7 @@ static void well_info_add_UNRST_wells2(well_info_type *well_info,
                                        rd_file_view_type *rst_view,
                                        bool load_segment_information) {
     int num_blocks = rd_file_view_get_num_named_kw(rst_view, SEQNUM_KW);
-    int block_nr;
-    for (block_nr = 0; block_nr < num_blocks; block_nr++) {
+    for (int block_nr = 0; block_nr < num_blocks; block_nr++) {
 
         rd_file_view_type *step_view =
             rd_file_view_add_restart_view(rst_view, block_nr, -1, -1, -1);
