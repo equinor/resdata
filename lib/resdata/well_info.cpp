@@ -237,6 +237,24 @@ static void well_info_add_state(well_info_type *well_info,
    be discarded afterwards.
 */
 
+namespace {
+struct close_guard {
+    explicit close_guard(rd_file_view_type *file_view)
+        : file_view(file_view),
+          was_set(rd_file_view_drop_flag(file_view, RD_FILE_CLOSE_STREAM)) {}
+
+    ~close_guard() {
+        if (was_set)
+            rd_file_view_add_flag(file_view, RD_FILE_CLOSE_STREAM);
+    }
+    close_guard(const close_guard &) = delete;
+    close_guard &operator=(const close_guard &) = delete;
+
+    rd_file_view_type *file_view;
+    bool was_set;
+};
+} // namespace
+
 /**
    This function assumes that (sub)select_block() has been used on the
    rd_file instance @rst_file; and the function will load well
@@ -255,7 +273,7 @@ static void well_info_add_state(well_info_type *well_info,
 static void well_info_add_wells2(well_info_type *well_info,
                                  rd_file_view_type *rst_view, int report_nr,
                                  bool load_segment_information) {
-    bool close_stream = rd_file_view_drop_flag(rst_view, RD_FILE_CLOSE_STREAM);
+    close_guard close_stream_guard(rst_view);
     std::unique_ptr<rd_rsthead_type, decltype(&rd_rsthead_free)> global_header(
         rd_rsthead_alloc(rst_view, report_nr), rd_rsthead_free);
     for (int well_nr = 0; well_nr < global_header->nwells; well_nr++) {
@@ -265,8 +283,6 @@ static void well_info_add_wells2(well_info_type *well_info,
         if (well_state != NULL)
             well_info_add_state(well_info, well_state);
     }
-    if (close_stream)
-        rd_file_view_add_flag(rst_view, RD_FILE_CLOSE_STREAM);
 }
 
 static void well_info_add_wells(well_info_type *well_info,
