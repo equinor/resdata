@@ -197,8 +197,8 @@ class SumTest(ResdataTest):
 
     def test_block(self):
         summary = self.rd_sum
-        index_ijk = sum.get_key_index("BPR:15,28,1")
-        index_num = sum.get_key_index("BPR:1095")
+        index_ijk = summary.get_key_index("BPR:15,28,1")
+        index_num = summary.get_key_index("BPR:1095")
         self.assertEqual(index_ijk, index_num)
 
     def test_restart(self):
