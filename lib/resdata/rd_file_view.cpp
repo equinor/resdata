@@ -1,7 +1,14 @@
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <cstring>
+
 #include <vector>
 #include <string>
 #include <map>
-#include <cstring>
+
+#include <ert/util/int_vector.hpp>
+#include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
@@ -10,6 +17,7 @@
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_util.hpp>
 
 struct rd_file_view_struct {
     std::vector<rd_file_kw_type *> kw_list;
@@ -468,6 +476,16 @@ bool rd_file_view_has_report_step(const rd_file_view_type *rd_file_view,
         return true;
     else
         return false;
+}
+
+static time_t rsthead_date(int day, int month, int year) {
+    return rd_make_date(day, month, year);
+}
+
+static time_t rd_rsthead_date(const rd_kw_type *intehead_kw) {
+    return rsthead_date(rd_kw_iget_int(intehead_kw, INTEHEAD_DAY_INDEX),
+                        rd_kw_iget_int(intehead_kw, INTEHEAD_MONTH_INDEX),
+                        rd_kw_iget_int(intehead_kw, INTEHEAD_YEAR_INDEX));
 }
 
 time_t rd_file_view_iget_restart_sim_date(const rd_file_view_type *rd_file_view,

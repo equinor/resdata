@@ -1,5 +1,3 @@
-#include "ert/util/int_vector.hpp"
-#include "resdata/rd_type.hpp"
 #include <cstdio>
 #include <string>
 
@@ -12,10 +10,13 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/well/well_info.hpp>
 #include <resdata/FortIO.hpp>
+#include <resdata/rd_file_view.hpp>
+#include <resdata/rd_type.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
+#include <ert/util/int_vector.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
 
@@ -216,4 +217,19 @@ template <> well_info_type *from_cwrap<well_info_type>(py::handle obj) {
         throw py::type_error("Expected WellInfo, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<well_info_type>(obj);
+}
+
+py::object ResdataFileView() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.resfile").attr("ResdataFileView");
+    }
+    return cls;
+}
+
+template <> rd_file_view_type *from_cwrap<rd_file_view_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataFileView()))
+        throw py::type_error("Expected ResdataFileView, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<rd_file_view_type>(obj);
 }

@@ -17,16 +17,14 @@ int main(int argc, char **argv) {
     const char *Xfile = argv[1];
     bool MSW;
     rd_file_type *rst_file = rd_file_open(Xfile, 0);
-    rd_rsthead_type *rst_head = rd_rsthead_alloc(
-        rd_file_get_global_view(rst_file), rd_filename_report_nr(Xfile));
+    auto rst_head = RSTHead::read(rd_file_get_global_view(rst_file),
+                                  rd_filename_report_nr(Xfile));
 
     test_install_SIGNALS();
     test_assert_true(util_sscanf_bool(argv[2], &MSW));
     test_assert_not_NULL(rst_file);
-    test_assert_not_NULL(rst_head);
 
     {
-        int iwell;
         const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
         const rd_kw_type *icon_kw = rd_file_iget_named_kw(rst_file, ICON_KW, 0);
         rd_kw_type *scon_kw = NULL;
@@ -34,8 +32,8 @@ int main(int argc, char **argv) {
 
         bool caseMSW = false;
 
-        for (iwell = 0; iwell < rst_head->nwells; iwell++) {
-            const int iwel_offset = rst_head->niwelz * iwell;
+        for (int iwell = 0; iwell < rst_head.nwells; iwell++) {
+            const int iwel_offset = rst_head.niwelz * iwell;
             int num_connections =
                 rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
             int iconn;

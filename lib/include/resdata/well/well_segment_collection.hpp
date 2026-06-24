@@ -1,6 +1,7 @@
 #ifndef ERT_WELL_SEGMENT_COLLECTION_H
 #define ERT_WELL_SEGMENT_COLLECTION_H
 
+#include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_segment.hpp>
@@ -28,12 +29,6 @@ well_segment_type *well_segment_collection_get(
     const well_segment_collection_type *segment_collection, int segment_id);
 well_segment_type *well_segment_collection_iget(
     const well_segment_collection_type *segment_collection, int index);
-int well_segment_collection_load_from_kw(
-    well_segment_collection_type *segment_collection, int well_nr,
-    const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
-    const well_rseg_loader_type *rseg_loader, const rd_rsthead_type *rst_head,
-    bool load_segment_information, bool *is_MSW_well);
-
 void well_segment_collection_link(
     const well_segment_collection_type *segment_collection);
 void well_segment_collection_add_connections(
@@ -45,5 +40,11 @@ void well_segment_collection_add_branches(
 
 #ifdef __cplusplus
 }
+int well_segment_collection_load_from_kw(
+    well_segment_collection_type *segment_collection, int well_nr,
+    const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
+    const well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
+    bool load_segment_information, bool *is_MSW_well);
+
 #endif
 #endif

@@ -61,11 +61,9 @@ well_segment_type *well_segment_alloc(int segment_id, int outlet_segment_id,
     return segment;
 }
 
-well_segment_type *
-well_segment_alloc_from_kw(const rd_kw_type *iseg_kw,
-                           const well_rseg_loader_type *rseg_loader,
-                           const rd_rsthead_type *header, int well_nr,
-                           int segment_index, int segment_id) {
+well_segment_type *well_segment_alloc_from_kw(
+    const rd_kw_type *iseg_kw, const well_rseg_loader_type *rseg_loader,
+    const RSTHead &header, int well_nr, int segment_index, int segment_id) {
     if (rseg_loader == NULL) {
         util_abort("%s: fatal internal error - tried to create well_segment "
                    "instance without RSEG keyword.\n",
@@ -73,9 +71,9 @@ well_segment_alloc_from_kw(const rd_kw_type *iseg_kw,
         return NULL;
     } else {
         const int iseg_offset =
-            header->nisegz * (header->nsegmx * well_nr + segment_index);
+            header.nisegz * (header.nsegmx * well_nr + segment_index);
         const int rseg_offset =
-            header->nrsegz * (header->nsegmx * well_nr + segment_index);
+            header.nrsegz * (header.nsegmx * well_nr + segment_index);
         int outlet_segment_id =
             rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_OUTLET_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET; // -1
@@ -209,8 +207,8 @@ well_segment_get_global_connections(const well_segment_type *segment) {
 }
 
 bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
-                              const rd_rsthead_type *rst_head) {
-    int iwel_offset = rst_head->niwelz * well_nr;
+                              const RSTHead &rst_head) {
+    int iwel_offset = rst_head.niwelz * well_nr;
     int segment_well_nr =
         rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
 

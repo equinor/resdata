@@ -260,7 +260,7 @@ double well_state_get_volume_rate_si(const well_state_type *well_state) {
 }
 
 static void well_state_add_wellhead(well_state_type *well_state,
-                                    const rd_rsthead_type *header,
+                                    const RSTHead &header,
                                     const rd_kw_type *iwel_kw, int well_nr,
                                     const char *grid_name, int grid_nr) {
     well_conn_type *wellhead =
@@ -281,10 +281,10 @@ static bool well_state_add_rates(well_state_type *well_state,
     if (has_xwel_kw) {
         const rd_kw_type *xwel_kw =
             rd_file_view_iget_named_kw(rst_view, XWEL_KW, 0);
-        rd_rsthead_type *header = rd_rsthead_alloc(rst_view, -1);
-        int offset = header->nxwelz * well_nr;
+        auto header = RSTHead::read(rst_view, -1);
+        int offset = header.nxwelz * well_nr;
 
-        well_state->unit_system = header->unit_system;
+        well_state->unit_system = header.unit_system;
         well_state->oil_rate =
             rd_kw_iget_double(xwel_kw, offset + XWEL_RES_ORAT_ITEM);
         well_state->gas_rate =
@@ -293,8 +293,6 @@ static bool well_state_add_rates(well_state_type *well_state,
             rd_kw_iget_double(xwel_kw, offset + XWEL_RES_WRAT_ITEM);
         well_state->volume_rate =
             rd_kw_iget_double(xwel_kw, offset + XWEL_RESV_ITEM);
-
-        rd_rsthead_free(header);
     }
     return has_xwel_kw;
 }
@@ -312,17 +310,17 @@ static int well_state_get_lgr_well_nr(const well_state_type *well_state,
     int well_nr = -1;
 
     if (rd_file_view_has_kw(file_view, ZWEL_KW)) {
-        rd_rsthead_type *header = rd_rsthead_alloc(file_view, -1);
+        auto header = RSTHead::read(file_view, -1);
         const rd_kw_type *zwel_kw =
             rd_file_view_iget_named_kw(file_view, ZWEL_KW, 0);
-        int num_wells = header->nwells;
+        int num_wells = header.nwells;
         well_nr = 0;
         while (true) {
             bool found = false;
             {
                 char *lgr_well_name =
                     (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
-                        zwel_kw, well_nr * header->nzwelz));
+                        zwel_kw, well_nr * header.nzwelz));
 
                 if (well_state->name == lgr_well_name)
                     found = true;
@@ -340,7 +338,6 @@ static int well_state_get_lgr_well_nr(const well_state_type *well_state,
                 break;
             }
         }
-        rd_rsthead_free(header);
     }
     return well_nr;
 }
@@ -381,7 +378,7 @@ static void well_state_add_connections__(well_state_type *well_state,
                                          const char *grid_name, int grid_nr,
                                          int well_nr) {
 
-    rd_rsthead_type *header = rd_rsthead_alloc(rst_view, -1);
+    auto header = RSTHead::read(rst_view, -1);
     const rd_kw_type *iwel_kw =
         rd_file_view_iget_named_kw(rst_view, IWEL_KW, 0);
 
@@ -410,7 +407,6 @@ static void well_state_add_connections__(well_state_type *well_state,
                                               xcon_kw, well_nr, header);
         }
     }
-    rd_rsthead_free(header);
 }
 
 static void well_state_add_global_connections(well_state_type *well_state,
@@ -460,7 +456,7 @@ bool well_state_add_MSW2(well_state_type *well_state,
                          bool load_segment_information) {
 
     if (rd_file_view_has_kw(rst_view, ISEG_KW)) {
-        rd_rsthead_type *rst_head = rd_rsthead_alloc(rst_view, -1);
+        auto rst_head = RSTHead::read(rst_view, -1);
         const rd_kw_type *iwel_kw =
             rd_file_view_iget_named_kw(rst_view, IWEL_KW, 0);
         const rd_kw_type *iseg_kw =
@@ -490,7 +486,6 @@ bool well_state_add_MSW2(well_state_type *well_state,
                 well_segment_collection_add_branches(well_state->segments,
                                                      well_state->branches);
             }
-            rd_rsthead_free(rst_head);
 
             if (rseg_loader != NULL) {
                 well_rseg_loader_free(rseg_loader);
@@ -528,13 +523,13 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
                                              bool load_segment_information) {
     if (rd_file_view_has_kw(file_view, IWEL_KW)) {
         well_state_type *well_state = NULL;
-        rd_rsthead_type *global_header = rd_rsthead_alloc(file_view, -1);
+        auto global_header = RSTHead::read(file_view, -1);
         const rd_kw_type *global_iwel_kw =
             rd_file_view_iget_named_kw(file_view, IWEL_KW, 0);
         const rd_kw_type *global_zwel_kw =
             rd_file_view_iget_named_kw(file_view, ZWEL_KW, 0);
 
-        const int iwel_offset = global_header->niwelz * global_well_nr;
+        const int iwel_offset = global_header.niwelz * global_well_nr;
         {
             char *name;
             bool open;
@@ -555,7 +550,7 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
             }
 
             {
-                const int zwel_offset = global_header->nzwelz * global_well_nr;
+                const int zwel_offset = global_header.nzwelz * global_well_nr;
                 name =
                     (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
                         global_zwel_kw,
@@ -563,7 +558,7 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
             }
 
             well_state = well_state_alloc(name, global_well_nr, open, type,
-                                          report_nr, global_header->sim_time);
+                                          report_nr, global_header.sim_time);
             free(name);
 
             well_state_add_connections2(well_state, grid, file_view,
@@ -574,7 +569,6 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
 
             well_state_add_rates(well_state, file_view, global_well_nr);
         }
-        rd_rsthead_free(global_header);
         return well_state;
     } else
         /* This seems a bit weird - have come over E300 restart files without the IWEL keyword. */

@@ -1,17 +1,15 @@
-#ifndef ERT_RD_RSTHEAD_H
-#define ERT_RD_RSTHEAD_H
-
+#pragma once
 #include <ctime>
+
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_util.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct {
+struct RSTHead {
     // The report step is from the SEQNUM keyword for unified files,
     // and inferred from the filename for non unified files.
     int report_step;
@@ -59,25 +57,117 @@ typedef struct {
 
     // Properties from the DOUBHEAD keyword:
     double sim_days;
-} rd_rsthead_type;
 
-void rd_rsthead_free(rd_rsthead_type *rsthead);
-rd_rsthead_type *rd_rsthead_alloc_from_kw(int report_step,
-                                          const rd_kw_type *intehead_kw,
-                                          const rd_kw_type *doubhead_kw,
-                                          const rd_kw_type *logihead_kw);
-rd_rsthead_type *rd_rsthead_alloc(const rd_file_view_type *rst_file,
-                                  int report_step);
-time_t rd_rsthead_date(const rd_kw_type *intehead_kw);
-bool rd_rsthead_equal(const rd_rsthead_type *header1,
-                      const rd_rsthead_type *header2);
-double rd_rsthead_get_sim_days(const rd_rsthead_type *header);
-int rd_rsthead_get_report_step(const rd_rsthead_type *header);
-time_t rd_rsthead_get_sim_time(const rd_rsthead_type *header);
-int rd_rsthead_get_nxconz(const rd_rsthead_type *rsthead);
-int rd_rsthead_get_ncwmax(const rd_rsthead_type *rsthead);
+    inline RSTHead(int report_step, int day, int year, int month,
+                   time_t sim_time, int version, int phase_sum,
+                   ert_rd_unit_enum unit_system, int nx, int ny, int nz,
+                   int nactive, int nwells, int niwelz, int nzwelz, int nxwelz,
+                   int niconz, int ncwmax, int nsconz, int nxconz, int nisegz,
+                   int nsegmx, int nswlmx, int nlbrmx, int nilbrz, int nrsegz,
+                   bool dualp, double sim_days)
+        : report_step(report_step), day(day), year(year), month(month),
+          sim_time(sim_time), version(version), phase_sum(phase_sum),
+          unit_system(unit_system), nx(nx), ny(ny), nz(nz), nactive(nactive),
+          nwells(nwells), niwelz(niwelz), nzwelz(nzwelz), nxwelz(nxwelz),
+          niconz(niconz), ncwmax(ncwmax), nsconz(nsconz), nxconz(nxconz),
+          nisegz(nisegz), nsegmx(nsegmx), nswlmx(nswlmx), nlbrmx(nlbrmx),
+          nilbrz(nilbrz), nrsegz(nrsegz), dualp(dualp), sim_days(sim_days) {};
 
-#ifdef __cplusplus
-}
-#endif
-#endif
+    inline RSTHead(int report_step, const rd_kw_type *intehead_kw,
+                   const rd_kw_type *doubhead_kw, const rd_kw_type *logihead_kw)
+        : report_step(report_step),
+          sim_days(rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX)) {
+
+        int nihead = rd_kw_get_size(intehead_kw);
+        const int *data = (const int *)rd_kw_get_void_ptr(intehead_kw);
+
+        auto get = [data, nihead](int index) {
+            return index < nihead ? data[index] : 0;
+        };
+
+        this->day = get(INTEHEAD_DAY_INDEX);
+        this->month = get(INTEHEAD_MONTH_INDEX);
+        this->year = get(INTEHEAD_YEAR_INDEX);
+        this->version = get(INTEHEAD_IPROG_INDEX);
+        this->phase_sum = get(INTEHEAD_PHASE_INDEX);
+
+        this->unit_system =
+            static_cast<ert_rd_unit_enum>(get(INTEHEAD_UNIT_INDEX));
+
+        this->nx = get(INTEHEAD_NX_INDEX);
+        this->ny = get(INTEHEAD_NY_INDEX);
+        this->nz = get(INTEHEAD_NZ_INDEX);
+        this->nactive = get(INTEHEAD_NACTIVE_INDEX);
+
+        this->nwells = get(INTEHEAD_NWELLS_INDEX);
+        this->niwelz = get(INTEHEAD_NIWELZ_INDEX);
+        this->nxwelz = get(INTEHEAD_NXWELZ_INDEX);
+        this->nzwelz = get(INTEHEAD_NZWELZ_INDEX);
+        this->nsconz = get(INTEHEAD_NSCONZ_INDEX);
+        this->nxconz = get(INTEHEAD_NXCONZ_INDEX);
+        this->niconz = get(INTEHEAD_NICONZ_INDEX);
+        this->ncwmax = get(INTEHEAD_NCWMAX_INDEX);
+
+        this->nisegz = get(INTEHEAD_NISEGZ_INDEX);
+        this->nsegmx = get(INTEHEAD_NSEGMX_INDEX);
+        this->nswlmx = get(INTEHEAD_NSWLMX_INDEX);
+        this->nlbrmx = get(INTEHEAD_NLBRMX_INDEX);
+        this->nilbrz = get(INTEHEAD_NILBRZ_INDEX);
+        this->nrsegz = get(INTEHEAD_NRSEGZ_INDEX);
+
+        this->sim_time = rd_make_date(this->day, this->month, this->year);
+
+        if (logihead_kw)
+            this->dualp = rd_kw_iget_bool(logihead_kw, LOGIHEAD_DUALP_INDEX);
+        else
+            this->dualp = false;
+    }
+
+    inline static RSTHead read(const rd_file_view_type *rst_view,
+                               int report_step) {
+        const rd_kw_type *intehead_kw =
+            rd_file_view_iget_named_kw(rst_view, INTEHEAD_KW, 0);
+        const rd_kw_type *doubhead_kw =
+            rd_file_view_iget_named_kw(rst_view, DOUBHEAD_KW, 0);
+        const rd_kw_type *logihead_kw = NULL;
+
+        if (rd_file_view_has_kw(rst_view, LOGIHEAD_KW))
+            logihead_kw = rd_file_view_iget_named_kw(rst_view, LOGIHEAD_KW, 0);
+
+        if (rd_file_view_has_kw(rst_view, SEQNUM_KW)) {
+            const rd_kw_type *seqnum_kw =
+                rd_file_view_iget_named_kw(rst_view, SEQNUM_KW, 0);
+            report_step = rd_kw_iget_int(seqnum_kw, 0);
+        }
+
+        return {report_step, intehead_kw, doubhead_kw, logihead_kw};
+    }
+
+    inline bool operator==(const RSTHead &other) const {
+        bool equal = true;
+        equal &= (this->day == other.day);
+        equal &= (this->year == other.year);
+        equal &= (this->month == other.month);
+        equal &= (this->sim_time == other.sim_time);
+        equal &= (this->version == other.version);
+        equal &= (this->phase_sum == other.phase_sum);
+        equal &= (this->nx == other.nx);
+        equal &= (this->ny == other.ny);
+        equal &= (this->nz == other.nz);
+        equal &= (this->nactive == other.nactive);
+        equal &= (this->nwells == other.nwells);
+        equal &= (this->niwelz == other.niwelz);
+        equal &= (this->nzwelz == other.nzwelz);
+        equal &= (this->niconz == other.niconz);
+        equal &= (this->ncwmax == other.ncwmax);
+        equal &= (this->nisegz == other.nisegz);
+        equal &= (this->nsegmx == other.nsegmx);
+        equal &= (this->nswlmx == other.nswlmx);
+        equal &= (this->nlbrmx == other.nlbrmx);
+        equal &= (this->nilbrz == other.nilbrz);
+        equal &= (this->dualp == other.dualp);
+        equal &= util_double_approx_equal(this->sim_days, other.sim_days);
+
+        return equal;
+    }
+};

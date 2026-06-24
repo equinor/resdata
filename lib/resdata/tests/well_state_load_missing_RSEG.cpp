@@ -1,9 +1,14 @@
 #include <cstdlib>
 
+#include <ctime>
 #include <ert/util/test_util.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 
+#include <resdata/rd_file_view.hpp>
+#include <resdata/rd_rsthead.hpp>
+#include <resdata/well/well_const.hpp>
+#include <resdata/well/well_segment_collection.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>
@@ -20,17 +25,16 @@ int main(int argc, char **argv) {
         rd_grid_type *grid = rd_grid_alloc(grid_file);
         rd_file_type *rst_file = rd_file_open(rst_file_name, 0);
         rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
-        rd_rsthead_type *header =
-            rd_rsthead_alloc(rst_view, rd_filename_report_nr(rst_file_name));
+        auto header =
+            RSTHead::read(rst_view, rd_filename_report_nr(rst_file_name));
         const char *well_name = "WELL";
         int report_nr = 100;
         time_t valid_from = -1;
         bool open = false;
         well_type_enum type = RD_WELL_GAS_INJECTOR;
-        int global_well_nr = 0;
         bool load_segment_information = false;
 
-        for (global_well_nr = 0; global_well_nr < header->nwells;
+        for (int global_well_nr = 0; global_well_nr < header.nwells;
              global_well_nr++) {
             well_state_type *well_state = well_state_alloc(
                 well_name, global_well_nr, open, type, report_nr, valid_from);

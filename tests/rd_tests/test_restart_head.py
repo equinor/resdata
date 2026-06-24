@@ -118,3 +118,26 @@ def test_that_restart_interpreted_timestamp_is_not_affected_by_local_timezone(
             assert result_tz_ny == result_tz_utc
     finally:
         time.tzset()
+
+
+def test_that_short_intehead_sets_fields_to_zero():
+    intehead = ResdataKW("INTEHEAD", 1, ResDataType.RD_INT)
+    doubhead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_DOUBLE)
+    header = ResdataRestartHead(kw_arg=(1, intehead, doubhead, None))
+    assert header.well_details() == {"NXCONZ": 0, "NCWMAX": 0}
+    assert header.get_sim_days() == 0
+
+
+def test_that_intehead_fields_are_set():
+    intehead = ResdataKW("INTEHEAD", 180, ResDataType.RD_INT)
+    intehead[17] = 1
+    intehead[34] = 2
+    intehead[64] = 3
+    intehead[65] = 4
+    intehead[66] = 2000
+    doubhead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_DOUBLE)
+    doubhead[0] = 2.0
+    header = ResdataRestartHead(kw_arg=(1, intehead, doubhead, None))
+    assert header.well_details() == {"NCWMAX": 1, "NXCONZ": 2}
+    assert header.get_sim_days() == 2.0
+    assert header.get_sim_date() == datetime.datetime(year=2000, month=4, day=3)

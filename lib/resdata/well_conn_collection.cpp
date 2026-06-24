@@ -83,14 +83,13 @@ int well_conn_collection_load_from_kw(well_conn_collection_type *wellcc,
                                       const rd_kw_type *icon_kw,
                                       const rd_kw_type *scon_kw,
                                       const rd_kw_type *xcon_kw, int iwell,
-                                      const rd_rsthead_type *rst_head) {
+                                      const RSTHead &rst_head) {
 
-    const int iwel_offset = rst_head->niwelz * iwell;
+    const int iwel_offset = rst_head.niwelz * iwell;
     int num_connections =
         rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
-    int iconn;
 
-    for (iconn = 0; iconn < num_connections; iconn++) {
+    for (int iconn = 0; iconn < num_connections; iconn++) {
         well_conn_type *conn = well_conn_alloc_from_kw(
             icon_kw, scon_kw, xcon_kw, rst_head, iwell, iconn);
         if (conn)

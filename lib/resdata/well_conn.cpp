@@ -134,11 +134,10 @@ well_conn_type *well_conn_alloc_fracture_MSW(int i, int j, int k,
 well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
                                         const rd_kw_type *scon_kw,
                                         const rd_kw_type *xcon_kw,
-                                        const rd_rsthead_type *header,
-                                        int well_nr, int conn_nr) {
+                                        const RSTHead &header, int well_nr,
+                                        int conn_nr) {
 
-    const int icon_offset =
-        header->niconz * (header->ncwmax * well_nr + conn_nr);
+    const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
     int IC = rd_kw_iget_int(icon_kw, icon_offset + ICON_IC_INDEX);
     if (IC <= 0)
         return NULL; /* IC < 0: Connection not in current LGR. */
@@ -169,8 +168,8 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 
     /* Set the K value and fracture flag. */
     {
-        if (header->dualp) {
-            int geometric_nz = header->nz / 2;
+        if (header.dualp) {
+            int geometric_nz = header.nz / 2;
             if (k >= geometric_nz) {
                 k -= geometric_nz;
                 matrix_connection = false;
@@ -202,7 +201,7 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 
     if (scon_kw) {
         const int scon_offset =
-            header->nsconz * (header->ncwmax * well_nr + conn_nr);
+            header.nsconz * (header.ncwmax * well_nr + conn_nr);
         connection_factor =
             rd_kw_iget_as_double(scon_kw, scon_offset + SCON_CF_INDEX);
     }
@@ -217,7 +216,7 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 
         if (xcon_kw) {
             const int xcon_offset =
-                header->nxconz * (header->ncwmax * well_nr + conn_nr);
+                header.nxconz * (header.ncwmax * well_nr + conn_nr);
 
             conn->water_rate =
                 rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_WRAT_INDEX);
@@ -243,9 +242,8 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 void well_conn_free(well_conn_type *conn) { delete conn; }
 
 well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
-                                         const rd_rsthead_type *header,
-                                         int well_nr) {
-    const int iwel_offset = header->niwelz * well_nr;
+                                         const RSTHead &header, int well_nr) {
+    const int iwel_offset = header.niwelz * well_nr;
     int conn_i = rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADI_INDEX) - 1;
 
     if (conn_i >= 0) {
@@ -258,8 +256,8 @@ well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
         bool open = true;
         double connection_factor = -1;
 
-        if (header->dualp) {
-            int geometric_nz = header->nz / 2;
+        if (header.dualp) {
+            int geometric_nz = header.nz / 2;
             if (conn_k >= geometric_nz) {
                 conn_k -= geometric_nz;
                 matrix_connection = false;

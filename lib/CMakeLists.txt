@@ -56,7 +56,6 @@ add_library(
   util/perm_vector.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}
-  resdata/rd_rsthead.cpp
   resdata/rd_sum_tstep.cpp
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
@@ -218,6 +217,33 @@ install(TARGETS _kw LIBRARY DESTINATION ${_kw_install_dir})
 set_target_properties(
   _kw PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                  ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
+
+# -----------------------------------------------------------------
+# Pybind11 extension module: resdata.resfile._rsthead
+# -----------------------------------------------------------------
+pybind11_add_module(_rsthead resdata/rsthead_pybind.cpp
+                    resdata/cwrap_pybind.cpp)
+target_link_libraries(_rsthead PRIVATE resdata fmt::fmt)
+target_include_directories(
+  _rsthead
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+if(SKBUILD)
+  set(_rsthead_install_dir "python/resdata/resfile")
+  if(APPLE)
+    set_target_properties(_rsthead PROPERTIES INSTALL_RPATH
+                                              "@loader_path/../.libs")
+  else()
+    set_target_properties(_rsthead PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_rsthead_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _rsthead LIBRARY DESTINATION ${_rsthead_install_dir})
+set_target_properties(
+  _rsthead PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                      ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
 
 # -----------------------------------------------------------------
 # Pybind11 extension module: resdata.resfile._fortio

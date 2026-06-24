@@ -14,8 +14,8 @@
 void test_rstfile(const char *filename, bool fracture_connection) {
     rd_file_type *rst_file = rd_file_open(filename, 0);
     const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
-    rd_rsthead_type *header = rd_rsthead_alloc(
-        rd_file_get_global_view(rst_file), rd_filename_report_nr(filename));
+    auto header = RSTHead::read(rd_file_get_global_view(rst_file),
+                                rd_filename_report_nr(filename));
 
     well_conn_type *wellhead = well_conn_alloc_wellhead(iwel_kw, header, 0);
 
@@ -27,9 +27,8 @@ void test_rstfile(const char *filename, bool fracture_connection) {
         test_assert_true(well_conn_matrix_connection(wellhead));
     }
 
-    test_assert_true(well_conn_get_k(wellhead) < header->nz);
+    test_assert_true(well_conn_get_k(wellhead) < header.nz);
 
-    rd_rsthead_free(header);
     well_conn_free(wellhead);
     rd_file_close(rst_file);
 }
