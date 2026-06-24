@@ -1,7 +1,9 @@
 #pragma once
 #include <ctime>
 
+#include <filesystem>
 #include <memory>
+#include <string>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
@@ -9,6 +11,8 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
+
+#include "ert/util/type_macros.hpp"
 
 #define RD_FILE_FLAGS_ENUM_DEFS                                                \
     {.value = 1, .name = "RD_FILE_CLOSE_STREAM"},                              \
@@ -74,3 +78,10 @@ using rd_file_view_ptr =
     std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
 
 using rd_file_ptr = std::unique_ptr<rd_file_type, decltype(&rd_file_close)>;
+
+inline rd_file_ptr open_rd_file(const std::string &path, int flags) {
+    return {rd_file_open(path.c_str(), flags), &rd_file_close};
+}
+inline rd_file_ptr open_rd_file(const std::filesystem::path &path, int flags) {
+    return {rd_file_open(path.string().c_str(), flags), &rd_file_close};
+}

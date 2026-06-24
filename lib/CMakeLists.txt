@@ -372,6 +372,7 @@ add_executable(
   tests/testsuite.cpp
   tests/test_util.cpp
   tests/test_rd_region.cpp
+  tests/test_geertsma.cpp
   tests/test_layer.cpp
   tests/test_fault_block_layer.cpp)
 target_compile_features(rd_test_suite PUBLIC cxx_std_17)
