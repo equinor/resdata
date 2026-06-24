@@ -178,7 +178,7 @@ class ResdataSubsidence(BaseCClass):
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
-        if monitor_survey not in self:
+        if monitor_survey is not None and monitor_survey not in self:
             raise KeyError("No such survey: %s" % monitor_survey)
 
         return self._eval(
