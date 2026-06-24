@@ -1,56 +1,8 @@
-from cwrap import BaseCClass
-
-from resdata import FileMode, FileType, ResdataPrototype
+from resdata import FileMode, FileType
 from resdata.resfile import Resdata3DFile, ResdataFile
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import monkey_the_camel
 
-
-class ResdataRestartHead(BaseCClass):
-    TYPE_NAME = "rd_rsthead"
-    _alloc = ResdataPrototype(
-        "void*  rd_rsthead_alloc(rd_file_view , int )", bind=False
-    )
-    _alloc_from_kw = ResdataPrototype(
-        "void*  rd_rsthead_alloc_from_kw(int , rd_kw , rd_kw , rd_kw )", bind=False
-    )
-    _free = ResdataPrototype("void   rd_rsthead_free(rd_rsthead)")
-    _get_report_step = ResdataPrototype("int    rd_rsthead_get_report_step(rd_rsthead)")
-    _get_sim_time = ResdataPrototype("rd_time_t rd_rsthead_get_sim_time(rd_rsthead)")
-    _get_sim_days = ResdataPrototype("double rd_rsthead_get_sim_days(rd_rsthead)")
-    _get_nxconz = ResdataPrototype("int   rd_rsthead_get_nxconz(rd_rsthead)")
-    _get_ncwmax = ResdataPrototype("int   rd_rsthead_get_ncwmax(rd_rsthead)")
-
-    def __init__(self, kw_arg=None, rst_view=None):
-        if kw_arg is None and rst_view is None:
-            raise ValueError(
-                "Cannot construct ResdataRestartHead without one of kw_arg and rst_view, both were None!"
-            )
-
-        if kw_arg is not None:
-            report_step, intehead_kw, doubhead_kw, logihead_kw = kw_arg
-            c_ptr = self._alloc_from_kw(
-                report_step, intehead_kw, doubhead_kw, logihead_kw
-            )
-        else:
-            c_ptr = self._alloc(rst_view, -1)
-
-        super().__init__(c_ptr)
-
-    def free(self):
-        self._free()
-
-    def get_report_step(self):
-        return self._get_report_step()
-
-    def get_sim_date(self):
-        ct = CTime(self._get_sim_time())
-        return ct.datetime()
-
-    def get_sim_days(self):
-        return self._get_sim_days()
-
-    def well_details(self):
-        return {"NXCONZ": self._get_nxconz(), "NCWMAX": self._get_ncwmax()}
+from ._rsthead import ResdataRestartHead
 
 
 class ResdataRestartFile(Resdata3DFile):

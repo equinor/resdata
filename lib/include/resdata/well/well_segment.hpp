@@ -14,11 +14,6 @@ extern "C" {
 
 typedef struct well_segment_struct well_segment_type;
 
-well_segment_type *
-well_segment_alloc_from_kw(const rd_kw_type *iseg_kw,
-                           const well_rseg_loader_type *rseg_loader,
-                           const rd_rsthead_type *header, int well_nr,
-                           int segment_index, int segment_id);
 well_segment_type *well_segment_alloc(int segment_id, int outlet_segment_id,
                                       int branch_id, const double *rseg_data);
 void well_segment_free(well_segment_type *segment);
@@ -46,9 +41,6 @@ well_segment_get_connections(const well_segment_type *segment,
                              const char *grid_name);
 const well_conn_collection_type *
 well_segment_get_global_connections(const well_segment_type *segment);
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
-                              const rd_rsthead_type *rst_head);
-
 double well_segment_get_depth(const well_segment_type *segment);
 double well_segment_get_length(const well_segment_type *segment);
 double well_segment_get_total_length(const well_segment_type *segment);
@@ -58,5 +50,11 @@ UTIL_IS_INSTANCE_HEADER(well_segment);
 
 #ifdef __cplusplus
 }
+well_segment_type *well_segment_alloc_from_kw(
+    const rd_kw_type *iseg_kw, const well_rseg_loader_type *rseg_loader,
+    const RSTHead &header, int well_nr, int segment_index, int segment_id);
+bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
+                              const RSTHead &rst_head);
+
 #endif
 #endif

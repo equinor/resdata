@@ -1,6 +1,7 @@
 #ifndef ERT_WELL_CONN_COLLECTION_H
 #define ERT_WELL_CONN_COLLECTION_H
 
+#include "resdata/rd_rsthead.hpp"
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_kw.hpp>
@@ -25,16 +26,16 @@ void well_conn_collection_add(well_conn_collection_type *wellcc,
                               well_conn_type *conn);
 void well_conn_collection_add_ref(well_conn_collection_type *wellcc,
                                   well_conn_type *conn);
+UTIL_IS_INSTANCE_HEADER(well_conn_collection);
+
+#ifdef __cplusplus
+}
+
 int well_conn_collection_load_from_kw(well_conn_collection_type *wellcc,
                                       const rd_kw_type *iwel_kw,
                                       const rd_kw_type *icon_kw,
                                       const rd_kw_type *scon_kw,
                                       const rd_kw_type *xcon_kw, int iwell,
-                                      const rd_rsthead_type *rst_head);
-
-UTIL_IS_INSTANCE_HEADER(well_conn_collection);
-
-#ifdef __cplusplus
-}
+                                      const RSTHead &rst_head);
 #endif
 #endif

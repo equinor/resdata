@@ -274,9 +274,8 @@ static void well_info_add_wells2(well_info_type *well_info,
                                  rd_file_view_type *rst_view, int report_nr,
                                  bool load_segment_information) {
     close_guard close_stream_guard(rst_view);
-    std::unique_ptr<rd_rsthead_type, decltype(&rd_rsthead_free)> global_header(
-        rd_rsthead_alloc(rst_view, report_nr), rd_rsthead_free);
-    for (int well_nr = 0; well_nr < global_header->nwells; well_nr++) {
+    auto global_header = RSTHead::read(rst_view, report_nr);
+    for (int well_nr = 0; well_nr < global_header.nwells; well_nr++) {
         well_state_type *well_state =
             well_state_alloc_from_file2(rst_view, well_info->grid, report_nr,
                                         well_nr, load_segment_information);

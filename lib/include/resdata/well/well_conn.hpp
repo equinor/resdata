@@ -37,15 +37,6 @@ well_conn_type *well_conn_alloc_fracture_MSW(int i, int j, int k,
 
 bool well_conn_MSW(const well_conn_type *conn);
 
-well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
-                                        const rd_kw_type *scon_kw,
-                                        const rd_kw_type *xcon_kw,
-                                        const rd_rsthead_type *header,
-                                        int well_nr, int conn_nr);
-well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
-                                         const rd_rsthead_type *header,
-                                         int well_nr);
-
 int well_conn_get_i(const well_conn_type *conn);
 int well_conn_get_j(const well_conn_type *conn);
 int well_conn_get_k(const well_conn_type *conn);
@@ -72,5 +63,14 @@ UTIL_SAFE_CAST_HEADER(well_conn);
 
 #ifdef __cplusplus
 }
+
+well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
+                                        const rd_kw_type *scon_kw,
+                                        const rd_kw_type *xcon_kw,
+                                        const RSTHead &header, int well_nr,
+                                        int conn_nr);
+well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
+                                         const RSTHead &header, int well_nr);
+
 #endif
 #endif
