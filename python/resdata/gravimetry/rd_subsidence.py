@@ -7,7 +7,7 @@ different surveys.
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.gravimetry._subsidence as _subsidence
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
 from resdata.util.util import monkey_the_camel
@@ -30,35 +30,18 @@ class ResdataSubsidence(BaseCClass):
     """
 
     TYPE_NAME = "rd_subsidence"
-    _alloc = ResdataPrototype(
-        "void* rd_subsidence_alloc( rd_grid , rd_file )", bind=False
-    )
-    _free = ResdataPrototype("void rd_subsidence_free( rd_subsidence )")
-    _add_survey_PRESSURE = ResdataPrototype(
-        "void*  rd_subsidence_add_survey_PRESSURE( rd_subsidence , char* , rd_file_view )"
-    )
-    _eval = ResdataPrototype(
-        "double rd_subsidence_eval( rd_subsidence , char* , char* , rd_region , double , double , double, double, double)"
-    )
-    _eval_geertsma = ResdataPrototype(
-        "double rd_subsidence_eval_geertsma( rd_subsidence , char* , char* , rd_region , double , double , double, double, double, double)"
-    )
-    _eval_geertsma_rporv = ResdataPrototype(
-        "double rd_subsidence_eval_geertsma_rporv( rd_subsidence , char* , char* , rd_region , double , double , double, double, double, double)"
-    )
-    _has_survey = ResdataPrototype(
-        "bool  rd_subsidence_has_survey( rd_subsidence , char*)"
-    )
 
     def __init__(self, grid: Grid, init_file: ResdataFile):
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
-        c_ptr = self._alloc(grid, init_file)
+        c_ptr = _subsidence._alloc(grid, init_file)
+        if c_ptr is None:
+            raise ValueError("Unable to construct ResdataSubsidence")
         super().__init__(c_ptr)
 
     def __contains__(self, survey_name: str) -> bool:
         if survey_name is None:
             raise TypeError("survey_name must not be None")
-        return self._has_survey(survey_name)
+        return _subsidence._has_survey(self, survey_name)
 
     def add_survey_PRESSURE(
         self, survey_name: str, restart_file: ResdataFileView
@@ -86,7 +69,7 @@ class ResdataSubsidence(BaseCClass):
         """
         if survey_name is None:
             raise TypeError("survey_name must not be None")
-        self._add_survey_PRESSURE(survey_name, restart_file)
+        _subsidence._add_survey_PRESSURE(self, survey_name, restart_file)
 
     def eval_geertsma(
         self,
@@ -108,7 +91,8 @@ class ResdataSubsidence(BaseCClass):
             if monitor_survey not in self:
                 raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval_geertsma(
+        return _subsidence._eval_geertsma(
+            self,
             base_survey,
             monitor_survey,
             region,
@@ -140,7 +124,8 @@ class ResdataSubsidence(BaseCClass):
             if monitor_survey not in self:
                 raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval_geertsma_rporv(
+        return _subsidence._eval_geertsma_rporv(
+            self,
             base_survey,
             monitor_survey,
             region,
@@ -192,7 +177,8 @@ class ResdataSubsidence(BaseCClass):
         if monitor_survey is not None and monitor_survey not in self:
             raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval(
+        return _subsidence._eval(
+            self,
             base_survey,
             monitor_survey,
             region,
@@ -204,7 +190,7 @@ class ResdataSubsidence(BaseCClass):
         )
 
     def free(self):
-        self._free()
+        _subsidence._free(self)
 
 
 monkey_the_camel(ResdataSubsidence, "evalGeertsma", ResdataSubsidence.eval_geertsma)
