@@ -55,7 +55,9 @@ class ResdataSubsidence(BaseCClass):
         c_ptr = self._alloc(grid, init_file)
         super().__init__(c_ptr)
 
-    def __contains__(self, survey_name):
+    def __contains__(self, survey_name: str) -> bool:
+        if survey_name is None:
+            raise TypeError("survey_name must not be None")
         return self._has_survey(survey_name)
 
     def add_survey_PRESSURE(
@@ -82,6 +84,8 @@ class ResdataSubsidence(BaseCClass):
         The pore volume is calculated from the initial pore volume and
         the PRESSURE keyword from the restart file.
         """
+        if survey_name is None:
+            raise TypeError("survey_name must not be None")
         self._add_survey_PRESSURE(survey_name, restart_file)
 
     def eval_geertsma(
@@ -94,6 +98,9 @@ class ResdataSubsidence(BaseCClass):
         seabed,
         region=None,
     ):
+        if base_survey is None:
+            raise TypeError("base_survey must not be None")
+
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -123,6 +130,9 @@ class ResdataSubsidence(BaseCClass):
         seabed,
         region=None,
     ):
+        if base_survey is None:
+            raise TypeError("base_survey must not be None")
+
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -173,6 +183,9 @@ class ResdataSubsidence(BaseCClass):
 
         The argument @compressibility is the total reservoir compressibility.
         """
+        if base_survey is None:
+            raise TypeError("base_survey must not be None")
+
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
