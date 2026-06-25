@@ -12,6 +12,8 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_subsidence.hpp>
+#include <resdata/rd_region.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -232,4 +234,36 @@ template <> rd_file_view_type *from_cwrap<rd_file_view_type>(py::handle obj) {
         throw py::type_error("Expected ResdataFileView, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<rd_file_view_type>(obj);
+}
+py::object ResdataSubsidence() {
+    static py::object cls;
+    if (!cls) {
+        cls =
+            py::module_::import("resdata.gravimetry").attr("ResdataSubsidence");
+    }
+    return cls;
+}
+
+template <> rd_subsidence_type *from_cwrap<rd_subsidence_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataSubsidence()))
+        throw py::type_error("Expected ResdataSubsidence, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<rd_subsidence_type>(obj);
+}
+
+py::object ResdataRegion() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.grid").attr("ResdataRegion");
+    }
+    return cls;
+}
+
+template <> rd_region_type *from_cwrap<rd_region_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataRegion()))
+        throw py::type_error("Expected ResdataRegion, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<rd_region_type>(obj);
 }
