@@ -1,21 +1,20 @@
-"""
-Calculate dynamic change in gravitational strength.
+"""Calculate subsidence change.
 
 The rd_subsidence module contains functionality to load time-lapse ECLIPSE
 results and calculate the change in seafloor subsidence between the
-different surveys. The implementation is a thin wrapper around the
-rd_subsidence.c implementation in the resdata library.
+different surveys.
 """
 
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
+from resdata.grid import Grid, ResdataRegion
+from resdata.resfile import ResdataFile, ResdataFileView
 from resdata.util.util import monkey_the_camel
 
 
 class ResdataSubsidence(BaseCClass):
-    """
-    Holding ECLIPSE results for calculating subsidence changes.
+    """ECLIPSE results for calculating subsidence changes.
 
     The ResdataSubsidence class is a collection class holding the results from
     ECLIPSE forward modelling of subsidence surveys. Observe that the
@@ -27,7 +26,7 @@ class ResdataSubsidence(BaseCClass):
 
       1. Create the ResdataSubsidence instance.
       2. Add surveys with the add_survey_XXXX() methods.
-      3. Evalute the subsidence response with the eval() method.
+      3. Evaluate the subsidence response with the eval() method.
     """
 
     TYPE_NAME = "rd_subsidence"
@@ -51,13 +50,7 @@ class ResdataSubsidence(BaseCClass):
         "bool  rd_subsidence_has_survey( rd_subsidence , char*)"
     )
 
-    def __init__(self, grid, init_file):
-        """
-        Creates a new ResdataSubsidence instance.
-
-        The input arguments @grid and @init_file should be instances
-        of Grid and ResdataFile respectively.
-        """
+    def __init__(self, grid: Grid, init_file: ResdataFile):
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
         c_ptr = self._alloc(grid, init_file)
         super().__init__(c_ptr)
@@ -65,20 +58,26 @@ class ResdataSubsidence(BaseCClass):
     def __contains__(self, survey_name):
         return self._has_survey(survey_name)
 
-    def add_survey_PRESSURE(self, survey_name, restart_file):
-        """
-        Add new survey based on PRESSURE keyword.
+    def add_survey_PRESSURE(
+        self, survey_name: str, restart_file: ResdataFileView
+    ) -> None:
+        """Add new survey based on PRESSURE keyword.
 
         Add a new survey; in this context a survey is the state of
         reservoir, i.e. a restart file. The @survey_name
-        input argument will be used when refering to this survey at a
+        input argument will be used when referring to this survey at a
         later stage. The @restart_file input argument should be an
-        ResdataFile instance with data from one report step. A typical way
+        ResdataFileView instance with data from one report step. A typical way
         to load the @restart_file argument is:
 
-           >>> date = datetime.datetime( year , month , day )
-           >>> restart_file1 = ResdataFile.restart_block( "CASE.UNRST" , dtime = date)
-           >>> restart_file2 = ResdataFile.restart_block( "CASE.UNRST" , report_step = 67 )
+           >>> date = datetime.datetime(year, month, day)
+           >>> restart = ResdataFile("CASE.UNRST")
+           >>> init = ResdataFile("CASE.INIT")
+           >>> grid = Grid("CASE.EGRID")
+           >>>
+           >>> subsidence = ResdataSubsidence(grid, init)
+           >>> subsidence.add_survey_PRESSURE("Survey1", restart.restart_view(sim_time=date))
+           >>> subsidence.add_survey_PRESSURE("Survey2", restart.restart_view(report_step=67))
 
         The pore volume is calculated from the initial pore volume and
         the PRESSURE keyword from the restart file.
@@ -145,15 +144,14 @@ class ResdataSubsidence(BaseCClass):
 
     def eval(
         self,
-        base_survey,
-        monitor_survey,
-        pos,
-        compressibility,
-        poisson_ratio,
-        region=None,
-    ):
-        """
-        Calculates the subsidence change between two surveys.
+        base_survey: str,
+        monitor_survey: str | None,
+        pos: tuple[float, float, float],
+        compressibility: float,
+        poisson_ratio: float,
+        region: ResdataRegion | None = None,
+    ) -> float:
+        """Calculate the subsidence change between two surveys.
 
         This is the method everything is leading up to; will calculate
         the change in subsidence, in centimeters,
@@ -161,7 +159,7 @@ class ResdataSubsidence(BaseCClass):
         @monitor_survey.
 
         The monitor survey can be 'None' - the resulting answer has
-        nothing whatsovever to do with subsidence, but can be
+        nothing whatsoever to do with subsidence, but can be
         interesting to determine the numerical size of the quantities
         which are subtracted in a 4D study.
 
@@ -171,7 +169,7 @@ class ResdataSubsidence(BaseCClass):
 
         If supplied the optional argument @region should be an
         ResdataRegion() instance; this region will be used to limit the
-        part of the reserviour included in the subsidence calculations.
+        part of the reservoir included in the subsidence calculations.
 
         The argument @compressibility is the total reservoir compressibility.
         """
