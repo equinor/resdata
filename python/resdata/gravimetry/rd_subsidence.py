@@ -81,9 +81,6 @@ class ResdataSubsidence(BaseCClass):
         seabed,
         region=None,
     ):
-        if base_survey is None:
-            raise TypeError("base_survey must not be None")
-
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -114,9 +111,6 @@ class ResdataSubsidence(BaseCClass):
         seabed,
         region=None,
     ):
-        if base_survey is None:
-            raise TypeError("base_survey must not be None")
-
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -168,9 +162,6 @@ class ResdataSubsidence(BaseCClass):
 
         The argument @compressibility is the total reservoir compressibility.
         """
-        if base_survey is None:
-            raise TypeError("base_survey must not be None")
-
         if base_survey not in self:
             raise KeyError("No such survey: %s" % base_survey)
 
