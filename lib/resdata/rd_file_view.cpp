@@ -62,7 +62,7 @@ rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
 static int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
                                          const char *kw, int ith) {
     const auto &index_vector = rd_file_view->kw_index.at(kw);
-    return index_vector[ith];
+    return index_vector.at(ith);
 }
 
 /**
