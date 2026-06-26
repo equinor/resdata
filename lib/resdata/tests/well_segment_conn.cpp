@@ -22,10 +22,10 @@ int main(int argc, char **argv) {
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
         well_segment_type *ws = well_segment_alloc(
             segment_id, outlet_segment_id, branch_nr, rseg_data);
-        well_conn_type *conn1 =
-            well_conn_alloc_MSW(1, 1, 1, CF, well_conn_dirX, true, segment_id);
-        well_conn_type *conn2 = well_conn_alloc_MSW(1, 1, 1, CF, well_conn_dirX,
-                                                    true, segment_id + 1);
+        well_conn_type *conn1 = well_conn_alloc_MSW(
+            1, 1, 1, CF, well_conn_dirX, true, segment_id, RD_METRIC_UNITS);
+        well_conn_type *conn2 = well_conn_alloc_MSW(
+            1, 1, 1, CF, well_conn_dirX, true, segment_id + 1, RD_METRIC_UNITS);
 
         test_assert_false(well_segment_has_global_grid_connections(ws));
 

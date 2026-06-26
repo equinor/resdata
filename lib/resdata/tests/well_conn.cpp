@@ -17,7 +17,8 @@ void test_conn_rate() {
     bool open = true;
 
     well_conn_dir_enum dir = well_conn_dirX;
-    well_conn_type *conn = well_conn_alloc(i, j, k, CF, dir, open);
+    well_conn_type *conn =
+        well_conn_alloc(i, j, k, CF, dir, open, RD_METRIC_UNITS);
 
     test_assert_double_equal(0.0, well_conn_get_oil_rate(conn));
     test_assert_double_equal(0.0, well_conn_get_gas_rate(conn));
@@ -42,9 +43,12 @@ int main(int argc, char **argv) {
 
     {
         well_conn_dir_enum dir = well_conn_dirX;
-        well_conn_type *conn = well_conn_alloc(i, j, k, CF, dir, open);
-        well_conn_type *conn2 = well_conn_alloc(i, j, k, CF, dir, open);
-        well_conn_type *conn3 = well_conn_alloc(i, j, k + 1, CF, dir, open);
+        well_conn_type *conn =
+            well_conn_alloc(i, j, k, CF, dir, open, RD_METRIC_UNITS);
+        well_conn_type *conn2 =
+            well_conn_alloc(i, j, k, CF, dir, open, RD_METRIC_UNITS);
+        well_conn_type *conn3 =
+            well_conn_alloc(i, j, k + 1, CF, dir, open, RD_METRIC_UNITS);
         test_assert_not_NULL(conn);
         test_assert_true(well_conn_is_instance(conn));
         test_assert_int_equal(i, well_conn_get_i(conn));
@@ -64,13 +68,15 @@ int main(int argc, char **argv) {
 
     {
         well_conn_dir_enum dir = well_conn_fracX;
-        well_conn_type *conn = well_conn_alloc(i, j, k, CF, dir, open);
+        well_conn_type *conn =
+            well_conn_alloc(i, j, k, CF, dir, open, RD_METRIC_UNITS);
         test_assert_NULL(conn);
     }
 
     {
         well_conn_dir_enum dir = well_conn_fracX;
-        well_conn_type *conn = well_conn_alloc_fracture(i, j, k, CF, dir, open);
+        well_conn_type *conn =
+            well_conn_alloc_fracture(i, j, k, CF, dir, open, RD_METRIC_UNITS);
         test_assert_not_NULL(conn);
         test_assert_int_equal(i, well_conn_get_i(conn));
         test_assert_int_equal(j, well_conn_get_j(conn));
@@ -85,7 +91,8 @@ int main(int argc, char **argv) {
 
     {
         well_conn_dir_enum dir = well_conn_dirX;
-        well_conn_type *conn = well_conn_alloc_fracture(i, j, k, CF, dir, open);
+        well_conn_type *conn =
+            well_conn_alloc_fracture(i, j, k, CF, dir, open, RD_METRIC_UNITS);
         test_assert_not_NULL(conn);
         well_conn_free(conn);
     }
@@ -93,8 +100,8 @@ int main(int argc, char **argv) {
     {
         int segment = 16;
         well_conn_dir_enum dir = well_conn_dirX;
-        well_conn_type *conn =
-            well_conn_alloc_MSW(i, j, k, CF, dir, open, segment);
+        well_conn_type *conn = well_conn_alloc_MSW(i, j, k, CF, dir, open,
+                                                   segment, RD_METRIC_UNITS);
         test_assert_not_NULL(conn);
         test_assert_int_equal(i, well_conn_get_i(conn));
         test_assert_int_equal(j, well_conn_get_j(conn));
@@ -110,8 +117,8 @@ int main(int argc, char **argv) {
     {
         int segment = 16;
         well_conn_dir_enum dir = well_conn_fracX;
-        well_conn_type *conn =
-            well_conn_alloc_fracture_MSW(i, j, k, CF, dir, open, segment);
+        well_conn_type *conn = well_conn_alloc_fracture_MSW(
+            i, j, k, CF, dir, open, segment, RD_METRIC_UNITS);
         test_assert_not_NULL(conn);
         test_assert_int_equal(i, well_conn_get_i(conn));
         test_assert_int_equal(j, well_conn_get_j(conn));

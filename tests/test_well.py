@@ -55,6 +55,10 @@ ICON_STATUS = 5
 ICON_DIRECTION = 13
 ICON_SEGMENT = 14
 
+# XCON indices (per-connection rates).
+XCON_ORAT, XCON_WRAT, XCON_GRAT = 0, 1, 2
+XCON_QR = 49  # reservoir volume rate
+
 # ISEG indices.
 ISEG_OUTLET = 1
 ISEG_BRANCH = 3
@@ -66,7 +70,7 @@ RSEG_TOTAL_LENGTH = 6
 RSEG_DEPTH = 7
 
 # XWEL items (reservoir rates).
-XWEL_WRAT, XWEL_GRAT, XWEL_ORAT, XWEL_RESV = 1, 2, 3, 4
+XWEL_ORAT, XWEL_WRAT, XWEL_GRAT, XWEL_RESV = 0, 1, 2, 4
 
 # IWEL well-type values, matching the WellType enum.
 IWEL_PRODUCER = 1
@@ -77,6 +81,36 @@ IWEL_GAS_INJECTOR = 4
 # A connection direction value of 0 in ICON is interpreted as "Z".
 ICON_DIR_DEFAULT = 0
 
+# Unit systems, as stored in INTEHEAD[2] and matching the ert_rd_unit_enum.
+METRIC_UNITS = 1
+FIELD_UNITS = 2
+LAB_UNITS = 3
+
+# Unit conversion constants
+INCH = 0.0254  # meters
+FEET = 12 * INCH
+GALLON = 231 * INCH**3
+BARREL = GALLON * 42
+LITER = 0.001  # m^3
+MILLI_LITER = LITER * 0.001
+MMCF = (FEET**3) * 1_000_000
+HOUR = 3600  # seconds
+DAY = 24 * HOUR
+
+# Factor that converts a raw oil/water rate to SI (rm3/s or sm3/s) per unit system.
+LIQUID_RATE_SI_FACTOR = {
+    METRIC_UNITS: 1.0 / DAY,
+    FIELD_UNITS: BARREL / DAY,
+    LAB_UNITS: MILLI_LITER / HOUR,
+}
+
+# Gas uses a different reservoir volume unit in field units.
+GAS_RATE_SI_FACTOR = {
+    METRIC_UNITS: 1.0 / DAY,
+    FIELD_UNITS: MMCF / DAY,
+    LAB_UNITS: MILLI_LITER / HOUR,
+}
+
 
 @dataclass
 class Connection:
@@ -86,6 +120,7 @@ class Connection:
     status: int = 1
     direction: int = ICON_DIR_DEFAULT
     segment: int = 0
+    rates: tuple | None = None  # (oil, water, gas, resv) connection rates
 
 
 @dataclass
@@ -146,9 +181,9 @@ def _char_kw(name, size):
     return kw
 
 
-def _intehead_kw(year, month, day):
+def _intehead_kw(year, month, day, unit_system=METRIC_UNITS):
     kw = _int_kw("INTEHEAD", 412)
-    kw[2] = 1  # metric unit system
+    kw[2] = unit_system
     kw[8], kw[9], kw[10] = NX, NY, NZ
     kw[11] = NX * NY * NZ  # nactive
     kw[14] = 7  # oil + gas + water
@@ -256,6 +291,21 @@ def _xwel_kw(wells):
     return kw
 
 
+def _xcon_kw(wells):
+    kw = _double_kw("XCON", NXCONZ * NCWMAX * len(wells))
+    for i, well in enumerate(wells):
+        for j, conn in enumerate(well.connections):
+            if conn.rates is None:
+                continue
+            oil, water, gas, resv = conn.rates
+            off = NXCONZ * (NCWMAX * i + j)
+            kw[off + XCON_ORAT] = oil
+            kw[off + XCON_WRAT] = water
+            kw[off + XCON_GRAT] = gas
+            kw[off + XCON_QR] = resv
+    return kw
+
+
 Year: TypeAlias = int
 Month: TypeAlias = int
 Day: TypeAlias = int
@@ -267,9 +317,10 @@ def _step_keywords(
     date: Date,
     seqnum: int | None = None,
     include_icon: bool = True,
+    unit_system: int = METRIC_UNITS,
 ):
     year, month, day = date
-    intehead = _intehead_kw(year, month, day)
+    intehead = _intehead_kw(year, month, day, unit_system=unit_system)
     intehead[16] = len(wells)
 
     keywords = []
@@ -291,6 +342,8 @@ def _step_keywords(
     if include_icon:
         keywords.append(_icon_kw(wells))
         keywords.append(_scon_kw(wells))
+        if any(conn.rates is not None for well in wells for conn in well.connections):
+            keywords.append(_xcon_kw(wells))
     if any(well.rates is not None for well in wells):
         keywords.append(_xwel_kw(wells))
     if any(well.segments for well in wells):
@@ -318,9 +371,13 @@ def write_restart(
     wells: list[Well],
     date: Date = (2020, 1, 1),
     include_icon: bool = True,
+    unit_system: int = METRIC_UNITS,
 ):
     """Write a non-unified restart file (``.X#### ``) with a single report step."""
-    _fwrite_keywords(path, _step_keywords(wells, date, include_icon=include_icon))
+    _fwrite_keywords(
+        path,
+        _step_keywords(wells, date, include_icon=include_icon, unit_system=unit_system),
+    )
 
 
 def write_unified_restart(path, steps: Iterable[tuple[int, Date, list[Well]]]):
@@ -724,8 +781,6 @@ def test_that_well_rates_are_read_from_xwel(tmp_path, grid):
     assert well_state.gasRate() == 20.0
     assert well_state.oilRate() == 30.0
     assert well_state.volumeRate() == 40.0
-    # The reservoir volume rate is unit-independent and equals its SI value.
-    assert well_state.volumeRateSI() == well_state.volumeRate()
 
 
 def test_that_a_well_without_rate_data_reports_zero_rates(tmp_path, grid, producer):
@@ -742,6 +797,116 @@ def test_that_a_well_without_rate_data_reports_zero_rates(tmp_path, grid, produc
     assert well_state.gasRateSI() == 0
     assert well_state.waterRateSI() == 0
     assert well_state.volumeRateSI() == 0
+
+
+@pytest.mark.parametrize("unit_system", [METRIC_UNITS, FIELD_UNITS, LAB_UNITS])
+def test_that_well_state_si_rates_are_raw_rates_scaled_by_the_unit_factor(
+    tmp_path, grid, unit_system
+):
+    raw_water, raw_gas, raw_oil, raw_resv = 10.0, 20.0, 30.0, 40.0
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, 1)],
+        rates=(raw_water, raw_gas, raw_oil, raw_resv),
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], unit_system=unit_system)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.waterRate() == raw_water
+    assert well_state.gasRate() == raw_gas
+    assert well_state.oilRate() == raw_oil
+    assert well_state.volumeRate() == raw_resv
+
+    assert well_state.oilRateSI() == pytest.approx(
+        raw_oil * LIQUID_RATE_SI_FACTOR[unit_system]
+    )
+    assert well_state.waterRateSI() == pytest.approx(
+        raw_water * LIQUID_RATE_SI_FACTOR[unit_system]
+    )
+    assert well_state.gasRateSI() == pytest.approx(
+        raw_gas * GAS_RATE_SI_FACTOR[unit_system]
+    )
+    assert well_state.volumeRateSI() == pytest.approx(
+        raw_resv * LIQUID_RATE_SI_FACTOR[unit_system]
+    )
+
+
+def test_that_metric_si_rates_are_the_raw_rates_divided_by_seconds_per_day(
+    tmp_path, grid
+):
+    seconds_per_day = 24 * 3600
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, 1)],
+        rates=(86400.0, 0.0, 172800.0, 0.0),  # water, gas, oil, resv
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], unit_system=METRIC_UNITS)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.waterRate() == 86400.0
+    assert well_state.waterRateSI() == pytest.approx(86400.0 / seconds_per_day)
+    assert well_state.oilRateSI() == pytest.approx(172800.0 / seconds_per_day)
+
+
+def test_that_field_units_use_barrels_for_liquids_and_mscf_for_gas(tmp_path, grid):
+    # FIELD liquid rates are in barrels/day while gas is in Mscf/day
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, 1)],
+        rates=(1.0, 1.0, 1.0, 1.0),  # water, gas, oil, resv
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], unit_system=FIELD_UNITS)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.oilRateSI() == pytest.approx(BARREL / DAY)
+    assert well_state.waterRateSI() == pytest.approx(BARREL / DAY)
+    assert well_state.gasRateSI() == pytest.approx(MMCF / DAY)
+
+
+def test_that_connection_si_rates_are_scaled_by_the_unit_factor(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(1, 1, 1, rates=(1.0, 2.0, 3.0, 4.0)),  # oil, water, gas, resv
+            Connection(1, 1, 2, rates=(5.0, 6.0, 7.0, 8.0)),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], unit_system=FIELD_UNITS)
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert len(connections) == 2
+    for connection, (oil, water, gas, resv) in zip(
+        connections, [(1.0, 2.0, 3.0, 4.0), (5.0, 6.0, 7.0, 8.0)]
+    ):
+        assert connection.oilRate() == oil
+        assert connection.waterRate() == water
+        assert connection.gasRate() == gas
+        assert connection.volumeRate() == resv
+
+        assert connection.oilRateSI() == pytest.approx(
+            oil * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+        )
+        assert connection.waterRateSI() == pytest.approx(
+            water * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+        )
+        assert connection.gasRateSI() == pytest.approx(
+            gas * GAS_RATE_SI_FACTOR[FIELD_UNITS]
+        )
+        assert connection.volumeRateSI() == pytest.approx(
+            resv * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+        )
 
 
 def test_that_a_restart_file_can_be_loaded_from_a_resdatafile_instance(
