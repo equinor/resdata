@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <fmt/format.h>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>
@@ -59,7 +60,8 @@ struct rd_subsidence_survey_struct {
     std::optional<std::vector<double>>
         dynamic_porevolume; /* Porevolume in each grid cell at survey time */
 
-    rd_subsidence_survey_struct(const rd_subsidence_type &sub, const char *name)
+    rd_subsidence_survey_struct(const rd_subsidence_type &sub,
+                                const std::string name)
         : grid_cache(sub.grid_cache.get()),
           aquifer_cell(sub.aquifer_cell.get()), name(name),
           porv(sub.grid_cache->size()), pressure(sub.grid_cache->size()) {}
@@ -68,7 +70,7 @@ struct rd_subsidence_survey_struct {
 static std::unique_ptr<rd_subsidence_survey_type>
 rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
                                     const rd_file_view_type *restart_view,
-                                    const char *name) {
+                                    const std::string &name) {
 
     auto survey(
         std::make_unique<rd_subsidence_survey_struct>(*rd_subsidence, name));
@@ -169,17 +171,17 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
     std::vector<double> weight(size);
 
     if (!base_survey->dynamic_porevolume.has_value()) {
-        util_abort(
-            "%s: Keyword RPORV not defined in .UNRST file for %s. Please add "
+        throw std::invalid_argument(fmt::format(
+            "Keyword RPORV not defined in .UNRST file for {}. Please add "
             "RPORV keyword to output in RPTRST clause in .DATA file.\n",
-            __func__, base_survey->name.c_str());
+            base_survey->name));
     }
 
     if (monitor_survey && !monitor_survey->dynamic_porevolume.has_value()) {
-        util_abort(
-            "%s: Keyword RPORV not defined in .UNRST file for %s. Please add "
-            "RPORV keyword to output in RPTRST clause in .DATA file.\n",
-            __func__, monitor_survey->name.c_str());
+        throw std::invalid_argument(fmt::format(
+            "Keyword RPORV not defined in .UNRST file for {}. Please add "
+            "RPORV keyword to output in RPTRST clause in .DATA file.",
+            monitor_survey->name));
     }
 
     for (size_t index = 0; index < weight.size(); ++index) {
@@ -216,10 +218,8 @@ rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
 
 rd_subsidence_survey_type *
 rd_subsidence_add_survey_PRESSURE(rd_subsidence_type *subsidence,
-                                  const char *name,
+                                  const std::string &name,
                                   const rd_file_view_type *restart_view) {
-    if (name == nullptr)
-        throw std::invalid_argument("Name cannot be NULL");
     auto survey =
         rd_subsidence_survey_alloc_PRESSURE(subsidence, restart_view, name);
     rd_subsidence_survey_type *ret = survey.get();
@@ -228,28 +228,28 @@ rd_subsidence_add_survey_PRESSURE(rd_subsidence_type *subsidence,
 }
 
 bool rd_subsidence_has_survey(const rd_subsidence_type *subsidence,
-                              const char *name) {
-    if (name == nullptr)
-        return false;
+                              const std::string &name) {
     return subsidence->surveys.count(name) > 0;
 }
 
 double rd_subsidence_eval(const rd_subsidence_type *subsidence,
-                          const char *base, const char *monitor,
+                          const std::string &base,
+                          const std::optional<std::string> &monitor,
                           rd_region_type *region, double utm_x, double utm_y,
                           double depth, double compressibility,
                           double poisson_ratio) {
     rd_subsidence_survey_type *base_survey = subsidence->surveys.at(base).get();
     rd_subsidence_survey_type *monitor_survey = nullptr;
     if (monitor)
-        monitor_survey = subsidence->surveys.at(monitor).get();
+        monitor_survey = subsidence->surveys.at(*monitor).get();
     return rd_subsidence_survey_eval(base_survey, monitor_survey, region, utm_x,
                                      utm_y, depth, compressibility,
                                      poisson_ratio);
 }
 
 double rd_subsidence_eval_geertsma(const rd_subsidence_type *subsidence,
-                                   const char *base, const char *monitor,
+                                   const std::string &base,
+                                   const std::optional<std::string> &monitor,
                                    rd_region_type *region, double utm_x,
                                    double utm_y, double depth,
                                    double youngs_modulus, double poisson_ratio,
@@ -257,22 +257,21 @@ double rd_subsidence_eval_geertsma(const rd_subsidence_type *subsidence,
     rd_subsidence_survey_type *base_survey = subsidence->surveys.at(base).get();
     rd_subsidence_survey_type *monitor_survey = nullptr;
     if (monitor)
-        monitor_survey = subsidence->surveys.at(monitor).get();
+        monitor_survey = subsidence->surveys.at(*monitor).get();
     return rd_subsidence_survey_eval_geertsma(
         base_survey, monitor_survey, region, utm_x, utm_y, depth,
         youngs_modulus, poisson_ratio, seabed);
 }
 
-double rd_subsidence_eval_geertsma_rporv(const rd_subsidence_type *subsidence,
-                                         const char *base, const char *monitor,
-                                         rd_region_type *region, double utm_x,
-                                         double utm_y, double depth,
-                                         double youngs_modulus,
-                                         double poisson_ratio, double seabed) {
+double rd_subsidence_eval_geertsma_rporv(
+    const rd_subsidence_type *subsidence, const std::string &base,
+    const std::optional<std::string> &monitor, rd_region_type *region,
+    double utm_x, double utm_y, double depth, double youngs_modulus,
+    double poisson_ratio, double seabed) {
     rd_subsidence_survey_type *base_survey = subsidence->surveys.at(base).get();
     rd_subsidence_survey_type *monitor_survey = nullptr;
     if (monitor)
-        monitor_survey = subsidence->surveys.at(monitor).get();
+        monitor_survey = subsidence->surveys.at(*monitor).get();
     return rd_subsidence_survey_eval_geertsma_rporv(
         base_survey, monitor_survey, region, utm_x, utm_y, depth,
         youngs_modulus, poisson_ratio, seabed);

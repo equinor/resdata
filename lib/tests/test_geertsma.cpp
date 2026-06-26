@@ -103,7 +103,7 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
 
     SECTION("receiver at surface") {
         double dz = rd_subsidence_eval_geertsma(
-            subsidence.get(), "S1", nullptr, nullptr, 1000, 1000, 0,
+            subsidence.get(), "S1", std::nullopt, nullptr, 1000, 1000, 0,
             youngs_modulus, poisson_ratio, seabed);
         REQUIRE_THAT(dz, WithinRel(3.944214576168326e-09, 1e-9));
     }
@@ -111,7 +111,7 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
     SECTION("receiver below surface") {
         double depth = topres - seabed - above;
         double dz = rd_subsidence_eval_geertsma(
-            subsidence.get(), "S1", nullptr, nullptr, 1000, 1000, depth,
+            subsidence.get(), "S1", std::nullopt, nullptr, 1000, 1000, depth,
             youngs_modulus, poisson_ratio, seabed);
         REQUIRE_THAT(dz, WithinRel(5.8160298201497136e-08, 1e-9));
 
@@ -154,13 +154,13 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel two source points two vintages") {
     const double seabed = 0.0;
 
     double dz1 = rd_subsidence_eval_geertsma(
-        subsidence.get(), "S1", nullptr, nullptr, 1000, 1000, 0, youngs_modulus,
-        poisson_ratio, seabed);
+        subsidence.get(), "S1", std::nullopt, nullptr, 1000, 1000, 0,
+        youngs_modulus, poisson_ratio, seabed);
     REQUIRE_THAT(dz1, WithinRel(8.65322541521704e-07, 1e-9));
 
     double dz2 = rd_subsidence_eval_geertsma(
-        subsidence.get(), "S2", nullptr, nullptr, 1000, 1000, 0, youngs_modulus,
-        poisson_ratio, seabed);
+        subsidence.get(), "S2", std::nullopt, nullptr, 1000, 1000, 0,
+        youngs_modulus, poisson_ratio, seabed);
     REQUIRE_THAT(dz2, WithinRel(2.275556615015282e-06, 1e-9));
 
     double dz = rd_subsidence_eval_geertsma(
@@ -197,7 +197,7 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel with seabed") {
     double depth = topres - seabed - above;
 
     double dz = rd_subsidence_eval_geertsma(
-        subsidence.get(), "S1", nullptr, nullptr, 1000, 1000, depth,
+        subsidence.get(), "S1", std::nullopt, nullptr, 1000, 1000, depth,
         youngs_modulus, poisson_ratio, seabed);
     REQUIRE_THAT(dz, WithinRel(5.819790154474284e-08, 1e-9));
 }
@@ -235,11 +235,11 @@ TEST_CASE_METHOD(Tmpdir,
     const double seabed = 0.0;
 
     double dz1 = rd_subsidence_eval_geertsma_rporv(
-        subsidence.get(), "S1", nullptr, nullptr, 1000, 1000, 0, youngs_modulus,
-        poisson_ratio, seabed);
+        subsidence.get(), "S1", std::nullopt, nullptr, 1000, 1000, 0,
+        youngs_modulus, poisson_ratio, seabed);
     double dz2 = rd_subsidence_eval_geertsma_rporv(
-        subsidence.get(), "S2", nullptr, nullptr, 1000, 1000, 0, youngs_modulus,
-        poisson_ratio, seabed);
+        subsidence.get(), "S2", std::nullopt, nullptr, 1000, 1000, 0,
+        youngs_modulus, poisson_ratio, seabed);
     double dz = rd_subsidence_eval_geertsma_rporv(
         subsidence.get(), "S1", "S2", nullptr, 1000, 1000, 0, youngs_modulus,
         poisson_ratio, seabed);
@@ -275,13 +275,13 @@ TEST_CASE_METHOD(Tmpdir, "Subsidence survey validation") {
     SECTION("unknown base survey throws") {
         REQUIRE(!rd_subsidence_has_survey(subsidence.get(), "dummy_survey"));
         REQUIRE_THROWS_AS(rd_subsidence_eval_geertsma_rporv(
-                              subsidence.get(), "dummy_survey", nullptr,
+                              subsidence.get(), "dummy_survey", std::nullopt,
                               nullptr, 1000, 1000, 0, youngs_modulus,
                               poisson_ratio, seabed),
                           std::out_of_range);
         REQUIRE_THROWS_AS(rd_subsidence_eval(subsidence.get(), "dummy_survey",
-                                             nullptr, nullptr, 1000, 1000, 0,
-                                             compressibility, poisson_ratio),
+                                             std::nullopt, nullptr, 1000, 1000,
+                                             0, compressibility, poisson_ratio),
                           std::out_of_range);
     }
 

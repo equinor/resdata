@@ -37,7 +37,7 @@ PYBIND11_MODULE(_subsidence, m) {
     m.def("_add_survey_PRESSURE", [](py::handle self, std::string survey_name,
                                      py::handle restart_file_view) {
         rd_subsidence_add_survey_PRESSURE(
-            from_cwrap<rd_subsidence_type>(self), survey_name.c_str(),
+            from_cwrap<rd_subsidence_type>(self), survey_name,
             from_cwrap<rd_file_view_type>(restart_file_view));
     });
 
@@ -50,27 +50,25 @@ PYBIND11_MODULE(_subsidence, m) {
             region_ptr = from_cwrap<rd_region_type>(region);
         }
 
-        return rd_subsidence_eval(
-            from_cwrap<rd_subsidence_type>(self), base.c_str(),
-            monitor ? monitor->c_str() : nullptr, region_ptr, utm_x, utm_y,
-            depth, compressibility, poisson_ratio);
+        return rd_subsidence_eval(from_cwrap<rd_subsidence_type>(self), base,
+                                  monitor, region_ptr, utm_x, utm_y, depth,
+                                  compressibility, poisson_ratio);
     });
 
-    m.def("_eval_geertsma",
-          [](py::handle self, std::string base,
-             std::optional<std::string> monitor, py::object region,
-             double utm_x, double utm_y, double depth, double youngs_modulus,
-             double poisson_ratio, double seabed) {
-              rd_region_type *region_ptr = nullptr;
-              if (!region.is_none()) {
-                  region_ptr = from_cwrap<rd_region_type>(region);
-              }
+    m.def("_eval_geertsma", [](py::handle self, std::string base,
+                               std::optional<std::string> monitor,
+                               py::object region, double utm_x, double utm_y,
+                               double depth, double youngs_modulus,
+                               double poisson_ratio, double seabed) {
+        rd_region_type *region_ptr = nullptr;
+        if (!region.is_none()) {
+            region_ptr = from_cwrap<rd_region_type>(region);
+        }
 
-              return rd_subsidence_eval_geertsma(
-                  from_cwrap<rd_subsidence_type>(self), base.c_str(),
-                  monitor ? monitor->c_str() : nullptr, region_ptr, utm_x,
-                  utm_y, depth, youngs_modulus, poisson_ratio, seabed);
-          });
+        return rd_subsidence_eval_geertsma(
+            from_cwrap<rd_subsidence_type>(self), base, monitor, region_ptr,
+            utm_x, utm_y, depth, youngs_modulus, poisson_ratio, seabed);
+    });
 
     m.def("_eval_geertsma_rporv",
           [](py::handle self, std::string base,
@@ -83,13 +81,13 @@ PYBIND11_MODULE(_subsidence, m) {
               }
 
               return rd_subsidence_eval_geertsma_rporv(
-                  from_cwrap<rd_subsidence_type>(self), base.c_str(),
-                  monitor ? monitor->c_str() : nullptr, region_ptr, utm_x,
-                  utm_y, depth, youngs_modulus, poisson_ratio, seabed);
+                  from_cwrap<rd_subsidence_type>(self), base, monitor,
+                  region_ptr, utm_x, utm_y, depth, youngs_modulus,
+                  poisson_ratio, seabed);
           });
 
     m.def("_has_survey", [](py::handle self, std::string survey_name) {
         return rd_subsidence_has_survey(from_cwrap<rd_subsidence_type>(self),
-                                        survey_name.c_str());
+                                        survey_name);
     });
 }
