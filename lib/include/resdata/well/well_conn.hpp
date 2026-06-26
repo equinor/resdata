@@ -22,18 +22,21 @@ typedef struct well_conn_struct well_conn_type;
 void well_conn_free(well_conn_type *conn);
 
 well_conn_type *well_conn_alloc(int i, int j, int k, double connection_factor,
-                                well_conn_dir_enum dir, bool open);
+                                well_conn_dir_enum dir, bool open,
+                                ert_rd_unit_enum unit_system);
 well_conn_type *well_conn_alloc_MSW(int i, int j, int k,
                                     double connection_factor,
                                     well_conn_dir_enum dir, bool open,
-                                    int segment);
+                                    int segment, ert_rd_unit_enum unit_system);
 well_conn_type *well_conn_alloc_fracture(int i, int j, int k,
                                          double connection_factor,
-                                         well_conn_dir_enum dir, bool open);
+                                         well_conn_dir_enum dir, bool open,
+                                         ert_rd_unit_enum unit_system);
 well_conn_type *well_conn_alloc_fracture_MSW(int i, int j, int k,
                                              double connection_factor,
                                              well_conn_dir_enum dir, bool open,
-                                             int segment);
+                                             int segment,
+                                             ert_rd_unit_enum unit_system);
 
 bool well_conn_MSW(const well_conn_type *conn);
 

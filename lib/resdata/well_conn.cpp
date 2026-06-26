@@ -5,6 +5,8 @@
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_units.hpp>
 
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_conn.hpp>
@@ -33,6 +35,7 @@ struct well_conn_struct {
     double gas_rate;
     double water_rate;
     double volume_rate;
+    ert_rd_unit_enum unit_system;
 };
 
 bool well_conn_equal(const well_conn_type *conn1, const well_conn_type *conn2) {
@@ -67,8 +70,8 @@ UTIL_SAFE_CAST_FUNCTION(well_conn, WELL_CONN_TYPE_ID)
 static well_conn_type *well_conn_alloc__(int i, int j, int k,
                                          double connection_factor,
                                          well_conn_dir_enum dir, bool open,
-                                         int segment_id,
-                                         bool matrix_connection) {
+                                         int segment_id, bool matrix_connection,
+                                         ert_rd_unit_enum unit_system) {
     if (well_conn_assert_direction(dir, matrix_connection)) {
         well_conn_type *conn = new well_conn_type();
         UTIL_TYPE_ID_INIT(conn, WELL_CONN_TYPE_ID);
@@ -89,6 +92,7 @@ static well_conn_type *well_conn_alloc__(int i, int j, int k,
         conn->gas_rate = 0;
         conn->oil_rate = 0;
         conn->volume_rate = 0;
+        conn->unit_system = unit_system;
 
         return conn;
     } else {
@@ -99,32 +103,38 @@ static well_conn_type *well_conn_alloc__(int i, int j, int k,
 }
 
 well_conn_type *well_conn_alloc(int i, int j, int k, double connection_factor,
-                                well_conn_dir_enum dir, bool open) {
+                                well_conn_dir_enum dir, bool open,
+                                ert_rd_unit_enum unit_system) {
     return well_conn_alloc__(i, j, k, connection_factor, dir, open,
-                             WELL_CONN_NORMAL_WELL_SEGMENT_ID, true);
+                             WELL_CONN_NORMAL_WELL_SEGMENT_ID, true,
+                             unit_system);
 }
 
 well_conn_type *well_conn_alloc_MSW(int i, int j, int k,
                                     double connection_factor,
                                     well_conn_dir_enum dir, bool open,
-                                    int segment_id) {
+                                    int segment_id,
+                                    ert_rd_unit_enum unit_system) {
     return well_conn_alloc__(i, j, k, connection_factor, dir, open, segment_id,
-                             true);
+                             true, unit_system);
 }
 
 well_conn_type *well_conn_alloc_fracture(int i, int j, int k,
                                          double connection_factor,
-                                         well_conn_dir_enum dir, bool open) {
+                                         well_conn_dir_enum dir, bool open,
+                                         ert_rd_unit_enum unit_system) {
     return well_conn_alloc__(i, j, k, connection_factor, dir, open,
-                             WELL_CONN_NORMAL_WELL_SEGMENT_ID, false);
+                             WELL_CONN_NORMAL_WELL_SEGMENT_ID, false,
+                             unit_system);
 }
 
 well_conn_type *well_conn_alloc_fracture_MSW(int i, int j, int k,
                                              double connection_factor,
                                              well_conn_dir_enum dir, bool open,
-                                             int segment_id) {
+                                             int segment_id,
+                                             ert_rd_unit_enum unit_system) {
     return well_conn_alloc__(i, j, k, connection_factor, dir, open, segment_id,
-                             false);
+                             false, unit_system);
 }
 
 /*
@@ -210,9 +220,9 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
         int segment_id =
             rd_kw_iget_int(icon_kw, icon_offset + ICON_SEGMENT_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
-        well_conn_type *conn =
-            well_conn_alloc__(i, j, k, connection_factor, dir, is_open,
-                              segment_id, matrix_connection);
+        well_conn_type *conn = well_conn_alloc__(
+            i, j, k, connection_factor, dir, is_open, segment_id,
+            matrix_connection, header.unit_system);
 
         if (xcon_kw) {
             const int xcon_offset =
@@ -266,11 +276,12 @@ well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
 
         if (matrix_connection)
             return well_conn_alloc(conn_i, conn_j, conn_k, connection_factor,
-                                   (well_conn_dir_enum)open, well_conn_dirZ);
+                                   (well_conn_dir_enum)open, well_conn_dirZ,
+                                   header.unit_system);
         else
             return well_conn_alloc_fracture(
                 conn_i, conn_j, conn_k, connection_factor,
-                (well_conn_dir_enum)open, well_conn_dirZ);
+                (well_conn_dir_enum)open, well_conn_dirZ, header.unit_system);
     } else
         // The well is completed in this LGR - however the wellhead is in another LGR.
         return NULL;
@@ -317,17 +328,21 @@ double well_conn_get_volume_rate(const well_conn_type *conn) {
 }
 
 double well_conn_get_oil_rate_si(const well_conn_type *conn) {
-    return conn->oil_rate;
+    double conversion_factor = liquid_conversion_factor(conn->unit_system);
+    return conn->oil_rate * conversion_factor;
 }
 
 double well_conn_get_gas_rate_si(const well_conn_type *conn) {
-    return conn->gas_rate;
+    double conversion_factor = gas_conversion_factor(conn->unit_system);
+    return conn->gas_rate * conversion_factor;
 }
 
 double well_conn_get_water_rate_si(const well_conn_type *conn) {
-    return conn->water_rate;
+    double conversion_factor = liquid_conversion_factor(conn->unit_system);
+    return conn->water_rate * conversion_factor;
 }
 
 double well_conn_get_volume_rate_si(const well_conn_type *conn) {
-    return conn->volume_rate;
+    double conversion_factor = liquid_conversion_factor(conn->unit_system);
+    return conn->volume_rate * conversion_factor;
 }

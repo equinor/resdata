@@ -60,9 +60,9 @@ extern "C" {
 #define ISEG_OUTLET_INDEX 1
 #define ISEG_BRANCH_INDEX 3
 
+#define XWEL_RES_ORAT_ITEM 0
 #define XWEL_RES_WRAT_ITEM 1
 #define XWEL_RES_GRAT_ITEM 2
-#define XWEL_RES_ORAT_ITEM 3
 #define XWEL_RESV_ITEM 4
 
 #define ICON_IC_INDEX 0

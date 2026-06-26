@@ -217,46 +217,26 @@ double well_state_get_volume_rate(const well_state_type *well_state) {
 }
 
 double well_state_get_oil_rate_si(const well_state_type *well_state) {
-    double conversion_factor = 1;
-
-    if (well_state->unit_system == RD_METRIC_UNITS)
-        conversion_factor = 1.0 / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_FIELD_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_BARREL / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_LAB_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
-
+    double conversion_factor =
+        liquid_conversion_factor(well_state->unit_system);
     return well_state->oil_rate * conversion_factor;
 }
 
 double well_state_get_gas_rate_si(const well_state_type *well_state) {
-    double conversion_factor = 1;
-
-    if (well_state->unit_system == RD_METRIC_UNITS)
-        conversion_factor = 1.0 / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_FIELD_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_GAS_FIELD / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_LAB_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
-
+    double conversion_factor = gas_conversion_factor(well_state->unit_system);
     return well_state->gas_rate * conversion_factor;
 }
 
 double well_state_get_water_rate_si(const well_state_type *well_state) {
-    double conversion_factor = 1;
-
-    if (well_state->unit_system == RD_METRIC_UNITS)
-        conversion_factor = 1.0 / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_FIELD_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_BARREL / RD_UNITS_TIME_DAY;
-    else if (well_state->unit_system == RD_LAB_UNITS)
-        conversion_factor = RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
-
+    double conversion_factor =
+        liquid_conversion_factor(well_state->unit_system);
     return well_state->water_rate * conversion_factor;
 }
 
 double well_state_get_volume_rate_si(const well_state_type *well_state) {
-    return well_state->volume_rate;
+    double conversion_factor =
+        liquid_conversion_factor(well_state->unit_system);
+    return well_state->volume_rate * conversion_factor;
 }
 
 static void well_state_add_wellhead(well_state_type *well_state,

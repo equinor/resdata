@@ -171,25 +171,64 @@ class WellState(BaseCClass):
         return self._create_repr(cnt)
 
     def gasRate(self) -> float:
+        """The gas rate, as stored in the restart file.
+
+        The physical unit depends on the file's unit system: sm3/day (metric),
+        Mscf/day (field) or cm3/hour (lab). Use :meth:`gasRateSI` to get the
+        value converted to SI units.
+        """
         return self._gas_rate()
 
     def waterRate(self) -> float:
+        """The water rate, as stored in the restart file.
+
+        The physical unit depends on the file's unit system: sm3/day (metric),
+        stb/day (field) or cm3/hour (lab). Use :meth:`waterRateSI` to get the
+        value converted to SI units.
+        """
         return self._water_rate()
 
     def oilRate(self) -> float:
+        """The oil rate, as stored in the restart file.
+
+        The physical unit depends on the file's unit system: sm3/day (metric),
+        stb/day (field) or cm3/hour (lab). Use :meth:`oilRateSI` to get the
+        value converted to SI units.
+        """
         return self._oil_rate()
 
     def volumeRate(self) -> float:
+        """The volume rate, at reservoir conditions."""
         return self._volume_rate()
 
     def gasRateSI(self) -> float:
+        """The gas rate converted to SI units (m3/s).
+
+        This is the raw :meth:`gasRate` multiplied by a unit-system dependent
+        conversion factor.
+        """
         return self._gas_rate_si()
 
     def waterRateSI(self) -> float:
+        """The water rate converted to SI units (m3/s).
+
+        This is the raw :meth:`waterRate` multiplied by a unit-system dependent
+        conversion factor.
+        """
         return self._water_rate_si()
 
     def oilRateSI(self) -> float:
+        """The oil rate converted to SI units (m3/s).
+
+        This is the raw :meth:`oilRate` multiplied by a unit-system dependent
+        conversion factor.
+        """
         return self._oil_rate_si()
 
     def volumeRateSI(self) -> float:
+        """The volume rate, at reservoir conditions, converted to SI units (m3/s).
+
+        This is the raw :meth:`volumeRate` multiplied by a unit-system dependent
+        conversion factor.
+        """
         return self._volume_rate_si()
