@@ -4,6 +4,8 @@
 #include <cctype>
 #include <fstream>
 #include <system_error>
+#include <stdexcept>
+#include <string>
 
 #include <ert/util/ert_api_config.hpp>
 
@@ -51,9 +53,9 @@ const char *rd_get_phase_name(rd_phase_enum phase) {
         return RD_PHASE_NAME_GAS;
         break;
     default:
-        util_abort("%s: phase enum value:%d not recognized \n", __func__,
-                   phase);
-        return NULL;
+        throw std::invalid_argument(
+            std::string(__func__) + ": phase enum value: " +
+            std::to_string(static_cast<int>(phase)) + " not recognized");
     }
 }
 

@@ -351,6 +351,31 @@ install(TARGETS _subsidence LIBRARY DESTINATION ${_subsidence_install_dir})
 set_target_properties(
   _subsidence PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                          ${PROJECT_SOURCE_DIR}/python/resdata/gravimetry)
+# -----------------------------------------------------------------
+# Pybind11 extension module: resdata.gravimetry._grav
+# -----------------------------------------------------------------
+pybind11_add_module(_grav resdata/rd_grav_pybind.cpp resdata/cwrap_pybind.cpp)
+target_link_libraries(_grav PRIVATE resdata fmt::fmt)
+target_include_directories(
+  _grav
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+if(SKBUILD)
+  set(_grav_install_dir "python/resdata/gravimetry")
+  if(APPLE)
+    set_target_properties(_grav PROPERTIES INSTALL_RPATH
+                                           "@loader_path/../.libs")
+  else()
+    set_target_properties(_grav PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_grav_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _grav LIBRARY DESTINATION ${_grav_install_dir})
+set_target_properties(
+  _grav PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                   ${PROJECT_SOURCE_DIR}/python/resdata/gravimetry)
 
 # -----------------------------------------------------------------
 # Pybind11 extension module: resdata.summary._rd_sum

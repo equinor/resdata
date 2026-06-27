@@ -6,6 +6,7 @@
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_grid.hpp>
+#include <resdata/rd_grav.hpp>
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/well/well_info.hpp>
@@ -277,6 +278,14 @@ py::object WellState() {
     return cls;
 }
 
+py::object ResdataGrav() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.gravimetry").attr("ResdataGrav");
+    }
+    return cls;
+}
+
 template <> well_state_type *from_cwrap<well_state_type>(py::handle obj) {
     if (!py::isinstance(obj, WellState()))
         throw py::type_error("Expected WellState, got " +
@@ -299,4 +308,11 @@ py::object WellSegment() {
         cls = py::module_::import("resdata.well").attr("WellSegment");
     }
     return cls;
+}
+template <> rd_grav_type *from_cwrap<rd_grav_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataGrav()))
+        throw py::type_error("Expected ResdataGrav, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<rd_grav_type>(obj);
 }
