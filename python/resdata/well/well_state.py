@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 import resdata.well._well_state as _well_state
-from resdata import ResdataPrototype
 from resdata.util.util import CTime
 
 from .well_connection import WellConnection
@@ -11,79 +10,36 @@ from .well_type_enum import WellType
 
 class WellState(BaseCClass):
     TYPE_NAME = "rd_well_state"
-    _segment_collection_size = ResdataPrototype(
-        "int well_segment_collection_get_size(void*)", bind=False
-    )
-    _segment_collection_iget = ResdataPrototype(
-        "rd_well_segment_ref well_segment_collection_iget(void*, int)", bind=False
-    )
-    _has_global_connections = ResdataPrototype(
-        "bool well_state_has_global_connections(rd_well_state)"
-    )
-    _get_segment_collection = ResdataPrototype(
-        "void* well_state_get_segments(rd_well_state)"
-    )
-    _branches = ResdataPrototype("void* well_state_get_branches(rd_well_state)")
-    _segments = ResdataPrototype("void* well_state_get_segments(rd_well_state)")
-    _get_name = ResdataPrototype("char* well_state_get_name(rd_well_state)")
-    _is_open = ResdataPrototype("bool  well_state_is_open(rd_well_state)")
-    _is_msw = ResdataPrototype("bool  well_state_is_MSW(rd_well_state)")
-    _well_number = ResdataPrototype("int well_state_get_well_nr(rd_well_state)")
-    _report_number = ResdataPrototype("int well_state_get_report_nr(rd_well_state)")
-    _has_segment_data = ResdataPrototype(
-        "bool well_state_has_segment_data(rd_well_state)"
-    )
-    _sim_time = ResdataPrototype("rd_time_t well_state_get_sim_time(rd_well_state)")
-    _well_type = ResdataPrototype(
-        "rd_well_type_enum well_state_get_type(rd_well_state)"
-    )
-    _oil_rate = ResdataPrototype("double well_state_get_oil_rate(rd_well_state)")
-    _gas_rate = ResdataPrototype("double well_state_get_gas_rate(rd_well_state)")
-    _water_rate = ResdataPrototype("double well_state_get_water_rate(rd_well_state)")
-    _volume_rate = ResdataPrototype("double well_state_get_volume_rate(rd_well_state)")
-    _oil_rate_si = ResdataPrototype("double well_state_get_oil_rate_si(rd_well_state)")
-    _gas_rate_si = ResdataPrototype("double well_state_get_gas_rate_si(rd_well_state)")
-    _water_rate_si = ResdataPrototype(
-        "double well_state_get_water_rate_si(rd_well_state)"
-    )
-    _volume_rate_si = ResdataPrototype(
-        "double well_state_get_volume_rate_si(rd_well_state)"
-    )
-    _get_global_well_head = ResdataPrototype(
-        "rd_well_connect_ref well_state_get_global_wellhead(rd_well_state)"
-    )
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
     def name(self) -> str:
-        return self._get_name()
+        return _well_state._name(self)
 
     def isOpen(self) -> bool:
-        return self._is_open()
+        return _well_state._is_open(self)
 
     def free(self) -> None:
         pass
 
-    def wellHead(self) -> WellConnection:
-        well_head = self._get_global_well_head()
-        well_head.setParent(self)
-        return well_head
+    def wellHead(self) -> WellConnection | None:
+        return _well_state._well_head(self)
 
     def wellNumber(self) -> int:
-        return self._well_number()
+        return _well_state._well_number(self)
 
     def reportNumber(self) -> int:
-        return self._report_number()
+        return _well_state._report_number(self)
 
     def simulationTime(self) -> CTime:
-        return self._sim_time()
+        return CTime(_well_state._sim_time(self))
 
     def wellType(self) -> WellType:
-        return self._well_type()
+        return WellType(_well_state._well_type(self))
 
     def hasGlobalConnections(self) -> bool:
-        return self._has_global_connections()
+        return _well_state._has_global_connections(self)
 
     def globalConnections(self) -> list[WellConnection]:
         """The list of well connections for the global grid.
@@ -99,23 +55,16 @@ class WellState(BaseCClass):
         return self.igetSegment(idx)
 
     def numSegments(self) -> int:
-        segment_collection = self._get_segment_collection()
-        count = self._segment_collection_size(segment_collection)
-        return count
+        return _well_state._num_segments(self)
 
     def segments(self) -> list[WellSegment]:
-        segment_collection = self._get_segment_collection()
+        """The list of segments in the well.
 
-        values = []
-        for index in range(self.numSegments()):
-            value = self._segment_collection_iget(segment_collection, index).setParent(
-                self
-            )
-            values.append(value)
+        Note: Constructs a new list of references to the well segments.
+        """
+        return _well_state._segments(self)
 
-        return values
-
-    def igetSegment(self, seg_idx) -> WellSegment:
+    def igetSegment(self, seg_idx: int) -> WellSegment:
         if seg_idx < 0:
             seg_idx += len(self)
 
@@ -123,17 +72,13 @@ class WellState(BaseCClass):
             raise IndexError(
                 "Invalid index:%d - valid range [0,%d)" % (seg_idx, len(self))
             )
-
-        segment_collection = self._get_segment_collection()
-        return self._segment_collection_iget(segment_collection, seg_idx).setParent(
-            self
-        )
+        return _well_state._iget_segment(self, seg_idx)
 
     def isMultiSegmentWell(self) -> bool:
-        return self._is_msw()
+        return _well_state._is_msw(self)
 
     def hasSegmentData(self) -> bool:
-        return self._has_segment_data()
+        return _well_state._has_segment_data(self)
 
     def __repr__(self) -> str:
         name = self.name()
@@ -161,7 +106,7 @@ class WellState(BaseCClass):
         Mscf/day (field) or cm3/hour (lab). Use :meth:`gasRateSI` to get the
         value converted to SI units.
         """
-        return self._gas_rate()
+        return _well_state._gas_rate(self)
 
     def waterRate(self) -> float:
         """The water rate, as stored in the restart file.
@@ -170,7 +115,7 @@ class WellState(BaseCClass):
         stb/day (field) or cm3/hour (lab). Use :meth:`waterRateSI` to get the
         value converted to SI units.
         """
-        return self._water_rate()
+        return _well_state._water_rate(self)
 
     def oilRate(self) -> float:
         """The oil rate, as stored in the restart file.
@@ -179,11 +124,11 @@ class WellState(BaseCClass):
         stb/day (field) or cm3/hour (lab). Use :meth:`oilRateSI` to get the
         value converted to SI units.
         """
-        return self._oil_rate()
+        return _well_state._oil_rate(self)
 
     def volumeRate(self) -> float:
         """The volume rate, at reservoir conditions."""
-        return self._volume_rate()
+        return _well_state._volume_rate(self)
 
     def gasRateSI(self) -> float:
         """The gas rate converted to SI units (m3/s).
@@ -191,7 +136,7 @@ class WellState(BaseCClass):
         This is the raw :meth:`gasRate` multiplied by a unit-system dependent
         conversion factor.
         """
-        return self._gas_rate_si()
+        return _well_state._gas_rate_si(self)
 
     def waterRateSI(self) -> float:
         """The water rate converted to SI units (m3/s).
@@ -199,7 +144,7 @@ class WellState(BaseCClass):
         This is the raw :meth:`waterRate` multiplied by a unit-system dependent
         conversion factor.
         """
-        return self._water_rate_si()
+        return _well_state._water_rate_si(self)
 
     def oilRateSI(self) -> float:
         """The oil rate converted to SI units (m3/s).
@@ -207,7 +152,7 @@ class WellState(BaseCClass):
         This is the raw :meth:`oilRate` multiplied by a unit-system dependent
         conversion factor.
         """
-        return self._oil_rate_si()
+        return _well_state._oil_rate_si(self)
 
     def volumeRateSI(self) -> float:
         """The volume rate, at reservoir conditions, converted to SI units (m3/s).
@@ -215,4 +160,4 @@ class WellState(BaseCClass):
         This is the raw :meth:`volumeRate` multiplied by a unit-system dependent
         conversion factor.
         """
-        return self._volume_rate_si()
+        return _well_state._volume_rate_si(self)

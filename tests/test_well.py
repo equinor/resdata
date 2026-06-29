@@ -582,6 +582,43 @@ def test_that_well_head_returns_the_global_connection_head(tmp_path, grid, produ
     assert well_head.isOpen()
 
 
+def test_that_the_well_head_reports_the_cell_where_the_well_enters(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        headi=7,
+        headj=4,
+        headk=2,
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(7, 4, 2)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    head = WellInfo(grid, path)["OP1"][0].wellHead()
+
+    assert head.ijk() == (6, 3, 1)
+
+
+def test_that_the_well_head_reports_the_cell_after_the_well_lookup_is_discarded(
+    tmp_path, grid
+):
+    well = Well(
+        name="OP1",
+        headi=7,
+        headj=4,
+        headk=2,
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(7, 4, 2)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    head = WellInfo(grid, path)["OP1"][0].wellHead()
+
+    assert head.ijk() == (6, 3, 1)
+    assert head.isOpen()
+
+
 def test_that_multiple_wells_are_all_available_by_name_and_index(tmp_path, grid):
     wells = [
         Well(name="PROD", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]),
@@ -657,6 +694,56 @@ def test_that_a_unified_restart_builds_a_time_line_with_all_report_steps(
     ]
 
 
+def test_that_simulation_time_matches_the_restart_report_date(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer], date=(2020, 6, 29))
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    sim_date = well_state.simulationTime().datetime()
+    assert (sim_date.year, sim_date.month, sim_date.day) == (2020, 6, 29)
+
+
+def test_that_unified_restart_steps_have_increasing_simulation_times(tmp_path, grid):
+    producer = Well(
+        name="OP1", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]
+    )
+    steps = [
+        (0, (2020, 1, 1), [producer]),
+        (1, (2021, 1, 1), [producer]),
+        (2, (2022, 1, 1), [producer]),
+    ]
+    path = str(tmp_path / "CASE.UNRST")
+    write_unified_restart(path, steps)
+
+    times = [state.simulationTime() for state in WellInfo(grid, path)["OP1"]]
+
+    assert times == sorted(times)
+
+
+def test_that_each_iwel_type_code_maps_to_the_expected_well_type(tmp_path, grid):
+    wells = [
+        Well(name="PROD", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]),
+        Well(
+            name="OIL", well_type=IWEL_OIL_INJECTOR, connections=[Connection(2, 1, 1)]
+        ),
+        Well(
+            name="WAT", well_type=IWEL_WATER_INJECTOR, connections=[Connection(3, 1, 1)]
+        ),
+        Well(
+            name="GAS", well_type=IWEL_GAS_INJECTOR, connections=[Connection(4, 1, 1)]
+        ),
+    ]
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, wells)
+
+    well_info = WellInfo(grid, path)
+    assert well_info["PROD"][0].wellType() == WellType.PRODUCER
+    assert well_info["OIL"][0].wellType() == WellType.OIL_INJECTOR
+    assert well_info["WAT"][0].wellType() == WellType.WATER_INJECTOR
+    assert well_info["GAS"][0].wellType() == WellType.GAS_INJECTOR
+
+
 def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
     well = Well(
         name="MSW",
@@ -697,6 +784,110 @@ def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
     assert all(segment.isMainStem() for segment in segments)
     # The first segment is closest to the wellhead (outlet == 0).
     assert segments[0].isNearestWellHead()
+    assert segments[1].outletId() == 1
+
+
+def test_that_a_multisegment_wells_tubing_geometry_is_reported_as_written(
+    tmp_path, grid
+):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segments = WellInfo(grid, path)["MSW"][0].segments()
+
+    assert [seg.id() for seg in segments] == [1, 2]
+    assert [seg.length() for seg in segments] == [10.0, 20.0]
+    assert [seg.depth() for seg in segments] == [100.0, 120.0]
+
+
+def test_that_segment_indexing_matches_the_segments_list(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+    segments = well_state.segments()
+
+    assert [well_state[i].id() for i in range(len(well_state))] == [
+        seg.id() for seg in segments
+    ]
+
+
+def test_that_negative_segment_index_returns_the_last_segment(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state[-1].id() == well_state.segments()[-1].id()
+
+
+def test_that_segment_branch_and_outlet_match_what_was_written(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segments = WellInfo(grid, path)["MSW"][0].segments()
+
+    assert all(seg.branchId() == 1 for seg in segments)
     assert segments[1].outletId() == 1
 
 

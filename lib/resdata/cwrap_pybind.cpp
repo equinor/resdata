@@ -292,3 +292,11 @@ py::object WellConnection() {
     }
     return cls;
 }
+
+py::object WellSegment() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.well").attr("WellSegment");
+    }
+    return cls;
+}

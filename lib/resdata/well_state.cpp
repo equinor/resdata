@@ -128,6 +128,8 @@ struct well_state_struct {
     well_segment_collection_ptr segments{nullptr, well_segment_collection_free};
     well_branch_collection_ptr branches{nullptr, well_branch_collection_free};
 
+    // The index_wellhead will own the reference to the well_conn
+    // and the name_wellhead has a non-owning reference
     std::vector<well_conn_ptr>
         index_wellhead; // An well_conn_type instance representing the wellhead - indexed by grid_nr.
     std::map<std::string, well_conn_type *>
@@ -208,7 +210,7 @@ static void well_state_add_wellhead(well_state_type *well_state,
                                     const char *grid_name, int grid_nr) {
     well_conn_ptr wellhead(well_conn_alloc_wellhead(iwel_kw, header, well_nr));
 
-    if (wellhead != NULL) {
+    if (wellhead) {
         if (grid_nr >= static_cast<int>(well_state->index_wellhead.size()))
             well_state->index_wellhead.resize(grid_nr + 1);
         well_state->name_wellhead[grid_name] = wellhead.get();
