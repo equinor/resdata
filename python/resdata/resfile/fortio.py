@@ -19,20 +19,18 @@ structure; mainly to support passing FortIO handles to the underlying cpp
 functions.
 """
 
+from contextlib import contextmanager
+
 from resdata.resfile._fortio import FortIO
 from resdata.util.util import monkey_the_camel
 
 
-class FortIOContextManager:
-    def __init__(self, fortio):
-        self.__fortio = fortio
-
-    def __enter__(self):
-        return self.__fortio
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__fortio.close()
-        return exc_type is not None
+@contextmanager
+def FortIOContextManager(fortio):
+    try:
+        yield fortio
+    finally:
+        fortio.close()
 
 
 def openFortIO(

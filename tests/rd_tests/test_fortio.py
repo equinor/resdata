@@ -102,6 +102,12 @@ class FortIOTest(ResdataTest):
 
             self.assertTrue(kw1 == kw2)
 
+    def test_context_propagates_exceptions(self):
+        with TestAreaContext("python/fortio/context-exception"):
+            with pytest.raises(ValueError):
+                with openFortIO("file", mode=FortIO.WRITE_MODE, fmt_file=False) as f:
+                    raise ValueError()
+
     def test_is_fortran_file(self):
         with TestAreaContext("python/fortio/guess"):
             kw1 = ResdataKW("KW", 12345, ResDataType.RD_FLOAT)
