@@ -125,10 +125,10 @@ struct well_state_struct {
     ert_rd_unit_enum unit_system;
 
     std::map<std::string, std::vector<well_conn_ptr>> connections;
-    well_segment_collection_type *segments;
-    well_branch_collection_type *branches;
+    well_segment_collection_ptr segments{nullptr, well_segment_collection_free};
+    well_branch_collection_ptr branches{nullptr, well_branch_collection_free};
 
-    std::vector<well_conn_type *>
+    std::vector<well_conn_ptr>
         index_wellhead; // An well_conn_type instance representing the wellhead - indexed by grid_nr.
     std::map<std::string, well_conn_type *>
         name_wellhead; // An well_conn_type instance representing the wellhead - indexed by lgr_name.
@@ -148,8 +148,8 @@ well_state_type *well_state_alloc(const char *well_name, int global_well_nr,
     well_state->open = open;
     well_state->type = type;
     well_state->global_well_nr = global_well_nr;
-    well_state->segments = well_segment_collection_alloc();
-    well_state->branches = well_branch_collection_alloc();
+    well_state->segments.reset(well_segment_collection_alloc());
+    well_state->branches.reset(well_branch_collection_alloc());
     well_state->is_MSW_well = false;
     well_state->oil_rate = 0;
     well_state->gas_rate = 0;
@@ -206,14 +206,13 @@ static void well_state_add_wellhead(well_state_type *well_state,
                                     const RSTHead &header,
                                     const rd_kw_type *iwel_kw, int well_nr,
                                     const char *grid_name, int grid_nr) {
-    well_conn_type *wellhead =
-        well_conn_alloc_wellhead(iwel_kw, header, well_nr);
+    well_conn_ptr wellhead(well_conn_alloc_wellhead(iwel_kw, header, well_nr));
 
     if (wellhead != NULL) {
         if (grid_nr >= static_cast<int>(well_state->index_wellhead.size()))
-            well_state->index_wellhead.resize(grid_nr + 1, NULL);
-        well_state->index_wellhead[grid_nr] = wellhead;
-        well_state->name_wellhead[grid_name] = wellhead;
+            well_state->index_wellhead.resize(grid_nr + 1);
+        well_state->name_wellhead[grid_name] = wellhead.get();
+        well_state->index_wellhead[grid_nr] = std::move(wellhead);
     }
 }
 
@@ -260,18 +259,13 @@ static int well_state_get_lgr_well_nr(const well_state_type *well_state,
         well_nr = 0;
         while (true) {
             bool found = false;
-            {
-                char *lgr_well_name =
-                    (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
-                        zwel_kw, well_nr * header.nzwelz));
+            std::string lgr_well_name =
+                rd_kw_iget_stripped_string(zwel_kw, well_nr * header.nzwelz);
 
-                if (well_state->name == lgr_well_name)
-                    found = true;
-                else
-                    well_nr++;
-
-                free(lgr_well_name);
-            }
+            if (well_state->name == lgr_well_name)
+                found = true;
+            else
+                well_nr++;
 
             if (found)
                 break;
@@ -411,36 +405,34 @@ bool well_state_add_MSW2(well_state_type *well_state,
             rd_file_view_iget_named_kw(rst_view, IWEL_KW, 0);
         const rd_kw_type *iseg_kw =
             rd_file_view_iget_named_kw(rst_view, ISEG_KW, 0);
-        well_rseg_loader_type *rseg_loader = NULL;
+        std::unique_ptr<well_rseg_loader_type, decltype(&well_rseg_loader_free)>
+            rseg_loader(nullptr, well_rseg_loader_free);
 
         int segment_count;
 
         if (rd_file_view_has_kw(rst_view, RSEG_KW)) {
             if (load_segment_information)
-                rseg_loader = well_rseg_loader_alloc(rst_view);
+                rseg_loader.reset(well_rseg_loader_alloc(rst_view));
 
             segment_count = well_segment_collection_load_from_kw(
-                well_state->segments, well_nr, iwel_kw, iseg_kw, rseg_loader,
-                rst_head, load_segment_information, &well_state->is_MSW_well);
+                well_state->segments.get(), well_nr, iwel_kw, iseg_kw,
+                rseg_loader.get(), rst_head, load_segment_information,
+                &well_state->is_MSW_well);
 
             if (segment_count > 0) {
 
                 auto it = well_state->connections.begin();
                 while (it != well_state->connections.end()) {
                     well_segment_collection_add_connections(
-                        well_state->segments, it->first.c_str(), it->second);
+                        well_state->segments.get(), it->first.c_str(),
+                        it->second);
                     it++;
                 }
 
-                well_segment_collection_link(well_state->segments);
-                well_segment_collection_add_branches(well_state->segments,
-                                                     well_state->branches);
+                well_segment_collection_link(well_state->segments.get());
+                well_segment_collection_add_branches(
+                    well_state->segments.get(), well_state->branches.get());
             }
-
-            if (rseg_loader != NULL) {
-                well_rseg_loader_free(rseg_loader);
-            }
-
             return true;
         }
     }
@@ -452,7 +444,7 @@ bool well_state_is_MSW(const well_state_type *well_state) {
 }
 
 bool well_state_has_segment_data(const well_state_type *well_state) {
-    if (well_segment_collection_get_size(well_state->segments) > 0)
+    if (well_segment_collection_get_size(well_state->segments.get()) > 0)
         return true;
     else
         return false;
@@ -481,7 +473,6 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
 
         const int iwel_offset = global_header.niwelz * global_well_nr;
         {
-            char *name;
             bool open;
             well_type_enum type = RD_WELL_ZERO;
             {
@@ -499,17 +490,13 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
                 type = well_state_translate_rd_type_int(int_type);
             }
 
-            {
-                const int zwel_offset = global_header.nzwelz * global_well_nr;
-                name =
-                    (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
-                        global_zwel_kw,
-                        zwel_offset)); // Hardwired max 8 characters in Well Name
-            }
+            const int zwel_offset = global_header.nzwelz * global_well_nr;
+            std::string name =
+                rd_kw_iget_stripped_string(global_zwel_kw, zwel_offset);
 
-            well_state = well_state_alloc(name, global_well_nr, open, type,
-                                          report_nr, global_header.sim_time);
-            free(name);
+            well_state =
+                well_state_alloc(name.c_str(), global_well_nr, open, type,
+                                 report_nr, global_header.sim_time);
 
             well_state_add_connections2(well_state, grid, file_view,
                                         global_well_nr);
@@ -525,18 +512,7 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
         return NULL;
 }
 
-void well_state_free(well_state_type *well) {
-
-    for (size_t i = 0; i < well->index_wellhead.size(); i++) {
-        if (well->index_wellhead[i])
-            well_conn_free(well->index_wellhead[i]);
-    }
-
-    well_segment_collection_free(well->segments);
-    well_branch_collection_free(well->branches);
-
-    delete well;
-}
+void well_state_free(well_state_type *well) { delete well; }
 
 int well_state_get_report_nr(const well_state_type *well_state) {
     return well_state->valid_from_report;
@@ -603,10 +579,10 @@ bool well_state_has_global_connections(const well_state_type *well_state) {
 
 well_segment_collection_type *
 well_state_get_segments(const well_state_type *well_state) {
-    return well_state->segments;
+    return well_state->segments.get();
 }
 
 well_branch_collection_type *
 well_state_get_branches(const well_state_type *well_state) {
-    return well_state->branches;
+    return well_state->branches.get();
 }
