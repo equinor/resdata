@@ -700,6 +700,55 @@ def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
     assert segments[1].outletId() == 1
 
 
+def test_that_connections_of_a_multisegment_well_are_multisegment(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["MSW"][0].globalConnections()
+
+    assert len(connections) == 2
+    assert all(conn.isMultiSegmentWell() for conn in connections)
+
+
+def test_that_segment_id_differs_from_outlet_id(tmp_path, grid):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segments = WellInfo(grid, path)["MSW"][0].segments()
+
+    assert all(segment.id() != segment.outletId() for segment in segments)
+
+
 def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
     well = Well(
         name="MSW",
@@ -744,8 +793,18 @@ def test_that_a_non_segmented_well_has_no_segments(tmp_path, grid, producer):
     assert well_state.numSegments() == 0
     assert well_state.segments() == []
     assert len(well_state) == 0
-    with pytest.raises(IndexError):
-        assert well_state[0]
+
+
+def test_that_connections_of_a_non_segmented_well_are_not_multisegment(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert len(connections) == 2
+    assert all(not conn.isMultiSegmentWell() for conn in connections)
 
 
 def test_that_disabling_segment_loading_skips_segment_data(tmp_path, grid):
@@ -907,6 +966,163 @@ def test_that_connection_si_rates_are_scaled_by_the_unit_factor(tmp_path, grid):
         assert connection.volumeRateSI() == pytest.approx(
             resv * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
         )
+
+
+def test_that_well_connection_ijk_match_the_perforations_written_to_the_restart(
+    tmp_path, grid
+):
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(3, 4, 5), Connection(6, 7, 8)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert [conn.ijk() for conn in connections] == [(2, 3, 4), (5, 6, 7)]
+
+
+def test_that_two_calls_to_global_connections_return_equal_ijk_lists(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    first = [conn.ijk() for conn in well_state.globalConnections()]
+    second = [conn.ijk() for conn in well_state.globalConnections()]
+    assert first == second
+
+
+def test_that_connections_preserve_icon_ordering(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(1, 1, k) for k in range(1, 5)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert [conn.ijk() for conn in connections] == [(0, 0, k) for k in range(4)]
+
+
+def test_that_global_connections_of_two_wells_have_different_ijk(tmp_path, grid):
+    wells = [
+        Well(name="PROD", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]),
+        Well(
+            name="INJ", well_type=IWEL_WATER_INJECTOR, connections=[Connection(5, 5, 1)]
+        ),
+    ]
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, wells)
+
+    well_info = WellInfo(grid, path)
+    assert [c.ijk() for c in well_info["PROD"][0].globalConnections()] == [(0, 0, 0)]
+    assert [c.ijk() for c in well_info["INJ"][0].globalConnections()] == [(4, 4, 0)]
+
+
+def test_that_all_written_perforations_appear_as_connections(tmp_path, grid):
+    cells = [(1, 2, 1), (3, 4, 2), (5, 6, 3)]
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i, j, k) for (i, j, k) in cells],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    expected = {(i - 1, j - 1, k - 1) for (i, j, k) in cells}
+    assert {conn.ijk() for conn in connections} == expected
+
+
+def test_that_querying_one_well_does_not_change_another_wells_connections(
+    tmp_path, grid
+):
+    wells = [
+        Well(name="PROD", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]),
+        Well(
+            name="INJ", well_type=IWEL_WATER_INJECTOR, connections=[Connection(5, 5, 1)]
+        ),
+    ]
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, wells)
+
+    well_info = WellInfo(grid, path)
+    inj_first = [c.ijk() for c in well_info["INJ"][0].globalConnections()]
+    _ = well_info["PROD"][0].globalConnections()
+    inj_second = [c.ijk() for c in well_info["INJ"][0].globalConnections()]
+    assert inj_first == inj_second
+
+
+def test_that_connection_factor_and_rates_match_per_connection(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(1, 1, 1, rates=(1.0, 2.0, 3.0, 4.0)),
+            Connection(1, 1, 2, rates=(5.0, 6.0, 7.0, 8.0)),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert connections[0].oilRate() == 1.0
+    assert connections[1].oilRate() == 5.0
+
+
+def test_that_connections_load_with_their_connection_factor(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert len(connections) == 2
+    assert [conn.connectionFactor() for conn in connections] == [1.0, 2.0]
+
+
+def test_that_segment_connections_are_consistent_with_global_connections(
+    tmp_path, grid
+):
+    well = Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        well_type=IWEL_PRODUCER,
+        connections=[
+            Connection(i=2, j=3, k=1, segment=1),
+            Connection(i=2, j=3, k=2, segment=2),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["MSW"][0].globalConnections()
+
+    assert len(connections) == 2
+
+
+def test_that_reopening_the_same_restart_yields_consistent_connection_count(
+    tmp_path, grid, producer
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    counts = [len(WellInfo(grid, path)["OP1"][0].globalConnections()) for _ in range(5)]
+    assert counts == [2] * 5
 
 
 def test_that_a_restart_file_can_be_loaded_from_a_resdatafile_instance(

@@ -11,7 +11,6 @@
 #include <resdata/well/well_segment.hpp>
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_segment_collection.hpp>
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 
 struct well_segment_collection_struct {
@@ -140,16 +139,13 @@ void well_segment_collection_link(
 
 void well_segment_collection_add_connections(
     well_segment_collection_type *segment_collection, const char *grid_name,
-    const well_conn_collection_type *connections) {
-    int iconn;
-    for (iconn = 0; iconn < well_conn_collection_get_size(connections);
-         iconn++) {
-        well_conn_type *conn = well_conn_collection_iget(connections, iconn);
-        if (well_conn_MSW(conn)) {
-            int segment_id = well_conn_get_segment_id(conn);
+    const std::vector<well_conn_ptr> &connections) {
+    for (const auto &conn : connections) {
+        if (well_conn_MSW(conn.get())) {
+            int segment_id = well_conn_get_segment_id(conn.get());
             well_segment_type *segment =
                 well_segment_collection_get(segment_collection, segment_id);
-            well_segment_add_connection(segment, grid_name, conn);
+            well_segment_add_connection(segment, grid_name, conn.get());
         }
     }
 }

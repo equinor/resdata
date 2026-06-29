@@ -21,23 +21,6 @@
 
 #define WELL_CONN_TYPE_ID 702052013
 
-struct well_conn_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    int i;
-    int j;
-    int k;
-    well_conn_dir_enum dir;
-    bool open;
-    int segment_id;         // -1: Ordinary well
-    bool matrix_connection; // k >= nz => fracture (and k -= nz )
-    double connection_factor;
-    double oil_rate;
-    double gas_rate;
-    double water_rate;
-    double volume_rate;
-    ert_rd_unit_enum unit_system;
-};
-
 bool well_conn_equal(const well_conn_type *conn1, const well_conn_type *conn2) {
     if (memcmp(conn1, conn2, sizeof *conn1) == 0)
         return true;

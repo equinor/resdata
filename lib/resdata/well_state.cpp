@@ -3,6 +3,8 @@
    well for one particular point in time.
 */
 
+#include "resdata/rd_file_view.hpp"
+#include <cstdlib>
 #include <ctime>
 
 #include <ert/util/util.hpp>
@@ -11,7 +13,9 @@
 #include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 
@@ -99,48 +103,8 @@ The connection can in general be both to the main global grid, and to
 an LGR. Hence all questions about connections must be LGR aware. This
 is in contrast to the segments and branches which are geometric
 objects, not directly coupled to a specific grid; however the segments
-have a collection of connections - and these connections are of course
-coupledte implementation these objects are modelled as such:
-
- 1. The well_state has hash table which is indexed by LGR name, and
-    the values are well_conn_collection instances. The
-    well_conn_collection type is a quite simple collection which can
-    tell how may connections there are, and index based lookup:
-
-
-       well_conn_collection_type * connections = well_state_get_grid_connections( well_state , LGR_NAME);
-       if (connections) {
-          well_conn_type * conn = well_conn_collection_iget( connections , 0 );
-          printf("Have %d connections \n",well_conn_collection_get_size( connections );
-       }
-
-    The connections to the global grid are stored with the 'LGR' name
-    given by the symbole RD_GRID_GLOBAL_GRID, or alternatively the
-    function well_state_get_global_connections( well_state ) can be
-    used.
-
-
-
- 2. If - AND ONLY IF - the well is a multisegment well, you can query
-    the well_state object for information about segments and branches:
-
-       if (well_state_is_MSW( well_state )) {
-          well_segment_collection_type * segments = well_state_get_segments( well_state );
-          well_branch_collection_type * branches = well_state_get_branches( well_state );
-          int branch_nr;
-
-          for (branch_nr = 0; branch_nr < well_branch_collection_get_size( branches ); branch_nr++) {
-              well_segment_type * segment = well_branch_collection_iget_start_segment( branches , branhc_nr );
-              while (segment) {
-                  // Inspect the current segment.
-                  segment = well_segment_get_outlet( segment );
-              }
-          }
-       }
-
-
-
-
+have a collection of connections - and these connections are coupled to
+a grid.
 */
 
 #define WELL_STATE_TYPE_ID 613307832
@@ -160,8 +124,7 @@ struct well_state_struct {
     double volume_rate;
     ert_rd_unit_enum unit_system;
 
-    std::map<std::string, well_conn_collection_type *>
-        connections; // hash<grid_name,well_conn_collection>
+    std::map<std::string, std::vector<well_conn_ptr>> connections;
     well_segment_collection_type *segments;
     well_branch_collection_type *branches;
 
@@ -369,7 +332,7 @@ static void well_state_add_connections__(well_state_type *well_state,
         const rd_kw_type *icon_kw =
             rd_file_view_iget_named_kw(rst_view, ICON_KW, 0);
         if (!well_state_has_grid_connections(well_state, grid_name))
-            well_state->connections[grid_name] = well_conn_collection_alloc();
+            well_state->connections[grid_name];
 
         {
             rd_kw_type *scon_kw = NULL;
@@ -381,10 +344,17 @@ static void well_state_add_connections__(well_state_type *well_state,
                 xcon_kw = rd_file_view_iget_named_kw(rst_view, XCON_KW, 0);
             }
 
-            well_conn_collection_type *wellcc =
-                well_state->connections[grid_name];
-            well_conn_collection_load_from_kw(wellcc, iwel_kw, icon_kw, scon_kw,
-                                              xcon_kw, well_nr, header);
+            const int iwel_offset = header.niwelz * well_nr;
+            int num_connections =
+                rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
+
+            for (int iconn = 0; iconn < num_connections; iconn++) {
+                well_conn_type *conn = well_conn_alloc_from_kw(
+                    icon_kw, scon_kw, xcon_kw, header, well_nr, iconn);
+                if (conn)
+                    well_state->connections[grid_name].push_back(
+                        well_conn_ptr(conn));
+            }
         }
     }
 }
@@ -562,9 +532,6 @@ void well_state_free(well_state_type *well) {
             well_conn_free(well->index_wellhead[i]);
     }
 
-    for (auto &pair : well->connections)
-        well_conn_collection_free(pair.second);
-
     well_segment_collection_free(well->segments);
     well_branch_collection_free(well->branches);
 
@@ -609,16 +576,14 @@ const char *well_state_get_name(const well_state_type *well_state) {
     return well_state->name.c_str();
 }
 
-const well_conn_collection_type *
+const std::vector<well_conn_ptr> *
 well_state_get_grid_connections(const well_state_type *well_state,
-                                const char *grid_name) {
-    if (well_state_has_grid_connections(well_state, grid_name))
-        return well_state->connections.at(grid_name);
-    else
-        return NULL;
+                                const std::string &grid_name) {
+    auto it = well_state->connections.find(grid_name);
+    return it != well_state->connections.end() ? &it->second : nullptr;
 }
 
-const well_conn_collection_type *
+const std::vector<well_conn_ptr> *
 well_state_get_global_connections(const well_state_type *well_state) {
     return well_state_get_grid_connections(well_state, RD_GRID_GLOBAL_GRID);
 }

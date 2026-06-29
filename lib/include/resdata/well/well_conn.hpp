@@ -17,6 +17,23 @@ typedef enum {
     well_conn_fracY = 5
 } well_conn_dir_enum;
 
+struct well_conn_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    int i;
+    int j;
+    int k;
+    well_conn_dir_enum dir;
+    bool open;
+    int segment_id;         // -1: Ordinary well
+    bool matrix_connection; // k >= nz => fracture (and k -= nz )
+    double connection_factor;
+    double oil_rate;
+    double gas_rate;
+    double water_rate;
+    double volume_rate;
+    ert_rd_unit_enum unit_system;
+};
+
 typedef struct well_conn_struct well_conn_type;
 
 void well_conn_free(well_conn_type *conn);
@@ -66,6 +83,7 @@ UTIL_SAFE_CAST_HEADER(well_conn);
 
 #ifdef __cplusplus
 }
+#include <memory>
 
 well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
                                         const rd_kw_type *scon_kw,
@@ -75,5 +93,6 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
                                          const RSTHead &header, int well_nr);
 
+using well_conn_ptr = std::unique_ptr<well_conn_type>;
 #endif
 #endif

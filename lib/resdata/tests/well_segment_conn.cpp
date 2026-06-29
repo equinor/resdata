@@ -10,7 +10,6 @@
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_segment.hpp>
 #include <resdata/well/well_conn.hpp>
-#include <resdata/well/well_conn_collection.hpp>
 
 int main(int argc, char **argv) {
     test_install_SIGNALS();
@@ -40,10 +39,6 @@ int main(int argc, char **argv) {
         test_assert_false(
             well_segment_has_grid_connections(ws, "DoesNotExist"));
 
-        test_assert_true(well_conn_collection_is_instance(
-            well_segment_get_connections(ws, RD_GRID_GLOBAL_GRID)));
-        test_assert_true(well_conn_collection_is_instance(
-            well_segment_get_global_connections(ws)));
         test_assert_NULL(well_segment_get_connections(ws, "doesNotExist"));
 
         well_conn_free(conn1);

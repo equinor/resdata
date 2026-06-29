@@ -5,9 +5,9 @@
 #include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_segment.hpp>
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
+#include <resdata/well/well_conn.hpp>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,20 +31,22 @@ well_segment_type *well_segment_collection_iget(
     const well_segment_collection_type *segment_collection, int index);
 void well_segment_collection_link(
     const well_segment_collection_type *segment_collection);
-void well_segment_collection_add_connections(
-    well_segment_collection_type *segment_collection, const char *grid_name,
-    const well_conn_collection_type *connections);
 void well_segment_collection_add_branches(
     const well_segment_collection_type *segment_collection,
     well_branch_collection_type *branches);
 
 #ifdef __cplusplus
 }
+#include <vector>
+
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
     const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
     const well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segment_information, bool *is_MSW_well);
+void well_segment_collection_add_connections(
+    well_segment_collection_type *segment_collection, const char *grid_name,
+    const std::vector<well_conn_ptr> &connections);
 
 #endif
 #endif

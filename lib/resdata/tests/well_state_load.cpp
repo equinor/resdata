@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
         test_assert_true(
             well_state_has_grid_connections(well_state, RD_GRID_GLOBAL_GRID));
         test_assert_false(well_state_has_grid_connections(well_state, "???"));
-        test_assert_true(well_state_has_global_connections(well_state));
 
         well_state_add_MSW2(well_state, rst_view, global_well_nr,
                             load_segment_information);
