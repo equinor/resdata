@@ -38,6 +38,7 @@ void well_segment_collection_add_branches(
 #ifdef __cplusplus
 }
 #include <vector>
+#include <memory>
 
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
@@ -48,5 +49,8 @@ void well_segment_collection_add_connections(
     well_segment_collection_type *segment_collection, const char *grid_name,
     const std::vector<well_conn_ptr> &connections);
 
+using well_segment_collection_ptr =
+    std::unique_ptr<well_segment_collection_type,
+                    decltype(&well_segment_collection_free)>;
 #endif
 #endif

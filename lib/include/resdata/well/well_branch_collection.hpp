@@ -28,5 +28,10 @@ UTIL_IS_INSTANCE_HEADER(well_branch_collection);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using well_branch_collection_ptr =
+    std::unique_ptr<well_branch_collection_type,
+                    decltype(&well_branch_collection_free)>;
 #endif
 #endif
