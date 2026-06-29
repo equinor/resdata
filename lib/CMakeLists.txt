@@ -89,7 +89,6 @@ add_library(
   resdata/well_conn.cpp
   resdata/well_info.cpp
   resdata/well_ts.cpp
-  resdata/well_conn_collection.cpp
   resdata/well_segment.cpp
   resdata/well_segment_collection.cpp
   resdata/well_branch_collection.cpp
@@ -379,6 +378,39 @@ set_target_properties(
   _rd_sum PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                      ${PROJECT_SOURCE_DIR}/python/resdata/summary)
 
+# -----------------------------------------------------------------
+# Pybind11 extension module: resdata.well._well_state
+# -----------------------------------------------------------------
+pybind11_add_module(_well_state resdata/well_state_pybind.cpp
+                    resdata/cwrap_pybind.cpp)
+target_link_libraries(_well_state PRIVATE resdata fmt::fmt)
+target_include_directories(
+  _well_state
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+          ${CMAKE_CURRENT_BINARY_DIR}/include
+          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+if(SKBUILD)
+  set(_well_state_install_dir "python/resdata/well")
+  # libresdata.so.6 is installed at python/resdata/.libs/ make _well_state.so
+  # find it
+  if(APPLE)
+    set_target_properties(_well_state PROPERTIES INSTALL_RPATH
+                                                 "@loader_path/../.libs")
+  else()
+    set_target_properties(_well_state PROPERTIES INSTALL_RPATH
+                                                 "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_well_state_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _well_state LIBRARY DESTINATION ${_well_state_install_dir})
+# When running tests against the build tree (editable install), put the
+# extension directly next to rd_well_state.py so it can be imported as
+# resdata.well._well_state without an install step.
+set_target_properties(
+  _well_state PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                         ${PROJECT_SOURCE_DIR}/python/resdata/well)
+
 if(NOT BUILD_TESTS)
   return()
 endif()
@@ -502,7 +534,6 @@ foreach(
   rd_filenames
   rd_make_date_no_shift
   rd_make_date_shift
-  well_conn_collection
   well_branch_collection
   well_conn
   well_state
@@ -588,10 +619,8 @@ foreach(
   well_state_load
   well_state_load_missing_RSEG
   well_segment_load
-  well_segment_branch_conn_load
   well_info
   well_conn_CF
-  well_conn_load
   well_ts
   well_dualp
   well_lgr_load)
@@ -737,10 +766,6 @@ add_test(
 add_test(NAME well_segment_load COMMAND well_segment_load
                                         ${_resdatapath}/MSWcase/MSW_CASE.X0021)
 
-add_test(NAME well_segment_branch_conn_load
-         COMMAND well_segment_branch_conn_load
-                 ${_resdatapath}/MSWcase/MSW_CASE.X0021)
-
 add_test(NAME well_info1 COMMAND well_info ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
 add_test(
   NAME well_info2
@@ -751,22 +776,6 @@ add_test(
 
 add_test(NAME well_conn_CF COMMAND well_conn_CF
                                    ${_resdatapath}/Gurbat/ECLIPSE.X0060)
-
-add_test(NAME well_conn_load1 COMMAND well_conn_load
-                                      ${_resdatapath}/Gurbat/ECLIPSE.X0030 F)
-add_test(NAME well_conn_load2
-         COMMAND well_conn_load
-                 ${_resdatapath}/10kcase/TEST10K_FLT_LGR_NNC.X0021 F)
-add_test(NAME well_conn_load3 COMMAND well_conn_load
-                                      ${_resdatapath}/MSWcase/MSW_CASE.X0021 T)
-add_test(NAME well_conn_load4
-         COMMAND well_conn_load
-                 ${_resdatapath}/AmalgLGRcase/TESTCASE_AMALG_LGR.X0021 F)
-add_test(NAME well_conn_load5 COMMAND well_conn_load
-                                      ${_resdatapath}/DualPoro/DUALPORO.X0009 F)
-add_test(NAME well_conn_load6
-         COMMAND well_conn_load
-                 ${_resdatapath}/0.9.2_LGR/BASE_REF_XY3Z1_T30_WI.X0003 F)
 
 add_test(NAME well_ts COMMAND well_ts ${_resdatapath}/CO2case/BASE_CASE)
 

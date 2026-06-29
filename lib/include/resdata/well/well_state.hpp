@@ -8,7 +8,6 @@
 
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_const.hpp>
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_segment_collection.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 
@@ -62,11 +61,6 @@ const well_conn_type *
 well_state_get_global_wellhead(const well_state_type *well_state);
 well_type_enum well_state_translate_rd_type_int(int int_type);
 
-const well_conn_collection_type *
-well_state_get_grid_connections(const well_state_type *well_state,
-                                const char *grid_name);
-const well_conn_collection_type *
-well_state_get_global_connections(const well_state_type *well_state);
 bool well_state_has_grid_connections(const well_state_type *well_state,
                                      const char *grid_name);
 bool well_state_has_global_connections(const well_state_type *well_state);
@@ -84,6 +78,14 @@ UTIL_IS_INSTANCE_HEADER(well_state);
 
 #ifdef __cplusplus
 }
+#include <vector>
+#include <string>
+
+const std::vector<well_conn_ptr> *
+well_state_get_grid_connections(const well_state_type *well_state,
+                                const std::string &grid_name);
+const std::vector<well_conn_ptr> *
+well_state_get_global_connections(const well_state_type *well_state);
 #endif
 
 #endif

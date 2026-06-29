@@ -11,7 +11,7 @@
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_segment.hpp>
-#include <resdata/well/well_conn_collection.hpp>
+#include <vector>
 
 #define WELL_SEGMENT_TYPE_ID 2209166
 
@@ -22,9 +22,7 @@ struct well_segment_struct {
     int branch_id;
     int outlet_segment_id; // This is in the global index space given by the ISEG keyword.
     well_segment_type *outlet_segment;
-    std::map<std::string,
-             well_conn_collection_type *>
-        connections; // hash_type<grid_name , well_conn_collection>;
+    std::map<std::string, std::vector<well_conn_type *>> connections;
 
     double
         depth; // The depth of the segment node; furthest away from the wellhead.
@@ -93,12 +91,7 @@ well_segment_type *well_segment_alloc_from_kw(
     }
 }
 
-void well_segment_free(well_segment_type *segment) {
-    for (auto &pair : segment->connections)
-        well_conn_collection_free(pair.second);
-
-    delete segment;
-}
+void well_segment_free(well_segment_type *segment) { delete segment; }
 
 bool well_segment_active(const well_segment_type *segment) {
     if (segment->branch_id == WELL_SEGMENT_BRANCH_INACTIVE_VALUE)
@@ -182,26 +175,20 @@ bool well_segment_add_connection(well_segment_type *segment,
                                  const char *grid_name, well_conn_type *conn) {
     int conn_segment_id = well_conn_get_segment_id(conn);
     if (conn_segment_id == segment->segment_id) {
-
-        if (!well_segment_has_grid_connections(segment, grid_name))
-            segment->connections[grid_name] = well_conn_collection_alloc();
-
-        well_conn_collection_add_ref(segment->connections[grid_name], conn);
+        segment->connections[grid_name].push_back(conn);
         return true;
     } else
         return false;
 }
 
-const well_conn_collection_type *
+const std::vector<well_conn_type *> *
 well_segment_get_connections(const well_segment_type *segment,
                              const char *grid_name) {
-    if (well_segment_has_grid_connections(segment, grid_name))
-        return segment->connections.at(grid_name);
-    else
-        return NULL;
+    auto it = segment->connections.find(grid_name);
+    return it != segment->connections.end() ? &it->second : nullptr;
 }
 
-const well_conn_collection_type *
+const std::vector<well_conn_type *> *
 well_segment_get_global_connections(const well_segment_type *segment) {
     return well_segment_get_connections(segment, RD_GRID_GLOBAL_GRID);
 }

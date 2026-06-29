@@ -1,5 +1,6 @@
 from cwrap import BaseCClass
 
+import resdata.well._well_state as _well_state
 from resdata import ResdataPrototype
 from resdata.util.util import CTime
 
@@ -10,13 +11,6 @@ from .well_type_enum import WellType
 
 class WellState(BaseCClass):
     TYPE_NAME = "rd_well_state"
-
-    _global_connections_size = ResdataPrototype(
-        "int well_conn_collection_get_size(void*)", bind=False
-    )
-    _global_connections_iget = ResdataPrototype(
-        "rd_well_connect_ref well_conn_collection_iget(void*, int)", bind=False
-    )
     _segment_collection_size = ResdataPrototype(
         "int well_segment_collection_get_size(void*)", bind=False
     )
@@ -25,9 +19,6 @@ class WellState(BaseCClass):
     )
     _has_global_connections = ResdataPrototype(
         "bool well_state_has_global_connections(rd_well_state)"
-    )
-    _get_global_connections = ResdataPrototype(
-        "void* well_state_get_global_connections(rd_well_state)"
     )
     _get_segment_collection = ResdataPrototype(
         "void* well_state_get_segments(rd_well_state)"
@@ -95,18 +86,11 @@ class WellState(BaseCClass):
         return self._has_global_connections()
 
     def globalConnections(self) -> list[WellConnection]:
-        global_connections = self._get_global_connections()
-        if global_connections is None:
-            return []
-        count = self._global_connections_size(global_connections)
+        """The list of well connections for the global grid.
 
-        values = []
-        for index in range(count):
-            value = self._global_connections_iget(global_connections, index).setParent(
-                self
-            )
-            values.append(value)
-        return values
+        Note: Constructs a new list of references to the well connections.
+        """
+        return _well_state.global_connections(self)
 
     def __len__(self) -> int:
         return self.numSegments()

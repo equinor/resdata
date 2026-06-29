@@ -6,7 +6,6 @@
 
 #include <resdata/rd_util.hpp>
 
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_conn.hpp>
 
 void test_conn_rate() {

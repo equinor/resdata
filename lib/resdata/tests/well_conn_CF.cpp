@@ -10,7 +10,6 @@
 #include <resdata/rd_kw_magic.hpp>
 
 #include <resdata/well/well_conn.hpp>
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_const.hpp>
 
 void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,

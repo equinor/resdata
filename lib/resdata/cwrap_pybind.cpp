@@ -14,6 +14,7 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_subsidence.hpp>
 #include <resdata/rd_region.hpp>
+#include <resdata/well/well_state.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -266,4 +267,28 @@ template <> rd_region_type *from_cwrap<rd_region_type>(py::handle obj) {
                              static_cast<std::string>(py::repr(obj)));
 
     return cast_cwrap<rd_region_type>(obj);
+}
+
+py::object WellState() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.well").attr("WellState");
+    }
+    return cls;
+}
+
+template <> well_state_type *from_cwrap<well_state_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellState()))
+        throw py::type_error("Expected WellState, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<well_state_type>(obj);
+}
+
+py::object WellConnection() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.well").attr("WellConnection");
+    }
+    return cls;
 }

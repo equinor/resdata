@@ -4,7 +4,6 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
 
-#include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
 
@@ -36,11 +35,6 @@ bool well_segment_has_grid_connections(const well_segment_type *segment,
 bool well_segment_has_global_grid_connections(const well_segment_type *segment);
 bool well_segment_add_connection(well_segment_type *segment,
                                  const char *grid_name, well_conn_type *conn);
-const well_conn_collection_type *
-well_segment_get_connections(const well_segment_type *segment,
-                             const char *grid_name);
-const well_conn_collection_type *
-well_segment_get_global_connections(const well_segment_type *segment);
 double well_segment_get_depth(const well_segment_type *segment);
 double well_segment_get_length(const well_segment_type *segment);
 double well_segment_get_total_length(const well_segment_type *segment);
@@ -50,11 +44,18 @@ UTIL_IS_INSTANCE_HEADER(well_segment);
 
 #ifdef __cplusplus
 }
+#include <vector>
+
 well_segment_type *well_segment_alloc_from_kw(
     const rd_kw_type *iseg_kw, const well_rseg_loader_type *rseg_loader,
     const RSTHead &header, int well_nr, int segment_index, int segment_id);
 bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
                               const RSTHead &rst_head);
 
+const std::vector<well_conn_type *> *
+well_segment_get_connections(const well_segment_type *segment,
+                             const char *grid_name);
+const std::vector<well_conn_type *> *
+well_segment_get_global_connections(const well_segment_type *segment);
 #endif
 #endif
