@@ -2,10 +2,13 @@
 #include <cstring>
 #include <cctype>
 
+#include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 #include <resdata/rd_type.hpp>
+#include <stdexcept>
+#include <string>
 
 #define RD_TYPE_NAME_CHAR "CHAR"
 #define RD_TYPE_NAME_FLOAT "REAL"
@@ -134,7 +137,7 @@ rd_data_type rd_type_create_from_name(const char *type_name) {
     else if (strncmp(type_name, RD_TYPE_NAME_BOOL, RD_TYPE_LENGTH) == 0)
         return RD_BOOL;
     else {
-        util_abort("%s: unrecognized type name:%s \n", __func__, type_name);
+        throw std::invalid_argument(fmt::format("unrecognized type name:{}", std::string(type_name)));
     }
 }
 

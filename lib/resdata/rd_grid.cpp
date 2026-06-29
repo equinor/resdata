@@ -1688,8 +1688,13 @@ static void rd_grid_update_index(rd_grid_type *rd_grid) {
 
 static rd_coarse_cell_type *
 rd_grid_get_or_create_coarse_cell(rd_grid_type *rd_grid, int coarse_nr) {
+
+    if (coarse_nr < 0)
+        throw std::invalid_argument("Negative coarse number for cell in file");
+
     while (static_cast<int>(rd_grid->coarse_cells.size()) <= coarse_nr)
         rd_grid->coarse_cells.emplace_back(nullptr, &rd_coarse_cell_free);
+
     if (!rd_grid->coarse_cells[coarse_nr])
         rd_grid->coarse_cells[coarse_nr].reset(rd_coarse_cell_alloc());
 

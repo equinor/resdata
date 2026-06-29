@@ -7,6 +7,7 @@
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_coarse_cell.hpp>
+#include <stdexcept>
 
 /*
 
@@ -258,10 +259,9 @@ void rd_coarse_cell_update_index(rd_coarse_cell_type *coarse_cell,
     if (int_vector_size(coarse_cell->active_values) > 1) {
         if (int_vector_reverse_iget(coarse_cell->active_values, -2) !=
             active_value)
-            util_abort(
-                "%s: Sorry - current coarse cell implementation requires that "
-                "all active cells have the same active value\n",
-                __func__);
+            throw std::invalid_argument(
+                "Coarse cell implementation requires that "
+                "all active cells have the same active value");
     }
 }
 

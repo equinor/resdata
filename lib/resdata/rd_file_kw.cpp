@@ -163,15 +163,17 @@ bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
 }
 
 static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
+    if (!file_kw->kw)
+        throw std::invalid_argument("Found invalid keyword in file");
     if (!rd_type_is_equal(rd_file_kw_get_data_type(file_kw),
                           rd_kw_get_data_type(file_kw->kw)))
-        util_abort("%s: type mismatch between header and file.\n", __func__);
+        throw std::invalid_argument("type mismatch between header and file.");
 
     if (file_kw->kw_size != rd_kw_get_size(file_kw->kw))
-        util_abort("%s: size mismatch between header and file.\n", __func__);
+        throw std::invalid_argument("size mismatch between header and file.");
 
     if (strcmp(file_kw->header, rd_kw_get_header(file_kw->kw)) != 0)
-        util_abort("%s: name mismatch between header and file.\n", __func__);
+        throw std::invalid_argument("name mismatch between header and file.");
 }
 
 static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
