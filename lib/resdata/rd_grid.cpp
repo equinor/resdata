@@ -4306,11 +4306,11 @@ double rd_grid_get_property(const rd_grid_type *rd_grid,
             return -1; /* Tried to lookup an inactive cell. */
 
     } else {
-        std::unique_ptr<char> type_name(rd_type_alloc_name(data_type));
+        std::string type_name = rd_type_name(data_type);
         throw std::invalid_argument(fmt::format(
             "rd_grid_get_property: can not lookup type:{} - keyword type must "
             "be numeric.",
-            type_name.get()));
+            type_name));
     }
 }
 
@@ -4357,11 +4357,11 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
             }
         }
     } else {
-        std::unique_ptr<char> type_name(rd_type_alloc_name(data_type));
+        std::string type_name = rd_type_name(data_type);
         throw std::invalid_argument(fmt::format(
             "rd_grid_get_column_property: can not lookup type:{} - keyword "
             "type must be numeric.",
-            type_name.get()));
+            type_name));
     }
 }
 
@@ -4401,10 +4401,9 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
         }
 
         if (default_ptr == NULL) {
-            std::unique_ptr<char> type_name(
-                rd_type_alloc_name(rd_kw_get_data_type(rd_kw)));
+            std::string type_name = rd_type_name(rd_kw_get_data_type(rd_kw));
             throw std::invalid_argument(fmt::format(
-                "rd_grid_grdecl_fprintf_kw: invalid type {}", type_name.get()));
+                "rd_grid_grdecl_fprintf_kw: invalid type {}", type_name));
         }
 
         {

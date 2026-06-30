@@ -250,7 +250,7 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
     if (rd_type_is_mess(rd_kw->data_type))
         return buffer;
 
-    if (rd_kw->data) {
+    if (rd_kw->data && buffer_size > 0) {
         memcpy(buffer, rd_kw->data, buffer_size);
         util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
     }
@@ -1571,7 +1571,7 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
                         fprintf(stream, write_fmt, int_value);
                     } break;
                     case (RD_BOOL_TYPE): {
-                        bool bool_value = ((bool *)data_ptr)[0];
+                        bool bool_value = ((unsigned char *)data_ptr)[0] != 0;
                         if (bool_value)
                             fprintf(stream, write_fmt, BOOL_TRUE_CHAR);
                         else

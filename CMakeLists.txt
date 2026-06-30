@@ -231,6 +231,9 @@ if(ENABLE_ASAN OR ENABLE_UBSAN)
     if(ENABLE_UBSAN)
       message(STATUS "UndefinedBehaviorSanitizer enabled")
       set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fsanitize=undefined")
+      # Abort on the first undefined-behavior error instead of the default
+      # "recover" behavior of printing and continuing.
+      set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fno-sanitize-recover=undefined")
     endif()
     set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fno-omit-frame-pointer -g")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
