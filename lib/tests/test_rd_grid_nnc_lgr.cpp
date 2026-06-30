@@ -284,8 +284,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
         THEN("The regenerated COORD keyword contains inv-transformed "
              "(local-frame) pillar coordinates") {
-            auto coord_kw =
-                rd_kw_ptr(rd_grid_alloc_coord_kw(grid.get()), &rd_kw_free);
+            auto coord_kw = rd_grid_alloc_coord_kw(grid.get());
             REQUIRE(coord_kw != nullptr);
             const int nx = rd_grid_get_nx(grid.get());
             const int ny = rd_grid_get_ny(grid.get());

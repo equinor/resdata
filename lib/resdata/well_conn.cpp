@@ -203,9 +203,9 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
         int segment_id =
             rd_kw_iget_int(icon_kw, icon_offset + ICON_SEGMENT_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
-        well_conn_type *conn = well_conn_alloc__(
+        well_conn_ptr conn(well_conn_alloc__(
             i, j, k, connection_factor, dir, is_open, segment_id,
-            matrix_connection, header.unit_system);
+            matrix_connection, header.unit_system));
 
         if (xcon_kw) {
             const int xcon_offset =
@@ -228,7 +228,7 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
        MSW + LGR well.
     */
 
-        return conn;
+        return conn.release();
     }
 }
 

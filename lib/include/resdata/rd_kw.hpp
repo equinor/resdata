@@ -242,6 +242,8 @@ inline rd_kw_ptr make_rd_kw(const char *header, int size,
     return {rd_kw_alloc(header, size, data_type), rd_kw_free};
 }
 
+inline rd_kw_ptr make_rd_kw() { return {rd_kw_alloc_empty(), rd_kw_free}; }
+
 inline rd_kw_ptr make_rd_kw(const char *header, int size,
                             rd_data_type data_type, const void *data) {
     return {rd_kw_alloc_new(header, size, data_type, data), rd_kw_free};

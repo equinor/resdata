@@ -1,6 +1,7 @@
 #include <ctime>
 #include <cmath>
 
+#include <memory>
 #include <vector>
 
 #include <ert/util/util.hpp>
@@ -55,13 +56,13 @@ struct rd_sum_tstep_struct {
 
 static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
                                              const rd_smspec_type *smspec) {
-    rd_sum_tstep_type *tstep = new rd_sum_tstep_type();
-    UTIL_TYPE_ID_INIT(tstep, RD_SUM_TSTEP_ID);
+    auto tstep = std::make_unique<rd_sum_tstep_type>();
+    UTIL_TYPE_ID_INIT(tstep.get(), RD_SUM_TSTEP_ID);
     tstep->smspec = smspec;
     tstep->report_step = report_step;
     tstep->ministep = ministep_nr;
     tstep->data.resize(rd_smspec_get_params_size(smspec));
-    return tstep;
+    return tstep.release();
 }
 
 UTIL_SAFE_CAST_FUNCTION(rd_sum_tstep, RD_SUM_TSTEP_ID)
@@ -150,11 +151,12 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
     int data_size = rd_kw_get_size(params_kw);
 
     if (data_size == rd_smspec_get_params_size(smspec)) {
-        rd_sum_tstep_type *ministep =
-            rd_sum_tstep_alloc(report_step, ministep_nr, smspec);
+        std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
+            ministep(rd_sum_tstep_alloc(report_step, ministep_nr, smspec),
+                     &rd_sum_tstep_free);
         rd_kw_get_memcpy_data(params_kw, ministep->data.data());
-        rd_sum_tstep_set_time_info(ministep, smspec);
-        return ministep;
+        rd_sum_tstep_set_time_info(ministep.get(), smspec);
+        return ministep.release();
     } else {
         /*
        This is actually a fatal error / bug; the difference in smspec
@@ -178,15 +180,15 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
 rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
                                           float sim_seconds,
                                           const rd_smspec_type *smspec) {
-    rd_sum_tstep_type *tstep =
-        rd_sum_tstep_alloc(report_step, ministep, smspec);
+    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
+        rd_sum_tstep_alloc(report_step, ministep, smspec), &rd_sum_tstep_free);
     tstep->data = rd_smspec_get_params_default(smspec);
 
     rd_sum_tstep_set_time_info_from_seconds(
-        tstep, rd_smspec_get_start_time(smspec), sim_seconds);
-    rd_sum_tstep_iset(tstep, rd_smspec_get_time_index(smspec),
+        tstep.get(), rd_smspec_get_start_time(smspec), sim_seconds);
+    rd_sum_tstep_iset(tstep.get(), rd_smspec_get_time_index(smspec),
                       sim_seconds / rd_smspec_get_time_seconds(smspec));
-    return tstep;
+    return tstep.release();
 }
 
 double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
@@ -223,25 +225,21 @@ void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
                          const int *index_map, int index_map_size,
                          ERT::FortIO &fortio) {
     {
-        rd_kw_type *ministep_kw = rd_kw_alloc(MINISTEP_KW, 1, RD_INT);
-        rd_kw_iset_int(ministep_kw, 0, ministep->ministep);
-        rd_kw_fwrite(ministep_kw, fortio);
-        rd_kw_free(ministep_kw);
+        auto ministep_kw = make_rd_kw(MINISTEP_KW, 1, RD_INT);
+        rd_kw_iset_int(ministep_kw.get(), 0, ministep->ministep);
+        rd_kw_fwrite(ministep_kw.get(), fortio);
     }
 
     {
         int compact_size = index_map_size;
-        rd_kw_type *params_kw = rd_kw_alloc(PARAMS_KW, compact_size, RD_FLOAT);
+        auto params_kw = make_rd_kw(PARAMS_KW, compact_size, RD_FLOAT);
 
-        float *data = (float *)rd_kw_get_ptr(params_kw);
+        float *data = (float *)rd_kw_get_ptr(params_kw.get());
 
-        {
-            int i;
-            for (i = 0; i < compact_size; i++)
-                data[i] = ministep->data[index_map[i]];
-        }
-        rd_kw_fwrite(params_kw, fortio);
-        rd_kw_free(params_kw);
+        for (int i = 0; i < compact_size; i++)
+            data[i] = ministep->data[index_map[i]];
+
+        rd_kw_fwrite(params_kw.get(), fortio);
     }
 }
 

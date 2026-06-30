@@ -386,10 +386,10 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
                 }
 
             {
-                rd_kw_type *rd_kw =
-                    rd_kw_alloc_new(file_header, kw_size, data_type, NULL);
-                rd_kw_set_data_ptr(rd_kw, data.release());
-                return rd_kw;
+                auto rd_kw = make_rd_kw(file_header, kw_size, data_type, NULL);
+                rd_kw_set_data_ptr(rd_kw.get(), data.get());
+                data.release();
+                return rd_kw.release();
             }
 
         } else

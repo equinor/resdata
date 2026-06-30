@@ -274,7 +274,7 @@ rd_file_view_type *rd_file_get_summary_view(rd_file_type *rd_file,
 static void rd_file_scan(rd_file_type *rd_file) {
     rd_file->fortio->fseek(0, SEEK_SET);
     {
-        rd_kw_type *work_kw = rd_kw_alloc_new("WORK-KW", 0, RD_INT, NULL);
+        rd_kw_ptr work_kw = make_rd_kw("WORK-KW", 0, RD_INT, nullptr);
 
         while (true) {
             if (rd_file->fortio->read_at_eof())
@@ -283,25 +283,25 @@ static void rd_file_scan(rd_file_type *rd_file) {
             {
                 offset_type current_offset = rd_file->fortio->ftell();
                 rd_read_status_enum read_status =
-                    rd_kw_fread_header(work_kw, *rd_file->fortio);
+                    rd_kw_fread_header(work_kw.get(), *rd_file->fortio);
                 if (read_status == RD_KW_READ_FAIL)
                     break;
 
                 if (read_status == RD_KW_READ_OK) {
-                    rd_file_kw_type *file_kw =
-                        rd_file_kw_alloc(work_kw, current_offset);
+                    std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)>
+                        file_kw(rd_file_kw_alloc(work_kw.get(), current_offset),
+                                &rd_file_kw_free);
 
-                    if (rd_file_kw_fskip_data(file_kw, *rd_file->fortio))
-                        rd_file_view_add_kw(rd_file->global_view, file_kw);
-                    else {
-                        rd_file_kw_free(file_kw);
+                    if (rd_file_kw_fskip_data(file_kw.get(),
+                                              *rd_file->fortio)) {
+                        rd_file_view_add_kw(rd_file->global_view,
+                                            file_kw.release());
+                    } else {
                         break;
                     }
                 }
             }
         }
-
-        rd_kw_free(work_kw);
     }
     rd_file_view_make_index(rd_file->global_view);
 }
@@ -321,37 +321,37 @@ static void rd_file_select_global(rd_file_type *rd_file) {
    file until rd_file_close() is called.
 */
 
-static ERT::FortIO *rd_file_alloc_fortio(const char *filename, int flags) {
-    ERT::FortIO *fortio = NULL;
+static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
+                                                         int flags) {
     bool fmt_file;
-
     rd_fmt_file(filename, &fmt_file);
 
     if (rd_file_view_check_flags(flags, RD_FILE_WRITABLE))
-        fortio = new ERT::FortIO(
+        return std::make_unique<ERT::FortIO>(
             filename, std::ios_base::in | std::ios_base::out, fmt_file);
     else
-        fortio = new ERT::FortIO(filename, std::ios_base::in, fmt_file);
+        return std::make_unique<ERT::FortIO>(filename, std::ios_base::in,
+                                             fmt_file);
 
-    return fortio;
+    return nullptr;
 }
 
 rd_file_type *rd_file_open(const char *filename, int flags) {
-    ERT::FortIO *fortio = rd_file_alloc_fortio(filename, flags);
+    auto fortio = rd_file_alloc_fortio(filename, flags);
 
     if (fortio) {
-        rd_file_type *rd_file = rd_file_alloc_empty(flags);
-        rd_file->fortio = fortio;
+        rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
+        rd_file->fortio = fortio.release();
         rd_file->global_view = rd_file_view_alloc(
             rd_file->fortio, &rd_file->flags, rd_file->inv_view, true);
 
-        rd_file_scan(rd_file);
-        rd_file_select_global(rd_file);
+        rd_file_scan(rd_file.get());
+        rd_file_select_global(rd_file.get());
 
         if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
             rd_file->fortio->fclose_stream();
 
-        return rd_file;
+        return rd_file.release();
     } else
         return NULL;
 }
@@ -634,26 +634,22 @@ rd_file_type *rd_file_fast_open(const char *file_name,
     if (!istream)
         return NULL;
 
-    rd_file_type *rd_file = NULL;
-
     if (rd_file_index_valid1(file_name, istream.get())) {
-        ERT::FortIO *fortio = rd_file_alloc_fortio(file_name, flags);
+        auto fortio = rd_file_alloc_fortio(file_name, flags);
         if (fortio) {
-            rd_file = rd_file_alloc_empty(flags);
-            rd_file->fortio = fortio;
+            rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
+            rd_file->fortio = fortio.release();
             rd_file->global_view =
                 rd_file_view_fread_alloc(rd_file->fortio, &rd_file->flags,
                                          rd_file->inv_view, istream.get());
             if (rd_file->global_view) {
-                rd_file_select_global(rd_file);
+                rd_file_select_global(rd_file.get());
                 if (rd_file_view_check_flags(rd_file->flags,
                                              RD_FILE_CLOSE_STREAM))
                     rd_file->fortio->fclose_stream();
-            } else {
-                rd_file_close(rd_file);
-                rd_file = NULL;
+                return rd_file.release();
             }
         }
     }
-    return rd_file;
+    return NULL;
 }

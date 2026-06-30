@@ -253,6 +253,22 @@ struct close_guard {
     rd_file_view_type *file_view;
     bool was_set;
 };
+
+struct transaction_guard {
+    explicit transaction_guard(rd_file_view_type *file_view)
+        : file_view(file_view),
+          transaction(rd_file_view_start_transaction(file_view)) {}
+
+    ~transaction_guard() {
+        if (transaction)
+            rd_file_view_end_transaction(file_view, transaction);
+    }
+    transaction_guard(const transaction_guard &) = delete;
+    transaction_guard &operator=(const transaction_guard &) = delete;
+
+    rd_file_view_type *file_view;
+    rd_file_transaction_type *transaction;
+};
 } // namespace
 
 /**
@@ -276,11 +292,14 @@ static void well_info_add_wells2(well_info_type *well_info,
     close_guard close_stream_guard(rst_view);
     auto global_header = RSTHead::read(rst_view, report_nr);
     for (int well_nr = 0; well_nr < global_header.nwells; well_nr++) {
-        well_state_type *well_state =
+        std::unique_ptr<well_state_type, decltype(&well_state_free)> well_state(
             well_state_alloc_from_file2(rst_view, well_info->grid, report_nr,
-                                        well_nr, load_segment_information);
-        if (well_state != NULL)
-            well_info_add_state(well_info, well_state);
+                                        well_nr, load_segment_information),
+            well_state_free);
+        if (well_state) {
+            well_info_add_state(well_info, well_state.get());
+            well_state.release();
+        }
     }
 }
 
@@ -308,10 +327,9 @@ static void well_info_add_UNRST_wells2(well_info_type *well_info,
             rd_file_view_iget_named_kw(step_view, SEQNUM_KW, 0);
         int report_nr = rd_kw_iget_int(seqnum_kw, 0);
 
-        rd_file_transaction_type *t = rd_file_view_start_transaction(rst_view);
+        transaction_guard transaction(rst_view);
         well_info_add_wells2(well_info, step_view, report_nr,
                              load_segment_information);
-        rd_file_view_end_transaction(rst_view, t);
     }
 }
 

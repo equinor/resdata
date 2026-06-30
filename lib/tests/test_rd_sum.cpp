@@ -356,8 +356,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         SECTION("Allocated time and data vectors") {
-            auto times = std::unique_ptr<time_t_vector_type,
-                                         void (*)(time_t_vector_type *)>(
+            time_t_vector_ptr times(
                 rd_sum_alloc_time_vector(rd_sum.get(), false),
                 &time_t_vector_free);
             REQUIRE(time_t_vector_size(times.get()) ==
@@ -366,8 +365,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
 
             const int param_index =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
-            auto data = std::unique_ptr<double_vector_type,
-                                        void (*)(double_vector_type *)>(
+            auto data = double_vector_ptr(
                 rd_sum_alloc_data_vector(rd_sum.get(), param_index, false),
                 &double_vector_free);
             REQUIRE(double_vector_size(data.get()) ==
@@ -386,14 +384,12 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         WHEN("calling rd_sum_alloc_time_solution") {
-            using time_vec_ptr =
-                std::unique_ptr<time_t_vector_type,
-                                void (*)(time_t_vector_type *)>;
             auto solve = [&](const char *key, double cmp,
                              bool clamp_lower = false) {
-                return time_vec_ptr(rd_sum_alloc_time_solution(
-                                        rd_sum.get(), key, cmp, clamp_lower),
-                                    &time_t_vector_free);
+                return time_t_vector_ptr(
+                    rd_sum_alloc_time_solution(rd_sum.get(), key, cmp,
+                                               clamp_lower),
+                    &time_t_vector_free);
             };
 
             const double day = spec.ministep_length;
@@ -490,11 +486,10 @@ TEST_CASE_METHOD(Tmpdir,
 
     auto rd_sum = read_summary(case_path);
 
-    auto sol =
-        std::unique_ptr<time_t_vector_type, void (*)(time_t_vector_type *)>(
-            rd_sum_alloc_time_solution(rd_sum.get(), "BPR:567", 1.5,
-                                       /*rates_clamp_lower=*/false),
-            &time_t_vector_free);
+    time_t_vector_ptr sol(
+        rd_sum_alloc_time_solution(rd_sum.get(), "BPR:567", 1.5,
+                                   /*rates_clamp_lower=*/false),
+        &time_t_vector_free);
 
     REQUIRE(time_t_vector_size(sol.get()) == 2);
 
@@ -718,8 +713,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     }
 
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
-    auto restart_file = rd_file_ptr(
-        rd_file_open((restart_name + smspec_ext).c_str(), 0), &rd_file_close);
+    auto restart_file = open_rd_file(restart_name + smspec_ext, 0);
     REQUIRE(restart_file != nullptr);
     rd_file_view_type *view = rd_file_get_global_view(restart_file.get());
     REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
@@ -762,8 +756,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
         rd_sum_fwrite(rd_sum.get());
     }
 
-    auto smspec_file = rd_file_ptr(rd_file_open((name + ".SMSPEC").c_str(), 0),
-                                   &rd_file_close);
+    auto smspec_file = open_rd_file(name + ".SMSPEC", 0);
     rd_file_view_type *view = rd_file_get_global_view(smspec_file.get());
     REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
     rd_kw_type *restart_kw = rd_file_view_iget_named_kw(view, RESTART_KW, 0);
@@ -1244,9 +1237,8 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                                const std::vector<double> &expected) {
             const int idx =
                 rd_sum_get_general_var_params_index(sum, key.c_str());
-            auto data = std::unique_ptr<double_vector_type,
-                                        void (*)(double_vector_type *)>(
-                rd_sum_alloc_data_vector(sum, idx, false), &double_vector_free);
+            double_vector_ptr data(rd_sum_alloc_data_vector(sum, idx, false),
+                                   &double_vector_free);
             REQUIRE(static_cast<size_t>(double_vector_size(data.get())) ==
                     expected.size());
             for (size_t j = 0; j < expected.size(); ++j)
@@ -1334,12 +1326,8 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         }
         WHEN("CASE3 is post-processed into CASE4 by appending a duplicate "
              "BPR keyword and a WTPRWI1 placeholder") {
-            auto smspec_in =
-                rd_file_ptr(rd_file_open((case3_path + ".SMSPEC").c_str(), 0),
-                            &rd_file_close);
-            auto sum_in =
-                rd_file_ptr(rd_file_open((case3_path + ".UNSMRY").c_str(), 0),
-                            &rd_file_close);
+            auto smspec_in = open_rd_file(case3_path + ".SMSPEC", 0);
+            auto sum_in = open_rd_file(case3_path + ".UNSMRY", 0);
 
             rd_kw_type *keywords =
                 rd_file_iget_named_kw(smspec_in.get(), "KEYWORDS", 0);

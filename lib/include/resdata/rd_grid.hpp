@@ -88,9 +88,9 @@ rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes);
 rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
                                         double dy, double dz,
                                         const int *actnum);
-rd_kw_type *rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size);
+rd_kw_ptr rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size);
 std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
-rd_kw_type *rd_grid_alloc_coord_kw(const rd_grid_type *grid);
+rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid);
 
 bool rd_grid_exists(const char *case_input);
 
@@ -163,8 +163,8 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
 
 int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c);
 
-rd_kw_type *rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
-rd_kw_type *rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
+rd_kw_ptr rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
+rd_kw_ptr rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid);
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid);
 

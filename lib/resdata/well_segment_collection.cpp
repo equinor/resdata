@@ -1,4 +1,5 @@
 
+#include <memory>
 #include <vector>
 
 #include <ert/util/util.hpp>
@@ -106,15 +107,17 @@ int well_segment_collection_load_from_kw(
             for (int segment_index = 0; segment_index < rst_head.nsegmx;
                  segment_index++) {
                 int segment_id = segment_index + WELL_SEGMENT_OFFSET;
-                well_segment_type *segment = well_segment_alloc_from_kw(
-                    iseg_kw, rseg_loader, rst_head, segment_well_nr,
-                    segment_index, segment_id);
+                std::unique_ptr<well_segment_type, decltype(&well_segment_free)>
+                    segment(well_segment_alloc_from_kw(
+                                iseg_kw, rseg_loader, rst_head, segment_well_nr,
+                                segment_index, segment_id),
+                            well_segment_free);
 
-                if (well_segment_active(segment)) {
-                    well_segment_collection_add(segment_collection, segment);
+                if (well_segment_active(segment.get())) {
+                    well_segment_collection_add(segment_collection,
+                                                segment.release());
                     segments_added++;
-                } else
-                    well_segment_free(segment);
+                }
             }
         }
     }

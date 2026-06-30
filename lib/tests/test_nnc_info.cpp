@@ -94,10 +94,7 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
 }
 
 TEST_CASE("NNC Vector", "[unittest]") {
-    using nnc_vector_ptr =
-        std::unique_ptr<nnc_vector_type, decltype(&nnc_vector_free)>;
-
-    auto nnc_vec = nnc_vector_ptr(nnc_vector_alloc(0), &nnc_vector_free);
+    auto nnc_vec = make_nnc_vector(0);
     REQUIRE(nnc_vec != nullptr);
     REQUIRE(nnc_vector_get_lgr_nr(nnc_vec.get()) == 0);
     REQUIRE(nnc_vector_get_size(nnc_vec.get()) == 0);

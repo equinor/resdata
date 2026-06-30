@@ -62,11 +62,11 @@ inline void write_egrid_gridhead(ERT::FortIO &fortio, int gnx, int gny, int gnz,
 }
 
 inline void write_egrid_grid_body(rd_grid_type *grid, ERT::FortIO &fortio) {
-    auto coord = rd_kw_ptr(rd_grid_alloc_coord_kw(grid), &rd_kw_free);
+    auto coord = rd_grid_alloc_coord_kw(grid);
     rd_kw_fwrite(coord.get(), fortio);
-    auto zcorn = rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid), &rd_kw_free);
+    auto zcorn = rd_grid_alloc_zcorn_kw(grid);
     rd_kw_fwrite(zcorn.get(), fortio);
-    auto actnum = rd_kw_ptr(rd_grid_alloc_actnum_kw(grid), &rd_kw_free);
+    auto actnum = rd_grid_alloc_actnum_kw(grid);
     rd_kw_fwrite(actnum.get(), fortio);
 }
 
@@ -401,9 +401,9 @@ inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     write_egrid_filehead(fortio, FILEHEAD_DUAL_POROSITY);
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
 
-    auto coord = rd_kw_ptr(rd_grid_alloc_coord_kw(grid.get()), &rd_kw_free);
+    auto coord = rd_grid_alloc_coord_kw(grid.get());
     rd_kw_fwrite(coord.get(), fortio);
-    auto zcorn = rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid.get()), &rd_kw_free);
+    auto zcorn = rd_grid_alloc_zcorn_kw(grid.get());
     rd_kw_fwrite(zcorn.get(), fortio);
 
     const int size = nx * ny * nz;

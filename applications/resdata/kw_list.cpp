@@ -35,13 +35,11 @@ void kw_list(const char *filename) {
                "--\n");
         printf("%s: \n", filename);
         ERT::FortIO fortio = ERT::FortIO(filename, std::ios_base::in, fmt_file);
-        rd_kw_type *rd_kw = rd_kw_alloc_empty();
-        while (rd_kw_fread_realloc(rd_kw, fortio))
-            rd_kw_summarize(rd_kw);
+        rd_kw_ptr rd_kw = make_rd_kw();
+        while (rd_kw_fread_realloc(rd_kw.get(), fortio))
+            rd_kw_summarize(rd_kw.get());
         printf("---------------------------------------------------------------"
                "--\n");
-
-        rd_kw_free(rd_kw);
     } else
         fprintf(stderr,
                 "Could not determine formatted/unformatted status of:%s - "

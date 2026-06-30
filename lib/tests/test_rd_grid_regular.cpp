@@ -368,8 +368,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             0.0, 1.0, 4.0, 6.0, 2.0, 4.0, 0.0, 2.0, 4.0, 6.0};
 
         SECTION("Keyword allocation") {
-            auto zcorn_kw =
-                rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid.get()), &rd_kw_free);
+            auto zcorn_kw = rd_grid_alloc_zcorn_kw(grid.get());
             REQUIRE(zcorn_kw != nullptr);
             REQUIRE(rd_kw_get_size(zcorn_kw.get()) ==
                     static_cast<int>(expected_zcorn.size()));
@@ -377,15 +376,13 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
                 REQUIRE(rd_kw_iget_float(zcorn_kw.get(), i) ==
                         expected_zcorn[i]);
 
-            auto actnum_kw =
-                rd_kw_ptr(rd_grid_alloc_actnum_kw(grid.get()), &rd_kw_free);
+            auto actnum_kw = rd_grid_alloc_actnum_kw(grid.get());
             REQUIRE(actnum_kw != nullptr);
             REQUIRE(rd_kw_get_size(actnum_kw.get()) == 8);
             for (int i = 0; i < 8; i++)
                 REQUIRE(rd_kw_iget_int(actnum_kw.get(), i) == actnum_data[i]);
 
-            auto coord_kw =
-                rd_kw_ptr(rd_grid_alloc_coord_kw(grid.get()), &rd_kw_free);
+            auto coord_kw = rd_grid_alloc_coord_kw(grid.get());
             REQUIRE(coord_kw != nullptr);
             REQUIRE(rd_kw_get_size(coord_kw.get()) ==
                     static_cast<int>(expected_coord.size()));
@@ -393,15 +390,13 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
                 REQUIRE(rd_kw_iget_float(coord_kw.get(), i) ==
                         expected_coord[i]);
 
-            auto volume_kw = rd_kw_ptr(
-                rd_grid_alloc_volume_kw(grid.get(), false), &rd_kw_free);
+            auto volume_kw = rd_grid_alloc_volume_kw(grid.get(), false);
             REQUIRE(volume_kw != nullptr);
             REQUIRE(rd_kw_get_size(volume_kw.get()) == 8);
             for (int i = 0; i < rd_kw_get_size(volume_kw.get()); i++)
                 REQUIRE(rd_kw_iget_double(volume_kw.get(), i) == 6.0);
 
-            auto volume_kw_active = rd_kw_ptr(
-                rd_grid_alloc_volume_kw(grid.get(), true), &rd_kw_free);
+            auto volume_kw_active = rd_grid_alloc_volume_kw(grid.get(), true);
             REQUIRE(volume_kw_active != nullptr);
             REQUIRE(rd_kw_get_size(volume_kw_active.get()) == 7);
             for (int i = 0; i < rd_kw_get_size(volume_kw_active.get()); i++)

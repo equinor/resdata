@@ -1,6 +1,7 @@
 #include <optional>
 #include <tuple>
 #include <algorithm>
+#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -285,10 +286,10 @@ PYBIND11_MODULE(_grid, m) {
         [](py::handle self) {
             auto rd_grid = from_cwrap<rd_grid_type>(self);
             int size = rd_grid_get_global_size(rd_grid);
-            int_vector_type *actnum = int_vector_alloc(size, 0);
-            rd_grid_init_actnum_data(rd_grid, int_vector_get_ptr(actnum));
+            int_vector_ptr actnum = make_int_vector(size, 0);
+            rd_grid_init_actnum_data(rd_grid, int_vector_get_ptr(actnum.get()));
 
-            return reinterpret_cast<std::uintptr_t>(actnum);
+            return reinterpret_cast<std::uintptr_t>(actnum.release());
         },
         py::return_value_policy::reference);
     m.def(
@@ -296,13 +297,13 @@ PYBIND11_MODULE(_grid, m) {
         [](py::handle self) {
             auto rd_grid = from_cwrap<rd_grid_type>(self);
             int size = rd_grid_get_global_size(rd_grid);
-            rd_kw_type *actnum = rd_kw_alloc("ACTNUM", size, RD_INT);
+            rd_kw_ptr actnum(rd_kw_alloc("ACTNUM", size, RD_INT), rd_kw_free);
             if (!actnum)
                 throw std::runtime_error(
                     fmt::format("Could not allocate ACTNUM of size {}", size));
-            rd_grid_init_actnum_data(rd_grid, rd_kw_get_int_ptr(actnum));
+            rd_grid_init_actnum_data(rd_grid, rd_kw_get_int_ptr(actnum.get()));
 
-            return reinterpret_cast<std::uintptr_t>(actnum);
+            return reinterpret_cast<std::uintptr_t>(actnum.release());
         },
         py::return_value_policy::reference);
     m.def("_compressed_kw_copy",
@@ -320,8 +321,10 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_create_volume_keyword",
         [](py::handle self, bool active_size) {
-            return reinterpret_cast<std::uintptr_t>(rd_grid_alloc_volume_kw(
-                from_cwrap<rd_grid_type>(self), active_size));
+            return reinterpret_cast<std::uintptr_t>(
+                rd_grid_alloc_volume_kw(from_cwrap<rd_grid_type>(self),
+                                        active_size)
+                    .release());
         },
         py::return_value_policy::reference);
     m.def("_use_mapaxes", [](py::handle self) {
@@ -331,21 +334,24 @@ PYBIND11_MODULE(_grid, m) {
         "_export_coord",
         [](py::handle self) {
             return reinterpret_cast<std::uintptr_t>(
-                rd_grid_alloc_coord_kw(from_cwrap<rd_grid_type>(self)));
+                rd_grid_alloc_coord_kw(from_cwrap<rd_grid_type>(self))
+                    .release());
         },
         py::return_value_policy::reference);
     m.def(
         "_export_zcorn",
         [](py::handle self) {
             return reinterpret_cast<std::uintptr_t>(
-                rd_grid_alloc_zcorn_kw(from_cwrap<rd_grid_type>(self)));
+                rd_grid_alloc_zcorn_kw(from_cwrap<rd_grid_type>(self))
+                    .release());
         },
         py::return_value_policy::reference);
     m.def(
         "_export_actnum",
         [](py::handle self) {
             return reinterpret_cast<std::uintptr_t>(
-                rd_grid_alloc_actnum_kw(from_cwrap<rd_grid_type>(self)));
+                rd_grid_alloc_actnum_kw(from_cwrap<rd_grid_type>(self))
+                    .release());
         },
         py::return_value_policy::reference);
     m.def(

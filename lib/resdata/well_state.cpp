@@ -141,7 +141,7 @@ UTIL_IS_INSTANCE_FUNCTION(well_state, WELL_STATE_TYPE_ID)
 well_state_type *well_state_alloc(const char *well_name, int global_well_nr,
                                   bool open, well_type_enum type, int report_nr,
                                   time_t valid_from) {
-    well_state_type *well_state = new well_state_type();
+    auto well_state = std::make_unique<well_state_type>();
     UTIL_TYPE_ID_INIT(well_state, WELL_STATE_TYPE_ID);
 
     well_state->name = well_name;
@@ -162,7 +162,7 @@ well_state_type *well_state_alloc(const char *well_name, int global_well_nr,
     /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
     if ((type == RD_WELL_ZERO) && open)
         util_abort("%s: Invalid type value for open wells.\n", __func__);
-    return well_state;
+    return well_state.release();
 }
 
 double well_state_get_oil_rate(const well_state_type *well_state) {
@@ -345,11 +345,11 @@ static void well_state_add_connections__(well_state_type *well_state,
                 rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
 
             for (int iconn = 0; iconn < num_connections; iconn++) {
-                well_conn_type *conn = well_conn_alloc_from_kw(
-                    icon_kw, scon_kw, xcon_kw, header, well_nr, iconn);
+                well_conn_ptr conn(well_conn_alloc_from_kw(
+                    icon_kw, scon_kw, xcon_kw, header, well_nr, iconn));
                 if (conn)
                     well_state->connections[grid_name].push_back(
-                        well_conn_ptr(conn));
+                        std::move(conn));
             }
         }
     }
@@ -466,7 +466,6 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
                                              int report_nr, int global_well_nr,
                                              bool load_segment_information) {
     if (rd_file_view_has_kw(file_view, IWEL_KW)) {
-        well_state_type *well_state = NULL;
         auto global_header = RSTHead::read(file_view, -1);
         const rd_kw_type *global_iwel_kw =
             rd_file_view_iget_named_kw(file_view, IWEL_KW, 0);
@@ -474,44 +473,44 @@ well_state_type *well_state_alloc_from_file2(rd_file_view_type *file_view,
             rd_file_view_iget_named_kw(file_view, ZWEL_KW, 0);
 
         const int iwel_offset = global_header.niwelz * global_well_nr;
+
+        bool open;
+        well_type_enum type = RD_WELL_ZERO;
         {
-            bool open;
-            well_type_enum type = RD_WELL_ZERO;
-            {
-                int int_state = rd_kw_iget_int(global_iwel_kw,
-                                               iwel_offset + IWEL_STATUS_INDEX);
-                if (int_state > 0)
-                    open = true;
-                else
-                    open = false;
-            }
-
-            {
-                int int_type = rd_kw_iget_int(global_iwel_kw,
-                                              iwel_offset + IWEL_TYPE_INDEX);
-                type = well_state_translate_rd_type_int(int_type);
-            }
-
-            const int zwel_offset = global_header.nzwelz * global_well_nr;
-            std::string name =
-                rd_kw_iget_stripped_string(global_zwel_kw, zwel_offset);
-
-            well_state =
-                well_state_alloc(name.c_str(), global_well_nr, open, type,
-                                 report_nr, global_header.sim_time);
-
-            well_state_add_connections2(well_state, grid, file_view,
-                                        global_well_nr);
-            if (rd_file_view_has_kw(file_view, ISEG_KW))
-                well_state_add_MSW2(well_state, file_view, global_well_nr,
-                                    load_segment_information);
-
-            well_state_add_rates(well_state, file_view, global_well_nr);
+            int int_state =
+                rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_STATUS_INDEX);
+            if (int_state > 0)
+                open = true;
+            else
+                open = false;
         }
-        return well_state;
+
+        {
+            int int_type =
+                rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_TYPE_INDEX);
+            type = well_state_translate_rd_type_int(int_type);
+        }
+
+        const int zwel_offset = global_header.nzwelz * global_well_nr;
+        std::string name =
+            rd_kw_iget_stripped_string(global_zwel_kw, zwel_offset);
+
+        std::unique_ptr<well_state_type, decltype(&well_state_free)> well_state(
+            well_state_alloc(name.c_str(), global_well_nr, open, type,
+                             report_nr, global_header.sim_time),
+            well_state_free);
+
+        well_state_add_connections2(well_state.get(), grid, file_view,
+                                    global_well_nr);
+        if (rd_file_view_has_kw(file_view, ISEG_KW))
+            well_state_add_MSW2(well_state.get(), file_view, global_well_nr,
+                                load_segment_information);
+
+        well_state_add_rates(well_state.get(), file_view, global_well_nr);
+        return well_state.release();
     } else
         /* This seems a bit weird - have come over E300 restart files without the IWEL keyword. */
-        return NULL;
+        return nullptr;
 }
 
 void well_state_free(well_state_type *well) { delete well; }
