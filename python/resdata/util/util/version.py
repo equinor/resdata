@@ -1,5 +1,7 @@
 from functools import wraps
 
+from typing_extensions import deprecated
+
 from resdata import ResdataPrototype
 
 
@@ -14,6 +16,7 @@ def cmp_method(method):
     return cmp_wrapper
 
 
+@deprecated("resdata.util.util.Version is deprecated, use packaging.version instead")
 class Version:
     def __init__(self, major, minor, micro, git_commit=None, build_time=None):
         self.major = major
@@ -98,6 +101,11 @@ class Version:
                 return self.git_commit
 
 
+@deprecated(
+    "resdata.util.util.ResdataVersion is deprecated, "
+    "use resdata.version or importlib.metdata instead. "
+    "For parsing the version you can use packaging.version.parse"
+)
 class ResdataVersion(Version):
     _build_time = ResdataPrototype("char* rd_version_get_build_time()", bind=False)
     _git_commit = ResdataPrototype("char* rd_version_get_git_commit()", bind=False)
