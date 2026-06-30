@@ -15,16 +15,34 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_subsidence.hpp>
 #include <resdata/rd_region.hpp>
+#include <resdata/rd_grav.hpp>
+#include <resdata/rd_sum_tstep.hpp>
+#include <resdata/smspec_node.hpp>
+#include <resdata/layer.hpp>
+#include <resdata/fault_block.hpp>
+#include <resdata/fault_block_layer.hpp>
 #include <resdata/well/well_state.hpp>
+#include <resdata/well/well_conn.hpp>
+#include <resdata/well/well_segment.hpp>
+#include <resdata/well/well_ts.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>
+#include <ert/util/lookup_table.hpp>
+#include <ert/util/rng.hpp>
+#include <ert/geometry/geo_polygon.hpp>
+#include <ert/geometry/geo_polygon_collection.hpp>
+#include <ert/geometry/geo_pointset.hpp>
+#include <ert/geometry/geo_region.hpp>
+#include <ert/geometry/geo_surface.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
 
 namespace py = pybind11;
+
+using smspec_node_type = rd::smspec_node;
 
 template <typename T> T *cast_cwrap(py::handle obj) {
     py::int_ address = obj.attr("_BaseCClass__c_pointer");
@@ -300,4 +318,226 @@ py::object WellSegment() {
         cls = py::module_::import("resdata.well").attr("WellSegment");
     }
     return cls;
+}
+
+// -----------------------------------------------------------------
+// Class-import helpers and from_cwrap specializations consolidated
+// from the per-class *_pybind.cpp modules.
+// -----------------------------------------------------------------
+
+template <> well_conn_type *from_cwrap<well_conn_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellConnection()))
+        throw py::type_error("Expected WellConnection, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<well_conn_type>(obj);
+}
+
+template <> well_segment_type *from_cwrap<well_segment_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellSegment()))
+        throw py::type_error("Expected WellSegment, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<well_segment_type>(obj);
+}
+
+py::object WellTimeLine() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.well").attr("WellTimeLine");
+    return cls;
+}
+
+template <> well_ts_type *from_cwrap<well_ts_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellTimeLine()))
+        throw py::type_error("Expected WellTimeLine, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<well_ts_type>(obj);
+}
+
+py::object RandomNumberGenerator() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.util.util")
+                  .attr("RandomNumberGenerator");
+    return cls;
+}
+
+template <> rng_type *from_cwrap<rng_type>(py::handle obj) {
+    if (!py::isinstance(obj, RandomNumberGenerator()))
+        throw py::type_error("Expected RandomNumberGenerator, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<rng_type>(obj);
+}
+
+py::object LookupTable() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.util.util").attr("LookupTable");
+    return cls;
+}
+
+template <> lookup_table_type *from_cwrap<lookup_table_type>(py::handle obj) {
+    if (!py::isinstance(obj, LookupTable()))
+        throw py::type_error("Expected LookupTable, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<lookup_table_type>(obj);
+}
+
+py::object CPolyline() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("CPolyline");
+    return cls;
+}
+
+template <> geo_polygon_type *from_cwrap<geo_polygon_type>(py::handle obj) {
+    if (!py::isinstance(obj, CPolyline()))
+        throw py::type_error("Expected CPolyline, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<geo_polygon_type>(obj);
+}
+
+py::object CPolylineCollection() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry")
+                  .attr("CPolylineCollection");
+    return cls;
+}
+
+template <>
+geo_polygon_collection_type *
+from_cwrap<geo_polygon_collection_type>(py::handle obj) {
+    if (!py::isinstance(obj, CPolylineCollection()))
+        throw py::type_error("Expected CPolylineCollection, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<geo_polygon_collection_type>(obj);
+}
+
+py::object GeoPointset() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("GeoPointset");
+    return cls;
+}
+
+template <> geo_pointset_type *from_cwrap<geo_pointset_type>(py::handle obj) {
+    if (!py::isinstance(obj, GeoPointset()))
+        throw py::type_error("Expected GeoPointset, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<geo_pointset_type>(obj);
+}
+
+py::object GeoRegion() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("GeoRegion");
+    return cls;
+}
+
+template <> geo_region_type *from_cwrap<geo_region_type>(py::handle obj) {
+    if (!py::isinstance(obj, GeoRegion()))
+        throw py::type_error("Expected GeoRegion, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<geo_region_type>(obj);
+}
+
+py::object Surface() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("Surface");
+    return cls;
+}
+
+template <> geo_surface_type *from_cwrap<geo_surface_type>(py::handle obj) {
+    if (!py::isinstance(obj, Surface()))
+        throw py::type_error("Expected Surface, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<geo_surface_type>(obj);
+}
+
+py::object Layer() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.grid.faults.layer").attr("Layer");
+    return cls;
+}
+
+template <> layer_type *from_cwrap<layer_type>(py::handle obj) {
+    if (!py::isinstance(obj, Layer()))
+        throw py::type_error("Expected Layer, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<layer_type>(obj);
+}
+
+py::object FaultBlock() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.grid.faults.fault_block")
+                  .attr("FaultBlock");
+    return cls;
+}
+
+template <> fault_block_type *from_cwrap<fault_block_type>(py::handle obj) {
+    if (!py::isinstance(obj, FaultBlock()))
+        throw py::type_error("Expected FaultBlock, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<fault_block_type>(obj);
+}
+
+py::object FaultBlockLayer() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.grid.faults.fault_block_layer")
+                  .attr("FaultBlockLayer");
+    return cls;
+}
+
+template <>
+fault_block_layer_type *from_cwrap<fault_block_layer_type>(py::handle obj) {
+    if (!py::isinstance(obj, FaultBlockLayer()))
+        throw py::type_error("Expected FaultBlockLayer, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<fault_block_layer_type>(obj);
+}
+
+py::object ResdataSMSPECNode() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.summary").attr("ResdataSMSPECNode");
+    return cls;
+}
+
+template <> smspec_node_type *from_cwrap<smspec_node_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataSMSPECNode()))
+        throw py::type_error("Expected ResdataSMSPECNode, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<smspec_node_type>(obj);
+}
+
+py::object SummaryTStep() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.summary").attr("SummaryTStep");
+    return cls;
+}
+
+template <> rd_sum_tstep_type *from_cwrap<rd_sum_tstep_type>(py::handle obj) {
+    if (!py::isinstance(obj, SummaryTStep()))
+        throw py::type_error("Expected SummaryTStep, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<rd_sum_tstep_type>(obj);
+}
+
+py::object ResdataGrav() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.gravimetry").attr("ResdataGrav");
+    return cls;
+}
+
+template <> rd_grav_type *from_cwrap<rd_grav_type>(py::handle obj) {
+    if (!py::isinstance(obj, ResdataGrav()))
+        throw py::type_error("Expected ResdataGrav, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<rd_grav_type>(obj);
 }

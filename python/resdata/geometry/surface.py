@@ -2,51 +2,16 @@
 Create a polygon
 """
 
-import ctypes
 import os.path
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.geometry._surface as _surface
 from resdata.geometry import GeoPointset
 
 
 class Surface(BaseCClass):
     TYPE_NAME = "rd_surface"
-
-    _alloc = ResdataPrototype(
-        "void* geo_surface_fload_alloc_irap(char*, bool)", bind=False
-    )
-    _free = ResdataPrototype("void geo_surface_free(rd_surface)")
-    _new = ResdataPrototype(
-        "void* geo_surface_alloc_new(int, int, double, double, double, double, double)",
-        bind=False,
-    )
-    _get_nx = ResdataPrototype("int geo_surface_get_nx(rd_surface)")
-    _get_ny = ResdataPrototype("int geo_surface_get_ny(rd_surface)")
-    _iget_zvalue = ResdataPrototype("double geo_surface_iget_zvalue(rd_surface, int)")
-    _iset_zvalue = ResdataPrototype(
-        "void geo_surface_iset_zvalue(rd_surface, int, double)"
-    )
-    _write = ResdataPrototype("void geo_surface_fprintf_irap(rd_surface, char*)")
-    _equal = ResdataPrototype("bool   geo_surface_equal(rd_surface, rd_surface)")
-    _header_equal = ResdataPrototype(
-        "bool geo_surface_equal_header(rd_surface, rd_surface)"
-    )
-    _copy = ResdataPrototype("rd_surface_obj geo_surface_alloc_copy(rd_surface, bool)")
-    _assign = ResdataPrototype("void geo_surface_assign_value(rd_surface, double)")
-    _scale = ResdataPrototype("void geo_surface_scale(rd_surface, double)")
-    _shift = ResdataPrototype("void geo_surface_shift(rd_surface, double)")
-    _iadd = ResdataPrototype("void geo_surface_iadd(rd_surface, rd_surface)")
-    _imul = ResdataPrototype("void geo_surface_imul(rd_surface, rd_surface)")
-    _isub = ResdataPrototype("void geo_surface_isub(rd_surface, rd_surface)")
-    _isqrt = ResdataPrototype("void geo_surface_isqrt(rd_surface)")
-    _iget_xy = ResdataPrototype(
-        "void geo_surface_iget_xy(rd_surface, int, double*, double*)"
-    )
-    _get_pointset = ResdataPrototype(
-        "rd_geo_points_ref geo_surface_get_pointset(rd_surface)"
-    )
 
     def __init__(
         self,
@@ -66,7 +31,7 @@ class Surface(BaseCClass):
         if filename is not None:
             filename = str(filename)
             if os.path.isfile(filename):
-                c_ptr = self._alloc(filename, True)
+                c_ptr = _surface._alloc(filename, True)
                 super().__init__(c_ptr)
             else:
                 raise OSError('No such file "%s".' % filename)
@@ -77,7 +42,7 @@ class Surface(BaseCClass):
                     "Missing argument for creating surface, all values must be set, was: %s"
                     % str(s_args)
                 )
-            c_ptr = self._new(*s_args)
+            c_ptr = _surface._new(*s_args)
             super().__init__(c_ptr)
 
     def __eq__(self, other):
@@ -86,45 +51,45 @@ class Surface(BaseCClass):
         to compare as equal.
         """
         if isinstance(other, Surface):
-            return self._equal(other)
+            return _surface._equal(self, other)
         else:
             return False
 
     def headerEqual(self, other):
-        return self._header_equal(other)
+        return _surface._header_equal(self, other)
 
     def __iadd__(self, other):
         if isinstance(other, Surface):
             if self.headerEqual(other):
-                self._iadd(other)
+                _surface._iadd(self, other)
             else:
                 raise ValueError("Tried to add incompatible surfaces")
         else:
-            self._shift(other)
+            _surface._shift(self, other)
         return self
 
     def __isub__(self, other):
         if isinstance(other, Surface):
             if self.headerEqual(other):
-                self._isub(other)
+                _surface._isub(self, other)
             else:
                 raise ValueError("Tried to subtract incompatible surfaces")
         else:
-            self._shift(-other)
+            _surface._shift(self, -other)
         return self
 
     def __imul__(self, other):
         if isinstance(other, Surface):
             if self.headerEqual(other):
-                self._imul(other)
+                _surface._imul(self, other)
             else:
                 raise ValueError("Tried to add multiply ncompatible surfaces")
         else:
-            self._scale(other)
+            _surface._scale(self, other)
         return self
 
     def __itruediv__(self, other):
-        self._scale(1.0 / other)
+        _surface._scale(self, 1.0 / other)
         return self
 
     def __idiv__(self, other):
@@ -163,7 +128,7 @@ class Surface(BaseCClass):
         """
         Will do an inplace sqrt operation.
         """
-        self._isqrt()
+        _surface._isqrt(self)
         return self
 
     def sqrt(self):
@@ -178,19 +143,19 @@ class Surface(BaseCClass):
         """Will create a deep copy of self, if copy_data is set to False the
         copy will have all z-values set to zero.
         """
-        return self._copy(copy_data)
+        return Surface.createPythonObject(_surface._copy(self, copy_data))
 
     def write(self, filename):
         """
         Will write the surface as an ascii formatted file to @filename.
         """
-        self._write(filename)
+        _surface._write(self, filename)
 
     def assign(self, value):
         """
         Will set all the values in the surface to @value"
         """
-        self._assign(value)
+        _surface._assign(self, value)
 
     def __setitem__(self, index, value):
         if isinstance(index, int):
@@ -201,7 +166,7 @@ class Surface(BaseCClass):
             if index < 0:
                 index += len(self)
 
-            self._iset_zvalue(index, value)
+            _surface._iset_zvalue(self, index, value)
         else:
             raise TypeError("Invalid index type:%s - must be integer" % index)
 
@@ -212,7 +177,7 @@ class Surface(BaseCClass):
             if idx < 0:
                 idx += ls
             if 0 <= idx < ls:
-                return self._iget_zvalue(idx)
+                return _surface._iget_zvalue(self, idx)
             else:
                 raise IndexError(
                     "Invalid index:%d - valid range [0,%d)" % (index, len(self))
@@ -234,20 +199,16 @@ class Surface(BaseCClass):
         else:
             raise TypeError("Invalid index type:%s - must be integer" % index)
 
-        x = ctypes.c_double()
-        y = ctypes.c_double()
-        self._iget_xy(index, ctypes.byref(x), ctypes.byref(y))
-
-        return x.value, y.value
+        return _surface._iget_xy(self, index)
 
     def getNX(self):
-        return self._get_nx()
+        return _surface._get_nx(self)
 
     def getNY(self):
-        return self._get_ny()
+        return _surface._get_ny(self)
 
     def getPointset(self) -> GeoPointset:
-        return self._get_pointset()
+        return _surface._get_pointset(self)
 
     def _assert_idx_or_i_and_j(self, idx, i, j):
         if idx is None:
@@ -281,7 +242,7 @@ class Surface(BaseCClass):
         return (x, y, z)
 
     def free(self):
-        self._free()
+        _surface._free(self)
 
     def __repr__(self):
         cnt = "nx=%d, ny=%d" % (self.getNX(), self.getNY())

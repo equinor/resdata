@@ -1,26 +1,10 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.well._well_segment as _well_segment
 
 
 class WellSegment(BaseCClass):
     TYPE_NAME = "rd_well_segment"
-
-    _active = ResdataPrototype("bool well_segment_active(rd_well_segment)")
-    _main_stem = ResdataPrototype("bool well_segment_main_stem(rd_well_segment)")
-    _nearest_wellhead = ResdataPrototype(
-        "bool well_segment_nearest_wellhead(rd_well_segment)"
-    )
-    _id = ResdataPrototype("int well_segment_get_id(rd_well_segment)")
-    _link_count = ResdataPrototype("int well_segment_get_link_count(rd_well_segment)")
-    _branch_id = ResdataPrototype("int well_segment_get_branch_id(rd_well_segment)")
-    _outlet_id = ResdataPrototype("int well_segment_get_outlet_id(rd_well_segment)")
-    _depth = ResdataPrototype("double well_segment_get_depth(rd_well_segment)")
-    _length = ResdataPrototype("double well_segment_get_length(rd_well_segment)")
-    _total_length = ResdataPrototype(
-        "double well_segment_get_total_length(rd_well_segment)"
-    )
-    _diameter = ResdataPrototype("double well_segment_get_diameter(rd_well_segment)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
@@ -39,37 +23,37 @@ class WellSegment(BaseCClass):
         )
 
     def id(self) -> int:
-        return self._id()
+        return _well_segment._id(self)
 
     def linkCount(self) -> int:
-        return self._link_count()
+        return _well_segment._link_count(self)
 
     def branchId(self) -> int:
-        return self._branch_id()
+        return _well_segment._branch_id(self)
 
     def outletId(self) -> int:
-        return self._outlet_id()
+        return _well_segment._outlet_id(self)
 
     def isActive(self) -> bool:
-        return self._active()
+        return _well_segment._active(self)
 
     def isMainStem(self) -> bool:
-        return self._main_stem()
+        return _well_segment._main_stem(self)
 
     def isNearestWellHead(self) -> bool:
-        return self._nearest_wellhead()
+        return _well_segment._nearest_wellhead(self)
 
     def depth(self) -> float:
-        return self._depth()
+        return _well_segment._depth(self)
 
     def __len__(self):
         return self.length()
 
     def length(self) -> float:
-        return self._length()
+        return _well_segment._length(self)
 
     def totalLength(self) -> float:
-        return self._total_length()
+        return _well_segment._total_length(self)
 
     def diameter(self) -> float:
-        return self._diameter()
+        return _well_segment._diameter(self)

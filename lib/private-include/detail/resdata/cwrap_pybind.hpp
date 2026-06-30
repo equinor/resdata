@@ -22,3 +22,21 @@ inline void register_exceptions(pybind11::module &m) {
 
 pybind11::object WellConnection();
 pybind11::object WellSegment();
+pybind11::object WellState();
+pybind11::object WellTimeLine();
+pybind11::object ResdataKW();
+pybind11::object ResdataFileView();
+pybind11::object IntVector();
+pybind11::object CPolyline();
+pybind11::object CPolylineCollection();
+pybind11::object GeoPointset();
+pybind11::object GeoRegion();
+pybind11::object Surface();
+pybind11::object Layer();
+pybind11::object FaultBlock();
+pybind11::object FaultBlockLayer();
+pybind11::object LookupTable();
+pybind11::object RandomNumberGenerator();
+pybind11::object ResdataSMSPECNode();
+pybind11::object SummaryTStep();
+pybind11::object ResdataGrav();

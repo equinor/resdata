@@ -1,43 +1,18 @@
 from cwrap import BaseCClass
 from six import string_types
 
-from resdata import ResdataPrototype
+import resdata.resfile._rd_file_view as _rd_file_view
 from resdata.util.util import CTime, monkey_the_camel
 
 
 class ResdataFileView(BaseCClass):
     TYPE_NAME = "rd_file_view"
-    _iget_kw = ResdataPrototype(
-        "rd_kw_ref    rd_file_view_iget_kw( rd_file_view , int)"
-    )
-    _iget_named_kw = ResdataPrototype(
-        "rd_kw_ref    rd_file_view_iget_named_kw( rd_file_view , char* , int)"
-    )
-    _get_unique_kw = ResdataPrototype(
-        "char*         rd_file_view_iget_distinct_kw( rd_file_view, int )"
-    )
-    _get_size = ResdataPrototype("int           rd_file_view_get_size( rd_file_view )")
-    _get_num_named_kw = ResdataPrototype(
-        "int           rd_file_view_get_num_named_kw( rd_file_view , char* )"
-    )
-    _get_unique_size = ResdataPrototype(
-        "int           rd_file_view_get_num_distinct_kw( rd_file_view )"
-    )
-    _create_block_view = ResdataPrototype(
-        "rd_file_view_ref rd_file_view_add_blockview( rd_file_view , char*, int )"
-    )
-    _create_block_view2 = ResdataPrototype(
-        "rd_file_view_ref rd_file_view_add_blockview2( rd_file_view , char*, char*, int )"
-    )
-    _restart_view = ResdataPrototype(
-        "rd_file_view_ref rd_file_view_add_restart_view( rd_file_view , int, int, rd_time_t, double )"
-    )
 
     def __init__(self):
         raise NotImplementedError("Can not instantiate directly")
 
     def __iget(self, index):
-        return self._iget_kw(index).setParent(parent=self)
+        return _rd_file_view._iget_kw(self, index)
 
     def __repr__(self):
         return "ResdataFileView(size=%d) %s" % (len(self), self._ad_str())
@@ -49,7 +24,7 @@ class ResdataFileView(BaseCClass):
         if index >= self.num_keywords(kw_name):
             raise IndexError("Too large index: %d" % index)
 
-        return self._iget_named_kw(kw_name, index).setParent(parent=self)
+        return _rd_file_view._iget_named_kw(self, kw_name, index)
 
     def __getitem__(self, index):
         """
@@ -111,7 +86,7 @@ class ResdataFileView(BaseCClass):
                 raise TypeError("Index must be integer or string (keyword)")
 
     def __len__(self):
-        return self._get_size()
+        return _rd_file_view._get_size(self)
 
     def __contains__(self, kw):
         if self.num_keywords(kw) > 0:
@@ -120,13 +95,16 @@ class ResdataFileView(BaseCClass):
             return False
 
     def num_keywords(self, kw):
-        return self._get_num_named_kw(kw)
+        return _rd_file_view._get_num_named_kw(self, kw)
 
     def unique_size(self):
-        return self._get_unique_size()
+        return _rd_file_view._get_unique_size(self)
 
     def unique_kw(self):
-        return [self._get_unique_kw(index) for index in range(self.unique_size())]
+        return [
+            _rd_file_view._get_unique_kw(self, index)
+            for index in range(self.unique_size())
+        ]
 
     def block_view2(self, start_kw, stop_kw, start_index):
         idx = start_index
@@ -146,9 +124,7 @@ class ResdataFileView(BaseCClass):
             if stop_kw not in self:
                 raise KeyError("The keyword:%s is not in file" % stop_kw)
 
-        view = self._create_block_view2(start_kw, stop_kw, idx)
-        view.setParent(parent=self)
-        return view
+        return _rd_file_view._create_block_view2(self, start_kw, stop_kw, idx)
 
     def block_view(self, kw, kw_index):
         num = self.num_keywords(kw)
@@ -163,9 +139,7 @@ class ResdataFileView(BaseCClass):
         if not (0 <= idx < num):
             raise IndexError("Index must be in [0, %d), was: %d." % (num, kw_index))
 
-        view = self._create_block_view(kw, kw_index)
-        view.setParent(parent=self)
-        return view
+        return _rd_file_view._create_block_view(self, kw, kw_index)
 
     def restart_view(
         self, seqnum_index=None, report_step=None, sim_time=None, sim_days=None
@@ -182,11 +156,12 @@ class ResdataFileView(BaseCClass):
         if seqnum_index is None:
             seqnum_index = -1
 
-        view = self._restart_view(seqnum_index, report_step, CTime(sim_time), sim_days)
+        view = _rd_file_view._restart_view(
+            self, seqnum_index, report_step, CTime(sim_time).value(), sim_days
+        )
         if view is None:
             raise ValueError("No such restart block could be identified")
 
-        view.setParent(parent=self)
         return view
 
 

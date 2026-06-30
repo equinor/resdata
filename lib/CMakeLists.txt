@@ -161,6 +161,38 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
 # -----------------------------------------------------------------
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
+
+# Helper to register a pybind11 extension module that wraps a single
+# <classname>_pybind.cpp together with the shared cwrap_pybind.cpp glue.
+#   module_name : name of the python extension (e.g. _well_connection)
+#   source_file : the <classname>_pybind.cpp relative to resdata/
+#   py_pkg_path : install/output package path under python/ (e.g. resdata/well)
+#   libs_rpath  : RPATH (relative to $ORIGIN) pointing at resdata/.libs
+function(add_resdata_pybind_module module_name source_file py_pkg_path libs_rpath)
+  pybind11_add_module(${module_name} resdata/${source_file}
+                      resdata/cwrap_pybind.cpp)
+  target_link_libraries(${module_name} PRIVATE resdata fmt::fmt)
+  target_include_directories(
+    ${module_name}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+  if(SKBUILD)
+    set(_install_dir "python/${py_pkg_path}")
+    set_target_properties(${module_name} PROPERTIES INSTALL_RPATH
+                                                    "${libs_rpath}")
+  else()
+    set(_install_dir "${CMAKE_INSTALL_LIBDIR}")
+  endif()
+  install(TARGETS ${module_name} LIBRARY DESTINATION ${_install_dir})
+  # When running tests against the build tree (editable install), put the
+  # extension directly next to its python module so it can be imported
+  # without an install step.
+  set_target_properties(
+    ${module_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                             ${PROJECT_SOURCE_DIR}/python/${py_pkg_path})
+endfunction()
+
 pybind11_add_module(_grid resdata/rd_grid_pybind.cpp resdata/cwrap_pybind.cpp)
 target_link_libraries(_grid PRIVATE resdata fmt::fmt)
 target_include_directories(
@@ -410,6 +442,50 @@ install(TARGETS _well_state LIBRARY DESTINATION ${_well_state_install_dir})
 set_target_properties(
   _well_state PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                          ${PROJECT_SOURCE_DIR}/python/resdata/well)
+
+# -----------------------------------------------------------------
+# Pybind11 extension modules migrated from ResdataPrototype
+# -----------------------------------------------------------------
+add_resdata_pybind_module(_cpolyline_collection geo_polygon_collection_pybind.cpp
+                          resdata/geometry "$ORIGIN/../.libs")
+add_resdata_pybind_module(_cpolyline geo_polygon_pybind.cpp resdata/geometry
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_ctime ctime_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_fault_block fault_block_pybind.cpp resdata/grid/faults
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_fault_block_layer fault_block_layer_pybind.cpp
+                          resdata/grid/faults "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_rd_util rd_util_pybind.cpp resdata "$ORIGIN/.libs")
+add_resdata_pybind_module(_geo_pointset geo_pointset_pybind.cpp resdata/geometry
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_geo_region geo_region_pybind.cpp resdata/geometry
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_layer layer_pybind.cpp resdata/grid/faults
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_lookup_table lookup_table_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_rng rng_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_rd_file_view rd_file_view_pybind.cpp resdata/resfile
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_rd_grav rd_grav_pybind.cpp resdata/gravimetry
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_rd_region rd_region_pybind.cpp resdata/grid
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_rd_smspec_node smspec_node_pybind.cpp resdata/summary
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_rd_type rd_type_pybind.cpp resdata "$ORIGIN/.libs")
+add_resdata_pybind_module(_rd_sum_tstep rd_sum_tstep_pybind.cpp resdata/summary
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_surface geo_surface_pybind.cpp resdata/geometry
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_well_connection well_conn_pybind.cpp resdata/well
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_well_segment well_segment_pybind.cpp resdata/well
+                          "$ORIGIN/../.libs")
+add_resdata_pybind_module(_well_time_line well_ts_pybind.cpp resdata/well
+                          "$ORIGIN/../.libs")
 
 if(NOT BUILD_TESTS)
   return()

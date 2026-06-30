@@ -4,46 +4,23 @@ Create a polygon
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.geometry._cpolyline_collection as _cpolyline_collection
 from resdata.geometry import CPolyline
 
 
 class CPolylineCollection(BaseCClass):
     TYPE_NAME = "rd_geo_polygon_collection"
 
-    _alloc_new = ResdataPrototype("void* geo_polygon_collection_alloc(  )", bind=False)
-    _free = ResdataPrototype(
-        "void geo_polygon_collection_free(rd_geo_polygon_collection)"
-    )
-    _size = ResdataPrototype(
-        "int geo_polygon_collection_size(rd_geo_polygon_collection)"
-    )
-    _create_polyline = ResdataPrototype(
-        "rd_geo_polygon_ref geo_polygon_collection_create_polygon(rd_geo_polygon_collection, char*)"
-    )
-    _has_polyline = ResdataPrototype(
-        "bool geo_polygon_collection_has_polygon(rd_geo_polygon_collection, char*)"
-    )
-    _iget = ResdataPrototype(
-        "rd_geo_polygon_ref geo_polygon_collection_iget_polygon(rd_geo_polygon_collection, int)"
-    )
-    _get = ResdataPrototype(
-        "rd_geo_polygon_ref geo_polygon_collection_get_polygon(rd_geo_polygon_collection, char*)"
-    )
-    _add_polyline = ResdataPrototype(
-        "void geo_polygon_collection_add_polygon(rd_geo_polygon_collection, rd_geo_polygon, bool)"
-    )
-
     def __init__(self):
-        c_ptr = self._alloc_new()
+        c_ptr = _cpolyline_collection._alloc_new()
         super().__init__(c_ptr)
         self.parent_ref = None
 
     def __contains__(self, name):
-        return self._has_polyline(name)
+        return _cpolyline_collection._has_polyline(self, name)
 
     def __len__(self):
-        return self._size()
+        return _cpolyline_collection._size(self)
 
     def __iter__(self):
         index = 0
@@ -58,14 +35,14 @@ class CPolylineCollection(BaseCClass):
                 index += len(self)
 
             if 0 <= index < len(self):
-                return self._iget(index).setParent(self)
+                return _cpolyline_collection._iget(self, index)
             else:
                 raise IndexError(
                     "Invalid index:%d - valid range: [0,%d)" % (index, len(self))
                 )
         elif isinstance(index, str):
             if index in self:
-                return self._get(index)
+                return _cpolyline_collection._get(self, index)
             else:
                 raise KeyError("No polyline named:%s" % index)
         else:
@@ -74,7 +51,7 @@ class CPolylineCollection(BaseCClass):
     def shallowCopy(self):
         copy = CPolylineCollection()
         for pl in self:
-            copy._add_polyline(pl, False)
+            _cpolyline_collection._add_polyline(copy, pl, False)
 
         # If we make a shallow copy we must ensure that source, owning
         # all the polyline objects does not go out of scope.
@@ -95,18 +72,16 @@ class CPolylineCollection(BaseCClass):
             raise KeyError("The polyline collection already has an object:%s" % name)
 
         if polyline.isReference():
-            self._add_polyline(polyline, False)
+            _cpolyline_collection._add_polyline(self, polyline, False)
         else:
             polyline.convertToCReference(self)
-            self._add_polyline(polyline, True)
+            _cpolyline_collection._add_polyline(self, polyline, True)
 
     def createPolyline(self, name=None):
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
 
-        polyline = self._create_polyline(name)
-        polyline.setParent(parent=self)
-        return polyline
+        return _cpolyline_collection._create_polyline(self, name)
 
     def free(self):
-        self._free()
+        _cpolyline_collection._free(self)

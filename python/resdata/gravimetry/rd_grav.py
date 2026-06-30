@@ -7,11 +7,10 @@ different surveys. The implementation is a thin wrapper around the
 rd_grav.c implementation in the resdata library.
 """
 
-from typing import Optional
-
 from cwrap import BaseCClass
 
-from resdata import Phase, ResdataPrototype
+import resdata.gravimetry._rd_grav as _rd_grav
+from resdata import Phase
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
 from resdata.util.util import monkey_the_camel
@@ -35,29 +34,6 @@ class ResdataGrav(BaseCClass):
     """
 
     TYPE_NAME = "rd_grav"
-    _grav_alloc = ResdataPrototype("void* rd_grav_alloc(rd_grid, rd_file)", bind=False)
-    _free = ResdataPrototype("void rd_grav_free(rd_grav)")
-    _add_survey_RPORV = ResdataPrototype(
-        "void*  rd_grav_add_survey_RPORV(rd_grav, char*, rd_file_view)"
-    )
-    _add_survey_PORMOD = ResdataPrototype(
-        "void*  rd_grav_add_survey_PORMOD(rd_grav, char*, rd_file_view)"
-    )
-    _add_survey_FIP = ResdataPrototype(
-        "void*  rd_grav_add_survey_FIP(rd_grav, char*, rd_file_view)"
-    )
-    _add_survey_RFIP = ResdataPrototype(
-        "void*  rd_grav_add_survey_RFIP(rd_grav, char*, rd_file_view)"
-    )
-    _new_std_density = ResdataPrototype(
-        "void rd_grav_new_std_density(rd_grav, int, double)"
-    )
-    _add_std_density = ResdataPrototype(
-        "void rd_grav_add_std_density(rd_grav, int, int, double)"
-    )
-    _eval = ResdataPrototype(
-        "double rd_grav_eval(rd_grav, char*, char*, rd_region, double, double, double, int)"
-    )
 
     def __init__(self, grid: Grid, init_file: ResdataFile):
         """
@@ -68,7 +44,7 @@ class ResdataGrav(BaseCClass):
         """
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
 
-        c_ptr = self._grav_alloc(grid, init_file)
+        c_ptr = _rd_grav._alloc(grid, init_file)
         super().__init__(c_ptr)
 
         self.dispatch = {
@@ -103,7 +79,7 @@ class ResdataGrav(BaseCClass):
         add_survey_PORMOD() and add_survey_FIP() are alternatives
         which are based on other keywords.
         """
-        self._add_survey_RPORV(survey_name, restart_view)
+        _rd_grav._add_survey_RPORV(self, survey_name, restart_view)
 
     def add_survey_PORMOD(
         self, survey_name: str, restart_view: ResdataFileView
@@ -115,7 +91,7 @@ class ResdataGrav(BaseCClass):
         the PORV_MOD keyword from the restart file; see
         add_survey_RPORV() for further details.
         """
-        self._add_survey_PORMOD(survey_name, restart_view)
+        _rd_grav._add_survey_PORMOD(self, survey_name, restart_view)
 
     def add_survey_FIP(self, survey_name: str, restart_view: ResdataFileView) -> None:
         """
@@ -130,7 +106,7 @@ class ResdataGrav(BaseCClass):
         the new_std_density() (and possibly also add_std_density())
         method before calling the add_survey_FIP() method.
         """
-        void_ptr = self._add_survey_FIP(survey_name, restart_view)
+        void_ptr = _rd_grav._add_survey_FIP(self, survey_name, restart_view)
         if void_ptr is None:
             raise ValueError("Could not add FIP survey due to missing std_density")
 
@@ -143,7 +119,7 @@ class ResdataGrav(BaseCClass):
         calculated based on the RFIPxxx keyword along with the
         per-cell mass density of the respective phases.
         """
-        self._add_survey_RFIP(survey_name, restart_view)
+        _rd_grav._add_survey_RFIP(self, survey_name, restart_view)
 
     def add_survey(self, name: str, restart_view: ResdataFileView, method: str) -> None:
         method_callable = self.dispatch[method]
@@ -183,8 +159,15 @@ class ResdataGrav(BaseCClass):
         sum of the relevant integer constants 'OIL',
         'GAS' and 'WATER'.
         """
-        return self._eval(
-            base_survey, monitor_survey, region, pos[0], pos[1], pos[2], phase_mask
+        return _rd_grav._eval(
+            self,
+            base_survey,
+            monitor_survey,
+            region,
+            pos[0],
+            pos[1],
+            pos[2],
+            phase_mask,
         )
 
     def new_std_density(self, phase_enum, default_density):
@@ -205,7 +188,7 @@ class ResdataGrav(BaseCClass):
         used before you use the add_survey_FIP() method to add a
         survey based on the FIP keyword.
         """
-        self._new_std_density(phase_enum, default_density)
+        _rd_grav._new_std_density(self, phase_enum, default_density)
 
     def add_std_density(self, phase_enum, pvtnum, density):
         """
@@ -225,10 +208,10 @@ class ResdataGrav(BaseCClass):
         used before you use the add_survey_FIP() method to add a
         survey based on the FIP keyword.
         """
-        self._add_std_density(phase_enum, pvtnum, density)
+        _rd_grav._add_std_density(self, phase_enum, pvtnum, density)
 
     def free(self):
-        self._free()
+        _rd_grav._free(self)
 
 
 monkey_the_camel(ResdataGrav, "addSurvey", ResdataGrav.add_survey)

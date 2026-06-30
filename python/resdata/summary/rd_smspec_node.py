@@ -1,6 +1,8 @@
+import sys
+
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.summary._rd_smspec_node as _rd_smspec_node
 from resdata.util.util import monkey_the_camel
 
 from .rd_sum_var_type import SummaryVarType
@@ -18,30 +20,13 @@ class ResdataSMSPECNode(BaseCClass):
     """
 
     TYPE_NAME = "rd_smspec_node"
-    _node_is_total = ResdataPrototype("bool smspec_node_is_total( rd_smspec_node )")
-    _node_is_historical = ResdataPrototype(
-        "bool smspec_node_is_historical( rd_smspec_node )"
-    )
-    _node_is_rate = ResdataPrototype("bool smspec_node_is_rate( rd_smspec_node )")
-    _node_unit = ResdataPrototype("char* smspec_node_get_unit( rd_smspec_node )")
-    _node_wgname = ResdataPrototype("char* smspec_node_get_wgname( rd_smspec_node )")
-    _node_keyword = ResdataPrototype("char* smspec_node_get_keyword( rd_smspec_node )")
-    _node_num = ResdataPrototype("int   smspec_node_get_num( rd_smspec_node )")
-    _node_need_num = ResdataPrototype("bool  smspec_node_need_nums( rd_smspec_node )")
-    _gen_key1 = ResdataPrototype("char* smspec_node_get_gen_key1( rd_smspec_node )")
-    _gen_key2 = ResdataPrototype("char* smspec_node_get_gen_key2( rd_smspec_node )")
-    _var_type = ResdataPrototype(
-        "rd_sum_var_type smspec_node_get_var_type( rd_smspec_node )"
-    )
-    _cmp = ResdataPrototype("int smspec_node_cmp( rd_smspec_node , rd_smspec_node)")
-    _get_default = ResdataPrototype("float smspec_node_get_default(rd_smspec_node)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly!")
 
     def cmp(self, other):
         if isinstance(other, ResdataSMSPECNode):
-            return self._cmp(other)
+            return _rd_smspec_node._cmp(self, other)
         else:
             raise TypeError("Other argument must be of type ResdataSMSPECNode")
 
@@ -55,14 +40,14 @@ class ResdataSMSPECNode(BaseCClass):
         return self.cmp(other) == 0
 
     def __hash__(self, other):
-        return hash(self._gen_key1())
+        return hash(_rd_smspec_node._gen_key1(self))
 
     @property
     def unit(self):
         """
         Returns the unit of this node as a string.
         """
-        return self._node_unit()
+        return _rd_smspec_node._node_unit(self)
 
     @property
     def wgname(self):
@@ -74,7 +59,7 @@ class ResdataSMSPECNode(BaseCClass):
         BPR:10,10,10. For these variables the function will return
         None, and not the dummy value: ":+:+:+:+".
         """
-        return self._node_wgname()
+        return _rd_smspec_node._node_wgname(self)
 
     @property
     def keyword(self):
@@ -86,7 +71,7 @@ class ResdataSMSPECNode(BaseCClass):
         read from the KEWYORD value; see table 3.4 in the ECLIPSE file
         format reference manual.
         """
-        return self._node_keyword()
+        return _rd_smspec_node._node_keyword(self)
 
     @property
     def num(self):
@@ -101,14 +86,14 @@ class ResdataSMSPECNode(BaseCClass):
         The default value is also used to initialize the PARAMS vector when
         writing to file.
         """
-        return self._get_default()
+        return _rd_smspec_node._get_default(self)
 
     def get_key1(self):
         """
         Returns the primary composite key, i.e. like 'WOPR:OPX' for this
         node.
         """
-        return self._gen_key1()
+        return _rd_smspec_node._gen_key1(self)
 
     def get_key2(self):
         """Returns the secondary composite key for this node.
@@ -123,10 +108,10 @@ class ResdataSMSPECNode(BaseCClass):
         Where the '52423' in get_key2() corresponds to i + j*nx +
         k*nx*ny.
         """
-        return self._gen_key2()
+        return _rd_smspec_node._gen_key2(self)
 
     def var_type(self) -> SummaryVarType:
-        return self._var_type()
+        return SummaryVarType(_rd_smspec_node._var_type(self))
 
     def get_num(self):
         """
@@ -142,8 +127,8 @@ class ResdataSMSPECNode(BaseCClass):
            sum.smspec_node("BPR:1000").num => 1000
 
         """
-        if self._node_need_num():
-            return self._node_num()
+        if _rd_smspec_node._node_need_num(self):
+            return _rd_smspec_node._node_num(self)
         else:
             return None
 
@@ -154,7 +139,7 @@ class ResdataSMSPECNode(BaseCClass):
         The conecpt of rate variabel is important (internally) when
         interpolation values to arbitrary times.
         """
-        return self._node_is_rate()
+        return _rd_smspec_node._node_is_rate(self)
 
     def is_total(self):
         """
@@ -167,7 +152,7 @@ class ResdataSMSPECNode(BaseCClass):
         smspec_node.c; this list again is based on the tables 2.7 -
         2.11 in the ECLIPSE fileformat documentation.
         """
-        return self._node_is_total()
+        return _rd_smspec_node._node_is_total(self)
 
     def is_historical(self):
         """
@@ -176,8 +161,10 @@ class ResdataSMSPECNode(BaseCClass):
         The check is only based on the last character; all variables
         ending with 'H' are considered historical.
         """
-        return self._node_is_historical()
+        return _rd_smspec_node._node_is_historical(self)
 
+
+sys.modules[__package__].ResdataSMSPECNode = ResdataSMSPECNode
 
 monkey_the_camel(ResdataSMSPECNode, "getKey1", ResdataSMSPECNode.get_key1)
 monkey_the_camel(ResdataSMSPECNode, "getKey2", ResdataSMSPECNode.get_key2)

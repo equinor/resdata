@@ -11,12 +11,12 @@ When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
 
-import ctypes
 from functools import wraps
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype, ResDataType
+import resdata.grid._rd_region as _rd_region
+from resdata import ResDataType
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
@@ -69,235 +69,270 @@ def select_method(select):
 
 class ResdataRegion(BaseCClass):
     TYPE_NAME = "rd_region"
-    _alloc = ResdataPrototype("void* rd_region_alloc( rd_grid , bool )", bind=False)
-    _alloc_copy = ResdataPrototype("rd_region_obj rd_region_alloc_copy( rd_region )")
 
-    _set_kw_int = ResdataPrototype(
-        "void rd_region_set_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _set_kw_float = ResdataPrototype(
-        "void rd_region_set_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _set_kw_double = ResdataPrototype(
-        "void rd_region_set_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _shift_kw_int = ResdataPrototype(
-        "void rd_region_shift_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _shift_kw_float = ResdataPrototype(
-        "void rd_region_shift_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _shift_kw_double = ResdataPrototype(
-        "void rd_region_shift_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _scale_kw_int = ResdataPrototype(
-        "void rd_region_scale_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _scale_kw_float = ResdataPrototype(
-        "void rd_region_scale_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _scale_kw_double = ResdataPrototype(
-        "void rd_region_scale_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _sum_kw_int = ResdataPrototype(
-        "int rd_region_sum_kw_int( rd_region , rd_kw , bool) "
-    )
-    _sum_kw_float = ResdataPrototype(
-        "float rd_region_sum_kw_float( rd_region , rd_kw , bool ) "
-    )
-    _sum_kw_double = ResdataPrototype(
-        "double rd_region_sum_kw_double( rd_region , rd_kw , bool) "
-    )
-    _sum_kw_bool = ResdataPrototype(
-        "int rd_region_sum_kw_int( rd_region , rd_kw , bool) "
-    )
+    @staticmethod
+    def _alloc(grid, preselect):
+        return _rd_region._alloc(grid, preselect)
 
-    _free = ResdataPrototype("void rd_region_free( rd_region )")
-    _reset = ResdataPrototype("void rd_region_reset( rd_region )")
-    _select_all = ResdataPrototype("void rd_region_select_all( rd_region )")
-    _deselect_all = ResdataPrototype("void rd_region_deselect_all( rd_region )")
-    _select_equal = ResdataPrototype(
-        "void rd_region_select_equal( rd_region , rd_kw , int )"
-    )
-    _deselect_equal = ResdataPrototype(
-        "void rd_region_deselect_equal( rd_region , rd_kw , int)"
-    )
-    _select_less = ResdataPrototype(
-        "void rd_region_select_smaller( rd_region , rd_kw , float )"
-    )
-    _deselect_less = ResdataPrototype(
-        "void rd_region_deselect_smaller( rd_region , rd_kw , float )"
-    )
-    _select_more = ResdataPrototype(
-        "void rd_region_select_larger( rd_region , rd_kw , float )"
-    )
-    _deselect_more = ResdataPrototype(
-        "void rd_region_deselect_larger( rd_region , rd_kw , float )"
-    )
-    _select_in_interval = ResdataPrototype(
-        "void rd_region_select_in_interval( rd_region, rd_kw , float , float )"
-    )
-    _deselect_in_interval = ResdataPrototype(
-        "void rd_region_deselect_in_interval( rd_region, rd_kw, float , float )"
-    )
-    _invert_selection = ResdataPrototype("void rd_region_invert_selection( rd_region )")
+    def _alloc_copy(self):
+        region = ResdataRegion.createPythonObject(_rd_region._alloc_copy(self))
+        region.grid = self.grid
+        region.active_index = self.active_index
+        return region
 
-    _select_box = ResdataPrototype(
-        "void rd_region_select_from_ijkbox(rd_region , int , int , int , int , int , int)"
-    )
-    _deselect_box = ResdataPrototype(
-        "void rd_region_deselect_from_ijkbox(rd_region , int , int , int , int , int , int)"
-    )
-    _imul_kw = ResdataPrototype(
-        "void  rd_region_kw_imul( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _idiv_kw = ResdataPrototype(
-        "void  rd_region_kw_idiv( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _iadd_kw = ResdataPrototype(
-        "void  rd_region_kw_iadd( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _isub_kw = ResdataPrototype(
-        "void  rd_region_kw_isub( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _copy_kw = ResdataPrototype(
-        "void  rd_region_kw_copy( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _intersect = ResdataPrototype(
-        "void rd_region_intersection( rd_region , rd_region )"
-    )
-    _combine = ResdataPrototype("void rd_region_union( rd_region , rd_region )")
-    _subtract = ResdataPrototype("void rd_region_subtract( rd_region , rd_region )")
-    _xor = ResdataPrototype("void rd_region_xor( rd_region , rd_region )")
-    _get_kw_index_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_kw_index_list( rd_region , rd_kw , bool )"
-    )
-    _get_active_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_active_list( rd_region )"
-    )
-    _get_global_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_global_list( rd_region )"
-    )
-    _get_active_global = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_global_active_list( rd_region )"
-    )
-    _select_cmp_less = ResdataPrototype(
-        "void rd_region_cmp_select_less( rd_region , rd_kw , rd_kw)"
-    )
-    _select_cmp_more = ResdataPrototype(
-        "void rd_region_cmp_select_more( rd_region , rd_kw , rd_kw)"
-    )
-    _deselect_cmp_less = ResdataPrototype(
-        "void rd_region_cmp_deselect_less( rd_region , rd_kw , rd_kw)"
-    )
-    _deselect_cmp_more = ResdataPrototype(
-        "void rd_region_cmp_deselect_more( rd_region , rd_kw , rd_kw)"
-    )
-    _select_islice = ResdataPrototype(
-        "void rd_region_select_i1i2( rd_region , int , int )"
-    )
-    _deselect_islice = ResdataPrototype(
-        "void rd_region_deselect_i1i2( rd_region , int , int )"
-    )
-    _select_jslice = ResdataPrototype(
-        "void rd_region_select_j1j2( rd_region , int , int )"
-    )
-    _deselect_jslice = ResdataPrototype(
-        "void rd_region_deselect_j1j2( rd_region , int , int )"
-    )
-    _select_kslice = ResdataPrototype(
-        "void rd_region_select_k1k2( rd_region , int , int )"
-    )
-    _deselect_kslice = ResdataPrototype(
-        "void rd_region_deselect_k1k2( rd_region , int , int )"
-    )
-    _select_deep_cells = ResdataPrototype(
-        "void rd_region_select_deep_cells( rd_region , double )"
-    )
-    _deselect_deep_cells = ResdataPrototype(
-        "void rd_region_deselect_deep_cells( rd_region , double )"
-    )
-    _select_shallow_cells = ResdataPrototype(
-        "void rd_region_select_shallow_cells( rd_region , double )"
-    )
-    _deselect_shallow_cells = ResdataPrototype(
-        "void rd_region_deselect_shallow_cells( rd_region , double )"
-    )
-    _select_small = ResdataPrototype(
-        "void rd_region_select_small_cells( rd_region , double )"
-    )
-    _deselect_small = ResdataPrototype(
-        "void rd_region_deselect_small_cells( rd_region , double )"
-    )
-    _select_large = ResdataPrototype(
-        "void rd_region_select_large_cells( rd_region , double )"
-    )
-    _deselect_large = ResdataPrototype(
-        "void rd_region_deselect_large_cells( rd_region , double )"
-    )
-    _select_thin = ResdataPrototype(
-        "void rd_region_select_thin_cells( rd_region , double )"
-    )
-    _deselect_thin = ResdataPrototype(
-        "void rd_region_deselect_thin_cells( rd_region , double )"
-    )
-    _select_thick = ResdataPrototype(
-        "void rd_region_select_thick_cells( rd_region , double )"
-    )
-    _deselect_thick = ResdataPrototype(
-        "void rd_region_deselect_thick_cells( rd_region , double )"
-    )
-    _select_active = ResdataPrototype("void rd_region_select_active_cells( rd_region )")
-    _select_inactive = ResdataPrototype(
-        "void rd_region_select_inactive_cells( rd_region )"
-    )
-    _deselect_active = ResdataPrototype(
-        "void rd_region_deselect_active_cells( rd_region )"
-    )
-    _deselect_inactive = ResdataPrototype(
-        "void rd_region_deselect_inactive_cells( rd_region )"
-    )
-    _select_above_plane = ResdataPrototype(
-        "void rd_region_select_above_plane( rd_region  , double* , double* )"
-    )
-    _select_below_plane = ResdataPrototype(
-        "void rd_region_select_below_plane( rd_region  , double* , double* )"
-    )
-    _deselect_above_plane = ResdataPrototype(
-        "void rd_region_deselect_above_plane( rd_region, double* , double* )"
-    )
-    _deselect_below_plane = ResdataPrototype(
-        "void rd_region_deselect_below_plane( rd_region, double* , double* )"
-    )
-    _select_inside_polygon = ResdataPrototype(
-        "void rd_region_select_inside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _select_outside_polygon = ResdataPrototype(
-        "void rd_region_select_outside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _deselect_inside_polygon = ResdataPrototype(
-        "void rd_region_deselect_inside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _deselect_outside_polygon = ResdataPrototype(
-        "void rd_region_deselect_outside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _set_name = ResdataPrototype("void rd_region_set_name( rd_region , char*)")
-    _get_name = ResdataPrototype("char* rd_region_get_name( rd_region )")
-    _contains_ijk = ResdataPrototype(
-        "bool rd_region_contains_ijk( rd_region , int , int , int)"
-    )
-    _contains_global = ResdataPrototype(
-        "bool rd_region_contains_global( rd_region, int )"
-    )
-    _contains_active = ResdataPrototype(
-        "bool rd_region_contains_active( rd_region , int )"
-    )
-    _equal = ResdataPrototype("bool rd_region_equal( rd_region , rd_region )")
-    _select_true = ResdataPrototype("void rd_region_select_true( rd_region , rd_kw)")
-    _select_false = ResdataPrototype("void rd_region_select_false( rd_region , rd_kw)")
-    _select_from_layer = ResdataPrototype(
-        "void rd_region_select_from_layer( rd_region , rd_layer , int , int)"
-    )
+    def _free(self, *args):
+        return _rd_region._free(self, *args)
+
+    def _reset(self, *args):
+        return _rd_region._reset(self, *args)
+
+    def _select_all(self, *args):
+        return _rd_region._select_all(self, *args)
+
+    def _deselect_all(self, *args):
+        return _rd_region._deselect_all(self, *args)
+
+    def _select_equal(self, *args):
+        return _rd_region._select_equal(self, *args)
+
+    def _deselect_equal(self, *args):
+        return _rd_region._deselect_equal(self, *args)
+
+    def _select_less(self, *args):
+        return _rd_region._select_less(self, *args)
+
+    def _deselect_less(self, *args):
+        return _rd_region._deselect_less(self, *args)
+
+    def _select_more(self, *args):
+        return _rd_region._select_more(self, *args)
+
+    def _deselect_more(self, *args):
+        return _rd_region._deselect_more(self, *args)
+
+    def _select_in_interval(self, *args):
+        return _rd_region._select_in_interval(self, *args)
+
+    def _deselect_in_interval(self, *args):
+        return _rd_region._deselect_in_interval(self, *args)
+
+    def _invert_selection(self, *args):
+        return _rd_region._invert_selection(self, *args)
+
+    def _select_box(self, *args):
+        return _rd_region._select_box(self, *args)
+
+    def _deselect_box(self, *args):
+        return _rd_region._deselect_box(self, *args)
+
+    def _imul_kw(self, *args):
+        return _rd_region._imul_kw(self, *args)
+
+    def _idiv_kw(self, *args):
+        return _rd_region._idiv_kw(self, *args)
+
+    def _iadd_kw(self, *args):
+        return _rd_region._iadd_kw(self, *args)
+
+    def _isub_kw(self, *args):
+        return _rd_region._isub_kw(self, *args)
+
+    def _copy_kw(self, *args):
+        return _rd_region._copy_kw(self, *args)
+
+    def _intersect(self, *args):
+        return _rd_region._intersect(self, *args)
+
+    def _combine(self, *args):
+        return _rd_region._combine(self, *args)
+
+    def _subtract(self, *args):
+        return _rd_region._subtract(self, *args)
+
+    def _xor(self, *args):
+        return _rd_region._xor(self, *args)
+
+    def _select_cmp_less(self, *args):
+        return _rd_region._select_cmp_less(self, *args)
+
+    def _select_cmp_more(self, *args):
+        return _rd_region._select_cmp_more(self, *args)
+
+    def _deselect_cmp_less(self, *args):
+        return _rd_region._deselect_cmp_less(self, *args)
+
+    def _deselect_cmp_more(self, *args):
+        return _rd_region._deselect_cmp_more(self, *args)
+
+    def _select_islice(self, *args):
+        return _rd_region._select_islice(self, *args)
+
+    def _deselect_islice(self, *args):
+        return _rd_region._deselect_islice(self, *args)
+
+    def _select_jslice(self, *args):
+        return _rd_region._select_jslice(self, *args)
+
+    def _deselect_jslice(self, *args):
+        return _rd_region._deselect_jslice(self, *args)
+
+    def _select_kslice(self, *args):
+        return _rd_region._select_kslice(self, *args)
+
+    def _deselect_kslice(self, *args):
+        return _rd_region._deselect_kslice(self, *args)
+
+    def _select_deep_cells(self, *args):
+        return _rd_region._select_deep_cells(self, *args)
+
+    def _deselect_deep_cells(self, *args):
+        return _rd_region._deselect_deep_cells(self, *args)
+
+    def _select_shallow_cells(self, *args):
+        return _rd_region._select_shallow_cells(self, *args)
+
+    def _deselect_shallow_cells(self, *args):
+        return _rd_region._deselect_shallow_cells(self, *args)
+
+    def _select_small(self, *args):
+        return _rd_region._select_small(self, *args)
+
+    def _deselect_small(self, *args):
+        return _rd_region._deselect_small(self, *args)
+
+    def _select_large(self, *args):
+        return _rd_region._select_large(self, *args)
+
+    def _deselect_large(self, *args):
+        return _rd_region._deselect_large(self, *args)
+
+    def _select_thin(self, *args):
+        return _rd_region._select_thin(self, *args)
+
+    def _deselect_thin(self, *args):
+        return _rd_region._deselect_thin(self, *args)
+
+    def _select_thick(self, *args):
+        return _rd_region._select_thick(self, *args)
+
+    def _deselect_thick(self, *args):
+        return _rd_region._deselect_thick(self, *args)
+
+    def _select_active(self, *args):
+        return _rd_region._select_active(self, *args)
+
+    def _select_inactive(self, *args):
+        return _rd_region._select_inactive(self, *args)
+
+    def _deselect_active(self, *args):
+        return _rd_region._deselect_active(self, *args)
+
+    def _deselect_inactive(self, *args):
+        return _rd_region._deselect_inactive(self, *args)
+
+    def _select_above_plane(self, *args):
+        return _rd_region._select_above_plane(self, *args)
+
+    def _select_below_plane(self, *args):
+        return _rd_region._select_below_plane(self, *args)
+
+    def _deselect_above_plane(self, *args):
+        return _rd_region._deselect_above_plane(self, *args)
+
+    def _deselect_below_plane(self, *args):
+        return _rd_region._deselect_below_plane(self, *args)
+
+    def _select_inside_polygon(self, *args):
+        return _rd_region._select_inside_polygon(self, *args)
+
+    def _select_outside_polygon(self, *args):
+        return _rd_region._select_outside_polygon(self, *args)
+
+    def _deselect_inside_polygon(self, *args):
+        return _rd_region._deselect_inside_polygon(self, *args)
+
+    def _deselect_outside_polygon(self, *args):
+        return _rd_region._deselect_outside_polygon(self, *args)
+
+    def _set_name(self, *args):
+        return _rd_region._set_name(self, *args)
+
+    def _contains_ijk(self, *args):
+        return _rd_region._contains_ijk(self, *args)
+
+    def _contains_global(self, *args):
+        return _rd_region._contains_global(self, *args)
+
+    def _contains_active(self, *args):
+        return _rd_region._contains_active(self, *args)
+
+    def _equal(self, *args):
+        return _rd_region._equal(self, *args)
+
+    def _select_true(self, *args):
+        return _rd_region._select_true(self, *args)
+
+    def _select_false(self, *args):
+        return _rd_region._select_false(self, *args)
+
+    def _select_from_layer(self, *args):
+        return _rd_region._select_from_layer(self, *args)
+
+    def _set_kw_int(self, *args):
+        return _rd_region._set_kw_int(self, *args)
+
+    def _set_kw_float(self, *args):
+        return _rd_region._set_kw_float(self, *args)
+
+    def _set_kw_double(self, *args):
+        return _rd_region._set_kw_double(self, *args)
+
+    def _shift_kw_int(self, *args):
+        return _rd_region._shift_kw_int(self, *args)
+
+    def _shift_kw_float(self, *args):
+        return _rd_region._shift_kw_float(self, *args)
+
+    def _shift_kw_double(self, *args):
+        return _rd_region._shift_kw_double(self, *args)
+
+    def _scale_kw_int(self, *args):
+        return _rd_region._scale_kw_int(self, *args)
+
+    def _scale_kw_float(self, *args):
+        return _rd_region._scale_kw_float(self, *args)
+
+    def _scale_kw_double(self, *args):
+        return _rd_region._scale_kw_double(self, *args)
+
+    def _sum_kw_int(self, *args):
+        return _rd_region._sum_kw_int(self, *args)
+
+    def _sum_kw_float(self, *args):
+        return _rd_region._sum_kw_float(self, *args)
+
+    def _sum_kw_double(self, *args):
+        return _rd_region._sum_kw_double(self, *args)
+
+    def _sum_kw_bool(self, *args):
+        return _rd_region._sum_kw_bool(self, *args)
+
+    def _get_active_list(self):
+        return IntVector.createCReference(_rd_region._get_active_list(self), self)
+
+    def _get_global_list(self):
+        return IntVector.createCReference(_rd_region._get_global_list(self), self)
+
+    def _get_active_global(self):
+        return IntVector.createCReference(_rd_region._get_active_global(self), self)
+
+    def _get_kw_index_list(self, rd_kw, force_active):
+        return IntVector.createCReference(
+            _rd_region._get_kw_index_list(self, rd_kw, force_active), self
+        )
+
+    def _get_name(self):
+        return _rd_region._get_name(self)
 
     def __init__(self, grid, preselect):
         """
@@ -835,12 +870,9 @@ class ResdataRegion(BaseCClass):
         self._invert_selection()
 
     def __init_plane_select(self, n, p):
-        n_vec = ctypes.cast((ctypes.c_double * 3)(), ctypes.POINTER(ctypes.c_double))
-        p_vec = ctypes.cast((ctypes.c_double * 3)(), ctypes.POINTER(ctypes.c_double))
-        for i in range(3):
-            n_vec[i] = n[i]
-            p_vec[i] = p[i]
-        return (n_vec, p_vec)
+        if len(n) != 3 or len(p) != 3:
+            raise ValueError("Plane normal and point must contain exactly 3 values")
+        return (list(n), list(p))
 
     @select_method
     def select_above_plane(self, n, p, intersect=False):

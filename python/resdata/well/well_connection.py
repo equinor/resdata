@@ -1,6 +1,6 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.well._well_connection as _well_connection
 
 from .well_connection_direction_enum import WellConnectionDirection
 
@@ -8,68 +8,35 @@ from .well_connection_direction_enum import WellConnectionDirection
 class WellConnection(BaseCClass):
     TYPE_NAME = "rd_well_connect"
 
-    _i = ResdataPrototype("int well_conn_get_i(rd_well_connect)")
-    _j = ResdataPrototype("int well_conn_get_j(rd_well_connect)")
-    _k = ResdataPrototype("int well_conn_get_k(rd_well_connect)")
-    _segment_id = ResdataPrototype("int well_conn_get_segment_id(rd_well_connect)")
-    _is_open = ResdataPrototype("bool well_conn_open(rd_well_connect)")
-    _is_msw = ResdataPrototype("bool well_conn_MSW(rd_well_connect)")
-    _fracture_connection = ResdataPrototype(
-        "bool well_conn_fracture_connection(rd_well_connect)"
-    )
-    _matrix_connection = ResdataPrototype(
-        "bool well_conn_matrix_connection(rd_well_connect)"
-    )
-    _connection_factor = ResdataPrototype(
-        "double well_conn_get_connection_factor(rd_well_connect)"
-    )
-    _equal = ResdataPrototype("bool well_conn_equal(rd_well_connect, rd_well_connect)")
-    _get_dir = ResdataPrototype(
-        "rd_well_connection_dir well_conn_get_dir(rd_well_connect)"
-    )
-    _oil_rate = ResdataPrototype("double well_conn_get_oil_rate(rd_well_connect)")
-    _gas_rate = ResdataPrototype("double well_conn_get_gas_rate(rd_well_connect)")
-    _water_rate = ResdataPrototype("double well_conn_get_water_rate(rd_well_connect)")
-    _volume_rate = ResdataPrototype("double well_conn_get_volume_rate(rd_well_connect)")
-
-    _oil_rate_si = ResdataPrototype("double well_conn_get_oil_rate_si(rd_well_connect)")
-    _gas_rate_si = ResdataPrototype("double well_conn_get_gas_rate_si(rd_well_connect)")
-    _water_rate_si = ResdataPrototype(
-        "double well_conn_get_water_rate_si(rd_well_connect)"
-    )
-    _volume_rate_si = ResdataPrototype(
-        "double well_conn_get_volume_rate_si(rd_well_connect)"
-    )
-
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
     def isOpen(self) -> bool:
-        return self._is_open()
+        return _well_connection._is_open(self)
 
     def ijk(self) -> tuple[int, int, int]:
-        i = self._i()
-        j = self._j()
-        k = self._k()
+        i = _well_connection._i(self)
+        j = _well_connection._j(self)
+        k = _well_connection._k(self)
         return i, j, k
 
     def direction(self) -> WellConnectionDirection:
-        return self._get_dir()
+        return WellConnectionDirection(_well_connection._get_dir(self))
 
     def segmentId(self) -> int:
-        return self._segment_id()
+        return _well_connection._segment_id(self)
 
     def isFractureConnection(self) -> bool:
-        return self._fracture_connection()
+        return _well_connection._fracture_connection(self)
 
     def isMatrixConnection(self) -> bool:
-        return self._matrix_connection()
+        return _well_connection._matrix_connection(self)
 
     def connectionFactor(self) -> float:
-        return self._connection_factor()
+        return _well_connection._connection_factor(self)
 
     def __eq__(self, other) -> bool:
-        return self._equal(other)
+        return _well_connection._equal(self, other)
 
     def __hash__(self) -> int:
         return id(self)
@@ -81,7 +48,7 @@ class WellConnection(BaseCClass):
         pass
 
     def isMultiSegmentWell(self) -> bool:
-        return self._is_msw()
+        return _well_connection._is_msw(self)
 
     def __repr__(self) -> str:
         ijk = str(self.ijk())
@@ -106,25 +73,25 @@ class WellConnection(BaseCClass):
         )
 
     def gasRate(self) -> float:
-        return self._gas_rate()
+        return _well_connection._gas_rate(self)
 
     def waterRate(self) -> float:
-        return self._water_rate()
+        return _well_connection._water_rate(self)
 
     def oilRate(self) -> float:
-        return self._oil_rate()
+        return _well_connection._oil_rate(self)
 
     def volumeRate(self) -> float:
-        return self._volume_rate()
+        return _well_connection._volume_rate(self)
 
     def gasRateSI(self) -> float:
-        return self._gas_rate_si()
+        return _well_connection._gas_rate_si(self)
 
     def waterRateSI(self) -> float:
-        return self._water_rate_si()
+        return _well_connection._water_rate_si(self)
 
     def oilRateSI(self) -> float:
-        return self._oil_rate_si()
+        return _well_connection._oil_rate_si(self)
 
     def volumeRateSI(self) -> float:
-        return self._volume_rate_si()
+        return _well_connection._volume_rate_si(self)

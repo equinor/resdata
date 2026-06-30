@@ -10,12 +10,10 @@ In addition to the enum definitions there are a few stateless
 functions from rd_util.c which are not bound to any class type.
 """
 
-import ctypes
-
 from cwrap import BaseCEnum
 
-from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+import resdata._rd_util as _rd_util
+from resdata.util.util import CTime, monkey_the_camel
 
 
 class FileType(BaseCEnum):
@@ -98,13 +96,6 @@ FileMode.addEnum("WRITABLE", 2)
 
 
 class ResdataUtil:
-    _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
-    _get_file_type = ResdataPrototype(
-        "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
-    )
-    _get_start_date = ResdataPrototype("rd_time_t rd_get_start_date(char*)", bind=False)
-    _get_report_step = ResdataPrototype("int rd_filename_report_nr(char*)", bind=False)
-
     @staticmethod
     def get_num_cpu(datafile):
         """
@@ -114,7 +105,7 @@ class ResdataUtil:
         number of CPUs required. Will return one if no PARALLELL keyword
         is found.
         """
-        return ResdataUtil._get_num_cpu(datafile)
+        return _rd_util._get_num_cpu(datafile)
 
     @staticmethod
     def get_file_type(filename):
@@ -126,7 +117,7 @@ class ResdataUtil:
 
     @staticmethod
     def get_start_date(datafile):
-        return ResdataUtil._get_start_date(datafile).datetime()
+        return CTime(_rd_util._get_start_date(datafile)).datetime()
 
     @staticmethod
     def inspect_extension(filename):
@@ -134,21 +125,17 @@ class ResdataUtil:
         a FileType, a bool for formatted or not, and an
         integer for the step number.
         """
-        fmt_file = ctypes.c_bool()
-        report_step = ctypes.c_int(-1)
-        file_type = ResdataUtil._get_file_type(
-            filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
-        )
-        if report_step.value == -1:
+        file_type, fmt_file, report_step = _rd_util._get_file_type(filename)
+        if report_step == -1:
             step = None
         else:
-            step = report_step.value
+            step = report_step
 
-        return (file_type, fmt_file.value, step)
+        return (FileType(file_type), fmt_file, step)
 
     @staticmethod
     def report_step(filename):
-        report_step = ResdataUtil._get_report_step(filename)
+        report_step = _rd_util._get_report_step(filename)
         if report_step < 0:
             raise ValueError("Could not infer report step from: %s" % filename)
 

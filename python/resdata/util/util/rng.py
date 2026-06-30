@@ -2,25 +2,12 @@ import os.path
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.util.util._rng as _rng
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 
 class RandomNumberGenerator(BaseCClass):
     TYPE_NAME = "rd_rng"
-
-    _rng_alloc = ResdataPrototype(
-        "void* rng_alloc(rd_rng_alg_type_enum, rd_rng_init_mode)", bind=False
-    )
-    _free = ResdataPrototype("void rng_free(rd_rng)")
-    _get_double = ResdataPrototype("double rng_get_double(rd_rng)")
-    _get_int = ResdataPrototype("int rng_get_int(rd_rng, int)")
-    _forward = ResdataPrototype("uint rng_forward(rd_rng)")
-    _get_max_int = ResdataPrototype("uint rng_get_max_int(rd_rng)")
-    _state_size = ResdataPrototype("int rng_state_size(rd_rng)")
-    _set_state = ResdataPrototype("void rng_set_state(rd_rng , char*)")
-    _load_state = ResdataPrototype("void rng_load_state(rd_rng , char*)")
-    _save_state = ResdataPrototype("void rng_save_state(rd_rng , char*)")
 
     def __init__(
         self, alg_type=RngAlgTypeEnum.MZRAN, init_mode=RngInitModeEnum.INIT_CLOCK
@@ -28,11 +15,11 @@ class RandomNumberGenerator(BaseCClass):
         assert isinstance(alg_type, RngAlgTypeEnum)
         assert isinstance(init_mode, RngInitModeEnum)
 
-        c_ptr = self._rng_alloc(alg_type, init_mode)
+        c_ptr = _rng._rng_alloc(int(alg_type), int(init_mode))
         super().__init__(c_ptr)
 
     def stateSize(self):
-        return self._state_size()
+        return _rng._state_size(self)
 
     def setState(self, seed_string):
         state_size = self.stateSize()
@@ -40,29 +27,29 @@ class RandomNumberGenerator(BaseCClass):
             raise ValueError(
                 "The seed string must be at least %d characters long" % self.stateSize()
             )
-        self._set_state(seed_string)
+        _rng._set_state(self, seed_string)
 
     def getDouble(self) -> float:
-        return self._get_double()
+        return _rng._get_double(self)
 
     def getInt(self, maximum: int | None = None) -> float:
         if maximum is None:
-            maximum = self._get_max_int()
+            maximum = _rng._get_max_int(self)
 
-        return self._get_int(maximum)
+        return _rng._get_int(self, maximum)
 
     def forward(self):
-        return self._forward()
+        return _rng._forward(self)
 
     def free(self):
-        self._free()
+        _rng._free(self)
 
     def loadState(self, seed_file):
         """
         Will seed the RNG from the file @seed_file.
         """
         if os.path.isfile(seed_file):
-            self._load_state(seed_file)
+            _rng._load_state(self, seed_file)
         else:
             raise OSError("No such file: %s" % seed_file)
 
@@ -70,4 +57,4 @@ class RandomNumberGenerator(BaseCClass):
         """
         Will save the state of the rng to @seed_file
         """
-        self._save_state(seed_file)
+        _rng._save_state(self, seed_file)

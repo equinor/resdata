@@ -1,36 +1,13 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.util.util._lookup_table as _lookup_table
 
 
 class LookupTable(BaseCClass):
     TYPE_NAME = "rd_lookup_table"
-    _alloc = ResdataPrototype("void* lookup_table_alloc_empty()", bind=False)
-    _max = ResdataPrototype("double lookup_table_get_max_value(rd_lookup_table)")
-    _min = ResdataPrototype("double lookup_table_get_min_value(rd_lookup_table)")
-    _arg_max = ResdataPrototype("double lookup_table_get_max_arg(rd_lookup_table)")
-    _arg_min = ResdataPrototype("double lookup_table_get_min_arg(rd_lookup_table)")
-    _append = ResdataPrototype(
-        "void lookup_table_append(rd_lookup_table, double, double)"
-    )
-    _size = ResdataPrototype("int lookup_table_get_size(rd_lookup_table)")
-    _interp = ResdataPrototype("double lookup_table_interp(rd_lookup_table, double)")
-    _free = ResdataPrototype("void lookup_table_free(rd_lookup_table)")
-    _set_low_limit = ResdataPrototype(
-        "void lookup_table_set_low_limit(rd_lookup_table, double)"
-    )
-    _set_high_limit = ResdataPrototype(
-        "void lookup_table_set_high_limit(rd_lookup_table, double)"
-    )
-    _has_low_limit = ResdataPrototype(
-        "bool lookup_table_has_low_limit(rd_lookup_table)"
-    )
-    _has_high_limit = ResdataPrototype(
-        "bool lookup_table_has_high_limit(rd_lookup_table)"
-    )
 
     def __init__(self, lower_limit=None, upper_limit=None):
-        super().__init__(self._alloc())
+        super().__init__(_lookup_table._alloc())
 
         if lower_limit is not None:
             self.setLowerLimit(lower_limit)
@@ -40,26 +17,26 @@ class LookupTable(BaseCClass):
 
     def getMaxValue(self):
         self.assertSize(1)
-        return self._max()
+        return _lookup_table._max(self)
 
     def getMinValue(self):
         self.assertSize(1)
-        return self._min()
+        return _lookup_table._min(self)
 
     def getMinArg(self):
         self.assertSize(1)
-        return self._arg_min()
+        return _lookup_table._arg_min(self)
 
     def getMaxArg(self):
         self.assertSize(1)
-        return self._arg_max()
+        return _lookup_table._arg_max(self)
 
     def assertSize(self, N):
         if len(self) < N:
             raise ValueError("Lookup table is too small")
 
     def __len__(self):
-        return self._size()
+        return _lookup_table._size(self)
 
     @property
     def size(self):
@@ -82,16 +59,16 @@ class LookupTable(BaseCClass):
         return self.getMinArg()
 
     def setLowerLimit(self, value):
-        self._set_low_limit(value)
+        _lookup_table._set_low_limit(self, value)
 
     def hasLowerLimit(self):
-        return self._has_low_limit()
+        return _lookup_table._has_low_limit(self)
 
     def setUpperLimit(self, value):
-        self._set_high_limit(value)
+        _lookup_table._set_high_limit(self, value)
 
     def hasUpperLimit(self):
-        return self._has_high_limit()
+        return _lookup_table._has_high_limit(self)
 
     def interp(self, x):
         self.assertSize(2)
@@ -108,14 +85,14 @@ class LookupTable(BaseCClass):
                     % (x, self.getMinArg(), self.getMaxArg())
                 )
 
-        return self._interp(x)
+        return _lookup_table._interp(self, x)
 
     def append(self, x, y):
-        self._append(x, y)
+        _lookup_table._append(self, x, y)
 
     # todo: necessary???
     def __del__(self):
-        self._free()
+        _lookup_table._free(self)
 
     def free(self):
-        self._free()
+        _lookup_table._free(self)
