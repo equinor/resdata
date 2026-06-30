@@ -10,7 +10,6 @@ from typing import Any, cast
 import numpy as np
 import numpy.typing as npt
 from resfo_utilities import RFTReader
-from typing_extensions import deprecated
 
 from resdata.util.util import monkey_the_camel
 
@@ -215,11 +214,6 @@ def category_to_type_str(s: str) -> str | None:
     return None
 
 
-@deprecated(
-    "ResdataRFTFile is deprecated and will be removed in version 7, see "
-    "resfo-utilities.readthedocs.io/en/latest/user_guide.html"
-    "#module-resfo_utilities._rft_reader to migrate to resfo-utilities. ",
-)
 class ResdataRFTFile:
     """Used to load an RFT file.
 
