@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <optional>
 #include <string>
 
 #include <pybind11/pybind11.h>
@@ -46,14 +47,14 @@ template <> rd_kw_type *from_cwrap<rd_kw_type>(py::handle obj) {
     return cast_cwrap<rd_kw_type>(obj);
 }
 
-rd_kw_type *from_cwrap_opt_kw(py::handle obj) {
-    if (obj.is_none())
+template <> rd_kw_type *from_cwrap(std::optional<py::handle> obj) {
+    if (!obj)
         return nullptr;
 
-    if (!py::isinstance(obj, ResdataKW()))
+    if (!py::isinstance(*obj, ResdataKW()))
         throw py::type_error("Expected ResdataKW, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<rd_kw_type>(obj);
+                             static_cast<std::string>(py::repr(*obj)));
+    return cast_cwrap<rd_kw_type>(*obj);
 }
 
 py::object Grid() {
