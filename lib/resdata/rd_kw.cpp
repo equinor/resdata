@@ -615,6 +615,8 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (target->size < 0)
         throw std::invalid_argument(
             fmt::format("target size was negative: {}", target->size));
+    if (target->size == 0)
+        return;
     memcpy(target->data, src->data,
            static_cast<size_t>(target->size) *
                rd_type_get_sizeof_ctype(target->data_type));
