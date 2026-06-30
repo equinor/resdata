@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from resdata import ResdataPrototype
+import resdata.util.util._bool_vector as _bool_vector
 
 from .int_vector import IntVector
 from .vector_template import VectorTemplate
@@ -10,97 +10,163 @@ class BoolVector(VectorTemplate):
     TYPE_NAME = "rd_bool_vector"
     default_format = "%8d"
 
-    _alloc = ResdataPrototype("void* bool_vector_alloc(int, bool)", bind=False)
-    _create_active_mask = ResdataPrototype(
-        "rd_bool_vector_obj string_util_alloc_active_mask(char*)", bind=False
-    )
-    _active_list = ResdataPrototype(
-        "rd_int_vector_obj bool_vector_alloc_active_list(rd_bool_vector)"
-    )
-    _alloc_copy = ResdataPrototype(
-        "rd_bool_vector_obj bool_vector_alloc_copy(rd_bool_vector)"
-    )
-    _update_active_mask = ResdataPrototype(
-        "bool string_util_update_active_mask(char*, rd_bool_vector)", bind=False
-    )
-
-    _strided_copy = ResdataPrototype(
-        "rd_bool_vector_obj bool_vector_alloc_strided_copy(rd_bool_vector, int, int, int)"
-    )
-    _free = ResdataPrototype("void bool_vector_free(rd_bool_vector)")
-    _iget = ResdataPrototype("bool bool_vector_iget(rd_bool_vector, int)")
-    _safe_iget = ResdataPrototype("bool bool_vector_safe_iget(rd_bool_vector, int)")
-    _iset = ResdataPrototype("void bool_vector_iset(rd_bool_vector, int, bool)")
-    _size = ResdataPrototype("int bool_vector_size(rd_bool_vector)")
-    _append = ResdataPrototype("void bool_vector_append(rd_bool_vector, bool)")
-    _idel_block = ResdataPrototype(
-        "void bool_vector_idel_block(rd_bool_vector, bool, bool)"
-    )
-    _idel = ResdataPrototype("void bool_vector_idel(rd_bool_vector, int)")
-    _pop = ResdataPrototype("bool bool_vector_pop(rd_bool_vector)")
-    _lshift = ResdataPrototype("void bool_vector_lshift(rd_bool_vector, int)")
-    _rshift = ResdataPrototype("void bool_vector_rshift(rd_bool_vector, int)")
-    _insert = ResdataPrototype("void bool_vector_insert(rd_bool_vector, int, bool)")
-    _fprintf = ResdataPrototype(
-        "void bool_vector_fprintf(rd_bool_vector, FILE, char*, char*)"
-    )
-    _sort = ResdataPrototype("void bool_vector_sort(rd_bool_vector)")
-    _rsort = ResdataPrototype("void bool_vector_rsort(rd_bool_vector)")
-    _reset = ResdataPrototype("void bool_vector_reset(rd_bool_vector)")
-    _set_read_only = ResdataPrototype(
-        "void bool_vector_set_read_only(rd_bool_vector, bool)"
-    )
-    _get_read_only = ResdataPrototype("bool bool_vector_get_read_only(rd_bool_vector)")
-    _get_max = ResdataPrototype("bool bool_vector_get_max(rd_bool_vector)")
-    _get_min = ResdataPrototype("bool bool_vector_get_min(rd_bool_vector)")
-    _get_max_index = ResdataPrototype(
-        "int bool_vector_get_max_index(rd_bool_vector, bool)"
-    )
-    _get_min_index = ResdataPrototype(
-        "int bool_vector_get_min_index(rd_bool_vector, bool)"
-    )
-    _shift = ResdataPrototype("void bool_vector_shift(rd_bool_vector, bool)")
-    _scale = ResdataPrototype("void bool_vector_scale(rd_bool_vector, bool)")
-    _div = ResdataPrototype("void bool_vector_div(rd_bool_vector, bool)")
-    _inplace_add = ResdataPrototype(
-        "void bool_vector_inplace_add(rd_bool_vector, rd_bool_vector)"
-    )
-    _inplace_mul = ResdataPrototype(
-        "void bool_vector_inplace_mul(rd_bool_vector, rd_bool_vector)"
-    )
-    _assign = ResdataPrototype("void bool_vector_set_all(rd_bool_vector, bool)")
-    _memcpy = ResdataPrototype(
-        "void bool_vector_memcpy(rd_bool_vector, rd_bool_vector)"
-    )
-    _set_default = ResdataPrototype(
-        "void bool_vector_set_default(rd_bool_vector, bool)"
-    )
-    _get_default = ResdataPrototype("bool bool_vector_get_default(rd_bool_vector)")
-    _element_size = ResdataPrototype("int bool_vector_element_size(rd_bool_vector)")
-
-    _permute = ResdataPrototype(
-        "void bool_vector_permute(rd_bool_vector, rd_permutation_vector)"
-    )
-    _sort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj bool_vector_alloc_sort_perm(rd_bool_vector)"
-    )
-    _rsort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj bool_vector_alloc_rsort_perm(rd_bool_vector)"
-    )
-
-    _contains = ResdataPrototype("bool bool_vector_contains(rd_bool_vector, bool)")
-    _select_unique = ResdataPrototype("void bool_vector_select_unique(rd_bool_vector)")
-    _element_sum = ResdataPrototype("bool bool_vector_sum(rd_bool_vector)")
-    _get_data_ptr = ResdataPrototype("bool* bool_vector_get_ptr(rd_bool_vector)")
-    _count_equal = ResdataPrototype("int bool_vector_count_equal(rd_bool_vector, bool)")
     _init_linear = None
-    _equal = ResdataPrototype("bool bool_vector_equal(rd_bool_vector, rd_bool_vector)")
-    _first_eq = ResdataPrototype(
-        "int bool_vector_first_equal(rd_bool_vector, rd_bool_vector, int)"
-    )
-    _first_neq = ResdataPrototype(
-        "int bool_vector_first_not_equal(rd_bool_vector, rd_bool_vector, int)"
-    )
+
+    @staticmethod
+    def _alloc(initial_size, default_value):
+        return _bool_vector._alloc(initial_size, default_value)
+
+    @classmethod
+    def _create_active_mask(cls, range_string):
+        return cls.createPythonObject(_bool_vector._create_active_mask(range_string))
+
+    def _active_list(self):
+        return IntVector.createPythonObject(_bool_vector._active_list(self))
+
+    def _alloc_copy(self):
+        return BoolVector.createPythonObject(_bool_vector._alloc_copy(self))
+
+    @staticmethod
+    def _update_active_mask(range_string, active_mask):
+        return _bool_vector._update_active_mask(range_string, active_mask)
+
+    def _strided_copy(self, start, stop, stride):
+        return BoolVector.createPythonObject(
+            _bool_vector._strided_copy(self, start, stop, stride)
+        )
+
+    def _free(self):
+        _bool_vector._free(self)
+
+    def _iget(self, index):
+        return _bool_vector._iget(self, index)
+
+    def _safe_iget(self, index):
+        return _bool_vector._safe_iget(self, index)
+
+    def _iset(self, index, value):
+        _bool_vector._iset(self, index, value)
+
+    def _size(self):
+        return _bool_vector._size(self)
+
+    def _append(self, value):
+        _bool_vector._append(self, value)
+
+    def _idel_block(self, index, block_size):
+        _bool_vector._idel_block(self, index, block_size)
+
+    def _idel(self, index):
+        _bool_vector._idel(self, index)
+
+    def _pop(self):
+        return _bool_vector._pop(self)
+
+    def _lshift(self, shift):
+        _bool_vector._lshift(self, shift)
+
+    def _rshift(self, shift):
+        _bool_vector._rshift(self, shift)
+
+    def _insert(self, index, value):
+        _bool_vector._insert(self, index, value)
+
+    def _fprintf(self, stream, name, fmt):
+        _bool_vector._fprintf(self, stream, name, fmt)
+
+    def _sort(self):
+        _bool_vector._sort(self)
+
+    def _rsort(self):
+        _bool_vector._rsort(self)
+
+    def _reset(self):
+        _bool_vector._reset(self)
+
+    def _set_read_only(self, read_only):
+        _bool_vector._set_read_only(self, read_only)
+
+    def _get_read_only(self):
+        return _bool_vector._get_read_only(self)
+
+    def _get_max(self):
+        return _bool_vector._get_max(self)
+
+    def _get_min(self):
+        return _bool_vector._get_min(self)
+
+    def _get_max_index(self, reverse):
+        return _bool_vector._get_max_index(self, reverse)
+
+    def _get_min_index(self, reverse):
+        return _bool_vector._get_min_index(self, reverse)
+
+    def _shift(self, delta):
+        _bool_vector._shift(self, delta)
+
+    def _scale(self, factor):
+        _bool_vector._scale(self, factor)
+
+    def _div(self, divisor):
+        _bool_vector._div(self, divisor)
+
+    def _inplace_add(self, delta):
+        _bool_vector._inplace_add(self, delta)
+
+    def _inplace_mul(self, factor):
+        _bool_vector._inplace_mul(self, factor)
+
+    def _assign(self, value):
+        _bool_vector._assign(self, value)
+
+    def _memcpy(self, src):
+        _bool_vector._memcpy(self, src)
+
+    def _set_default(self, default_value):
+        _bool_vector._set_default(self, default_value)
+
+    def _get_default(self):
+        return _bool_vector._get_default(self)
+
+    def _element_size(self):
+        return _bool_vector._element_size(self)
+
+    def _permute(self, permutation_vector):
+        _bool_vector._permute(self, permutation_vector)
+
+    def _sort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_bool_vector._sort_perm(self))
+
+    def _rsort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_bool_vector._rsort_perm(self))
+
+    def _contains(self, value):
+        return _bool_vector._contains(self, value)
+
+    def _select_unique(self):
+        _bool_vector._select_unique(self)
+
+    def _element_sum(self):
+        return _bool_vector._element_sum(self)
+
+    def _get_data_ptr(self):
+        return _bool_vector._get_data_ptr(self)
+
+    def _count_equal(self, value):
+        return _bool_vector._count_equal(self, value)
+
+    def _equal(self, other):
+        return _bool_vector._equal(self, other)
+
+    def _first_eq(self, other, offset):
+        return _bool_vector._first_eq(self, other, offset)
+
+    def _first_neq(self, other, offset):
+        return _bool_vector._first_neq(self, other, offset)
 
     def __init__(self, default_value=False, initial_size=0):
         super().__init__(default_value, initial_size)

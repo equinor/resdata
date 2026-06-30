@@ -40,3 +40,6 @@ pybind11::object RandomNumberGenerator();
 pybind11::object ResdataSMSPECNode();
 pybind11::object SummaryTStep();
 pybind11::object ResdataGrav();
+pybind11::object BoolVector();
+pybind11::object PermutationVector();
+pybind11::object Hash();

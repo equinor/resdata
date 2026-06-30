@@ -1,4 +1,4 @@
-from resdata import ResdataPrototype
+import resdata.util.util._double_vector as _double_vector
 
 from .vector_template import VectorTemplate
 
@@ -7,107 +7,156 @@ class DoubleVector(VectorTemplate):
     TYPE_NAME = "rd_double_vector"
     default_format = "%8.4f"
 
-    _alloc = ResdataPrototype("void* double_vector_alloc(int, double)", bind=False)
-    _alloc_copy = ResdataPrototype(
-        "rd_double_vector_obj double_vector_alloc_copy(rd_double_vector)"
-    )
-    _strided_copy = ResdataPrototype(
-        "rd_double_vector_obj double_vector_alloc_strided_copy(rd_double_vector, int, int, int)"
-    )
-    _free = ResdataPrototype("void double_vector_free(rd_double_vector)")
-    _iget = ResdataPrototype("double double_vector_iget(rd_double_vector, int)")
-    _safe_iget = ResdataPrototype(
-        "double double_vector_safe_iget(rd_double_vector, int)"
-    )
-    _iset = ResdataPrototype("double double_vector_iset(rd_double_vector, int, double)")
-    _size = ResdataPrototype("int double_vector_size(rd_double_vector)")
-    _append = ResdataPrototype("void double_vector_append(rd_double_vector, double )")
-    _idel_block = ResdataPrototype(
-        "void double_vector_idel_block(rd_double_vector, int, int)"
-    )
-    _pop = ResdataPrototype("double double_vector_pop(rd_double_vector)")
-    _idel = ResdataPrototype("void double_vector_idel(rd_double_vector, int)")
-    _lshift = ResdataPrototype("void double_vector_lshift(rd_double_vector, int)")
-    _rshift = ResdataPrototype("void double_vector_rshift(rd_double_vector, int)")
-    _insert = ResdataPrototype(
-        "void double_vector_insert(rd_double_vector, int, double)"
-    )
-    _fprintf = ResdataPrototype(
-        "void double_vector_fprintf(rd_double_vector, FILE, char*, char*)"
-    )
-    _sort = ResdataPrototype("void double_vector_sort(rd_double_vector)")
-    _rsort = ResdataPrototype("void double_vector_rsort(rd_double_vector)")
-    _reset = ResdataPrototype("void double_vector_reset(rd_double_vector)")
-    _get_read_only = ResdataPrototype(
-        "bool double_vector_get_read_only(rd_double_vector)"
-    )
-    _set_read_only = ResdataPrototype(
-        "void double_vector_set_read_only(rd_double_vector, bool)"
-    )
-    _get_max = ResdataPrototype("double double_vector_get_max(rd_double_vector)")
-    _get_min = ResdataPrototype("double double_vector_get_min(rd_double_vector)")
-    _get_max_index = ResdataPrototype(
-        "int double_vector_get_max_index(rd_double_vector, bool)"
-    )
-    _get_min_index = ResdataPrototype(
-        "int double_vector_get_min_index(rd_double_vector, bool)"
-    )
-    _shift = ResdataPrototype("void double_vector_shift(rd_double_vector, double)")
-    _scale = ResdataPrototype("void double_vector_scale(rd_double_vector, double)")
-    _div = ResdataPrototype("void double_vector_div(rd_double_vector, double)")
-    _inplace_add = ResdataPrototype(
-        "void double_vector_inplace_add(rd_double_vector, rd_double_vector)"
-    )
-    _inplace_mul = ResdataPrototype(
-        "void double_vector_inplace_mul(rd_double_vector, rd_double_vector)"
-    )
-    _assign = ResdataPrototype("void double_vector_set_all(rd_double_vector, double)")
-    _memcpy = ResdataPrototype(
-        "void double_vector_memcpy(rd_double_vector, rd_double_vector)"
-    )
-    _set_default = ResdataPrototype(
-        "void double_vector_set_default(rd_double_vector, double)"
-    )
-    _get_default = ResdataPrototype(
-        "double double_vector_get_default(rd_double_vector)"
-    )
-    _element_size = ResdataPrototype("int double_vector_element_size(rd_double_vector)")
+    @staticmethod
+    def _alloc(initial_size, default_value):
+        return _double_vector._alloc(initial_size, default_value)
 
-    _permute = ResdataPrototype(
-        "void double_vector_permute(rd_double_vector, rd_permutation_vector)"
-    )
-    _sort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj double_vector_alloc_sort_perm(rd_double_vector)"
-    )
-    _rsort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj double_vector_alloc_rsort_perm(rd_double_vector)"
-    )
-    _contains = ResdataPrototype(
-        "bool double_vector_contains(rd_double_vector, double)"
-    )
-    _select_unique = ResdataPrototype(
-        "void double_vector_select_unique(rd_double_vector)"
-    )
-    _element_sum = ResdataPrototype("double double_vector_sum(rd_double_vector)")
-    _get_data_ptr = ResdataPrototype("double* double_vector_get_ptr(rd_double_vector)")
-    _count_equal = ResdataPrototype(
-        "int double_vector_count_equal(rd_double_vector, double)"
-    )
-    _init_range = ResdataPrototype(
-        "void double_vector_init_range(rd_double_vector, double, double, double)"
-    )
-    _init_linear = ResdataPrototype(
-        "bool double_vector_init_linear(rd_double_vector, double, double, int)"
-    )
-    _equal = ResdataPrototype(
-        "bool double_vector_equal(rd_double_vector, rd_double_vector)"
-    )
-    _first_eq = ResdataPrototype(
-        "int double_vector_first_equal(rd_double_vector, rd_double_vector, int)"
-    )
-    _first_neq = ResdataPrototype(
-        "int double_vector_first_not_equal(rd_double_vector, rd_double_vector, int)"
-    )
+    def _alloc_copy(self):
+        return DoubleVector.createPythonObject(_double_vector._alloc_copy(self))
+
+    def _strided_copy(self, start, stop, stride):
+        return DoubleVector.createPythonObject(
+            _double_vector._strided_copy(self, start, stop, stride)
+        )
+
+    def _free(self):
+        _double_vector._free(self)
+
+    def _iget(self, index):
+        return _double_vector._iget(self, index)
+
+    def _safe_iget(self, index):
+        return _double_vector._safe_iget(self, index)
+
+    def _iset(self, index, value):
+        _double_vector._iset(self, index, value)
+
+    def _size(self):
+        return _double_vector._size(self)
+
+    def _append(self, value):
+        _double_vector._append(self, value)
+
+    def _idel_block(self, index, block_size):
+        _double_vector._idel_block(self, index, block_size)
+
+    def _idel(self, index):
+        _double_vector._idel(self, index)
+
+    def _pop(self):
+        return _double_vector._pop(self)
+
+    def _lshift(self, shift):
+        _double_vector._lshift(self, shift)
+
+    def _rshift(self, shift):
+        _double_vector._rshift(self, shift)
+
+    def _insert(self, index, value):
+        _double_vector._insert(self, index, value)
+
+    def _fprintf(self, stream, name, fmt):
+        _double_vector._fprintf(self, stream, name, fmt)
+
+    def _sort(self):
+        _double_vector._sort(self)
+
+    def _rsort(self):
+        _double_vector._rsort(self)
+
+    def _reset(self):
+        _double_vector._reset(self)
+
+    def _set_read_only(self, read_only):
+        _double_vector._set_read_only(self, read_only)
+
+    def _get_read_only(self):
+        return _double_vector._get_read_only(self)
+
+    def _get_max(self):
+        return _double_vector._get_max(self)
+
+    def _get_min(self):
+        return _double_vector._get_min(self)
+
+    def _get_max_index(self, reverse):
+        return _double_vector._get_max_index(self, reverse)
+
+    def _get_min_index(self, reverse):
+        return _double_vector._get_min_index(self, reverse)
+
+    def _shift(self, delta):
+        _double_vector._shift(self, delta)
+
+    def _scale(self, factor):
+        _double_vector._scale(self, factor)
+
+    def _div(self, divisor):
+        _double_vector._div(self, divisor)
+
+    def _inplace_add(self, delta):
+        _double_vector._inplace_add(self, delta)
+
+    def _inplace_mul(self, factor):
+        _double_vector._inplace_mul(self, factor)
+
+    def _assign(self, value):
+        _double_vector._assign(self, value)
+
+    def _memcpy(self, src):
+        _double_vector._memcpy(self, src)
+
+    def _set_default(self, default_value):
+        _double_vector._set_default(self, default_value)
+
+    def _get_default(self):
+        return _double_vector._get_default(self)
+
+    def _element_size(self):
+        return _double_vector._element_size(self)
+
+    def _permute(self, permutation_vector):
+        _double_vector._permute(self, permutation_vector)
+
+    def _sort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_double_vector._sort_perm(self))
+
+    def _rsort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_double_vector._rsort_perm(self))
+
+    def _contains(self, value):
+        return _double_vector._contains(self, value)
+
+    def _select_unique(self):
+        _double_vector._select_unique(self)
+
+    def _element_sum(self):
+        return _double_vector._element_sum(self)
+
+    def _get_data_ptr(self):
+        return _double_vector._get_data_ptr(self)
+
+    def _count_equal(self, value):
+        return _double_vector._count_equal(self, value)
+
+    def _init_range(self, min_value, max_value, delta):
+        _double_vector._init_range(self, min_value, max_value, delta)
+
+    def _init_linear(self, start_value, end_value, num_values):
+        return _double_vector._init_linear(self, start_value, end_value, num_values)
+
+    def _equal(self, other):
+        return _double_vector._equal(self, other)
+
+    def _first_eq(self, other, offset):
+        return _double_vector._first_eq(self, other, offset)
+
+    def _first_neq(self, other, offset):
+        return _double_vector._first_neq(self, other, offset)
 
     def __init__(self, default_value=0, initial_size=0):
         super().__init__(default_value, initial_size)

@@ -486,6 +486,26 @@ add_resdata_pybind_module(_well_segment well_segment_pybind.cpp resdata/well
                           "$ORIGIN/../.libs")
 add_resdata_pybind_module(_well_time_line well_ts_pybind.cpp resdata/well
                           "$ORIGIN/../.libs")
+add_resdata_pybind_module(_bool_vector bool_vector_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_int_vector int_vector_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_double_vector double_vector_pybind.cpp
+                          resdata/util/util "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_time_vector time_t_vector_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_permutation_vector perm_vector_pybind.cpp
+                          resdata/util/util "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_hash hash_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_stringlist stringlist_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_rd_version rd_version_pybind.cpp resdata/util/util
+                          "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_install_abort_signals install_abort_signals_pybind.cpp
+                          resdata/util/util "$ORIGIN/../../.libs")
+add_resdata_pybind_module(_rd_sum_keyword_vector rd_sum_vector_pybind.cpp
+                          resdata/summary "$ORIGIN/../.libs")
 
 if(NOT BUILD_TESTS)
   return()

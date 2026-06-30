@@ -18,29 +18,11 @@ hardly need to notice that the StringList class is at play.
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.util.util._stringlist as _stringlist
 
 
 class StringList(BaseCClass):
     TYPE_NAME = "rd_stringlist"
-
-    _alloc = ResdataPrototype("void* stringlist_alloc_new( )", bind=False)
-    _free = ResdataPrototype("void stringlist_free(rd_stringlist )")
-    _append = ResdataPrototype("void stringlist_append_copy(rd_stringlist , char* )")
-    _iget = ResdataPrototype("char* stringlist_iget(rd_stringlist , int )")
-    _front = ResdataPrototype("char* stringlist_front( rd_stringlist )")
-    _back = ResdataPrototype("char* stringlist_back( rd_stringlist )")
-    _iget_copy = ResdataPrototype("char* stringlist_iget_copy(rd_stringlist, int)")
-    _iset = ResdataPrototype(
-        "void  stringlist_iset_copy( rd_stringlist , int , char* )"
-    )
-    _get_size = ResdataPrototype("int  stringlist_get_size( rd_stringlist )")
-    _contains = ResdataPrototype("bool stringlist_contains(rd_stringlist , char*)")
-    _equal = ResdataPrototype("bool stringlist_equal(rd_stringlist , rd_stringlist)")
-    _sort = ResdataPrototype("void stringlist_python_sort( rd_stringlist , int)")
-    _pop = ResdataPrototype("char* stringlist_pop(rd_stringlist)")
-    _last = ResdataPrototype("char* stringlist_get_last(rd_stringlist)")
-    _find_first = ResdataPrototype("int stringlist_find_first(rd_stringlist, char*)")
 
     def __init__(self, initial=None):
         """
@@ -61,7 +43,7 @@ class StringList(BaseCClass):
         ownership of the underlying object.
         """
 
-        c_ptr = self._alloc()
+        c_ptr = _stringlist._alloc()
         super().__init__(c_ptr)
         if not initial:
             return
@@ -82,7 +64,7 @@ class StringList(BaseCClass):
     def __eq__(self, other):
         if len(self) == len(other):
             if isinstance(other, StringList):
-                return self._equal(other)
+                return _stringlist._equal(self, other)
             else:
                 equal = True
                 for index, s2 in enumerate(other):
@@ -107,7 +89,7 @@ class StringList(BaseCClass):
             if isinstance(value, bytes):
                 value = value.decode("ascii")
             if isinstance(value, str):
-                self._iset(index, value)
+                _stringlist._iset(self, index, value)
             else:
                 raise TypeError("Item: %s not string type" % value)
 
@@ -127,7 +109,7 @@ class StringList(BaseCClass):
                     "index must be in range %d <= %d < %d" % (0, index, len(self))
                 )
             else:
-                return self._iget(index)
+                return _stringlist._iget(self, index)
         else:
             raise TypeError("Index should be integer type")
 
@@ -137,7 +119,7 @@ class StringList(BaseCClass):
 
         The 'in' check is based on string equality.
         """
-        return self._contains(s)
+        return _stringlist._contains(self, s)
 
     def __iadd__(self, other):
         if isinstance(other, bytes):
@@ -181,7 +163,7 @@ class StringList(BaseCClass):
         """
         The length of the list - used to support builtin len().
         """
-        return self._get_size()
+        return _stringlist._get_size(self)
 
     def __str__(self):
         """
@@ -211,7 +193,7 @@ class StringList(BaseCClass):
         Will raise IndexError if list is empty.
         """
         if not self.empty():
-            return self._pop()
+            return _stringlist._pop(self)
         else:
             raise IndexError("List empty.  Cannot call pop().")
 
@@ -223,9 +205,9 @@ class StringList(BaseCClass):
         if isinstance(s, bytes):
             s.decode("ascii")
         if isinstance(s, str):
-            self._append(s)
+            _stringlist._append(self, s)
         else:
-            self._append(str(s))
+            _stringlist._append(self, str(s))
 
     @property
     def strings(self):
@@ -246,7 +228,7 @@ class StringList(BaseCClass):
         Will return the last element in list. Raise IndexError if empty.
         """
         if not self.empty():
-            return self._last()
+            return _stringlist._last(self)
         else:
             raise IndexError("List empty.  No such element last().")
 
@@ -262,28 +244,28 @@ class StringList(BaseCClass):
              2 : util_strcmp_float() string comparison
 
         """
-        self._sort(cmp_flag)
+        _stringlist._sort(self, cmp_flag)
 
     def index(self, value: str) -> int:
         if isinstance(value, bytes):
             value.decode("ascii")
         if isinstance(value, str):
-            return self._find_first(value)
+            return _stringlist._find_first(self, value)
         raise KeyError(
             'Cannot index by "%s", lst.index() needs a string.' % str(type(value))
         )
 
     def free(self):
-        self._free()
+        _stringlist._free(self)
 
     def front(self):
         if not self.empty():
-            return self._front()
+            return _stringlist._front(self)
         else:
             raise IndexError("List empty.  No such element front().")
 
     def back(self):
         if not self.empty():
-            return self._back()
+            return _stringlist._back(self)
         else:
             raise IndexError("List empty.  No such element back().")

@@ -1,4 +1,4 @@
-from resdata import ResdataPrototype
+import resdata.util.util._int_vector as _int_vector
 
 from .vector_template import VectorTemplate
 
@@ -7,93 +7,164 @@ class IntVector(VectorTemplate):
     TYPE_NAME = "rd_int_vector"
     default_format = "%d"
 
-    _alloc = ResdataPrototype("void*  int_vector_alloc(int, int)", bind=False)
-    _create_active_list = ResdataPrototype(
-        "rd_int_vector_obj string_util_alloc_active_list( char*)", bind=False
-    )
-    _create_value_list = ResdataPrototype(
-        "rd_int_vector_obj string_util_alloc_value_list( char*)", bind=False
-    )
-    _alloc_copy = ResdataPrototype(
-        "rd_int_vector_obj int_vector_alloc_copy(rd_int_vector)"
-    )
-    _strided_copy = ResdataPrototype(
-        "rd_int_vector_obj int_vector_alloc_strided_copy(rd_int_vector, int, int, int)"
-    )
-    _free = ResdataPrototype("void int_vector_free(rd_int_vector)")
-    _iget = ResdataPrototype("int int_vector_iget(rd_int_vector, int)")
-    _safe_iget = ResdataPrototype("int int_vector_safe_iget(rd_int_vector, int)")
-    _iset = ResdataPrototype("int int_vector_iset(rd_int_vector, int, int)")
-    _size = ResdataPrototype("int int_vector_size(rd_int_vector)")
-    _append = ResdataPrototype("void int_vector_append(rd_int_vector, int)")
-    _idel_block = ResdataPrototype(
-        "void int_vector_idel_block(rd_int_vector, int, int)"
-    )
-    _pop = ResdataPrototype("int int_vector_pop(rd_int_vector)")
-    _idel = ResdataPrototype("void int_vector_idel(rd_int_vector, int)")
-    _insert = ResdataPrototype("void int_vector_insert(rd_int_vector, int, int)")
-    _lshift = ResdataPrototype("void int_vector_lshift(rd_int_vector, int)")
-    _rshift = ResdataPrototype("void int_vector_rshift(rd_int_vector, int)")
-    _fprintf = ResdataPrototype(
-        "void int_vector_fprintf(rd_int_vector, FILE, char*, char*)"
-    )
-    _sort = ResdataPrototype("void int_vector_sort(rd_int_vector)")
-    _rsort = ResdataPrototype("void int_vector_rsort(rd_int_vector)")
-    _reset = ResdataPrototype("void int_vector_reset(rd_int_vector)")
-    _set_read_only = ResdataPrototype(
-        "void int_vector_set_read_only(rd_int_vector, bool )"
-    )
-    _get_read_only = ResdataPrototype("bool int_vector_get_read_only(rd_int_vector)")
-    _get_max = ResdataPrototype("int int_vector_get_max(rd_int_vector)")
-    _get_min = ResdataPrototype("int int_vector_get_min(rd_int_vector)")
-    _get_max_index = ResdataPrototype(
-        "int int_vector_get_max_index(rd_int_vector, bool)"
-    )
-    _get_min_index = ResdataPrototype(
-        "int int_vector_get_min_index(rd_int_vector, bool)"
-    )
-    _shift = ResdataPrototype("void int_vector_shift(rd_int_vector, int)")
-    _scale = ResdataPrototype("void int_vector_scale(rd_int_vector, int)")
-    _div = ResdataPrototype("void int_vector_div(rd_int_vector, int)")
-    _inplace_add = ResdataPrototype(
-        "void int_vector_inplace_add(rd_int_vector, rd_int_vector)"
-    )
-    _inplace_mul = ResdataPrototype(
-        "void int_vector_inplace_mul(rd_int_vector, rd_int_vector)"
-    )
-    _assign = ResdataPrototype("void int_vector_set_all(rd_int_vector, int)")
-    _memcpy = ResdataPrototype("void int_vector_memcpy(rd_int_vector, rd_int_vector)")
-    _set_default = ResdataPrototype("void int_vector_set_default(rd_int_vector, int)")
-    _get_default = ResdataPrototype("int int_vector_get_default(rd_int_vector)")
-    _element_size = ResdataPrototype("int int_vector_element_size(rd_int_vector)")
+    @staticmethod
+    def _alloc(initial_size, default_value):
+        return _int_vector._alloc(initial_size, default_value)
 
-    _permute = ResdataPrototype(
-        "void int_vector_permute(rd_int_vector, rd_permutation_vector)"
-    )
-    _sort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj int_vector_alloc_sort_perm(rd_int_vector)"
-    )
-    _rsort_perm = ResdataPrototype(
-        "rd_permutation_vector_obj int_vector_alloc_rsort_perm(rd_int_vector)"
-    )
-    _contains = ResdataPrototype("bool int_vector_contains(rd_int_vector, int)")
-    _select_unique = ResdataPrototype("void int_vector_select_unique(rd_int_vector)")
-    _element_sum = ResdataPrototype("int int_vector_sum(rd_int_vector)")
-    _get_data_ptr = ResdataPrototype("int* int_vector_get_ptr(rd_int_vector)")
-    _count_equal = ResdataPrototype("int int_vector_count_equal(rd_int_vector, int)")
-    _init_range = ResdataPrototype(
-        "void int_vector_init_range(rd_int_vector, int, int, int)"
-    )
-    _init_linear = ResdataPrototype(
-        "bool int_vector_init_linear(rd_int_vector, int, int, int)"
-    )
-    _equal = ResdataPrototype("bool int_vector_equal(rd_int_vector, rd_int_vector)")
-    _first_eq = ResdataPrototype(
-        "int int_vector_first_equal(rd_int_vector, rd_int_vector, int)"
-    )
-    _first_neq = ResdataPrototype(
-        "int int_vector_first_not_equal(rd_int_vector, rd_int_vector, int)"
-    )
+    @classmethod
+    def _create_active_list(cls, range_string):
+        return cls.createPythonObject(_int_vector._create_active_list(range_string))
+
+    @classmethod
+    def _create_value_list(cls, range_string):
+        return cls.createPythonObject(_int_vector._create_value_list(range_string))
+
+    def _alloc_copy(self):
+        return IntVector.createPythonObject(_int_vector._alloc_copy(self))
+
+    def _strided_copy(self, start, stop, stride):
+        return IntVector.createPythonObject(
+            _int_vector._strided_copy(self, start, stop, stride)
+        )
+
+    def _free(self):
+        _int_vector._free(self)
+
+    def _iget(self, index):
+        return _int_vector._iget(self, index)
+
+    def _safe_iget(self, index):
+        return _int_vector._safe_iget(self, index)
+
+    def _iset(self, index, value):
+        _int_vector._iset(self, index, value)
+
+    def _size(self):
+        return _int_vector._size(self)
+
+    def _append(self, value):
+        _int_vector._append(self, value)
+
+    def _idel_block(self, index, block_size):
+        _int_vector._idel_block(self, index, block_size)
+
+    def _pop(self):
+        return _int_vector._pop(self)
+
+    def _idel(self, index):
+        _int_vector._idel(self, index)
+
+    def _insert(self, index, value):
+        _int_vector._insert(self, index, value)
+
+    def _lshift(self, shift):
+        _int_vector._lshift(self, shift)
+
+    def _rshift(self, shift):
+        _int_vector._rshift(self, shift)
+
+    def _fprintf(self, stream, name, fmt):
+        _int_vector._fprintf(self, stream, name, fmt)
+
+    def _sort(self):
+        _int_vector._sort(self)
+
+    def _rsort(self):
+        _int_vector._rsort(self)
+
+    def _reset(self):
+        _int_vector._reset(self)
+
+    def _set_read_only(self, read_only):
+        _int_vector._set_read_only(self, read_only)
+
+    def _get_read_only(self):
+        return _int_vector._get_read_only(self)
+
+    def _get_max(self):
+        return _int_vector._get_max(self)
+
+    def _get_min(self):
+        return _int_vector._get_min(self)
+
+    def _get_max_index(self, reverse):
+        return _int_vector._get_max_index(self, reverse)
+
+    def _get_min_index(self, reverse):
+        return _int_vector._get_min_index(self, reverse)
+
+    def _shift(self, delta):
+        _int_vector._shift(self, delta)
+
+    def _scale(self, factor):
+        _int_vector._scale(self, factor)
+
+    def _div(self, divisor):
+        _int_vector._div(self, divisor)
+
+    def _inplace_add(self, delta):
+        _int_vector._inplace_add(self, delta)
+
+    def _inplace_mul(self, factor):
+        _int_vector._inplace_mul(self, factor)
+
+    def _assign(self, value):
+        _int_vector._assign(self, value)
+
+    def _memcpy(self, src):
+        _int_vector._memcpy(self, src)
+
+    def _set_default(self, default_value):
+        _int_vector._set_default(self, default_value)
+
+    def _get_default(self):
+        return _int_vector._get_default(self)
+
+    def _element_size(self):
+        return _int_vector._element_size(self)
+
+    def _permute(self, permutation_vector):
+        _int_vector._permute(self, permutation_vector)
+
+    def _sort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_int_vector._sort_perm(self))
+
+    def _rsort_perm(self):
+        from .permutation_vector import PermutationVector
+
+        return PermutationVector.createPythonObject(_int_vector._rsort_perm(self))
+
+    def _contains(self, value):
+        return _int_vector._contains(self, value)
+
+    def _select_unique(self):
+        _int_vector._select_unique(self)
+
+    def _element_sum(self):
+        return _int_vector._element_sum(self)
+
+    def _get_data_ptr(self):
+        return _int_vector._get_data_ptr(self)
+
+    def _count_equal(self, value):
+        return _int_vector._count_equal(self, value)
+
+    def _init_range(self, min_value, max_value, delta):
+        _int_vector._init_range(self, min_value, max_value, delta)
+
+    def _init_linear(self, start_value, end_value, num_values):
+        return _int_vector._init_linear(self, start_value, end_value, num_values)
+
+    def _equal(self, other):
+        return _int_vector._equal(self, other)
+
+    def _first_eq(self, other, offset):
+        return _int_vector._first_eq(self, other, offset)
+
+    def _first_neq(self, other, offset):
+        return _int_vector._first_neq(self, other, offset)
 
     def __init__(self, default_value=0, initial_size=0):
         super().__init__(default_value, initial_size)

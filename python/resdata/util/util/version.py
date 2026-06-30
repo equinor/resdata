@@ -1,6 +1,6 @@
 from functools import wraps
 
-from resdata import ResdataPrototype
+import resdata.util.util._rd_version as _rd_version
 
 
 def cmp_method(method):
@@ -99,14 +99,29 @@ class Version:
 
 
 class ResdataVersion(Version):
-    _build_time = ResdataPrototype("char* rd_version_get_build_time()", bind=False)
-    _git_commit = ResdataPrototype("char* rd_version_get_git_commit()", bind=False)
-    _major_version = ResdataPrototype("int rd_version_get_major_version()", bind=False)
-    _minor_version = ResdataPrototype("int rd_version_get_minor_version()", bind=False)
-    _micro_version = ResdataPrototype(
-        "char* rd_version_get_micro_version()", bind=False
-    )
-    _is_devel = ResdataPrototype("bool rd_version_is_devel_version()", bind=False)
+    @staticmethod
+    def _build_time():
+        return _rd_version._build_time()
+
+    @staticmethod
+    def _git_commit():
+        return _rd_version._git_commit()
+
+    @staticmethod
+    def _major_version():
+        return _rd_version._major_version()
+
+    @staticmethod
+    def _minor_version():
+        return _rd_version._minor_version()
+
+    @staticmethod
+    def _micro_version():
+        return _rd_version._micro_version()
+
+    @staticmethod
+    def _is_devel():
+        return _rd_version._is_devel()
 
     def __init__(self):
         major = self._major_version()

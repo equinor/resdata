@@ -30,6 +30,9 @@
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/perm_vector.hpp>
+#include <ert/util/hash.hpp>
 #include <ert/util/lookup_table.hpp>
 #include <ert/util/rng.hpp>
 #include <ert/geometry/geo_polygon.hpp>
@@ -540,4 +543,51 @@ template <> rd_grav_type *from_cwrap<rd_grav_type>(py::handle obj) {
         throw py::type_error("Expected ResdataGrav, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<rd_grav_type>(obj);
+}
+
+// -----------------------------------------------------------------
+// Batch-2 consolidation: BoolVector, PermutationVector, Hash.
+// -----------------------------------------------------------------
+
+py::object BoolVector() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.util.util").attr("BoolVector");
+    return cls;
+}
+
+template <> bool_vector_type *from_cwrap<bool_vector_type>(py::handle obj) {
+    if (!py::isinstance(obj, BoolVector()))
+        throw py::type_error("Expected BoolVector, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<bool_vector_type>(obj);
+}
+
+py::object PermutationVector() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.util.util")
+                  .attr("PermutationVector");
+    return cls;
+}
+
+template <> perm_vector_type *from_cwrap<perm_vector_type>(py::handle obj) {
+    if (!py::isinstance(obj, PermutationVector()))
+        throw py::type_error("Expected PermutationVector, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<perm_vector_type>(obj);
+}
+
+py::object Hash() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.util.util").attr("Hash");
+    return cls;
+}
+
+template <> hash_type *from_cwrap<hash_type>(py::handle obj) {
+    if (!py::isinstance(obj, Hash()))
+        throw py::type_error("Expected Hash, got " +
+                             static_cast<std::string>(py::repr(obj)));
+    return cast_cwrap<hash_type>(obj);
 }
