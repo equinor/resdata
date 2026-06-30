@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
 
 #include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.hpp>
@@ -196,8 +197,10 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
     {
         fortio.fseek(file_kw->file_offset, SEEK_SET);
         file_kw->kw = rd_kw_fread_alloc(fortio);
-        rd_file_kw_assert_kw(file_kw);
-        inv_map_add_kw(inv_map, file_kw, file_kw->kw);
+        if (file_kw->kw != NULL) {
+            rd_file_kw_assert_kw(file_kw);
+            inv_map_add_kw(inv_map, file_kw, file_kw->kw);
+        }
     }
 }
 
@@ -270,6 +273,9 @@ bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw,
 */
 
 void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio) {
+    if (file_kw->kw == NULL)
+        throw std::invalid_argument(
+            "rd_file_kw: cannot write keyword that is not loaded");
     rd_file_kw_assert_kw(file_kw);
     fortio.fseek(file_kw->file_offset, SEEK_SET);
     rd_kw_fskip_header(fortio);
