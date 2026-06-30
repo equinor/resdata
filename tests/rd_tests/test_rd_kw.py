@@ -1518,3 +1518,44 @@ class StatefulKwTest(RuleBasedStateMachine):
 
 
 TestKw = StatefulKwTest.TestCase
+
+
+def test_create_negative_size_raises():
+    with pytest.raises(ValueError, match="rd_kw size was negative"):
+        ResdataKW("KW", -1, ResDataType.RD_INT)
+
+
+def test_set_too_long_string_raises():
+    kw = ResdataKW("S", 2, ResDataType.RD_STRING(8))
+    with pytest.raises(ValueError, match="cannot hold input string of length 9"):
+        kw[0] = "123456789"
+
+
+def test_fread_formatted_corrupt_data_raises(use_tmpdir):
+    kw = ResdataKW("INTKW", 4, ResDataType.RD_INT)
+    for i in range(len(kw)):
+        kw[i] = i
+    with openFortIO("F.txt", FortIO.WRITE_MODE, fmt_file=True) as f:
+        kw.fwrite(f)
+
+    with open("F.txt") as inf, open("BAD.txt", "w") as outf:
+        outf.write(inf.read().replace("0", "XYZ", 1))
+
+    with pytest.raises(RuntimeError, match="reading of keyword:INTKW"):
+        with openFortIO("BAD.txt", fmt_file=True) as f:
+            ResdataKW.fread(f)
+
+
+def test_fread_formatted_bad_logical_raises(use_tmpdir):
+    kw = ResdataKW("BKW", 3, ResDataType.RD_BOOL)
+    for i in range(len(kw)):
+        kw[i] = True
+    with openFortIO("B.txt", FortIO.WRITE_MODE, fmt_file=True) as f:
+        kw.fwrite(f)
+
+    with open("B.txt") as inf, open("BAD.txt", "w") as outf:
+        outf.write(inf.read().replace("T", "Q"))
+
+    with pytest.raises(RuntimeError, match=r"Logical value: \[Q\] not recogniced"):
+        with openFortIO("BAD.txt", fmt_file=True) as f:
+            ResdataKW.fread(f)

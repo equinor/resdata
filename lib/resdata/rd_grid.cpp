@@ -2210,16 +2210,16 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
 
 static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
                                              int grid_nr) {
-    rd_kw_type *gridhead_kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
-    rd_kw_scalar_set_int(gridhead_kw, 0);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_TYPE_INDEX,
+    auto gridhead_kw = make_rd_kw(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+    rd_kw_scalar_set_int(gridhead_kw.get(), 0);
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_TYPE_INDEX,
                    GRIDHEAD_GRIDTYPE_CORNERPOINT);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NX_INDEX, nx);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NY_INDEX, ny);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NZ_INDEX, nz);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NUMRES_INDEX, 1);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_LGR_INDEX, grid_nr);
-    return gridhead_kw;
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NX_INDEX, nx);
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NY_INDEX, ny);
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NZ_INDEX, nz);
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NUMRES_INDEX, 1);
+    rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_LGR_INDEX, grid_nr);
+    return gridhead_kw.release();
 }
 
 /**
@@ -4500,34 +4500,34 @@ std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
 }
 
 static rd_kw_type *rd_grid_alloc_mapunits_kw(ert_rd_unit_enum output_unit) {
-    rd_kw_type *mapunits_kw = rd_kw_alloc(MAPUNITS_KW, 1, RD_CHAR);
+    auto mapunits_kw = make_rd_kw(MAPUNITS_KW, 1, RD_CHAR);
 
     if (output_unit == RD_FIELD_UNITS)
-        rd_kw_iset_string8(mapunits_kw, 0, "FEET");
+        rd_kw_iset_string8(mapunits_kw.get(), 0, "FEET");
 
     if (output_unit == RD_METRIC_UNITS)
-        rd_kw_iset_string8(mapunits_kw, 0, "METRES");
+        rd_kw_iset_string8(mapunits_kw.get(), 0, "METRES");
 
     if (output_unit == RD_LAB_UNITS)
-        rd_kw_iset_string8(mapunits_kw, 0, "CM");
+        rd_kw_iset_string8(mapunits_kw.get(), 0, "CM");
 
-    return mapunits_kw;
+    return mapunits_kw.release();
 }
 
 static rd_kw_type *rd_grid_alloc_gridunits_kw(ert_rd_unit_enum output_unit) {
-    rd_kw_type *gridunits_kw = rd_kw_alloc(GRIDUNIT_KW, 2, RD_CHAR);
+    auto gridunits_kw = make_rd_kw(GRIDUNIT_KW, 2, RD_CHAR);
 
     if (output_unit == RD_FIELD_UNITS)
-        rd_kw_iset_string8(gridunits_kw, 0, "FEET");
+        rd_kw_iset_string8(gridunits_kw.get(), 0, "FEET");
 
     if (output_unit == RD_METRIC_UNITS)
-        rd_kw_iset_string8(gridunits_kw, 0, "METRES");
+        rd_kw_iset_string8(gridunits_kw.get(), 0, "METRES");
 
     if (output_unit == RD_LAB_UNITS)
-        rd_kw_iset_string8(gridunits_kw, 0, "CM");
+        rd_kw_iset_string8(gridunits_kw.get(), 0, "CM");
 
-    rd_kw_iset_string8(gridunits_kw, 1, "");
-    return gridunits_kw;
+    rd_kw_iset_string8(gridunits_kw.get(), 1, "");
+    return gridunits_kw.release();
 }
 
 static ert_rd_unit_enum
@@ -4574,16 +4574,14 @@ static void rd_grid_fwrite_mapaxes(const rd_grid_type *grid,
 
 static void rd_grid_fwrite_mapunits(ERT::FortIO &fortio,
                                     ert_rd_unit_enum output_unit) {
-    rd_kw_type *mapunits_kw = rd_grid_alloc_mapunits_kw(output_unit);
-    rd_kw_fwrite(mapunits_kw, fortio);
-    rd_kw_free(mapunits_kw);
+    rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit), rd_kw_free);
+    rd_kw_fwrite(mapunits_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_gridunits(ERT::FortIO &fortio,
                                      ert_rd_unit_enum output_unit) {
-    rd_kw_type *gridunits_kw = rd_grid_alloc_gridunits_kw(output_unit);
-    rd_kw_fwrite(gridunits_kw, fortio);
-    rd_kw_free(gridunits_kw);
+    rd_kw_ptr gridunits_kw(rd_grid_alloc_gridunits_kw(output_unit), rd_kw_free);
+    rd_kw_fwrite(gridunits_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
@@ -4729,9 +4727,9 @@ static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
 
 static void rd_grid_fwrite_gridhead_kw(int nx, int ny, int nz, int grid_nr,
                                        ERT::FortIO &fortio) {
-    rd_kw_type *gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, grid_nr);
-    rd_kw_fwrite(gridhead_kw, fortio);
-    rd_kw_free(gridhead_kw);
+    rd_kw_ptr gridhead_kw(rd_grid_alloc_gridhead_kw(nx, ny, nz, grid_nr),
+                          rd_kw_free);
+    rd_kw_fwrite(gridhead_kw.get(), fortio);
 }
 
 /**
@@ -4945,20 +4943,21 @@ void rd_grid_init_zcorn_data_double(const rd_grid_type *grid, double *zcorn) {
     rd_grid_init_zcorn_data__(grid, NULL, zcorn);
 }
 
-rd_kw_type *rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
-    rd_kw_type *zcorn_kw =
-        rd_kw_alloc(ZCORN_KW, rd_grid_get_zcorn_size(grid), RD_FLOAT);
-    rd_grid_init_zcorn_data(grid, (float *)rd_kw_get_void_ptr(zcorn_kw));
+rd_kw_ptr rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
+    auto zcorn_kw =
+        make_rd_kw(ZCORN_KW, rd_grid_get_zcorn_size(grid), RD_FLOAT);
+    rd_grid_init_zcorn_data(
+        grid, static_cast<float *>(rd_kw_get_void_ptr(zcorn_kw.get())));
     return zcorn_kw;
 }
 
-rd_kw_type *rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
+rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
     if (grid->coord_kw)
-        return rd_kw_alloc_copy(grid->coord_kw.get());
+        return {rd_kw_alloc_copy(grid->coord_kw.get()), &rd_kw_free};
 
-    rd_kw_type *coord_kw =
-        rd_kw_alloc(COORD_KW, RD_GRID_COORD_SIZE(grid->nx, grid->ny), RD_FLOAT);
-    rd_grid_init_coord_data(grid, rd_kw_get_float_ptr(coord_kw));
+    auto coord_kw =
+        make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(grid->nx, grid->ny), RD_FLOAT);
+    rd_grid_init_coord_data(grid, rd_kw_get_float_ptr(coord_kw.get()));
 
     return coord_kw;
 }
@@ -5011,9 +5010,10 @@ void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
     }
 }
 
-rd_kw_type *rd_grid_alloc_actnum_kw(const rd_grid_type *grid) {
-    rd_kw_type *actnum_kw = rd_kw_alloc(ACTNUM_KW, grid->size, RD_INT);
-    rd_grid_init_actnum_data(grid, (int *)rd_kw_get_void_ptr(actnum_kw));
+rd_kw_ptr rd_grid_alloc_actnum_kw(const rd_grid_type *grid) {
+    auto actnum_kw = make_rd_kw(ACTNUM_KW, grid->size, RD_INT);
+    rd_grid_init_actnum_data(
+        grid, static_cast<int *>(rd_kw_get_void_ptr(actnum_kw.get())));
     return actnum_kw;
 }
 
@@ -5062,9 +5062,10 @@ static void rd_grid_init_hostnum_data(const rd_grid_type *grid, int *hostnum) {
     }
 }
 
-static rd_kw_type *rd_grid_alloc_hostnum_kw(const rd_grid_type *grid) {
-    rd_kw_type *hostnum_kw = rd_kw_alloc(HOSTNUM_KW, grid->size, RD_INT);
-    rd_grid_init_hostnum_data(grid, (int *)rd_kw_get_void_ptr(hostnum_kw));
+static rd_kw_ptr rd_grid_alloc_hostnum_kw(const rd_grid_type *grid) {
+    auto hostnum_kw = make_rd_kw(HOSTNUM_KW, grid->size, RD_INT);
+    rd_grid_init_hostnum_data(
+        grid, static_cast<int *>(rd_kw_get_void_ptr(hostnum_kw.get())));
     return hostnum_kw;
 }
 
@@ -5076,9 +5077,10 @@ static void rd_grid_init_corsnum_data(const rd_grid_type *grid, int *corsnum) {
 }
 
 static rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
-    rd_kw_type *corsnum_kw = rd_kw_alloc(CORSNUM_KW, grid->size, RD_INT);
-    rd_grid_init_corsnum_data(grid, (int *)rd_kw_get_void_ptr(corsnum_kw));
-    return corsnum_kw;
+    auto corsnum_kw = make_rd_kw(CORSNUM_KW, grid->size, RD_INT);
+    rd_grid_init_corsnum_data(
+        grid, static_cast<int *>(rd_kw_get_void_ptr(corsnum_kw.get())));
+    return corsnum_kw.release();
 }
 
 void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
@@ -5187,8 +5189,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
         {
             auto coord_kw =
                 rd_kw_ptr(rd_kw_alloc_copy(grid->coord_kw.get()), &rd_kw_free);
-            auto zcorn_kw =
-                rd_kw_ptr(rd_grid_alloc_zcorn_kw(grid), &rd_kw_free);
+            auto zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
 
             if (output_unit != grid->unit_system) {
                 double scale_factor = rd_grid_output_scaling(grid, output_unit);
@@ -5199,13 +5200,11 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
             rd_kw_fwrite(zcorn_kw.get(), fortio);
         }
         {
-            auto actnum_kw =
-                rd_kw_ptr(rd_grid_alloc_actnum_kw(grid), &rd_kw_free);
+            auto actnum_kw = rd_grid_alloc_actnum_kw(grid);
             rd_kw_fwrite(actnum_kw.get(), fortio);
         }
         if (is_lgr) {
-            auto hostnum_kw =
-                rd_kw_ptr(rd_grid_alloc_hostnum_kw(grid), &rd_kw_free);
+            auto hostnum_kw = rd_grid_alloc_hostnum_kw(grid);
             rd_kw_fwrite(hostnum_kw.get(), fortio);
         }
         if (grid->coarsening_active) {
@@ -5266,9 +5265,9 @@ void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
 void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
                              ert_rd_unit_enum output_unit) {
     {
-        rd_kw_type *mapunits_kw = rd_grid_alloc_mapunits_kw(output_unit);
-        rd_kw_fprintf_grdecl(mapunits_kw, stream);
-        rd_kw_free(mapunits_kw);
+        rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit),
+                              rd_kw_free);
+        rd_kw_fprintf_grdecl(mapunits_kw.get(), stream);
         fprintf(stream, "\n");
     }
 
@@ -5277,9 +5276,9 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
     }
 
     {
-        rd_kw_type *gridunits_kw = rd_grid_alloc_gridunits_kw(output_unit);
-        rd_kw_fprintf_grdecl(gridunits_kw, stream);
-        rd_kw_free(gridunits_kw);
+        rd_kw_ptr gridunits_kw(rd_grid_alloc_gridunits_kw(output_unit),
+                               rd_kw_free);
+        rd_kw_fprintf_grdecl(gridunits_kw.get(), stream);
         fprintf(stream, "\n");
     }
 
@@ -5302,16 +5301,14 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
     }
 
     {
-        rd_kw_type *zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
-        rd_kw_fprintf_grdecl(zcorn_kw, stream);
-        rd_kw_free(zcorn_kw);
+        rd_kw_ptr zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
+        rd_kw_fprintf_grdecl(zcorn_kw.get(), stream);
         fprintf(stream, "\n");
     }
 
     {
-        rd_kw_type *actnum_kw = rd_grid_alloc_actnum_kw(grid);
-        rd_kw_fprintf_grdecl(actnum_kw, stream);
-        rd_kw_free(actnum_kw);
+        rd_kw_ptr actnum_kw = rd_grid_alloc_actnum_kw(grid);
+        rd_kw_fprintf_grdecl(actnum_kw.get(), stream);
         fprintf(stream, "\n");
     }
 }
@@ -5323,11 +5320,12 @@ bool rd_grid_dual_grid(const rd_grid_type *rd_grid) {
         return true;
 }
 
-static rd_kw_type *rd_grid_alloc_volume_kw_active(const rd_grid_type *grid) {
-    rd_kw_type *volume_kw =
-        rd_kw_alloc("VOLUME", rd_grid_get_active_size(grid), RD_DOUBLE);
+static rd_kw_ptr rd_grid_alloc_volume_kw_active(const rd_grid_type *grid) {
+    auto volume_kw =
+        make_rd_kw("VOLUME", rd_grid_get_active_size(grid), RD_DOUBLE);
     {
-        double *volume_data = (double *)rd_kw_get_ptr(volume_kw);
+        double *volume_data =
+            static_cast<double *>(rd_kw_get_ptr(volume_kw.get()));
         int active_index;
         for (active_index = 0; active_index < rd_grid_get_active_size(grid);
              active_index++) {
@@ -5338,11 +5336,12 @@ static rd_kw_type *rd_grid_alloc_volume_kw_active(const rd_grid_type *grid) {
     return volume_kw;
 }
 
-static rd_kw_type *rd_grid_alloc_volume_kw_global(const rd_grid_type *grid) {
-    rd_kw_type *volume_kw =
-        rd_kw_alloc("VOLUME", rd_grid_get_global_size(grid), RD_DOUBLE);
+static rd_kw_ptr rd_grid_alloc_volume_kw_global(const rd_grid_type *grid) {
+    auto volume_kw =
+        make_rd_kw("VOLUME", rd_grid_get_global_size(grid), RD_DOUBLE);
     {
-        double *volume_data = (double *)rd_kw_get_ptr(volume_kw);
+        double *volume_data =
+            static_cast<double *>(rd_kw_get_ptr(volume_kw.get()));
         int global_index;
         for (global_index = 0; global_index < rd_grid_get_global_size(grid);
              global_index++) {
@@ -5353,8 +5352,7 @@ static rd_kw_type *rd_grid_alloc_volume_kw_global(const rd_grid_type *grid) {
     return volume_kw;
 }
 
-rd_kw_type *rd_grid_alloc_volume_kw(const rd_grid_type *grid,
-                                    bool active_size) {
+rd_kw_ptr rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size) {
     if (active_size)
         return rd_grid_alloc_volume_kw_active(grid);
     else

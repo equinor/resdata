@@ -18,6 +18,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <memory>
 
 #include <ert/util/util.hpp>
 #include <resdata/rd_kw.hpp>
@@ -26,24 +27,23 @@
 int main(int argc, char **argv) {
     fprintf(stderr,
             "** Warning: grdecl_test.x is deprecated. Use res2df instead\n");
-    FILE *stream = util_fopen(argv[1], "r");
+    std::unique_ptr<FILE, decltype(&fclose)> stream(util_fopen(argv[1], "r"),
+                                                    &fclose);
     {
         while (true) {
-            rd_kw_type *grdecl_kw;
             clock_t begin = clock();
-            grdecl_kw = rd_kw_fscanf_alloc_grdecl(stream, nullptr, RD_FLOAT);
+            rd_kw_ptr grdecl_kw(
+                rd_kw_fscanf_alloc_grdecl(stream.get(), nullptr, RD_FLOAT),
+                &rd_kw_free);
             clock_t end = clock();
             double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-            if (grdecl_kw != NULL) {
+            if (grdecl_kw) {
                 printf("Loaded %s - %d elements : %g \n",
-                       rd_kw_get_header(grdecl_kw), rd_kw_get_size(grdecl_kw),
-                       time_spent);
-                rd_kw_free(grdecl_kw);
+                       rd_kw_get_header(grdecl_kw.get()),
+                       rd_kw_get_size(grdecl_kw.get()), time_spent);
             } else
                 break;
         }
     }
-
-    fclose(stream);
 }

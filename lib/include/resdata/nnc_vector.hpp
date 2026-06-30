@@ -8,6 +8,7 @@ typedef struct nnc_vector_struct nnc_vector_type;
 
 #ifdef __cplusplus
 #include <vector>
+#include <memory>
 const std::vector<int> &
 nnc_vector_get_grid_index_list(const nnc_vector_type *nnc_vector);
 const std::vector<int> &
@@ -34,6 +35,12 @@ bool nnc_vector_equal(const nnc_vector_type *nnc_vector1,
                       const nnc_vector_type *nnc_vector2);
 
 #ifdef __cplusplus
+}
+using nnc_vector_ptr =
+    std::unique_ptr<nnc_vector_type, decltype(&nnc_vector_free)>;
+
+inline nnc_vector_ptr make_nnc_vector(int lgr_nr) {
+    return {nnc_vector_alloc(lgr_nr), &nnc_vector_free};
 }
 #endif
 #endif

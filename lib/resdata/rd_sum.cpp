@@ -1104,10 +1104,10 @@ time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
                                                bool rates_clamp_lower) {
     auto solution = make_time_t_vector(0, 0);
     {
-        std::unique_ptr<double_vector_type, decltype(&double_vector_free)>
-            seconds{rd_sum_alloc_seconds_solution(rd_sum, gen_key, cmp_value,
-                                                  rates_clamp_lower),
-                    &double_vector_free};
+        double_vector_ptr seconds{
+            rd_sum_alloc_seconds_solution(rd_sum, gen_key, cmp_value,
+                                          rates_clamp_lower),
+            &double_vector_free};
         time_t start_time = rd_sum_get_start_time(rd_sum);
         for (int i = 0; i < double_vector_size(seconds.get()); i++) {
             time_t t = start_time;

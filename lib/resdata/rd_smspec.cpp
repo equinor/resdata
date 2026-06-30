@@ -852,14 +852,17 @@ static bool rd_smspec_check_header(rd_file_type *header) {
 static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                                    const std::string &header_file,
                                    bool include_restart) {
-    rd_file_type *header = rd_file_open(header_file.c_str(), 0);
-    if (header && rd_smspec_check_header(header)) {
-        const char *names_alias = get_active_keyword_alias(header, WGNAMES_KW);
-        rd_kw_type *wells = rd_file_iget_named_kw(header, names_alias, 0);
-        rd_kw_type *keywords = rd_file_iget_named_kw(header, KEYWORDS_KW, 0);
-        rd_kw_type *startdat = rd_file_iget_named_kw(header, STARTDAT_KW, 0);
-        rd_kw_type *units = rd_file_iget_named_kw(header, UNITS_KW, 0);
-        rd_kw_type *dimens = rd_file_iget_named_kw(header, DIMENS_KW, 0);
+    rd_file_ptr header(rd_file_open(header_file.c_str(), 0), &rd_file_close);
+    if (header && rd_smspec_check_header(header.get())) {
+        const char *names_alias =
+            get_active_keyword_alias(header.get(), WGNAMES_KW);
+        rd_kw_type *wells = rd_file_iget_named_kw(header.get(), names_alias, 0);
+        rd_kw_type *keywords =
+            rd_file_iget_named_kw(header.get(), KEYWORDS_KW, 0);
+        rd_kw_type *startdat =
+            rd_file_iget_named_kw(header.get(), STARTDAT_KW, 0);
+        rd_kw_type *units = rd_file_iget_named_kw(header.get(), UNITS_KW, 0);
+        rd_kw_type *dimens = rd_file_iget_named_kw(header.get(), DIMENS_KW, 0);
         rd_kw_type *nums = NULL;
         rd_kw_type *lgrs = NULL;
         rd_kw_type *numlx = NULL;
@@ -873,12 +876,12 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             throw std::invalid_argument(
                 "Could not locate STARTDAT keyword in header");
 
-        if (rd_file_has_kw(header, NUMS_KW))
-            nums = rd_file_iget_named_kw(header, NUMS_KW, 0);
+        if (rd_file_has_kw(header.get(), NUMS_KW))
+            nums = rd_file_iget_named_kw(header.get(), NUMS_KW, 0);
 
-        if (rd_file_has_kw(header, INTEHEAD_KW)) {
+        if (rd_file_has_kw(header.get(), INTEHEAD_KW)) {
             const rd_kw_type *intehead =
-                rd_file_iget_named_kw(header, INTEHEAD_KW, 0);
+                rd_file_iget_named_kw(header.get(), INTEHEAD_KW, 0);
             rd_smspec->unit_system = (ert_rd_unit_enum)rd_kw_iget_int(
                 intehead, INTEHEAD_SMSPEC_UNIT_INDEX);
             /*
@@ -888,12 +891,12 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
       */
         }
 
-        if (rd_file_has_kw(header,
+        if (rd_file_has_kw(header.get(),
                            LGRS_KW)) { /* The file has LGR information. */
-            lgrs = rd_file_iget_named_kw(header, LGRS_KW, 0);
-            numlx = rd_file_iget_named_kw(header, NUMLX_KW, 0);
-            numly = rd_file_iget_named_kw(header, NUMLY_KW, 0);
-            numlz = rd_file_iget_named_kw(header, NUMLZ_KW, 0);
+            lgrs = rd_file_iget_named_kw(header.get(), LGRS_KW, 0);
+            numlx = rd_file_iget_named_kw(header.get(), NUMLX_KW, 0);
+            numly = rd_file_iget_named_kw(header.get(), NUMLY_KW, 0);
+            numlz = rd_file_iget_named_kw(header.get(), NUMLZ_KW, 0);
             rd_smspec->has_lgr = true;
         } else
             rd_smspec->has_lgr = false;
@@ -973,9 +976,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         rd_smspec->header_file = fs::canonical(header_file).string();
         if (include_restart)
-            rd_smspec_load_restart(rd_smspec, header);
-
-        rd_file_close(header);
+            rd_smspec_load_restart(rd_smspec, header.get());
 
         return true;
     } else

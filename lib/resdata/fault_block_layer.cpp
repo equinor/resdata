@@ -63,15 +63,16 @@ UTIL_IS_INSTANCE_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
 fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {
     if (layer->get_block(block_id) < 0) {
-        fault_block_type *block = fault_block_alloc(layer, block_id);
+        block_ptr block(fault_block_alloc(layer, block_id), &fault_block_free);
+        fault_block_type *block_raw = block.get();
         int storage_index = layer->blocks.size();
 
         if (block_id >= static_cast<int>(layer->block_map.size()))
             layer->block_map.resize(block_id + 1, -1);
+        layer->blocks.emplace_back(std::move(block));
         layer->block_map[block_id] = storage_index;
-        layer->blocks.emplace_back(block, &fault_block_free);
 
-        return block;
+        return block_raw;
     } else
         return NULL;
 }
@@ -186,15 +187,16 @@ fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, int k) {
     if ((k < 0) || (k >= rd_grid_get_nz(grid)))
         return NULL;
     else {
-        auto layer = new fault_block_layer_type;
-        UTIL_TYPE_ID_INIT(layer, FAULT_BLOCK_LAYER_ID);
+        std::unique_ptr<fault_block_layer_type> layer(
+            new fault_block_layer_type);
+        UTIL_TYPE_ID_INIT(layer.get(), FAULT_BLOCK_LAYER_ID);
         layer->grid = grid;
         layer->k = k;
         layer->block_map = std::vector<int>(0);
         layer->blocks = std::vector<block_ptr>();
         layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
 
-        return layer;
+        return layer.release();
     }
 }
 

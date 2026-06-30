@@ -1,6 +1,7 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include <ert/util/int_vector.hpp>
 
@@ -17,27 +18,27 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
       time_index(rd_smspec_get_time_index(smspec)),
       time_seconds(rd_smspec_get_time_seconds(smspec)),
       sim_start(rd_smspec_get_start_time(smspec)) {
-    rd_file_type *file = rd_file_open(filename.c_str(), file_options);
+    rd_file_ptr file = open_rd_file(filename, file_options);
     if (!file)
         throw std::bad_alloc();
 
-    if (!rd_file_has_kw(file, PARAMS_KW)) {
-        rd_file_close(file);
+    if (!rd_file_has_kw(file.get(), PARAMS_KW)) {
         throw std::bad_alloc();
     }
 
-    if (rd_file_get_num_named_kw(file, PARAMS_KW) !=
-        rd_file_get_num_named_kw(file, MINISTEP_KW)) {
-        rd_file_close(file);
+    if (rd_file_get_num_named_kw(file.get(), PARAMS_KW) !=
+        rd_file_get_num_named_kw(file.get(), MINISTEP_KW)) {
         throw std::bad_alloc();
     }
 
     this->date_index = {{rd_smspec_get_date_day_index(smspec),
                          rd_smspec_get_date_month_index(smspec),
                          rd_smspec_get_date_year_index(smspec)}};
-    this->file = file;
-    this->file_view = rd_file_get_global_view(this->file);
-    this->m_length = rd_file_view_get_num_named_kw(this->file_view, PARAMS_KW);
+    rd_file_view_type *file_view = rd_file_get_global_view(file.get());
+    int length = rd_file_view_get_num_named_kw(file_view, PARAMS_KW);
+    this->file = file.release();
+    this->file_view = file_view;
+    this->m_length = length;
 }
 
 unsmry_loader::~unsmry_loader() { rd_file_close(file); }
@@ -51,16 +52,15 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
             " PARAMS_SIZE: " + std::to_string(size));
 
     std::vector<double> data(this->length());
-    int_vector_type *index_map = int_vector_alloc(1, pos);
+    auto index_map = make_int_vector(1, pos);
     char buffer[4];
 
     for (int index = 0; index < this->length(); index++) {
-        rd_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map,
-                                    buffer);
+        rd_file_view_index_fload_kw(file_view, PARAMS_KW, index,
+                                    index_map.get(), buffer);
         float *data_value = (float *)buffer;
         data[index] = *data_value;
     }
-    int_vector_free(index_map);
 
     if (rd_file_view_flags_set(file_view, RD_FILE_CLOSE_STREAM))
         rd_file_view_fclose_stream(file_view);
@@ -70,11 +70,10 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 
 // This is horribly inefficient
 double unsmry_loader::iget(int time_index, int params_index) const {
-    int_vector_type *index_map = int_vector_alloc(1, params_index);
+    auto index_map = make_int_vector(1, params_index);
     float value;
     rd_file_view_index_fload_kw(this->file_view, PARAMS_KW, time_index,
-                                index_map, (char *)&value);
-    int_vector_free(index_map);
+                                index_map.get(), (char *)&value);
     return value;
 }
 
@@ -85,15 +84,14 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
         util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
         return sim_time;
     } else {
-        int_vector_type *index_map = int_vector_alloc(3, 0);
-        int_vector_iset(index_map, 0, this->date_index[0]);
-        int_vector_iset(index_map, 1, this->date_index[1]);
-        int_vector_iset(index_map, 2, this->date_index[2]);
+        auto index_map = make_int_vector(3, 0);
+        int_vector_iset(index_map.get(), 0, this->date_index[0]);
+        int_vector_iset(index_map.get(), 1, this->date_index[1]);
+        int_vector_iset(index_map.get(), 2, this->date_index[2]);
 
         float values[3];
         rd_file_view_index_fload_kw(this->file_view, PARAMS_KW, time_index,
-                                    index_map, (char *)&values);
-        int_vector_free(index_map);
+                                    index_map.get(), (char *)&values);
 
         return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
                             util_roundf(values[2]));

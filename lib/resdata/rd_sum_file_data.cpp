@@ -289,14 +289,17 @@ void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
 rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(int report_step,
                                                    double sim_seconds) {
     int ministep_nr = vector_get_size(data);
-    rd_sum_tstep_type *tstep = rd_sum_tstep_alloc_new(report_step, ministep_nr,
-                                                      sim_seconds, rd_smspec);
+    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
+        rd_sum_tstep_alloc_new(report_step, ministep_nr, sim_seconds,
+                               rd_smspec),
+        &rd_sum_tstep_free);
     rd_sum_tstep_type *prev_tstep = NULL;
 
     if (vector_get_size(data) > 0)
         prev_tstep = (rd_sum_tstep_type *)vector_get_last(data);
 
-    append_tstep(tstep);
+    rd_sum_tstep_type *new_tstep = tstep.get();
+    append_tstep(tstep.release());
 
     bool rebuild_index = true;
     /*
@@ -308,21 +311,23 @@ rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(int report_step,
     if (!prev_tstep)
         goto exit;
 
-    if (rd_sum_tstep_get_report(prev_tstep) != rd_sum_tstep_get_report(tstep))
+    if (rd_sum_tstep_get_report(prev_tstep) !=
+        rd_sum_tstep_get_report(new_tstep))
         goto exit;
 
     if (rd_sum_tstep_get_sim_days(prev_tstep) >=
-        rd_sum_tstep_get_sim_days(tstep))
+        rd_sum_tstep_get_sim_days(new_tstep))
         goto exit;
 
-    this->index.add(rd_sum_tstep_get_sim_time(tstep), sim_seconds, report_step);
+    this->index.add(rd_sum_tstep_get_sim_time(new_tstep), sim_seconds,
+                    report_step);
     rebuild_index = false;
 
 exit:
     if (rebuild_index)
         this->build_index();
 
-    return tstep;
+    return new_tstep;
 }
 
 rd_sum_tstep_type *rd_sum_file_data::iget_ministep(int internal_index) const {
@@ -441,10 +446,9 @@ std::pair<int, int> rd_sum_file_data::report_range(int report_step) const {
 void rd_sum_file_data::fwrite_report(int report_step,
                                      ERT::FortIO &fortio) const {
     {
-        rd_kw_type *seqhdr_kw = rd_kw_alloc(SEQHDR_KW, SEQHDR_SIZE, RD_INT);
-        rd_kw_iset_int(seqhdr_kw, 0, 0);
-        rd_kw_fwrite(seqhdr_kw, fortio);
-        rd_kw_free(seqhdr_kw);
+        auto seqhdr_kw = make_rd_kw(SEQHDR_KW, SEQHDR_SIZE, RD_INT);
+        rd_kw_iset_int(seqhdr_kw.get(), 0, 0);
+        rd_kw_fwrite(seqhdr_kw.get(), fortio);
     }
 
     {
@@ -544,12 +548,15 @@ void rd_sum_file_data::add_rd_file(int report_step,
 
             {
                 int ministep_nr = rd_kw_iget_int(ministep_kw, 0);
-                rd_sum_tstep_type *tstep = rd_sum_tstep_alloc_from_file(
-                    report_step, ministep_nr, params_kw,
-                    rd_file_view_get_src_file(summary_view), this->rd_smspec);
+                std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
+                    tstep(rd_sum_tstep_alloc_from_file(
+                              report_step, ministep_nr, params_kw,
+                              rd_file_view_get_src_file(summary_view),
+                              this->rd_smspec),
+                          &rd_sum_tstep_free);
 
                 if (tstep)
-                    append_tstep(tstep);
+                    append_tstep(tstep.release());
             }
         }
     }
@@ -579,11 +586,10 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
                 util_abort("%s: file:%s has wrong type \n", __func__,
                            data_file);
             {
-                rd_file_type *rd_file = rd_file_open(data_file, 0);
-                if (rd_file && check_file(rd_file)) {
+                rd_file_ptr rd_file(rd_file_open(data_file, 0), &rd_file_close);
+                if (rd_file && check_file(rd_file.get())) {
                     this->add_rd_file(report_step,
-                                      rd_file_get_global_view(rd_file));
-                    rd_file_close(rd_file);
+                                      rd_file_get_global_view(rd_file.get()));
                 }
             }
         }
@@ -600,9 +606,9 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
 
             // Is this correct for a restarted chain of UNSMRY files? Looks like the
             // report step sequence will be restarted?
-            rd_file_type *rd_file =
-                rd_file_open(stringlist_iget(filelist, 0), 0);
-            if (rd_file && check_file(rd_file)) {
+            rd_file_ptr rd_file(rd_file_open(stringlist_iget(filelist, 0), 0),
+                                &rd_file_close);
+            if (rd_file && check_file(rd_file.get())) {
                 int first_report_step =
                     rd_smspec_get_first_step(this->rd_smspec);
                 int block_index = 0;
@@ -615,7 +621,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             ert counting).
         */
                     rd_file_view_type *summary_view =
-                        rd_file_get_summary_view(rd_file, block_index);
+                        rd_file_get_summary_view(rd_file.get(), block_index);
                     if (summary_view) {
                         this->add_rd_file(block_index + first_report_step,
                                           summary_view);
@@ -623,7 +629,6 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
                     } else
                         break;
                 }
-                rd_file_close(rd_file);
             }
         }
     }

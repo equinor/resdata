@@ -208,12 +208,12 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
 
 rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
                                         const rd_file_type *init_file) {
-    auto rd_subsidence = new rd_subsidence_type();
+    auto rd_subsidence = std::make_unique<rd_subsidence_type>();
     rd_subsidence->init_file = init_file;
     rd_subsidence->grid_cache = std::make_unique<rd::rd_grid_cache>(rd_grid);
     rd_subsidence->aquifer_cell.reset(rd_grav_common_alloc_aquifer_cell(
         *(rd_subsidence->grid_cache), init_file));
-    return rd_subsidence;
+    return rd_subsidence.release();
 }
 
 rd_subsidence_survey_type *

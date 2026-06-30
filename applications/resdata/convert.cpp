@@ -52,10 +52,9 @@ void file_convert(const std::string &src_file, const std::string &target_file,
             break;
 
         {
-            rd_kw_type *rd_kw = rd_kw_fread_alloc(src);
+            rd_kw_ptr rd_kw(rd_kw_fread_alloc(src), rd_kw_free);
             if (rd_kw) {
-                rd_kw_fwrite(rd_kw, target);
-                rd_kw_free(rd_kw);
+                rd_kw_fwrite(rd_kw.get(), target);
             } else {
                 fprintf(stderr, "Reading keyword failed \n");
                 break;
