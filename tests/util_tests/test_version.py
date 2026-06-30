@@ -1,5 +1,10 @@
+import warnings
+
 import resdata
-from resdata.util.util import ResdataVersion, Version
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import ResdataVersion, Version
 
 from tests import ResdataTest
 

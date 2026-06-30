@@ -5,7 +5,7 @@ import sys
 import traceback
 from unittest import TestCase
 
-from resdata.util.util import Version, installAbortSignals
+from resdata.util.util import installAbortSignals
 
 from .source_enumerator import SourceEnumerator
 
@@ -186,13 +186,3 @@ class ExtendedTestCase(TestCase):
         """
 
         return os.environ.get("SKIP_SLOW_TESTS", "False") == "True"
-
-    @staticmethod
-    def requireVersion(major, minor, micro="git"):
-        required_version = Version(major, minor, micro)
-        current_version = Version.currentVersion()
-
-        if required_version < current_version:
-            return True
-        else:
-            return False

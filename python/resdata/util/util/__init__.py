@@ -50,7 +50,21 @@ from .stringlist import StringList
 from .thread_pool import ThreadPool
 from .time_vector import TimeVector
 from .vector_template import VectorTemplate
-from .version import ResdataVersion, Version
+
+
+# Lazy load ResdataVersion and Version to not eagerly trigger
+# deprecation warning
+def __getattr__(name):
+    if name == "ResdataVersion":
+        from .version import ResdataVersion
+
+        return ResdataVersion
+    if name == "Version":
+        from .version import Version
+
+        return Version
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __cc = "dev"
 
