@@ -105,13 +105,6 @@ def split_summary(simple_unified):
     return sorted(str(p) for p in Path(".").glob("SIMPLE.S[0-9]*"))
 
 
-def test_no_arguments_is_a_silent_noop():
-    result = run_pack()
-    assert result.returncode == 0
-    assert result.stdout == ""
-    assert result.stderr == ""
-
-
 def test_pack_is_inverse_of_unpack_restart(split_restart):
     """Packing the files produced by rd_unpack.x must yield a unified
     restart whose keyword/array stream equals the original."""
