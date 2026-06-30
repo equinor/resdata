@@ -427,6 +427,8 @@ add_executable(
   tests/test_rd_grid_bounds_checking.cpp
   tests/test_rd_sum.cpp
   tests/test_rd_kw.cpp
+  tests/test_well_info.cpp
+  tests/test_well_keyword_validation.cpp
   tests/test_rd_util.cpp
   tests/test_fortio.cpp
   tests/test_geometry.cpp
