@@ -786,12 +786,14 @@ def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
     assert well_state.hasSegmentData()
     assert well_state.numSegments() == 3
     assert len(well_state) == 3
+    assert well_state.igetSegment(0) == well_state[0]
 
     segments = well_state.segments()
     assert [segment.id() for segment in segments] == [
         well_state[i].id() for i in range(len(well_state))
     ]
     assert well_state[-1].id() == well_state[len(well_state) - 1].id()
+    assert well_state.name() == "MSW"
     assert repr(well_state).startswith(
         'WellState(MSW (multi segment), number = 0, type = "PRODUCER", state = open)'
     )

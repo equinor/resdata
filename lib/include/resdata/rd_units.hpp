@@ -27,7 +27,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 
-inline double liquid_conversion_factor(ert_rd_unit_enum unit_system) {
+constexpr inline double liquid_conversion_factor(ert_rd_unit_enum unit_system) {
     if (unit_system == RD_METRIC_UNITS)
         return 1.0 / RD_UNITS_TIME_DAY;
     else if (unit_system == RD_FIELD_UNITS)
@@ -37,7 +37,7 @@ inline double liquid_conversion_factor(ert_rd_unit_enum unit_system) {
     return 1;
 }
 
-inline double gas_conversion_factor(ert_rd_unit_enum unit_system) {
+constexpr inline double gas_conversion_factor(ert_rd_unit_enum unit_system) {
     if (unit_system == RD_METRIC_UNITS)
         return 1.0 / RD_UNITS_TIME_DAY;
     else if (unit_system == RD_FIELD_UNITS)

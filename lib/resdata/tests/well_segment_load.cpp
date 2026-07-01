@@ -1,13 +1,13 @@
 #include <cstdlib>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
-#include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_file_view.hpp>
+#include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_segment.hpp>
 #include <resdata/well/well_const.hpp>
@@ -40,23 +40,21 @@ int main(int argc, char **argv) {
             for (int segment_index = 0; segment_index < rst_head.nsegmx;
                  segment_index++) {
                 int segment_id = segment_index + WELL_SEGMENT_OFFSET;
-                well_segment_type *segment = well_segment_alloc_from_kw(
-                    iseg_kw, rseg_loader, rst_head, seg_well_nr, segment_index,
-                    segment_id);
+                auto segment = WellSegment::from_kw(iseg_kw, rseg_loader,
+                                                    rst_head, seg_well_nr,
+                                                    segment_index, segment_id);
 
-                test_assert_true(well_segment_is_instance(segment));
-
-                if (well_segment_active(segment)) {
+                if (segment->is_active()) {
                     well_segment_collection_add(segments, segment);
                     test_assert_int_equal(
                         well_segment_collection_get_size(segments),
                         segment_count + 1);
                     test_assert_ptr_equal(
-                        well_segment_collection_iget(segments, segment_count),
-                        segment);
+                        well_segment_collection_iget(segments, segment_count)
+                            .get(),
+                        segment.get());
                     segment_count++;
-                } else
-                    well_segment_free(segment);
+                }
             }
         }
 

@@ -20,6 +20,4 @@ inline void register_exceptions(pybind11::module &m) {
     });
 }
 
-pybind11::object WellConnection();
-pybind11::object WellSegment();
-pybind11::object WellState();
+pybind11::object CTime();

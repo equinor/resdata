@@ -316,15 +316,13 @@ TEST_CASE_METHOD(Tmpdir, "well keyword failure conditions", "[well][wellkw]") {
     auto path = (dirname / "CASE.X0000").string();
     write_file(path, kws);
 
-    std::unique_ptr<well_info_type, decltype(&well_info_free)> wi(
-        well_info_alloc(grid.get()), well_info_free);
+    WellInfo wi(grid.get());
 
     if (c.throws) {
-        REQUIRE_THROWS_AS(well_info_load_rstfile(wi.get(), path.c_str(), true),
-                          std::exception);
+        REQUIRE_THROWS_AS(wi.load_rstfile(path, true), std::exception);
     } else {
-        REQUIRE_NOTHROW(well_info_load_rstfile(wi.get(), path.c_str(), true));
-        REQUIRE(well_info_get_num_wells(wi.get()) == c.wells);
+        REQUIRE_NOTHROW(wi.load_rstfile(path, true));
+        REQUIRE(wi.num_wells() == c.wells);
     }
 }
 
@@ -336,10 +334,8 @@ TEST_CASE_METHOD(Tmpdir, "baseline restart file loads one well",
     write_file(path, kws);
 
     auto grid = make_rectangular_grid(d.nx, d.ny, d.nz, 1.0, 1.0, 1.0, nullptr);
-    std::unique_ptr<well_info_type, decltype(&well_info_free)> well_info(
-        well_info_alloc(grid.get()), well_info_free);
+    WellInfo well_info(grid.get());
 
-    REQUIRE_NOTHROW(
-        well_info_load_rstfile(well_info.get(), path.c_str(), true));
-    REQUIRE(well_info_get_num_wells(well_info.get()) == 1);
+    REQUIRE_NOTHROW(well_info.load_rstfile(path.c_str(), true));
+    REQUIRE(well_info.num_wells() == 1);
 }

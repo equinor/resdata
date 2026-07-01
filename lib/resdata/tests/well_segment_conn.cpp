@@ -1,8 +1,8 @@
 #include <cstdlib>
 
+#include <memory>
+
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
-#include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_grid.hpp>
@@ -13,38 +13,29 @@
 
 int main(int argc, char **argv) {
     test_install_SIGNALS();
-    double *rseg_data = (double *)util_calloc(100, sizeof *rseg_data);
     {
         double CF = 88;
         int segment_id = 78;
         int outlet_segment_id = 100;
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
-        well_segment_type *ws = well_segment_alloc(
-            segment_id, outlet_segment_id, branch_nr, rseg_data);
-        well_conn_type *conn1 = well_conn_alloc_MSW(
-            1, 1, 1, CF, well_conn_dirX, true, segment_id, RD_METRIC_UNITS);
-        well_conn_type *conn2 = well_conn_alloc_MSW(
-            1, 1, 1, CF, well_conn_dirX, true, segment_id + 1, RD_METRIC_UNITS);
+        WellSegment ws(segment_id, outlet_segment_id, branch_nr);
+        auto conn1 =
+            std::make_shared<WellConnection>(1, 1, 1, CF, WellConnDir::X, true,
+                                             segment_id, true, RD_METRIC_UNITS);
+        auto conn2 = std::make_shared<WellConnection>(
+            1, 1, 1, CF, WellConnDir::X, true, segment_id + 1, true,
+            RD_METRIC_UNITS);
 
-        test_assert_false(well_segment_has_global_grid_connections(ws));
+        test_assert_false(ws.has_global_grid_connections());
 
-        test_assert_true(
-            well_segment_add_connection(ws, RD_GRID_GLOBAL_GRID, conn1));
-        test_assert_false(
-            well_segment_add_connection(ws, RD_GRID_GLOBAL_GRID, conn2));
+        test_assert_true(ws.add_connection(RD_GRID_GLOBAL_GRID, conn1));
+        test_assert_false(ws.add_connection(RD_GRID_GLOBAL_GRID, conn2));
 
-        test_assert_true(
-            well_segment_has_grid_connections(ws, RD_GRID_GLOBAL_GRID));
-        test_assert_true(well_segment_has_global_grid_connections(ws));
-        test_assert_false(
-            well_segment_has_grid_connections(ws, "DoesNotExist"));
+        test_assert_true(ws.has_grid_connections(RD_GRID_GLOBAL_GRID));
+        test_assert_true(ws.has_global_grid_connections());
+        test_assert_false(ws.has_grid_connections("DoesNotExist"));
 
-        test_assert_NULL(well_segment_get_connections(ws, "doesNotExist"));
-
-        well_conn_free(conn1);
-        well_conn_free(conn2);
-        well_segment_free(ws);
+        test_assert_NULL(ws.get_connections("doesNotExist"));
     }
-    free(rseg_data);
     exit(0);
 }

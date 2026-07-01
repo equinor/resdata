@@ -17,19 +17,18 @@ void test_rstfile(const char *filename, bool fracture_connection) {
     auto header = RSTHead::read(rd_file_get_global_view(rst_file),
                                 rd_filename_report_nr(filename));
 
-    well_conn_type *wellhead = well_conn_alloc_wellhead(iwel_kw, header, 0);
+    auto wellhead = WellConnection::read_wellhead(iwel_kw, header, 0);
 
     if (fracture_connection) {
-        test_assert_true(well_conn_fracture_connection(wellhead));
-        test_assert_false(well_conn_matrix_connection(wellhead));
+        test_assert_true(wellhead->is_fracture_connection());
+        test_assert_false(wellhead->is_matrix_connection());
     } else {
-        test_assert_false(well_conn_fracture_connection(wellhead));
-        test_assert_true(well_conn_matrix_connection(wellhead));
+        test_assert_false(wellhead->is_fracture_connection());
+        test_assert_true(wellhead->is_matrix_connection());
     }
 
-    test_assert_true(well_conn_get_k(wellhead) < header.nz);
+    test_assert_true(wellhead->get_k() < header.nz);
 
-    well_conn_free(wellhead);
     rd_file_close(rst_file);
 }
 

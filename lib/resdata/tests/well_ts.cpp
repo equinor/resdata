@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 
 #include <ert/util/test_util.hpp>
@@ -21,8 +22,7 @@ int main(int argc, char **argv) {
     stringlist_sort(file_list, (string_cmp_ftype *)util_strcmp_int);
 
     {
-        int i;
-        for (i = 0; i < stringlist_get_size(file_list); i++) {
+        for (int i = 0; i < stringlist_get_size(file_list); i++) {
             char *ext;
             char *target_ext = util_alloc_sprintf("X%04d", i);
             util_alloc_file_components(stringlist_iget(file_list, i), NULL,
@@ -34,24 +34,18 @@ int main(int argc, char **argv) {
         }
     }
     {
-        well_info_type *well_info = well_info_alloc(grid.get());
-        int i;
-        for (i = 0; i < stringlist_get_size(file_list); i++) {
+        WellInfo well_info(grid.get());
+        for (int i = 0; i < stringlist_get_size(file_list); i++) {
             printf("Loading file:%s \n", stringlist_iget(file_list, i));
-            well_info_load_rstfile(well_info, stringlist_iget(file_list, i),
-                                   true);
+            well_info.load_rstfile(stringlist_iget(file_list, i), true);
         }
-        well_info_free(well_info);
     }
 
     {
-        well_info_type *well_info = well_info_alloc(grid.get());
-        int i;
+        WellInfo well_info(grid.get());
         stringlist_reverse(file_list);
-        for (i = 0; i < stringlist_get_size(file_list); i++)
-            well_info_load_rstfile(well_info, stringlist_iget(file_list, i),
-                                   true);
-        well_info_free(well_info);
+        for (int i = 0; i < stringlist_get_size(file_list); i++)
+            well_info.load_rstfile(stringlist_iget(file_list, i), true);
     }
     free(grid_file);
 

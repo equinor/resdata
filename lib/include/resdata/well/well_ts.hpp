@@ -1,26 +1,24 @@
-#ifndef ERT_WELL_TS_H
-#define ERT_WELL_TS_H
+#pragma once
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <resdata/well/well_state.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class WellTimeLine {
+    std::string well_name;
+    std::vector<std::shared_ptr<WellState>> ts;
 
-typedef struct well_ts_struct well_ts_type;
+public:
+    explicit WellTimeLine(std::string well_name) : well_name(well_name) {};
 
-void well_ts_free(well_ts_type *well_ts);
-void well_ts_add_well(well_ts_type *well_ts, well_state_type *well_state);
-well_ts_type *well_ts_alloc(const char *well_name);
-well_state_type *well_ts_iget_state(const well_ts_type *well_ts, int index);
-int well_ts_get_size(const well_ts_type *well_ts);
-const char *well_ts_get_name(const well_ts_type *well_ts);
-well_state_type *well_ts_get_last_state(const well_ts_type *well_ts);
-
-#ifdef __cplusplus
-}
-#endif
-#include <memory>
-
-using well_ts_ptr = std::unique_ptr<well_ts_type, decltype(&well_ts_free)>;
-#endif
+    void add_well(const std::shared_ptr<WellState> &well_state) {
+        ts.push_back(well_state);
+    }
+    [[nodiscard]] std::string name() const { return well_name; }
+    [[nodiscard]] std::shared_ptr<WellState> at(size_t n) const {
+        return ts.at(n);
+    }
+    [[nodiscard]] size_t size() const { return ts.size(); }
+};
