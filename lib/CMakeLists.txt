@@ -156,285 +156,58 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.grid._grid
-# -----------------------------------------------------------------
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
-pybind11_add_module(_grid resdata/rd_grid_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_grid PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _grid
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_grid_install_dir "python/resdata/grid")
-  # libresdata.so.6 is installed at python/resdata/.libs/ make _grid.so find it
-  if(APPLE)
-    set_target_properties(_grid PROPERTIES INSTALL_RPATH
-                                           "@loader_path/../.libs")
-  else()
-    set_target_properties(_grid PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_grid_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _grid LIBRARY DESTINATION ${_grid_install_dir})
-# When running tests against the build tree (editable install), put the
-# extension directly next to rd_grid.py so it can be imported as
-# resdata.grid._grid without an install step.
-set_target_properties(
-  _grid PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                   ${PROJECT_SOURCE_DIR}/python/resdata/grid)
 
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.resfile._kw
-# -----------------------------------------------------------------
-pybind11_add_module(_kw resdata/rd_kw_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_kw PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _kw
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_kw_install_dir "python/resdata/resfile")
-  # libresdata.so.6 is installed at python/resdata/.libs/ make _kw.so find it
-  if(APPLE)
-    set_target_properties(_kw PROPERTIES INSTALL_RPATH "@loader_path/../.libs")
+# Helper to register a pybind11 extension module that wraps a single
+# <classname>_pybind.cpp together with the shared cwrap_pybind.cpp glue.
+# module_name : name of the python extension (e.g. _grid) source_file : the
+# <classname>_pybind.cpp in lib/resdata/ py_pkg_path : install/output package
+# path under python/ (e.g. resdata/grid)
+function(add_resdata_pybind_module module_name source_file py_pkg_path)
+  pybind11_add_module(${module_name} resdata/${source_file}
+                      resdata/cwrap_pybind.cpp)
+  target_link_libraries(${module_name} PRIVATE resdata fmt::fmt)
+  target_include_directories(
+    ${module_name}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+  if(SKBUILD)
+    set(${module_name}_install_dir "python/${py_pkg_path}")
+    # libresdata.so.6 is installed at python/resdata/.libs/ make
+    # ${module_name}.so find it
+    if(APPLE)
+      set_target_properties(${module_name} PROPERTIES INSTALL_RPATH
+                                                      "@loader_path/../.libs")
+    else()
+      set_target_properties(${module_name} PROPERTIES INSTALL_RPATH
+                                                      "$ORIGIN/../.libs")
+    endif()
   else()
-    set_target_properties(_kw PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+    set(${module_name}_install_dir "${CMAKE_INSTALL_LIBDIR}")
   endif()
-else()
-  set(_kw_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _kw LIBRARY DESTINATION ${_kw_install_dir})
-# When running tests against the build tree (editable install), put the
-# extension directly next to rd_kw.py so it can be imported as
-# resdata.resfile._kw without an install step.
-set_target_properties(
-  _kw PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                 ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
+  install(TARGETS ${module_name}
+          LIBRARY DESTINATION ${${module_name}_install_dir})
+  # When running tests against the build tree (editable install), put the
+  # extension in the source package directory so it can be imported without
+  # installing.
+  set_target_properties(
+    ${module_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                              ${PROJECT_SOURCE_DIR}/python/${py_pkg_path})
+endfunction()
 
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.resfile._rsthead
-# -----------------------------------------------------------------
-pybind11_add_module(_rsthead resdata/rsthead_pybind.cpp
-                    resdata/cwrap_pybind.cpp)
-target_link_libraries(_rsthead PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _rsthead
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_rsthead_install_dir "python/resdata/resfile")
-  if(APPLE)
-    set_target_properties(_rsthead PROPERTIES INSTALL_RPATH
-                                              "@loader_path/../.libs")
-  else()
-    set_target_properties(_rsthead PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_rsthead_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _rsthead LIBRARY DESTINATION ${_rsthead_install_dir})
-set_target_properties(
-  _rsthead PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                      ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.resfile._fortio
-# -----------------------------------------------------------------
-pybind11_add_module(_fortio resdata/fortio_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_fortio PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _fortio
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_fortio_install_dir "python/resdata/resfile")
-  if(APPLE)
-    set_target_properties(_fortio PROPERTIES INSTALL_RPATH
-                                             "@loader_path/../.libs")
-  else()
-    set_target_properties(_fortio PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_fortio_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _fortio LIBRARY DESTINATION ${_fortio_install_dir})
-set_target_properties(
-  _fortio PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                     ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.resfile._file
-# -----------------------------------------------------------------
-pybind11_add_module(_file resdata/rd_file_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_file PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _file
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_file_install_dir "python/resdata/resfile")
-  if(APPLE)
-    set_target_properties(_file PROPERTIES INSTALL_RPATH
-                                           "@loader_path/../.libs")
-  else()
-    set_target_properties(_file PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_file_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _file LIBRARY DESTINATION ${_file_install_dir})
-set_target_properties(
-  _file PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                   ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.well._well_info
-# -----------------------------------------------------------------
-pybind11_add_module(_well_info resdata/well_info_pybind.cpp
-                    resdata/cwrap_pybind.cpp)
-target_link_libraries(_well_info PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _well_info
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_well_info_install_dir "python/resdata/well")
-  if(APPLE)
-    set_target_properties(_well_info PROPERTIES INSTALL_RPATH
-                                                "@loader_path/../.libs")
-  else()
-    set_target_properties(_well_info PROPERTIES INSTALL_RPATH
-                                                "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_well_info_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _well_info LIBRARY DESTINATION ${_well_info_install_dir})
-set_target_properties(
-  _well_info PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                        ${PROJECT_SOURCE_DIR}/python/resdata/well)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.gravimetry._subsidence
-# -----------------------------------------------------------------
-pybind11_add_module(_subsidence resdata/rd_subsidence_pybind.cpp
-                    resdata/cwrap_pybind.cpp)
-target_link_libraries(_subsidence PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _subsidence
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_subsidence_install_dir "python/resdata/gravimetry")
-  if(APPLE)
-    set_target_properties(_subsidence PROPERTIES INSTALL_RPATH
-                                                 "@loader_path/../.libs")
-  else()
-    set_target_properties(_subsidence PROPERTIES INSTALL_RPATH
-                                                 "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_subsidence_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _subsidence LIBRARY DESTINATION ${_subsidence_install_dir})
-set_target_properties(
-  _subsidence PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                         ${PROJECT_SOURCE_DIR}/python/resdata/gravimetry)
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.gravimetry._grav
-# -----------------------------------------------------------------
-pybind11_add_module(_grav resdata/rd_grav_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_grav PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _grav
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_grav_install_dir "python/resdata/gravimetry")
-  if(APPLE)
-    set_target_properties(_grav PROPERTIES INSTALL_RPATH
-                                           "@loader_path/../.libs")
-  else()
-    set_target_properties(_grav PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_grav_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _grav LIBRARY DESTINATION ${_grav_install_dir})
-set_target_properties(
-  _grav PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                   ${PROJECT_SOURCE_DIR}/python/resdata/gravimetry)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.summary._rd_sum
-# -----------------------------------------------------------------
-pybind11_add_module(_rd_sum resdata/rd_sum_pybind.cpp resdata/cwrap_pybind.cpp)
-target_link_libraries(_rd_sum PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _rd_sum
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_rd_sum_install_dir "python/resdata/summary")
-  if(APPLE)
-    set_target_properties(_rd_sum PROPERTIES INSTALL_RPATH
-                                             "@loader_path/../.libs")
-  else()
-    set_target_properties(_rd_sum PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_rd_sum_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _rd_sum LIBRARY DESTINATION ${_rd_sum_install_dir})
-set_target_properties(
-  _rd_sum PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                     ${PROJECT_SOURCE_DIR}/python/resdata/summary)
-
-# -----------------------------------------------------------------
-# Pybind11 extension module: resdata.well._well_state
-# -----------------------------------------------------------------
-pybind11_add_module(_well_state resdata/well_state_pybind.cpp
-                    resdata/cwrap_pybind.cpp)
-target_link_libraries(_well_state PRIVATE resdata fmt::fmt)
-target_include_directories(
-  _well_state
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-          ${CMAKE_CURRENT_BINARY_DIR}/include
-          ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-if(SKBUILD)
-  set(_well_state_install_dir "python/resdata/well")
-  # libresdata.so.6 is installed at python/resdata/.libs/ make _well_state.so
-  # find it
-  if(APPLE)
-    set_target_properties(_well_state PROPERTIES INSTALL_RPATH
-                                                 "@loader_path/../.libs")
-  else()
-    set_target_properties(_well_state PROPERTIES INSTALL_RPATH
-                                                 "$ORIGIN/../.libs")
-  endif()
-else()
-  set(_well_state_install_dir "${CMAKE_INSTALL_LIBDIR}")
-endif()
-install(TARGETS _well_state LIBRARY DESTINATION ${_well_state_install_dir})
-# When running tests against the build tree (editable install), put the
-# extension directly next to rd_well_state.py so it can be imported as
-# resdata.well._well_state without an install step.
-set_target_properties(
-  _well_state PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                         ${PROJECT_SOURCE_DIR}/python/resdata/well)
+add_resdata_pybind_module(_grid rd_grid_pybind.cpp resdata/grid)
+add_resdata_pybind_module(_kw rd_kw_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_rsthead rsthead_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_file rd_file_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_fortio fortio_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_well_info well_info_pybind.cpp resdata/well)
+add_resdata_pybind_module(_well_state well_state_pybind.cpp resdata/well)
+add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
+                          resdata/gravimetry)
+add_resdata_pybind_module(_grav rd_grav_pybind.cpp resdata/gravimetry)
+add_resdata_pybind_module(_rd_sum rd_sum_pybind.cpp resdata/summary)
 
 if(NOT BUILD_TESTS)
   return()
