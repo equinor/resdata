@@ -31,27 +31,25 @@ int main(int argc, char **argv) {
         int report_nr = 100;
         time_t valid_from = -1;
         bool open = false;
-        well_type_enum type = RD_WELL_GAS_INJECTOR;
+        auto type = WellType::GAS_INJECTOR;
         bool load_segment_information = false;
 
         for (int global_well_nr = 0; global_well_nr < header.nwells;
              global_well_nr++) {
-            well_state_type *well_state = well_state_alloc(
-                well_name, global_well_nr, open, type, report_nr, valid_from);
-            test_assert_true(well_state_is_instance(well_state));
-            well_state_add_connections2(well_state, grid, rst_view, 0);
-            well_state_add_MSW2(well_state, rst_view, global_well_nr,
-                                load_segment_information);
+            WellState well_state(well_name, global_well_nr, open, type,
+                                 report_nr, valid_from);
+            well_state.add_connections(grid, rst_view, 0);
+            well_state.add_MSW(rst_view, global_well_nr,
+                               load_segment_information);
 
             {
                 const well_segment_collection_type *segments =
-                    well_state_get_segments(well_state);
+                    well_state.get_segments();
 
                 if (!rd_file_view_has_kw(rst_view, RSEG_KW))
                     test_assert_int_equal(
                         0, well_segment_collection_get_size(segments));
             }
-            well_state_free(well_state);
         }
     }
 

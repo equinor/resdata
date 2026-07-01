@@ -86,7 +86,6 @@ add_library(
   resdata/well_state.cpp
   resdata/well_conn.cpp
   resdata/well_info.cpp
-  resdata/well_ts.cpp
   resdata/well_segment.cpp
   resdata/well_segment_collection.cpp
   resdata/well_branch_collection.cpp
@@ -173,15 +172,27 @@ function(add_resdata_pybind_module module_name source_file py_pkg_path)
             ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
   if(SKBUILD)
     set(${module_name}_install_dir "python/${py_pkg_path}")
-    # libresdata.so.6 is installed at python/resdata/.libs/ make
-    # ${module_name}.so find it
+    # libresdata.so.<major> is installed at python/resdata/.libs/. The extension
+    # is installed at python/${py_pkg_path}/, which may be at any depth. Compute
+    # how many directories we must climb to get back to python/resdata/ so the
+    # RPATH is correct regardless of the module's package depth.
+    string(REPLACE "/" ";" _pkg_parts "${py_pkg_path}")
+    list(LENGTH _pkg_parts _pkg_depth)
+    math(EXPR _levels_up "${_pkg_depth} - 1")
+
     if(APPLE)
-      set_target_properties(${module_name} PROPERTIES INSTALL_RPATH
-                                                      "@loader_path/../.libs")
+      set(_origin "@loader_path")
     else()
-      set_target_properties(${module_name} PROPERTIES INSTALL_RPATH
-                                                      "$ORIGIN/../.libs")
+      set(_origin "$ORIGIN")
     endif()
+
+    set(_rpath "${_origin}")
+    if(_levels_up GREATER 0)
+      string(REPEAT "/.." ${_levels_up} _up)
+      string(APPEND _rpath "${_up}")
+    endif()
+    set(_rpath "${_rpath}/.libs")
+    set_target_properties(${module_name} PROPERTIES INSTALL_RPATH "${_rpath}")
   else()
     set(${module_name}_install_dir "${CMAKE_INSTALL_LIBDIR}")
   endif()
@@ -200,11 +211,7 @@ add_resdata_pybind_module(_kw rd_kw_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_rsthead rsthead_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_file rd_file_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_fortio fortio_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(_well_info well_info_pybind.cpp resdata/well)
-add_resdata_pybind_module(_well_state well_state_pybind.cpp resdata/well)
-add_resdata_pybind_module(_well_time_line well_ts_pybind.cpp resdata/well)
-add_resdata_pybind_module(_well_connection well_conn_pybind.cpp resdata/well)
-add_resdata_pybind_module(_well_segment well_segment_pybind.cpp resdata/well)
+add_resdata_pybind_module(well well_pybind.cpp resdata)
 add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
                           resdata/gravimetry)
 add_resdata_pybind_module(_grav rd_grav_pybind.cpp resdata/gravimetry)

@@ -16,10 +16,9 @@ void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,
                        const rd_kw_type *scon_kw, const rd_kw_type *xcon_kw,
                        const RSTHead &rst_head, int iwell, int iconn,
                        double CF) {
-    well_conn_type *conn = well_conn_alloc_from_kw(icon_kw, scon_kw, xcon_kw,
-                                                   rst_head, iwell, iconn);
-    test_assert_double_equal(CF, well_conn_get_connection_factor(conn));
-    well_conn_free(conn);
+    auto conn = WellConnection::from_keywords(icon_kw, scon_kw, xcon_kw,
+                                              rst_head, iwell, iconn);
+    test_assert_double_equal(CF, conn->get_connection_factor());
 }
 
 int main(int argc, char **argv) {

@@ -16,7 +16,6 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_subsidence.hpp>
 #include <resdata/rd_region.hpp>
-#include <resdata/well/well_state.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -209,21 +208,6 @@ template <> rd_file_type *from_cwrap<rd_file_type>(py::handle obj) {
     return cast_cwrap<rd_file_type>(obj);
 }
 
-py::object WellInfo() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.well").attr("WellInfo");
-    }
-    return cls;
-}
-
-template <> well_info_type *from_cwrap<well_info_type>(py::handle obj) {
-    if (!py::isinstance(obj, WellInfo()))
-        throw py::type_error("Expected WellInfo, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<well_info_type>(obj);
-}
-
 py::object ResdataFileView() {
     static py::object cls;
     if (!cls) {
@@ -271,69 +255,6 @@ template <> rd_region_type *from_cwrap<rd_region_type>(py::handle obj) {
     return cast_cwrap<rd_region_type>(obj);
 }
 
-py::object WellState() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.well").attr("WellState");
-    }
-    return cls;
-}
-
-template <> well_state_type *from_cwrap<well_state_type>(py::handle obj) {
-    if (!py::isinstance(obj, WellState()))
-        throw py::type_error("Expected WellState, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<well_state_type>(obj);
-}
-
-py::object WellConnection() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.well").attr("WellConnection");
-    }
-    return cls;
-}
-
-template <> well_conn_type *from_cwrap<well_conn_type>(py::handle obj) {
-    if (!py::isinstance(obj, WellConnection()))
-        throw py::type_error("Expected WellConnection, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<well_conn_type>(obj);
-}
-
-py::object WellSegment() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.well").attr("WellSegment");
-    }
-    return cls;
-}
-
-template <> well_segment_type *from_cwrap<well_segment_type>(py::handle obj) {
-    if (!py::isinstance(obj, WellSegment()))
-        throw py::type_error("Expected WellSegment, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<well_segment_type>(obj);
-}
-
-py::object WellTimeLine() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.well").attr("WellTimeLine");
-    }
-    return cls;
-}
-template <> well_ts_type *from_cwrap<well_ts_type>(py::handle obj) {
-    if (!py::isinstance(obj, WellTimeLine()))
-        throw py::type_error("Expected WellTimeLine, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<well_ts_type>(obj);
-}
-
 py::object ResdataGrav() {
     static py::object cls;
     if (!cls) {
@@ -348,4 +269,12 @@ template <> rd_grav_type *from_cwrap<rd_grav_type>(py::handle obj) {
                              static_cast<std::string>(py::repr(obj)));
 
     return cast_cwrap<rd_grav_type>(obj);
+}
+
+py::object CTime() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.util.util").attr("CTime");
+    }
+    return cls;
 }

@@ -89,13 +89,6 @@ void write_restart_file(const std::string &path, const RestartLayout &layout) {
     fortio.fflush();
 }
 
-using well_info_ptr =
-    std::unique_ptr<well_info_type, decltype(&well_info_free)>;
-
-well_info_ptr make_well_info(const rd_grid_ptr &grid) {
-    return well_info_ptr(well_info_alloc(grid.get()), well_info_free);
-}
-
 } // namespace
 
 TEST_CASE_METHOD(Tmpdir,
@@ -109,10 +102,9 @@ TEST_CASE_METHOD(Tmpdir,
     layout.with_zwel = false;
     write_restart_file(path, layout);
 
-    auto well_info = make_well_info(grid);
-    REQUIRE_NOTHROW(
-        well_info_load_rstfile(well_info.get(), path.c_str(), false));
-    REQUIRE(well_info_get_num_wells(well_info.get()) == 0);
+    WellInfo well_info(grid.get());
+    REQUIRE_NOTHROW(well_info.load_rstfile(path.c_str(), false));
+    REQUIRE(well_info.num_wells() == 0);
 }
 
 TEST_CASE_METHOD(Tmpdir, "restart file without IWEL loads zero wells (unified)",
@@ -126,10 +118,9 @@ TEST_CASE_METHOD(Tmpdir, "restart file without IWEL loads zero wells (unified)",
     layout.with_zwel = false;
     write_restart_file(path, layout);
 
-    auto well_info = make_well_info(grid);
-    REQUIRE_NOTHROW(
-        well_info_load_rstfile(well_info.get(), path.c_str(), false));
-    REQUIRE(well_info_get_num_wells(well_info.get()) == 0);
+    WellInfo well_info(grid.get());
+    REQUIRE_NOTHROW(well_info.load_rstfile(path, false));
+    REQUIRE(well_info.num_wells() == 0);
 }
 
 TEST_CASE_METHOD(Tmpdir,
@@ -143,10 +134,9 @@ TEST_CASE_METHOD(Tmpdir,
     layout.with_zwel = false;
     write_restart_file(path, layout);
 
-    auto well_info = make_well_info(grid);
-    REQUIRE_THROWS_AS(
-        well_info_load_rstfile(well_info.get(), path.c_str(), false),
-        std::out_of_range);
+    WellInfo well_info(grid.get());
+    REQUIRE_THROWS_AS(well_info.load_rstfile(path.c_str(), false),
+                      std::out_of_range);
 }
 
 TEST_CASE_METHOD(Tmpdir,
@@ -161,10 +151,8 @@ TEST_CASE_METHOD(Tmpdir,
     layout.with_zwel = false;
     write_restart_file(path, layout);
 
-    auto well_info = make_well_info(grid);
-    REQUIRE_THROWS_AS(
-        well_info_load_rstfile(well_info.get(), path.c_str(), false),
-        std::out_of_range);
+    WellInfo well_info(grid.get());
+    REQUIRE_THROWS_AS(well_info.load_rstfile(path, false), std::out_of_range);
 }
 
 TEST_CASE_METHOD(Tmpdir, "loading an unknown file type throws",
@@ -177,10 +165,9 @@ TEST_CASE_METHOD(Tmpdir, "loading an unknown file type throws",
         fortio.fflush();
     }
 
-    auto well_info = make_well_info(grid);
-    REQUIRE_THROWS_AS(
-        well_info_load_rstfile(well_info.get(), path.c_str(), false),
-        std::invalid_argument);
+    WellInfo well_info(grid.get());
+    REQUIRE_THROWS_AS(well_info.load_rstfile(path, false),
+                      std::invalid_argument);
 }
 
 namespace {

@@ -1,11 +1,12 @@
 
+#include <memory>
 #include <vector>
 
-#include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_conn.hpp>
+#include <resdata/well/well_segment.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 
 #define WELL_BRANCH_COLLECTION_TYPE_ID 67177087
@@ -13,7 +14,7 @@
 struct well_branch_collection_struct {
     UTIL_TYPE_ID_DECLARATION;
 
-    std::vector<well_segment_type *> __start_segments;
+    std::vector<std::shared_ptr<WellSegment>> __start_segments;
     std::vector<int> index_map;
 };
 
@@ -56,15 +57,15 @@ bool well_branch_collection_has_branch(
         return false;
 }
 
-const well_segment_type *well_branch_collection_iget_start_segment(
+const std::shared_ptr<WellSegment> well_branch_collection_iget_start_segment(
     const well_branch_collection_type *branches, int index) {
     if (index < static_cast<int>(branches->__start_segments.size()))
         return branches->__start_segments[index];
     else
-        return NULL;
+        return {nullptr};
 }
 
-const well_segment_type *well_branch_collection_get_start_segment(
+const std::shared_ptr<WellSegment> well_branch_collection_get_start_segment(
     const well_branch_collection_type *branches, int branch_id) {
     int internal_index =
         well_branch_collection_safe_iget_index(branches, branch_id);
@@ -72,14 +73,15 @@ const well_segment_type *well_branch_collection_get_start_segment(
         return well_branch_collection_iget_start_segment(branches,
                                                          internal_index);
     else
-        return NULL;
+        return {nullptr};
 }
 
 bool well_branch_collection_add_start_segment(
-    well_branch_collection_type *branches, well_segment_type *start_segment) {
-    if ((well_segment_get_link_count(start_segment) == 0) &&
-        (well_segment_get_outlet(start_segment))) {
-        int branch_id = well_segment_get_branch_id(start_segment);
+    well_branch_collection_type *branches,
+    std::shared_ptr<WellSegment> start_segment) {
+    if ((start_segment->get_link_count() == 0) &&
+        (start_segment->get_outlet())) {
+        int branch_id = start_segment->get_branch_id();
         int current_index =
             well_branch_collection_safe_iget_index(branches, branch_id);
         if (current_index >= 0)

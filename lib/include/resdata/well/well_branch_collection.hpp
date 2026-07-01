@@ -13,15 +13,15 @@ bool well_branch_collection_has_branch(
     const well_branch_collection_type *branches, int branch_id);
 int well_branch_collection_get_size(
     const well_branch_collection_type *branches);
-const well_segment_type *well_branch_collection_iget_start_segment(
+const std::shared_ptr<WellSegment> well_branch_collection_iget_start_segment(
     const well_branch_collection_type *branches, int index);
-const well_segment_type *well_branch_collection_get_start_segment(
+const std::shared_ptr<WellSegment> well_branch_collection_get_start_segment(
     const well_branch_collection_type *branches, int branch_id);
 bool well_branch_collection_add_start_segment(
-    well_branch_collection_type *branches, well_segment_type *start_segment);
+    well_branch_collection_type *branches,
+    std::shared_ptr<WellSegment> start_segment);
 
 UTIL_IS_INSTANCE_HEADER(well_branch_collection);
-
 
 using well_branch_collection_ptr =
     std::unique_ptr<well_branch_collection_type,

@@ -29,30 +29,27 @@ int main(int argc, char **argv) {
     int report_nr = 100;
     time_t valid_from = -1;
     bool open = false;
-    well_type_enum type = RD_WELL_GAS_INJECTOR;
+    auto type = WellType::GAS_INJECTOR;
     bool load_segment_information = true;
     rd_file_view_type *rst_view = rd_file_get_global_view(rst_file);
 
     for (int global_well_nr = 0; global_well_nr < header.nwells;
          global_well_nr++) {
-        well_state_type *well_state = well_state_alloc(
-            well_name, global_well_nr, open, type, report_nr, valid_from);
-        test_assert_true(well_state_is_instance(well_state));
-        well_state_add_connections2(well_state, grid, rst_view, 0);
+        WellState well_state(well_name, global_well_nr, open, type, report_nr,
+                             valid_from);
+        well_state.add_connections(grid, rst_view, 0);
 
-        test_assert_true(
-            well_state_has_grid_connections(well_state, RD_GRID_GLOBAL_GRID));
-        test_assert_false(well_state_has_grid_connections(well_state, "???"));
+        test_assert_true(well_state.has_grid_connections(RD_GRID_GLOBAL_GRID));
+        test_assert_false(well_state.has_grid_connections("???"));
 
-        well_state_add_MSW2(well_state, rst_view, global_well_nr,
-                            load_segment_information);
+        well_state.add_MSW(rst_view, global_well_nr, load_segment_information);
         {
             const well_segment_collection_type *segments =
-                well_state_get_segments(well_state);
+                well_state.get_segments();
             const well_branch_collection_type *branches =
-                well_state_get_branches(well_state);
+                well_state.get_branches();
 
-            if (well_state_is_MSW(well_state)) {
+            if (well_state.is_MSW()) {
                 test_assert_true(rd_file_has_kw(rst_file, ISEG_KW));
                 test_assert_int_not_equal(
                     well_segment_collection_get_size(segments), 0);
@@ -63,10 +60,9 @@ int main(int argc, char **argv) {
                     well_segment_collection_get_size(segments), 0);
                 test_assert_int_equal(well_branch_collection_get_size(branches),
                                       0);
-                test_assert_false(well_state_is_MSW(well_state));
+                test_assert_false(well_state.is_MSW());
             }
         }
-        well_state_free(well_state);
     }
     exit(0);
 }

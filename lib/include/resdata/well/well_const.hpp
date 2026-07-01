@@ -111,10 +111,10 @@
 #define IWEL_WATER_INJECTOR 3
 #define IWEL_GAS_INJECTOR 4
 
-typedef enum {
-    RD_WELL_ZERO = 0,
-    RD_WELL_PRODUCER = 1,
-    RD_WELL_OIL_INJECTOR = 2,
-    RD_WELL_WATER_INJECTOR = 3,
-    RD_WELL_GAS_INJECTOR = 4,
-} well_type_enum;
+enum class WellType {
+    ZERO = 0,
+    PRODUCER = 1,
+    OIL_INJECTOR = 2,
+    WATER_INJECTOR = 3,
+    GAS_INJECTOR = 4,
+};
