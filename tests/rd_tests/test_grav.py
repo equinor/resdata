@@ -1,5 +1,6 @@
 import datetime
 
+import pytest
 from resdata import ResDataType
 from resdata.gravimetry import ResdataGrav
 from resdata.grid import GridGenerator
@@ -134,3 +135,111 @@ class ResdataGravTest(ResdataTest):
             grav.add_std_density(1, 0, 0.5)
 
             grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_missing_rporv_keyword_raises(self):
+        kws = [
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
+            for kw in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "OIL_DEN",
+            ]
+        ]
+
+        with TestAreaContext("grav_missing_rporv"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+
+            grav = ResdataGrav(self.grid, init)
+
+            restart_file = ResdataFile("TEST.UNRST")
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+
+            grav.new_std_density(1, 0.5)
+            grav.add_std_density(1, 0, 0.5)
+
+            with pytest.raises(RuntimeError, match=r"restart file did not contain"):
+                grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_invalid_phase_id_raises_python_exception(self):
+        kws = [
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
+            for kw in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "OIL_DEN",
+                "RPORV",
+            ]
+        ]
+
+        with TestAreaContext("grav_invalid_phase"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+            grav = ResdataGrav(self.grid, init)
+
+            with pytest.raises(
+                ValueError, match=r"phase enum value: 999 not recognized"
+            ):
+                grav.new_std_density(999, 0.5)
+
+    def test_eval_unknown_survey_raises(self):
+        kws = [
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
+            for kw in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "OIL_DEN",
+                "RPORV",
+            ]
+        ]
+
+        with TestAreaContext("grav_unknown_survey"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+
+            grav = ResdataGrav(self.grid, init)
+
+            restart_file = ResdataFile("TEST.UNRST")
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+
+            grav.new_std_density(1, 0.5)
+            grav.add_std_density(1, 0, 0.5)
+            grav.add_survey_RPORV("rporv", restart_view)
+
+            with pytest.raises(
+                ValueError,
+                match=r"Survey name: does_not_exist not registered",
+            ):
+                grav.eval("does_not_exist", None, (0, 0, 0), phase_mask=1)
+
+    def test_that_rporv_inconsistency_raises(self):
+        size = self.grid.get_global_size()
+        porv = ResdataKW("PORV", size, ResDataType.RD_FLOAT)
+        rporv = ResdataKW("RPORV", size, ResDataType.RD_FLOAT)
+
+        for i in range(size):
+            porv[i] = 1.0
+            rporv[i] = 1000.0
+
+        kws = [porv, rporv]
+
+        with TestAreaContext("grav_bad_rporv"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+
+            grav = ResdataGrav(self.grid, init)
+
+            restart_file = ResdataFile("TEST.UNRST")
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+
+            grav.new_std_density(1, 0.5)
+            grav.add_std_density(1, 0, 0.5)
+
+            with pytest.raises(
+                RuntimeError,
+                match=r"substantially different from the initial porv value",
+            ):
+                grav.add_survey_RPORV("rporv", restart_view)

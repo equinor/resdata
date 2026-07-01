@@ -7,6 +7,9 @@
 
 #include <ert/util/util.hpp>
 
+#include <stdexcept>
+#include <string>
+
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file.hpp>
@@ -117,8 +120,9 @@ static const char *get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
             return ECLIPSE100_WATER_DEN_KW;
             break;
         default:
-            util_abort("%s: unrecognized phase id:%d \n", __func__, phase);
-            return NULL;
+            throw std::invalid_argument(
+                std::string(__func__) + ": unrecognized phase id: " +
+                std::to_string(static_cast<int>(phase)));
         }
     } else if ((rd_version == ECLIPSE300) ||
                (rd_version == ECLIPSE300_THERMAL)) {
@@ -133,15 +137,16 @@ static const char *get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
             return ECLIPSE300_WATER_DEN_KW;
             break;
         default:
-            util_abort("%s: unrecognized phase id:%d \n", __func__, phase);
-            return NULL;
+            throw std::invalid_argument(
+                std::string(__func__) + ": unrecognized phase id: " +
+                std::to_string(static_cast<int>(phase)));
         }
     } else {
-        util_abort("%s: unrecognized simulator id:%d \n", __func__, rd_version);
-        return NULL;
+        throw std::invalid_argument(
+            std::string(__func__) + ": unrecognized simulator id: " +
+            std::to_string(static_cast<int>(rd_version)));
     }
 }
-
 static void rd_grav_phase_ensure_work(rd_grav_phase_type *grav_phase) {
     if (grav_phase->work == NULL)
         grav_phase->work = (double *)util_calloc(grav_phase->grid_cache->size(),
@@ -187,8 +192,8 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
 
         return deltag;
     } else {
-        util_abort("%s comparing different phases ... \n", __func__);
-        return -1;
+        throw std::invalid_argument(std::string(__func__) +
+                                    ": comparing different phases");
     }
 }
 
@@ -343,13 +348,13 @@ static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
 }
 
 static rd_grav_survey_type *
-rd_grav_survey_alloc_empty(const rd_grav_type *rd_grav, const char *name,
+rd_grav_survey_alloc_empty(const rd_grav_type *rd_grav, const std::string &name,
                            grav_calc_type calc_type) {
     rd_grav_survey_type *survey = new rd_grav_survey_type();
     UTIL_TYPE_ID_INIT(survey, RD_GRAV_SURVEY_ID);
     survey->grid_cache = rd_grav->grid_cache;
     survey->aquifer_cell = rd_grav->aquifer_cell;
-    survey->name = util_alloc_string_copy(name);
+    survey->name = util_alloc_string_copy(name.c_str());
 
     if (calc_type & GRAV_CALC_USE_PORV)
         survey->porv = (double *)util_calloc(rd_grav->grid_cache->size(),
@@ -389,21 +394,17 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
             if (fabs(log_pormod) > 1) {
                 // Detected as error if the effective pore volume multiplier
                 // is greater than 10 or less than 0.10.
-                fprintf(stderr, "----------------------------------------------"
-                                "-------------------\n");
-                fprintf(stderr, "INIT PORV : %g \n", init_porv);
-                fprintf(stderr, "RPORV     : %g \n", rporv);
-                fprintf(stderr, "The RPORV values extracted from the "
-                                "restart file appear to be \n");
-                fprintf(stderr,
-                        "substantially different from the initial porv value. "
-                        "This might indicate \n");
-                fprintf(stderr, "an inconsistency in the RPORV handling. Try "
-                                "using a different simulator version,\n");
-                fprintf(stderr, "or alternatively the PORMOD approach. \n");
-                fprintf(stderr, "----------------------------------------------"
-                                "-------------------\n");
-                exit(1);
+                throw std::runtime_error(
+                    std::string(__func__) +
+                    ": INIT PORV: " + std::to_string(init_porv) +
+                    ", RPORV: " + std::to_string(rporv) +
+                    ". The RPORV values extracted from the restart file appear "
+                    "to be substantially different from the initial porv "
+                    "value. "
+                    "This might indicate an inconsistency in the RPORV "
+                    "handling. "
+                    "Try using a different simulator version, or alternatively "
+                    "the PORMOD approach.");
             }
         }
         check_nr++;
@@ -454,7 +455,7 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
                            const rd_file_view_type *restart_file,
-                           const char *name) {
+                           const std::string &name) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
 
@@ -465,8 +466,9 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
         for (iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
             survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
     } else
-        util_abort("%s: restart file did not contain %s keyword??\n", __func__,
-                   RPORV_KW);
+        throw std::runtime_error(std::string(__func__) +
+                                 ": restart file did not contain " + RPORV_KW +
+                                 " keyword");
 
     {
         const rd_file_type *init_file = rd_grav->init_file;
@@ -483,7 +485,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
                             const rd_file_view_type *restart_file,
-                            const char *name) {
+                            const std::string &name) {
     rd::rd_grid_cache &grid_cache = *(rd_grav->grid_cache);
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_PORMOD);
@@ -519,7 +521,7 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
                          const rd_file_view_type *restart_file,
-                         const char *name) {
+                         const std::string &name) {
 
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_FIP);
@@ -536,7 +538,7 @@ rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_RFIP(rd_grav_type *rd_grav,
                           const rd_file_view_type *restart_file,
-                          const char *name) {
+                          const std::string &name) {
 
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RFIP);
@@ -559,7 +561,7 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
          phase_nr++) {
         rd_grav_phase_type *base_phase = base_survey->phase_list[phase_nr];
         if (base_phase->phase & phase_mask) {
-            if (monitor_survey != NULL) {
+            if (monitor_survey != nullptr) {
                 const rd_grav_phase_type *monitor_phase =
                     monitor_survey->phase_list[phase_nr];
                 deltag += rd_grav_phase_eval(base_phase, monitor_phase, region,
@@ -591,24 +593,26 @@ rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid,
     return rd_grav;
 }
 
-static void rd_grav_add_survey__(rd_grav_type *grav, const char *name,
+static void rd_grav_add_survey__(rd_grav_type *grav, const std::string &name,
                                  rd_grav_survey_type *survey) {
     grav->surveys[name] = survey;
 }
 
 rd_grav_survey_type *
-rd_grav_add_survey_RPORV(rd_grav_type *grav, const char *name,
+rd_grav_add_survey_RPORV(rd_grav_type *grav, const std::string &name,
                          const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RPORV(grav, restart_file, name);
-    if (survey == NULL)
-        return NULL;
+
+    if (survey == nullptr)
+        return nullptr;
+
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
 
 rd_grav_survey_type *
-rd_grav_add_survey_FIP(rd_grav_type *grav, const char *name,
+rd_grav_add_survey_FIP(rd_grav_type *grav, const std::string &name,
                        const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_FIP(grav, restart_file, name);
@@ -619,7 +623,7 @@ rd_grav_add_survey_FIP(rd_grav_type *grav, const char *name,
 }
 
 rd_grav_survey_type *
-rd_grav_add_survey_RFIP(rd_grav_type *grav, const char *name,
+rd_grav_add_survey_RFIP(rd_grav_type *grav, const std::string &name,
                         const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RFIP(grav, restart_file, name);
@@ -630,7 +634,7 @@ rd_grav_add_survey_RFIP(rd_grav_type *grav, const char *name,
 }
 
 rd_grav_survey_type *
-rd_grav_add_survey_PORMOD(rd_grav_type *grav, const char *name,
+rd_grav_add_survey_PORMOD(rd_grav_type *grav, const std::string &name,
                           const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_PORMOD(grav, restart_file, name);
@@ -641,32 +645,29 @@ rd_grav_add_survey_PORMOD(rd_grav_type *grav, const char *name,
 }
 
 static rd_grav_survey_type *rd_grav_get_survey(const rd_grav_type *grav,
-                                               const char *name) {
-    if (name == NULL)
-        return NULL; // Calling scope must determine if this is OK?
-    else {
-        if (grav->surveys.count(name) > 0)
-            return grav->surveys.at(name);
-        else {
-            fprintf(stderr,
-                    "Survey name:%s not registered. Available surveys are: "
-                    "\n\n     ",
-                    name);
+                                               const std::string &name) {
+    if (grav->surveys.count(name) > 0)
+        return grav->surveys.at(name);
 
-            for (const auto &survey_pair : grav->surveys)
-                fprintf(stderr, "%s ", survey_pair.first.c_str());
+    std::string available_surveys;
+    for (const auto &survey_pair : grav->surveys)
+        available_surveys += survey_pair.first + " ";
 
-            fprintf(stderr, "\n\n");
-            exit(1);
-        }
-    }
+    throw std::invalid_argument(
+        "Survey name: " + name +
+        " not registered. Available surveys are: " + available_surveys);
 }
 
-double rd_grav_eval(const rd_grav_type *grav, const char *base,
-                    const char *monitor, rd_region_type *region, double utm_x,
-                    double utm_y, double depth, int phase_mask) {
+double rd_grav_eval(const rd_grav_type *grav, const std::string &base,
+                    const std::optional<std::string> &monitor,
+                    rd_region_type *region, double utm_x, double utm_y,
+                    double depth, int phase_mask) {
     rd_grav_survey_type *base_survey = rd_grav_get_survey(grav, base);
-    rd_grav_survey_type *monitor_survey = rd_grav_get_survey(grav, monitor);
+
+    rd_grav_survey_type *monitor_survey = nullptr;
+    if (monitor.has_value()) {
+        monitor_survey = rd_grav_get_survey(grav, monitor.value());
+    }
 
     return rd_grav_survey_eval(base_survey, monitor_survey, region, utm_x,
                                utm_y, depth, phase_mask);
