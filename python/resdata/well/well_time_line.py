@@ -1,26 +1,21 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.well._well_time_line as _well_time_line
 
 from .well_state import WellState
 
 
 class WellTimeLine(BaseCClass):
     TYPE_NAME = "rd_well_time_line"
-    _size = ResdataPrototype("int well_ts_get_size(rd_well_time_line)")
-    _name = ResdataPrototype("char* well_ts_get_name(rd_well_time_line)")
-    _iget = ResdataPrototype(
-        "rd_well_state_ref well_ts_iget_state(rd_well_time_line, int)"
-    )
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
     def getName(self) -> str:
-        return self._name()
+        return _well_time_line._name(self)
 
     def __len__(self) -> int:
-        return self._size()
+        return _well_time_line._size(self)
 
     def __getitem__(self, index: int) -> WellState:
         if index < 0:
@@ -29,7 +24,7 @@ class WellTimeLine(BaseCClass):
         if not 0 <= index < len(self):
             raise IndexError("Index must be in range 0 <= %d < %d" % (index, len(self)))
 
-        return self._iget(index).setParent(self)
+        return _well_time_line._iget(self, index)
 
     def free(self) -> None:
         pass

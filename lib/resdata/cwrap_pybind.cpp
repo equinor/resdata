@@ -279,14 +279,6 @@ py::object WellState() {
     return cls;
 }
 
-py::object ResdataGrav() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.gravimetry").attr("ResdataGrav");
-    }
-    return cls;
-}
-
 template <> well_state_type *from_cwrap<well_state_type>(py::handle obj) {
     if (!py::isinstance(obj, WellState()))
         throw py::type_error("Expected WellState, got " +
@@ -303,6 +295,14 @@ py::object WellConnection() {
     return cls;
 }
 
+template <> well_conn_type *from_cwrap<well_conn_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellConnection()))
+        throw py::type_error("Expected WellConnection, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<well_conn_type>(obj);
+}
+
 py::object WellSegment() {
     static py::object cls;
     if (!cls) {
@@ -310,6 +310,38 @@ py::object WellSegment() {
     }
     return cls;
 }
+
+template <> well_segment_type *from_cwrap<well_segment_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellSegment()))
+        throw py::type_error("Expected WellSegment, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<well_segment_type>(obj);
+}
+
+py::object WellTimeLine() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.well").attr("WellTimeLine");
+    }
+    return cls;
+}
+template <> well_ts_type *from_cwrap<well_ts_type>(py::handle obj) {
+    if (!py::isinstance(obj, WellTimeLine()))
+        throw py::type_error("Expected WellTimeLine, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<well_ts_type>(obj);
+}
+
+py::object ResdataGrav() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.gravimetry").attr("ResdataGrav");
+    }
+    return cls;
+}
+
 template <> rd_grav_type *from_cwrap<rd_grav_type>(py::handle obj) {
     if (!py::isinstance(obj, ResdataGrav()))
         throw py::type_error("Expected ResdataGrav, got " +
