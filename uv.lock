@@ -20,43 +20,6 @@ resolution-markers = [
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P7D"
 
-[manifest]
-
-[manifest.dependency-groups]
-build = [
-    { name = "cibuildwheel" },
-    { name = "cmake", specifier = "<4" },
-    { name = "cwrap" },
-    { name = "ninja" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scikit-build" },
-    { name = "setuptools" },
-    { name = "setuptools-scm" },
-    { name = "sphinx", specifier = "!=3.4.0" },
-    { name = "wheel" },
-]
-format = [
-    { name = "clang-format" },
-    { name = "cmake-format" },
-    { name = "pre-commit" },
-    { name = "ruff" },
-]
-test = [
-    { name = "hypothesis", extras = ["lark", "numpy"] },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "pytest-benchmark" },
-    { name = "pytest-timeout" },
-    { name = "resfo-utilities", extras = ["testing"], specifier = ">=0.4.0" },
-]
-types = [
-    { name = "mypy" },
-    { name = "types-six" },
-]
-
 [[package]]
 name = "alabaster"
 version = "1.0.0"
@@ -1299,6 +1262,102 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0", size = 73075, upload-time = "2026-05-14T19:25:26.443Z" },
+]
+
+[[package]]
+name = "resdata"
+source = { editable = "." }
+dependencies = [
+    { name = "cwrap" },
+    { name = "natsort" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+    { name = "resfo-utilities" },
+    { name = "typing-extensions" },
+]
+
+[package.dev-dependencies]
+build = [
+    { name = "cibuildwheel" },
+    { name = "cmake" },
+    { name = "cwrap" },
+    { name = "ninja" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+    { name = "scikit-build" },
+    { name = "setuptools" },
+    { name = "setuptools-scm" },
+    { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "wheel" },
+]
+format = [
+    { name = "clang-format" },
+    { name = "cmake-format" },
+    { name = "pre-commit" },
+    { name = "ruff" },
+]
+test = [
+    { name = "hypothesis", extra = ["lark", "numpy"] },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pandas" },
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-timeout" },
+    { name = "resfo-utilities", extra = ["testing"] },
+]
+types = [
+    { name = "mypy" },
+    { name = "types-six" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cwrap" },
+    { name = "natsort" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "resfo-utilities", specifier = ">=0.4.0" },
+    { name = "typing-extensions" },
+]
+
+[package.metadata.requires-dev]
+build = [
+    { name = "cibuildwheel" },
+    { name = "cmake", specifier = "<4" },
+    { name = "cwrap" },
+    { name = "ninja" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scikit-build" },
+    { name = "setuptools" },
+    { name = "setuptools-scm" },
+    { name = "sphinx", specifier = "!=3.4.0" },
+    { name = "wheel" },
+]
+format = [
+    { name = "clang-format" },
+    { name = "cmake-format" },
+    { name = "pre-commit" },
+    { name = "ruff" },
+]
+test = [
+    { name = "hypothesis", extras = ["lark", "numpy"] },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pydantic" },
+    { name = "pytest" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-timeout" },
+    { name = "resfo-utilities", extras = ["testing"], specifier = ">=0.4.0" },
+]
+types = [
+    { name = "mypy" },
+    { name = "types-six" },
 ]
 
 [[package]]
