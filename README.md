@@ -26,8 +26,7 @@ ResData's build dependencies (`cmake`, `ninja`, `cwrap`, etc.) are pinned in [`u
 git clone https://github.com/equinor/resdata
 cd resdata
 
-# Install the pinned "build" dependency group from uv.lock
-uv sync --group build
+uv sync --all-groups
 
 # Build and install ResData in editable mode, without re-resolving dependencies
 uv pip install --no-deps --editable .
