@@ -18,6 +18,8 @@ ResData is a Python project with a C++ extension layer. Most of the functionalit
 
 A C++17-compatible compiler, like GCC 8+ or Clang 11+ is required. Other C++ dependencies are brought in automatically by [Conan](https://conan.io) during [CMake](https://cmake.org) compilation.
 
+Building and testing use [uv](https://docs.astral.sh/uv/) to manage Python dependencies. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it; we recommend installing it via your system's package manager, or into a small dedicated virtual environment.
+
 In a [Python virtual environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments), run:
 ```sh
 # Fetch directly from GitHub
