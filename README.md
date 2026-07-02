@@ -18,28 +18,28 @@ ResData is a Python project with a C++ extension layer. Most of the functionalit
 
 A C++17-compatible compiler, like GCC 8+ or Clang 11+ is required. Other C++ dependencies are brought in automatically by [Conan](https://conan.io) during [CMake](https://cmake.org) compilation.
 
-In a [Python virtual environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments), run:
-```sh
-# Fetch directly from GitHub
-pip install git+https://github.com/equinor/resdata
+Building and testing use [uv](https://docs.astral.sh/uv/) to manage Python dependencies. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it.
 
-# If git-cloned, install local directory in editable mode
-pip install --editable .
+ResData's build dependencies (`cmake`, `ninja`, `cwrap`, etc.) as well as ResData itself are pinned in [`uv.lock`](uv.lock) and installed together with `uv sync`:
+
+```sh
+git clone https://github.com/equinor/resdata
+cd resdata
+uv sync --all-groups
 ```
 
 ## Running tests
 As this codebase contains both Python and C++ code, there are tests for both Python and C++.
 
 ### Python tests
-These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv in `--editable` mode, as described in the [Building](#Building) section.
+These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv, as described in the [Building](#Building) section.
 
-Ensure that pytest is installed and do the following to
+Run the tests via `uv run`, which uses the same locked environment:
 ```sh
-# Install pytest
-pip install pytest
+uv sync --group test
 
-# Run all tests in the python/tests directory
-pytest python/tests
+# Run all tests in the tests directory
+uv run pytest tests
 ```
 
 ### C++ tests
