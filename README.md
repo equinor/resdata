@@ -20,7 +20,7 @@ A C++17-compatible compiler, like GCC 8+ or Clang 11+ is required. Other C++ dep
 
 Building and testing use [uv](https://docs.astral.sh/uv/) to manage Python dependencies. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it.
 
-ResData's build dependencies (`cmake`, `ninja`, `cwrap`, etc.) are pinned in [`uv.lock`](uv.lock). Since ResData's C++ extension is built with a `setup.py`/scikit-build backend rather than a PEP 621 `[project]` table, `uv sync` cannot install ResData itself — it only installs the pinned dependency groups. ResData itself is therefore always built and installed separately with `uv pip install`:
+ResData's build dependencies (`cmake`, `ninja`, `cwrap`, etc.) as well as ResData itself are pinned in [`uv.lock`](uv.lock) and installed together with `uv sync`:
 
 ```sh
 git clone https://github.com/equinor/resdata
@@ -32,12 +32,11 @@ uv sync --all-groups
 As this codebase contains both Python and C++ code, there are tests for both Python and C++.
 
 ### Python tests
-These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv in `--editable` mode, as described in the [Building](#Building) section.
+These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv, as described in the [Building](#Building) section.
 
-Install the pinned "test" dependency group and run the tests via `uv run`, which uses the same locked environment:
+Run the tests via `uv run`, which uses the same locked environment:
 ```sh
-uv sync --group build --group test
-uv pip install --no-deps --editable .
+uv sync --group test
 
 # Run all tests in the tests directory
 uv run pytest tests
