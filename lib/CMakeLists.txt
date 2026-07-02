@@ -315,6 +315,7 @@ add_executable(
   tests/test_rd_util.cpp
   tests/test_fortio.cpp
   tests/test_geometry.cpp
+  tests/test_rd_file_kw.cpp
   tests/testsuite.cpp
   tests/test_util.cpp
   tests/test_rd_region.cpp

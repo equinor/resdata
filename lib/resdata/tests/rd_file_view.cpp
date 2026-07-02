@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <unistd.h>
-#include <stdexcept>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -96,29 +95,8 @@ void test_create_file_kw() {
     rd_file_kw_free(file_kw2);
 }
 
-void test_unloaded_file_kw_is_rejected() {
-    rd_file_kw_type *file_kw = rd_file_kw_alloc0("TEST_KW", RD_INT, 10, 0);
-
-    rd::util::TestArea ta("reject_unloaded");
-    FILE *fp = util_fopen("dummy", "w");
-    fclose(fp);
-
-    ERT::FortIO fortio("dummy", std::ios_base::in, false, true);
-
-    bool threw = false;
-    try {
-        rd_file_kw_inplace_fwrite(file_kw, fortio);
-    } catch (const std::invalid_argument &) {
-        threw = true;
-    }
-    test_assert_true(threw);
-
-    rd_file_kw_free(file_kw);
-}
-
 int main(int argc, char **argv) {
     util_install_signals();
     test_file_kw_equal();
     test_create_file_kw();
-    test_unloaded_file_kw_is_rejected();
 }
