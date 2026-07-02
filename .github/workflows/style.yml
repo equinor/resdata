@@ -36,7 +36,7 @@ jobs:
 
     - name: CMake Format
       run: |
-        find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
+        find . -path './.venv/' -prune -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
         xargs uv run --no-sync cmake-format --check < cmake-src
 
     - name: pre-commit hooks
