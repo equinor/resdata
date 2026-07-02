@@ -9,7 +9,27 @@ requires = [
   "wheel",
 ]
 
+# Minimum project setup such that uv can build the package conveniently without
+# the need to fully replace setup.py and setup.cfg by pyproject.toml.
+[project]
+name = "resdata"
+dynamic = ["version", "readme", "dependencies", "scripts", "classifiers"]
+requires-python = ">=3.11"
+
 [dependency-groups]
+build = [
+  "cibuildwheel",
+  "cmake<4",
+  "cwrap",
+  "ninja",
+  "numpy",
+  "pandas",
+  "scikit-build",
+  "setuptools",
+  "setuptools_scm",
+  "sphinx!=3.4.0",
+  "wheel",
+]
 test = [
   "pytest",
   "pytest-benchmark",
@@ -28,6 +48,10 @@ format = [
   "pre-commit",
   "ruff"
   ]
+
+[tool.uv]
+fork-strategy = "requires-python"
+exclude-newer = "7 days"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"

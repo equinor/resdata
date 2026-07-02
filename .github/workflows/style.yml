@@ -11,28 +11,34 @@ jobs:
 
     runs-on: "ubuntu-latest"
 
+    env:
+      UV_FROZEN: true
+
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-    - name: Setup Python
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       with:
+        enable-cache: true
+        prune-cache: false
         python-version: '3.14'
 
     - name: Install dependencies
       run: |
-        pip install --group format --group types
+        uv sync --group format --group types --no-install-project
 
     - name: Check types
-      run: mypy python
+      run: uv run --no-sync mypy python
 
     - name: Clang Format
-      run: ./script/clang-format --check
+      run: uv run --no-sync ./script/clang-format --check
 
     - name: CMake Format
       run: |
-        find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
-        xargs cmake-format --check < cmake-src
+        find . -path './.venv' -prune -o \( -name 'CMakeLists.txt' -o -name '*.cmake' \) -print > cmake-src
+        xargs uv run --no-sync cmake-format --check < cmake-src
 
     - name: pre-commit hooks
       run: |
-        SKIP=no-commit-to-branch pre-commit run --all-files --show-diff-on-failure
+        SKIP=no-commit-to-branch uv run --no-sync pre-commit run --all-files --show-diff-on-failure

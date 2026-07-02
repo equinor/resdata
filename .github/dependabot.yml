@@ -9,3 +9,17 @@ updates:
       all-deps:
         patterns:
           - "*"
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "quarterly"
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: "lockfile-only"
+    groups:
+      all-deps:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
