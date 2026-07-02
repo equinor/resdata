@@ -33,13 +33,13 @@ As this codebase contains both Python and C++ code, there are tests for both Pyt
 ### Python tests
 These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv in `--editable` mode, as described in the [Building](#Building) section.
 
-Ensure that the test dependencies are installed and do the following to
+Ensure that the test dependencies are installed and run:
 ```sh
 # Install the "test" dependency group
 uv pip install --group test
 
-# Run all tests in the python/tests directory
-pytest python/tests
+# Run all tests in the tests directory
+pytest tests
 ```
 
 ### C++ tests

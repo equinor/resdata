@@ -27,6 +27,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      UV_FROZEN: true
+
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
@@ -43,7 +46,6 @@ jobs:
       with:
         enable-cache: true
         prune-cache: false
-        python-version: 3.14
 
     - name: Install Conan
       uses: conan-io/setup-conan@ed3942a6883243f4af84e13e49c972f9440fa1c2 # v1.4.0
@@ -52,8 +54,12 @@ jobs:
 
     - name: Install dependencies
       shell: bash
+      # uv sync installs into a local environment so we need to extend the PATH
+      # variable in subsequent steps via GITHUB_PATH to ensure that conan
+      # picks up packages installed by us.
       run: |
-        uv pip install --system --group build
+        uv sync --group build --no-install-project
+        echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
         mkdir cmake-build
         conan install . --output-folder=cmake-build --build=missing -o build_tests=True
 
