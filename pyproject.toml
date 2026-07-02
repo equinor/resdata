@@ -9,6 +9,11 @@ requires = [
   "wheel",
 ]
 
+[project]
+name = "resdata"
+dynamic = ["version", "readme", "dependencies", "entry-points", "classifiers"]
+requires-python = ">=3.11"
+
 [dependency-groups]
 build = [
   "cibuildwheel",
