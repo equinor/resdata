@@ -13,7 +13,7 @@
 
 3.  Download and install Microsoft Visual Studio . At a minimum **_resdata_** requires the VS Studio packages for cmake, msbuild, c and c++ compilers (CL.exe).
 
-4. Open a MSVC command prompt such as _x64 Native Tools Command Prompt for VS 2017_ from your start menu. In the open prompt, navigate to the **_resdata_** source directory you created in step 1. Use the Python package manager **pip** to install **_resdata_** requirements via `pip install -r requirements.txt`. If Python is not accessible from the prompt it may be necessary to add the Python environment location to your system path variable `PATH`.
+4. Open a MSVC command prompt such as _x64 Native Tools Command Prompt for VS 2017_ from your start menu. In the open prompt, navigate to the **_resdata_** source directory you created in step 1. Use [uv](https://docs.astral.sh/uv/) to install **_resdata_** build requirements via `uv pip install --group build`. If Python is not accessible from the prompt it may be necessary to add the Python environment location to your system path variable `PATH`.
 
 5. Execute the build commands with the desired CMAKE parameters from `README.md`. The cmake generator can be _`NMake Makefiles`_ , _`Ninja`_ or an appropriate version of _`MSVC`_. For the availble options type `cmake -G` in the MSVC command prompt.
 

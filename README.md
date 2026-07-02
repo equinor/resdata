@@ -21,10 +21,10 @@ A C++17-compatible compiler, like GCC 8+ or Clang 11+ is required. Other C++ dep
 In a [Python virtual environment](https://docs.python.org/3/library/venv.html#creating-virtual-environments), run:
 ```sh
 # Fetch directly from GitHub
-pip install git+https://github.com/equinor/resdata
+uv pip install git+https://github.com/equinor/resdata
 
 # If git-cloned, install local directory in editable mode
-pip install --editable .
+uv pip install --editable .
 ```
 
 ## Running tests
@@ -33,10 +33,10 @@ As this codebase contains both Python and C++ code, there are tests for both Pyt
 ### Python tests
 These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv in `--editable` mode, as described in the [Building](#Building) section.
 
-Ensure that pytest is installed and do the following to
+Ensure that the test dependencies are installed and do the following to
 ```sh
-# Install pytest
-pip install pytest
+# Install the "test" dependency group
+uv pip install --group test
 
 # Run all tests in the python/tests directory
 pytest python/tests

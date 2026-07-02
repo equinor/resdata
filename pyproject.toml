@@ -10,6 +10,19 @@ requires = [
 ]
 
 [dependency-groups]
+build = [
+  "cibuildwheel",
+  "cmake<4",
+  "cwrap",
+  "ninja",
+  "numpy",
+  "pandas",
+  "scikit-build",
+  "setuptools",
+  "setuptools_scm",
+  "sphinx!=3.4.0",
+  "wheel",
+]
 test = [
   "pytest",
   "pytest-benchmark",
@@ -28,6 +41,10 @@ format = [
   "pre-commit",
   "ruff"
   ]
+
+[tool.uv]
+fork-strategy = "requires-python"
+exclude-newer = "7 days"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
