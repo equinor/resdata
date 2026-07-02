@@ -84,7 +84,6 @@ add_library(
   resdata/fault_block.cpp
   resdata/fault_block_layer.cpp
   resdata/rd_type.cpp
-  resdata/rd_type_python.cpp
   resdata/well_state.cpp
   resdata/well_conn.cpp
   resdata/well_info.cpp
@@ -199,6 +198,7 @@ endfunction()
 
 add_resdata_pybind_module(_grid rd_grid_pybind.cpp resdata/grid)
 add_resdata_pybind_module(_kw rd_kw_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_rd_type rd_type_pybind.cpp resdata)
 add_resdata_pybind_module(_rsthead rsthead_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_file rd_file_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_fortio fortio_pybind.cpp resdata/resfile)
@@ -215,6 +215,7 @@ endif()
 
 add_executable(
   rd_test_suite
+  tests/test_rd_type.cpp
   tests/test_rd_grid_regular.cpp
   tests/test_nnc_info.cpp
   tests/test_rd_grid_nnc_lgr.cpp

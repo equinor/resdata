@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <stdexcept>
 
 #include <fmt/format.h>
 
@@ -25,8 +26,9 @@ static bool is_rd_string_name(const char *type_name) {
 
 static size_t get_rd_string_length(const char *type_name) {
     if (!is_rd_string_name(type_name))
-        util_abort("%s: Expected eclipse string (CXXX), received %s\n",
-                   __func__, type_name);
+        throw std::invalid_argument(
+            fmt::format("{}: Expected eclipse string (CXXX), received {}",
+                        __func__, type_name));
 
     return atoi(type_name + 1);
 }
@@ -38,9 +40,9 @@ rd_data_type rd_type_create(const rd_type_enum type,
                                 : rd_type_create_from_type(type));
 
     if (rd_type_get_sizeof_iotype(rd_type) != element_size)
-        util_abort(
-            "%s: element_size mismatch for type %d, was: %zu, expected: %zu\n",
-            __func__, type, element_size, rd_type_get_sizeof_iotype(rd_type));
+        throw std::invalid_argument(fmt::format(
+            "{}: element_size mismatch for type {}, was: {}, expected: {}",
+            __func__, type, element_size, rd_type_get_sizeof_iotype(rd_type)));
 
     return rd_type;
 }
@@ -60,11 +62,13 @@ rd_data_type rd_type_create_from_type(const rd_type_enum type) {
     case (RD_MESS_TYPE):
         return RD_MESS;
     case (RD_STRING_TYPE):
-        util_abort("%s: Variable length string type cannot be created"
-                   " from type alone!\n",
-                   __func__);
+        throw std::invalid_argument(
+            fmt::format("{}: Variable length string type cannot be created "
+                        "from type alone!",
+                        __func__));
     default:
-        util_abort("%s: invalid rd_type: %d\n", __func__, type);
+        throw std::invalid_argument(
+            fmt::format("{}: invalid rd_type: {}", __func__, type));
     }
 }
 
@@ -134,7 +138,8 @@ rd_data_type rd_type_create_from_name(const char *type_name) {
     else if (strncmp(type_name, RD_TYPE_NAME_BOOL, RD_TYPE_LENGTH) == 0)
         return RD_BOOL;
     else {
-        util_abort("%s: unrecognized type name:%s \n", __func__, type_name);
+        throw std::invalid_argument(
+            fmt::format("{}: unrecognized type name: {}", __func__, type_name));
     }
 }
 
