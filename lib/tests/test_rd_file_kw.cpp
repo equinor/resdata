@@ -16,7 +16,7 @@ TEST_CASE_METHOD(Tmpdir,
     std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)> file_kw(
         rd_file_kw_alloc0("TEST_KW", RD_INT, 10, 0), &rd_file_kw_free);
 
-    auto filename = (   dirname / "dummy").string();
+    auto filename = (dirname / "dummy").string();
     {
         std::ofstream ofs(filename);
         REQUIRE(ofs);
