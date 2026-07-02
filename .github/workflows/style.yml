@@ -29,16 +29,16 @@ jobs:
         uv sync --group format --group types --no-install-project
 
     - name: Check types
-      run: uv run mypy python
+      run: uv run --no-sync mypy python
 
     - name: Clang Format
-      run: uv run ./script/clang-format --check
+      run: uv run --no-sync ./script/clang-format --check
 
     - name: CMake Format
       run: |
         find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
-        xargs uv run cmake-format --check < cmake-src
+        xargs uv run --no-sync cmake-format --check < cmake-src
 
     - name: pre-commit hooks
       run: |
-        SKIP=no-commit-to-branch uv run pre-commit run --all-files --show-diff-on-failure
+        SKIP=no-commit-to-branch uv run --no-sync pre-commit run --all-files --show-diff-on-failure
