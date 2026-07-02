@@ -9,6 +9,7 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_file_kw.hpp>
+#include <resdata/FortIO.hpp>
 
 void test_file_kw_equal() {
     rd_file_kw_type *kw1 = rd_file_kw_alloc0("PRESSURE", RD_FLOAT, 1000, 66);
