@@ -108,16 +108,6 @@ const char *well_ts_get_name(const well_ts_type *well_ts) {
 void well_ts_add_well(well_ts_type *well_ts, well_state_type *well_state) {
     well_node_type *new_node = well_node_alloc(well_state);
     well_ts->ts.push_back(new_node);
-
-    if (well_ts->ts.size() > 1) {
-        const well_node_type *last_node = well_ts->ts.back();
-        if (new_node->sim_time < last_node->sim_time)
-            // The new node is chronologically before the previous node;
-            // i.e. we must sort the nodes in time. This should probably happen
-            // quite seldom:
-            std::sort(well_ts->ts.begin(), well_ts->ts.end(),
-                      well_node_time_lt);
-    }
 }
 
 void well_ts_free(well_ts_type *well_ts) {
