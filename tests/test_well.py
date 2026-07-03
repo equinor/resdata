@@ -313,12 +313,23 @@ Day: TypeAlias = int
 Date: TypeAlias = tuple[Year, Month, Day]
 
 
+# LOGIHEAD index that flags a dual-porosity run.
+LOGIHEAD_DUALP = 14
+
+
+def _logihead_kw(dualp=False):
+    kw = _bool_kw("LOGIHEAD", 30)
+    kw[LOGIHEAD_DUALP] = dualp
+    return kw
+
+
 def _step_keywords(
     wells: list[Well],
     date: Date,
     seqnum: int | None = None,
     include_icon: bool = True,
     unit_system: int = METRIC_UNITS,
+    dualp: bool = False,
 ):
     year, month, day = date
     intehead = _intehead_kw(year, month, day, unit_system=unit_system)
@@ -332,7 +343,7 @@ def _step_keywords(
 
     keywords += [
         intehead,
-        _bool_kw("LOGIHEAD", 30),
+        _logihead_kw(dualp=dualp),
         _double_kw("DOUBHEAD", 50),
         _iwel_kw(wells),
         _zwel_kw(wells),
@@ -373,11 +384,18 @@ def write_restart(
     date: Date = (2020, 1, 1),
     include_icon: bool = True,
     unit_system: int = METRIC_UNITS,
+    dualp: bool = False,
 ):
     """Write a non-unified restart file (``.X#### ``) with a single report step."""
     _fwrite_keywords(
         path,
-        _step_keywords(wells, date, include_icon=include_icon, unit_system=unit_system),
+        _step_keywords(
+            wells,
+            date,
+            include_icon=include_icon,
+            unit_system=unit_system,
+            dualp=dualp,
+        ),
     )
 
 
@@ -580,6 +598,38 @@ def test_that_well_head_returns_the_global_connection_head(tmp_path, grid, produ
 
     # IWEL stores the head as (2, 3, 1) using 1-based indices.
     assert well_head.ijk() == (1, 2, 0)
+    assert well_head.isOpen()
+
+
+def test_that_the_well_head_direction_is_z(tmp_path, grid, producer):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [producer])
+
+    well_head = WellInfo(grid, path)["OP1"][0].wellHead()
+
+    # The wellhead is a matrix connection. Its direction is
+    # always vertical (Z).
+    assert well_head.isMatrixConnection()
+    assert well_head.direction() == WellConnectionDirection.well_conn_dirZ
+    assert well_head.isOpen()
+
+
+def test_that_the_fracture_well_head_direction_is_z(tmp_path, grid):
+    well = Well(
+        name="OP1",
+        headi=2,
+        headj=3,
+        headk=NZ // 2 + 1,
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i=2, j=3, k=NZ // 2 + 1)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], dualp=True)
+
+    well_head = WellInfo(grid, path)["OP1"][0].wellHead()
+
+    assert well_head.isFractureConnection()
+    assert well_head.direction() == WellConnectionDirection.well_conn_dirZ
     assert well_head.isOpen()
 
 

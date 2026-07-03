@@ -259,12 +259,11 @@ well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
 
         if (matrix_connection)
             return well_conn_alloc(conn_i, conn_j, conn_k, connection_factor,
-                                   (well_conn_dir_enum)open, well_conn_dirZ,
-                                   header.unit_system);
+                                   well_conn_dirZ, open, header.unit_system);
         else
-            return well_conn_alloc_fracture(
-                conn_i, conn_j, conn_k, connection_factor,
-                (well_conn_dir_enum)open, well_conn_dirZ, header.unit_system);
+            return well_conn_alloc_fracture(conn_i, conn_j, conn_k,
+                                            connection_factor, well_conn_dirZ,
+                                            open, header.unit_system);
     } else
         // The well is completed in this LGR - however the wellhead is in another LGR.
         return NULL;

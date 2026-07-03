@@ -59,7 +59,7 @@ class ResdataWellICONTest(ResdataTest):
         self.assertTrue(well_connection.isOpen())
         self.assertFalse(well_connection.isMultiSegmentWell())
         self.assertEqual(
-            well_connection.direction(), WellConnectionDirection.well_conn_dirX
+            well_connection.direction(), WellConnectionDirection.well_conn_dirZ
         )
         self.assertEqual(well_connection.segmentId(), -999)
         self.assertEqual(well_connection.connectionFactor(), -1.0)
