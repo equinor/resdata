@@ -338,7 +338,7 @@ foreach(
   rd_make_date_no_shift
   rd_make_date_shift
   well_branch_collection
-  well_conn
+  test_well_conn
   test_well_state
   well_segment
   well_segment_conn
