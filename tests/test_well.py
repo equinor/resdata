@@ -5,6 +5,7 @@ in [OPM flow 2025.04 manual Appendix F.8](https://opm-project.org/?page_id=955)
 
 """
 
+import datetime
 import os
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -704,21 +705,25 @@ def test_that_simulation_time_matches_the_restart_report_date(tmp_path, grid, pr
     assert (sim_date.year, sim_date.month, sim_date.day) == (2020, 6, 29)
 
 
-def test_that_unified_restart_steps_have_increasing_simulation_times(tmp_path, grid):
+def test_that_states_are_in_the_order_of_the_file(tmp_path, grid):
     producer = Well(
         name="OP1", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]
     )
     steps = [
         (0, (2020, 1, 1), [producer]),
-        (1, (2021, 1, 1), [producer]),
         (2, (2022, 1, 1), [producer]),
+        (1, (2021, 1, 1), [producer]),
     ]
     path = str(tmp_path / "CASE.UNRST")
     write_unified_restart(path, steps)
 
-    times = [state.simulationTime() for state in WellInfo(grid, path)["OP1"]]
+    times = [state.simulationTime().datetime() for state in WellInfo(grid, path)["OP1"]]
 
-    assert times == sorted(times)
+    assert times == [
+        datetime.datetime(2020, 1, 1, 0, 0),
+        datetime.datetime(2022, 1, 1, 0, 0),
+        datetime.datetime(2021, 1, 1, 0, 0),
+    ]
 
 
 def test_that_each_iwel_type_code_maps_to_the_expected_well_type(tmp_path, grid):
