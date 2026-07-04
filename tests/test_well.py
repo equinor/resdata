@@ -11,7 +11,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TypeAlias
 
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 from resdata import ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataKW
@@ -30,7 +32,6 @@ NIWELZ = 105  # Number of values per well in IWEL
 NZWELZ = 3  # 8-character words per well in ZWEL
 NXWELZ = 8  # Number of values per well in XWEL
 NICONZ = 25  # Number of values per connection in ICON
-NCWMAX = 5  # max connections per well
 NSCONZ = 25  # Number of values per connection in SCON
 NXCONZ = 60  # Number of values per connection in XCON
 NISEGZ = 22  # Number of values per segment in ISEG
@@ -182,131 +183,6 @@ def _char_kw(name, size):
     return kw
 
 
-def _intehead_kw(year, month, day, unit_system=METRIC_UNITS):
-    kw = _int_kw("INTEHEAD", 412)
-    kw[2] = unit_system
-    kw[8], kw[9], kw[10] = NX, NY, NZ
-    kw[11] = NX * NY * NZ  # nactive
-    kw[14] = 7  # oil + gas + water
-    kw[16] = 0  # nwells, filled in by caller
-    kw[17] = NCWMAX
-    kw[24] = NIWELZ
-    kw[26] = NXWELZ
-    kw[27] = NZWELZ
-    kw[32] = NICONZ
-    kw[33] = NSCONZ
-    kw[34] = NXCONZ
-    kw[64], kw[65], kw[66] = day, month, year
-    kw[94] = 100  # IPROG / simulator version
-    kw[175] = NSWLMX
-    kw[176] = NSEGMX
-    kw[177] = NLBRMX
-    kw[178] = NISEGZ
-    kw[179] = NRSEGZ
-    kw[180] = NILBRZ
-    return kw
-
-
-def _iwel_kw(wells: list[Well]) -> ResdataKW:
-    kw = _int_kw("IWEL", NIWELZ * len(wells))
-    for i, well in enumerate(wells):
-        off = NIWELZ * i
-        kw[off + IWEL_HEADI] = well.headi
-        kw[off + IWEL_HEADJ] = well.headj
-        kw[off + IWEL_HEADK] = well.headk
-        kw[off + IWEL_CONNECTIONS] = len(well.connections)
-        kw[off + IWEL_TYPE] = well.well_type
-        kw[off + IWEL_STATUS] = well.status
-        # A value of -1 (==0 after the implicit -1 offset) marks a non-segmented
-        # well; any other value flags the well as multi-segmented.
-        kw[off + IWEL_SEGMENTED_WELL_NR] = i + 1 if well.segments else -1
-    return kw
-
-
-def _zwel_kw(wells):
-    kw = _char_kw("ZWEL", NZWELZ * len(wells))
-    for i, well in enumerate(wells):
-        kw[NZWELZ * i] = well.name.ljust(8)
-    return kw
-
-
-def _icon_kw(wells):
-    kw = _int_kw("ICON", NICONZ * NCWMAX * len(wells))
-    for i, well in enumerate(wells):
-        for j, conn in enumerate(well.connections):
-            off = NICONZ * (NCWMAX * i + j)
-            kw[off + ICON_IC] = j + 1
-            kw[off + ICON_I] = conn.i
-            kw[off + ICON_J] = conn.j
-            kw[off + ICON_K] = conn.k
-            kw[off + ICON_STATUS] = conn.status
-            kw[off + ICON_DIRECTION] = conn.direction
-            kw[off + ICON_SEGMENT] = conn.segment
-    return kw
-
-
-def _scon_kw(wells):
-    kw = _float_kw("SCON", NSCONZ * NCWMAX * len(wells))
-    for i, well in enumerate(wells):
-        for j, _ in enumerate(well.connections):
-            off = NSCONZ * (NCWMAX * i + j)
-            kw[off + 0] = float(j + 1)  # connection factor
-    return kw
-
-
-def _iseg_kw(wells):
-    kw = _int_kw("ISEG", NISEGZ * NSEGMX * len(wells))
-    for i, well in enumerate(wells):
-        for seg_index, segment in enumerate(well.segments):
-            off = NISEGZ * (NSEGMX * i + seg_index)
-            kw[off + ISEG_OUTLET] = segment.outlet
-            kw[off + ISEG_BRANCH] = segment.branch
-    return kw
-
-
-def _rseg_kw(wells):
-    # RSEG is read into a double buffer by the C rseg-loader, so it must be
-    # written with double precision for the indexed read to line up.
-    kw = _double_kw("RSEG", NRSEGZ * NSEGMX * len(wells))
-    for i, well in enumerate(wells):
-        for seg_index, segment in enumerate(well.segments):
-            off = NRSEGZ * (NSEGMX * i + seg_index)
-            kw[off + RSEG_LENGTH] = segment.length
-            kw[off + RSEG_DIAMETER] = segment.diameter
-            kw[off + RSEG_TOTAL_LENGTH] = segment.total_length
-            kw[off + RSEG_DEPTH] = segment.depth
-    return kw
-
-
-def _xwel_kw(wells):
-    kw = _double_kw("XWEL", NXWELZ * len(wells))
-    for i, well in enumerate(wells):
-        if well.rates is None:
-            continue
-        water, gas, oil, resv = well.rates
-        off = NXWELZ * i
-        kw[off + XWEL_WRAT] = water
-        kw[off + XWEL_GRAT] = gas
-        kw[off + XWEL_ORAT] = oil
-        kw[off + XWEL_RESV] = resv
-    return kw
-
-
-def _xcon_kw(wells):
-    kw = _double_kw("XCON", NXCONZ * NCWMAX * len(wells))
-    for i, well in enumerate(wells):
-        for j, conn in enumerate(well.connections):
-            if conn.rates is None:
-                continue
-            oil, water, gas, resv = conn.rates
-            off = NXCONZ * (NCWMAX * i + j)
-            kw[off + XCON_ORAT] = oil
-            kw[off + XCON_WRAT] = water
-            kw[off + XCON_GRAT] = gas
-            kw[off + XCON_QR] = resv
-    return kw
-
-
 Year: TypeAlias = int
 Month: TypeAlias = int
 Day: TypeAlias = int
@@ -331,6 +207,129 @@ def _step_keywords(
     unit_system: int = METRIC_UNITS,
     dualp: bool = False,
 ):
+    ncwmax = max(len(w.connections) for w in wells)
+
+    def _icon_kw(wells):
+        kw = _int_kw("ICON", NICONZ * ncwmax * len(wells))
+        for i, well in enumerate(wells):
+            for j, conn in enumerate(well.connections):
+                off = NICONZ * (ncwmax * i + j)
+                kw[off + ICON_IC] = j + 1
+                kw[off + ICON_I] = conn.i
+                kw[off + ICON_J] = conn.j
+                kw[off + ICON_K] = conn.k
+                kw[off + ICON_STATUS] = conn.status
+                kw[off + ICON_DIRECTION] = conn.direction
+                kw[off + ICON_SEGMENT] = conn.segment
+        return kw
+
+    def _intehead_kw(
+        year,
+        month,
+        day,
+        unit_system=METRIC_UNITS,
+    ):
+        kw = _int_kw("INTEHEAD", 412)
+        kw[2] = unit_system
+        kw[8], kw[9], kw[10] = NX, NY, NZ
+        kw[11] = NX * NY * NZ  # nactive
+        kw[14] = 7  # oil + gas + water
+        kw[16] = 0  # nwells, filled in by caller
+        kw[17] = ncwmax
+        kw[24] = NIWELZ
+        kw[26] = NXWELZ
+        kw[27] = NZWELZ
+        kw[32] = NICONZ
+        kw[33] = NSCONZ
+        kw[34] = NXCONZ
+        kw[64], kw[65], kw[66] = day, month, year
+        kw[94] = 100  # IPROG / simulator version
+        kw[175] = NSWLMX
+        kw[176] = NSEGMX
+        kw[177] = NLBRMX
+        kw[178] = NISEGZ
+        kw[179] = NRSEGZ
+        kw[180] = NILBRZ
+        return kw
+
+    def _iwel_kw(wells: list[Well]) -> ResdataKW:
+        kw = _int_kw("IWEL", NIWELZ * len(wells))
+        for i, well in enumerate(wells):
+            off = NIWELZ * i
+            kw[off + IWEL_HEADI] = well.headi
+            kw[off + IWEL_HEADJ] = well.headj
+            kw[off + IWEL_HEADK] = well.headk
+            kw[off + IWEL_CONNECTIONS] = len(well.connections)
+            kw[off + IWEL_TYPE] = well.well_type
+            kw[off + IWEL_STATUS] = well.status
+            # A value of -1 (==0 after the implicit -1 offset) marks a non-segmented
+            # well; any other value flags the well as multi-segmented.
+            kw[off + IWEL_SEGMENTED_WELL_NR] = i + 1 if well.segments else -1
+        return kw
+
+    def _zwel_kw(wells):
+        kw = _char_kw("ZWEL", NZWELZ * len(wells))
+        for i, well in enumerate(wells):
+            kw[NZWELZ * i] = well.name.ljust(8)
+        return kw
+
+    def _scon_kw(wells):
+        kw = _float_kw("SCON", NSCONZ * ncwmax * len(wells))
+        for i, well in enumerate(wells):
+            for j, _ in enumerate(well.connections):
+                off = NSCONZ * (ncwmax * i + j)
+                kw[off + 0] = float(j + 1)  # connection factor
+        return kw
+
+    def _iseg_kw(wells):
+        kw = _int_kw("ISEG", NISEGZ * NSEGMX * len(wells))
+        for i, well in enumerate(wells):
+            for seg_index, segment in enumerate(well.segments):
+                off = NISEGZ * (NSEGMX * i + seg_index)
+                kw[off + ISEG_OUTLET] = segment.outlet
+                kw[off + ISEG_BRANCH] = segment.branch
+        return kw
+
+    def _rseg_kw(wells):
+        # RSEG is read into a double buffer by the C rseg-loader, so it must be
+        # written with double precision for the indexed read to line up.
+        kw = _double_kw("RSEG", NRSEGZ * NSEGMX * len(wells))
+        for i, well in enumerate(wells):
+            for seg_index, segment in enumerate(well.segments):
+                off = NRSEGZ * (NSEGMX * i + seg_index)
+                kw[off + RSEG_LENGTH] = segment.length
+                kw[off + RSEG_DIAMETER] = segment.diameter
+                kw[off + RSEG_TOTAL_LENGTH] = segment.total_length
+                kw[off + RSEG_DEPTH] = segment.depth
+        return kw
+
+    def _xwel_kw(wells):
+        kw = _double_kw("XWEL", NXWELZ * len(wells))
+        for i, well in enumerate(wells):
+            if well.rates is None:
+                continue
+            water, gas, oil, resv = well.rates
+            off = NXWELZ * i
+            kw[off + XWEL_WRAT] = water
+            kw[off + XWEL_GRAT] = gas
+            kw[off + XWEL_ORAT] = oil
+            kw[off + XWEL_RESV] = resv
+        return kw
+
+    def _xcon_kw(wells):
+        kw = _double_kw("XCON", NXCONZ * ncwmax * len(wells))
+        for i, well in enumerate(wells):
+            for j, conn in enumerate(well.connections):
+                if conn.rates is None:
+                    continue
+                oil, water, gas, resv = conn.rates
+                off = NXCONZ * (ncwmax * i + j)
+                kw[off + XCON_ORAT] = oil
+                kw[off + XCON_WRAT] = water
+                kw[off + XCON_GRAT] = gas
+                kw[off + XCON_QR] = resv
+        return kw
+
     year, month, day = date
     intehead = _intehead_kw(year, month, day, unit_system=unit_system)
     intehead[16] = len(wells)
@@ -1076,20 +1075,25 @@ def test_that_global_connections_of_two_wells_have_different_ijk(tmp_path, grid)
     assert [c.ijk() for c in well_info["INJ"][0].globalConnections()] == [(4, 4, 0)]
 
 
-def test_that_all_written_perforations_appear_as_connections(tmp_path, grid):
-    cells = [(1, 2, 1), (3, 4, 2), (5, 6, 3)]
+connection_idx = st.integers(min_value=1, max_value=6)
+connections = st.builds(Connection, *([connection_idx] * 3))
+
+
+@given(st.lists(connections))
+def test_that_all_written_connections_are_read(tmp_path_factory, connections):
+    grid = GridGenerator.create_rectangular((NX, NY, NZ), (1.0, 1.0, 1.0))
+    tmp_path = tmp_path_factory.mktemp("write_connections")
     well = Well(
         name="OP1",
         well_type=IWEL_PRODUCER,
-        connections=[Connection(i, j, k) for (i, j, k) in cells],
+        connections=connections,
     )
     path = str(tmp_path / "CASE.X0000")
     write_restart(path, [well])
 
-    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
-
-    expected = {(i - 1, j - 1, k - 1) for (i, j, k) in cells}
-    assert {conn.ijk() for conn in connections} == expected
+    assert {
+        conn.ijk() for conn in WellInfo(grid, path)["OP1"][0].globalConnections()
+    } == {(c.i - 1, c.j - 1, c.k - 1) for c in connections}
 
 
 def test_that_querying_one_well_does_not_change_another_wells_connections(
