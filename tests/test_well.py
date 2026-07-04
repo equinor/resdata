@@ -938,24 +938,6 @@ def test_that_disabling_segment_loading_skips_segment_data(tmp_path, grid):
     assert well_state.numSegments() == 0
 
 
-def test_that_well_rates_are_read_from_xwel(tmp_path, grid):
-    well = Well(
-        name="OP1",
-        well_type=IWEL_PRODUCER,
-        connections=[Connection(1, 1, 1)],
-        rates=(10.0, 20.0, 30.0, 40.0),  # water, gas, oil, resv
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    well_state = WellInfo(grid, path)["OP1"][0]
-
-    assert well_state.waterRate() == 10.0
-    assert well_state.gasRate() == 20.0
-    assert well_state.oilRate() == 30.0
-    assert well_state.volumeRate() == 40.0
-
-
 def test_that_a_well_without_rate_data_reports_zero_rates(producer):
     well_state = producer()["OP1"][0]
 
@@ -1002,44 +984,6 @@ def test_that_well_state_si_rates_are_raw_rates_scaled_by_the_unit_factor(
     assert well_state.volumeRateSI() == pytest.approx(
         raw_resv * LIQUID_RATE_SI_FACTOR[unit_system]
     )
-
-
-def test_that_metric_si_rates_are_the_raw_rates_divided_by_seconds_per_day(
-    tmp_path, grid
-):
-    seconds_per_day = 24 * 3600
-    well = Well(
-        name="OP1",
-        well_type=IWEL_PRODUCER,
-        connections=[Connection(1, 1, 1)],
-        rates=(86400.0, 0.0, 172800.0, 0.0),  # water, gas, oil, resv
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well], unit_system=METRIC_UNITS)
-
-    well_state = WellInfo(grid, path)["OP1"][0]
-
-    assert well_state.waterRate() == 86400.0
-    assert well_state.waterRateSI() == pytest.approx(86400.0 / seconds_per_day)
-    assert well_state.oilRateSI() == pytest.approx(172800.0 / seconds_per_day)
-
-
-def test_that_field_units_use_barrels_for_liquids_and_mscf_for_gas(tmp_path, grid):
-    # FIELD liquid rates are in barrels/day while gas is in Mscf/day
-    well = Well(
-        name="OP1",
-        well_type=IWEL_PRODUCER,
-        connections=[Connection(1, 1, 1)],
-        rates=(1.0, 1.0, 1.0, 1.0),  # water, gas, oil, resv
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well], unit_system=FIELD_UNITS)
-
-    well_state = WellInfo(grid, path)["OP1"][0]
-
-    assert well_state.oilRateSI() == pytest.approx(BARREL / DAY)
-    assert well_state.waterRateSI() == pytest.approx(BARREL / DAY)
-    assert well_state.gasRateSI() == pytest.approx(MMCF / DAY)
 
 
 def test_that_connection_si_rates_are_scaled_by_the_unit_factor(tmp_path, grid):
