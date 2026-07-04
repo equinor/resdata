@@ -413,28 +413,30 @@ def grid():
 
 
 @pytest.fixture
-def producer():
-    return Well(
-        name="OP1",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        status=1,
-        connections=[
-            Connection(i=2, j=3, k=1),
-            Connection(i=2, j=3, k=2),
-        ],
-    )
+def producer(grid, tmp_path):
+    def inner(*args, **kwargs):
+        well = Well(
+            name="OP1",
+            headi=2,
+            headj=3,
+            headk=1,
+            well_type=IWEL_PRODUCER,
+            status=1,
+            connections=[
+                Connection(i=2, j=3, k=1),
+                Connection(i=2, j=3, k=2),
+            ],
+        )
+        path = str(tmp_path / "CASE.X0000")
+        write_restart(path, [well], *args, **kwargs)
+
+        return WellInfo(grid, path)
+
+    return inner
 
 
-def test_that_a_single_producer_well_is_loaded_with_correct_metadata(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_info = WellInfo(grid, path)
+def test_that_a_single_producer_well_is_loaded_with_correct_metadata(producer):
+    well_info = producer()
 
     assert len(well_info) == 1
     assert "OP1" in well_info
@@ -482,11 +484,8 @@ def test_that_status_0_means_closed_well(tmp_path, grid):
     assert not well_state.isOpen()
 
 
-def test_that_well_connections_are_loaded_with_ijk_and_status(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+def test_that_well_connections_are_loaded_with_ijk_and_status(producer):
+    connections = producer()["OP1"][0].globalConnections()
 
     assert len(connections) == 2
     # ICON indices are 1-based; the bindings return 0-based ijk.
@@ -497,28 +496,18 @@ def test_that_well_connections_are_loaded_with_ijk_and_status(tmp_path, grid, pr
     assert all(not conn.isFractureConnection() for conn in connections)
 
 
-def test_that_a_well_without_an_icon_keyword_has_no_global_connections(
-    tmp_path, grid, producer
-):
+def test_that_a_well_without_an_icon_keyword_has_no_global_connections(producer):
     # Some restart files (e.g. certain E300 outputs) lack the ICON keyword.
     # The well is still present with a wellhead, but exposes no global
     # connections.
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer], include_icon=False)
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+    well_state = producer(include_icon=False)["OP1"][0]
 
     assert not well_state.hasGlobalConnections()
     assert well_state.globalConnections() == []
 
 
-def test_that_a_well_without_an_icon_keyword_still_has_metadata_and_wellhead(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer], include_icon=False)
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_a_well_without_an_icon_keyword_still_has_metadata_and_wellhead(producer):
+    well_state = producer(include_icon=False)["OP1"][0]
 
     assert well_state.name() == "OP1"
     assert well_state.wellType() == WellType.PRODUCER
@@ -528,13 +517,8 @@ def test_that_a_well_without_an_icon_keyword_still_has_metadata_and_wellhead(
     assert well_state.wellHead().ijk() == (1, 2, 0)
 
 
-def test_that_a_well_with_an_icon_keyword_has_global_connections(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer], include_icon=True)
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_a_well_with_an_icon_keyword_has_global_connections(producer):
+    well_state = producer(include_icon=True)["OP1"][0]
 
     assert well_state.hasGlobalConnections()
     assert len(well_state.globalConnections()) == 2
@@ -580,32 +564,23 @@ def test_that_connection_direction_is_read_from_icon(
     assert connection.direction() == expected_direction
 
 
-def test_that_connection_factor_is_read_from_scon(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+def test_that_connection_factor_is_read_from_scon(producer):
+    connections = producer()["OP1"][0].globalConnections()
 
     assert connections[0].connectionFactor() == 1.0
     assert connections[1].connectionFactor() == 2.0
 
 
-def test_that_well_head_returns_the_global_connection_head(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_head = WellInfo(grid, path)["OP1"][0].wellHead()
+def test_that_well_head_returns_the_global_connection_head(producer):
+    well_head = producer()["OP1"][0].wellHead()
 
     # IWEL stores the head as (2, 3, 1) using 1-based indices.
     assert well_head.ijk() == (1, 2, 0)
     assert well_head.isOpen()
 
 
-def test_that_the_well_head_direction_is_z(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_head = WellInfo(grid, path)["OP1"][0].wellHead()
+def test_that_the_well_head_direction_is_z(producer):
+    well_head = producer()["OP1"][0].wellHead()
 
     # The wellhead is a matrix connection. Its direction is
     # always vertical (Z).
@@ -691,23 +666,15 @@ def test_that_multiple_wells_are_all_available_by_name_and_index(tmp_path, grid)
     assert [time_line.getName() for time_line in well_info] == ["PROD", "INJ"]
 
 
-def test_that_querying_an_unknown_well_raises_keyerror(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_info = WellInfo(grid, path)
-
+def test_that_querying_an_unknown_well_raises_keyerror(producer):
+    well_info = producer()
     assert "NOPE" not in well_info
     with pytest.raises(KeyError):
         _ = well_info["NOPE"]
 
 
-def test_that_indexing_a_well_out_of_range_raises_indexerror(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_info = WellInfo(grid, path)
-
+def test_that_indexing_a_well_out_of_range_raises_indexerror(producer):
+    well_info = producer()
     with pytest.raises(IndexError):
         _ = well_info[5]
 
@@ -745,11 +712,8 @@ def test_that_a_unified_restart_builds_a_time_line_with_all_report_steps(
     ]
 
 
-def test_that_simulation_time_matches_the_restart_report_date(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer], date=(2020, 6, 29))
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_simulation_time_matches_the_restart_report_date(producer):
+    well_state = producer(date=(2020, 6, 29))["OP1"][0]
 
     sim_date = well_state.simulationTime().datetime()
     assert (sim_date.year, sim_date.month, sim_date.day) == (2020, 6, 29)
@@ -942,11 +906,8 @@ def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
     assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
 
 
-def test_that_a_non_segmented_well_has_no_segments(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_a_non_segmented_well_has_no_segments(producer):
+    well_state = producer()["OP1"][0]
 
     assert not well_state.isMultiSegmentWell()
     assert not well_state.hasSegmentData()
@@ -955,13 +916,8 @@ def test_that_a_non_segmented_well_has_no_segments(tmp_path, grid, producer):
     assert len(well_state) == 0
 
 
-def test_that_connections_of_a_non_segmented_well_are_not_multisegment(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+def test_that_connections_of_a_non_segmented_well_are_not_multisegment(producer):
+    connections = producer()["OP1"][0].globalConnections()
 
     assert len(connections) == 2
     assert all(not conn.isMultiSegmentWell() for conn in connections)
@@ -1002,11 +958,8 @@ def test_that_well_rates_are_read_from_xwel(tmp_path, grid):
     assert well_state.volumeRate() == 40.0
 
 
-def test_that_a_well_without_rate_data_reports_zero_rates(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_a_well_without_rate_data_reports_zero_rates(producer):
+    well_state = producer()["OP1"][0]
 
     assert well_state.oilRate() == 0
     assert well_state.gasRate() == 0
@@ -1144,13 +1097,8 @@ def test_that_well_connection_ijk_match_the_perforations_written_to_the_restart(
     assert [conn.ijk() for conn in connections] == [(2, 3, 4), (5, 6, 7)]
 
 
-def test_that_two_calls_to_global_connections_return_equal_ijk_lists(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_state = WellInfo(grid, path)["OP1"][0]
+def test_that_two_calls_to_global_connections_return_equal_ijk_lists(producer):
+    well_state = producer()["OP1"][0]
 
     first = [conn.ijk() for conn in well_state.globalConnections()]
     second = [conn.ijk() for conn in well_state.globalConnections()]
@@ -1239,11 +1187,8 @@ def test_that_connection_factor_and_rates_match_per_connection(tmp_path, grid):
     assert connections[1].oilRate() == 5.0
 
 
-def test_that_connections_load_with_their_connection_factor(tmp_path, grid, producer):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+def test_that_connections_load_with_their_connection_factor(producer):
+    connections = producer()["OP1"][0].globalConnections()
 
     assert len(connections) == 2
     assert [conn.connectionFactor() for conn in connections] == [1.0, 2.0]
@@ -1257,23 +1202,13 @@ def test_that_segment_connections_are_consistent_with_global_connections(
     assert len(connections) == 2
 
 
-def test_that_reopening_the_same_restart_yields_consistent_connection_count(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    counts = [len(WellInfo(grid, path)["OP1"][0].globalConnections()) for _ in range(5)]
+def test_that_reopening_the_same_restart_yields_consistent_connection_count(producer):
+    counts = [len(producer()["OP1"][0].globalConnections()) for _ in range(5)]
     assert counts == [2] * 5
 
 
-def test_that_a_restart_file_can_be_loaded_from_a_resdatafile_instance(
-    tmp_path, grid, producer
-):
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [producer])
-
-    well_info = WellInfo(grid, ResdataFile(path))
+def test_that_a_restart_file_can_be_loaded_from_a_resdatafile_instance(producer):
+    well_info = producer()
 
     assert "OP1" in well_info
     assert well_info["OP1"][0].wellType() == WellType.PRODUCER
