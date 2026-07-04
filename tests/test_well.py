@@ -682,16 +682,16 @@ def test_that_indexing_a_well_out_of_range_raises_indexerror(producer):
 def test_that_a_unified_restart_builds_a_time_line_with_all_report_steps(
     tmp_path, grid
 ):
-    producer = Well(
+    well = Well(
         name="OP1",
         well_type=IWEL_PRODUCER,
         connections=[Connection(1, 1, 1)],
     )
 
     steps = [
-        (0, (2020, 1, 1), [producer]),
-        (1, (2021, 1, 1), [producer]),
-        (2, (2022, 1, 1), [producer]),
+        (0, (2020, 1, 1), [well]),
+        (1, (2021, 1, 1), [well]),
+        (2, (2022, 1, 1), [well]),
     ]
     path = str(tmp_path / "CASE.UNRST")
     write_unified_restart(path, steps)
@@ -720,13 +720,11 @@ def test_that_simulation_time_matches_the_restart_report_date(producer):
 
 
 def test_that_states_are_in_the_order_of_the_file(tmp_path, grid):
-    producer = Well(
-        name="OP1", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)]
-    )
+    well = Well(name="OP1", well_type=IWEL_PRODUCER, connections=[Connection(1, 1, 1)])
     steps = [
-        (0, (2020, 1, 1), [producer]),
-        (2, (2022, 1, 1), [producer]),
-        (1, (2021, 1, 1), [producer]),
+        (0, (2020, 1, 1), [well]),
+        (2, (2022, 1, 1), [well]),
+        (1, (2021, 1, 1), [well]),
     ]
     path = str(tmp_path / "CASE.UNRST")
     write_unified_restart(path, steps)
