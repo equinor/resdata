@@ -842,9 +842,8 @@ def test_that_a_multisegment_well_exposes_its_segments(tmp_path, grid):
     assert segments[1].outletId() == 1
 
 
-def test_that_a_multisegment_wells_tubing_geometry_is_reported_as_written(
-    tmp_path, grid
-):
+@pytest.fixture
+def multi_segment_well(grid, tmp_path):
     well = Well(
         name="MSW",
         headi=2,
@@ -862,34 +861,21 @@ def test_that_a_multisegment_wells_tubing_geometry_is_reported_as_written(
     )
     path = str(tmp_path / "CASE.X0000")
     write_restart(path, [well])
+    return WellInfo(grid, path)
 
-    segments = WellInfo(grid, path)["MSW"][0].segments()
+
+def test_that_a_multisegment_wells_tubing_geometry_is_reported_as_written(
+    multi_segment_well,
+):
+    segments = multi_segment_well["MSW"][0].segments()
 
     assert [seg.id() for seg in segments] == [1, 2]
     assert [seg.length() for seg in segments] == [10.0, 20.0]
     assert [seg.depth() for seg in segments] == [100.0, 120.0]
 
 
-def test_that_segment_indexing_matches_the_segments_list(tmp_path, grid):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    well_state = WellInfo(grid, path)["MSW"][0]
+def test_that_segment_indexing_matches_the_segments_list(multi_segment_well):
+    well_state = multi_segment_well["MSW"][0]
     segments = well_state.segments()
 
     assert [well_state[i].id() for i in range(len(well_state))] == [
@@ -897,100 +883,28 @@ def test_that_segment_indexing_matches_the_segments_list(tmp_path, grid):
     ]
 
 
-def test_that_negative_segment_index_returns_the_last_segment(tmp_path, grid):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    well_state = WellInfo(grid, path)["MSW"][0]
+def test_that_negative_segment_index_returns_the_last_segment(multi_segment_well):
+    well_state = multi_segment_well["MSW"][0]
 
     assert well_state[-1].id() == well_state.segments()[-1].id()
 
 
-def test_that_segment_branch_and_outlet_match_what_was_written(tmp_path, grid):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    segments = WellInfo(grid, path)["MSW"][0].segments()
+def test_that_segment_branch_and_outlet_match_what_was_written(multi_segment_well):
+    segments = multi_segment_well["MSW"][0].segments()
 
     assert all(seg.branchId() == 1 for seg in segments)
     assert segments[1].outletId() == 1
 
 
-def test_that_connections_of_a_multisegment_well_are_multisegment(tmp_path, grid):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    connections = WellInfo(grid, path)["MSW"][0].globalConnections()
+def test_that_connections_of_a_multisegment_well_are_multisegment(multi_segment_well):
+    connections = multi_segment_well["MSW"][0].globalConnections()
 
     assert len(connections) == 2
     assert all(conn.isMultiSegmentWell() for conn in connections)
 
 
-def test_that_segment_id_differs_from_outlet_id(tmp_path, grid):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    segments = WellInfo(grid, path)["MSW"][0].segments()
+def test_that_segment_id_differs_from_outlet_id(multi_segment_well):
+    segments = multi_segment_well["MSW"][0].segments()
 
     assert all(segment.id() != segment.outletId() for segment in segments)
 
@@ -1336,27 +1250,9 @@ def test_that_connections_load_with_their_connection_factor(tmp_path, grid, prod
 
 
 def test_that_segment_connections_are_consistent_with_global_connections(
-    tmp_path, grid
+    multi_segment_well,
 ):
-    well = Well(
-        name="MSW",
-        headi=2,
-        headj=3,
-        headk=1,
-        well_type=IWEL_PRODUCER,
-        connections=[
-            Connection(i=2, j=3, k=1, segment=1),
-            Connection(i=2, j=3, k=2, segment=2),
-        ],
-        segments=[
-            Segment(outlet=0, branch=1, length=10.0, total_length=10.0, depth=100.0),
-            Segment(outlet=1, branch=1, length=20.0, total_length=30.0, depth=120.0),
-        ],
-    )
-    path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well])
-
-    connections = WellInfo(grid, path)["MSW"][0].globalConnections()
+    connections = multi_segment_well["MSW"][0].globalConnections()
 
     assert len(connections) == 2
 
