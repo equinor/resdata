@@ -1605,11 +1605,11 @@ void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio) {
 void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     FILE *stream = fortio.get_FILE();
     bool fmt_file = fortio.fmt_file();
-    char *type_name = rd_type_alloc_name(rd_kw->data_type);
+    std::string type_name = rd_type_name(rd_kw->data_type);
 
     if (fmt_file)
         fprintf(stream, WRITE_HEADER_FMT, rd_kw->header8, rd_kw->size,
-                type_name);
+                type_name.c_str());
     else {
         int size = rd_kw->size;
         if (RD_ENDIAN_FLIP)
@@ -1619,12 +1619,10 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 
         fwrite(rd_kw->header8, sizeof(char), RD_STRING8_LENGTH, stream);
         fwrite(&size, sizeof(int), 1, stream);
-        fwrite(type_name, sizeof(char), RD_TYPE_LENGTH, stream);
+        fwrite(type_name.c_str(), sizeof(char), RD_TYPE_LENGTH, stream);
 
         fortio.complete_write(RD_KW_HEADER_DATA_SIZE);
     }
-
-    free(type_name);
 }
 
 bool rd_kw_fwrite(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
@@ -1759,10 +1757,9 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
 }
 
 void rd_kw_summarize(const rd_kw_type *rd_kw) {
-    char *type_name = rd_type_alloc_name(rd_kw->data_type);
+    std::string type_name = rd_type_name(rd_kw->data_type);
     printf("%8s   %10d:%4s \n", rd_kw_get_header8(rd_kw), rd_kw_get_size(rd_kw),
-           type_name);
-    free(type_name);
+           type_name.c_str());
 }
 
 #define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \

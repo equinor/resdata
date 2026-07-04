@@ -83,7 +83,6 @@ add_library(
   resdata/fault_block.cpp
   resdata/fault_block_layer.cpp
   resdata/rd_type.cpp
-  resdata/rd_type_python.cpp
   resdata/well_state.cpp
   resdata/well_conn.cpp
   resdata/well_info.cpp
@@ -207,6 +206,7 @@ add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
                           resdata/gravimetry)
 add_resdata_pybind_module(_grav rd_grav_pybind.cpp resdata/gravimetry)
 add_resdata_pybind_module(_rd_sum rd_sum_pybind.cpp resdata/summary)
+add_resdata_pybind_module(_type rd_type_pybind.cpp resdata/types)
 
 if(NOT BUILD_TESTS)
   return()

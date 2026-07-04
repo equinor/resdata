@@ -21,10 +21,6 @@
 
 namespace py = pybind11;
 
-extern "C" {
-rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type);
-}
-
 namespace {
 PYBIND11_MODULE(_kw, m) {
     register_exceptions(m);
@@ -180,7 +176,7 @@ PYBIND11_MODULE(_kw, m) {
             auto rd_kw = from_cwrap<rd_kw_type>(self);
             rd_data_type data_type = rd_kw_get_data_type(rd_kw);
             return reinterpret_cast<std::uintptr_t>(
-                rd_type_alloc_copy_python(&data_type));
+                new rd_data_type(data_type));
         },
         py::return_value_policy::reference);
 

@@ -1,6 +1,6 @@
 from cwrap import BaseCClass, BaseCEnum
 
-from resdata import ResdataPrototype
+import resdata.types._type as _rd_type
 
 
 class ResdataTypeEnum(BaseCEnum):
@@ -22,48 +22,19 @@ ResdataTypeEnum.addEnum("RD_BOOL_TYPE", 4)
 ResdataTypeEnum.addEnum("RD_MESS_TYPE", 5)
 ResdataTypeEnum.addEnum("RD_STRING_TYPE", 7)
 
-# -----------------------------------------------------------------
-
 
 class ResDataType(BaseCClass):
     TYPE_NAME = "rd_data_type"
-
-    _alloc = ResdataPrototype(
-        "void* rd_type_alloc_python(rd_type_enum, size_t)", bind=False
-    )
-    _alloc_from_type = ResdataPrototype(
-        "void* rd_type_alloc_from_type_python(rd_type_enum)", bind=False
-    )
-    _alloc_from_name = ResdataPrototype(
-        "void* rd_type_alloc_from_name_python(char*)", bind=False
-    )
-    _free = ResdataPrototype("void rd_type_free_python(rd_data_type)")
-    _get_type = ResdataPrototype("rd_type_enum rd_type_get_type_python(rd_data_type)")
-    _get_element_size = ResdataPrototype(
-        "size_t rd_type_get_sizeof_iotype_python(rd_data_type)"
-    )
-    _is_int = ResdataPrototype("bool rd_type_is_int_python(rd_data_type)")
-    _is_char = ResdataPrototype("bool rd_type_is_char_python(rd_data_type)")
-    _is_float = ResdataPrototype("bool rd_type_is_float_python(rd_data_type)")
-    _is_double = ResdataPrototype("bool rd_type_is_double_python(rd_data_type)")
-    _is_mess = ResdataPrototype("bool rd_type_is_mess_python(rd_data_type)")
-    _is_bool = ResdataPrototype("bool rd_type_is_bool_python(rd_data_type)")
-    _is_string = ResdataPrototype("bool rd_type_is_string_python(rd_data_type)")
-    _get_name = ResdataPrototype("char* rd_type_alloc_name_python(rd_data_type)")
-    _is_numeric = ResdataPrototype("bool rd_type_is_numeric_python(rd_data_type)")
-    _is_equal = ResdataPrototype(
-        "bool rd_type_is_equal_python(rd_data_type, rd_data_type)"
-    )
 
     def __init__(self, type_enum=None, element_size=None, type_name=None):
         self._assert_valid_arguments(type_enum, element_size, type_name)
 
         if type_name:
-            c_ptr = self._alloc_from_name(type_name)
+            c_ptr = _rd_type._create_from_name(type_name)
         elif element_size is None:
-            c_ptr = self._alloc_from_type(type_enum)
+            c_ptr = _rd_type._create_from_type(type_enum)
         else:
-            c_ptr = self._alloc(type_enum, element_size)
+            c_ptr = _rd_type._create(type_enum, element_size)
 
         super().__init__(c_ptr)
 
@@ -93,45 +64,45 @@ class ResDataType(BaseCClass):
 
     @property
     def type(self):
-        return self._get_type()
+        return ResdataTypeEnum(_rd_type._get_type(self))
 
     @property
     def element_size(self):
-        return self._get_element_size()
+        return _rd_type._get_sizeof_iotype(self)
 
     @property
     def type_name(self):
-        return self._get_name()
+        return _rd_type._name(self)
 
     def free(self):
-        self._free()
+        _rd_type._free(self)
 
     def is_int(self):
-        return self._is_int()
+        return _rd_type._is_int(self)
 
     def is_char(self):
-        return self._is_char()
+        return _rd_type._is_char(self)
 
     def is_float(self):
-        return self._is_float()
+        return _rd_type._is_float(self)
 
     def is_double(self):
-        return self._is_double()
+        return _rd_type._is_double(self)
 
     def is_mess(self):
-        return self._is_mess()
+        return _rd_type._is_mess(self)
 
     def is_bool(self):
-        return self._is_bool()
+        return _rd_type._is_bool(self)
 
     def is_string(self):
-        return self._is_string()
+        return _rd_type._is_string(self)
 
     def is_numeric(self):
-        return self._is_numeric()
+        return _rd_type._is_numeric(self)
 
     def is_equal(self, other):
-        return self._is_equal(other)
+        return _rd_type._is_equal(self, other)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
