@@ -459,6 +459,17 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
     }
 }
 
+TEST_CASE_METHOD(Tmpdir, "rd_sum_add_tstep rejects negative report steps") {
+    const auto case_path = (dirname / "NEGATIVE_REPORT_STEP").string();
+    auto rd_sum = make_summary_writer(case_path, /*fmt_output=*/false,
+                                      /*unified=*/true, ":",
+                                      util_make_date_utc(1, 1, 2010),
+                                      /*time_in_days=*/true, 10, 11, 12);
+
+    REQUIRE_THROWS_AS(rd_sum_add_tstep(rd_sum.get(), -1, 0.0),
+                      std::invalid_argument);
+}
+
 TEST_CASE_METHOD(Tmpdir,
                  "rd_sum_alloc_time_solution finds multiple crossings on a "
                  "non-monotonic series") {

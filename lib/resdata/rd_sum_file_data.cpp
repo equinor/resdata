@@ -15,6 +15,15 @@
 
 namespace fs = std::filesystem;
 
+namespace {
+
+void validate_report_step(int report_step) {
+    if (report_step < 0)
+        throw std::invalid_argument("report step cannot be negative");
+}
+
+} // namespace
+
 /*
   This file implements the type rd_sum_data_type. The data structure
   is involved with holding all the actual summary data (the
@@ -288,6 +297,8 @@ void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
 
 rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(int report_step,
                                                    double sim_seconds) {
+    validate_report_step(report_step);
+
     int ministep_nr = vector_get_size(data);
     std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
         rd_sum_tstep_alloc_new(report_step, ministep_nr, sim_seconds,
@@ -535,6 +546,7 @@ bool rd_sum_file_data::check_file(rd_file_type *rd_file) {
 
 void rd_sum_file_data::add_rd_file(int report_step,
                                    const rd_file_view_type *summary_view) {
+    validate_report_step(report_step);
 
     int num_ministep = rd_file_view_get_num_named_kw(summary_view, PARAMS_KW);
     if (num_ministep > 0) {
