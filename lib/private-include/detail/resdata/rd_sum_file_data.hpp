@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <vector>
 #include <memory>
 #include <array>
 #include <limits>
 #include <string>
+#include <stdexcept>
 
 #include <ert/util/vector.hpp>
 
@@ -29,6 +31,8 @@ struct IndexNode {
 class TimeIndex {
 public:
     void add(time_t sim_time, double sim_seconds, int report_step) {
+        if (report_step < 0)
+            throw std::invalid_argument("report step cannot be negative");
         int internal_index = static_cast<int>(this->nodes.size());
         this->nodes.emplace_back(sim_time, sim_seconds, report_step);
 
@@ -44,6 +48,10 @@ public:
     }
 
     bool has_report(int report_step) const {
+
+        if (report_step < 0)
+            return false;
+
         if (report_step >= static_cast<int>(this->report_map.size()))
             return false;
 
@@ -68,10 +76,14 @@ public:
     size_t size() const { return this->nodes.size(); }
 
     std::pair<int, int> &report_range(int report_step) {
+        if (report_step < 0)
+            throw std::invalid_argument("report step cannot be negative");
         return this->report_map[report_step];
     }
 
     const std::pair<int, int> &report_range(int report_step) const {
+        if (report_step < 0)
+            throw std::invalid_argument("report step cannot be negative");
         return this->report_map[report_step];
     }
 
