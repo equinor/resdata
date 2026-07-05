@@ -893,6 +893,12 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         if (rd_file_has_kw(header.get(),
                            LGRS_KW)) { /* The file has LGR information. */
+            if (!rd_file_has_kw(header.get(), NUMLX_KW) ||
+                !rd_file_has_kw(header.get(), NUMLY_KW) ||
+                !rd_file_has_kw(header.get(), NUMLZ_KW))
+                throw std::invalid_argument(
+                    "SMSPEC header has LGRS keyword but is missing one or "
+                    "more required LGR index keywords (NUMLX, NUMLY, NUMLZ)");
             lgrs = rd_file_iget_named_kw(header.get(), LGRS_KW, 0);
             numlx = rd_file_iget_named_kw(header.get(), NUMLX_KW, 0);
             numly = rd_file_iget_named_kw(header.get(), NUMLY_KW, 0);
@@ -949,6 +955,13 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                     rd::smspec_node::valid_type(kw.c_str(), well.c_str(), num);
                 if (var_type == RD_SMSPEC_INVALID_VAR) {
                     continue;
+                }
+
+                if (rd_smspec_lgr_var_type(var_type) && !rd_smspec->has_lgr) {
+                    throw std::invalid_argument(
+                        "SMSPEC header contains LGR variable '" + kw +
+                        "' but required LGR metadata keywords are missing "
+                        "(expected LGRS, NUMLX, NUMLY, NUMLZ)");
                 }
 
                 if (rd_smspec_lgr_var_type(var_type)) {
