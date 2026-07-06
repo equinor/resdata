@@ -42,7 +42,7 @@ class ResdataCmpTest(ResdataTest):
 
         diff_sum, ref_sum = rd_cmp.cmp_summary_vector("FOPT")
         self.assertEqual(diff_sum, 0.0)
-        self.assertTrue(rd_cmp.endTimeEqual())
+        self.assertTrue(rd_cmp.end_time_equal())
 
     def test_wells(self):
         rd_cmp = ResdataCmp(self.root1, self.root1)
@@ -70,10 +70,10 @@ def test_cmp_same_case(tmpdir):
     with tmpdir.as_cwd():
         _make_case("CASE1")
         rd_cmp = ResdataCmp("CASE1", "CASE1")
-        assert rd_cmp.endTimeEqual()
-        diff_sum, ref_sum = rd_cmp.cmpSummaryVector("FOPT")
+        assert rd_cmp.end_time_equal()
+        diff_sum, ref_sum = rd_cmp.cmp_summary_vector("FOPT")
         assert diff_sum == 0.0
-        assert (True, True) == rd_cmp.hasSummaryVector("FOPT")
+        assert (True, True) == rd_cmp.has_summary_vector("FOPT")
 
 
 def test_cmp_different_start(tmpdir):

@@ -91,7 +91,6 @@ class BoolVector(VectorTemplate):
     _contains = ResdataPrototype("bool bool_vector_contains(rd_bool_vector, bool)")
     _select_unique = ResdataPrototype("void bool_vector_select_unique(rd_bool_vector)")
     _element_sum = ResdataPrototype("bool bool_vector_sum(rd_bool_vector)")
-    _get_data_ptr = ResdataPrototype("bool* bool_vector_get_ptr(rd_bool_vector)")
     _count_equal = ResdataPrototype("int bool_vector_count_equal(rd_bool_vector, bool)")
     _init_linear = None
     _equal = ResdataPrototype("bool bool_vector_equal(rd_bool_vector, rd_bool_vector)")

@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
 
 from .rd_sum_var_type import SummaryVarType
 
@@ -177,12 +176,3 @@ class ResdataSMSPECNode(BaseCClass):
         ending with 'H' are considered historical.
         """
         return self._node_is_historical()
-
-
-monkey_the_camel(ResdataSMSPECNode, "getKey1", ResdataSMSPECNode.get_key1)
-monkey_the_camel(ResdataSMSPECNode, "getKey2", ResdataSMSPECNode.get_key2)
-monkey_the_camel(ResdataSMSPECNode, "varType", ResdataSMSPECNode.var_type)
-monkey_the_camel(ResdataSMSPECNode, "getNum", ResdataSMSPECNode.get_num)
-monkey_the_camel(ResdataSMSPECNode, "isRate", ResdataSMSPECNode.is_rate)
-monkey_the_camel(ResdataSMSPECNode, "isTotal", ResdataSMSPECNode.is_total)
-monkey_the_camel(ResdataSMSPECNode, "isHistorical", ResdataSMSPECNode.is_historical)

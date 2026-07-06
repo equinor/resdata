@@ -2,7 +2,7 @@ from cwrap import BaseCClass
 from six import string_types
 
 from resdata import ResdataPrototype
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import CTime
 
 
 class ResdataFileView(BaseCClass):
@@ -188,10 +188,3 @@ class ResdataFileView(BaseCClass):
 
         view.setParent(parent=self)
         return view
-
-
-monkey_the_camel(ResdataFileView, "numKeywords", ResdataFileView.num_keywords)
-monkey_the_camel(ResdataFileView, "uniqueSize", ResdataFileView.unique_size)
-monkey_the_camel(ResdataFileView, "blockView2", ResdataFileView.block_view2)
-monkey_the_camel(ResdataFileView, "blockView", ResdataFileView.block_view)
-monkey_the_camel(ResdataFileView, "restartView", ResdataFileView.restart_view)

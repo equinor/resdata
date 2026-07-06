@@ -1,8 +1,6 @@
 from cwrap import BaseCClass
-from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
 
 from .fault import Fault
 from .fault_block import FaultBlock
@@ -188,12 +186,6 @@ class FaultBlockLayer(BaseCClass):
         layer = self.get_geo_layer()
         layer.add_fault_barrier(fault, self.get_k(), link_segments)
 
-    @deprecated("add_fault_link is deprecated and will be removed in version 7.")
-    def add_fault_link(self, fault1, fault2):
-        if not fault1.intersects_fault(fault2, self.get_k()):
-            layer = self.get_geo_layer()
-            layer.add_ij_barrier(fault1.extend_to_fault(fault2, self.get_k()))
-
     def join_faults(self, fault1, fault2):
         if not fault1.intersects_fault(fault2, self.get_k()):
             layer = self.get_geo_layer()
@@ -227,25 +219,3 @@ class FaultBlockLayer(BaseCClass):
     def cell_contact(self, p1, p2):
         layer = self.get_geo_layer()
         return layer.cell_contact(p1, p2)
-
-
-monkey_the_camel(FaultBlockLayer, "scanKeyword", FaultBlockLayer.scan_keyword)
-monkey_the_camel(FaultBlockLayer, "loadKeyword", FaultBlockLayer.load_keyword)
-monkey_the_camel(FaultBlockLayer, "getBlock", FaultBlockLayer.get_block)
-monkey_the_camel(FaultBlockLayer, "deleteBlock", FaultBlockLayer.delete_block)
-monkey_the_camel(FaultBlockLayer, "addBlock", FaultBlockLayer.add_block)
-monkey_the_camel(FaultBlockLayer, "getNextID", FaultBlockLayer.get_next_id)
-monkey_the_camel(FaultBlockLayer, "getK", FaultBlockLayer.get_k)
-monkey_the_camel(FaultBlockLayer, "scanLayer", FaultBlockLayer.scan_layer)
-monkey_the_camel(
-    FaultBlockLayer, "insertBlockContent", FaultBlockLayer.insert_block_content
-)
-monkey_the_camel(FaultBlockLayer, "exportKeyword", FaultBlockLayer.export_keyword)
-monkey_the_camel(FaultBlockLayer, "addFaultBarrier", FaultBlockLayer.add_fault_barrier)
-monkey_the_camel(FaultBlockLayer, "addFaultLink", FaultBlockLayer.add_fault_link)
-monkey_the_camel(FaultBlockLayer, "joinFaults", FaultBlockLayer.join_faults)
-monkey_the_camel(
-    FaultBlockLayer, "addPolylineBarrier", FaultBlockLayer.add_polyline_barrier
-)
-monkey_the_camel(FaultBlockLayer, "getGeoLayer", FaultBlockLayer.get_geo_layer)
-monkey_the_camel(FaultBlockLayer, "cellContact", FaultBlockLayer.cell_contact)

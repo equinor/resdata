@@ -52,7 +52,6 @@ add_library(
   util/stringlist.cpp
   util/string_util.cpp
   util/type_vector_functions.cpp
-  util/rd_version.cpp
   util/perm_vector.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}

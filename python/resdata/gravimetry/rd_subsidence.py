@@ -10,7 +10,6 @@ from cwrap import BaseCClass
 import resdata.gravimetry._subsidence as _subsidence
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
-from resdata.util.util import monkey_the_camel
 
 
 class ResdataSubsidence(BaseCClass):
@@ -182,6 +181,3 @@ class ResdataSubsidence(BaseCClass):
 
     def free(self):
         _subsidence._free(self)
-
-
-monkey_the_camel(ResdataSubsidence, "evalGeertsma", ResdataSubsidence.eval_geertsma)

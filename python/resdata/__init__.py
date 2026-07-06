@@ -107,7 +107,7 @@ from .rd_util import (
     ResdataUtil,
     UnitSystem,
 )
-from .util.util import ResdataVersion, updateAbortSignals
+from .util.util import updateAbortSignals
 
 updateAbortSignals()
 

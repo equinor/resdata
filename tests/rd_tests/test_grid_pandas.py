@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
-import pandas as pd
-from resdata import ResdataTypeEnum
-from resdata.grid import Grid, GridGenerator
+from resdata import ResDataType
+from resdata.grid import GridGenerator
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
@@ -19,7 +18,7 @@ class GridPandasTest(ResdataTest):
         )
         assert np.array_equal(df.values, index_matrix)
 
-        kw_int_active = ResdataKW("int_act", 4, ResdataTypeEnum.RD_INT_TYPE)
+        kw_int_active = ResdataKW("int_act", 4, ResDataType.RD_INT)
         kw_int_active[0] = 9
         kw_int_active[1] = 8
         kw_int_active[2] = 7
@@ -28,7 +27,7 @@ class GridPandasTest(ResdataTest):
         assert len(data) == 4
         assert np.array_equal(data, np.array([9, 8, 7, 6]))
 
-        kw_float_active = ResdataKW("float_at", 4, ResdataTypeEnum.RD_FLOAT_TYPE)
+        kw_float_active = ResdataKW("float_at", 4, ResDataType.RD_FLOAT)
         kw_float_active[0] = 10.5
         kw_float_active[1] = 9.25
         kw_float_active[2] = 2.0
@@ -37,7 +36,7 @@ class GridPandasTest(ResdataTest):
         assert len(data) == 4
         assert np.array_equal(data, np.array([10.5, 9.25, 2.0, 1.625]))
 
-        kw_int_global = ResdataKW("int_glob", 6, ResdataTypeEnum.RD_INT_TYPE)
+        kw_int_global = ResdataKW("int_glob", 6, ResDataType.RD_INT)
         kw_int_global[0] = 0
         kw_int_global[1] = 2
         kw_int_global[2] = 4
@@ -48,7 +47,7 @@ class GridPandasTest(ResdataTest):
         assert len(data) == 4
         assert np.array_equal(data, np.array([0, 2, 8, 9]))
 
-        kw_double_global = ResdataKW("double_g", 6, ResdataTypeEnum.RD_DOUBLE_TYPE)
+        kw_double_global = ResdataKW("double_g", 6, ResDataType.RD_DOUBLE)
         kw_double_global[0] = 1.1
         kw_double_global[1] = 2.2
         kw_double_global[2] = 3.3

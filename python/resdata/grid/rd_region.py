@@ -20,7 +20,7 @@ from resdata import ResdataPrototype, ResDataType
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
-from resdata.util.util import IntVector, monkey_the_camel
+from resdata.util.util import IntVector
 
 
 def select_method(select):
@@ -1180,13 +1180,3 @@ class ResdataRegion(BaseCClass):
 
     def set_name(self, name):
         self._set_name(name)
-
-
-monkey_the_camel(ResdataRegion, "selectTrue", ResdataRegion.select_true)
-monkey_the_camel(ResdataRegion, "selectFalse", ResdataRegion.select_false)
-monkey_the_camel(ResdataRegion, "selectFromLayer", ResdataRegion.select_from_layer)
-monkey_the_camel(ResdataRegion, "getActiveList", ResdataRegion.get_active_list)
-monkey_the_camel(ResdataRegion, "getGlobalList", ResdataRegion.get_global_list)
-monkey_the_camel(ResdataRegion, "getIJKList", ResdataRegion.get_ijk_list)
-monkey_the_camel(ResdataRegion, "getName", ResdataRegion.get_name)
-monkey_the_camel(ResdataRegion, "setName", ResdataRegion.set_name)

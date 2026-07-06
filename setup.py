@@ -118,12 +118,8 @@ def utility_wrappers():
     return [
         name + " = resdata.bin:main"
         for name in (
-            "convert.x",  # deprecated
             "rd_pack.x",
             "rd_unpack.x",
-            "grdecl_test.x",  # deprecated
-            "kw_list.x",  # deprecated
-            "load_test.x",  # deprecated
         )
     ] + ["summary.x = view_summary.__main__:main"]
 

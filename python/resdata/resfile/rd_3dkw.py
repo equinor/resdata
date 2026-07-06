@@ -1,5 +1,3 @@
-from resdata.util.util import monkey_the_camel
-
 from .rd_kw import ResdataKW
 
 
@@ -202,10 +200,3 @@ class Resdata3DKW(ResdataKW):
 
     def get_default(self):
         return self.default_value
-
-
-monkey_the_camel(Resdata3DKW, "castFromKW", Resdata3DKW.cast_from_kw, classmethod)
-monkey_the_camel(Resdata3DKW, "compressedCopy", Resdata3DKW.compressed_copy)
-monkey_the_camel(Resdata3DKW, "globalCopy", Resdata3DKW.global_copy)
-monkey_the_camel(Resdata3DKW, "setDefault", Resdata3DKW.set_default)
-monkey_the_camel(Resdata3DKW, "getDefault", Resdata3DKW.get_default)

@@ -6,7 +6,6 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
 
 
 class SummaryKeyWordVector(BaseCClass):
@@ -55,7 +54,3 @@ class SummaryKeyWordVector(BaseCClass):
 
     def copy(self, rd_sum):
         return self._alloc_copy(rd_sum)
-
-
-monkey_the_camel(SummaryKeyWordVector, "addKeyword", SummaryKeyWordVector.add_keyword)
-monkey_the_camel(SummaryKeyWordVector, "addKeywords", SummaryKeyWordVector.add_keywords)

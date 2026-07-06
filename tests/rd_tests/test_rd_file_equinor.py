@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import datetime
-import os.path
 from unittest import skipIf
 
-from resdata import FileMode, FileType
-from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO, openResdataFile
+from resdata import FileMode
+from resdata.resfile import FortIO, ResdataFile
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext

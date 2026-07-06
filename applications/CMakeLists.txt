@@ -11,7 +11,7 @@ if(BUILD_APPLICATIONS)
   add_executable(sum_write resdata/sum_write.cpp)
   target_link_resdata(sum_write)
 
-  foreach(app rd_pack rd_unpack load_test)
+  foreach(app rd_pack rd_unpack)
     add_executable(${app} resdata/${app}.cpp)
     target_link_resdata(${app})
     list(APPEND apps ${app})
@@ -20,17 +20,6 @@ if(BUILD_APPLICATIONS)
       set_target_properties(${app} PROPERTIES SUFFIX ".x")
     endif()
   endforeach()
-
-  if(ERT_LINUX)
-    foreach(app convert grdecl_test kw_list)
-      add_executable(${app} resdata/${app}.cpp)
-      target_link_resdata(${app})
-      # The .x extension creates problems on windows
-      set_target_properties(${app} PROPERTIES SUFFIX ".x")
-      list(APPEND apps ${app})
-    endforeach()
-
-  endif()
 endif()
 
 if(apps)

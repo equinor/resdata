@@ -8,7 +8,6 @@ import resdata.grid._grid as _grid
 from resdata import ResDataType
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
-from resdata.util.util import monkey_the_camel
 
 
 def flatten(l):
@@ -738,11 +737,3 @@ class GridGenerator:
                 + "Either change one of the lower bounds by 1 "
                 + "or activate decomposition_change."
             )
-
-
-monkey_the_camel(
-    GridGenerator,
-    "createRectangular",
-    GridGenerator.create_rectangular,
-    classmethod,
-)

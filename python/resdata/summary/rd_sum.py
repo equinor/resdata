@@ -11,8 +11,7 @@ resdata/src directory.
 import datetime
 import os.path
 import re
-from textwrap import dedent
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,6 @@ import pandas as pd
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 from cwrap import CFILE, BaseCClass
-from typing_extensions import deprecated
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import UnitSystem
@@ -32,57 +30,12 @@ from resdata.util.util import (
     IntVector,
     StringList,
     TimeVector,
-    monkey_the_camel,
 )
 
 from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
 from .rd_sum_var_type import SummaryVarType
 from .rd_sum_vector import SummaryVector
-
-# , SummaryKeyWordVector
-
-
-# import resdata.rd_plot.sum_plot as sum_plot
-
-# The date2num function is a verbatim copy of the _to_ordinalf()
-# function from the matplotlib.dates module. Inserted here only to
-# avoid importing the full matplotlib library. The date2num
-# implementation could be replaced with:
-#
-#   from matplotlib.dates import date2num
-
-
-HOURS_PER_DAY = 24.0
-MINUTES_PER_DAY = 60 * HOURS_PER_DAY
-SECONDS_PER_DAY = 60 * MINUTES_PER_DAY
-MUSECONDS_PER_DAY = 1e6 * SECONDS_PER_DAY
-
-
-def date2num(dt):
-    """
-    Convert a python datetime instance to UTC float days.
-
-    Convert datetime to the Gregorian date as UTC float days,
-    preserving hours, minutes, seconds and microseconds, return value
-    is a float. The function is a verbatim copy of the _to_ordinalf()
-    function from the matplotlib.dates module.
-    """
-
-    if hasattr(dt, "tzinfo") and dt.tzinfo is not None:
-        delta = dt.tzinfo.utcoffset(dt)
-        if delta is not None:
-            dt -= delta
-
-    base = float(dt.toordinal())
-    if hasattr(dt, "hour"):
-        base += (
-            dt.hour / HOURS_PER_DAY
-            + dt.minute / MINUTES_PER_DAY
-            + dt.second / SECONDS_PER_DAY
-            + dt.microsecond / MUSECONDS_PER_DAY
-        )
-    return base
 
 
 class Summary(BaseCClass):
@@ -292,23 +245,6 @@ class Summary(BaseCClass):
         ptr = _rd_sum._add_tstep(self, report_step, sim_seconds)
         return SummaryTStep.createCReference(ptr, parent=self)
 
-    @deprecated(
-        "The method get_vector() is deprecated, and will be removed in version 7."
-        " Use numpy_vector() instead"
-    )
-    def get_vector(self, key, report_only=False):
-        """
-        Will return SummaryVector according to @key.
-
-        Will raise exception KeyError if the summary object does not
-        have @key.
-        """
-        self.assert_key_valid(key)
-        if report_only:
-            return SummaryVector(self, key, report_only=True)
-        else:
-            return SummaryVector(self, key)
-
     def report_index_list(self):
         """
         Internal function for working with report_steps.
@@ -340,37 +276,6 @@ class Summary(BaseCClass):
         on fnmatch(), i.e. shell style wildcards.
         """
         return StringList.createPythonObject(_rd_sum._create_group_list(self, pattern))
-
-    @deprecated(
-        "The method get_values() is deprecated, and will be removed in version 7."
-        " Use numpy_vector() instead."
-    )
-    def get_values(self, key, report_only=False):
-        """
-        Will return numpy vector of all values according to @key.
-
-        If the optional argument report_only is true only the values
-        corresponding to report steps are included.  The method is
-        also available as the 'values' property of an SummaryVector
-        instance.
-        """
-        if self.has_key(key):
-            key_index = _rd_sum._get_general_var_index(self, key)
-            if report_only:
-                index_list = self.report_index_list()
-                values = np.zeros(len(index_list))
-                for i in range(len(index_list)):
-                    time_index = index_list[i]
-                    values[i] = _rd_sum._iiget(self, time_index, key_index)
-            else:
-                length = _rd_sum._data_length(self)
-                values = np.zeros(length)
-                for i in range(length):
-                    values[i] = _rd_sum._iiget(self, i, key_index)
-
-            return values
-        else:
-            raise KeyError("Summary object does not have key:%s" % key)
 
     def _make_time_vector(
         self, time_index: Sequence[CTime | datetime.datetime | int | datetime.date]
@@ -680,13 +585,6 @@ class Summary(BaseCClass):
 
         return _rd_sum._get_first_value(self, key)
 
-    @deprecated(
-        "The function get_last_value() is deprecated, and will be removed in"
-        " version 7. Use last_value() instead"
-    )
-    def get_last_value(self, key):
-        return self.last_value(key)
-
     def get_last(self, key):
         """
         Will return the last SummaryNode corresponding to @key.
@@ -755,32 +653,8 @@ class Summary(BaseCClass):
 
         The returned value will be a SummaryVector instance.
         """
-        return self.get_vector(key)
-
-    def scale_vector(self, key, scalar):
-        raise NotImplementedError(
-            dedent(
-                """The function Summary.scale_vector has been removed. As an alternative you
-                    are advised to fetch vector as a numpy vector and then scale that yourself:
-
-                        vec = rd_sum.numpy_vector(key)
-                        vec *= scalar
-
-            """
-            )
-        )
-
-    def shift_vector(self, key, addend):
-        raise NotImplementedError(
-            dedent(
-                """The function Summary.shift_vector has been removed. As an alternative you
-                    are advised to fetch vector as a numpy vector and then scale that yourself:
-
-                        vec = rd_sum.numpy_vector(key)
-                        vec += scalar
-            """
-            )
-        )
+        self.assert_key_valid(key)
+        return SummaryVector(self, key)
 
     def check_sim_time(self, date):
         """
@@ -1142,40 +1016,6 @@ class Summary(BaseCClass):
             return self.report_dates
         else:
             return self.dates
-
-    @property
-    @deprecated(
-        "The mpl_dates property is deprecated and will be removed in version 7."
-        " Use numpy_dates instead"
-    )
-    def mpl_dates(self):
-        """
-        Will return a numpy vector of dates ready for matplotlib
-
-        The content of the vector are dates in matplotlib format,
-        i.e. floats - generated by the date2num() function at the top
-        of this file.
-        """
-        return self.get_mpl_dates(False)
-
-    @deprecated(
-        "The get_mpl_dates( ) method is deprecated and will be removed in"
-        " version 7. Use numpy_dates instead",
-    )
-    def get_mpl_dates(self, report_only=False):
-        """
-        Will return a numpy vector of dates ready for matplotlib
-
-        If the optional argument @report_only is set to True, only
-        dates values corresponding to report steps will be
-        included. The content of the vector are dates in matplotlib
-        format, i.e. floats - generated by the date2num() function at
-        the top of this file.
-        """
-        if report_only:
-            return [date2num(dt) for dt in self.report_dates]
-        else:
-            return [date2num(dt) for dt in self.dates]
 
     @property
     def report_step(self):
@@ -1592,19 +1432,3 @@ class Summary(BaseCClass):
 
 
 import resdata.summary.rd_sum_keyword_vector  # noqa
-
-monkey_the_camel(Summary, "varType", Summary.var_type, classmethod)
-monkey_the_camel(Summary, "addVariable", Summary.add_variable)
-monkey_the_camel(Summary, "addTStep", Summary.add_t_step)
-monkey_the_camel(Summary, "assertKeyValid", Summary.assert_key_valid)
-monkey_the_camel(Summary, "scaleVector", Summary.scale_vector)
-monkey_the_camel(Summary, "shiftVector", Summary.shift_vector)
-monkey_the_camel(Summary, "timeRange", Summary.time_range)
-monkey_the_camel(Summary, "blockedProduction", Summary.blocked_production)
-monkey_the_camel(Summary, "getDataStartTime", Summary.get_data_start_time)
-monkey_the_camel(Summary, "getStartTime", Summary.get_start_time)
-monkey_the_camel(Summary, "getEndTime", Summary.get_end_time)
-monkey_the_camel(Summary, "solveDates", Summary.solve_dates)
-monkey_the_camel(Summary, "solveDays", Summary.solve_days)
-monkey_the_camel(Summary, "dumpCSVLine", Summary.dump_csv_line)
-monkey_the_camel(Summary, "exportCSV", Summary.export_csv)

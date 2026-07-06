@@ -14,7 +14,7 @@ from hypothesis.extra.lark import from_lark
 from hypothesis.extra.numpy import arrays, from_dtype
 from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
 from lark import Lark
-from resdata import FileMode, ResDataType, ResdataTypeEnum
+from resdata import FileMode, ResDataType
 from resdata.grid import GridGenerator, ResdataRegion
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
@@ -51,22 +51,6 @@ class KWTest(ResdataTest):
         self.assertEqual(0, kw.get_min())
         self.assertEqual((0, 10), kw.get_min_max())
 
-    def test_deprecated_datatypes(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            kw = ResdataKW("Test", 10, ResdataTypeEnum.RD_INT_TYPE)
-            self.assertTrue(len(w) > 0)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            kw = ResdataKW("Test", 10, ResDataType.RD_INT)
-            self.assertTrue(len(w) == 0)
-
-            self.assertEqual(ResdataTypeEnum.RD_INT_TYPE, kw.type)
-
-            self.assertTrue(len(w) == 1)
-
     def kw_test(self, data_type, data, fmt):
         name1 = "file1.txt"
         name2 = "file2.txt"
@@ -98,7 +82,7 @@ class KWTest(ResdataTest):
         name, length, type_name = kw.header
         self.assertEqual(name, "TESTKW")
         self.assertEqual(length, 3)
-        self.assertEqual(type_name, kw.typeName())
+        self.assertEqual(type_name, kw.type_name())
 
         s = kw.str(width=2, max_lines=10)
         self.assertIn("TESTKW", s)
@@ -291,43 +275,43 @@ class KWTest(ResdataTest):
         kw5 = ResdataKW("NAME2", 100, ResDataType.RD_FLOAT)
 
         with self.assertRaises(IndexError):
-            ResdataKW.firstDifferent(kw1, kw2, offset=100)
+            ResdataKW.first_different(kw1, kw2, offset=100)
 
         with self.assertRaises(ValueError):
-            ResdataKW.firstDifferent(kw1, kw3)
+            ResdataKW.first_different(kw1, kw3)
 
         with self.assertRaises(TypeError):
-            ResdataKW.firstDifferent(kw1, kw4)
+            ResdataKW.first_different(kw1, kw4)
 
         with self.assertRaises(IndexError):
-            kw1.firstDifferent(kw2, offset=100)
+            kw1.first_different(kw2, offset=100)
 
         with self.assertRaises(ValueError):
-            kw1.firstDifferent(kw3)
+            kw1.first_different(kw3)
 
         with self.assertRaises(TypeError):
-            kw1.firstDifferent(kw4)
+            kw1.first_different(kw4)
 
         kw1.assign(1)
         kw2.assign(1)
 
-        self.assertEqual(kw1.firstDifferent(kw2), len(kw1))
+        self.assertEqual(kw1.first_different(kw2), len(kw1))
 
         kw1[0] = 100
-        self.assertEqual(kw1.firstDifferent(kw2), 0)
-        self.assertEqual(kw1.firstDifferent(kw2, offset=1), len(kw1))
+        self.assertEqual(kw1.first_different(kw2), 0)
+        self.assertEqual(kw1.first_different(kw2, offset=1), len(kw1))
         kw1[10] = 100
-        self.assertEqual(kw1.firstDifferent(kw2, offset=1), 10)
+        self.assertEqual(kw1.first_different(kw2, offset=1), 10)
 
         kw4.assign(1.0)
         kw5.assign(1.0)
-        self.assertEqual(kw4.firstDifferent(kw5), len(kw4))
+        self.assertEqual(kw4.first_different(kw5), len(kw4))
 
         kw4[10] *= 1.0001
-        self.assertEqual(kw4.firstDifferent(kw5), 10)
+        self.assertEqual(kw4.first_different(kw5), 10)
 
-        self.assertEqual(kw4.firstDifferent(kw5, epsilon=1.0), len(kw4))
-        self.assertEqual(kw4.firstDifferent(kw5, epsilon=0.0000001), 10)
+        self.assertEqual(kw4.first_different(kw5, epsilon=1.0), len(kw4))
+        self.assertEqual(kw4.first_different(kw5, epsilon=0.0000001), 10)
 
     def test_numeric_equal(self):
         kw1 = ResdataKW("Name1", 10, ResDataType.RD_DOUBLE)
@@ -398,8 +382,8 @@ class KWTest(ResdataTest):
     def test_numpy(self):
         kw1 = ResdataKW("DOUBLE", 10, ResDataType.RD_DOUBLE)
 
-        view = kw1.numpyView()
-        copy = kw1.numpyCopy()
+        view = kw1.numpy_view()
+        copy = kw1.numpy_copy()
         kw2 = kw1.sub_copy(1, 3)
         self.assertEqual(len(kw2), 3)
 
@@ -417,7 +401,7 @@ class KWTest(ResdataTest):
         ]:
             kw2 = ResdataKW("TEST_KW", 10, rd_type)
             with self.assertRaises(ValueError):
-                kw2.numpyView()
+                kw2.numpy_view()
 
     def test_slice(self):
         N = 100
@@ -701,12 +685,6 @@ def test_apply():
     kw3.assign(3.0)
     kw3.apply(lambda x: x + 1.0, mask=region)
     assert list(kw3) == [4.0] * 5
-
-
-def test_get_ptr_data():
-    assert ResdataKW("KW1", 10, ResDataType.RD_INT).get_data_ptr()
-    assert ResdataKW("KW1", 10, ResDataType.RD_FLOAT).get_data_ptr()
-    assert ResdataKW("KW1", 10, ResDataType.RD_DOUBLE).get_data_ptr()
 
 
 def _write_grdecl(tmp_path, name, body):
@@ -1049,7 +1027,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         except Exception:
             assume(False)
 
-        return (kw, (kw.name, kw.numpyView().copy()))
+        return (kw, (kw.name, kw.numpy_view().copy()))
 
     @rule(kw=numeric_kws)
     def getitem_numeric(self, kw):

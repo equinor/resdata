@@ -736,15 +736,15 @@ class FaultTest(ResdataTest):
         polyline3 = CPolyline(init_points=[(1, 3), (1, 0)])
 
         with self.assertRaises(ValueError):
-            fault1.extendPolylineOnto(polyline0, 0)
+            fault1.extend_polyline_onto(polyline0, 0)
 
-        points = fault1.extendPolylineOnto(polyline1, 0)
+        points = fault1.extend_polyline_onto(polyline1, 0)
         self.assertIsNone(points)
 
-        points = fault1.extendPolylineOnto(polyline2, 0)
+        points = fault1.extend_polyline_onto(polyline2, 0)
         self.assertEqual(points, [(1, 2), (1, 1)])
 
-        points = fault1.extendPolylineOnto(polyline3, 0)
+        points = fault1.extend_polyline_onto(polyline3, 0)
         self.assertIsNone(points)
 
     def test_stepped(self):

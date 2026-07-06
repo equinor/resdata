@@ -11,12 +11,8 @@ import pytest
 @pytest.mark.parametrize(
     "name,returncode,stderr",
     [
-        ("convert.x", 1, b"Usage: convert.x"),
         ("rd_pack.x", 0, b""),
         ("rd_unpack.x", 1, b"rd_unpack UNIFIED_FILE1"),
-        ("grdecl_test.x", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
-        ("kw_list.x", 0, b""),
-        ("load_test.x", 0, b""),
         ("summary.x", 2, b"the following arguments are required: CASE"),
     ],
 )

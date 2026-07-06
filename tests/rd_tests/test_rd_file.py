@@ -5,8 +5,8 @@ import shutil
 
 import pytest
 from resdata import FileMode, FileType, ResDataType
-from resdata.grid import Grid
-from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO, openResdataFile
+from resdata.grid import GridGenerator
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, open_rd_file, openFortIO
 from resdata.util.util import CWDContext
 
 from tests import ResdataTest
@@ -61,7 +61,7 @@ class ResdataFileTest(ResdataTest):
             self.assertFalse(
                 ResdataFile.contains_sim_time("TEST", datetime.datetime(2024, 4, 4))
             )
-            with openResdataFile("TEST") as rd_file:
+            with open_rd_file("TEST") as rd_file:
                 assert rd_file.iget_named_kw("KW1", 0).name == "KW1"
                 self.assertEqual(len(rd_file), 2)
                 self.assertTrue(rd_file.has_kw("KW1"))
@@ -255,11 +255,11 @@ class ResdataFileTest(ResdataTest):
 
 def test_report_list(tmpdir):
     with tmpdir.as_cwd():
-        grid = Grid.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         create_restart(grid, "TEST", [1.0])
         assert ResdataFile.file_report_list("TEST.UNRST") == [10.0]
 
-        with openResdataFile("TEST.UNRST") as rd_file:
+        with open_rd_file("TEST.UNRST") as rd_file:
             assert rd_file.report_list == [10.0]
             assert (
                 rd_file.restart_get_kw("SEQNUM", datetime.datetime(2000, 1, 1)).name

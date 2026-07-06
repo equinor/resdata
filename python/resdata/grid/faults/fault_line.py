@@ -1,7 +1,7 @@
 import sys
 
 from resdata.geometry import CPolyline
-from resdata.util.util import DoubleVector, monkey_the_camel
+from resdata.util.util import DoubleVector
 
 from .fault_segments import FaultSegment
 
@@ -209,12 +209,3 @@ class FaultLine:
                 "[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]"
                 % (C1, I1, J1, C2, I2, J2)
             )
-
-
-monkey_the_camel(FaultLine, "tryAppend", FaultLine.try_append)
-monkey_the_camel(FaultLine, "getK", FaultLine.get_k)
-monkey_the_camel(FaultLine, "getPolyline", FaultLine.get_polyline)
-monkey_the_camel(FaultLine, "getIJPolyline", FaultLine.get_ij_polyline)
-monkey_the_camel(FaultLine, "getNeighborCells", FaultLine.get_neighbor_cells)
-monkey_the_camel(FaultLine, "startPoint", FaultLine.start_point)
-monkey_the_camel(FaultLine, "endPoint", FaultLine.end_point)

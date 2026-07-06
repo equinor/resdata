@@ -13,7 +13,6 @@ import resdata.gravimetry._grav as _grav
 from resdata import Phase
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
-from resdata.util.util import monkey_the_camel
 
 
 class ResdataGrav(BaseCClass):
@@ -215,6 +214,3 @@ class ResdataGrav(BaseCClass):
 
     def free(self):
         _grav._free(self)
-
-
-monkey_the_camel(ResdataGrav, "addSurvey", ResdataGrav.add_survey)
