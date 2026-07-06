@@ -1,19 +1,14 @@
-#ifndef ERT_RD_FILE_KW_H
-#define ERT_RD_FILE_KW_H
+#pragma once
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct rd_file_kw_struct rd_file_kw_type;
 typedef struct inv_map_struct inv_map_type;
 
-inv_map_type *inv_map_alloc(void);
+inv_map_type *inv_map_alloc();
 rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
                                      const rd_kw_type *rd_kw);
 void inv_map_free(inv_map_type *map);
@@ -37,13 +32,6 @@ void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,
                                   int *ref_count);
 void rd_file_kw_end_transaction(rd_file_kw_type *file_kw, int ref_count);
 
-#ifdef __cplusplus
-}
-
-// C++ linkage: these may throw, which is UB across extern "C".
 rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                               inv_map_type *inv_map);
 void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio);
-#endif
-
-#endif
