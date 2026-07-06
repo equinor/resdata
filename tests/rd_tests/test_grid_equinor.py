@@ -9,7 +9,6 @@ from resdata.resfile import ResdataKW, open_rd_file
 from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 
 @equinor_test()
@@ -109,7 +108,11 @@ class GridTest(ResdataTest):
         return grid
 
     def test_rect(self):
-        with TestAreaContext("python/grid-test/testRect"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testRect", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             a1 = 1.0
             a2 = 2.0
             a3 = 3.0
@@ -148,7 +151,11 @@ class GridTest(ResdataTest):
         with self.assertRaises(IOError):
             grid = Grid.load_from_grdecl("/file/does/not/exists")
 
-        with TestAreaContext("python/grid-test/grdeclLoad"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_grdeclLoad", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("grid.grdecl", "w") as f:
                 f.write("Hei ...")
 
@@ -194,7 +201,11 @@ class GridTest(ResdataTest):
         self.assertTrue(t < 1.0)
 
     def test_save(self):
-        with TestAreaContext("python/grid-test/testSave"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testSave", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             g1 = Grid(self.egrid_file())
 
             g1.save_EGRID("test.EGRID")

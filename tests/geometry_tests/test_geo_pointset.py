@@ -1,7 +1,6 @@
 from resdata.geometry import GeoPointset, Surface
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class GeoPointsetTest(ResdataTest):

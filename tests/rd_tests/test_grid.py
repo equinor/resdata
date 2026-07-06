@@ -18,7 +18,6 @@ from resdata.resfile import ResdataFile, ResdataKW
 from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.
@@ -330,7 +329,9 @@ class GridTest(ResdataTest):
         self.assertEqual(pfx, rep[: len(pfx)])
         self.assertEqual(type(rep), str)
         self.assertEqual(type(grid.get_name()), str)
-        with TestAreaContext("python/rd_grid/repr"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_grid_repr", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             grid.save_EGRID("CASE.EGRID")
             g2 = Grid("CASE.EGRID")
             r2 = repr(g2)
@@ -358,7 +359,9 @@ class GridTest(ResdataTest):
     @skip("Needs better error checking inside in the rd_grid")
     def test_truncated_file(self):
         grid = GridGen.create_rectangular((10, 20, 30), (1, 1, 1))
-        with TestAreaContext("python/rd_grid/truncated"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_grid_truncated", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             grid.save_EGRID("TEST.EGRID")
 
             size = os.path.getsize("TEST.EGRID")
@@ -553,7 +556,9 @@ class GridTest(ResdataTest):
         a = 1
         grid = GridGen.create_rectangular((n, n, n), (a, a, a))
 
-        with TestAreaContext("python/rd_grid/units"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_grid_units", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             grid.save_EGRID("CASE.EGRID", output_unit=UnitSystem.FIELD)
             f = ResdataFile("CASE.EGRID")
             g = f["GRIDUNIT"][0]

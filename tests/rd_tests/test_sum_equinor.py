@@ -9,7 +9,6 @@ from resdata.summary import Summary
 from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
@@ -188,7 +187,11 @@ class SumTest(ResdataTest):
 
     def test_fwrite(self):
         rd_sum = Summary(self.case, lazy_load=False)
-        with TestAreaContext("python/sum-test/fwrite") as work_area:
+        work_area = self.tmp_path_factory.mktemp(
+            "python_sum-test_fwrite", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(work_area)
             rd_sum.fwrite(rd_case="CASE")
             self.assertTrue(True)
 
@@ -456,7 +459,9 @@ class SumTest(ResdataTest):
         self.assertEqual(total.iget("WGPR:NOT_21_D", 5), node.default)
 
     def test_write(self):
-        with TestAreaContext("my_space") as area:
+        area = self.tmp_path_factory.mktemp("my_space", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(area)
             intersect_summary = Summary(
                 self.createTestPath(
                     "Equinor/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0"
@@ -505,7 +510,9 @@ class SumTest(ResdataTest):
             "Equinor/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
             "Equinor/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC",
         ]:
-            with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
+            area = self.tmp_path_factory.mktemp("my_space", numbered=True)
+            with self.monkeypatch.context() as mp:
+                mp.chdir(area)
                 intersect_summary = Summary(
                     self.createTestPath(data_set), lazy_load=False
                 )

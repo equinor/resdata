@@ -9,7 +9,6 @@ from resdata.resfile import FortIO, Resdata3DKW, ResdataFile, ResdataKW
 from resdata.util.util import IntVector
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class Resdata3DKWTest(ResdataTest):

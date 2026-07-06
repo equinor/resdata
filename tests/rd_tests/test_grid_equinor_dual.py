@@ -3,7 +3,6 @@ import math
 from resdata.grid import Grid
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 
 @equinor_test()
@@ -15,7 +14,11 @@ class GridDualTest(ResdataTest):
         return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.GRID")
 
     def test_dual(self):
-        with TestAreaContext("python/grid-test/testDual"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testDual", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             grid = Grid(self.egrid_file())
             self.assertFalse(grid.dual_grid())
             self.assertTrue(grid.get_num_active_fracture() == 0)

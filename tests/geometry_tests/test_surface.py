@@ -3,7 +3,6 @@ import random
 from resdata.geometry import Surface
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class SurfaceTest(ResdataTest):
@@ -108,7 +107,9 @@ class SurfaceTest(ResdataTest):
         self.assertEqual(s[len(s) - 1], 77)
 
     def test_write(self):
-        with TestAreaContext("surface/write"):
+        tmpdir = self.tmp_path_factory.mktemp("surface_write", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             s0 = Surface(self.surface_valid)
             s0.write("new_surface.irap")
 
@@ -119,7 +120,9 @@ class SurfaceTest(ResdataTest):
             self.assertFalse(s1 == s0)
 
     def test_copy(self):
-        with TestAreaContext("surface/copy"):
+        tmpdir = self.tmp_path_factory.mktemp("surface_copy", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             s0 = Surface(self.surface_valid)
             s1 = s0.copy()
 

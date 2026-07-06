@@ -6,7 +6,6 @@ from resdata import FileMode, ResDataType
 from resdata.resfile import FortIO, ResdataFile, ResdataKW
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 
 def copy_long():

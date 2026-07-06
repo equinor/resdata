@@ -4,7 +4,6 @@ from resdata.grid import Grid
 from resdata.resfile import ResdataRestartFile
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 
 @equinor_test()
@@ -18,7 +17,11 @@ class GridCoarceTest(ResdataTest):
         )
 
     def test_save_roundtrip(self):
-        with TestAreaContext("python/grid-test/testCoarse"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testCoarse", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             g1 = self.lgc_grid()
 
             g1.save_EGRID("LGC.EGRID")
@@ -27,13 +30,21 @@ class GridCoarceTest(ResdataTest):
             self.assertEqual(g1.coarse_groups(), g2.coarse_groups())
 
     def test_lgc_number_of_groups(self):
-        with TestAreaContext("python/grid-test/testCoarse"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testCoarse", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             g1 = self.lgc_grid()
 
             self.assertTrue(g1.coarse_groups() == 3384)
 
     def test_create_3d_agrees_with_get_value_on_coarse_grid(self):
-        with TestAreaContext("python/grid-test/testCoarse"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_grid-test_testCoarse", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             grid = self.lgc_grid()
             kw = self.lgc_restart(grid)["SGAS"][0]
             nx = grid.get_nx()

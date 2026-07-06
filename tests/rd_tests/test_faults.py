@@ -17,7 +17,6 @@ from resdata.grid.faults import (
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class FaultTest(ResdataTest):
@@ -532,7 +531,9 @@ class FaultTest(ResdataTest):
         ny = 60
         nz = 43
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
-        with TestAreaContext("python/faults/line_order"):
+        tmpdir = self.tmp_path_factory.mktemp("python_faults_line_order", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faults.grdecl", "w") as f:
                 f.write("""FAULTS
 \'F\'              105  107     50   50      1   43    \'Y\'    /
@@ -668,7 +669,9 @@ class FaultTest(ResdataTest):
         ny = 10
         nz = 1
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
-        with TestAreaContext("python/faults/line_order"):
+        tmpdir = self.tmp_path_factory.mktemp("python_faults_line_order", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faults.grdecl", "w") as f:
                 f.write("""FAULTS
 \'F1\'              1    4       2    2       1    1    \'Y\'    /

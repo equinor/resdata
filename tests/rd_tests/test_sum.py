@@ -27,7 +27,6 @@ from resdata.summary import Summary, SummaryKeyWordVector, SummaryVarType
 from resdata.util.util import CTime, TimeVector
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 from tests.util.mock import createSummary
 
 
@@ -204,7 +203,9 @@ class SumTest(ResdataTest):
             "CSV", [("FOPT", None, 0, "SM3"), ("FOPR", None, 0, "SM3/DAY")]
         )
         sep = ";"
-        with TestAreaContext("resdata/csv"):
+        tmpdir = self.tmp_path_factory.mktemp("resdata_csv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case.export_csv("file.csv", sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
             input_file = csv.DictReader(open("file.csv"), delimiter=sep)
@@ -218,7 +219,9 @@ class SumTest(ResdataTest):
 
             self.assertEqual(case.unit("FOPT"), "SM3")
 
-        with TestAreaContext("resdata/csv"):
+        tmpdir = self.tmp_path_factory.mktemp("resdata_csv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case.export_csv("file.csv", keys=["FOPT"], sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
             input_file = csv.DictReader(open("file.csv"), delimiter=sep)
@@ -229,7 +232,9 @@ class SumTest(ResdataTest):
                 self.assertEqual(len(row), 3)
                 break
 
-        with TestAreaContext("resdata/csv"):
+        tmpdir = self.tmp_path_factory.mktemp("resdata_csv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             date_format = "%y-%m-%d"
             sep = ","
             case.export_csv("file.csv", keys=["F*"], sep=sep, date_format=date_format)
@@ -300,7 +305,9 @@ class SumTest(ResdataTest):
 
     def test_different_names(self):
         case = create_case()
-        with TestAreaContext("sum_different"):
+        tmpdir = self.tmp_path_factory.mktemp("sum_different", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case.fwrite()
             shutil.move("CSV.SMSPEC", "CSVX.SMSPEC")
             with self.assertRaises(IOError):
@@ -315,7 +322,9 @@ class SumTest(ResdataTest):
 
     def test_invalid(self):
         case = create_case()
-        with TestAreaContext("sum_invalid"):
+        tmpdir = self.tmp_path_factory.mktemp("sum_invalid", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case.fwrite()
             with open("CASE.txt", "w") as f:
                 f.write("No - this is not ResdataKW file ....")
@@ -389,7 +398,9 @@ class SumTest(ResdataTest):
         self.assertEqual(data[0], data2[0])
         self.assertEqual(data[2], data2[2])
 
-        with TestAreaContext("sum_vector"):
+        tmpdir = self.tmp_path_factory.mktemp("sum_vector", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with cwrap.open("f1.txt", "w") as f:
                 case1.dump_csv_line(t, kw_list, f)
 
@@ -470,7 +481,9 @@ class SumTest(ResdataTest):
     # resolve the history case, and the history would silently be ignored.
 
     def test_restart_abs_path(self):
-        with TestAreaContext("restart_test"):
+        tmpdir = self.tmp_path_factory.mktemp("restart_test", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             history = create_case(case="HISTORY")
             history.fwrite()
 
@@ -496,9 +509,11 @@ class SumTest(ResdataTest):
                     self.assertEqual(hist_times[index], pred_times[index])
 
     def test_restart_too_long_history_path(self):
-        with TestAreaContext(
+        tmpdir = self.tmp_path_factory.mktemp(
             "restart_test_too_long_path_for_the_eclipse_restart_keyword_1234567890123456789012345678901234567890"
-        ):
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             history = create_case(case="HISTORY")
             history.fwrite()
 
@@ -509,7 +524,9 @@ class SumTest(ResdataTest):
             self.assertIsNone(pred.restart_case)
 
     def test_restart_perm_denied(self):
-        with TestAreaContext("restart_test"):
+        tmpdir = self.tmp_path_factory.mktemp("restart_test", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with pushd("history/case1"):
                 history = create_case(case="HISTORY")
                 history.fwrite()
@@ -536,7 +553,9 @@ class SumTest(ResdataTest):
         # We do not really have support for writing anything else than the
         # default MERIC unit system. To be able to test the read functionality
         # we therefor monkey-patch the summary files in place.
-        with TestAreaContext("unit_test"):
+        tmpdir = self.tmp_path_factory.mktemp("unit_test", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case = create_case("UNITS")
             case.fwrite()
             case2 = Summary("UNITS")
@@ -660,7 +679,9 @@ class SumTest(ResdataTest):
             case.fwrite()
 
     def test_directory_conflict(self):
-        with TestAreaContext("dir_conflict"):
+        tmpdir = self.tmp_path_factory.mktemp("dir_conflict", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             case = create_case("UNITS")
             case.fwrite()
             os.mkdir("UNITS")

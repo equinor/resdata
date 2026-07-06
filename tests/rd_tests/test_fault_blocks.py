@@ -10,7 +10,6 @@ from resdata.grid.faults import Fault, FaultBlock, FaultBlockLayer, FaultCollect
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class FaultBlockTest(ResdataTest):
@@ -45,7 +44,11 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(layer, block.get_parent_layer())
 
     def test_get_ijk(self):
-        with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
+        work_area = self.tmp_path_factory.mktemp(
+            "python_fault_block_layer_neighbour", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(work_area)
             with open("kw.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 0 0\n")
@@ -74,7 +77,11 @@ class FaultBlockTest(ResdataTest):
             layer[5, 5]
 
     def test_neighbours(self):
-        with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
+        work_area = self.tmp_path_factory.mktemp(
+            "python_fault_block_layer_neighbour", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(work_area)
             with open("kw.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 0 0\n")
@@ -129,7 +136,11 @@ class FaultBlockTest(ResdataTest):
         nz = 1
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
-        with TestAreaContext("python/FaultBlocks/neighbours"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_FaultBlocks_neighbours", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faultblock.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 1 2 2 2 2 \n")
@@ -198,7 +209,11 @@ class FaultBlockTest(ResdataTest):
         nz = 1
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
-        with TestAreaContext("python/FaultBlocks/neighbours"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_FaultBlocks_neighbours", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faultblock.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 1 2 2 2 2 \n")
@@ -401,7 +416,11 @@ class FaultBlockTest(ResdataTest):
         nz = 1
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
-        with TestAreaContext("python/FaultBlocks/internal_blocks"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_FaultBlocks_internal_blocks", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faultblock.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 1 2 2 2 2 \n")

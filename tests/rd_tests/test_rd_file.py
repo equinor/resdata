@@ -10,7 +10,6 @@ from resdata.resfile import FortIO, ResdataFile, ResdataKW, open_rd_file, openFo
 from resdata.util.util import CWDContext
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 from .create_restart import create_restart
 
@@ -50,7 +49,9 @@ class ResdataFileTest(ResdataTest):
             ResdataFile("No/Does/not/exist")
 
     def test_context(self):
-        with TestAreaContext("python/rd_file/context"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_context", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             kw1 = ResdataKW("KW1", 100, ResDataType.RD_INT)
             kw2 = ResdataKW("KW2", 100, ResDataType.RD_INT)
             with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
@@ -73,7 +74,9 @@ class ResdataFileTest(ResdataTest):
                 self.assertEqual(rd_file.iget_kw(0).name, "KW1")
 
     def test_rd_index(self):
-        with TestAreaContext("python/rd_file/context"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_context", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             kw1 = ResdataKW("KW1", 100, ResDataType.RD_INT)
             kw2 = ResdataKW("KW2", 100, ResDataType.RD_FLOAT)
             kw3 = ResdataKW("KW3", 100, ResDataType.RD_CHAR)
@@ -107,7 +110,9 @@ class ResdataFileTest(ResdataTest):
                 rd_file = ResdataFile("TEST", 0, "index")
 
     def test_save_kw(self):
-        with TestAreaContext("python/rd_file/save_kw"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_save_kw", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             data = range(1000)
             kw = ResdataKW("MY_KEY", len(data), ResDataType.RD_INT)
             for index, val in enumerate(data):
@@ -150,7 +155,9 @@ class ResdataFileTest(ResdataTest):
 
         kw_list = [kw1, kw2, kw2]
 
-        with TestAreaContext("context") as ta:
+        ta = self.tmp_path_factory.mktemp("context", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
             createFile("TEST", kw_list)
             gc.collect()
             kw_list2 = loadKeywords("TEST")
@@ -159,7 +166,9 @@ class ResdataFileTest(ResdataTest):
                 self.assertEqual(kw1, kw2)
 
     def test_broken_file(self):
-        with TestAreaContext("test_broken_file"):
+        tmpdir = self.tmp_path_factory.mktemp("test_broken_file", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("CASE.FINIT", "w") as f:
                 f.write(
                     "This - is not a RDISPE file\nsdlcblhcdbjlwhc\naschscbasjhcasc\nascasck c s s aiasic asc"
@@ -190,7 +199,9 @@ class ResdataFileTest(ResdataTest):
             self.assertEqual(len(f), 1)
 
     def test_block_view(self):
-        with TestAreaContext("python/rd_file/view"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_view", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
                 for i in range(5):
                     header = ResdataKW("HEADER", 1, ResDataType.RD_INT)

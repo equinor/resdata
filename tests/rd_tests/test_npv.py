@@ -8,7 +8,6 @@ from resdata.summary import NPVPriceVector, ResdataNPV, Summary
 from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 from tests.util.mock import createSummary
 
 base = "ECLIPSE"
@@ -42,7 +41,9 @@ class NPVMockTest(ResdataTest):
         return case
 
     def test_parse_and_compile(self):
-        with TestAreaContext("npv_mock_parse"):
+        tmpdir = self.tmp_path_factory.mktemp("npv_mock_parse", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             self._make_case("CASE1")
             npv = ResdataNPV("CASE1")
             parsed = npv.parse_expression("[FOPT]")

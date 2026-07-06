@@ -19,7 +19,6 @@ from resdata.grid import GridGenerator, ResdataRegion
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 def copy_long():
@@ -126,7 +125,9 @@ class KWTest(ResdataTest):
         self.assertEqual(kw_b.sum(), 2)
 
     def test_fprintf(self):
-        with TestAreaContext("python.rd_kw"):
+        tmpdir = self.tmp_path_factory.mktemp("python.rd_kw", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             self.kw_test(ResDataType.RD_INT, [0, 1, 2, 3, 4, 5], "%4d\n")
             self.kw_test(
                 ResDataType.RD_FLOAT, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n"
@@ -149,7 +150,9 @@ class KWTest(ResdataTest):
                 )
 
     def test_kw_write(self):
-        with TestAreaContext("python/rd_kw/writing"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_kw_writing", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             data = [random.random() for i in range(10000)]
 
             kw = ResdataKW("TEST", len(data), ResDataType.RD_DOUBLE)
@@ -189,7 +192,9 @@ class KWTest(ResdataTest):
             self.assertTrue(kw.equal(kw5))
 
     def test_fprintf_data(self):
-        with TestAreaContext("kw_no_header"):
+        tmpdir = self.tmp_path_factory.mktemp("kw_no_header", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             kw = ResdataKW("REGIONS", 10, ResDataType.RD_INT)
             for i in range(len(kw)):
                 kw[i] = i
@@ -251,7 +256,9 @@ class KWTest(ResdataTest):
             kw1[i] = i + 1
             kw2[i] = len(kw1) - kw1[i]
 
-        with TestAreaContext("rd_kw/fmt") as ta:
+        ta = self.tmp_path_factory.mktemp("rd_kw_fmt", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
             with openFortIO("TEST.FINIT", FortIO.WRITE_MODE, fmt_file=True) as f:
                 kw1.fwrite(f)
                 kw2.fwrite(f)
@@ -451,7 +458,9 @@ class KWTest(ResdataTest):
 
     def test_string_write_read_unformatted(self):
         for str_len in range(1000):
-            with TestAreaContext("my_space"):
+            tmpdir = self.tmp_path_factory.mktemp("my_space", numbered=True)
+            with self.monkeypatch.context() as mp:
+                mp.chdir(tmpdir)
                 kw = ResdataKW("TEST_KW", 10, ResDataType.RD_STRING(str_len))
                 for i in range(10):
                     kw[i] = str(i) * str_len
@@ -468,7 +477,9 @@ class KWTest(ResdataTest):
 
     def test_string_write_read_formatted(self):
         for str_len in range(1000):
-            with TestAreaContext("my_space"):
+            tmpdir = self.tmp_path_factory.mktemp("my_space", numbered=True)
+            with self.monkeypatch.context() as mp:
+                mp.chdir(tmpdir)
                 kw = ResdataKW("TEST_KW", 10, ResDataType.RD_STRING(str_len))
                 for i in range(10):
                     kw[i] = str(i) * str_len
@@ -568,7 +579,9 @@ class KWTest(ResdataTest):
         N = 100
         global_size = 100
         active_size = 50
-        with TestAreaContext("FMU_FILES"):
+        tmpdir = self.tmp_path_factory.mktemp("FMU_FILES", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             for i in range(N):
                 permx = ResdataKW("PERMX", active_size, ResDataType.RD_FLOAT)
                 poro = ResdataKW("PORO", active_size, ResDataType.RD_FLOAT)
