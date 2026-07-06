@@ -25,5 +25,5 @@ TEST_CASE_METHOD(Tmpdir,
     ERT::FortIO fortio(filename, std::ios_base::in, false, true);
 
     REQUIRE_THROWS_AS(rd_file_kw_inplace_fwrite(file_kw.get(), fortio),
-                      std::invalid_argument);
+                      std::runtime_error);
 }
