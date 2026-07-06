@@ -422,7 +422,7 @@ foreach(
   well_state_load
   well_state_load_missing_RSEG
   well_segment_load
-  well_info
+  test_well_info
   well_conn_CF
   well_ts
   well_dualp
@@ -569,11 +569,12 @@ add_test(
 add_test(NAME well_segment_load COMMAND well_segment_load
                                         ${_resdatapath}/MSWcase/MSW_CASE.X0021)
 
-add_test(NAME well_info1 COMMAND well_info ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
+add_test(NAME well_info1 COMMAND test_well_info
+                                 ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
 add_test(
   NAME well_info2
   COMMAND
-    well_info
+    test_well_info
     ${_resdatapath}/well_info_rio/BMS8_TMPL_1-BMS8_105DST_EMBED_T0_1.EGRID
     ${_resdatapath}/well_info_rio/BMS8_TMPL_1-BMS8_105DST_EMBED_T0_1.UNRST)
 
