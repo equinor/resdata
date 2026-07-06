@@ -105,6 +105,71 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
     return end_time;
 }
 
+void write_single_string_kw(ERT::FortIO &fortio, const char *name,
+                            const char *value) {
+    auto kw = make_rd_kw(name, 1, RD_CHAR);
+    rd_kw_iset_string8(kw.get(), 0, value);
+    rd_kw_fwrite(kw.get(), fortio);
+}
+
+void write_single_int_kw(ERT::FortIO &fortio, const char *name, int value) {
+    auto kw = make_rd_kw(name, 1, RD_INT);
+    rd_kw_iset_int(kw.get(), 0, value);
+    rd_kw_fwrite(kw.get(), fortio);
+}
+
+void write_malformed_lgr_smspec(const fs::path &path, bool with_lgrs,
+                                bool with_numlx, bool with_numly,
+                                bool with_numlz) {
+    constexpr int n = 1;
+    ERT::FortIO fortio(path.string(), std::ios_base::out, false);
+
+    auto dimens = make_rd_kw(DIMENS_KW, DIMENS_SIZE, RD_INT);
+    rd_kw_scalar_set_int(dimens.get(), 0);
+    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_SIZE_INDEX, n);
+    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NX_INDEX, 10);
+    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NY_INDEX, 10);
+    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NZ_INDEX, 10);
+    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_RESTART_STEP_INDEX, 0);
+    rd_kw_fwrite(dimens.get(), fortio);
+
+    auto keywords_kw = make_rd_kw(KEYWORDS_KW, n, RD_CHAR);
+    auto wgnames_kw = make_rd_kw(WGNAMES_KW, n, RD_CHAR);
+    auto units_kw = make_rd_kw(UNITS_KW, n, RD_CHAR);
+    auto nums_kw = make_rd_kw(NUMS_KW, n, RD_INT);
+
+    rd_kw_iset_string8(keywords_kw.get(), 0, "LBPR");
+    rd_kw_iset_string8(wgnames_kw.get(), 0, "");
+    rd_kw_iset_string8(units_kw.get(), 0, "BARS");
+    rd_kw_iset_int(nums_kw.get(), 0, 0);
+
+    rd_kw_fwrite(keywords_kw.get(), fortio);
+    rd_kw_fwrite(wgnames_kw.get(), fortio);
+    rd_kw_fwrite(nums_kw.get(), fortio);
+    rd_kw_fwrite(units_kw.get(), fortio);
+
+    auto startdat = make_rd_kw(STARTDAT_KW, 3, RD_INT);
+    rd_kw_iset_int(startdat.get(), STARTDAT_DAY_INDEX, 1);
+    rd_kw_iset_int(startdat.get(), STARTDAT_MONTH_INDEX, 1);
+    rd_kw_iset_int(startdat.get(), STARTDAT_YEAR_INDEX, 2010);
+    rd_kw_fwrite(startdat.get(), fortio);
+
+    if (with_lgrs)
+        write_single_string_kw(fortio, LGRS_KW, "LGR1");
+    if (with_numlx)
+        write_single_int_kw(fortio, NUMLX_KW, 4);
+    if (with_numly)
+        write_single_int_kw(fortio, NUMLY_KW, 5);
+    if (with_numlz)
+        write_single_int_kw(fortio, NUMLZ_KW, 6);
+}
+
+void expect_smspec_load_throws(const fs::path &header_path,
+                               const std::string &msg) {
+    REQUIRE_THROWS_WITH(read_smspec(header_path.string(), ":", false),
+                        ContainsSubstring(msg));
+}
+
 } // namespace
 
 TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
@@ -1039,6 +1104,26 @@ TEST_CASE_METHOD(Tmpdir,
 TEST_CASE_METHOD(Tmpdir, "Missing case returns null") {
     auto rd_sum = read_summary((dirname / "DOES_NOT_EXIST").string());
     REQUIRE(rd_sum == nullptr);
+}
+
+TEST_CASE_METHOD(Tmpdir, "Malformed SMSPEC LGR metadata is rejected") {
+    SECTION("LGR variable without LGRS/NUML* is rejected") {
+        const fs::path header_path = dirname / "MISSING_LGR_META.SMSPEC";
+        write_malformed_lgr_smspec(header_path, false, false, false, false);
+
+        expect_smspec_load_throws(header_path,
+                                  "required LGR metadata keywords are missing");
+    }
+
+    SECTION("LGRS without complete NUMLX/NUMLY/NUMLZ is rejected") {
+        const fs::path header_path = dirname / "MISSING_NUMLZ.SMSPEC";
+        write_malformed_lgr_smspec(header_path, true, true, true, false);
+
+        expect_smspec_load_throws(
+            header_path,
+            "SMSPEC header has LGRS keyword but is missing one or more "
+            "required LGR index keywords");
+    }
 }
 
 TEST_CASE_METHOD(Tmpdir, "rd_sum_fwrite writes SMSPEC at rd_case") {
