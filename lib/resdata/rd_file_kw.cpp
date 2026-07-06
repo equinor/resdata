@@ -1,7 +1,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <ios>
 #include <stdexcept>
+#include <string>
 
 #include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.hpp>
@@ -76,7 +78,8 @@ static void inv_map_drop_kw(inv_map_type *map, const rd_kw_type *rd_kw) {
     {
         int index = size_t_vector_index_sorted(map->rd_kw_ptr, (size_t)rd_kw);
         if (index == -1)
-            util_abort("%s: trying to drop non-existent kw \n", __func__);
+            throw std::logic_error(std::string(__func__) +
+                                   ": trying to drop non-existent kw");
 
         size_t_vector_idel(map->rd_kw_ptr, index);
         size_t_vector_idel(map->file_kw_ptr, index);
@@ -171,13 +174,16 @@ static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
 
     if (!rd_type_is_equal(rd_file_kw_get_data_type(file_kw),
                           rd_kw_get_data_type(file_kw->kw)))
-        util_abort("%s: type mismatch between header and file.\n", __func__);
+        throw std::runtime_error(std::string(__func__) +
+                                 ": type mismatch between header and file.");
 
     if (file_kw->kw_size != rd_kw_get_size(file_kw->kw))
-        util_abort("%s: size mismatch between header and file.\n", __func__);
+        throw std::runtime_error(std::string(__func__) +
+                                 ": size mismatch between header and file.");
 
     if (strcmp(file_kw->header, rd_kw_get_header(file_kw->kw)) != 0)
-        util_abort("%s: name mismatch between header and file.\n", __func__);
+        throw std::runtime_error(std::string(__func__) +
+                                 ": name mismatch between header and file.");
 }
 
 static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
@@ -192,9 +198,10 @@ static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
 static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                                inv_map_type *inv_map) {
     if (!fortio.assert_stream_open())
-        util_abort("%s: trying to load a keyword after the backing file has "
-                   "been detached.\n",
-                   __func__);
+        throw std::ios_base::failure(
+            std::string(__func__) +
+            ": trying to load a keyword after the backing file has "
+            "been detached.");
 
     if (file_kw->kw != NULL)
         rd_file_kw_drop_kw(file_kw, inv_map);
