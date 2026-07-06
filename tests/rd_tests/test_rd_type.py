@@ -139,3 +139,9 @@ class ResDataTypeTest(ResdataTest):
             all_types.add(ResDataType(rd_type))
 
         self.assertEqual(len(test_base), len(all_types))
+
+    def test_resdata_type_type_returns_enum(self):
+        rd_type = ResDataType(ResdataTypeEnum.RD_INT_TYPE)
+
+        self.assertEqual(rd_type.type, ResdataTypeEnum.RD_INT_TYPE)
+        self.assertIsInstance(rd_type.type, ResdataTypeEnum)

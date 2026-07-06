@@ -2,13 +2,7 @@
 #define ERT_RD_TYPE_H
 
 #include <cstdlib>
-
-#ifdef __cplusplus
-
 #include <string>
-
-extern "C" {
-#endif
 
 /*
   The type of an eclipse keyword is carried by a struct
@@ -17,9 +11,8 @@ extern "C" {
   value semantics, and created with macros RD_INT, RD_FLOAT and so
   on.
 
-  The macros in C use designated initializers, whereas the C++ macros
-  use a constructor, for this reason this file has two slightly
-  different code paths for C and C++.
+    The macros use C++ aggregate initialization and are intended for
+    value-style use, matching how this type is consumed in pybind/C++.
 */
 
 #define RD_STRING8_LENGTH 8
@@ -50,15 +43,12 @@ typedef enum {
   i.e. 'REAL', 'INTE', ... , come as 4 character strings.
 */
 
-#define RD_STRING8_LENGTH 8 // 'Normal' 8 characters 'CHAR' type.
-#define RD_TYPE_LENGTH 4
-
 struct rd_type_struct {
     const rd_type_enum type;
     const size_t element_size;
 };
 
-#ifdef __cplusplus
+typedef struct rd_type_struct rd_data_type;
 
 #define RD_INT                                                                 \
     rd_data_type { RD_INT_TYPE, sizeof(int) }
@@ -71,31 +61,6 @@ struct rd_type_struct {
 #define RD_CHAR rd_data_type{RD_CHAR_TYPE, RD_STRING8_LENGTH + 1}
 #define RD_MESS rd_data_type{RD_MESS_TYPE, 0}
 #define RD_STRING(size) rd_data_type{RD_STRING_TYPE, (size) + 1}
-}
-
-#else
-
-#define RD_CHAR                                                                \
-    (rd_data_type){.type = RD_CHAR_TYPE, .element_size = RD_STRING8_LENGTH + 1}
-#define RD_INT                                                                 \
-    (rd_data_type) { .type = RD_INT_TYPE, .element_size = sizeof(int) }
-#define RD_FLOAT                                                               \
-    (rd_data_type) { .type = RD_FLOAT_TYPE, .element_size = sizeof(float) }
-#define RD_DOUBLE                                                              \
-    (rd_data_type) { .type = RD_DOUBLE_TYPE, .element_size = sizeof(double) }
-#define RD_BOOL                                                                \
-    (rd_data_type) { .type = RD_BOOL_TYPE, .element_size = sizeof(bool) }
-#define RD_MESS (rd_data_type){.type = RD_MESS_TYPE, .element_size = 0}
-#define RD_STRING(size)                                                        \
-    (rd_data_type){.type = RD_STRING_TYPE, .element_size = (size) + 1}
-
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct rd_type_struct rd_data_type;
 
 rd_data_type rd_type_create_from_name(const char *);
 rd_data_type rd_type_create(const rd_type_enum, const size_t);
@@ -119,10 +84,6 @@ bool rd_type_is_mess(const rd_data_type);
 bool rd_type_is_bool(const rd_data_type);
 bool rd_type_is_string(const rd_data_type);
 
-#ifdef __cplusplus
-}
-
 std::string rd_type_name(const rd_data_type);
-#endif
 
 #endif

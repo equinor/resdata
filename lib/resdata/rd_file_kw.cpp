@@ -167,6 +167,11 @@ bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
 }
 
 static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
+    if (file_kw->kw == NULL)
+        throw std::runtime_error(
+            "rd_file_kw: keyword could not be loaded from file "
+            "(rd_kw_fread_alloc returned NULL)");
+
     if (!rd_type_is_equal(rd_file_kw_get_data_type(file_kw),
                           rd_kw_get_data_type(file_kw->kw)))
         throw std::runtime_error(std::string(__func__) +
