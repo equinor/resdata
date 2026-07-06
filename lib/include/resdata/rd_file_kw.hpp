@@ -22,15 +22,12 @@ rd_file_kw_type *rd_file_kw_alloc(const rd_kw_type *rd_kw, offset_type offset);
 rd_file_kw_type *rd_file_kw_alloc0(const char *header, rd_data_type data_type,
                                    int size, offset_type offset);
 void rd_file_kw_free(rd_file_kw_type *file_kw);
-rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
-                              inv_map_type *inv_map);
 rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw);
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw);
 int rd_file_kw_get_size(const rd_file_kw_type *file_kw);
 rd_data_type rd_file_kw_get_data_type(const rd_file_kw_type *);
 offset_type rd_file_kw_get_offset(const rd_file_kw_type *file_kw);
 bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw, ERT::FortIO &fortio);
-void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio);
 
 void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream);
 rd_file_kw_type **rd_file_kw_fread_alloc_multiple(FILE *stream, int num);
@@ -42,6 +39,11 @@ void rd_file_kw_end_transaction(rd_file_kw_type *file_kw, int ref_count);
 
 #ifdef __cplusplus
 }
+
+// C++ linkage: these may throw, which is UB across extern "C".
+rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
+                              inv_map_type *inv_map);
+void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio);
 #endif
 
 #endif
