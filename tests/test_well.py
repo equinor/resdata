@@ -36,7 +36,6 @@ NSCONZ = 25  # Number of values per connection in SCON
 NXCONZ = 60  # Number of values per connection in XCON
 NISEGZ = 22  # Number of values per segment in ISEG
 NRSEGZ = 140  # Number of values per segment in RSEG
-NSEGMX = 10  # max segments per well
 NSWLMX = 2  # max segmented wells
 NLBRMX = 2  # max lateral branches per well
 NILBRZ = 10  # Number of values per branch in ILBR
@@ -208,6 +207,7 @@ def _step_keywords(
     dualp: bool = False,
 ):
     ncwmax = max(len(w.connections) for w in wells)
+    nsegmx = max(len(w.segments) for w in wells)
 
     def _icon_kw(wells):
         kw = _int_kw("ICON", NICONZ * ncwmax * len(wells))
@@ -245,7 +245,7 @@ def _step_keywords(
         kw[64], kw[65], kw[66] = day, month, year
         kw[94] = 100  # IPROG / simulator version
         kw[175] = NSWLMX
-        kw[176] = NSEGMX
+        kw[176] = nsegmx
         kw[177] = NLBRMX
         kw[178] = NISEGZ
         kw[179] = NRSEGZ
@@ -282,10 +282,10 @@ def _step_keywords(
         return kw
 
     def _iseg_kw(wells):
-        kw = _int_kw("ISEG", NISEGZ * NSEGMX * len(wells))
+        kw = _int_kw("ISEG", NISEGZ * nsegmx * len(wells))
         for i, well in enumerate(wells):
             for seg_index, segment in enumerate(well.segments):
-                off = NISEGZ * (NSEGMX * i + seg_index)
+                off = NISEGZ * (nsegmx * i + seg_index)
                 kw[off + ISEG_OUTLET] = segment.outlet
                 kw[off + ISEG_BRANCH] = segment.branch
         return kw
@@ -293,10 +293,10 @@ def _step_keywords(
     def _rseg_kw(wells):
         # RSEG is read into a double buffer by the C rseg-loader, so it must be
         # written with double precision for the indexed read to line up.
-        kw = _double_kw("RSEG", NRSEGZ * NSEGMX * len(wells))
+        kw = _double_kw("RSEG", NRSEGZ * nsegmx * len(wells))
         for i, well in enumerate(wells):
             for seg_index, segment in enumerate(well.segments):
-                off = NRSEGZ * (NSEGMX * i + seg_index)
+                off = NRSEGZ * (nsegmx * i + seg_index)
                 kw[off + RSEG_LENGTH] = segment.length
                 kw[off + RSEG_DIAMETER] = segment.diameter
                 kw[off + RSEG_TOTAL_LENGTH] = segment.total_length
@@ -901,6 +901,105 @@ def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
         "WellSegment({Segment ID:1   BranchID:1  Length:12.5})"
     )
     assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
+
+
+@st.composite
+def segment_trees(draw):
+    """Generate a random multi-segment well as a list of ``Segment`` slots.
+
+    A segment's *id* is the 1-based position of its slot in the ISEG array, so a
+    random subset of the slots is chosen to hold active segments (the segment
+    indices) and the remaining slots are filled with inactive placeholders
+    (``branch == 0``).
+
+    The active segments form a tree rooted at the nearest wellhead (``outlet == 0``).
+    Segments are grouped into branches (a branch is a chain of segments sharing
+    a branch id).
+    """
+    n = draw(st.integers(min_value=1, max_value=40))
+    outlet_node = [None] * n
+    branch_of_node = [0] * n
+    branch_of_node[0] = 1
+    branch_tail = {1: 0}  # branch id -> the last segment currently on that branch
+    next_branch = 2
+    for node in range(1, n):
+        if draw(st.booleans()):
+            # Start a new lateral branch off any already-created segment.
+            outlet_node[node] = draw(st.integers(min_value=0, max_value=node - 1))
+            branch_of_node[node] = next_branch
+            branch_tail[next_branch] = node
+            next_branch += 1
+        else:
+            # Extend an existing branch: outlet is that branch's current tail.
+            extended = draw(st.sampled_from(sorted(branch_tail)))
+            outlet_node[node] = branch_tail[extended]
+            branch_of_node[node] = extended
+            branch_tail[extended] = node
+
+    # Assign each node a unique 1-based ISEG position. Drawing from a range wider
+    # than ``n`` leaves gaps (inactive slots) between the active segments.
+    id_span = draw(st.integers(min_value=n, max_value=2 * n))
+    id_of_node = draw(
+        st.lists(
+            st.integers(min_value=1, max_value=id_span),
+            min_size=n,
+            max_size=n,
+            unique=True,
+        )
+    )
+
+    slots = [Segment(outlet=0, branch=0) for _ in range(max(id_of_node))]
+    for node in range(n):
+        outlet_id = 0 if outlet_node[node] is None else id_of_node[outlet_node[node]]
+        slots[id_of_node[node] - 1] = Segment(
+            outlet=outlet_id, branch=branch_of_node[node]
+        )
+    return slots
+
+
+@given(segment_trees())
+def test_that_segment_tree_is_read_from_iseg(tmp_path_factory, slots):
+    grid = GridGenerator.create_rectangular((NX, NY, NZ), (1.0, 1.0, 1.0))
+    tmp_path = tmp_path_factory.mktemp("segment_tree")
+
+    # The expected active segments in ISEG-position order (== ascending id).
+    expected = [
+        (index + 1, segment)
+        for index, segment in enumerate(slots)
+        if segment.branch != 0
+    ]
+    root_id = next(seg_id for seg_id, segment in expected if segment.outlet == 0)
+
+    well = Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i=1, j=1, k=1, segment=root_id)],
+        segments=slots,
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    read_segments = WellInfo(grid, path)["MSW"][0].segments()
+
+    # The segments must be read back in the expected (ascending id) order.
+    assert [segment.id() for segment in read_segments] == [
+        seg_id for seg_id, _ in expected
+    ]
+
+    for read_segment, (seg_id, segment) in zip(read_segments, expected):
+        assert read_segment.id() == seg_id
+        assert read_segment.branchId() == segment.branch
+        assert read_segment.outletId() == segment.outlet
+        assert read_segment.isNearestWellHead() == (segment.outlet == 0)
+
+        # A segment's link count is the number of child segments that continue
+        # in the same branch, i.e. reference it as their outlet.
+        expected_link_count = sum(
+            1
+            for _, child in expected
+            if child.outlet == seg_id and child.branch == segment.branch
+        )
+        assert read_segment.linkCount() == expected_link_count
 
 
 def test_that_a_non_segmented_well_has_no_segments(producer):
