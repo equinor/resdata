@@ -1,9 +1,4 @@
-#ifndef ERT_WELL_CONST_H
-#define ERT_WELL_CONST_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #define WELL_SEGMENT_OFFSET 1
 #define WELL_BRANCH_OFFSET 1
@@ -123,9 +118,3 @@ typedef enum {
     RD_WELL_WATER_INJECTOR = 3,
     RD_WELL_GAS_INJECTOR = 4,
 } well_type_enum;
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
