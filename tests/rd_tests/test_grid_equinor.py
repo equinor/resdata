@@ -25,9 +25,9 @@ class GridTest(ResdataTest):
             "Equinor/ECLIPSE/Gurbat/include/example_grid_sim.GRDECL"
         )
 
-    def test_loadFromFile(self):
-        g1 = Grid.loadFromFile(self.egrid_file())
-        g2 = Grid.loadFromFile(self.grdecl_file())
+    def test_load_from_file(self):
+        g1 = Grid.load_from_file(self.egrid_file())
+        g2 = Grid.load_from_file(self.grdecl_file())
 
         self.assertTrue(isinstance(g1, Grid))
         self.assertTrue(isinstance(g2, Grid))

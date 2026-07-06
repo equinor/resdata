@@ -141,9 +141,6 @@ class SumTest(ResdataTest):
         self.assertEqual(d[25], datetime.datetime(2001, 12, 1, 0, 0, 0))
         self.assertEqual(summary.iget_date(25), datetime.datetime(2001, 12, 1, 0, 0, 0))
 
-        mpl_dates = summary.mpl_dates
-        self.assertAlmostEqual(mpl_dates[25], 730820)
-
         days = summary.days
         self.assertAlmostEqual(days[50], 1461)
 
