@@ -6,7 +6,6 @@ from resdata.grid import Cell, Grid
 from resdata.summary import Summary
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 from tests.util.mock import createSummary
 
 
@@ -48,7 +47,9 @@ class SummaryResampleTest(ResdataTest):
         cls.case = create_case()
 
     def test_run_default(self):
-        with TestAreaContext(""):
+        tmpdir = self.tmp_path_factory.mktemp("test", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             self.case.fwrite()
 
             # Too few arguments

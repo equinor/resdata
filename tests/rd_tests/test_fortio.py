@@ -8,12 +8,13 @@ from resdata import ResDataType
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class FortIOTest(ResdataTest):
     def test_open_write(self):
-        with TestAreaContext("python/fortio/write"):
+        tmpdir = self.tmp_path_factory.mktemp("python_fortio_write", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             f = FortIO("newfile", FortIO.WRITE_MODE)
             self.assertTrue(os.path.exists("newfile"))
 
@@ -30,7 +31,9 @@ class FortIOTest(ResdataTest):
         kw2[0] = 113
         kw2[1] = 335
 
-        with TestAreaContext("python/fortio/write-kw"):
+        tmpdir = self.tmp_path_factory.mktemp("python_fortio_write-kw", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             f = FortIO("test", FortIO.WRITE_MODE, fmt_file=False)
             kw1.fwrite(f)
 
@@ -53,7 +56,9 @@ class FortIOTest(ResdataTest):
         kw2[0] = 113
         kw2[1] = 335
 
-        with TestAreaContext("python/fortio/ftruncate") as t:
+        t = self.tmp_path_factory.mktemp("python_fortio_ftruncate", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(t)
             with openFortIO("file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
                 pos1 = f.get_position()
@@ -78,7 +83,9 @@ class FortIOTest(ResdataTest):
             self.assertEqual(kw1, kw1_)
 
     def test_fortio_creation(self):
-        with TestAreaContext("python/fortio/create"):
+        tmpdir = self.tmp_path_factory.mktemp("python_fortio_create", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             w = FortIO("test", FortIO.WRITE_MODE)
             rw = FortIO("test", FortIO.READ_AND_WRITE_MODE)
             r = FortIO("test", FortIO.READ_MODE)
@@ -88,7 +95,9 @@ class FortIOTest(ResdataTest):
             w.close()  # should not fail
 
     def test_context(self):
-        with TestAreaContext("python/fortio/context") as t:
+        t = self.tmp_path_factory.mktemp("python_fortio_context", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(t)
             kw1 = ResdataKW("KW", 2456, ResDataType.RD_FLOAT)
             for i in range(len(kw1)):
                 kw1[i] = randint(0, 1000)
@@ -103,13 +112,19 @@ class FortIOTest(ResdataTest):
             self.assertTrue(kw1 == kw2)
 
     def test_context_propagates_exceptions(self):
-        with TestAreaContext("python/fortio/context-exception"):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_fortio_context-exception", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with pytest.raises(ValueError):
                 with openFortIO("file", mode=FortIO.WRITE_MODE, fmt_file=False) as f:
                     raise ValueError()
 
     def test_is_fortran_file(self):
-        with TestAreaContext("python/fortio/guess"):
+        tmpdir = self.tmp_path_factory.mktemp("python_fortio_guess", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             kw1 = ResdataKW("KW", 12345, ResDataType.RD_FLOAT)
             with openFortIO("fortran_file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)

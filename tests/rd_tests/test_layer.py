@@ -8,7 +8,6 @@ from resdata.grid.faults import FaultCollection, Layer
 from resdata.util.util import IntVector
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class LayerTest(ResdataTest):
@@ -60,7 +59,9 @@ class LayerTest(ResdataTest):
         self.assertTrue(layer.cell_contact((4, 0), (5, 0)))
         self.assertTrue(layer.cell_contact((0, 4), (0, 5)))
 
-        with TestAreaContext("Layer/barrier"):
+        tmpdir = self.tmp_path_factory.mktemp("Layer_barrier", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
                 f.write("'FX'   5   5   1   10   1   1  'X'  /\n")
@@ -92,7 +93,9 @@ class LayerTest(ResdataTest):
         ny = 60
         nz = 43
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
-        with TestAreaContext("python/faults/line_order"):
+        tmpdir = self.tmp_path_factory.mktemp("python_faults_line_order", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             with open("faults.grdecl", "w") as f:
                 f.write("""FAULTS
 \'F\'              105  107     50   50      1   43    \'Y\'    /

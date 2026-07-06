@@ -2,7 +2,6 @@
 from resdata.grid import Grid
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class FKTest(ResdataTest):

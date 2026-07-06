@@ -4,6 +4,7 @@ import sys
 import traceback
 from unittest import TestCase
 
+import pytest
 from resdata.util.util import installAbortSignals
 
 from .source_enumerator import SourceEnumerator
@@ -57,6 +58,12 @@ class ExtendedTestCase(TestCase):
     def __init__(self, *args, **kwargs):
         installAbortSignals()
         super().__init__(*args, **kwargs)
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, tmp_path_factory, monkeypatch):
+        self.tmp_path_factory = tmp_path_factory
+        self.monkeypatch = monkeypatch
+        yield
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:

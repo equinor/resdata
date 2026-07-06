@@ -1,7 +1,6 @@
 from resdata import ResDataType, ResdataTypeEnum
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 def get_const_size_types():

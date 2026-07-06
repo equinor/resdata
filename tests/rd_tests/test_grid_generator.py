@@ -12,7 +12,6 @@ from resdata.grid import GridGenerator as GridGen
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 def generate_ijk_bounds(dims):

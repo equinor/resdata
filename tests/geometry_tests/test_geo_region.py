@@ -1,7 +1,6 @@
 from resdata.geometry import CPolyline, GeoPointset, GeoRegion, Surface
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 class GeoRegionTest(ResdataTest):

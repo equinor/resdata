@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import datetime
+import shutil
 from unittest import skipIf
 
 from resdata import FileMode
 from resdata.resfile import FortIO, ResdataFile
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 
 
 @equinor_test()
@@ -24,7 +24,9 @@ class ResdataFileEquinorTest(ResdataTest):
         self.assertEqual(step, expected[2])
 
     def test_fast_open(self):
-        with TestAreaContext("index"):
+        tmpdir = self.tmp_path_factory.mktemp("index", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             f0 = ResdataFile(self.test_file)
             f0.write_index("index")
             f1 = ResdataFile(self.test_file, 0, "index")
@@ -50,8 +52,9 @@ class ResdataFileEquinorTest(ResdataTest):
             s = f.iget_named_kw("SWAT", N + 1)
 
     def test_fwrite(self):
-        # work_area = TestArea("python/rd_file/fwrite")
-        with TestAreaContext("python/rd_file/fwrite"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_fwrite", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             rst_file = ResdataFile(self.test_file)
             fortio = FortIO("ECLIPSE.UNRST", FortIO.WRITE_MODE)
             rst_file.fwrite(fortio)
@@ -61,9 +64,10 @@ class ResdataFileEquinorTest(ResdataTest):
 
     @skipIf(ResdataTest.slowTestShouldNotRun(), "Slow file test skipped!")
     def test_save(self):
-        # work_area = TestArea("python/rd_file/save")
-        with TestAreaContext("python/rd_file/save", store_area=False) as work_area:
-            work_area.copy_file(self.test_file)
+        work_area = self.tmp_path_factory.mktemp("python_rd_file_save", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(work_area)
+            shutil.copy(self.test_file, ".")
             rst_file = ResdataFile("ECLIPSE.UNRST", flags=FileMode.WRITABLE)
             swat0 = rst_file["SWAT"][0]
             swat0.assign(0.75)
@@ -88,9 +92,12 @@ class ResdataFileEquinorTest(ResdataTest):
 
     @skipIf(ResdataTest.slowTestShouldNotRun(), "Slow file test skipped!")
     def test_save_fmt(self):
-        # work_area = TestArea("python/rd_file/save_fmt")
-        with TestAreaContext("python/rd_file/save_fmt") as work_area:
-            work_area.copy_file(self.test_fmt_file)
+        work_area = self.tmp_path_factory.mktemp(
+            "python_rd_file_save_fmt", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(work_area)
+            shutil.copy(self.test_fmt_file, ".")
             rst_file = ResdataFile("ECLIPSE.FUNRST", flags=FileMode.WRITABLE)
             swat0 = rst_file["SWAT"][0]
             swat0.assign(0.75)
@@ -124,7 +131,9 @@ class ResdataFileEquinorTest(ResdataTest):
         v = f.restart_view(seqnum_index=30)
 
     def test_index(self):
-        with TestAreaContext("python/rd_file/truncated"):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_truncated", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             f0 = ResdataFile(self.test_file)
             f0.write_index("index")
 

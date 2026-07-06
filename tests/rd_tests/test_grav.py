@@ -7,7 +7,6 @@ from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 
 def write_kws(filename, kws):
@@ -83,7 +82,9 @@ class ResdataGravTest(ResdataTest):
 
         kws += int_kws
 
-        with TestAreaContext("grav_init"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_init", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             # The init file created here only contains a PORO field. More
             # properties must be added to this before it can be used for
@@ -122,7 +123,9 @@ class ResdataGravTest(ResdataTest):
             ]
         ]
 
-        with TestAreaContext("grav_init"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_init", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             init = ResdataFile("TEST.INIT")
 
@@ -147,7 +150,9 @@ class ResdataGravTest(ResdataTest):
             ]
         ]
 
-        with TestAreaContext("grav_missing_rporv"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_missing_rporv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             init = ResdataFile("TEST.INIT")
 
@@ -174,7 +179,9 @@ class ResdataGravTest(ResdataTest):
             ]
         ]
 
-        with TestAreaContext("grav_invalid_phase"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_invalid_phase", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             init = ResdataFile("TEST.INIT")
             grav = ResdataGrav(self.grid, init)
@@ -196,7 +203,9 @@ class ResdataGravTest(ResdataTest):
             ]
         ]
 
-        with TestAreaContext("grav_unknown_survey"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_unknown_survey", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             init = ResdataFile("TEST.INIT")
 
@@ -226,7 +235,9 @@ class ResdataGravTest(ResdataTest):
 
         kws = [porv, rporv]
 
-        with TestAreaContext("grav_bad_rporv"):
+        tmpdir = self.tmp_path_factory.mktemp("grav_bad_rporv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             write_kws("TEST", kws)
             init = ResdataFile("TEST.INIT")
 

@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import shutil
 from textwrap import dedent
 
 import numpy as np
@@ -30,7 +31,6 @@ from resfo_utilities.testing import (
 )
 
 from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
 from tests.util.mock import createSummary
 
 
@@ -129,16 +129,22 @@ class SummaryTest(ResdataTest):
             rd_sum_vector.add_keyword("MISSING")
 
         dtime = datetime.datetime(2002, 1, 1, 0, 0, 0)
-        with TestAreaContext("Summary/csv_dump"):
+        tmpdir = self.tmp_path_factory.mktemp("Summary_csv_dump", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             test_file_name = self.createTestPath("dump.csv")
             outputH = copen(test_file_name, "w")
             self.rd_sum.dump_csv_line(dtime, rd_sum_vector, outputH)
             assert os.path.isfile(test_file_name)
 
     def test_truncated_smspec(self):
-        with TestAreaContext("Summary/truncated_smspec") as ta:
-            ta.copy_file(self.test_file)
-            ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
+        ta = self.tmp_path_factory.mktemp("Summary_truncated_smspec", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
+            shutil.copy(self.test_file, ".")
+            shutil.copy(
+                self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"), "."
+            )
 
             file_size = os.path.getsize("ECLIPSE.SMSPEC")
             with open("ECLIPSE.SMSPEC", "r+") as f:
@@ -148,9 +154,13 @@ class SummaryTest(ResdataTest):
                 Summary("ECLIPSE")
 
     def test_truncated_data(self):
-        with TestAreaContext("Summary/truncated_data") as ta:
-            ta.copy_file(self.test_file)
-            ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
+        ta = self.tmp_path_factory.mktemp("Summary_truncated_data", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
+            shutil.copy(self.test_file, ".")
+            shutil.copy(
+                self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"), "."
+            )
 
             file_size = os.path.getsize("ECLIPSE.UNSMRY")
             with open("ECLIPSE.UNSMRY", "r+") as f:
@@ -160,9 +170,13 @@ class SummaryTest(ResdataTest):
                 Summary("ECLIPSE")
 
     def test_missing_smspec_keyword(self):
-        with TestAreaContext("Summary/truncated_data") as ta:
-            ta.copy_file(self.test_file)
-            ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
+        ta = self.tmp_path_factory.mktemp("Summary_truncated_data", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
+            shutil.copy(self.test_file, ".")
+            shutil.copy(
+                self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"), "."
+            )
 
             with open_rd_file("ECLIPSE.SMSPEC") as f:
                 kw_list = []
@@ -179,9 +193,13 @@ class SummaryTest(ResdataTest):
                 Summary("ECLIPSE")
 
     def test_missing_unsmry_keyword(self):
-        with TestAreaContext("Summary/truncated_data") as ta:
-            ta.copy_file(self.test_file)
-            ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
+        ta = self.tmp_path_factory.mktemp("Summary_truncated_data", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(ta)
+            shutil.copy(self.test_file, ".")
+            shutil.copy(
+                self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"), "."
+            )
 
             with open_rd_file("ECLIPSE.UNSMRY") as f:
                 kw_list = []

@@ -8,7 +8,6 @@ from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
-from tests.util import TestAreaContext
 
 from .create_restart import create_restart
 
@@ -26,10 +25,11 @@ def create_init(grid, case):
 
 
 class GeertsmaTest(ResdataTest):
-    @staticmethod
-    def test_geertsma_kernel():
+    def test_geertsma_kernel(self):
         grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
-        with TestAreaContext("Subsidence"):
+        tmpdir = self.tmp_path_factory.mktemp("Subsidence", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             p1 = [1]
             create_restart(grid, "TEST", p1)
             create_init(grid, "TEST")
@@ -68,11 +68,12 @@ class GeertsmaTest(ResdataTest):
                 "S1", "S2", receiver, youngs_modulus, poisson_ratio
             ) == pytest.approx(0.0)
 
-    @staticmethod
-    def test_geertsma_kernel_2_source_points_2_vintages():
+    def test_geertsma_kernel_2_source_points_2_vintages(self):
         grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
-        with TestAreaContext("Subsidence"):
+        tmpdir = self.tmp_path_factory.mktemp("Subsidence", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             p1 = [1, 10]
             p2 = [10, 20]
             create_restart(grid, "TEST", p1, p2)
@@ -114,10 +115,11 @@ class GeertsmaTest(ResdataTest):
             )
             np.testing.assert_almost_equal(dz, dz1 - dz2)
 
-    @staticmethod
-    def test_geertsma_kernel_seabed():
+    def test_geertsma_kernel_seabed(self):
         grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
-        with TestAreaContext("Subsidence"):
+        tmpdir = self.tmp_path_factory.mktemp("Subsidence", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             p1 = [1]
             create_restart(grid, "TEST", p1)
             create_init(grid, "TEST")
@@ -147,7 +149,9 @@ class GeertsmaTest(ResdataTest):
     def test_geertsma_rporv_kernel_2_source_points_2_vintages(self):
         grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
-        with TestAreaContext("Subsidence"):
+        tmpdir = self.tmp_path_factory.mktemp("Subsidence", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             p1 = [1, 10]
             p2 = [10, 20]
             create_restart(
@@ -195,7 +199,9 @@ class GeertsmaTest(ResdataTest):
     def test_validation_of_surveys(self):
         grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
-        with TestAreaContext("Subsidence"):
+        tmpdir = self.tmp_path_factory.mktemp("Subsidence", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
             p1 = [1, 10]
             p2 = [10, 20]
             create_restart(
