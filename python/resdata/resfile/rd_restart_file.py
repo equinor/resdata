@@ -1,6 +1,5 @@
 from resdata import FileMode, FileType
 from resdata.resfile import Resdata3DFile, ResdataFile
-from resdata.util.util import monkey_the_camel
 
 from ._rsthead import ResdataRestartHead
 
@@ -97,13 +96,3 @@ class ResdataRestartFile(Resdata3DFile):
     def get_header(self, index):
         self.assert_headers()
         return self.rst_headers[index]
-
-
-monkey_the_camel(
-    ResdataRestartHead, "getReportStep", ResdataRestartHead.get_report_step
-)
-monkey_the_camel(ResdataRestartHead, "getSimDate", ResdataRestartHead.get_sim_date)
-monkey_the_camel(ResdataRestartHead, "getSimDays", ResdataRestartHead.get_sim_days)
-
-monkey_the_camel(ResdataRestartFile, "assertHeaders", ResdataRestartFile.assert_headers)
-monkey_the_camel(ResdataRestartFile, "timeList", ResdataRestartFile.time_list)

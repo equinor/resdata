@@ -89,7 +89,6 @@ class DoubleVector(VectorTemplate):
         "void double_vector_select_unique(rd_double_vector)"
     )
     _element_sum = ResdataPrototype("double double_vector_sum(rd_double_vector)")
-    _get_data_ptr = ResdataPrototype("double* double_vector_get_ptr(rd_double_vector)")
     _count_equal = ResdataPrototype(
         "int double_vector_count_equal(rd_double_vector, double)"
     )

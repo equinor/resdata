@@ -2,11 +2,10 @@ import math
 import time
 from unittest import skipIf
 
-from cwrap import Prototype
 from cwrap import open as copen
-from resdata import ResDataType, UnitSystem
+from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator
-from resdata.resfile import ResdataFile, ResdataKW, openResdataFile
+from resdata.resfile import ResdataKW, open_rd_file
 from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest, equinor_test
@@ -168,7 +167,7 @@ class GridTest(ResdataTest):
                 f2.write("SPECGRID\n")
                 f2.write("  10  10  10  'F' /\n")
 
-            with openResdataFile("G.EGRID") as f:
+            with open_rd_file("G.EGRID") as f:
                 with copen("grid.grdecl", "a") as f2:
                     coord_kw = f["COORD"][0]
                     coord_kw.write_grdecl(f2)

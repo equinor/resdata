@@ -28,7 +28,6 @@ float and size_t not currently implemented in the Python version.
 import sys
 
 from cwrap import CFILE, BaseCClass
-from typing_extensions import deprecated
 
 from .permutation_vector import PermutationVector
 
@@ -520,13 +519,6 @@ class VectorTemplate(BaseCClass):
     def elementSum(self):
         return self._element_sum()
 
-    @deprecated("getDataPtr is deprecated and will be removed in version 7.")
-    def getDataPtr(self):
-        "Low level function which returns a pointer to underlying storage"
-        # Observe that the get_data_ptr() function is not implemented
-        # for the TimeVector class.
-        return self._get_data_ptr()
-
     def countEqual(self, value):
         return self._count_equal(value)
 
@@ -670,9 +662,6 @@ class VectorTemplate(BaseCClass):
         raise NotImplementedError()
 
     def _element_sum(self, *_):
-        raise NotImplementedError()
-
-    def _get_data_ptr(self, *_):
         raise NotImplementedError()
 
     def _count_equal(self, *_):

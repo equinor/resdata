@@ -12,19 +12,17 @@ import ctypes
 import math
 import os.path
 import sys
-from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 from cwrap import CFILE, BaseCClass
 from cwrap import open as copen
-from typing_extensions import deprecated
 
 import resdata.grid._grid as _grid
-from resdata import ResDataType, ResdataTypeEnum, UnitSystem
+from resdata import ResDataType, UnitSystem
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
-from resdata.util.util import IntVector, monkey_the_camel
+from resdata.util.util import IntVector
 
 
 class Grid(BaseCClass):
@@ -124,34 +122,6 @@ class Grid(BaseCClass):
                 specgrid[0], specgrid[1], specgrid[2], zcorn, coord, actnum, mapaxes
             )
         )
-
-    @classmethod
-    @deprecated(
-        "Grid.createRectangular is deprecated. It will be removed in version 7. "
-        "Please use the similar method: GridGenerator.createRectangular.",
-    )
-    def create_rectangular(cls, dims, dV, actnum: Sequence[int] | None = None):
-        """
-        Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
-
-        With the default value @actnum == None all cells will be active,
-        """
-        if actnum is None:
-            rd_grid = _grid._alloc_rectangular(
-                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], None
-            )
-        else:
-            if not len(actnum) == dims[0] * dims[1] * dims[2]:
-                raise ValueError(
-                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
-                    % (len(actnum), dims[0] * dims[1] * dims[2])
-                )
-            rd_grid = _grid._alloc_rectangular(
-                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], list(actnum)
-            )
-        if not rd_grid:
-            raise MemoryError("Failed to allocated regualar grid")
-        return cls.createPythonObject(rd_grid)
 
     def __init__(self, filename, apply_mapaxes=True):
         """
@@ -1004,9 +974,9 @@ class Grid(BaseCClass):
         """
         if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
             array = np.ones([self.get_global_size()], dtype=rd_kw.dtype) * default
-            kwa = rd_kw.array
+            kwa = rd_kw.numpy_view()
             if len(rd_kw) == self.get_global_size():
-                for i in range(kwa.size):
+                for i in range(len(kwa)):
                     array[i] = kwa[i]
             else:
                 for global_index in range(self.get_global_size()):
@@ -1184,12 +1154,9 @@ class Grid(BaseCClass):
         else:
             raise ValueError("The keyword must have a 3D compatible length")
 
-        if kw.type is ResdataTypeEnum.RD_INT_TYPE:
+        if kw.data_type == ResDataType.RD_INT:
             return _grid._export_data_as_int(index, kw, np.int32(default))
-        elif (
-            kw.type is ResdataTypeEnum.RD_FLOAT_TYPE
-            or kw.type is ResdataTypeEnum.RD_DOUBLE_TYPE
-        ):
+        elif kw.data_type in {ResDataType.RD_FLOAT, ResDataType.RD_DOUBLE}:
             return _grid._export_data_as_double(index, kw, np.float64(default))
         else:
             raise TypeError("Keyword must be either int, float or double.")
@@ -1276,33 +1243,3 @@ class Grid(BaseCClass):
     @property
     def unit_system(self):
         return UnitSystem(_grid._get_unit_system(self))
-
-
-monkey_the_camel(Grid, "loadFromGrdecl", Grid.load_from_grdecl, classmethod)
-monkey_the_camel(Grid, "loadFromFile", Grid.load_from_file, classmethod)
-monkey_the_camel(Grid, "createRectangular", Grid.create_rectangular, classmethod)
-monkey_the_camel(Grid, "dualGrid", Grid.dual_grid)
-monkey_the_camel(Grid, "getDims", Grid.get_dims)
-monkey_the_camel(Grid, "getNX", Grid.get_nx)
-monkey_the_camel(Grid, "getNY", Grid.get_ny)
-monkey_the_camel(Grid, "getNZ", Grid.get_nz)
-monkey_the_camel(Grid, "getGlobalSize", Grid.get_global_size)
-monkey_the_camel(Grid, "getNumActive", Grid.get_num_active)
-monkey_the_camel(Grid, "getNumActiveFracture", Grid.get_num_active_fracture)
-monkey_the_camel(Grid, "getBoundingBox2D", Grid.get_bounding_box_2d)
-monkey_the_camel(Grid, "getName", Grid.get_name)
-monkey_the_camel(Grid, "validCellGeometry", Grid.valid_cell_geometry)
-monkey_the_camel(Grid, "getNodePos", Grid.get_node_pos)
-monkey_the_camel(Grid, "getCellCorner", Grid.get_cell_corner)
-monkey_the_camel(Grid, "getNodeXYZ", Grid.get_node_xyz)
-monkey_the_camel(Grid, "getLayerXYZ", Grid.get_layer_xyz)
-monkey_the_camel(Grid, "findCellXY", Grid.find_cell_xy)
-monkey_the_camel(Grid, "findCellCornerXY", Grid.find_cell_corner_xy)
-monkey_the_camel(Grid, "getCellDims", Grid.get_cell_dims)
-monkey_the_camel(Grid, "getNumLGR", Grid.get_num_lgr)
-monkey_the_camel(Grid, "createKW", Grid.create_kw)
-monkey_the_camel(Grid, "create3D", Grid.create_3d)
-monkey_the_camel(Grid, "compressedKWCopy", Grid.compressed_kw_copy)
-monkey_the_camel(Grid, "globalKWCopy", Grid.global_kw_copy)
-monkey_the_camel(Grid, "exportACTNUMKw", Grid.export_ACTNUM_kw)
-monkey_the_camel(Grid, "createVolumeKeyword", Grid.create_volume_keyword)

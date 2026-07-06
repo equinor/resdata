@@ -171,8 +171,8 @@ the permeability:
        rd_file = ResdataFile(init_file)
        kw_list.append( rd_file["PERMX"][0] )
 
-   mean = ResdataKW.create("AVG-PERMX" , len(kw_list[0]) , ResdataTypeEnum.RD_FLOAT_TYPE)
-   std  = ResdataKW.create("STD-PERMX" , len(kw_list[0]) , ResdataTypeEnum.RD_FLOAT_TYPE)
+   mean = ResdataKW.create("AVG-PERMX" , len(kw_list[0]) , ResdataType.RD_FLOAT)
+   std  = ResdataKW.create("STD-PERMX" , len(kw_list[0]) , ResdataType.RD_FLOAT)
 
    # Here we do normal arithmetic calculations with the ResdataKW instances
    for kw in kw_list:
@@ -579,7 +579,7 @@ apply is:
 
    # Create a new satnum keyword and use the assign() method with a
    # mask parameter.
-   satnum = ResdataKW.create( "SATNUM" , grid.getGlobalSize() , ResdataTypeEnum.RD_INT_TYPE)
+   satnum = ResdataKW.create( "SATNUM" , grid.getGlobalSize() , ResdataType.RD_INT)
    satnum.assign( 1, mask = reg1 )
    satnum.assign( 2, mask = reg2 )
    satnum.assign( 3, mask = reg3 )
@@ -1128,9 +1128,7 @@ numpy_days
 ,,,,,,,,,,
 
 This property will return a numpy vector with the number of simulation
-days.  mpl_dates This property is a numpy vector of "time-values" in
-matplotlib format. Suitable when plotting with matplotlib. In the
-example below we fetch two vectors, and the simulation days from a
+days. In the example below we fetch two vectors, and the simulation days from a
 summary, and then print it all to the screen:
 
 .. code:: python

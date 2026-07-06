@@ -2,8 +2,6 @@ import datetime
 import numbers
 import re
 
-from resdata.util.util import monkey_the_camel
-
 from .rd_sum import Summary
 
 
@@ -182,15 +180,3 @@ varDict[\"npv\"] = npv
         varDict = {}
         eval(byteCode)
         return varDict["npv"]
-
-
-monkey_the_camel(NPVPriceVector, "addItem", NPVPriceVector.add_item)
-monkey_the_camel(NPVPriceVector, "assertDate", NPVPriceVector.assert_date, staticmethod)
-monkey_the_camel(NPVPriceVector, "evalDate", NPVPriceVector.eval_date)
-
-monkey_the_camel(ResdataNPV, "getExpression", ResdataNPV.get_expression)
-monkey_the_camel(ResdataNPV, "setExpression", ResdataNPV.set_expression)
-monkey_the_camel(ResdataNPV, "getKeyList", ResdataNPV.get_key_list)
-monkey_the_camel(ResdataNPV, "addKey", ResdataNPV.add_key)
-monkey_the_camel(ResdataNPV, "parseExpression", ResdataNPV.parse_expression)
-monkey_the_camel(ResdataNPV, "evalNPV", ResdataNPV.eval_npv)

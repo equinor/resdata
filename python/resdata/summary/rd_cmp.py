@@ -1,5 +1,3 @@
-from resdata.util.util import monkey_the_camel
-
 from .rd_sum import Summary
 
 
@@ -141,16 +139,3 @@ class ResdataCmp:
         Will return a list of wells keys in the test case.
         """
         return self.test_case.wells()
-
-
-monkey_the_camel(ResdataCase, "loadSummary", ResdataCase.load_summary)
-monkey_the_camel(ResdataCase, "startTimeEqual", ResdataCase.start_time_equal)
-monkey_the_camel(ResdataCase, "endTimeEqual", ResdataCase.end_time_equal)
-monkey_the_camel(ResdataCase, "cmpSummaryVector", ResdataCase.cmp_summary_vector)
-
-monkey_the_camel(ResdataCmp, "initCheck", ResdataCmp.init_check)
-monkey_the_camel(ResdataCmp, "hasSummaryVector", ResdataCmp.has_summary_vector)
-monkey_the_camel(ResdataCmp, "endTimeEqual", ResdataCmp.end_time_equal)
-monkey_the_camel(ResdataCmp, "cmpSummaryVector", ResdataCmp.cmp_summary_vector)
-monkey_the_camel(ResdataCmp, "testKeys", ResdataCmp.test_keys)
-monkey_the_camel(ResdataCmp, "testWells", ResdataCmp.test_wells)

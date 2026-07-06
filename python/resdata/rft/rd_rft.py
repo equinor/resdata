@@ -11,8 +11,6 @@ import numpy as np
 import numpy.typing as npt
 from resfo_utilities import RFTReader
 
-from resdata.util.util import monkey_the_camel
-
 from .rd_rft_cell import ResdataPLTCell, ResdataRFTCell
 
 
@@ -304,10 +302,3 @@ class ResdataRFTFile:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(wells = {len(self)}) {id(self)}"
-
-
-monkey_the_camel(ResdataRFT, "getWellName", ResdataRFT.get_well_name)
-monkey_the_camel(ResdataRFT, "getDate", ResdataRFT.get_date)
-
-monkey_the_camel(ResdataRFTFile, "getNumWells", ResdataRFTFile.get_num_wells)
-monkey_the_camel(ResdataRFTFile, "getHeaders", ResdataRFTFile.get_headers)

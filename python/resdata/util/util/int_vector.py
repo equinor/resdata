@@ -79,7 +79,6 @@ class IntVector(VectorTemplate):
     _contains = ResdataPrototype("bool int_vector_contains(rd_int_vector, int)")
     _select_unique = ResdataPrototype("void int_vector_select_unique(rd_int_vector)")
     _element_sum = ResdataPrototype("int int_vector_sum(rd_int_vector)")
-    _get_data_ptr = ResdataPrototype("int* int_vector_get_ptr(rd_int_vector)")
     _count_equal = ResdataPrototype("int int_vector_count_equal(rd_int_vector, int)")
     _init_range = ResdataPrototype(
         "void int_vector_init_range(rd_int_vector, int, int, int)"

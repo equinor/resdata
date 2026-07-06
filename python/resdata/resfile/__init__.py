@@ -22,7 +22,7 @@ import resdata.util.util
 from .fortio import FortIO, openFortIO
 from .rd_3d_file import Resdata3DFile
 from .rd_3dkw import Resdata3DKW
-from .rd_file import ResdataFile, openResdataFile
+from .rd_file import ResdataFile, open_rd_file
 from .rd_file_view import ResdataFileView
 from .rd_init_file import ResdataInitFile
 from .rd_kw import ResdataKW

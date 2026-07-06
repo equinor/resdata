@@ -117,20 +117,10 @@ extern "C" {
 #define IWEL_GAS_INJECTOR 4
 
 typedef enum {
-    ERT_UNDOCUMENTED_ZERO =
-        0, // Deprecated - retained for Resinsight compatibility
     RD_WELL_ZERO = 0,
-
-    ERT_PRODUCER = 1, // Deprecated
     RD_WELL_PRODUCER = 1,
-
-    ERT_OIL_INJECTOR = 2, // Deprecated
     RD_WELL_OIL_INJECTOR = 2,
-
-    ERT_WATER_INJECTOR = 3, // Deprecated
     RD_WELL_WATER_INJECTOR = 3,
-
-    ERT_GAS_INJECTOR = 4, // Deprecated
     RD_WELL_GAS_INJECTOR = 4,
 } well_type_enum;
 

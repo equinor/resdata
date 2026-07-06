@@ -24,47 +24,13 @@ the resdata library.
 """
 
 import ctypes
-import warnings
 
 import numpy as np
 from cwrap import CFILE, BaseCClass
-from typing_extensions import Self, deprecated
+from typing_extensions import Self
 
 import resdata.resfile._kw as _kw
-from resdata import ResDataType, ResdataTypeEnum
-from resdata.util.util import monkey_the_camel
-
-
-def dump_type_deprecation_warning():
-    warnings.warn(
-        "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
-        DeprecationWarning,
-    )
-
-
-def constant_size_data_type(rd_type):
-    return rd_type in [
-        ResdataTypeEnum.RD_CHAR_TYPE,
-        ResdataTypeEnum.RD_FLOAT_TYPE,
-        ResdataTypeEnum.RD_DOUBLE_TYPE,
-        ResdataTypeEnum.RD_INT_TYPE,
-        ResdataTypeEnum.RD_BOOL_TYPE,
-        ResdataTypeEnum.RD_MESS_TYPE,
-    ]
-
-
-def warn_and_cast_data_type(data_type):
-    if isinstance(data_type, ResDataType):
-        return data_type
-    if isinstance(data_type, ResdataTypeEnum):
-        if not constant_size_data_type(data_type):
-            raise ValueError(
-                "Cannot cast ResdataTypeEnum (%d) to ResDataType due "
-                "to non-constant size. Please provide an ResDataType instead."
-            )
-
-        dump_type_deprecation_warning()
-        return ResDataType(data_type)
+from resdata import ResDataType
 
 
 class ResdataKW(BaseCClass):
@@ -237,8 +203,6 @@ class ResdataKW(BaseCClass):
             else:
                 rd_type = ResDataType.RD_FLOAT
 
-        rd_type = warn_and_cast_data_type(rd_type)
-
         if not isinstance(rd_type, ResDataType):
             raise TypeError("Expected ResDataType, was: %s" % type(rd_type))
 
@@ -303,7 +267,7 @@ class ResdataKW(BaseCClass):
         fmt = 'ResdataKW(size=%d, name="%s", %s) %s'
         return fmt % (si, nm, mm, ad)
 
-    def __init__(self, name, size, data_type):
+    def __init__(self, name, size, data_type: ResDataType):
         """Creates a brand new ResdataKW instance.
 
         This method will create a grand spanking new ResdataKW
@@ -316,8 +280,6 @@ class ResdataKW(BaseCClass):
         """
         if len(name) > 8:
             raise ValueError("Sorry - maximum eight characters in keyword name")
-
-        data_type = warn_and_cast_data_type(data_type)
 
         if not isinstance(data_type, ResDataType):
             raise TypeError("Expected an ResDataType, received: %s" % type(data_type))
@@ -901,37 +863,15 @@ class ResdataKW(BaseCClass):
         return mm[0]
 
     @property
-    @deprecated(
-        "rd_kw.type is deprecated, it will be removed in version 7. Use .data_type."
-    )
-    def type(self):
-        return ResdataTypeEnum(_kw._get_type(self))
-
-    @property
     def data_type(self):
         return ResDataType.createPythonObject(_kw._get_data_type(self))
 
     def type_name(self):
         return self.data_type.type_name
 
-    @deprecated(
-        "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
-    )
-    def get_rd_type(self):
-        return ResdataTypeEnum(_kw._get_type(self))
-
     @property
     def header(self):
         return (self.get_name(), len(self), self.type_name())
-
-    @property
-    @deprecated("array is deprecated and will be removed in version 7.")
-    def array(self):
-        a = self.data_ptr
-        if a is not None:
-            a.size = len(self)
-            a.__parent__ = self  # Inhibit GC
-        return a
 
     def str_data(self, width, index1, index2, fmt):
         """
@@ -1020,7 +960,7 @@ class ResdataKW(BaseCClass):
         the ResdataKW.numpyView() method where the underlying data is
         shared.
         """
-        view = self.numpyView()
+        view = self.numpy_view()
         return np.copy(view)
 
     def fwrite(self, fortio):
@@ -1099,17 +1039,6 @@ class ResdataKW(BaseCClass):
         actnum = grid.exportACTNUM()
         _kw._fix_uninitialized(self, dims[0], dims[1], dims[2], actnum)
 
-    @deprecated("get_data_ptr is deprecated and will be removed in version 7.")
-    def get_data_ptr(self):
-        if self.data_type.is_int():
-            return ctypes.cast(_kw._int_ptr(self), ctypes.POINTER(ctypes.c_int))
-        elif self.data_type.is_float():
-            return ctypes.cast(_kw._float_ptr(self), ctypes.POINTER(ctypes.c_float))
-        elif self.data_type.is_double():
-            return ctypes.cast(_kw._double_ptr(self), ctypes.POINTER(ctypes.c_double))
-        else:
-            raise ValueError("Only numeric types can export data pointer")
-
     def first_different(
         self, other, offset=0, epsilon=0, abs_epsilon=None, rel_epsilon=None
     ):
@@ -1153,20 +1082,3 @@ class ResdataKW(BaseCClass):
             raise NotImplementedError(
                 "safe_div not implemented for this type combination"
             )
-
-
-monkey_the_camel(ResdataKW, "intKeywords", ResdataKW.int_keywords, classmethod)
-monkey_the_camel(ResdataKW, "isNumeric", ResdataKW.is_numeric)
-monkey_the_camel(ResdataKW, "fortIOSize", ResdataKW.fort_io_size)
-monkey_the_camel(ResdataKW, "setName", ResdataKW.set_name)
-monkey_the_camel(ResdataKW, "getName", ResdataKW.get_name)
-monkey_the_camel(ResdataKW, "getMinMax", ResdataKW.get_min_max)
-monkey_the_camel(ResdataKW, "getMax", ResdataKW.get_max)
-monkey_the_camel(ResdataKW, "getMin", ResdataKW.get_min)
-monkey_the_camel(ResdataKW, "typeName", ResdataKW.type_name)
-monkey_the_camel(ResdataKW, "getResdataType", ResdataKW.get_rd_type)
-monkey_the_camel(ResdataKW, "numpyView", ResdataKW.numpy_view)
-monkey_the_camel(ResdataKW, "numpyCopy", ResdataKW.numpy_copy)
-monkey_the_camel(ResdataKW, "fixUninitialized", ResdataKW.fix_uninitialized)
-monkey_the_camel(ResdataKW, "getDataPtr", ResdataKW.get_data_ptr)
-monkey_the_camel(ResdataKW, "firstDifferent", ResdataKW.first_different)

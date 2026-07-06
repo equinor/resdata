@@ -71,7 +71,7 @@ def actnum():
 
 @pytest.fixture
 def grid(actnum):
-    return Grid.create_rectangular((10, 10, 1), (1, 1, 1), actnum=actnum)
+    return GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1), actnum=actnum)
 
 
 @pytest.fixture

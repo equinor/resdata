@@ -15,7 +15,6 @@ import ctypes
 from cwrap import BaseCEnum
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
 
 
 class FileType(BaseCEnum):
@@ -158,8 +157,3 @@ class ResdataUtil:
 get_num_cpu = ResdataUtil.get_num_cpu
 get_file_type = ResdataUtil.get_file_type
 get_start_date = ResdataUtil.get_start_date
-
-monkey_the_camel(
-    ResdataUtil, "inspectExtension", ResdataUtil.inspect_extension, staticmethod
-)
-monkey_the_camel(ResdataUtil, "reportStep", ResdataUtil.report_step, staticmethod)

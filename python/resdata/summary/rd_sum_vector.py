@@ -1,7 +1,6 @@
 import warnings
 
-from typing_extensions import deprecated
-
+from ._date2num import date2num
 from .rd_sum_node import SummaryNode
 
 
@@ -90,20 +89,6 @@ class SummaryVector:
         return self.__days
 
     @property
-    @deprecated(
-        "The mpl_dates property has been deprecated, and will be "
-        "removed in version 7. Use numpy_dates instead"
-    )
-    def mpl_dates(self):
-        """
-        All the dates as numpy vector of dates in matplotlib format.
-        This property will be replaced by numpy_dates, but is kept for
-        backwards-compatibility for the time-being. Usage will trigger
-        a depreciation warning.
-        """
-        return self.parent.get_mpl_dates(self.report_only)
-
-    @property
     def numpy_dates(self):
         """
         All the dates as numpy vector of dates in numpy format.
@@ -127,7 +112,7 @@ class SummaryVector:
             self.__report_step[index],
             self.__days[index],
             self.__dates[index],
-            self.mpl_dates[index],
+            date2num(self.dates[index]),
             self.__values[index],
         )
 

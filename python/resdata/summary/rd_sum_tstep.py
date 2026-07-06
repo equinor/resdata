@@ -1,7 +1,7 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import CTime
 
 
 class SummaryTStep(BaseCClass):
@@ -68,9 +68,3 @@ class SummaryTStep(BaseCClass):
         m = self._get_ministep()
         cnt = "sim_days={}, sim_time={}, report={}, ministep={}"
         return self._create_repr(cnt.format(d, t, r, m))
-
-
-monkey_the_camel(SummaryTStep, "getSimDays", SummaryTStep.get_sim_days)
-monkey_the_camel(SummaryTStep, "getReport", SummaryTStep.get_report)
-monkey_the_camel(SummaryTStep, "getMiniStep", SummaryTStep.get_mini_step)
-monkey_the_camel(SummaryTStep, "getSimTime", SummaryTStep.get_sim_time)

@@ -22,7 +22,6 @@ functions.
 from contextlib import contextmanager
 
 from resdata.resfile._fortio import FortIO
-from resdata.util.util import monkey_the_camel
 
 
 @contextmanager
@@ -60,8 +59,5 @@ def openFortIO(
         )
     )
 
-
-monkey_the_camel(FortIO, "getPosition", FortIO.get_position)
-monkey_the_camel(FortIO, "isFortranFile", FortIO.is_fortran_file, classmethod)
 
 __all__ = ["FortIO", "FortIOContextManager", "openFortIO"]

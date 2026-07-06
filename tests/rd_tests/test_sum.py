@@ -119,49 +119,6 @@ class SumTest(ResdataTest):
         self.assertTrue("FOPT" in case)
         self.assertFalse("WWCT:OPX" in case)
 
-    def test_deprecated_mock_module(self):
-        # Exercise the deprecated resdata.util.test.mock.rd_sum_mock helper
-        # so that its mainline lines (variable creation, addTStep, key access)
-        # are covered. We cannot import the parent package normally because
-        # resdata.util.test.__init__ registers C types that conflict with
-        # tests.util, so we install stub parent packages first and load the
-        # target module directly from its source path under its real name.
-        import importlib.util
-        import os
-        import sys
-        import types
-        import warnings
-
-        import resdata
-
-        for parent in ("resdata.util.test", "resdata.util.test.mock"):
-            if parent not in sys.modules:
-                stub = types.ModuleType(parent)
-                stub.__path__ = []
-                sys.modules[parent] = stub
-
-        path = os.path.join(
-            os.path.dirname(resdata.__file__),
-            "util",
-            "test",
-            "mock",
-            "rd_sum_mock.py",
-        )
-        module_name = "resdata.util.test.mock.rd_sum_mock"
-        spec = importlib.util.spec_from_file_location(module_name, path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            case = module.createSummary(
-                "CSV",
-                [("FOPT", None, 0, "SM3"), ("WOPR", "OP_1", 0, "SM3/DAY")],
-            )
-        self.assertIn("FOPT", case)
-        self.assertIn("WOPR:OP_1", case)
-
     def test_TIME_special_case(self):
         case = createSummary(
             "CSV", [("FOPT", None, 0, "SM3"), ("FOPR", None, 0, "SM3/DAY")]
@@ -462,7 +419,7 @@ class SumTest(ResdataTest):
         with self.assertRaises(KeyError):
             case.last_value("NO_SUCH_KEY")
         last_fopt = case.last_value("FOPT")
-        values = case.get_values("FOPT")
+        values = list(case.numpy_vector("FOPT"))
         self.assertEqual(last_fopt, values[-1])
 
         with self.assertRaises(KeyError):
@@ -637,15 +594,6 @@ class SumTest(ResdataTest):
         v = case.numpy_vector("FOPR", report_only=True)
         self.assertEqual(len(v), len(case.report_dates))
 
-    def test_vector(self):
-        case = create_case()
-
-        # The get_vector method is extremely deprecated.
-        v1 = case.get_vector("FOPT")
-        v2 = case.get_vector("FOPT", report_only=True)
-        s1 = sum([x.value for x in v1])
-        s2 = sum([x.value for x in v2])
-
     def test_wells_and_groups(self):
         case = create_case()
         self.assertEqual(case.wells(), [])
@@ -766,7 +714,7 @@ class SumTest(ResdataTest):
             elif t > rd_sum.get_end_time():
                 self.assertFloatEqual(
                     resampled.iget(key_not_rate, time_index),
-                    rd_sum.get_last_value(key_not_rate),
+                    rd_sum.last_value(key_not_rate),
                 )
             else:
                 self.assertFloatEqual(

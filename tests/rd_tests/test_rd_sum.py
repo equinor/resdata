@@ -9,13 +9,13 @@ import resfo
 from cwrap import open as copen
 from hypothesis import assume, given
 from pandas.testing import assert_frame_equal
-from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
+from resdata.resfile import FortIO, ResdataKW, open_rd_file, openFortIO
 from resdata.summary import (
     Summary,
     SummaryKeyWordVector,
     SummaryVarType,
 )
-from resdata.summary.rd_sum import date2num
+from resdata.summary._date2num import date2num
 from resdata.util.util import DoubleVector, StringList, TimeVector
 from resfo_utilities.testing import (
     Date,
@@ -164,7 +164,7 @@ class SummaryTest(ResdataTest):
             ta.copy_file(self.test_file)
             ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
 
-            with openResdataFile("ECLIPSE.SMSPEC") as f:
+            with open_rd_file("ECLIPSE.SMSPEC") as f:
                 kw_list = []
                 for kw in f:
                     kw_list.append(ResdataKW.copy(kw))
@@ -183,7 +183,7 @@ class SummaryTest(ResdataTest):
             ta.copy_file(self.test_file)
             ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
 
-            with openResdataFile("ECLIPSE.UNSMRY") as f:
+            with open_rd_file("ECLIPSE.UNSMRY") as f:
                 kw_list = []
                 for kw in f:
                     kw_list.append(ResdataKW.copy(kw))
@@ -641,7 +641,9 @@ def test_summary_writer_multiple_variables():
     loaded = Summary("MULTI_VAR")
     assert len(loaded) == 4
 
-    assert loaded.get_values("FOPT") == pytest.approx([100.0 * i for i in range(1, 5)])
+    assert list(loaded.numpy_vector("FOPT")) == pytest.approx(
+        [100.0 * i for i in range(1, 5)]
+    )
     assert loaded.groups() == ["GROUP1"]
     assert loaded.groups("*") == ["GROUP1"]
     assert loaded.groups("NO") == []

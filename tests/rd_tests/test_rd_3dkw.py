@@ -137,7 +137,7 @@ class Resdata3DKWTest(ResdataTest):
     def test_default(self):
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT)
-        kw.setDefault(55)
+        kw.set_default(55)
         self.assertTrue(55, kw.get_default())
 
     def test_compressed_copy(self):
@@ -167,7 +167,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(len(kw)):
             kw[i] = i
 
-        kw.setDefault(177)
+        kw.set_default(177)
         kw_copy = kw.global_copy()
         self.assertTrue(isinstance(kw_copy, ResdataKW))
 

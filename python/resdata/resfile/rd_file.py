@@ -25,11 +25,10 @@ import datetime
 import re
 
 from cwrap import BaseCClass
-from typing_extensions import deprecated
 
 import resdata.resfile._file as _file
 from resdata import FileMode, FileType
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import CTime
 
 from .rd_file_view import ResdataFileView
 from .rd_kw import ResdataKW
@@ -544,20 +543,5 @@ class ResdataFileContextManager:
         return False
 
 
-@deprecated(
-    "The function openResdataFile is deprecated, "
-    "and will be removed in version 7. Use open_rd_file."
-)
-def openResdataFile(file_name, flags=FileMode.DEFAULT):
-    return open_rd_file(file_name, flags)
-
-
 def open_rd_file(file_name, flags=FileMode.DEFAULT):
     return ResdataFileContextManager(ResdataFile(file_name, flags))
-
-
-monkey_the_camel(ResdataFile, "getFileType", ResdataFile.get_filetype, staticmethod)
-monkey_the_camel(ResdataFile, "blockView", ResdataFile.block_view)
-monkey_the_camel(ResdataFile, "blockView2", ResdataFile.block_view2)
-monkey_the_camel(ResdataFile, "restartView", ResdataFile.restart_view)
-monkey_the_camel(ResdataFile, "getFilename", ResdataFile.get_filename)
