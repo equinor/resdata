@@ -653,8 +653,9 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
     if (!rd_file_has_kw(header, RESTART_KW))
         return;
     const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
-    if (restart_kw == NULL)
-        return;
+    if (restart_kw == nullptr)
+        throw std::invalid_argument(
+            "RESTART keyword lookup failed despite keyword presence");
     int num_blocks = rd_kw_get_size(restart_kw);
     num_blocks = (num_blocks < 0) ? 0 : num_blocks;
     auto tmp_base = rd::checked_calloc<char>(8 * num_blocks + 1);
@@ -929,6 +930,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         {
             int *date = rd_kw_get_int_ptr(startdat);
+            if (date == NULL)
+                throw std::invalid_argument(
+                    "STARTDAT keyword has no integer data payload");
             int year = date[STARTDAT_YEAR_INDEX];
             int month = date[STARTDAT_MONTH_INDEX];
             int day = date[STARTDAT_DAY_INDEX];
@@ -1027,6 +1031,9 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
             rd_smspec_get_var_node(rd_smspec->misc_var_index, "TIME");
         if (time_node) {
             const char *time_unit = time_node->get_unit();
+            if (time_unit == nullptr)
+                throw std::invalid_argument(
+                    "TIME variable is missing a unit string");
             rd_smspec->time_index = time_node->get_params_index();
 
             if (util_string_equal(time_unit, "DAYS"))
