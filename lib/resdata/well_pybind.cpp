@@ -14,6 +14,7 @@
 #include <optional>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 #include <fmt/format.h>
 #include <filesystem>
 
@@ -107,7 +108,7 @@ PYBIND11_MODULE(well, m) {
         .def("isFractureConnection", &WellConnection::is_fracture_connection)
         .def("isMatrixConnection", &WellConnection::is_matrix_connection)
         .def("connectionFactor", &WellConnection::get_connection_factor)
-        .def("__eq__", &WellConnection::operator==)
+        .def(py::self == py::self)
         .def("__hash__",
              [](const WellConnection &self) {
                  return py::hash(py::make_tuple(
