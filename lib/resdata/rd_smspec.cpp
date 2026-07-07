@@ -653,6 +653,8 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
     if (!rd_file_has_kw(header, RESTART_KW))
         return;
     const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
+    if (restart_kw == NULL)
+        return;
     int num_blocks = rd_kw_get_size(restart_kw);
     num_blocks = (num_blocks < 0) ? 0 : num_blocks;
     auto tmp_base = rd::checked_calloc<char>(8 * num_blocks + 1);
@@ -871,10 +873,24 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         int params_index;
         rd_smspec->num_regions = 0;
-        rd_smspec->params_size = rd_kw_get_size(keywords);
+
+        if (wells == NULL)
+            throw std::invalid_argument(
+                "Could not locate WGNAMES/NAMES keyword in header");
+        if (keywords == NULL)
+            throw std::invalid_argument(
+                "Could not locate KEYWORDS keyword in header");
         if (startdat == NULL)
             throw std::invalid_argument(
                 "Could not locate STARTDAT keyword in header");
+        if (units == NULL)
+            throw std::invalid_argument(
+                "Could not locate UNITS keyword in header");
+        if (dimens == NULL)
+            throw std::invalid_argument(
+                "Could not locate DIMENS keyword in header");
+
+        rd_smspec->params_size = rd_kw_get_size(keywords);
 
         if (rd_file_has_kw(header.get(), NUMS_KW))
             nums = rd_file_iget_named_kw(header.get(), NUMS_KW, 0);
@@ -882,6 +898,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
         if (rd_file_has_kw(header.get(), INTEHEAD_KW)) {
             const rd_kw_type *intehead =
                 rd_file_iget_named_kw(header.get(), INTEHEAD_KW, 0);
+            if (intehead == NULL)
+                throw std::invalid_argument(
+                    "INTEHEAD keyword lookup failed despite keyword presence");
             rd_smspec->unit_system = (ert_rd_unit_enum)rd_kw_iget_int(
                 intehead, INTEHEAD_SMSPEC_UNIT_INDEX);
             /*
@@ -903,6 +922,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             numlx = rd_file_iget_named_kw(header.get(), NUMLX_KW, 0);
             numly = rd_file_iget_named_kw(header.get(), NUMLY_KW, 0);
             numlz = rd_file_iget_named_kw(header.get(), NUMLZ_KW, 0);
+
             rd_smspec->has_lgr = true;
         } else
             rd_smspec->has_lgr = false;

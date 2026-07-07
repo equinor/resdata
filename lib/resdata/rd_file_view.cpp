@@ -152,6 +152,11 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
                                  char *io_buffer) {
     auto file_kw = rd_file_view_iget_named_file_kw(rd_file_view, kw, index);
 
+    if (!file_kw)
+        throw std::invalid_argument(std::string("Keyword '") + kw + "' index " +
+                                    std::to_string(index) +
+                                    " not found in file view");
+
     if (rd_file_view->fortio->assert_stream_open()) {
         offset_type offset = file_kw->get_offset();
         rd_data_type data_type = file_kw->get_data_type();
