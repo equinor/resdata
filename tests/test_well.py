@@ -1249,7 +1249,23 @@ def test_that_global_connections_of_two_wells_have_different_ijk(tmp_path, grid)
 
 
 connection_idx = st.integers(min_value=1, max_value=6)
-connections = st.builds(Connection, *([connection_idx] * 3))
+connection_rates = st.floats(
+    allow_nan=False, allow_infinity=False, min_value=-1e6, max_value=1e6
+)
+connections = st.builds(
+    Connection,
+    i=connection_idx,
+    j=connection_idx,
+    k=connection_idx,
+    status=st.sampled_from([0, 1]),
+    direction=st.sampled_from([ICON_DIR_DEFAULT, 1, 2, 3]),
+    rates=st.one_of(
+        st.none(),
+        st.tuples(
+            connection_rates, connection_rates, connection_rates, connection_rates
+        ),
+    ),
+)
 
 
 @given(st.lists(connections))
@@ -1267,6 +1283,25 @@ def test_that_all_written_connections_are_read(tmp_path_factory, connections):
     assert {
         conn.ijk() for conn in WellInfo(grid, path)["OP1"][0].globalConnections()
     } == {(c.i - 1, c.j - 1, c.k - 1) for c in connections}
+
+
+@given(st.lists(connections, min_size=1, max_size=5))
+def test_that_equal_well_connections_have_equal_hash(tmp_path_factory, connections):
+    grid = GridGenerator.create_rectangular((NX, NY, NZ), (1.0, 1.0, 1.0))
+    tmp_path = tmp_path_factory.mktemp("connection_hash")
+    well = Well(name="OP1", well_type=IWEL_PRODUCER, connections=connections)
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    loaded = (
+        WellInfo(grid, path)["OP1"][0].globalConnections()
+        + WellInfo(grid, path)["OP1"][0].globalConnections()
+    )
+
+    for a in loaded:
+        for b in loaded:
+            if a == b:
+                assert hash(a) == hash(b)
 
 
 def test_that_querying_one_well_does_not_change_another_wells_connections(

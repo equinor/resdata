@@ -1,5 +1,11 @@
 #include <cstddef>
 
+#include <fmt/core.h>
+#include <pybind11/attr.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
+#include <pybind11/pytypes.h>
+#include <pyerrors.h>
 #include <string>
 #include <tuple>
 #include <variant>
@@ -103,8 +109,14 @@ PYBIND11_MODULE(well, m) {
         .def("connectionFactor", &WellConnection::get_connection_factor)
         .def("__eq__", &WellConnection::operator==)
         .def("__hash__",
-             [](py::object self) {
-                 return reinterpret_cast<Py_ssize_t>(self.ptr());
+             [](const WellConnection &self) {
+                 return py::hash(py::make_tuple(
+                     self.get_i(), self.get_j(), self.get_k(),
+                     static_cast<int>(self.get_dir()), self.is_open(),
+                     self.get_segment_id(), self.is_matrix_connection(),
+                     self.get_connection_factor(), self.get_oil_rate(),
+                     self.get_gas_rate(), self.get_water_rate(),
+                     self.get_volume_rate()));
              })
         .def("isMultiSegmentWell", &WellConnection::is_MSW)
         .def("__repr__",
