@@ -4,3 +4,5 @@ recursive-include lib *
 recursive-include applications *
 recursive-include bin *
 recursive-include cmake *
+recursive-include python/resdata *.pyi
+include python/resdata/py.typed

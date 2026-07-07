@@ -137,6 +137,7 @@ skbuild.setup(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"],
     ),
     package_dir={"": "python"},
+    package_data={"resdata": ["py.typed", "well/*.pyi"]},
     license="GPL-3.0",
     platforms="any",
     install_requires=[
