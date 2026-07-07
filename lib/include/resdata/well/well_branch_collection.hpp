@@ -1,17 +1,13 @@
-#ifndef ERT_WELL_BRANCH_COLLECTION_H
-#define ERT_WELL_BRANCH_COLLECTION_H
+#pragma once
+#include <memory>
 
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/well/well_segment.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct well_branch_collection_struct well_branch_collection_type;
 
-well_branch_collection_type *well_branch_collection_alloc(void);
+well_branch_collection_type *well_branch_collection_alloc();
 void well_branch_collection_free(well_branch_collection_type *branches);
 bool well_branch_collection_has_branch(
     const well_branch_collection_type *branches, int branch_id);
@@ -26,12 +22,7 @@ bool well_branch_collection_add_start_segment(
 
 UTIL_IS_INSTANCE_HEADER(well_branch_collection);
 
-#ifdef __cplusplus
-}
-#include <memory>
 
 using well_branch_collection_ptr =
     std::unique_ptr<well_branch_collection_type,
                     decltype(&well_branch_collection_free)>;
-#endif
-#endif
