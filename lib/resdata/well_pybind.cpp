@@ -223,7 +223,6 @@ PYBIND11_MODULE(well, m) {
         .def("isMainStem", &WellSegment::is_main_stem)
         .def("isNearestWellHead", &WellSegment::is_nearest_wellhead)
         .def("depth", &WellSegment::get_depth)
-        .def("__len__", &WellSegment::get_length)
         .def("length", &WellSegment::get_length)
         .def("totalLength", &WellSegment::get_total_length)
         .def("diameter", &WellSegment::get_diameter);
