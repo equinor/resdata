@@ -1,21 +1,18 @@
-#ifndef ERT_WELL_SEGMENT_COLLECTION_H
-#define ERT_WELL_SEGMENT_COLLECTION_H
-
+#pragma once
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_kw.hpp>
+
+#include <vector>
+#include <memory>
 
 #include <resdata/well/well_segment.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
 #include <resdata/well/well_conn.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct well_segment_collection_struct well_segment_collection_type;
 
-well_segment_collection_type *well_segment_collection_alloc(void);
+well_segment_collection_type *well_segment_collection_alloc();
 void well_segment_collection_free(
     well_segment_collection_type *segment_collection);
 int well_segment_collection_get_size(
@@ -35,11 +32,6 @@ void well_segment_collection_add_branches(
     const well_segment_collection_type *segment_collection,
     well_branch_collection_type *branches);
 
-#ifdef __cplusplus
-}
-#include <vector>
-#include <memory>
-
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
     const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
@@ -52,5 +44,3 @@ void well_segment_collection_add_connections(
 using well_segment_collection_ptr =
     std::unique_ptr<well_segment_collection_type,
                     decltype(&well_segment_collection_free)>;
-#endif
-#endif
