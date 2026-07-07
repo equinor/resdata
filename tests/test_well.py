@@ -563,6 +563,78 @@ def test_that_connection_direction_is_read_from_icon(
     assert connection.direction() == expected_direction
 
 
+@pytest.mark.parametrize(
+    "icon_direction, expected_direction",
+    [
+        (4, WellConnectionDirection.well_conn_fracX),
+        (5, WellConnectionDirection.well_conn_fracY),
+    ],
+)
+def test_that_fracture_connection_direction_is_read_from_icon(
+    tmp_path, grid, icon_direction, expected_direction
+):
+    # Fractured directions (fracX/fracY) are only valid for non-matrix
+    # connections, so a dual-porosity file with a connection in the fracture
+    # part of the grid (k >= nz/2) is required.
+    well = Well(
+        name="W1",
+        connections=[Connection(i=1, j=1, k=NZ // 2 + 1, direction=icon_direction)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], dualp=True)
+
+    connection = WellInfo(grid, path)["W1"][0].globalConnections()[0]
+
+    assert connection.isFractureConnection()
+    assert connection.direction() == expected_direction
+
+
+def test_that_a_connection_with_an_out_of_range_direction_is_dropped(
+    tmp_path, grid, capfd
+):
+    # A direction value greater than the largest valid ICON direction
+    # (ICON_FRACY == 5) will drop the connection from the list and
+    # print to stderr.
+    well = Well(
+        name="W1",
+        connections=[
+            Connection(i=1, j=1, k=1),
+            Connection(i=2, j=2, k=2, direction=6),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["W1"][0].globalConnections()
+
+    assert len(connections) == 1
+    assert connections[0].ijk() == (0, 0, 0)
+    assert "Invalid direction value:6" in capfd.readouterr().err
+
+
+def test_that_a_matrix_connection_with_a_fracture_direction_is_dropped(
+    tmp_path, grid, capfd
+):
+    # fracX/fracY are only valid for fracture (non-matrix) connections. Setting
+    # a fracture direction on a matrix connection will drop it from the list
+    # of connections and print to stderr
+    well = Well(
+        name="W1",
+        connections=[
+            Connection(i=1, j=1, k=1),
+            Connection(i=2, j=2, k=2, direction=4),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connections = WellInfo(grid, path)["W1"][0].globalConnections()
+
+    assert len(connections) == 1
+    assert connections[0].ijk() == (0, 0, 0)
+    assert "invalid direction" in capfd.readouterr().err
+
+
 def test_that_connection_factor_is_read_from_scon(producer):
     connections = producer()["OP1"][0].globalConnections()
 
