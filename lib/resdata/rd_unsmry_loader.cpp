@@ -7,6 +7,9 @@
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/rd_file_view.hpp>
+#include <resdata/rd_file_kw.hpp>
+#include <resdata/rd_type.hpp>
 
 #include "detail/resdata/rd_unsmry_loader.hpp"
 
@@ -36,6 +39,20 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
                          rd_smspec_get_date_year_index(smspec)}};
     rd_file_view_type *file_view = rd_file_get_global_view(file.get());
     int length = rd_file_view_get_num_named_kw(file_view, PARAMS_KW);
+
+    if (length > 0) {
+        const rd_kw_type *params_kw =
+            rd_file_view_iget_named_kw(file_view, PARAMS_KW, 0);
+        if (params_kw == nullptr)
+            throw std::invalid_argument(
+                "Malformed summary file: missing PARAMS keyword entry");
+
+        const rd_data_type params_data_type = rd_kw_get_data_type(params_kw);
+        if (!rd_type_is_float(params_data_type))
+            throw std::invalid_argument(
+                "Malformed summary file: PARAMS keyword is not float");
+    }
+
     this->file = file.release();
     this->file_view = file_view;
     this->m_length = length;
@@ -53,13 +70,12 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 
     std::vector<double> data(this->length());
     auto index_map = make_int_vector(1, pos);
-    char buffer[4];
+    float value;
 
     for (int index = 0; index < this->length(); index++) {
         rd_file_view_index_fload_kw(file_view, PARAMS_KW, index,
-                                    index_map.get(), buffer);
-        float *data_value = (float *)buffer;
-        data[index] = *data_value;
+                                    index_map.get(), (char *)&value);
+        data[index] = value;
     }
 
     if (rd_file_view_flags_set(file_view, RD_FILE_CLOSE_STREAM))
