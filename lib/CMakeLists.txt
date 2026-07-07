@@ -340,7 +340,7 @@ foreach(
   well_branch_collection
   test_well_conn
   test_well_state
-  well_segment
+  test_well_segment
   well_segment_conn
   well_segment_collection
   rd_file)
