@@ -2,16 +2,18 @@
 #include <cstdio>
 #include <cstring>
 #include <ios>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
 #include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.hpp>
 
-#include <resdata/rd_util.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/FortIO.hpp>
+#include <ert/util/perm_vector.hpp>
+#include <resdata/rd_type.hpp>
 
 /*
   This file implements the datatype rd_file_kw which is used to hold
@@ -29,8 +31,6 @@
   whose index tables consists of rd_file_kw instances.
 */
 
-#define RD_FILE_KW_TYPE_ID 646107
-
 struct inv_map_struct {
     size_t_vector_type *file_kw_ptr;
     size_t_vector_type *rd_kw_ptr;
@@ -38,13 +38,17 @@ struct inv_map_struct {
 };
 
 struct rd_file_kw_struct {
-    UTIL_TYPE_ID_DECLARATION;
     offset_type file_offset;
     rd_data_type data_type;
     int kw_size;
-    int ref_count;
-    char *header;
-    rd_kw_type *kw;
+    int ref_count = 0;
+    std::string header;
+    rd_kw_ptr kw{nullptr, &rd_kw_free};
+
+    rd_file_kw_struct(offset_type file_offset, rd_data_type data_type,
+                      int kw_size, std::string header)
+        : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
+          header(header) {};
 };
 
 inv_map_type *inv_map_alloc() {
@@ -109,21 +113,9 @@ rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
     }
 }
 
-UTIL_IS_INSTANCE_FUNCTION(rd_file_kw, RD_FILE_KW_TYPE_ID);
-
 rd_file_kw_type *rd_file_kw_alloc0(const char *header, rd_data_type data_type,
                                    int size, offset_type offset) {
-    rd_file_kw_type *file_kw = (rd_file_kw_type *)util_malloc(sizeof *file_kw);
-    UTIL_TYPE_ID_INIT(file_kw, RD_FILE_KW_TYPE_ID);
-
-    file_kw->header = util_alloc_string_copy(header);
-    memcpy(&file_kw->data_type, &data_type, sizeof data_type);
-    file_kw->kw_size = size;
-    file_kw->file_offset = offset;
-    file_kw->ref_count = 0;
-    file_kw->kw = NULL;
-
-    return file_kw;
+    return new rd_file_kw_struct(offset, data_type, size, header);
 }
 
 /**
@@ -145,12 +137,8 @@ rd_file_kw_type *rd_file_kw_alloc(const rd_kw_type *rd_kw, offset_type offset) {
 }
 
 void rd_file_kw_free(rd_file_kw_type *file_kw) {
-    if (file_kw->kw != NULL) {
-        rd_kw_free(file_kw->kw);
-        file_kw->kw = NULL;
-    }
-    free(file_kw->header);
-    free(file_kw);
+    file_kw->kw.reset(nullptr);
+    delete file_kw;
 }
 
 bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
@@ -163,35 +151,34 @@ bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
     if (!rd_type_is_equal(kw1->data_type, kw2->data_type))
         return false;
 
-    return util_string_equal(kw1->header, kw2->header);
+    return kw1->header == kw2->header;
 }
 
 static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
-    if (file_kw->kw == NULL)
+    if (!file_kw->kw)
         throw std::runtime_error(
             "rd_file_kw: keyword could not be loaded from file "
             "(rd_kw_fread_alloc returned NULL)");
 
     if (!rd_type_is_equal(rd_file_kw_get_data_type(file_kw),
-                          rd_kw_get_data_type(file_kw->kw)))
+                          rd_kw_get_data_type(file_kw->kw.get())))
         throw std::runtime_error(std::string(__func__) +
                                  ": type mismatch between header and file.");
 
-    if (file_kw->kw_size != rd_kw_get_size(file_kw->kw))
+    if (file_kw->kw_size != rd_kw_get_size(file_kw->kw.get()))
         throw std::runtime_error(std::string(__func__) +
                                  ": size mismatch between header and file.");
 
-    if (strcmp(file_kw->header, rd_kw_get_header(file_kw->kw)) != 0)
+    if (file_kw->header != rd_kw_get_header(file_kw->kw.get()))
         throw std::runtime_error(std::string(__func__) +
                                  ": name mismatch between header and file.");
 }
 
 static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
                                inv_map_type *inv_map) {
-    if (file_kw->kw != NULL) {
-        inv_map_drop_kw(inv_map, file_kw->kw);
-        rd_kw_free(file_kw->kw);
-        file_kw->kw = NULL;
+    if (file_kw->kw) {
+        inv_map_drop_kw(inv_map, file_kw->kw.get());
+        file_kw->kw.reset(nullptr);
     }
 }
 
@@ -203,14 +190,14 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
             ": trying to load a keyword after the backing file has "
             "been detached.");
 
-    if (file_kw->kw != NULL)
+    if (file_kw->kw)
         rd_file_kw_drop_kw(file_kw, inv_map);
 
     {
         fortio.fseek(file_kw->file_offset, SEEK_SET);
-        file_kw->kw = rd_kw_fread_alloc(fortio);
+        file_kw->kw.reset(rd_kw_fread_alloc(fortio));
         rd_file_kw_assert_kw(file_kw);
-        inv_map_add_kw(inv_map, file_kw, file_kw->kw);
+        inv_map_add_kw(inv_map, file_kw, file_kw->kw.get());
     }
 }
 
@@ -225,7 +212,7 @@ rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw) {
         return NULL;
 
     file_kw->ref_count++;
-    return file_kw->kw;
+    return file_kw->kw.get();
 }
 
 /*
@@ -250,11 +237,11 @@ rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
     if (file_kw->kw)
         file_kw->ref_count++;
 
-    return file_kw->kw;
+    return file_kw->kw.get();
 }
 
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw) {
-    return file_kw->header;
+    return file_kw->header.c_str();
 }
 
 int rd_file_kw_get_size(const rd_file_kw_type *file_kw) {
@@ -287,12 +274,12 @@ void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio) {
     fortio.fseek(file_kw->file_offset, SEEK_SET);
     rd_kw_fskip_header(fortio);
     fortio.fclean();
-    rd_kw_fwrite_data(file_kw->kw, fortio);
+    rd_kw_fwrite_data(file_kw->kw.get(), fortio);
 }
 
 void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream) {
-    int header_length = strlen(file_kw->header);
-    for (int i = 0; i < RD_STRING8_LENGTH; i++) {
+    size_t header_length = file_kw->header.size();
+    for (size_t i = 0; i < RD_STRING8_LENGTH; i++) {
         if (i < header_length)
             fputc(file_kw->header[i], stream);
         else
@@ -385,8 +372,7 @@ void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,
 
 void rd_file_kw_end_transaction(rd_file_kw_type *file_kw, int ref_count) {
     if (ref_count == 0 && file_kw->ref_count > 0) {
-        rd_kw_free(file_kw->kw);
-        file_kw->kw = NULL;
+        file_kw->kw.reset(nullptr);
     }
     file_kw->ref_count = ref_count;
 }
