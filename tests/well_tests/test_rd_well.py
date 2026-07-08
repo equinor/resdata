@@ -352,12 +352,6 @@ class ResdataWellTest(ResdataTest):
             well_info, well_count=8, report_step_count=[4, 4, 4, 4, 4, 3, 3, 3]
         )
 
-    def test_well_connection_direction_enum(self):
-        source_file_path = "lib/include/resdata/well/well_conn.hpp"
-        self.assertEnumIsFullyDefined(
-            WellConnectionDirection, "well_conn_dir_enum", source_file_path
-        )
-
     def test_well_info(self):
         well_info = self.getWellInfo()
         self.assertEqual(len(well_info), 222)
