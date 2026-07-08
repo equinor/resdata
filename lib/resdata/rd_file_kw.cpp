@@ -32,9 +32,9 @@
 */
 
 struct inv_map_struct {
-    size_t_vector_type *file_kw_ptr;
-    size_t_vector_type *rd_kw_ptr;
-    bool sorted;
+    size_t_vector_ptr file_kw_ptr = make_size_t_vector(0, 0);
+    size_t_vector_ptr rd_kw_ptr = make_size_t_vector(0, 0);
+    bool sorted = false;
 };
 
 struct rd_file_kw_struct {
@@ -51,50 +51,41 @@ struct rd_file_kw_struct {
           header(header) {};
 };
 
-inv_map_type *inv_map_alloc() {
-    inv_map_type *map = (inv_map_type *)util_malloc(sizeof *map);
-    map->file_kw_ptr = size_t_vector_alloc(0, 0);
-    map->rd_kw_ptr = size_t_vector_alloc(0, 0);
-    map->sorted = false;
-    return map;
-}
+inv_map_type *inv_map_alloc() { return new inv_map_type(); }
 
-void inv_map_free(inv_map_type *map) {
-    size_t_vector_free(map->file_kw_ptr);
-    size_t_vector_free(map->rd_kw_ptr);
-    free(map);
-}
+void inv_map_free(inv_map_type *map) { delete map; }
 
 static void inv_map_assert_sort(inv_map_type *map) {
     if (!map->sorted) {
-        perm_vector_type *perm = size_t_vector_alloc_sort_perm(map->rd_kw_ptr);
+        std::unique_ptr<perm_vector_type, decltype(&perm_vector_free)> perm(
+            size_t_vector_alloc_sort_perm(map->rd_kw_ptr.get()),
+            perm_vector_free);
 
-        size_t_vector_permute(map->rd_kw_ptr, perm);
-        size_t_vector_permute(map->file_kw_ptr, perm);
+        size_t_vector_permute(map->rd_kw_ptr.get(), perm.get());
+        size_t_vector_permute(map->file_kw_ptr.get(), perm.get());
         map->sorted = true;
-
-        perm_vector_free(perm);
     }
 }
 
 static void inv_map_drop_kw(inv_map_type *map, const rd_kw_type *rd_kw) {
     inv_map_assert_sort(map);
     {
-        int index = size_t_vector_index_sorted(map->rd_kw_ptr, (size_t)rd_kw);
+        int index =
+            size_t_vector_index_sorted(map->rd_kw_ptr.get(), (size_t)rd_kw);
         if (index == -1)
             throw std::logic_error(std::string(__func__) +
                                    ": trying to drop non-existent kw");
 
-        size_t_vector_idel(map->rd_kw_ptr, index);
-        size_t_vector_idel(map->file_kw_ptr, index);
+        size_t_vector_idel(map->rd_kw_ptr.get(), index);
+        size_t_vector_idel(map->file_kw_ptr.get(), index);
         map->sorted = false;
     }
 }
 
 static void inv_map_add_kw(inv_map_type *map, const rd_file_kw_type *file_kw,
                            const rd_kw_type *rd_kw) {
-    size_t_vector_append(map->file_kw_ptr, (size_t)file_kw);
-    size_t_vector_append(map->rd_kw_ptr, (size_t)rd_kw);
+    size_t_vector_append(map->file_kw_ptr.get(), (size_t)file_kw);
+    size_t_vector_append(map->rd_kw_ptr.get(), (size_t)rd_kw);
     map->sorted = false;
 }
 
@@ -103,13 +94,13 @@ rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
     inv_map_assert_sort(inv_map);
     {
         int index =
-            size_t_vector_index_sorted(inv_map->rd_kw_ptr, (size_t)rd_kw);
+            size_t_vector_index_sorted(inv_map->rd_kw_ptr.get(), (size_t)rd_kw);
         if (index == -1)
             /* rd_kw ptr not found. */
             return NULL;
         else
-            return (rd_file_kw_type *)size_t_vector_iget(inv_map->file_kw_ptr,
-                                                         index);
+            return (rd_file_kw_type *)size_t_vector_iget(
+                inv_map->file_kw_ptr.get(), index);
     }
 }
 
