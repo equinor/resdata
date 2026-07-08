@@ -467,7 +467,8 @@ class ResdataWellTest(ResdataTest):
         self.assertEqual(well_types[WellType.GAS_INJECTOR], 1)
         self.assertEqual(well_types[WellType.PRODUCER], 221)
 
-        self.assertEqual(len(connections), connections_count)
+        self.assertEqual(len(connections), 10282)
+        self.assertEqual(connections_count, 10395)
 
     def test_well_segments(self):
         well_info = self.getWellInfo()
