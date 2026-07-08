@@ -74,8 +74,7 @@ PYBIND11_MODULE(well, m) {
         .value("PRODUCER", WellType::PRODUCER)
         .value("WATER_INJECTOR", WellType::WATER_INJECTOR)
         .value("GAS_INJECTOR", WellType::GAS_INJECTOR)
-        .value("OIL_INJECTOR", WellType::OIL_INJECTOR)
-        .export_values();
+        .value("OIL_INJECTOR", WellType::OIL_INJECTOR);
     m.attr("WellType") = well_type_module.attr("WellType");
 
     auto well_conn_dir_module =
@@ -85,8 +84,7 @@ PYBIND11_MODULE(well, m) {
         .value("well_conn_dirY", WellConnDir::Y)
         .value("well_conn_dirZ", WellConnDir::Z)
         .value("well_conn_fracX", WellConnDir::fracX)
-        .value("well_conn_fracY", WellConnDir::fracY)
-        .export_values();
+        .value("well_conn_fracY", WellConnDir::fracY);
     m.attr("WellConnectionDirection") =
         well_conn_dir_module.attr("WellConnectionDirection");
 
@@ -478,9 +476,5 @@ PYBIND11_MODULE(well, m) {
         .def("__next__", &WellIter::next);
 
     m.attr("WellInfo") = well_info_module.attr("WellInfo");
-
-    m.attr("__all__") =
-        py::make_tuple("WellConnection", "WellConnectionDirection", "WellInfo",
-                       "WellSegment", "WellState", "WellTimeLine", "WellType");
 }
 } // namespace
