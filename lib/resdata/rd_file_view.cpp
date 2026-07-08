@@ -30,7 +30,7 @@ struct rd_file_view_struct {
         fortio; /* The same fortio instance pointer as in the rd_file styructure. */
     inv_map_type
         *inv_map; /* Shared reference owned by the rd_file structure. */
-    std::vector<rd_file_view_type *> child_list;
+    std::vector<std::unique_ptr<rd_file_view_type>> child_list;
     int *flags;
 };
 
@@ -222,13 +222,7 @@ void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
     rd_file_view->kw_list.push_back(file_kw);
 }
 
-void rd_file_view_free(rd_file_view_type *rd_file_view) {
-
-    for (auto &child_ptr : rd_file_view->child_list)
-        rd_file_view_free(child_ptr);
-
-    delete rd_file_view;
-}
+void rd_file_view_free(rd_file_view_type *rd_file_view) { delete rd_file_view; }
 
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw) {
@@ -320,7 +314,7 @@ rd_file_view_type *rd_file_view_add_blockview(rd_file_view_type *file_view,
         rd_file_view_alloc_blockview2(file_view, header, header, occurence);
 
     if (child)
-        file_view->child_list.push_back(child);
+        file_view->child_list.emplace_back(child);
 
     return child;
 }
@@ -333,7 +327,7 @@ rd_file_view_type *rd_file_view_add_blockview2(rd_file_view_type *rd_file_view,
         rd_file_view, start_kw, end_kw, occurence);
 
     if (child)
-        rd_file_view->child_list.push_back(child);
+        rd_file_view->child_list.emplace_back(child);
 
     return child;
 }
