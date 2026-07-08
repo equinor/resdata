@@ -1524,3 +1524,99 @@ def test_get_general_var_index_with_unknown_key_raises():
 
     with pytest.raises(IndexError, match="Invalid lookup summary object"):
         summary.get_general_var_index("NO_SUCH_KEY")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_smspec_keyword_without_nul_terminator_is_read_correctly():
+    smspec_kws = [
+        ("INTEHEAD", np.array([1, 100], dtype=np.int32)),
+        ("RESTART ", ["        "] * 9),
+        ("DIMENS  ", np.array([2, 10, 10, 10, 0, 0], dtype=np.int32)),
+        ("KEYWORDS", ["TIME    ", "FOPRTEST"]),
+        ("WGNAMES ", [":+:+:+:+", ":+:+:+:+"]),
+        ("NUMS    ", np.array([-32676, 0], dtype=np.int32)),
+        ("UNITS   ", ["DAYS    ", "SM3     "]),
+        ("STARTDAT", np.array([1, 1, 2000, 0, 0, 0], dtype=np.int32)),
+    ]
+    resfo.write("TEST.SMSPEC", smspec_kws)
+
+    unsmry_kws = [
+        ("SEQHDR  ", np.array([1], dtype=np.int32)),
+        ("MINISTEP", np.array([0], dtype=np.int32)),
+        ("PARAMS  ", np.array([1.0, 100.0], dtype=np.float32)),
+    ]
+    resfo.write("TEST.UNSMRY", unsmry_kws)
+
+    summary = Summary("TEST")
+    assert summary.has_key("FOPRTEST")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_smspec_missing_required_keyword_raises():
+    for missing_kw in ("WGNAMES ", "KEYWORDS", "UNITS   ", "DIMENS  "):
+        smspec_kws = [
+            ("INTEHEAD", np.array([1, 100], dtype=np.int32)),
+            ("RESTART ", ["        "] * 9),
+            ("DIMENS  ", np.array([2, 10, 10, 10, 0, 0], dtype=np.int32)),
+            ("KEYWORDS", ["TIME    ", "FOPR    "]),
+            ("WGNAMES ", [":+:+:+:+", ":+:+:+:+"]),
+            ("NUMS    ", np.array([-32676, 0], dtype=np.int32)),
+            ("UNITS   ", ["DAYS    ", "SM3     "]),
+            ("STARTDAT", np.array([1, 1, 2000, 0, 0, 0], dtype=np.int32)),
+        ]
+        smspec_kws = [(k, v) for k, v in smspec_kws if k != missing_kw]
+        resfo.write("TEST.SMSPEC", smspec_kws)
+        resfo.write(
+            "TEST.UNSMRY",
+            [
+                ("SEQHDR  ", np.array([1], dtype=np.int32)),
+                ("MINISTEP", np.array([0], dtype=np.int32)),
+                ("PARAMS  ", np.array([1.0, 100.0], dtype=np.float32)),
+            ],
+        )
+
+        with pytest.raises((IOError, ValueError)):
+            Summary("TEST")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_smspec_startdat_with_empty_payload_raises():
+    smspec_kws = [
+        ("INTEHEAD", np.array([1, 100], dtype=np.int32)),
+        ("RESTART ", ["        "] * 9),
+        ("DIMENS  ", np.array([2, 10, 10, 10, 0, 0], dtype=np.int32)),
+        ("KEYWORDS", ["TIME    ", "FOPR    "]),
+        ("WGNAMES ", [":+:+:+:+", ":+:+:+:+"]),
+        ("NUMS    ", np.array([-32676, 0], dtype=np.int32)),
+        ("UNITS   ", ["DAYS    ", "SM3     "]),
+        ("STARTDAT", ["NOTANINT"]),
+    ]
+    resfo.write("TEST.SMSPEC", smspec_kws)
+    resfo.write(
+        "TEST.UNSMRY",
+        [
+            ("SEQHDR  ", np.array([1], dtype=np.int32)),
+            ("MINISTEP", np.array([0], dtype=np.int32)),
+            ("PARAMS  ", np.array([1.0, 100.0], dtype=np.float32)),
+        ],
+    )
+
+    with pytest.raises((IOError, ValueError)):
+        Summary("TEST")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_unsmry_params_non_float_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+
+    kws = list(resfo.read("TEST.UNSMRY"))
+    patched = []
+    for name, value in kws:
+        if name.strip() == "PARAMS":
+            patched.append((name, value.astype(np.int32)))
+        else:
+            patched.append((name, value))
+    resfo.write("TEST.UNSMRY", patched)
+
+    with pytest.raises((IOError, ValueError)):
+        Summary("TEST")

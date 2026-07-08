@@ -112,6 +112,37 @@ TEST_CASE("rd_kw_iset_string_ptr validates type and length", "[rd_kw]") {
     }
 }
 
+TEST_CASE("rd_kw_iget_stripped_string handles width edge cases", "[rd_kw]") {
+    SECTION("RD_CHAR values can fill the full field width") {
+        auto char_kw = make_rd_kw("KW", 2, RD_CHAR);
+
+        rd_kw_iset_char_ptr(char_kw.get(), 0, "FOPRTEST");
+        rd_kw_iset_char_ptr(char_kw.get(), 1, "BPR");
+
+        REQUIRE(rd_kw_iget_stripped_string(char_kw.get(), 0) == "FOPRTEST");
+        REQUIRE(rd_kw_iget_stripped_string(char_kw.get(), 1) == "BPR");
+    }
+
+    SECTION("RD_STRING values can fill the declared field width") {
+        auto string_kw = make_rd_kw("KW", 1, RD_STRING(12));
+
+        rd_kw_iset_string_ptr(string_kw.get(), 0, "0123456789AB");
+
+        REQUIRE(rd_kw_iget_stripped_string(string_kw.get(), 0) ==
+                "0123456789AB");
+    }
+
+    SECTION("embedded NUL stops the extracted string before field width") {
+        auto string_kw = make_rd_kw("KW", 1, RD_STRING(12));
+        char *raw = static_cast<char *>(rd_kw_iget_ptr(string_kw.get(), 0));
+
+        std::memcpy(raw, "ABCD\0EFGHIJK", 12);
+        raw[12] = '\0';
+
+        REQUIRE(rd_kw_iget_stripped_string(string_kw.get(), 0) == "ABCD");
+    }
+}
+
 TEST_CASE("scalar_set/scale/shift validate the type", "[rd_kw]") {
     auto float_kw = make_rd_kw("KW", 3, RD_FLOAT);
     REQUIRE_THROWS_WITH(rd_kw_scalar_set_int(float_kw.get(), 1),
