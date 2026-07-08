@@ -139,7 +139,7 @@ static rd_file_type *rd_file_alloc_empty(int flags) {
     rd_file_type *rd_file = (rd_file_type *)util_malloc(sizeof *rd_file);
     UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
     rd_file->map_stack = vector_alloc_new();
-    rd_file->inv_view = inv_map_alloc();
+    rd_file->inv_view = new inv_map_type();
     rd_file->flags = flags;
     return rd_file;
 }
@@ -374,7 +374,7 @@ void rd_file_close(rd_file_type *rd_file) {
     if (rd_file->global_view)
         rd_file_view_free(rd_file->global_view);
 
-    inv_map_free(rd_file->inv_view);
+    delete rd_file->inv_view;
     vector_free(rd_file->map_stack);
     free(rd_file);
 }
@@ -527,27 +527,17 @@ bool rd_file_writable( const rd_file_type * rd_file ) {
 */
 
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
-    rd_file_kw_type *file_kw = inv_map_get_file_kw(
-        rd_file->inv_view,
-        rd_kw); // We just verify that the input rd_kw points to an rd_kw
-    if (file_kw !=
-        NULL) { // we manage; from then on we use the reference contained in
-        if (rd_file->fortio
-                ->assert_stream_open()) { // the corresponding rd_file_kw instance.
+    rd_file_kw_type *file_kw = rd_file->inv_view->at(rd_kw);
+    if (rd_file->fortio->assert_stream_open()) {
 
-            rd_file_kw_inplace_fwrite(file_kw, *rd_file->fortio);
+        rd_file_kw_inplace_fwrite(file_kw, *rd_file->fortio);
 
-            if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
-                rd_file->fortio->fclose_stream();
+        if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
+            rd_file->fortio->fclose_stream();
 
-            return true;
-        } else
-            return false;
-    } else {
-        util_abort("%s: keyword pointer:%p not found in rd_file instance. \n",
-                   __func__, rd_kw);
+        return true;
+    } else
         return false;
-    }
 }
 
 static rd_file_view_type *rd_file_get_relative_blockview(rd_file_type *rd_file,
