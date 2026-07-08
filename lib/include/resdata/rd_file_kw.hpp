@@ -25,6 +25,18 @@ struct rd_file_kw_struct {
                       int kw_size, std::string header)
         : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
           header(header) {};
+    /** Create a new rd_file_kw instance based on header information from
+        the input keyword. Typically only the header has been loaded from
+        the keyword.
+
+        Observe that it is the users responsability that the @offset
+        argument comes from the same fortio instance
+        as used when calling rd_file_kw_get_kw() to actually instatiate
+        the rd_kw. This is automatically assured when using rd_file to
+        access the rd_file_kw instances. */
+    rd_file_kw_struct(const rd_kw_type *rd_kw, offset_type offset)
+        : rd_file_kw_struct(offset, rd_kw_get_data_type(rd_kw),
+                            rd_kw_get_size(rd_kw), rd_kw_get_header(rd_kw)) {}
 };
 
 typedef struct inv_map_struct inv_map_type;
@@ -35,9 +47,6 @@ rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
                                      const rd_kw_type *rd_kw);
 void inv_map_free(inv_map_type *map);
 bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2);
-rd_file_kw_type *rd_file_kw_alloc(const rd_kw_type *rd_kw, offset_type offset);
-rd_file_kw_type *rd_file_kw_alloc0(const char *header, rd_data_type data_type,
-                                   int size, offset_type offset);
 void rd_file_kw_free(rd_file_kw_type *file_kw);
 rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw);
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw);

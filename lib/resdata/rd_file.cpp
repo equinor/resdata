@@ -289,8 +289,9 @@ static void rd_file_scan(rd_file_type *rd_file) {
 
                 if (read_status == RD_KW_READ_OK) {
                     std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)>
-                        file_kw(rd_file_kw_alloc(work_kw.get(), current_offset),
-                                &rd_file_kw_free);
+                        file_kw(
+                            new rd_file_kw_type(work_kw.get(), current_offset),
+                            &rd_file_kw_free);
 
                     if (rd_file_kw_fskip_data(file_kw.get(),
                                               *rd_file->fortio)) {

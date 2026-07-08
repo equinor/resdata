@@ -9,12 +9,13 @@
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_util.hpp>
 
+#include "resdata/rd_type.hpp"
 #include "tmpdir.hpp"
 
 TEST_CASE_METHOD(Tmpdir,
                  "rd_file_kw_inplace_fwrite rejects an unloaded keyword") {
     std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)> file_kw(
-        rd_file_kw_alloc0("TEST_KW", RD_INT, 10, 0), &rd_file_kw_free);
+        new rd_file_kw_type(0, RD_INT, 10, "TEST_KW"), &rd_file_kw_free);
 
     auto filename = (dirname / "dummy").string();
     {
