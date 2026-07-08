@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <unordered_map>
 
 #include <ert/util/util.hpp>
 
@@ -12,32 +11,38 @@
 #include <resdata/FortIO.hpp>
 #include "resdata/rd_type.hpp"
 
-typedef struct rd_file_kw_struct rd_file_kw_type;
+/** FileKW holds the header information (name, size, type) for an rd_kw
+    and the offset in a file containing the keyword.
 
-struct rd_file_kw_struct {
+    If and when the keyword is actually queried for, the
+    get_kw() method will seek to the keyword position in an
+    open fortio instance and read the rd_kw. */
+class FileKW {
     offset_type file_offset;
     rd_data_type data_type;
     int kw_size;
     std::string header;
     rd_kw_ptr kw{nullptr, &rd_kw_free};
 
-    rd_file_kw_struct(offset_type file_offset, rd_data_type data_type,
-                      int kw_size, std::string header)
+    void assert_kw() const;
+    void load_kw(ERT::FortIO &fortio);
+
+public:
+    FileKW(offset_type file_offset, rd_data_type data_type, int kw_size,
+           std::string header)
         : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
           header(header) {};
-    /** Create a new rd_file_kw instance based on header information from
-        the input keyword. Typically only the header has been loaded from
-        the keyword.
+    /** Create a new FileKW based on header information from
+        the input keyword.
 
-        Observe that it is the users responsability that the @offset
-        argument comes from the same fortio instance
-        as used when calling rd_file_kw_get_kw() to actually instatiate
-        the rd_kw. This is automatically assured when using rd_file to
-        access the rd_file_kw instances. */
-    rd_file_kw_struct(const rd_kw_type *rd_kw, offset_type offset)
-        : rd_file_kw_struct(offset, rd_kw_get_data_type(rd_kw),
-                            rd_kw_get_size(rd_kw), rd_kw_get_header(rd_kw)) {}
-    [[nodiscard]] bool operator==(const rd_file_kw_struct &other) const {
+        Typically only the header has been loaded from the keyword.
+
+        It is the users responsibility that the @offset argument comes
+        from the same fortio instance as used when calling get_kw().*/
+    FileKW(const rd_kw_type *rd_kw, offset_type offset)
+        : FileKW(offset, rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
+                 rd_kw_get_header(rd_kw)) {}
+    [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
             return false;
 
@@ -49,24 +54,26 @@ struct rd_file_kw_struct {
 
         return header == other.header;
     }
+    [[nodiscard]] const std::string &get_header() const { return header; };
+    [[nodiscard]] int get_size() const { return kw_size; };
+    [[nodiscard]] offset_type get_offset() const { return file_offset; };
+    [[nodiscard]] rd_data_type get_data_type() const { return data_type; };
+
+    /** The rd_kw, if one is read, otherwise returns nullptr. */
+    [[nodiscard]] rd_kw_type *get_kw_ptr() const { return kw.get(); };
+
+    /** Return the rd_kw. If it is not loaded, the method will read it
+       from @fortio. The kw is then cached. */
+    rd_kw_type *get_kw(ERT::FortIO &fortio);
+
+    bool skip_data(ERT::FortIO &fortio) const;
+    static std::vector<std::shared_ptr<FileKW>> read(FILE *stream, int num);
+
+    /** Clear the cached kw. Note: previous pointers to
+       kws are invalidated. */
+    void clear();
+
+    /** Overwrite the file contents with the new content of the rd_kw. */
+    void inplace_write(ERT::FortIO &fortio) const;
+    void write_header(FILE *stream);
 };
-
-using rd_file_kw_ptr = std::unique_ptr<rd_file_kw_type>;
-using inv_map_type = std::unordered_map<const rd_kw_type *, rd_file_kw_type *>;
-
-void rd_file_kw_free(rd_file_kw_type *file_kw);
-rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw);
-const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw);
-int rd_file_kw_get_size(const rd_file_kw_type *file_kw);
-rd_data_type rd_file_kw_get_data_type(const rd_file_kw_type *);
-offset_type rd_file_kw_get_offset(const rd_file_kw_type *file_kw);
-bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw, ERT::FortIO &fortio);
-
-void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream);
-std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num);
-
-void rd_file_kw_clear(rd_file_kw_type *file_kw);
-
-rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
-                              inv_map_type *inv_map);
-void rd_file_kw_inplace_fwrite(rd_file_kw_type *file_kw, ERT::FortIO &fortio);

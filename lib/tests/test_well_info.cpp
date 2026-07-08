@@ -182,8 +182,8 @@ std::string write_three_kw_file(const fs::path &dirname) {
     return path;
 }
 
-bool is_loaded(rd_file_kw_type *file_kw) {
-    return rd_file_kw_get_kw_ptr(file_kw) != nullptr;
+bool is_loaded(std::shared_ptr<FileKW> file_kw) {
+    return file_kw->get_kw_ptr() != nullptr;
 }
 
 } // namespace
@@ -193,9 +193,9 @@ TEST_CASE_METHOD(Tmpdir, "keywords are lazily loaded", "[well][transaction]") {
     rd_file_ptr file(rd_file_open(path.c_str(), 0), rd_file_close);
     auto *view = rd_file_get_global_view(file.get());
 
-    auto *fk0 = rd_file_view_iget_file_kw(view, 0);
-    auto *fk1 = rd_file_view_iget_file_kw(view, 1);
-    auto *fk2 = rd_file_view_iget_file_kw(view, 2);
+    auto fk0 = rd_file_view_iget_file_kw(view, 0);
+    auto fk1 = rd_file_view_iget_file_kw(view, 1);
+    auto fk2 = rd_file_view_iget_file_kw(view, 2);
 
     REQUIRE_FALSE(is_loaded(fk0));
     REQUIRE_FALSE(is_loaded(fk1));

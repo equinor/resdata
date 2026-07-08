@@ -14,8 +14,7 @@
 
 TEST_CASE_METHOD(Tmpdir,
                  "rd_file_kw_inplace_fwrite rejects an unloaded keyword") {
-    std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)> file_kw(
-        new rd_file_kw_type(0, RD_INT, 10, "TEST_KW"), &rd_file_kw_free);
+    FileKW file_kw(0, RD_INT, 10, "TEST_KW");
 
     auto filename = (dirname / "dummy").string();
     {
@@ -25,6 +24,5 @@ TEST_CASE_METHOD(Tmpdir,
 
     ERT::FortIO fortio(filename, std::ios_base::in, false, true);
 
-    REQUIRE_THROWS_AS(rd_file_kw_inplace_fwrite(file_kw.get(), fortio),
-                      std::runtime_error);
+    REQUIRE_THROWS_AS(file_kw.inplace_write(fortio), std::runtime_error);
 }

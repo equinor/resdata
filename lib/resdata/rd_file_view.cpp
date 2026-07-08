@@ -22,14 +22,12 @@
 #include <resdata/rd_util.hpp>
 
 struct rd_file_view_struct {
-    std::vector<rd_file_kw_type *> kw_list;
+    std::vector<std::shared_ptr<FileKW>> kw_list;
     std::map<std::string, std::vector<int>> kw_index;
     std::vector<std::string>
         distinct_kw; /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
     ERT::FortIO *
         fortio; /* The same fortio instance pointer as in the rd_file styructure. */
-    bool
-        owner; /* Is this map the owner of the rd_file_kw instances; only true for the global_map. */
     inv_map_type
         *inv_map; /* Shared reference owned by the rd_file structure. */
     std::vector<rd_file_view_type *> child_list;
@@ -53,10 +51,9 @@ const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
 }
 
 rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
-                                      inv_map_type *inv_map, bool owner) {
+                                      inv_map_type *inv_map) {
     rd_file_view_type *rd_file_view = new rd_file_view_type();
 
-    rd_file_view->owner = owner;
     rd_file_view->fortio = fortio;
     rd_file_view->inv_map = inv_map;
     rd_file_view->flags = flags;
@@ -84,7 +81,7 @@ void rd_file_view_make_index(rd_file_view_type *rd_file_view) {
     {
         int global_index = 0;
         for (const auto &file_kw : rd_file_view->kw_list) {
-            const std::string &header = rd_file_kw_get_header(file_kw);
+            const std::string &header = file_kw->get_header();
             if (rd_file_view->kw_index.find(header) ==
                 rd_file_view->kw_index.end())
                 rd_file_view->distinct_kw.push_back(header);
@@ -101,19 +98,17 @@ bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view,
     return (rd_file_view->kw_index.find(kw) != rd_file_view->kw_index.end());
 }
 
-rd_file_kw_type *
+std::shared_ptr<FileKW>
 rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
                           int global_index) {
     return rd_file_view->kw_list[global_index];
 }
 
-static rd_file_kw_type *
+static std::shared_ptr<FileKW>
 rd_file_view_iget_named_file_kw(const rd_file_view_type *rd_file_view,
                                 const char *kw, int ith) {
     int global_index = rd_file_view_get_global_index(rd_file_view, kw, ith);
-    rd_file_kw_type *file_kw =
-        rd_file_view_iget_file_kw(rd_file_view, global_index);
-    return file_kw;
+    return rd_file_view_iget_file_kw(rd_file_view, global_index);
 }
 
 bool rd_file_view_drop_flag(rd_file_view_type *file_view, int flag) {
@@ -129,13 +124,13 @@ void rd_file_view_add_flag(rd_file_view_type *file_view, int flag) {
 }
 
 static rd_kw_type *rd_file_view_get_kw(const rd_file_view_type *rd_file_view,
-                                       rd_file_kw_type *file_kw) {
-    rd_kw_type *rd_kw = rd_file_kw_get_kw_ptr(file_kw);
+                                       const std::shared_ptr<FileKW> &file_kw) {
+    rd_kw_type *rd_kw = file_kw->get_kw_ptr();
     if (!rd_kw) {
         if (rd_file_view->fortio->assert_stream_open()) {
 
-            rd_kw = rd_file_kw_get_kw(file_kw, *rd_file_view->fortio,
-                                      rd_file_view->inv_map);
+            rd_kw = file_kw->get_kw(*rd_file_view->fortio);
+            (*rd_file_view->inv_map)[rd_kw] = file_kw.get();
 
             if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
                 rd_file_view->fortio->fclose_stream();
@@ -146,7 +141,7 @@ static rd_kw_type *rd_file_view_get_kw(const rd_file_view_type *rd_file_view,
 
 rd_kw_type *rd_file_view_iget_kw(const rd_file_view_type *rd_file_view,
                                  int index) {
-    rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(rd_file_view, index);
+    auto file_kw = rd_file_view_iget_file_kw(rd_file_view, index);
     return rd_file_view_get_kw(rd_file_view, file_kw);
 }
 
@@ -154,13 +149,12 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
                                  const char *kw, int index,
                                  const int_vector_type *index_map,
                                  char *io_buffer) {
-    rd_file_kw_type *file_kw =
-        rd_file_view_iget_named_file_kw(rd_file_view, kw, index);
+    auto file_kw = rd_file_view_iget_named_file_kw(rd_file_view, kw, index);
 
     if (rd_file_view->fortio->assert_stream_open()) {
-        offset_type offset = rd_file_kw_get_offset(file_kw);
-        rd_data_type data_type = rd_file_kw_get_data_type(file_kw);
-        int element_count = rd_file_kw_get_size(file_kw);
+        offset_type offset = file_kw->get_offset();
+        rd_data_type data_type = file_kw->get_data_type();
+        int element_count = file_kw->get_size();
 
         rd_kw_fread_indexed_data(*rd_file_view->fortio, offset, data_type,
                                  element_count, index_map, io_buffer);
@@ -202,8 +196,7 @@ int rd_file_view_get_size(const rd_file_view_type *rd_file_view) {
 
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
                                        const char *kw, int ith) {
-    rd_file_kw_type *file_kw =
-        rd_file_view_iget_named_file_kw(rd_file_view, kw, ith);
+    auto file_kw = rd_file_view_iget_named_file_kw(rd_file_view, kw, ith);
     return rd_file_view_get_kw(rd_file_view, file_kw);
 }
 
@@ -211,9 +204,10 @@ bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
     bool loadOK = false;
 
     if (rd_file_view->fortio->assert_stream_open()) {
-        for (rd_file_kw_type *file_kw : rd_file_view->kw_list)
-            rd_file_kw_get_kw(file_kw, *rd_file_view->fortio,
-                              rd_file_view->inv_map);
+        for (auto &file_kw : rd_file_view->kw_list) {
+            auto rd_kw = file_kw->get_kw(*rd_file_view->fortio);
+            (*rd_file_view->inv_map)[rd_kw] = file_kw.get();
+        }
         loadOK = true;
     }
 
@@ -224,7 +218,7 @@ bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
 }
 
 void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
-                         rd_file_kw_type *file_kw) {
+                         std::shared_ptr<FileKW> file_kw) {
     rd_file_view->kw_list.push_back(file_kw);
 }
 
@@ -232,11 +226,6 @@ void rd_file_view_free(rd_file_view_type *rd_file_view) {
 
     for (auto &child_ptr : rd_file_view->child_list)
         rd_file_view_free(child_ptr);
-
-    if (rd_file_view->owner) {
-        for (auto &kw_ptr : rd_file_view->kw_list)
-            rd_file_kw_free(kw_ptr);
-    }
 
     delete rd_file_view;
 }
@@ -260,8 +249,8 @@ void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
 
 static int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
                                        int global_index) {
-    const rd_file_kw_type *file_kw = rd_file_view->kw_list[global_index];
-    const char *header = rd_file_kw_get_header(file_kw);
+    const auto &file_kw = rd_file_view->kw_list[global_index];
+    const std::string &header = file_kw->get_header();
     const auto &index_vector = rd_file_view->kw_index.at(header);
 
     int occurence = -1;
@@ -286,16 +275,15 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
         rd_file_view_get_num_named_kw(rd_file_view, start_kw) <= occurence)
         return NULL;
 
-    rd_file_view_type *block_map =
-        rd_file_view_alloc(rd_file_view->fortio, rd_file_view->flags,
-                           rd_file_view->inv_map, false);
+    rd_file_view_type *block_map = rd_file_view_alloc(
+        rd_file_view->fortio, rd_file_view->flags, rd_file_view->inv_map);
     size_t kw_index = 0;
     if (start_kw)
         kw_index =
             rd_file_view_get_global_index(rd_file_view, start_kw, occurence);
 
     {
-        rd_file_kw_type *file_kw = rd_file_view->kw_list[kw_index];
+        auto file_kw = rd_file_view->kw_list[kw_index];
         while (true) {
             rd_file_view_add_kw(block_map, file_kw);
 
@@ -305,7 +293,7 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
             else {
                 if (end_kw) {
                     file_kw = rd_file_view->kw_list[kw_index];
-                    if (strcmp(end_kw, rd_file_kw_get_header(file_kw)) == 0)
+                    if (strcmp(end_kw, file_kw->get_header().c_str()) == 0)
                         break;
                 }
             }
@@ -723,10 +711,8 @@ void rd_file_view_write_index(const rd_file_view_type *file_view,
     int size = rd_file_view_get_size(file_view);
     util_fwrite_int(size, ostream);
 
-    rd_file_kw_type *file_kw;
-    for (int i = 0; i < size; i++) {
-        file_kw = rd_file_view_iget_file_kw(file_view, i);
-        rd_file_kw_fwrite(file_kw, ostream);
+    for (const auto &file_kw : file_view->kw_list) {
+        file_kw->write_header(ostream);
     }
 }
 
@@ -735,13 +721,11 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             FILE *istream) {
 
     int index_size = util_fread_int(istream);
-    rd_file_view_ptr file_view(rd_file_view_alloc(fortio, flags, inv_map, true),
+    rd_file_view_ptr file_view(rd_file_view_alloc(fortio, flags, inv_map),
                                &rd_file_view_free);
 
     try {
-        auto file_kw_list = rd_file_kw_fread(istream, index_size);
-        for (int i = 0; i < index_size; i++)
-            rd_file_view_add_kw(file_view.get(), file_kw_list.at(i).release());
+        file_view->kw_list = FileKW::read(istream, index_size);
     } catch (const std::exception &e) {
         fprintf(stderr, "%s\n", e.what());
         return NULL;
@@ -752,7 +736,9 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
 }
 
 void rd_file_view_clear(rd_file_view_type *file_view) {
-    for (int i = 0; i < rd_file_view_get_size(file_view); i++) {
-        rd_file_kw_clear(rd_file_view_iget_file_kw(file_view, i));
+    for (const auto &file_kw : file_view->kw_list) {
+        if (auto *rd_kw = file_kw->get_kw_ptr())
+            file_view->inv_map->erase(rd_kw);
+        file_kw->clear();
     }
 }
