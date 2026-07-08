@@ -36,11 +36,6 @@ struct rd_file_view_struct {
     int *flags;
 };
 
-struct rd_file_transaction_struct {
-    const rd_file_view_type *file_view;
-    int *ref_count;
-};
-
 bool rd_file_view_check_flags(int state_flags, int query_flags) {
     if ((state_flags & query_flags) == query_flags)
         return true;
@@ -756,32 +751,8 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
     return file_view.release();
 }
 
-rd_file_transaction_type *
-rd_file_view_start_transaction(rd_file_view_type *file_view) {
-    rd_file_transaction_type *t =
-        (rd_file_transaction_type *)util_malloc(sizeof *t);
-    int size = rd_file_view_get_size(file_view);
-    t->file_view = file_view;
-    t->ref_count = (int *)util_malloc(size * sizeof *t->ref_count);
-    for (int i = 0; i < size; i++) {
-        rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(file_view, i);
-        rd_file_kw_start_transaction(file_kw, &t->ref_count[i]);
-    }
-
-    return t;
-}
-
-void rd_file_view_end_transaction(rd_file_view_type *file_view,
-                                  rd_file_transaction_type *transaction) {
-    if (transaction->file_view != file_view)
-        util_abort("%s: internal error - file_view / transaction mismatch\n",
-                   __func__);
-
-    const int *ref_count = transaction->ref_count;
+void rd_file_view_clear(rd_file_view_type *file_view) {
     for (int i = 0; i < rd_file_view_get_size(file_view); i++) {
-        rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(file_view, i);
-        rd_file_kw_end_transaction(file_kw, ref_count[i]);
+        rd_file_kw_clear(rd_file_view_iget_file_kw(file_view, i));
     }
-    free(transaction->ref_count);
-    free(transaction);
 }

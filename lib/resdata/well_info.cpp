@@ -33,20 +33,14 @@ struct close_guard {
     bool was_set;
 };
 
-struct transaction_guard {
-    explicit transaction_guard(rd_file_view_type *file_view)
-        : file_view(file_view),
-          transaction(rd_file_view_start_transaction(file_view)) {}
+struct clear_guard {
+    explicit clear_guard(rd_file_view_type *file_view) : file_view(file_view) {}
 
-    ~transaction_guard() {
-        if (transaction)
-            rd_file_view_end_transaction(file_view, transaction);
-    }
-    transaction_guard(const transaction_guard &) = delete;
-    transaction_guard &operator=(const transaction_guard &) = delete;
+    ~clear_guard() { rd_file_view_clear(file_view); }
+    clear_guard(const clear_guard &) = delete;
+    clear_guard &operator=(const clear_guard &) = delete;
 
     rd_file_view_type *file_view;
-    rd_file_transaction_type *transaction;
 };
 } // namespace
 
@@ -86,7 +80,7 @@ void WellInfo::add_UNRST_wells(rd_file_type *rst_file,
             rd_file_view_iget_named_kw(step_view, SEQNUM_KW, 0);
         int report_nr = rd_kw_iget_int(seqnum_kw, 0);
 
-        transaction_guard transaction(rst_view);
+        clear_guard clear(rst_view);
         add_wells(step_view, report_nr, load_segment_information);
     }
 }

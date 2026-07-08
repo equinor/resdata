@@ -25,7 +25,6 @@ typedef enum {
 } rd_file_flag_type;
 
 typedef struct rd_file_view_struct rd_file_view_type;
-typedef struct rd_file_transaction_struct rd_file_transaction_type;
 
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
                             int query_flags);
@@ -100,10 +99,7 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             inv_map_type *inv_map,
                                             FILE *istream);
 
-rd_file_transaction_type *
-rd_file_view_start_transaction(rd_file_view_type *file_view);
-void rd_file_view_end_transaction(rd_file_view_type *file_view,
-                                  rd_file_transaction_type *transaction);
+void rd_file_view_clear(rd_file_view_type *file_view);
 
 #ifdef __cplusplus
 }

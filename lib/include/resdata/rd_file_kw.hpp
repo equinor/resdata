@@ -18,7 +18,6 @@ struct rd_file_kw_struct {
     offset_type file_offset;
     rd_data_type data_type;
     int kw_size;
-    int ref_count = 0;
     std::string header;
     rd_kw_ptr kw{nullptr, &rd_kw_free};
 
@@ -66,9 +65,7 @@ bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw, ERT::FortIO &fortio);
 void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream);
 std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num);
 
-void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,
-                                  int *ref_count);
-void rd_file_kw_end_transaction(rd_file_kw_type *file_kw, int ref_count);
+void rd_file_kw_clear(rd_file_kw_type *file_kw);
 
 rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                               inv_map_type *inv_map);
