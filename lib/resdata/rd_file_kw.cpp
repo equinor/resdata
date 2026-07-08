@@ -91,29 +91,6 @@ rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
     }
 }
 
-rd_file_kw_type *rd_file_kw_alloc0(const char *header, rd_data_type data_type,
-                                   int size, offset_type offset) {
-    return new rd_file_kw_struct(offset, data_type, size, header);
-}
-
-/**
-   Create a new rd_file_kw instance based on header information from
-   the input keyword. Typically only the header has been loaded from
-   the keyword.
-
-   Observe that it is the users responsability that the @offset
-   argument in rd_file_kw_alloc() comes from the same fortio instance
-   as used when calling rd_file_kw_get_kw() to actually instatiate
-   the rd_kw. This is automatically assured when using rd_file to
-   access the rd_file_kw instances.
-*/
-
-rd_file_kw_type *rd_file_kw_alloc(const rd_kw_type *rd_kw, offset_type offset) {
-    return rd_file_kw_alloc0(rd_kw_get_header(rd_kw),
-                             rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
-                             offset);
-}
-
 void rd_file_kw_free(rd_file_kw_type *file_kw) {
     file_kw->kw.reset(nullptr);
     delete file_kw;
@@ -319,8 +296,8 @@ std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num) {
         memcpy(&type_size, &buffer.get()[buffer_offset], sizeof type_size);
         buffer_offset += sizeof type_size;
 
-        kw_list[ikw].reset(rd_file_kw_alloc0(
-            header, rd_type_create(rd_type, type_size), kw_size, file_offset));
+        kw_list[ikw].reset(new rd_file_kw_struct(
+            file_offset, rd_type_create(rd_type, type_size), kw_size, header));
     }
     return kw_list;
 }
