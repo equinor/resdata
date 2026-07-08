@@ -1,5 +1,6 @@
 #include <cstring>
 #include <stddef.h>
+#include <cstdint>
 #include <cmath>
 #include <ctime>
 
@@ -8,6 +9,7 @@
 #include <set>
 #include <array>
 #include <memory>
+#include <limits>
 #include <stdexcept>
 #include <algorithm>
 #include <vector>
@@ -570,12 +572,59 @@ void smspec_node::set_num(const int *grid_dims, int num_) {
     this->num = num_;
     if ((var_type == RD_SMSPEC_COMPLETION_VAR) ||
         (var_type == RD_SMSPEC_BLOCK_VAR)) {
-        int global_index = this->num - 1;
-        this->ijk[2] = global_index / (grid_dims[0] * grid_dims[1]);
-        global_index -= this->ijk[2] * (grid_dims[0] * grid_dims[1]);
-        this->ijk[1] = global_index / grid_dims[0];
-        global_index -= this->ijk[1] * grid_dims[0];
-        this->ijk[0] = global_index;
+        if (grid_dims == nullptr)
+            throw std::invalid_argument(
+                "Grid dimensions are required for block and completion "
+                "summary variables");
+
+        if (grid_dims[0] <= 0 || grid_dims[1] <= 0 || grid_dims[2] <= 0)
+            throw std::invalid_argument(rd::util::string_format(
+                "Invalid grid dimensions for summary variable: nx=%d, ny=%d, "
+                "nz=%d",
+                grid_dims[0], grid_dims[1], grid_dims[2]));
+
+        const int64_t nx = grid_dims[0];
+        const int64_t ny = grid_dims[1];
+        const int64_t nz = grid_dims[2];
+
+        if (nx > std::numeric_limits<int64_t>::max() / ny)
+            throw std::invalid_argument(rd::util::string_format(
+                "Grid dimensions overflow for summary variable: nx=%d, ny=%d, "
+                "nz=%d",
+                grid_dims[0], grid_dims[1], grid_dims[2]));
+
+        const int64_t plane_size = nx * ny;
+        if (plane_size <= 0)
+            throw std::invalid_argument(rd::util::string_format(
+                "Invalid grid dimensions for summary variable: nx=%d, ny=%d, "
+                "nz=%d",
+                grid_dims[0], grid_dims[1], grid_dims[2]));
+
+        if (plane_size > std::numeric_limits<int64_t>::max() / nz)
+            throw std::invalid_argument(rd::util::string_format(
+                "Grid dimensions overflow for summary variable: nx=%d, ny=%d, "
+                "nz=%d",
+                grid_dims[0], grid_dims[1], grid_dims[2]));
+
+        const int64_t grid_size = plane_size * nz;
+        if (grid_size <= 0)
+            throw std::invalid_argument(rd::util::string_format(
+                "Invalid grid dimensions for summary variable: nx=%d, ny=%d, "
+                "nz=%d",
+                grid_dims[0], grid_dims[1], grid_dims[2]));
+
+        int64_t global_index = static_cast<int64_t>(this->num) - 1;
+        if (global_index < 0 || global_index >= grid_size)
+            throw std::invalid_argument(rd::util::string_format(
+                "Invalid NUMS value for summary variable: nums=%d, expected "
+                "1..%lld",
+                this->num, static_cast<long long>(grid_size)));
+
+        this->ijk[2] = static_cast<int>(global_index / plane_size);
+        global_index -= static_cast<int64_t>(this->ijk[2]) * plane_size;
+        this->ijk[1] = static_cast<int>(global_index / nx);
+        global_index -= static_cast<int64_t>(this->ijk[1]) * nx;
+        this->ijk[0] = static_cast<int>(global_index);
 
         this->ijk[0] += 1;
         this->ijk[1] += 1;
