@@ -1,11 +1,19 @@
 #ifndef ERT_RD_FILE_VIEW_H
 #define ERT_RD_FILE_VIEW_H
 
+#include <cstdio>
 #include <cstdlib>
+#include <ctime>
+#include <unordered_map>
+
+#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/FortIO.hpp>
+
+using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,12 +39,9 @@ bool rd_file_view_flags_set(const rd_file_view_type *file_view,
 bool rd_file_view_check_flags(int state_flags, int query_flags);
 
 rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
-                                      inv_map_type *inv_map, bool owner);
+                                      inv_map_type *inv_map);
 void rd_file_view_make_index(rd_file_view_type *rd_file_view);
 bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view, const char *kw);
-rd_file_kw_type *
-rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
-                          int global_index);
 rd_kw_type *rd_file_view_iget_kw(const rd_file_view_type *rd_file_view,
                                  int index);
 void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
@@ -50,8 +55,6 @@ int rd_file_view_get_size(const rd_file_view_type *rd_file_view);
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
                                        const char *kw, int ith);
 bool rd_file_view_load_all(rd_file_view_type *rd_file_view);
-void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
-                         rd_file_kw_type *file_kw);
 void rd_file_view_free(rd_file_view_type *rd_file_view);
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw);
@@ -108,6 +111,11 @@ void rd_file_view_clear(rd_file_view_type *file_view);
 using rd_file_view_ptr =
     std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
 
+std::shared_ptr<FileKW>
+rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
+                          int global_index);
+void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
+                         std::shared_ptr<FileKW> file_kw);
 #endif
 
 #endif

@@ -112,12 +112,11 @@ std::vector<int> unsmry_loader::report_steps(int offset) const {
     std::vector<int> report_steps;
     int current_step = offset;
     for (int i = 0; i < rd_file_view_get_size(this->file_view); i++) {
-        const rd_file_kw_type *file_kw =
-            rd_file_view_iget_file_kw(this->file_view, i);
-        if (util_string_equal(SEQHDR_KW, rd_file_kw_get_header(file_kw)))
+        const auto file_kw = rd_file_view_iget_file_kw(this->file_view, i);
+        if (SEQHDR_KW == file_kw->get_header())
             current_step++;
 
-        if (util_string_equal(PARAMS_KW, rd_file_kw_get_header(file_kw)))
+        if (PARAMS_KW == file_kw->get_header())
             report_steps.push_back(current_step);
     }
     return report_steps;

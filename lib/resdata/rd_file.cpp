@@ -288,15 +288,11 @@ static void rd_file_scan(rd_file_type *rd_file) {
                     break;
 
                 if (read_status == RD_KW_READ_OK) {
-                    std::unique_ptr<rd_file_kw_type, decltype(&rd_file_kw_free)>
-                        file_kw(
-                            new rd_file_kw_type(work_kw.get(), current_offset),
-                            &rd_file_kw_free);
+                    auto file_kw =
+                        std::make_shared<FileKW>(work_kw.get(), current_offset);
 
-                    if (rd_file_kw_fskip_data(file_kw.get(),
-                                              *rd_file->fortio)) {
-                        rd_file_view_add_kw(rd_file->global_view,
-                                            file_kw.release());
+                    if (file_kw->skip_data(*rd_file->fortio)) {
+                        rd_file_view_add_kw(rd_file->global_view, file_kw);
                     } else {
                         break;
                     }
@@ -344,7 +340,7 @@ rd_file_type *rd_file_open(const char *filename, int flags) {
         rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
         rd_file->fortio = fortio.release();
         rd_file->global_view = rd_file_view_alloc(
-            rd_file->fortio, &rd_file->flags, rd_file->inv_view, true);
+            rd_file->fortio, &rd_file->flags, rd_file->inv_view);
 
         rd_file_scan(rd_file.get());
         rd_file_select_global(rd_file.get());
@@ -518,19 +514,18 @@ bool rd_file_writable( const rd_file_type * rd_file ) {
      pointer comparison; i.e. the rd_kw argument must be the actual
      return value from an earlier rd_file_get_kw() operation.
 
-  2. The header data of the rd_kw must be unmodified; this is checked
-     by the rd_file_kw_inplace_fwrite() function and crash-and-burn
-     will ensue if this is not satisfied.
+  2. The header data of the rd_kw must be unmodified, and will throw
+     std::runtime_error if there is a mismatch.
 
   3. The rd_file must have been opened with one of the _writable()
      open functions.
 */
 
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
-    rd_file_kw_type *file_kw = rd_file->inv_view->at(rd_kw);
+    FileKW *file_kw = rd_file->inv_view->at(rd_kw);
     if (rd_file->fortio->assert_stream_open()) {
 
-        rd_file_kw_inplace_fwrite(file_kw, *rd_file->fortio);
+        file_kw->inplace_write(*rd_file->fortio);
 
         if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
             rd_file->fortio->fclose_stream();
