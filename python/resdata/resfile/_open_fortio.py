@@ -1,27 +1,6 @@
-"""
-Module to support transparent binary IO of Fortran created files.
-
-In Fortran, when writing binary blobs of data to file the Fortran runtime will
-add a header and footer around the data. The Fortran code:
-
-   integer array(100)
-   write(unit) array
-
-writes a head and tail in addition to the actual data. The header and tail are
-4-byte integers whose value is the number of bytes in the immediately following
-record. I.e. what is actually found on disk after the Fortran code above is:
-
-  | 400 | array ...... | 400 |
-
-The FortIO.cpp file implements the fortio_type struct which can be used to read
-and write these. The current Python module is a minimal wrapping of this data
-structure; mainly to support passing FortIO handles to the underlying cpp
-functions.
-"""
-
 from contextlib import contextmanager
 
-from resdata.resfile._fortio import FortIO
+from resdata.resfile.fortio import FortIO
 
 
 @contextmanager
@@ -60,4 +39,4 @@ def openFortIO(
     )
 
 
-__all__ = ["FortIO", "FortIOContextManager", "openFortIO"]
+__all__ = ["FortIOContextManager", "openFortIO"]
