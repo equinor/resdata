@@ -91,10 +91,6 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
 */
 
 rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw) {
-    if (file_kw->ref_count == 0)
-        return NULL;
-
-    file_kw->ref_count++;
     return file_kw->kw.get();
 }
 
@@ -114,11 +110,8 @@ rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw) {
 
 rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
                               inv_map_type *inv_map) {
-    if (file_kw->ref_count == 0)
+    if (!file_kw->kw)
         rd_file_kw_load_kw(file_kw, fortio, inv_map);
-
-    if (file_kw->kw)
-        file_kw->ref_count++;
 
     return file_kw->kw.get();
 }
@@ -230,14 +223,4 @@ std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num) {
     return kw_list;
 }
 
-void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,
-                                  int *ref_count) {
-    *ref_count = file_kw->ref_count;
-}
-
-void rd_file_kw_end_transaction(rd_file_kw_type *file_kw, int ref_count) {
-    if (ref_count == 0 && file_kw->ref_count > 0) {
-        file_kw->kw.reset(nullptr);
-    }
-    file_kw->ref_count = ref_count;
-}
+void rd_file_kw_clear(rd_file_kw_type *file_kw) { file_kw->kw.reset(nullptr); }
