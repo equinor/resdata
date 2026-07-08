@@ -96,19 +96,6 @@ void rd_file_kw_free(rd_file_kw_type *file_kw) {
     delete file_kw;
 }
 
-bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
-    if (kw1->file_offset != kw2->file_offset)
-        return false;
-
-    if (kw1->kw_size != kw2->kw_size)
-        return false;
-
-    if (!rd_type_is_equal(kw1->data_type, kw2->data_type))
-        return false;
-
-    return kw1->header == kw2->header;
-}
-
 static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
     if (!file_kw->kw)
         throw std::runtime_error(

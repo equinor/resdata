@@ -37,6 +37,18 @@ struct rd_file_kw_struct {
     rd_file_kw_struct(const rd_kw_type *rd_kw, offset_type offset)
         : rd_file_kw_struct(offset, rd_kw_get_data_type(rd_kw),
                             rd_kw_get_size(rd_kw), rd_kw_get_header(rd_kw)) {}
+    [[nodiscard]] bool operator==(const rd_file_kw_struct &other) const {
+        if (file_offset != other.file_offset)
+            return false;
+
+        if (kw_size != other.kw_size)
+            return false;
+
+        if (!rd_type_is_equal(data_type, other.data_type))
+            return false;
+
+        return header == other.header;
+    }
 };
 
 typedef struct inv_map_struct inv_map_type;
@@ -46,7 +58,6 @@ inv_map_type *inv_map_alloc();
 rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
                                      const rd_kw_type *rd_kw);
 void inv_map_free(inv_map_type *map);
-bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2);
 void rd_file_kw_free(rd_file_kw_type *file_kw);
 rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw);
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw);
