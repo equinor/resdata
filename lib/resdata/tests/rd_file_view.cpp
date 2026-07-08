@@ -54,12 +54,12 @@ void test_create_file_kw() {
         }
         {
             FILE *istream = util_fopen("file_kw", "r");
-            rd_file_kw_type *disk_kw = rd_file_kw_fread_alloc(istream);
+            auto kws = rd_file_kw_fread(istream, 1);
+            rd_file_kw_type *disk_kw = kws.at(0).get();
             test_assert_true(rd_file_kw_equal(file_kw0, disk_kw));
 
             /* Beyond the end of stream - return NULL */
-            test_assert_NULL(rd_file_kw_fread_alloc(istream));
-            rd_file_kw_free(disk_kw);
+            test_assert_throw(rd_file_kw_fread(istream, 1), std::exception);
             fclose(istream);
         }
 
@@ -73,20 +73,16 @@ void test_create_file_kw() {
 
         {
             FILE *istream = util_fopen("file_kw", "r");
-            rd_file_kw_type **disk_kw =
-                rd_file_kw_fread_alloc_multiple(istream, 3);
-            test_assert_true(rd_file_kw_equal(file_kw0, disk_kw[0]));
-            test_assert_true(rd_file_kw_equal(file_kw1, disk_kw[1]));
-            test_assert_true(rd_file_kw_equal(file_kw2, disk_kw[2]));
+            auto disk_kw = rd_file_kw_fread(istream, 3);
+            test_assert_true(rd_file_kw_equal(file_kw0, disk_kw[0].get()));
+            test_assert_true(rd_file_kw_equal(file_kw1, disk_kw[1].get()));
+            test_assert_true(rd_file_kw_equal(file_kw2, disk_kw[2].get()));
 
-            for (int i = 0; i < 3; i++)
-                rd_file_kw_free(disk_kw[i]);
-            free(disk_kw);
             fclose(istream);
         }
         {
             FILE *istream = util_fopen("file_kw", "r");
-            test_assert_NULL(rd_file_kw_fread_alloc_multiple(istream, 10));
+            test_assert_throw(rd_file_kw_fread(istream, 10), std::exception);
             fclose(istream);
         }
     }

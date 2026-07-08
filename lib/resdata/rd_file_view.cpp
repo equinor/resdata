@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cstring>
 
+#include <exception>
 #include <vector>
 #include <string>
 #include <map>
@@ -739,22 +740,20 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             FILE *istream) {
 
     int index_size = util_fread_int(istream);
-    rd_file_kw_type **file_kw_list =
-        rd_file_kw_fread_alloc_multiple(istream, index_size);
-    if (file_kw_list) {
-        rd_file_view_type *file_view =
-            rd_file_view_alloc(fortio, flags, inv_map, true);
-        for (int i = 0; i < index_size; i++)
-            rd_file_view_add_kw(file_view, file_kw_list[i]);
+    rd_file_view_ptr file_view(rd_file_view_alloc(fortio, flags, inv_map, true),
+                               &rd_file_view_free);
 
-        free(file_kw_list);
-        rd_file_view_make_index(file_view);
-        return file_view;
-    } else {
-        fprintf(stderr, "%s: error reading rd_file_type index file.\n",
-                __func__);
+    try {
+        auto file_kw_list = rd_file_kw_fread(istream, index_size);
+        for (int i = 0; i < index_size; i++)
+            rd_file_view_add_kw(file_view.get(), file_kw_list.at(i).release());
+    } catch (const std::exception &e) {
+        fprintf(stderr, "%s\n", e.what());
         return NULL;
     }
+
+    rd_file_view_make_index(file_view.get());
+    return file_view.release();
 }
 
 rd_file_transaction_type *
