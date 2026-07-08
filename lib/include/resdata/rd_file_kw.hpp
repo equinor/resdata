@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include <ert/util/util.hpp>
 
@@ -51,13 +52,9 @@ struct rd_file_kw_struct {
     }
 };
 
-typedef struct inv_map_struct inv_map_type;
 using rd_file_kw_ptr = std::unique_ptr<rd_file_kw_type>;
+using inv_map_type = std::unordered_map<const rd_kw_type *, rd_file_kw_type *>;
 
-inv_map_type *inv_map_alloc();
-rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
-                                     const rd_kw_type *rd_kw);
-void inv_map_free(inv_map_type *map);
 void rd_file_kw_free(rd_file_kw_type *file_kw);
 rd_kw_type *rd_file_kw_get_kw_ptr(rd_file_kw_type *file_kw);
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw);

@@ -32,65 +32,6 @@
   whose index tables consists of rd_file_kw instances.
 */
 
-struct inv_map_struct {
-    size_t_vector_ptr file_kw_ptr = make_size_t_vector(0, 0);
-    size_t_vector_ptr rd_kw_ptr = make_size_t_vector(0, 0);
-    bool sorted = false;
-};
-
-inv_map_type *inv_map_alloc() { return new inv_map_type(); }
-
-void inv_map_free(inv_map_type *map) { delete map; }
-
-static void inv_map_assert_sort(inv_map_type *map) {
-    if (!map->sorted) {
-        std::unique_ptr<perm_vector_type, decltype(&perm_vector_free)> perm(
-            size_t_vector_alloc_sort_perm(map->rd_kw_ptr.get()),
-            perm_vector_free);
-
-        size_t_vector_permute(map->rd_kw_ptr.get(), perm.get());
-        size_t_vector_permute(map->file_kw_ptr.get(), perm.get());
-        map->sorted = true;
-    }
-}
-
-static void inv_map_drop_kw(inv_map_type *map, const rd_kw_type *rd_kw) {
-    inv_map_assert_sort(map);
-    {
-        int index =
-            size_t_vector_index_sorted(map->rd_kw_ptr.get(), (size_t)rd_kw);
-        if (index == -1)
-            throw std::logic_error(std::string(__func__) +
-                                   ": trying to drop non-existent kw");
-
-        size_t_vector_idel(map->rd_kw_ptr.get(), index);
-        size_t_vector_idel(map->file_kw_ptr.get(), index);
-        map->sorted = false;
-    }
-}
-
-static void inv_map_add_kw(inv_map_type *map, const rd_file_kw_type *file_kw,
-                           const rd_kw_type *rd_kw) {
-    size_t_vector_append(map->file_kw_ptr.get(), (size_t)file_kw);
-    size_t_vector_append(map->rd_kw_ptr.get(), (size_t)rd_kw);
-    map->sorted = false;
-}
-
-rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
-                                     const rd_kw_type *rd_kw) {
-    inv_map_assert_sort(inv_map);
-    {
-        int index =
-            size_t_vector_index_sorted(inv_map->rd_kw_ptr.get(), (size_t)rd_kw);
-        if (index == -1)
-            /* rd_kw ptr not found. */
-            return NULL;
-        else
-            return (rd_file_kw_type *)size_t_vector_iget(
-                inv_map->file_kw_ptr.get(), index);
-    }
-}
-
 void rd_file_kw_free(rd_file_kw_type *file_kw) {
     file_kw->kw.reset(nullptr);
     delete file_kw;
@@ -119,7 +60,7 @@ static void rd_file_kw_assert_kw(const rd_file_kw_type *file_kw) {
 static void rd_file_kw_drop_kw(rd_file_kw_type *file_kw,
                                inv_map_type *inv_map) {
     if (file_kw->kw) {
-        inv_map_drop_kw(inv_map, file_kw->kw.get());
+        inv_map->erase(file_kw->kw.get());
         file_kw->kw.reset(nullptr);
     }
 }
@@ -139,7 +80,7 @@ static void rd_file_kw_load_kw(rd_file_kw_type *file_kw, ERT::FortIO &fortio,
         fortio.fseek(file_kw->file_offset, SEEK_SET);
         file_kw->kw.reset(rd_kw_fread_alloc(fortio));
         rd_file_kw_assert_kw(file_kw);
-        inv_map_add_kw(inv_map, file_kw, file_kw->kw.get());
+        (*inv_map)[file_kw->kw.get()] = file_kw;
     }
 }
 
