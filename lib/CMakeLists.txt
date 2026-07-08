@@ -341,7 +341,6 @@ foreach(
   rd_kw_init
   rd_nnc_info_test
   rd_nnc_vector
-  rd_file_view
   test_rd_file_index
   rd_filenames
   rd_make_date_no_shift
