@@ -26,9 +26,34 @@ enum class Mode {
 };
 
 namespace {
-PYBIND11_MODULE(_fortio, m) {
+PYBIND11_MODULE(fortio, m) {
     register_exceptions(m);
-    m.doc() = "pybind11 bindings between fortio.py and FortIO.cpp";
+    m.doc() =
+        "Module to support transparent binary IO of Fortran created files.\n"
+        "\n"
+        "In Fortran, when writing binary blobs of data to file the Fortran "
+        "runtime will\n"
+        "add a header and footer around the data. The Fortran code:\n"
+        "\n"
+        "   integer array(100)\n"
+        "   write(unit) array\n"
+        "\n"
+        "writes a head and tail in addition to the actual data. The header and "
+        "tail are\n"
+        "4-byte integers whose value is the number of bytes in the immediately "
+        "following\n"
+        "record. I.e. what is actually found on disk after the Fortran code "
+        "above is:\n"
+        "\n"
+        "  | 400 | array ...... | 400 |\n"
+        "\n"
+        "The FortIO.cpp file implements the fortio_type struct which can be "
+        "used to read\n"
+        "and write these. The current Python module is a minimal wrapping of "
+        "this data\n"
+        "structure; mainly to support passing FortIO handles to the underlying "
+        "cpp\n"
+        "functions.\n";
 
     py::enum_<Mode>(m, "Mode")
         .value("READ_MODE", Mode::READ_MODE)
