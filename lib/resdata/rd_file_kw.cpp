@@ -5,6 +5,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.hpp>
@@ -35,20 +36,6 @@ struct inv_map_struct {
     size_t_vector_ptr file_kw_ptr = make_size_t_vector(0, 0);
     size_t_vector_ptr rd_kw_ptr = make_size_t_vector(0, 0);
     bool sorted = false;
-};
-
-struct rd_file_kw_struct {
-    offset_type file_offset;
-    rd_data_type data_type;
-    int kw_size;
-    int ref_count = 0;
-    std::string header;
-    rd_kw_ptr kw{nullptr, &rd_kw_free};
-
-    rd_file_kw_struct(offset_type file_offset, rd_data_type data_type,
-                      int kw_size, std::string header)
-        : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
-          header(header) {};
 };
 
 inv_map_type *inv_map_alloc() { return new inv_map_type(); }
@@ -283,77 +270,59 @@ void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream) {
     util_fwrite_size_t(rd_type_get_sizeof_iotype(file_kw->data_type), stream);
 }
 
-rd_file_kw_type **rd_file_kw_fread_alloc_multiple(FILE *stream, int num) {
+std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num) {
 
     size_t file_kw_size = RD_STRING8_LENGTH + 2 * sizeof(int) +
                           sizeof(offset_type) + sizeof(size_t);
     size_t buffer_size = num * file_kw_size;
-    char *buffer = (char *)util_malloc(buffer_size * sizeof *buffer);
-    size_t num_read = fread(buffer, 1, buffer_size, stream);
+    std::unique_ptr<char, decltype(&std::free)> buffer(
+        (char *)util_malloc(buffer_size), &std::free);
+    size_t num_read = fread(buffer.get(), 1, buffer_size, stream);
 
     if (num_read != buffer_size) {
-        free(buffer);
-        return NULL;
+        throw std::runtime_error("error reading rd_file_type index file");
     }
 
-    {
-        rd_file_kw_type **kw_list =
-            (rd_file_kw_type **)util_malloc(num * sizeof *kw_list);
-        for (int ikw = 0; ikw < num; ikw++) {
-            int buffer_offset = ikw * file_kw_size;
-            char header[RD_STRING8_LENGTH + 1];
-            int kw_size;
-            offset_type file_offset;
-            rd_type_enum rd_type;
-            size_t type_size;
-            {
-                int index = 0;
-                while (true) {
-                    if (buffer[index + buffer_offset] != ' ')
-                        header[index] = buffer[index + buffer_offset];
-                    else
-                        break;
+    std::vector<rd_file_kw_ptr> kw_list(num);
+    for (int ikw = 0; ikw < num; ikw++) {
+        int buffer_offset = ikw * file_kw_size;
+        char header[RD_STRING8_LENGTH + 1];
+        int kw_size;
+        offset_type file_offset;
+        rd_type_enum rd_type;
+        size_t type_size;
+        {
+            int index = 0;
+            while (true) {
+                if (buffer.get()[index + buffer_offset] != ' ')
+                    header[index] = buffer.get()[index + buffer_offset];
+                else
+                    break;
 
-                    index++;
-                    if (index == RD_STRING8_LENGTH)
-                        break;
-                }
-                header[index] = '\0';
-                buffer_offset += RD_STRING8_LENGTH;
+                index++;
+                if (index == RD_STRING8_LENGTH)
+                    break;
             }
-
-            memcpy(&kw_size, &buffer[buffer_offset], sizeof kw_size);
-            buffer_offset += sizeof kw_size;
-
-            memcpy(&file_offset, &buffer[buffer_offset], sizeof file_offset);
-            buffer_offset += sizeof file_offset;
-
-            memcpy(&rd_type, &buffer[buffer_offset], sizeof rd_type);
-            buffer_offset += sizeof rd_type;
-
-            memcpy(&type_size, &buffer[buffer_offset], sizeof type_size);
-            buffer_offset += sizeof type_size;
-
-            kw_list[ikw] =
-                rd_file_kw_alloc0(header, rd_type_create(rd_type, type_size),
-                                  kw_size, file_offset);
+            header[index] = '\0';
+            buffer_offset += RD_STRING8_LENGTH;
         }
 
-        free(buffer);
-        return kw_list;
+        memcpy(&kw_size, &buffer.get()[buffer_offset], sizeof kw_size);
+        buffer_offset += sizeof kw_size;
+
+        memcpy(&file_offset, &buffer.get()[buffer_offset], sizeof file_offset);
+        buffer_offset += sizeof file_offset;
+
+        memcpy(&rd_type, &buffer.get()[buffer_offset], sizeof rd_type);
+        buffer_offset += sizeof rd_type;
+
+        memcpy(&type_size, &buffer.get()[buffer_offset], sizeof type_size);
+        buffer_offset += sizeof type_size;
+
+        kw_list[ikw].reset(rd_file_kw_alloc0(
+            header, rd_type_create(rd_type, type_size), kw_size, file_offset));
     }
-}
-
-rd_file_kw_type *rd_file_kw_fread_alloc(FILE *stream) {
-    rd_file_kw_type *file_kw = NULL;
-    rd_file_kw_type **multiple = rd_file_kw_fread_alloc_multiple(stream, 1);
-
-    if (multiple) {
-        file_kw = multiple[0];
-        free(multiple);
-    }
-
-    return file_kw;
+    return kw_list;
 }
 
 void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,

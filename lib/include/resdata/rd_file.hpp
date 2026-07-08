@@ -74,9 +74,6 @@ UTIL_IS_INSTANCE_HEADER(rd_file);
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);
 
-using rd_file_view_ptr =
-    std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
-
 using rd_file_ptr = std::unique_ptr<rd_file_type, decltype(&rd_file_close)>;
 
 inline rd_file_ptr open_rd_file(const std::string &path, int flags) {

@@ -1,12 +1,34 @@
 #pragma once
+#include <cstdio>
+
+#include <memory>
+#include <vector>
+#include <string>
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
+#include "resdata/rd_type.hpp"
 
 typedef struct rd_file_kw_struct rd_file_kw_type;
+
+struct rd_file_kw_struct {
+    offset_type file_offset;
+    rd_data_type data_type;
+    int kw_size;
+    int ref_count = 0;
+    std::string header;
+    rd_kw_ptr kw{nullptr, &rd_kw_free};
+
+    rd_file_kw_struct(offset_type file_offset, rd_data_type data_type,
+                      int kw_size, std::string header)
+        : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
+          header(header) {};
+};
+
 typedef struct inv_map_struct inv_map_type;
+using rd_file_kw_ptr = std::unique_ptr<rd_file_kw_type>;
 
 inv_map_type *inv_map_alloc();
 rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
@@ -25,8 +47,7 @@ offset_type rd_file_kw_get_offset(const rd_file_kw_type *file_kw);
 bool rd_file_kw_fskip_data(const rd_file_kw_type *file_kw, ERT::FortIO &fortio);
 
 void rd_file_kw_fwrite(const rd_file_kw_type *file_kw, FILE *stream);
-rd_file_kw_type **rd_file_kw_fread_alloc_multiple(FILE *stream, int num);
-rd_file_kw_type *rd_file_kw_fread_alloc(FILE *stream);
+std::vector<rd_file_kw_ptr> rd_file_kw_fread(FILE *stream, int num);
 
 void rd_file_kw_start_transaction(const rd_file_kw_type *file_kw,
                                   int *ref_count);

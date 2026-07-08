@@ -107,6 +107,11 @@ void rd_file_view_end_transaction(rd_file_view_type *file_view,
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using rd_file_view_ptr =
+    std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
+
 #endif
 
 #endif
