@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
         rd::filename(case_path, RD_INIT_FILE, false, 0).string();
 
     rd_grid_ptr GRID = read_grid(egrid_file);
-    rd_file_ptr RST_file(rd_file_open(rst_file.c_str(), 0), &rd_file_close);
-    rd_file_ptr INIT_file(rd_file_open(init_file.c_str(), 0), &rd_file_close);
+    rd_file_ptr RST_file = open_rd_file(rst_file);
+    rd_file_ptr INIT_file = open_rd_file(init_file);
 
     {
         test_assert_true(rd_grid_have_coarse_cells(GRID.get()));

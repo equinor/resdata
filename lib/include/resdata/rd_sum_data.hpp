@@ -13,6 +13,7 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_sum_vector.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 typedef struct rd_sum_data_struct rd_sum_data_type;
 
@@ -22,7 +23,7 @@ void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
                         bool fmt_case, bool unified);
 bool rd_sum_data_can_write(const rd_sum_data_type *data);
 bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
-                       bool lazy_load, int file_options);
+                       bool lazy_load, FileMode file_options);
 rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec);
 rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec);
 double rd_sum_data_time2days(const rd_sum_data_type *data, time_t sim_time);

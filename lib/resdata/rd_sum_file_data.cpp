@@ -1,17 +1,33 @@
+#include <ctime>
+#include <ios>
+#include <new>
 #include <stdexcept>
-#include <limits>
 #include <algorithm>
 #include <memory>
 #include <cstring>
 #include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <ert/util/stringlist.hpp>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
 
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
-#include "detail/resdata/rd_sum_file_data.hpp"
-#include "detail/resdata/rd_unsmry_loader.hpp"
+#include <detail/resdata/rd_sum_file_data.hpp>
+#include <detail/resdata/rd_unsmry_loader.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_file.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/rd_file_view.hpp>
+#include <resdata/rd_smspec.hpp>
+#include <resdata/rd_type.hpp>
+#include <resdata/rd_util.hpp>
 
 namespace fs = std::filesystem;
 
@@ -575,7 +591,7 @@ void rd_sum_file_data::add_rd_file(int report_step,
 }
 
 bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
-                             int file_options) {
+                             FileMode file_options) {
     if (stringlist_get_size(filelist) == 0)
         return false;
 
@@ -598,7 +614,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
                 util_abort("%s: file:%s has wrong type \n", __func__,
                            data_file);
             {
-                rd_file_ptr rd_file(rd_file_open(data_file, 0), &rd_file_close);
+                rd_file_ptr rd_file = open_rd_file(std::string(data_file));
                 if (rd_file && check_file(rd_file.get())) {
                     this->add_rd_file(report_step,
                                       rd_file_get_global_view(rd_file.get()));
@@ -618,8 +634,8 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
 
             // Is this correct for a restarted chain of UNSMRY files? Looks like the
             // report step sequence will be restarted?
-            rd_file_ptr rd_file(rd_file_open(stringlist_iget(filelist, 0), 0),
-                                &rd_file_close);
+            rd_file_ptr rd_file =
+                open_rd_file(std::string(stringlist_iget(filelist, 0)));
             if (rd_file && check_file(rd_file.get())) {
                 int first_report_step =
                     rd_smspec_get_first_step(this->rd_smspec);

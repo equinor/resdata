@@ -10,7 +10,7 @@
 int main(int argc, char **argv) {
     const char *grid_file = argv[1];
     rd_grid_ptr rd_grid = read_grid(grid_file);
-    rd_file_type *rd_file = rd_file_open(grid_file, 0);
+    rd_file_type *rd_file = rd_file_open(grid_file);
 
     rd_grid_test_lgr_consistency(rd_grid.get());
 

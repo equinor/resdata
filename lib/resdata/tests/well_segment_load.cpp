@@ -16,7 +16,7 @@
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
-    rd_file_type *rst_file = rd_file_open(Xfile, 0);
+    rd_file_type *rst_file = rd_file_open(Xfile);
     rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
     auto rst_head = RSTHead::read(rst_view, rd_filename_report_nr(Xfile));
     const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);

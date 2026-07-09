@@ -15,6 +15,7 @@ import ctypes
 from cwrap import BaseCEnum
 
 from resdata import ResdataPrototype
+from resdata._file_mode import FileMode
 
 
 class FileType(BaseCEnum):
@@ -45,9 +46,6 @@ FileType.addEnum("RFT", 256)
 FileType.addEnum("DATA", 512)
 
 
-# -----------------------------------------------------------------
-
-
 class Phase(BaseCEnum):
     TYPE_NAME = "rd_phase_enum"
     OIL = None
@@ -58,9 +56,6 @@ class Phase(BaseCEnum):
 Phase.addEnum("OIL", 1)
 Phase.addEnum("GAS", 2)
 Phase.addEnum("WATER", 4)
-
-
-# -----------------------------------------------------------------
 
 
 class UnitSystem(BaseCEnum):
@@ -76,24 +71,6 @@ UnitSystem.addEnum("METRIC", 1)
 UnitSystem.addEnum("FIELD", 2)
 UnitSystem.addEnum("LAB", 3)
 UnitSystem.addEnum("PVT_M", 4)
-
-
-# -----------------------------------------------------------------
-
-
-class FileMode(BaseCEnum):
-    TYPE_NAME = "rd_file_flag_enum"
-    DEFAULT = None
-    CLOSE_STREAM = None
-    WRITABLE = None
-
-
-FileMode.addEnum("DEFAULT", 0)
-FileMode.addEnum("CLOSE_STREAM", 1)
-FileMode.addEnum("WRITABLE", 2)
-
-
-# -----------------------------------------------------------------
 
 
 class ResdataUtil:
@@ -157,3 +134,14 @@ class ResdataUtil:
 get_num_cpu = ResdataUtil.get_num_cpu
 get_file_type = ResdataUtil.get_file_type
 get_start_date = ResdataUtil.get_start_date
+
+__all__ = [
+    "FileMode",
+    "FileType",
+    "Phase",
+    "ResdataUtil",
+    "UnitSystem",
+    "get_file_type",
+    "get_num_cpu",
+    "get_start_date",
+]

@@ -12,6 +12,7 @@
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
 
@@ -22,7 +23,7 @@ PYBIND11_MODULE(_file, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_file.py and rd_file.cpp";
 
-    m.def("_open", [](std::string filename, int flags) -> py::object {
+    m.def("_open", [](std::string filename, FileMode &flags) -> py::object {
         auto *file = rd_file_open(filename.c_str(), flags);
         if (file == nullptr)
             return py::none();
@@ -30,7 +31,7 @@ PYBIND11_MODULE(_file, m) {
     });
     m.def("_fast_open",
           [](std::string filename, std::string index_filename,
-             int flags) -> py::object {
+             FileMode flags) -> py::object {
               auto *file = rd_file_fast_open(filename.c_str(),
                                              index_filename.c_str(), flags);
               if (file == nullptr)

@@ -1,5 +1,3 @@
-#include <ctime>
-
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -8,23 +6,24 @@
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
-#include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_state.hpp>
 #include <resdata/well/well_info.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/well/well_ts.hpp>
 
 namespace {
 struct close_guard {
     explicit close_guard(rd_file_view_type *file_view)
         : file_view(file_view),
-          was_set(rd_file_view_drop_flag(file_view, RD_FILE_CLOSE_STREAM)) {}
+          was_set(rd_file_view_drop_flag(file_view, FileMode::CLOSE_STREAM)) {}
 
     ~close_guard() {
         if (was_set)
-            rd_file_view_add_flag(file_view, RD_FILE_CLOSE_STREAM);
+            rd_file_view_add_flag(file_view, FileMode::CLOSE_STREAM);
     }
     close_guard(const close_guard &) = delete;
     close_guard &operator=(const close_guard &) = delete;
@@ -87,7 +86,7 @@ void WellInfo::add_UNRST_wells(rd_file_type *rst_file,
 
 void WellInfo::load_rstfile(const std::string &filename,
                             bool load_segment_information) {
-    rd_file_ptr rd_file(rd_file_open(filename.c_str(), 0), rd_file_close);
+    rd_file_ptr rd_file = open_rd_file(filename);
     load_rstfile(rd_file.get(), load_segment_information);
 }
 

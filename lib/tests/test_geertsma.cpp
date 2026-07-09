@@ -81,8 +81,8 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
     write_subsidence_init(init_path, size);
     write_subsidence_restart(unrst_path, std::vector<float>{1.0f});
 
-    rd_file_ptr init = open_rd_file(init_path, 0);
-    rd_file_ptr restart = open_rd_file(unrst_path, 0);
+    rd_file_ptr init = open_rd_file(init_path);
+    rd_file_ptr restart = open_rd_file(unrst_path);
 
     std::unique_ptr<rd_subsidence_type, decltype(&rd_subsidence_free)>
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
@@ -132,8 +132,8 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel two source points two vintages") {
     write_subsidence_restart(unrst_path, std::vector<float>{1.0f, 10.0f},
                              std::vector<float>{10.0f, 20.0f});
 
-    rd_file_ptr init = open_rd_file(init_path, 0);
-    rd_file_ptr restart = open_rd_file(unrst_path, 0);
+    rd_file_ptr init = open_rd_file(init_path);
+    rd_file_ptr restart = open_rd_file(unrst_path);
 
     std::unique_ptr<rd_subsidence_type, decltype(&rd_subsidence_free)>
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
@@ -178,8 +178,8 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel with seabed") {
     write_subsidence_init(init_path, rd_grid_get_active_size(grid.get()));
     write_subsidence_restart(unrst_path, std::vector<float>{1.0f});
 
-    rd_file_ptr init = open_rd_file(init_path, 0);
-    rd_file_ptr restart = open_rd_file(unrst_path, 0);
+    rd_file_ptr init = open_rd_file(init_path);
+    rd_file_ptr restart = open_rd_file(unrst_path);
 
     std::unique_ptr<rd_subsidence_type, decltype(&rd_subsidence_free)>
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
@@ -215,8 +215,8 @@ TEST_CASE_METHOD(Tmpdir,
                              std::vector<float>{1e5f, 1e5f},
                              std::vector<float>{9e4f, 9e4f});
 
-    rd_file_ptr init = open_rd_file(init_path, 0);
-    rd_file_ptr restart = open_rd_file(unrst_path, 0);
+    rd_file_ptr init = open_rd_file(init_path);
+    rd_file_ptr restart = open_rd_file(unrst_path);
 
     std::unique_ptr<rd_subsidence_type, decltype(&rd_subsidence_free)>
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
@@ -260,8 +260,8 @@ TEST_CASE_METHOD(Tmpdir, "Subsidence survey validation") {
                              std::vector<float>{1e5f, 1e5f},
                              std::vector<float>{9e4f, 9e4f});
 
-    rd_file_ptr init = open_rd_file(init_path, 0);
-    rd_file_ptr restart = open_rd_file(unrst_path, 0);
+    rd_file_ptr init = open_rd_file(init_path);
+    rd_file_ptr restart = open_rd_file(unrst_path);
 
     std::unique_ptr<rd_subsidence_type, decltype(&rd_subsidence_free)>
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),

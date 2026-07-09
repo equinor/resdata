@@ -1,4 +1,3 @@
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -31,6 +30,7 @@
 #include <resdata/rd_sum_data.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 #include <detail/util/path.hpp>
 
@@ -149,14 +149,14 @@ static rd_sum_ptr rd_sum_alloc__(std::string input_arg,
 
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
                               const stringlist_type *data_files, bool lazy_load,
-                              int file_options) {
+                              FileMode file_options) {
     rd_sum->data.reset(rd_sum_data_alloc(rd_sum->smspec.get()));
     return rd_sum_data_fread(rd_sum->data.get(), data_files, lazy_load,
                              file_options);
 }
 
 static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
-                                 int file_options) {
+                                 FileMode file_options) {
     const char *restart_header =
         rd_smspec_get_restart_case(rd_sum->smspec.get());
     if (restart_header == nullptr)
@@ -177,7 +177,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
 static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
                          const stringlist_type *data_files,
                          bool include_restart, bool lazy_load,
-                         int file_options) {
+                         FileMode file_options) {
     rd_sum->smspec =
         read_smspec(header_file, rd_sum->key_join_string, include_restart);
     if (rd_sum->smspec) {
@@ -428,7 +428,7 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
 }
 
 static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
-                              bool lazy_load, int file_options) {
+                              bool lazy_load, FileMode file_options) {
     stringlist_ptr summary_file_list = make_stringlist();
 
     bool caseOK = false;
@@ -458,7 +458,7 @@ rd_sum_type *rd_sum_fread_alloc(const char *header_file,
                                 const stringlist_type *data_files,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
-                                int file_options) {
+                                FileMode file_options) {
     rd_sum_ptr rd_sum = rd_sum_alloc__(header_file, key_join_string);
     if (rd_sum) {
         if (!rd_sum_fread(rd_sum.get(), header_file, data_files,
@@ -578,7 +578,7 @@ void rd_sum_free(rd_sum_type *rd_sum) { delete rd_sum; }
 rd_sum_type *rd_sum_fread_alloc_case(const char *input_file,
                                      const char *key_join_string,
                                      bool include_restart, bool lazy_load,
-                                     int file_options) {
+                                     FileMode file_options) {
     rd_sum_ptr rd_sum = rd_sum_alloc__(input_file, key_join_string);
     if (!rd_sum)
         return nullptr;
@@ -1139,7 +1139,7 @@ double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
 
 rd_sum_ptr read_summary(const std::string &filename,
                         const std::string &key_join_string, bool lazy_load,
-                        bool include_restart, int file_options) {
+                        bool include_restart, FileMode file_options) {
     return {rd_sum_fread_alloc_case(filename.c_str(), key_join_string.c_str(),
                                     include_restart, lazy_load, file_options),
             &rd_sum_free};

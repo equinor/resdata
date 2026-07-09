@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdio>
-#include <cstdlib>
 #include <ctime>
 #include <unordered_map>
 #include <memory>
@@ -10,31 +9,18 @@
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
-#include <resdata/rd_type.hpp>
 #include <resdata/FortIO.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
-
-typedef enum {
-    RD_FILE_CLOSE_STREAM = 1, /*
-                                    This flag will close the underlying FILE object between each access; this is
-                                    mainly to save filedescriptors in cases where many rd_file instances are open at
-                                    the same time. */
-    RD_FILE_WRITABLE = 2      /*
-                                    This flag opens the file in a mode where it can be updated and modified, but it
-                                    must still exist and be readable. I.e. this should not compared with the normal:
-                                    fopen(filename , "w") where an existing file is truncated to zero upon successfull
-                                    open.
-                                 */
-} rd_file_flag_type;
 
 typedef struct rd_file_view_struct rd_file_view_type;
 
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
-                            int query_flags);
-bool rd_file_view_check_flags(int state_flags, int query_flags);
+                            FileMode query_flags);
+bool rd_file_view_check_flags(FileMode state_flags, FileMode query_flags);
 
-rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
+rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, FileMode *flags,
                                       inv_map_type *inv_map);
 void rd_file_view_make_index(rd_file_view_type *rd_file_view);
 bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view, const char *kw);
@@ -73,8 +59,8 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
                               const char *start_kw, const char *end_kw,
                               int occurence);
 
-bool rd_file_view_drop_flag(rd_file_view_type *file_view, int flag);
-void rd_file_view_add_flag(rd_file_view_type *file_view, int flag);
+bool rd_file_view_drop_flag(rd_file_view_type *file_view, FileMode flag);
+void rd_file_view_add_flag(rd_file_view_type *file_view, FileMode flag);
 
 bool rd_file_view_has_sim_time(const rd_file_view_type *rd_file_view,
                                time_t sim_time);
@@ -94,7 +80,8 @@ void rd_file_view_fclose_stream(rd_file_view_type *file_view);
 
 void rd_file_view_write_index(const rd_file_view_type *file_view,
                               FILE *ostream);
-rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
+rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio,
+                                            FileMode *flags,
                                             inv_map_type *inv_map,
                                             FILE *istream);
 

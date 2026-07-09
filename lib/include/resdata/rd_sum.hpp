@@ -1,6 +1,4 @@
 #pragma once
-
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -18,6 +16,7 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include "resdata/rd_util.hpp"
+#include <resdata/rd_file_flag.hpp>
 
 typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
@@ -42,10 +41,10 @@ int rd_sum_get_data_length(const rd_sum_type *rd_sum);
 rd_sum_type *rd_sum_fread_alloc(const char *, const stringlist_type *data_files,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
-                                int file_options);
+                                FileMode file_options = FileMode::DEFAULT);
 rd_sum_type *rd_sum_fread_alloc_case(const char *, const char *key_join_string,
                                      bool include_restart, bool lazy_load,
-                                     int file_options);
+                                     FileMode file_options = FileMode::DEFAULT);
 rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
                                  const time_t_vector_type *times,
                                  bool lower_extrapolation,
@@ -164,7 +163,7 @@ UTIL_IS_INSTANCE_HEADER(rd_sum);
 rd_sum_ptr read_summary(const std::string &filename,
                         const std::string &key_join_string = ":",
                         bool lazy_load = true, bool include_restart = true,
-                        int file_options = 0);
+                        FileMode file_options = FileMode::DEFAULT);
 rd_sum_ptr
 make_summary_writer(std::string rd_case, bool fmt_output, bool unified,
                     std::string key_join_string, time_t sim_start,

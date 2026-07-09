@@ -23,7 +23,7 @@ import pandas as pd
 from cwrap import CFILE, BaseCClass
 
 import resdata.summary._rd_sum as _rd_sum
-from resdata import UnitSystem
+from resdata import FileMode, UnitSystem
 from resdata.util.util import (
     CTime,
     DoubleVector,
@@ -58,7 +58,7 @@ class Summary(BaseCClass):
         join_string=":",
         include_restart=True,
         lazy_load=True,
-        file_options=0,
+        file_options=FileMode.DEFAULT,
     ):
         """Loads a new Summary instance with summary data.
 
@@ -82,7 +82,7 @@ class Summary(BaseCClass):
         whereas getting a vector will be slower. When the summary data is split
         over multiple CASE.Snnn files all the data will be loaded at
         construction time, and the @lazy_load option is ignored. If the
-        lazy_load functionality is used the file_options integer flag is passed
+        lazy_load functionality is used the file_options flag is passed
         when opening the UNSMRY file.
 
         """
@@ -110,7 +110,12 @@ class Summary(BaseCClass):
         data_files = StringList()
         data_files.append(unsmry_file)
         c_ptr = _rd_sum._fread_alloc(
-            smspec_file, data_files, key_join_string, include_restart, False, 0
+            smspec_file,
+            data_files,
+            key_join_string,
+            include_restart,
+            False,
+            FileMode.DEFAULT,
         )
         if not c_ptr:
             raise OSError("Failed to create summary instance")

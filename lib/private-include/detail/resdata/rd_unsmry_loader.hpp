@@ -1,17 +1,19 @@
+#include <ctime>
 #include <string>
 #include <array>
 #include <vector>
-#include <map>
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/rd_file_view.hpp>
 
 namespace rd {
 
 class unsmry_loader {
 public:
     unsmry_loader(const rd_smspec_type *smspec, const std::string &filename,
-                  int file_options);
+                  FileMode file_options = FileMode::DEFAULT);
     ~unsmry_loader();
 
     std::vector<double> get_vector(int pos) const;

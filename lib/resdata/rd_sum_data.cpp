@@ -1,7 +1,12 @@
+#include <cstdio>
 #include <cstring>
 #include <cmath>
+#include <ctime>
 
 #include <algorithm>
+#include <fmt/core.h>
+#include <ios>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 #include <string>
@@ -11,9 +16,8 @@
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/stringlist.hpp>
-#include <ert/util/test_util.hpp>
+#include <ert/util/double_vector.hpp>
 
 #include <fmt/format.h>
 
@@ -23,10 +27,11 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_file.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_sum_vector.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/FortIO.hpp>
 
 #include "detail/resdata/rd_sum_file_data.hpp"
 
@@ -614,7 +619,7 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
 */
 
 bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
-                       bool lazy_load, int file_options) {
+                       bool lazy_load, FileMode file_options) {
     auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
     if (file_data->fread(filelist, lazy_load, file_options)) {
         data->data_files.push_back(file_data);

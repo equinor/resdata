@@ -1,22 +1,27 @@
-#include <cmath>
+#include <ctime>
+#include <new>
+#include <stdexcept>
 #include <string>
-#include <iostream>
-#include <memory>
+#include <vector>
 
 #include <ert/util/int_vector.hpp>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_file_kw.hpp>
+#include <resdata/rd_smspec.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_util.hpp>
 
-#include "detail/resdata/rd_unsmry_loader.hpp"
+#include <detail/resdata/rd_unsmry_loader.hpp>
 
 namespace rd {
 
 unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
-                             const std::string &filename, int file_options)
+                             const std::string &filename, FileMode file_options)
     : size(rd_smspec_get_params_size(smspec)),
       time_index(rd_smspec_get_time_index(smspec)),
       time_seconds(rd_smspec_get_time_seconds(smspec)),
@@ -78,7 +83,7 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
         data[index] = value;
     }
 
-    if (rd_file_view_flags_set(file_view, RD_FILE_CLOSE_STREAM))
+    if (rd_file_view_flags_set(file_view, FileMode::CLOSE_STREAM))
         rd_file_view_fclose_stream(file_view);
 
     return data;
