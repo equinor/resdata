@@ -2,15 +2,18 @@
 #include <ctime>
 #include <cstdlib>
 
-#include <ert/util/stringlist.hpp>
-#include <ert/util/time_t_vector.hpp>
-#include <ert/util/parser.hpp>
-#include <resdata/rd_type.hpp>
+#include <new>
 #include <filesystem>
 #include <system_error>
 #include <memory>
 #include <string>
 #include <string_view>
+
+#include <ert/util/stringlist.hpp>
+#include <ert/util/time_t_vector.hpp>
+#include <ert/util/parser.hpp>
+
+#include <resdata/rd_type.hpp>
 
 #ifdef __cplusplus
 extern "C" {
@@ -134,6 +137,18 @@ inline bool try_exists(std::filesystem::path p) noexcept {
     std::error_code ec;
     return std::filesystem::exists(p, ec);
 }
+
+template <typename T>
+std::unique_ptr<T[], void (*)(void *)> checked_malloc(size_t num) {
+    T *ptr = static_cast<T *>(std::malloc(num * sizeof(T)));
+
+    if (ptr == nullptr) {
+        throw std::bad_alloc{};
+    }
+    return std::unique_ptr<T[], void (*)(void *)>(
+        ptr, [](void *p) { std::free(p); });
+}
+
 template <typename T>
 std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
     T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));

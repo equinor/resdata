@@ -11,6 +11,7 @@
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_util.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/FortIO.hpp>
 #include <ert/util/perm_vector.hpp>
@@ -86,8 +87,7 @@ std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, int num) {
     size_t file_kw_size = RD_STRING8_LENGTH + 2 * sizeof(int) +
                           sizeof(offset_type) + sizeof(size_t);
     size_t buffer_size = num * file_kw_size;
-    std::unique_ptr<char, decltype(&std::free)> buffer(
-        (char *)util_malloc(buffer_size), &std::free);
+    auto buffer = rd::checked_malloc<char>(buffer_size);
     size_t num_read = fread(buffer.get(), 1, buffer_size, stream);
 
     if (num_read != buffer_size) {
