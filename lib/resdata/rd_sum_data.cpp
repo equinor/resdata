@@ -38,11 +38,11 @@
 namespace fs = std::filesystem;
 
 /*
-  This file implements the sruct rd_sum_data which manages the actual simulated
+  This file implements the struct rd_sum_data which manages the actual simulated
   values from a summary file, including all time-related information. In the
   case of restarted simulations the different summary cases will be internalized
   as separate rd_sum_file_data instances. The rd_sum_file_data class is an
-  internal implemenation detail which is not exported. More details about the
+  internal implementation detail which is not exported. More details about the
   internal storage of summary data can be found in that file.
 
   For this file the implementation mainly consists of maintaining an ordered
@@ -789,7 +789,7 @@ double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
 
        However - as indicated on the figure above there is a zero
        measure point right at the start which corresponds to
-       time_index == 0; this is to ensure that there is correspondance
+       time_index == 0; this is to ensure that there is correspondence
        with the simulator results if you ask for a value interpolated to
        the starting time.
     */
