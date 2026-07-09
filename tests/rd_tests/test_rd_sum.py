@@ -1372,6 +1372,140 @@ def test_summary_alloc_data_vector():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_summary_alloc_time_vector_report_only():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+
+    summary = Summary("TEST")
+    time_vec = summary.alloc_time_vector(True)
+    assert isinstance(time_vec, TimeVector)
+    assert [t.datetime() for t in time_vec] == [
+        datetime.datetime(2000, 1, 1, 0, 0),
+        datetime.datetime(2000, 1, 2, 0, 0),
+        datetime.datetime(2000, 1, 3, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_alloc_data_vector_report_only():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+
+    summary = Summary("TEST")
+    key_index = summary.get_key_index("FOPR")
+    data_vec = summary.alloc_data_vector(key_index, True)
+    assert isinstance(data_vec, DoubleVector)
+    assert list(data_vec) == [100.0, 110.0, 120.0]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_get_report_from_time():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+
+    summary = Summary("TEST")
+    # Exact report dates map back to their report step.
+    assert summary.get_report(date=datetime.date(2000, 1, 1)) == 1
+    assert summary.get_report(date=datetime.date(2000, 1, 2)) == 2
+    assert summary.get_report(date=datetime.date(2000, 1, 3)) == 3
+    # A time strictly inside the range but not matching any report gives -1.
+    assert summary.get_report(date=datetime.datetime(2000, 1, 2, 12, 0)) == -1
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_fwrite_non_unified_roundtrip():
+    start_date = datetime.datetime(2000, 1, 1)
+    writer = Summary.writer("NON_UNIFIED", start_date, 5, 5, 5, unified=False)
+
+    var = writer.add_variable("FOPT")
+    for report_step, sim_days, value in [
+        (1, 1.0, 100.0),
+        (2, 2.0, 200.0),
+        (3, 3.0, 300.0),
+    ]:
+        t_step = writer.add_t_step(report_step, sim_days)
+        t_step[var.get_key1()] = value
+
+    assert writer.can_write()
+    writer.fwrite()
+
+    # A non-unified write produces one summary file per report step.
+    assert sorted(f for f in os.listdir(".") if f.startswith("NON_UNIFIED")) == [
+        "NON_UNIFIED.S0001",
+        "NON_UNIFIED.S0002",
+        "NON_UNIFIED.S0003",
+        "NON_UNIFIED.SMSPEC",
+    ]
+
+    summary = Summary("NON_UNIFIED")
+    assert len(summary) == 3
+    assert summary["FOPT"].values.tolist() == [100.0, 200.0, 300.0]
+    assert summary.days == [1.0, 2.0, 3.0]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_writer_out_of_order_tstep_same_report_is_sorted():
+    writer = Summary.writer("OUT_OF_ORDER", datetime.datetime(2000, 1, 1), 5, 5, 5)
+    var = writer.add_variable("FOPT")
+
+    # Two ministeps within the same report step, added with a decreasing
+    # sim_days. This forces a full index rebuild (rather than the fast-path
+    # append) and the ministeps are sorted by simulation time.
+    t_step = writer.add_t_step(1, 2.0)
+    t_step[var.get_key1()] = 200.0
+    t_step = writer.add_t_step(1, 1.0)
+    t_step[var.get_key1()] = 100.0
+
+    assert writer.days == [1.0, 2.0]
+    assert writer["FOPT"].values.tolist() == [100.0, 200.0]
+
+
+def _write_restart_chain(restart_step, prediction_start):
+    """Write a HISTORY case and a PREDICTION case restarting from it, and
+    return the combined summary loaded with include_restart=True."""
+    history = createSummary(
+        "HISTORY",
+        [("FOPT", None, 0, "SM3")],
+        sim_length_days=100,
+        num_report_step=10,
+        num_mini_step=10,
+        sim_start=datetime.date(2000, 1, 1),
+    )
+    history.fwrite()
+    prediction = createSummary(
+        "PREDICTION",
+        [("FOPT", None, 0, "SM3")],
+        sim_length_days=100,
+        num_report_step=10,
+        num_mini_step=10,
+        sim_start=datetime.date(2000, 1, 1),
+        data_start=prediction_start(history),
+        restart_case=os.path.join(os.getcwd(), "HISTORY"),
+        restart_step=restart_step,
+    )
+    prediction.fwrite()
+    return Summary("PREDICTION", include_restart=True)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_restart_chain_with_overlap():
+    summary = _write_restart_chain(
+        restart_step=5, prediction_start=lambda h: h.get_report_time(5)
+    )
+    assert summary.first_report == 1
+    assert summary.last_report == 10
+    assert len(summary) == 100
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_restart_chain_with_gap():
+    summary = _write_restart_chain(
+        restart_step=10,
+        prediction_start=lambda h: h.end_date + datetime.timedelta(days=30),
+    )
+    assert summary.first_report == 1
+    assert summary.last_report == 10
+    assert len(summary) == 100
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_general_var_index():
     create_summary(summary_keys=("FOPR",))
 
