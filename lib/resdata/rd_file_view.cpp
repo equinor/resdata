@@ -4,9 +4,7 @@
 
 #include <exception>
 #include <stdexcept>
-#include <vector>
 #include <string>
-#include <map>
 #include <memory>
 #include <fmt/format.h>
 
@@ -21,23 +19,6 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file_flag.hpp>
-
-struct rd_file_view_struct {
-    std::vector<std::shared_ptr<FileKW>> kw_list;
-    std::map<std::string, std::vector<int>> kw_index;
-    std::vector<std::string>
-        distinct_kw; /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
-    ERT::FortIO *
-        fortio; /* The same fortio instance pointer as in the rd_file styructure. */
-    inv_map_type
-        *inv_map; /* Shared reference owned by the rd_file structure. */
-    std::vector<std::unique_ptr<rd_file_view_type>> child_list;
-    FileMode *flags;
-
-    rd_file_view_struct(ERT::FortIO *fortio, FileMode *flags,
-                        inv_map_type *inv_map)
-        : fortio(fortio), inv_map(inv_map), flags(flags) {};
-};
 
 bool rd_file_view_check_flags(FileMode state_flags, FileMode query_flags) {
     return (state_flags & query_flags) == query_flags;

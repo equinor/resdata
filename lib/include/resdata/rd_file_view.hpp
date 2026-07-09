@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
+#include <vector>
+#include <map>
 
 #include <ert/util/int_vector.hpp>
 
@@ -15,6 +17,22 @@
 using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
 
 typedef struct rd_file_view_struct rd_file_view_type;
+struct rd_file_view_struct {
+    std::vector<std::shared_ptr<FileKW>> kw_list;
+    std::map<std::string, std::vector<int>> kw_index;
+    std::vector<std::string>
+        distinct_kw; /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
+    ERT::FortIO *
+        fortio; /* The same fortio instance pointer as in the rd_file styructure. */
+    inv_map_type
+        *inv_map; /* Shared reference owned by the rd_file structure. */
+    std::vector<std::unique_ptr<rd_file_view_type>> child_list;
+    FileMode *flags;
+
+    rd_file_view_struct(ERT::FortIO *fortio, FileMode *flags,
+                        inv_map_type *inv_map)
+        : fortio(fortio), inv_map(inv_map), flags(flags) {};
+};
 
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
                             FileMode query_flags);
