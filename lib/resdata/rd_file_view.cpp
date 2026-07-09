@@ -623,8 +623,7 @@ rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
         if (!seqnum_map)
             continue;
 
-        bool sim = rd_file_view_has_sim_time(seqnum_map.get(), sim_time);
-        if (sim)
+        if (rd_file_view_has_sim_time(seqnum_map.get(), sim_time))
             return s_idx;
     }
     return -1;
