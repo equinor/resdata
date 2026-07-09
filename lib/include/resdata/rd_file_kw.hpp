@@ -67,7 +67,7 @@ public:
     rd_kw_type *get_kw(ERT::FortIO &fortio);
 
     bool skip_data(ERT::FortIO &fortio) const;
-    static std::vector<std::shared_ptr<FileKW>> read(FILE *stream, int num);
+    static std::vector<std::shared_ptr<FileKW>> read(FILE *stream, size_t num);
 
     /** Clear the cached kw. Note: previous pointers to
        kws are invalidated. */

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include <exception>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <map>
@@ -715,11 +716,14 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
                                             FILE *istream) {
 
     int index_size = util_fread_int(istream);
+    if (index_size < 0)
+        return NULL;
     rd_file_view_ptr file_view(rd_file_view_alloc(fortio, flags, inv_map),
                                &rd_file_view_free);
 
     try {
-        file_view->kw_list = FileKW::read(istream, index_size);
+        file_view->kw_list =
+            FileKW::read(istream, static_cast<size_t>(index_size));
     } catch (const std::exception &e) {
         fprintf(stderr, "%s\n", e.what());
         return NULL;

@@ -82,8 +82,7 @@ void FileKW::write_header(FILE *stream) {
     util_fwrite_size_t(rd_type_get_sizeof_iotype(data_type), stream);
 }
 
-std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, int num) {
-
+std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, size_t num) {
     size_t file_kw_size = RD_STRING8_LENGTH + 2 * sizeof(int) +
                           sizeof(offset_type) + sizeof(size_t);
     size_t buffer_size = num * file_kw_size;
@@ -95,8 +94,8 @@ std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, int num) {
     }
 
     std::vector<std::shared_ptr<FileKW>> kw_list(num);
-    for (int ikw = 0; ikw < num; ikw++) {
-        int buffer_offset = ikw * file_kw_size;
+    for (size_t ikw = 0; ikw < num; ikw++) {
+        size_t buffer_offset = ikw * file_kw_size;
         char header[RD_STRING8_LENGTH + 1];
         int kw_size;
         offset_type file_offset;
