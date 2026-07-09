@@ -4,6 +4,7 @@
 #include <ctime>
 #include <unordered_map>
 #include <memory>
+#include <string>
 
 #include <ert/util/int_vector.hpp>
 
@@ -43,8 +44,8 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
                                  const char *kw, int index,
                                  const int_vector_type *index_map,
                                  char *buffer);
-const char *rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view,
-                                          int index);
+const std::string &
+rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view, int index);
 int rd_file_view_get_num_distinct_kw(const rd_file_view_type *rd_file_view);
 int rd_file_view_get_size(const rd_file_view_type *rd_file_view);
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,

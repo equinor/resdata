@@ -183,10 +183,10 @@ static int rd_file_view_find_kw_value(const rd_file_view_type *rd_file_view,
     return global_index;
 }
 
-const char *rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view,
-                                          int index) {
-    const std::string &string = rd_file_view->distinct_kw[index];
-    return string.c_str();
+const std::string &
+rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view,
+                              int index) {
+    return rd_file_view->distinct_kw[index];
 }
 
 int rd_file_view_get_num_distinct_kw(const rd_file_view_type *rd_file_view) {

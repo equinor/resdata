@@ -45,11 +45,8 @@ PYBIND11_MODULE(_file_view, m) {
             self);
     });
     m.def("_get_unique_kw", [](py::handle self, int index) {
-        const char *kw = rd_file_view_iget_distinct_kw(
+        return rd_file_view_iget_distinct_kw(
             from_cwrap<rd_file_view_type>(self), index);
-        if (!kw)
-            return std::string();
-        return std::string(kw);
     });
     m.def("_get_size", [](py::handle self) {
         return rd_file_view_get_size(from_cwrap<rd_file_view_type>(self));
