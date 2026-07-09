@@ -39,10 +39,7 @@ struct rd_file_view_struct {
 };
 
 bool rd_file_view_check_flags(int state_flags, int query_flags) {
-    if ((state_flags & query_flags) == query_flags)
-        return true;
-    else
-        return false;
+    return (state_flags & query_flags) == query_flags;
 }
 
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
