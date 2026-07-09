@@ -2,6 +2,7 @@ import datetime
 import gc
 import os.path
 import shutil
+import struct
 
 import pytest
 from resdata import FileMode, FileType, ResDataType
@@ -91,7 +92,7 @@ class ResdataFileTest(ResdataTest):
             rd_file.write_index("INDEX_FILE")
             rd_file.close()
 
-            rd_file_index = ResdataFile("TEST", 0, "INDEX_FILE")
+            rd_file_index = ResdataFile("TEST", index_filename="INDEX_FILE")
             for kw in ["KW1", "KW2", "KW3", "KW4"]:
                 self.assertIn(kw, rd_file_index)
 
@@ -99,7 +100,9 @@ class ResdataFileTest(ResdataTest):
                 rd_file.write_index("does-not-exist/INDEX")
 
             with self.assertRaises(IOError):
-                rd_file_index = ResdataFile("TEST", 0, "index_does_not_exist")
+                rd_file_index = ResdataFile(
+                    "TEST", index_filename="index_does_not_exist"
+                )
 
             os.mkdir("path")
             shutil.copyfile("TEST", "path/TEST")
@@ -107,7 +110,54 @@ class ResdataFileTest(ResdataTest):
             rd_file.write_index("path/index")
 
             with CWDContext("path"):
-                rd_file = ResdataFile("TEST", 0, "index")
+                rd_file = ResdataFile("TEST", index_filename="index")
+
+    def test_that_opening_a_rd_file_with_a_corrupt_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_bad_index", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("TEST")
+            rd_file.write_index("INDEX_FILE")
+            rd_file.close()
+
+            # The index file stores the source filename followed by the number
+            # of keywords. Overwriting that count with a negative value keeps the
+            # index looking valid (name still matches) but makes reading the file
+            # view fail.
+            with open("INDEX_FILE", "r+b") as fh:
+                (name_len,) = struct.unpack("i", fh.read(4))
+                fh.seek(4 + name_len + 1)
+                fh.write(struct.pack("i", -1))
+
+            with self.assertRaisesRegex(OSError, "Failed to open file"):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_opening_a_rd_file_with_a_truncated_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_short_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("TEST")
+            rd_file.write_index("INDEX_FILE")
+            rd_file.close()
+
+            # Keep the source-filename string and the (positive) keyword count,
+            # but drop the keyword headers that follow so reading them fails.
+            with open("INDEX_FILE", "r+b") as fh:
+                (name_len,) = struct.unpack("i", fh.read(4))
+                fh.truncate(4 + name_len + 1 + 4)
+
+            with self.assertRaisesRegex(OSError, "Failed to open file"):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
 
     def test_save_kw(self):
         tmpdir = self.tmp_path_factory.mktemp("python_rd_file_save_kw", numbered=True)
@@ -312,3 +362,64 @@ def test_report_list_non_unified_filename(tmpdir):
 
         rd_file = ResdataFile("CASE.X0042")
         assert rd_file.report_list == [42]
+
+
+def _write_single_kw_file(filename, kw_name="MY_KEY", size=5):
+    kw = ResdataKW(kw_name, size, ResDataType.RD_INT)
+    for index in range(size):
+        kw[index] = index
+    with openFortIO(filename, mode=FortIO.WRITE_MODE) as f:
+        kw.fwrite(f)
+    return kw
+
+
+def test_save_kw_roundtrip_with_own_kw(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        rd_file = ResdataFile("TEST", flags=FileMode.WRITABLE)
+        loaded_kw = rd_file["MY_KEY"][0]
+        loaded_kw[0] = 42
+
+        rd_file.save_kw(loaded_kw)
+        rd_file.close()
+
+        assert ResdataFile("TEST")["MY_KEY"][0][0] == 42
+
+
+def test_save_kw_with_kw_from_different_file_raises(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("A")
+        _write_single_kw_file("B")
+
+        writable = ResdataFile("A", flags=FileMode.WRITABLE)
+        other = ResdataFile("B")
+        foreign_kw = other["MY_KEY"][0]
+
+        with pytest.raises(IndexError):
+            writable.save_kw(foreign_kw)
+
+
+def test_save_kw_with_standalone_kw_raises(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        writable = ResdataFile("TEST", flags=FileMode.WRITABLE)
+
+        standalone_kw = ResdataKW("MY_KEY", 5, ResDataType.RD_INT)
+        for index in range(5):
+            standalone_kw[index] = index
+
+        with pytest.raises(IndexError):
+            writable.save_kw(standalone_kw)
+
+
+def test_save_kw_on_read_only_file_raises(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        read_only = ResdataFile("TEST")
+        loaded_kw = read_only["MY_KEY"][0]
+
+        with pytest.raises(OSError, match="opened read only"):
+            read_only.save_kw(loaded_kw)

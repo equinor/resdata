@@ -27,6 +27,8 @@ from resdata.well import (
     WellType,
 )
 
+from .rd_tests._grid_fixtures import load_egrid_with_single_lgr
+
 # These are the per-array sizes that is stored in the INTEHEAD
 NIWELZ = 105  # Number of values per well in IWEL
 NZWELZ = 3  # 8-character words per well in ZWEL
@@ -406,6 +408,32 @@ def write_unified_restart(path, steps: Iterable[tuple[int, Date, list[Well]]]):
     _fwrite_keywords(path, keywords)
 
 
+def _lgr_marker_kw(name: str):
+    """A char keyword named ``LGR`` marking the start of a local-grid block."""
+    kw = ResdataKW("LGR", 1, ResDataType.RD_CHAR)
+    kw[0] = name.ljust(8)
+    return kw
+
+
+def write_restart_with_lgr(
+    path,
+    global_wells: list[Well],
+    lgr_name: str,
+    lgr_wells: list[Well],
+    date: Date = (2020, 1, 1),
+):
+    """Write a non-unified restart file with a global block followed by one LGR block.
+
+    The LGR block is introduced by an ``LGR`` char keyword holding the local-grid
+    name and carries its own INTEHEAD/DOUBHEAD/IWEL/ZWEL/ICON/SCON keywords,
+    mirroring how a simulator stores well data local to a refined grid.
+    """
+    keywords = _step_keywords(global_wells, date)
+    keywords.append(_lgr_marker_kw(lgr_name))
+    keywords += _step_keywords(lgr_wells, date)
+    _fwrite_keywords(path, keywords)
+
+
 @pytest.fixture
 def grid():
     return GridGenerator.create_rectangular((NX, NY, NZ), (1.0, 1.0, 1.0))
@@ -466,6 +494,26 @@ def test_that_the_well_type_is_read_from_iwel(tmp_path, grid, iwel_type, expecte
     well_state = WellInfo(grid, path)["W1"][0]
 
     assert well_state.wellType() == expected_type
+
+
+def test_that_an_invalid_iwel_type_value_is_rejected(tmp_path, grid):
+    well = Well(name="W1", well_type=99, connections=[Connection(1, 1, 1)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    with pytest.raises(ValueError, match="Invalid type value 99"):
+        WellInfo(grid, path)
+
+
+def test_that_an_open_well_with_zero_type_is_rejected(tmp_path, grid):
+    # A well type of 0 (IWEL_UNDOCUMENTED_ZERO) is only valid for a shut well;
+    # an open well (status > 0) with that type is an error.
+    well = Well(name="W1", well_type=0, status=1, connections=[Connection(1, 1, 1)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    with pytest.raises(ValueError, match="Invalid type value for open wells"):
+        WellInfo(grid, path)
 
 
 def test_that_status_0_means_closed_well(tmp_path, grid):
@@ -1394,3 +1442,46 @@ def test_that_non_existent_well_file_raises_os_error(grid, tmp_path):
     well_info = WellInfo(grid)
     with pytest.raises(OSError, match="No such file"):
         well_info.addWellFile(str(tmp_path / "DOES_NOT_EXIST"), False)
+
+
+def test_that_wells_are_loaded_from_a_restart_file_with_an_lgr(tmp_path):
+    grid = load_egrid_with_single_lgr(
+        str(tmp_path / "CASE.EGRID"),
+        NX,
+        NY,
+        NZ,
+        2,
+        2,
+        2,
+        5,
+        5,
+        5,
+        "LGR1",
+    )
+    assert grid.get_num_lgr() == 1
+
+    global_wells = [
+        Well(name="OP1", headi=6, headj=6, headk=6, connections=[Connection(6, 6, 6)]),
+        Well(name="OP2", headi=7, headj=7, headk=7, connections=[Connection(7, 7, 7)]),
+    ]
+    # ``OP1`` also perforates the LGR (listed second so the name lookup has to
+    # scan past ``OTHER``), while ``OP2`` is absent from the LGR
+    lgr_wells = [
+        Well(
+            name="OTHER", headi=1, headj=1, headk=1, connections=[Connection(1, 1, 1)]
+        ),
+        Well(name="OP1", headi=2, headj=2, headk=2, connections=[Connection(2, 2, 2)]),
+    ]
+
+    path = str(tmp_path / "CASE.X0000")
+    write_restart_with_lgr(path, global_wells, "LGR1", lgr_wells)
+
+    well_info = WellInfo(grid, path)
+
+    assert set(well_info.allWellNames()) == {"OP1", "OP2"}
+
+    op1 = well_info["OP1"][0]
+    assert op1.name() == "OP1"
+    assert op1.wellType() == WellType.PRODUCER
+    assert op1.hasGlobalConnections()
+    assert well_info["OP2"][0].hasGlobalConnections()
