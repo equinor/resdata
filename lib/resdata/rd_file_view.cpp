@@ -596,17 +596,14 @@ static bool rd_file_view_has_sim_days(const rd_file_view_type *rd_file_view,
             double file_sim_days = rd_file_view_iget_restart_sim_days(
                 rd_file_view, doubhead_index);
 
-            if (util_double_approx_equal(sim_days,
-                                         file_sim_days)) /* Perfect hit. */
+            if (util_double_approx_equal(sim_days, file_sim_days))
                 return true;
 
-            if (file_sim_days >
-                sim_days) /* We have gone past the target_time - i.e. we do not have it. */
+            if (file_sim_days > sim_days)
                 return false;
 
             doubhead_index++;
-            if (doubhead_index ==
-                num_DOUBHEAD) /* We have iterated through the whole thing without finding sim_time. */
+            if (doubhead_index == num_DOUBHEAD)
                 return false;
         }
     }
