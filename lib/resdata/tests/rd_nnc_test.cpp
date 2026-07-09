@@ -36,8 +36,8 @@ void test_scan(const char *grid_filename) {
          block_nr++) {
         rd_grid_type *lgr = rd_grid;
         int lgr_nr;
-        rd_file_view_type *nnc_view =
-            rd_file_alloc_global_blockview(grid_file, NNCHEAD_KW, block_nr);
+        rd_file_view_ptr nnc_view(
+            rd_file_alloc_global_blockview(grid_file, NNCHEAD_KW, block_nr));
         {
             if (block_nr > 0)
                 lgr = rd_grid_iget_lgr(rd_grid, block_nr - 1);
@@ -45,11 +45,11 @@ void test_scan(const char *grid_filename) {
 
             /* Internal nnc */
             {
-                if (rd_file_view_has_kw(nnc_view, NNC1_KW)) {
+                if (rd_file_view_has_kw(nnc_view.get(), NNC1_KW)) {
                     rd_kw_type *nnc1_kw =
-                        rd_file_view_iget_named_kw(nnc_view, NNC1_KW, 0);
+                        rd_file_view_iget_named_kw(nnc_view.get(), NNC1_KW, 0);
                     rd_kw_type *nnc2_kw =
-                        rd_file_view_iget_named_kw(nnc_view, NNC2_KW, 0);
+                        rd_file_view_iget_named_kw(nnc_view.get(), NNC2_KW, 0);
                     int i;
                     for (i = 0; i < rd_kw_get_size(nnc1_kw); i++) {
                         const int g1 = rd_kw_iget_int(nnc1_kw, i) - 1;
@@ -73,13 +73,13 @@ void test_scan(const char *grid_filename) {
 
         /* Global -> lgr */
         {
-            if (rd_file_view_has_kw(nnc_view, NNCG_KW)) {
+            if (rd_file_view_has_kw(nnc_view.get(), NNCG_KW)) {
                 rd_kw_type *nnchead_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNCHEAD_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNCHEAD_KW, 0);
                 rd_kw_type *nncg_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNCG_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNCG_KW, 0);
                 rd_kw_type *nncl_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNCL_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNCL_KW, 0);
                 int i;
                 int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
                 for (i = 0; i < rd_kw_get_size(nncg_kw); i++) {
@@ -103,13 +103,13 @@ void test_scan(const char *grid_filename) {
 
         /* Amalgamated: LGR -> LGR */
         {
-            if (rd_file_view_has_kw(nnc_view, NNCHEADA_KW)) {
+            if (rd_file_view_has_kw(nnc_view.get(), NNCHEADA_KW)) {
                 rd_kw_type *nncheada_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNCHEADA_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNCHEADA_KW, 0);
                 rd_kw_type *nnc1_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNA1_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNA1_KW, 0);
                 rd_kw_type *nnc2_kw =
-                    rd_file_view_iget_named_kw(nnc_view, NNA2_KW, 0);
+                    rd_file_view_iget_named_kw(nnc_view.get(), NNA2_KW, 0);
                 int lgr_nr1 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC1_INDEX);
                 int lgr_nr2 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC2_INDEX);
 
@@ -129,8 +129,6 @@ void test_scan(const char *grid_filename) {
                 }
             }
         }
-
-        rd_file_view_free(nnc_view);
     }
 }
 

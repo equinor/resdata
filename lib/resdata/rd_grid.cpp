@@ -2389,8 +2389,7 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
 
     for (int i = 0; i < num_nnchead_kw; i++) {
         auto lgr_view = rd_file_view_ptr(
-            rd_file_alloc_global_blockview(rd_file, NNCHEAD_KW, i),
-            &rd_file_view_free);
+            rd_file_alloc_global_blockview(rd_file, NNCHEAD_KW, i));
         rd_kw_type *nnchead_kw =
             rd_file_view_iget_named_kw(lgr_view.get(), NNCHEAD_KW, 0);
         int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);

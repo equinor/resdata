@@ -204,8 +204,6 @@ void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
     rd_file_view->kw_list.push_back(file_kw);
 }
 
-void rd_file_view_free(rd_file_view_type *rd_file_view) { delete rd_file_view; }
-
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw) {
     if (rd_file_view_has_kw(rd_file_view, kw)) {
@@ -249,7 +247,7 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
         rd_file_view_get_num_named_kw(rd_file_view, start_kw) <= occurence)
         return NULL;
 
-    rd_file_view_type *block_map = rd_file_view_alloc(
+    rd_file_view_type *block_map = new rd_file_view_struct(
         rd_file_view->fortio, rd_file_view->flags, rd_file_view->inv_map);
     size_t kw_index = 0;
     if (start_kw)
@@ -450,9 +448,8 @@ static time_t rd_rsthead_date(const rd_kw_type *intehead_kw) {
 time_t rd_file_view_iget_restart_sim_date(const rd_file_view_type *rd_file_view,
                                           int seqnum_index) {
     time_t sim_time = -1;
-    std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)> seqnum_map(
-        rd_file_view_alloc_blockview(rd_file_view, SEQNUM_KW, seqnum_index),
-        &rd_file_view_free);
+    rd_file_view_ptr seqnum_map(
+        rd_file_view_alloc_blockview(rd_file_view, SEQNUM_KW, seqnum_index));
 
     if (seqnum_map) {
         rd_kw_type *intehead_kw =
@@ -466,9 +463,8 @@ time_t rd_file_view_iget_restart_sim_date(const rd_file_view_type *rd_file_view,
 double rd_file_view_iget_restart_sim_days(const rd_file_view_type *rd_file_view,
                                           int seqnum_index) {
     double sim_days = 0;
-    std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)> seqnum_map(
-        rd_file_view_alloc_blockview(rd_file_view, SEQNUM_KW, seqnum_index),
-        &rd_file_view_free);
+    rd_file_view_ptr seqnum_map(
+        rd_file_view_alloc_blockview(rd_file_view, SEQNUM_KW, seqnum_index));
 
     if (seqnum_map) {
         rd_kw_type *doubhead_kw =
@@ -596,10 +592,8 @@ rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
     int num_seqnum = rd_file_view_get_num_named_kw(parent_map, SEQNUM_KW);
 
     for (int s_idx = 0; s_idx < num_seqnum; s_idx++) {
-        std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>
-            seqnum_map(
-                rd_file_view_alloc_blockview(parent_map, SEQNUM_KW, s_idx),
-                &rd_file_view_free);
+        rd_file_view_ptr seqnum_map(
+            rd_file_view_alloc_blockview(parent_map, SEQNUM_KW, s_idx));
 
         if (!seqnum_map)
             continue;
@@ -616,10 +610,8 @@ static int rd_file_view_seqnum_index_from_sim_days(rd_file_view_type *file_view,
     int seqnum_index = 0;
 
     while (true) {
-        std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>
-            seqnum_map(rd_file_view_alloc_blockview(file_view, SEQNUM_KW,
-                                                    seqnum_index),
-                       &rd_file_view_free);
+        rd_file_view_ptr seqnum_map(
+            rd_file_view_alloc_blockview(file_view, SEQNUM_KW, seqnum_index));
 
         if (seqnum_map) {
             if (rd_file_view_has_sim_days(seqnum_map.get(), sim_days)) {
@@ -694,8 +686,8 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio,
     int index_size = util_fread_int(istream);
     if (index_size < 0)
         return NULL;
-    rd_file_view_ptr file_view(rd_file_view_alloc(fortio, flags, inv_map),
-                               &rd_file_view_free);
+    auto file_view =
+        std::make_unique<rd_file_view_struct>(fortio, flags, inv_map);
 
     try {
         file_view->kw_list =

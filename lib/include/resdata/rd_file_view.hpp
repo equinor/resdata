@@ -37,9 +37,6 @@ struct rd_file_view_struct {
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
                             FileMode query_flags);
 bool rd_file_view_check_flags(FileMode state_flags, FileMode query_flags);
-
-rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, FileMode *flags,
-                                      inv_map_type *inv_map);
 void rd_file_view_make_index(rd_file_view_type *rd_file_view);
 bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view, const char *kw);
 rd_kw_type *rd_file_view_iget_kw(const rd_file_view_type *rd_file_view,
@@ -55,7 +52,6 @@ int rd_file_view_get_size(const rd_file_view_type *rd_file_view);
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
                                        const char *kw, int ith);
 bool rd_file_view_load_all(rd_file_view_type *rd_file_view);
-void rd_file_view_free(rd_file_view_type *rd_file_view);
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw);
 void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
@@ -105,8 +101,7 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio,
 
 void rd_file_view_clear(rd_file_view_type *file_view);
 
-using rd_file_view_ptr =
-    std::unique_ptr<rd_file_view_type, decltype(&rd_file_view_free)>;
+using rd_file_view_ptr = std::unique_ptr<rd_file_view_type>;
 
 std::shared_ptr<FileKW>
 rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
