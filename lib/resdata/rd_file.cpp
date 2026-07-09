@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <cmath>
 #include <cerrno>
@@ -7,11 +8,9 @@
 #include <ios>
 #include <memory>
 
-#include <ert/util/hash.hpp>
-#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
-#include <ert/util/int_vector.hpp>
-#include <ert/util/stringlist.hpp>
+#include <ert/util/type_macros.hpp>
+#include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
@@ -19,9 +18,10 @@
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw_magic.hpp>
-#include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/rd_util.hpp>
 
 /**
    This file implements functionality to load a file in
@@ -104,7 +104,7 @@ struct rd_file_struct {
         *global_view; /* The index of all the rd_kw instances in the file. */
     rd_file_view_type *active_view; /* The currently active index. */
     bool read_only;
-    int flags;
+    FileMode flags;
     vector_type *map_stack;
     inv_map_type *inv_view;
 };
@@ -135,7 +135,7 @@ struct rd_file_struct {
 UTIL_SAFE_CAST_FUNCTION(rd_file, RD_FILE_ID)
 UTIL_IS_INSTANCE_FUNCTION(rd_file, RD_FILE_ID)
 
-static rd_file_type *rd_file_alloc_empty(int flags) {
+static rd_file_type *rd_file_alloc_empty(FileMode flags) {
     rd_file_type *rd_file = (rd_file_type *)util_malloc(sizeof *rd_file);
     UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
     rd_file->map_stack = vector_alloc_new();
@@ -319,11 +319,11 @@ static void rd_file_select_global(rd_file_type *rd_file) {
 */
 
 static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
-                                                         int flags) {
+                                                         FileMode flags) {
     bool fmt_file;
     rd_fmt_file(filename, &fmt_file);
 
-    if (rd_file_view_check_flags(flags, RD_FILE_WRITABLE))
+    if (rd_file_view_check_flags(flags, FileMode::WRITABLE))
         return std::make_unique<ERT::FortIO>(
             filename, std::ios_base::in | std::ios_base::out, fmt_file);
     else
@@ -333,7 +333,7 @@ static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
     return nullptr;
 }
 
-rd_file_type *rd_file_open(const char *filename, int flags) {
+rd_file_type *rd_file_open(const char *filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
     if (fortio) {
@@ -345,7 +345,7 @@ rd_file_type *rd_file_open(const char *filename, int flags) {
         rd_file_scan(rd_file.get());
         rd_file_select_global(rd_file.get());
 
-        if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
+        if (rd_file_view_check_flags(rd_file->flags, FileMode::CLOSE_STREAM))
             rd_file->fortio->fclose_stream();
 
         return rd_file.release();
@@ -354,7 +354,7 @@ rd_file_type *rd_file_open(const char *filename, int flags) {
 }
 
 bool rd_file_writable(const rd_file_type *rd_file) {
-    return rd_file_view_check_flags(rd_file->flags, RD_FILE_WRITABLE);
+    return rd_file_view_check_flags(rd_file->flags, FileMode::WRITABLE);
 }
 
 /**
@@ -527,7 +527,7 @@ bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
 
         file_kw->inplace_write(*rd_file->fortio);
 
-        if (rd_file_view_check_flags(rd_file->flags, RD_FILE_CLOSE_STREAM))
+        if (rd_file_view_check_flags(rd_file->flags, FileMode::CLOSE_STREAM))
             rd_file->fortio->fclose_stream();
 
         return true;
@@ -611,7 +611,7 @@ bool rd_file_write_index(const rd_file_type *rd_file,
 }
 
 rd_file_type *rd_file_fast_open(const char *file_name,
-                                const char *index_file_name, int flags) {
+                                const char *index_file_name, FileMode flags) {
     if (!rd_file_index_valid0(file_name, index_file_name))
         return NULL;
 
@@ -631,7 +631,7 @@ rd_file_type *rd_file_fast_open(const char *file_name,
             if (rd_file->global_view) {
                 rd_file_select_global(rd_file.get());
                 if (rd_file_view_check_flags(rd_file->flags,
-                                             RD_FILE_CLOSE_STREAM))
+                                             FileMode::CLOSE_STREAM))
                     rd_file->fortio->fclose_stream();
                 return rd_file.release();
             }

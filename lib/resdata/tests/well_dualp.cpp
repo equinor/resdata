@@ -12,7 +12,7 @@
 #include <resdata/well/well_conn.hpp>
 
 void test_rstfile(const char *filename, bool fracture_connection) {
-    rd_file_type *rst_file = rd_file_open(filename, 0);
+    rd_file_type *rst_file = rd_file_open(filename);
     const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
     auto header = RSTHead::read(rd_file_get_global_view(rst_file),
                                 rd_filename_report_nr(filename));

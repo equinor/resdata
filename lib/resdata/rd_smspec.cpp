@@ -855,7 +855,7 @@ static bool rd_smspec_check_header(rd_file_type *header) {
 static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                                    const std::string &header_file,
                                    bool include_restart) {
-    rd_file_ptr header(rd_file_open(header_file.c_str(), 0), &rd_file_close);
+    rd_file_ptr header = open_rd_file(header_file);
     if (header && rd_smspec_check_header(header.get())) {
         const char *names_alias =
             get_active_keyword_alias(header.get(), WGNAMES_KW);

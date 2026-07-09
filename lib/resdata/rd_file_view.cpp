@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
 #include <ctime>
 #include <cstring>
 
@@ -19,9 +18,9 @@
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_file_view.hpp>
-#include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 struct rd_file_view_struct {
     std::vector<std::shared_ptr<FileKW>> kw_list;
@@ -33,18 +32,19 @@ struct rd_file_view_struct {
     inv_map_type
         *inv_map; /* Shared reference owned by the rd_file structure. */
     std::vector<std::unique_ptr<rd_file_view_type>> child_list;
-    int *flags;
+    FileMode *flags;
 
-    rd_file_view_struct(ERT::FortIO *fortio, int *flags, inv_map_type *inv_map)
+    rd_file_view_struct(ERT::FortIO *fortio, FileMode *flags,
+                        inv_map_type *inv_map)
         : fortio(fortio), inv_map(inv_map), flags(flags) {};
 };
 
-bool rd_file_view_check_flags(int state_flags, int query_flags) {
+bool rd_file_view_check_flags(FileMode state_flags, FileMode query_flags) {
     return (state_flags & query_flags) == query_flags;
 }
 
 bool rd_file_view_flags_set(const rd_file_view_type *file_view,
-                            int query_flags) {
+                            FileMode query_flags) {
     return rd_file_view_check_flags(*file_view->flags, query_flags);
 }
 
@@ -52,7 +52,7 @@ const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
     return file_view->fortio->filename_ref();
 }
 
-rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
+rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, FileMode *flags,
                                       inv_map_type *inv_map) {
     return new rd_file_view_struct(fortio, flags, inv_map);
 }
@@ -107,15 +107,15 @@ rd_file_view_iget_named_file_kw(const rd_file_view_type *rd_file_view,
     return rd_file_view_iget_file_kw(rd_file_view, global_index);
 }
 
-bool rd_file_view_drop_flag(rd_file_view_type *file_view, int flag) {
+bool rd_file_view_drop_flag(rd_file_view_type *file_view, FileMode flag) {
     bool flag_set = rd_file_view_flags_set(file_view, flag);
     if (flag_set)
-        *file_view->flags -= flag;
+        *file_view->flags &= ~flag;
 
     return flag_set;
 }
 
-void rd_file_view_add_flag(rd_file_view_type *file_view, int flag) {
+void rd_file_view_add_flag(rd_file_view_type *file_view, FileMode flag) {
     *file_view->flags |= flag;
 }
 
@@ -128,7 +128,7 @@ static rd_kw_type *rd_file_view_get_kw(const rd_file_view_type *rd_file_view,
             rd_kw = file_kw->get_kw(*rd_file_view->fortio);
             (*rd_file_view->inv_map)[rd_kw] = file_kw.get();
 
-            if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
+            if (rd_file_view_flags_set(rd_file_view, FileMode::CLOSE_STREAM))
                 rd_file_view->fortio->fclose_stream();
         }
     }
@@ -212,7 +212,7 @@ bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
         loadOK = true;
     }
 
-    if (rd_file_view_flags_set(rd_file_view, RD_FILE_CLOSE_STREAM))
+    if (rd_file_view_flags_set(rd_file_view, FileMode::CLOSE_STREAM))
         rd_file_view->fortio->fclose_stream();
 
     return loadOK;
@@ -705,7 +705,8 @@ void rd_file_view_write_index(const rd_file_view_type *file_view,
     }
 }
 
-rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio, int *flags,
+rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio,
+                                            FileMode *flags,
                                             inv_map_type *inv_map,
                                             FILE *istream) {
 

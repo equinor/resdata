@@ -789,7 +789,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     }
 
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
-    auto restart_file = open_rd_file(restart_name + smspec_ext, 0);
+    auto restart_file = open_rd_file(restart_name + smspec_ext);
     REQUIRE(restart_file != nullptr);
     rd_file_view_type *view = rd_file_get_global_view(restart_file.get());
     REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
@@ -832,7 +832,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
         rd_sum_fwrite(rd_sum.get());
     }
 
-    auto smspec_file = open_rd_file(name + ".SMSPEC", 0);
+    auto smspec_file = open_rd_file(name + ".SMSPEC");
     rd_file_view_type *view = rd_file_get_global_view(smspec_file.get());
     REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
     rd_kw_type *restart_kw = rd_file_view_iget_named_kw(view, RESTART_KW, 0);
@@ -1422,8 +1422,8 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         }
         WHEN("CASE3 is post-processed into CASE4 by appending a duplicate "
              "BPR keyword and a WTPRWI1 placeholder") {
-            auto smspec_in = open_rd_file(case3_path + ".SMSPEC", 0);
-            auto sum_in = open_rd_file(case3_path + ".UNSMRY", 0);
+            auto smspec_in = open_rd_file(case3_path + ".SMSPEC");
+            auto sum_in = open_rd_file(case3_path + ".UNSMRY");
 
             rd_kw_type *keywords =
                 rd_file_iget_named_kw(smspec_in.get(), "KEYWORDS", 0);
@@ -1523,7 +1523,7 @@ SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
 
         WHEN("A rd::unsmry_loader is constructed over the UNSMRY file") {
             auto loader = std::make_unique<rd::unsmry_loader>(
-                rd_sum_get_smspec(rd_sum.get()), case_path + ".UNSMRY", 0);
+                rd_sum_get_smspec(rd_sum.get()), case_path + ".UNSMRY");
 
             THEN("get_vector returns the per-keyword series") {
                 const std::vector<double> fopt = loader->get_vector(1);
@@ -1785,8 +1785,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                 auto explicit_sum = rd_sum_ptr(
                     rd_sum_fread_alloc(header_file.c_str(), data_files.get(),
                                        ":", /*include_restart=*/true,
-                                       /*lazy_load=*/true,
-                                       /*file_options=*/0),
+                                       /*lazy_load=*/true),
                     &rd_sum_free);
                 REQUIRE(explicit_sum.get() != nullptr);
 

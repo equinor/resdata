@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         const char *rst_file_name = argv[2];
 
         rd_grid_type *grid = rd_grid_alloc(grid_file);
-        rd_file_type *rst_file = rd_file_open(rst_file_name, 0);
+        rd_file_type *rst_file = rd_file_open(rst_file_name);
         rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
         auto header =
             RSTHead::read(rst_view, rd_filename_report_nr(rst_file_name));

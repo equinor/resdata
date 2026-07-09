@@ -14,7 +14,7 @@
 void test_file(const char *filename, int occurence, bool exists,
                const RSTHead &true_header) {
     int report_step = rd_filename_report_nr(filename);
-    rd_file_type *rst_file = rd_file_open(filename, 0);
+    rd_file_type *rst_file = rd_file_open(filename);
     rd_file_enum file_type = rd_get_file_type(filename, NULL, NULL);
     rd_file_view_type *rst_view;
 

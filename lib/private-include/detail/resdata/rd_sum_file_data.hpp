@@ -1,16 +1,21 @@
 #include <algorithm>
+#include <ctime>
+#include <utility>
 #include <vector>
 #include <memory>
-#include <array>
 #include <limits>
 #include <string>
 #include <stdexcept>
 
 #include <ert/util/vector.hpp>
+#include <ert/util/stringlist.hpp>
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_file_flag.hpp>
+#include <resdata/rd_file_view.hpp>
 
 namespace rd {
 
@@ -133,7 +138,7 @@ public:
     void fwrite_unified(ERT::FortIO &fortio) const;
     void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
     bool fread(const stringlist_type *filelist, bool lazy_load,
-               int file_options);
+               FileMode file_options = FileMode::DEFAULT);
 
 private:
     const rd_smspec_type *rd_smspec;

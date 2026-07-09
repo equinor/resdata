@@ -28,7 +28,7 @@ template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
 
 void test_scan(const char *grid_filename) {
     rd_grid_type *rd_grid = rd_grid_alloc(grid_filename);
-    rd_file_type *grid_file = rd_file_open(grid_filename, 0);
+    rd_file_type *grid_file = rd_file_open(grid_filename);
     int block_nr;
 
     for (block_nr = 0;

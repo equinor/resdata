@@ -164,7 +164,7 @@ void test_read_write() {
         }
 
         {
-            rd_file_type *f = rd_file_open("test_file", 0);
+            rd_file_type *f = rd_file_open("test_file");
             rd_kw_type *d_kw = rd_file_iget_named_kw(f, "DOUBLE", 0);
             rd_kw_type *f_kw = rd_file_iget_named_kw(f, "FLOAT", 0);
             rd_kw_type *i_kw = rd_file_iget_named_kw(f, "INT", 0);

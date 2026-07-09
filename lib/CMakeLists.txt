@@ -218,6 +218,7 @@ add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
 add_resdata_pybind_module(_grav rd_grav_pybind.cpp resdata/gravimetry)
 add_resdata_pybind_module(_rd_sum rd_sum_pybind.cpp resdata/summary)
 add_resdata_pybind_module(_type rd_type_pybind.cpp resdata/types)
+add_resdata_pybind_module(_file_mode file_mode_pybind.cpp resdata)
 
 if(NOT BUILD_TESTS)
   return()

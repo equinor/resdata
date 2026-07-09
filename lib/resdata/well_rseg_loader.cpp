@@ -1,15 +1,13 @@
-
+#include <cstdlib>
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
 
-#include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_kw_magic.hpp>
 
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
-
-#include <resdata/FortIO.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 struct well_rseg_loader_struct {
     rd_file_view_type *rst_view;
@@ -41,7 +39,7 @@ well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view) {
 
 void well_rseg_loader_free(well_rseg_loader_type *loader) {
 
-    if (rd_file_view_flags_set(loader->rst_view, RD_FILE_CLOSE_STREAM))
+    if (rd_file_view_flags_set(loader->rst_view, FileMode::CLOSE_STREAM))
         rd_file_view_fclose_stream(loader->rst_view);
 
     int_vector_free(loader->relative_index_map);

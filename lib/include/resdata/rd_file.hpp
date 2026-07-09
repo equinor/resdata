@@ -6,24 +6,20 @@
 #include <string>
 
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
-#include <resdata/rd_type.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 #include "ert/util/type_macros.hpp"
 
-#define RD_FILE_FLAGS_ENUM_DEFS                                                \
-    {.value = 1, .name = "RD_FILE_CLOSE_STREAM"},                              \
-        {.value = 2, .name = "RD_FILE_WRITABLE"}
-#define RD_FILE_FLAGS_ENUM_SIZE 2
-
 typedef struct rd_file_struct rd_file_type;
 bool rd_file_load_all(rd_file_type *rd_file);
-rd_file_type *rd_file_open(const char *filename, int flags);
+rd_file_type *rd_file_open(const char *filename,
+                           FileMode flags = FileMode::DEFAULT);
 rd_file_type *rd_file_fast_open(const char *filename,
-                                const char *index_filename, int flags);
+                                const char *index_filename,
+                                FileMode flags = FileMode::DEFAULT);
 bool rd_file_write_index(const rd_file_type *rd_file,
                          const char *index_filename);
 bool rd_file_index_valid(const char *file_name, const char *index_file_name);
@@ -40,7 +36,7 @@ void rd_file_fwrite_fortio(const rd_file_type *ec_file, ERT::FortIO &fortio,
 int rd_file_get_phases(const rd_file_type *init_file);
 
 bool rd_file_writable(const rd_file_type *rd_file);
-bool rd_file_flags_set(const rd_file_type *rd_file, int flags);
+bool rd_file_flags_set(const rd_file_type *rd_file, FileMode flags);
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index);
 rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
@@ -76,9 +72,11 @@ bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
 
 using rd_file_ptr = std::unique_ptr<rd_file_type, decltype(&rd_file_close)>;
 
-inline rd_file_ptr open_rd_file(const std::string &path, int flags) {
+inline rd_file_ptr open_rd_file(const std::string &path,
+                                FileMode flags = FileMode::DEFAULT) {
     return {rd_file_open(path.c_str(), flags), &rd_file_close};
 }
-inline rd_file_ptr open_rd_file(const std::filesystem::path &path, int flags) {
+inline rd_file_ptr open_rd_file(const std::filesystem::path &path,
+                                FileMode flags = FileMode::DEFAULT) {
     return {rd_file_open(path.string().c_str(), flags), &rd_file_close};
 }

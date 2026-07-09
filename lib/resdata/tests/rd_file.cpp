@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 
 #include <ios>
 
@@ -12,10 +11,10 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_grid.hpp>
-#include <resdata/rd_endian_flip.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 void test_writable(size_t data_size) {
     rd::util::TestArea ta("file_writable");
@@ -31,7 +30,8 @@ void test_writable(size_t data_size) {
     }
 
     for (int i = 0; i < 4; ++i) {
-        rd_file_type *rd_file = rd_file_open(data_file_name, RD_FILE_WRITABLE);
+        rd_file_type *rd_file =
+            rd_file_open(data_file_name, FileMode::WRITABLE);
         rd_kw_type *loaded_kw =
             rd_file_view_iget_kw(rd_file_get_global_view(rd_file), 0);
         test_assert_true(rd_kw_equal(kw, loaded_kw));
@@ -51,7 +51,7 @@ void test_truncated() {
         rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", RD_METRIC_UNITS);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TEST.EGRID", 0);
+        rd_file_type *rd_file = rd_file_open("TEST.EGRID");
         test_assert_true(rd_file_is_instance(rd_file));
         num_kw = rd_file_get_size(rd_file);
         rd_file_close(rd_file);
@@ -64,7 +64,7 @@ void test_truncated() {
         fclose(stream);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TEST.EGRID", 0);
+        rd_file_type *rd_file = rd_file_open("TEST.EGRID");
         test_assert_true(rd_file_get_size(rd_file) < num_kw);
         rd_file_close(rd_file);
     }
@@ -78,7 +78,7 @@ void test_mixed_case() {
         rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", RD_METRIC_UNITS);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID", 0);
+        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID");
         test_assert_true(rd_file_is_instance(rd_file));
         num_kw = rd_file_get_size(rd_file);
         rd_file_close(rd_file);
@@ -91,7 +91,7 @@ void test_mixed_case() {
         fclose(stream);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID", 0);
+        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID");
         test_assert_true(rd_file_get_size(rd_file) < num_kw);
         rd_file_close(rd_file);
     }

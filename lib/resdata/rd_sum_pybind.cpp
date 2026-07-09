@@ -17,6 +17,7 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
 #include <resdata/smspec_node.hpp>
+#include <resdata/rd_file_flag.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
 
@@ -31,7 +32,7 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def(
         "_fread_alloc_case",
         [](std::string load_case, std::string key_join_string,
-           bool include_restart, bool lazy_load, int file_options) {
+           bool include_restart, bool lazy_load, FileMode file_options) {
             return reinterpret_cast<std::uintptr_t>(rd_sum_fread_alloc_case(
                 load_case.c_str(), key_join_string.c_str(), include_restart,
                 lazy_load, file_options));
@@ -41,7 +42,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         "_fread_alloc",
         [](std::string header_file, py::handle data_files,
            std::string key_join_string, bool include_restart, bool lazy_load,
-           int file_options) {
+           FileMode file_options) {
             return reinterpret_cast<std::uintptr_t>(rd_sum_fread_alloc(
                 header_file.c_str(), from_cwrap<stringlist_type>(data_files),
                 key_join_string.c_str(), include_restart, lazy_load,
