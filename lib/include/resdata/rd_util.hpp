@@ -1,5 +1,6 @@
 #pragma once
 #include <ctime>
+#include <cstdint>
 #include <cstdlib>
 
 #include <new>
@@ -140,33 +141,45 @@ inline bool try_exists(std::filesystem::path p) noexcept {
 
 template <typename T>
 std::unique_ptr<T[], void (*)(void *)> checked_malloc(size_t num) {
+    if (sizeof(T) == 0 || num == 0)
+        return {nullptr, std::free};
+    if (num > SIZE_MAX / sizeof(T))
+        throw std::bad_alloc{};
+
     T *ptr = static_cast<T *>(std::malloc(num * sizeof(T)));
 
-    if (ptr == nullptr) {
+    if (ptr == nullptr)
         throw std::bad_alloc{};
-    }
-    return std::unique_ptr<T[], void (*)(void *)>(
-        ptr, [](void *p) { std::free(p); });
+
+    return {ptr, std::free};
 }
 
 template <typename T>
 std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
+    if (sizeof(T) == 0 || num == 0)
+        return {nullptr, std::free};
+    if (num > SIZE_MAX / sizeof(T))
+        throw std::bad_alloc{};
+
     T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));
 
-    if (ptr == nullptr) {
+    if (ptr == nullptr)
         throw std::bad_alloc{};
-    }
-    return std::unique_ptr<T[], void (*)(void *)>(
-        ptr, [](void *p) { std::free(p); });
+
+    return {ptr, std::free};
 }
 
 template <typename T>
 void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
                      size_t new_element_count) {
-    if (new_element_count == 0) {
+    if (new_element_count == 0 || sizeof(T) == 0) {
         ptr.reset();
         return;
     }
+
+    if (new_element_count > SIZE_MAX / sizeof(T))
+        throw std::bad_alloc{};
+
     T *raw_ptr = ptr.release();
     void *new_raw_ptr = std::realloc(raw_ptr, new_element_count * sizeof(T));
     if (new_raw_ptr == nullptr) {
