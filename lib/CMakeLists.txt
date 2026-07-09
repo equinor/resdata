@@ -210,6 +210,7 @@ add_resdata_pybind_module(_grid rd_grid_pybind.cpp resdata/grid)
 add_resdata_pybind_module(_kw rd_kw_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_rsthead rsthead_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(_file rd_file_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_file_view rd_file_view_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(fortio fortio_pybind.cpp resdata/resfile)
 add_resdata_pybind_module(well well_pybind.cpp resdata)
 add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
