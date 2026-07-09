@@ -33,6 +33,9 @@ struct rd_file_view_struct {
         *inv_map; /* Shared reference owned by the rd_file structure. */
     std::vector<std::unique_ptr<rd_file_view_type>> child_list;
     int *flags;
+
+    rd_file_view_struct(ERT::FortIO *fortio, int *flags, inv_map_type *inv_map)
+        : fortio(fortio), inv_map(inv_map), flags(flags) {};
 };
 
 bool rd_file_view_check_flags(int state_flags, int query_flags) {
@@ -53,13 +56,7 @@ const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
 
 rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, int *flags,
                                       inv_map_type *inv_map) {
-    rd_file_view_type *rd_file_view = new rd_file_view_type();
-
-    rd_file_view->fortio = fortio;
-    rd_file_view->inv_map = inv_map;
-    rd_file_view->flags = flags;
-
-    return rd_file_view;
+    return new rd_file_view_struct(fortio, flags, inv_map);
 }
 
 static int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
