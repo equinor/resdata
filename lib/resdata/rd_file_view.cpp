@@ -9,6 +9,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <fmt/format.h>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
@@ -248,15 +249,13 @@ static int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
     const auto &index_vector = rd_file_view->kw_index.at(header);
 
     int occurence = -1;
-    {
-        /* Manual reverse lookup. */
-        for (size_t i = 0; i < index_vector.size(); i++) {
-            if (index_vector[i] == global_index)
-                occurence = i;
-        }
+    for (size_t i = 0; i < index_vector.size(); i++) {
+        if (index_vector[i] == global_index)
+            occurence = i;
     }
     if (occurence < 0)
-        util_abort("%s: internal error ... \n", __func__);
+        throw std::out_of_range(
+            fmt::format("Could not find index {}", global_index));
 
     return occurence;
 }
