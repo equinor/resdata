@@ -1,8 +1,10 @@
+#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <ios>
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -85,6 +87,8 @@ void FileKW::write_header(FILE *stream) {
 std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, size_t num) {
     size_t file_kw_size = RD_STRING8_LENGTH + 2 * sizeof(int) +
                           sizeof(offset_type) + sizeof(size_t);
+    if (num > SIZE_MAX / file_kw_size)
+        throw std::bad_alloc{};
     size_t buffer_size = num * file_kw_size;
     auto buffer = rd::checked_malloc<char>(buffer_size);
     size_t num_read = fread(buffer.get(), 1, buffer_size, stream);

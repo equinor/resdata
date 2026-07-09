@@ -2,7 +2,10 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <cstdint>
+#include <cstdio>
 #include <fstream>
+#include <new>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -10,6 +13,7 @@
 #include <ert/util/int_vector.hpp>
 
 #include <resdata/FortIO.hpp>
+#include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
 
@@ -332,4 +336,13 @@ TEST_CASE_METHOD(Tmpdir, "fseek_kw throws on missing keyword", "[rd_kw]") {
     REQUIRE_THROWS_WITH(rd_kw_fseek_kw("MISSING", /*rewind=*/false,
                                        /*abort_on_error=*/true, fortio),
                         ContainsSubstring("failed to locate keyword:MISSING"));
+}
+
+TEST_CASE_METHOD(Tmpdir, "FileKW::read guards against buffer_size overflow",
+                 "[rd_kw]") {
+    auto path = (dirname / "FILE").string();
+    std::FILE *stream = std::fopen(path.c_str(), "wb+");
+    REQUIRE(stream != nullptr);
+    REQUIRE_THROWS_AS(FileKW::read(stream, SIZE_MAX), std::bad_alloc);
+    std::fclose(stream);
 }
