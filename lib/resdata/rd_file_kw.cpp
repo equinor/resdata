@@ -99,39 +99,29 @@ std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, size_t num) {
 
     std::vector<std::shared_ptr<FileKW>> kw_list(num);
     for (size_t ikw = 0; ikw < num; ikw++) {
-        size_t buffer_offset = ikw * file_kw_size;
         char header[RD_STRING8_LENGTH + 1];
         int kw_size;
         offset_type file_offset;
         rd_type_enum rd_type;
         size_t type_size;
+
+        char *bp = buffer.get() + ikw * file_kw_size;
         {
-            int index = 0;
-            while (true) {
-                if (buffer.get()[index + buffer_offset] != ' ')
-                    header[index] = buffer.get()[index + buffer_offset];
-                else
-                    break;
-
-                index++;
-                if (index == RD_STRING8_LENGTH)
-                    break;
-            }
-            header[index] = '\0';
-            buffer_offset += RD_STRING8_LENGTH;
+            char *hp = header;
+            char *end = header + RD_STRING8_LENGTH;
+            while (*bp != ' ' && hp != end)
+                *hp++ = *bp++;
+            *hp = '\0';
+            bp = buffer.get() + ikw * file_kw_size + RD_STRING8_LENGTH;
         }
-
-        memcpy(&kw_size, &buffer.get()[buffer_offset], sizeof kw_size);
-        buffer_offset += sizeof kw_size;
-
-        memcpy(&file_offset, &buffer.get()[buffer_offset], sizeof file_offset);
-        buffer_offset += sizeof file_offset;
-
-        memcpy(&rd_type, &buffer.get()[buffer_offset], sizeof rd_type);
-        buffer_offset += sizeof rd_type;
-
-        memcpy(&type_size, &buffer.get()[buffer_offset], sizeof type_size);
-        buffer_offset += sizeof type_size;
+        memcpy(&kw_size, bp, sizeof kw_size);
+        bp += sizeof kw_size;
+        memcpy(&file_offset, bp, sizeof file_offset);
+        bp += sizeof file_offset;
+        memcpy(&rd_type, bp, sizeof rd_type);
+        bp += sizeof rd_type;
+        memcpy(&type_size, bp, sizeof type_size);
+        bp += sizeof type_size;
 
         kw_list[ikw] = std::make_shared<FileKW>(
             file_offset, rd_type_create(rd_type, type_size), kw_size, header);
