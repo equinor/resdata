@@ -35,7 +35,7 @@ const char *rd_file_view_get_src_file(const rd_file_view_type *file_view) {
 
 rd_file_view_type *rd_file_view_alloc(ERT::FortIO *fortio, FileMode *flags,
                                       inv_map_type *inv_map) {
-    return new rd_file_view_struct(fortio, flags, inv_map);
+    return new FileView(fortio, flags, inv_map);
 }
 
 static int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
@@ -247,7 +247,7 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
         rd_file_view_get_num_named_kw(rd_file_view, start_kw) <= occurence)
         return NULL;
 
-    rd_file_view_type *block_map = new rd_file_view_struct(
+    rd_file_view_type *block_map = new FileView(
         rd_file_view->fortio, rd_file_view->flags, rd_file_view->inv_map);
     size_t kw_index = 0;
     if (start_kw)
@@ -686,8 +686,7 @@ rd_file_view_type *rd_file_view_fread_alloc(ERT::FortIO *fortio,
     int index_size = util_fread_int(istream);
     if (index_size < 0)
         return NULL;
-    auto file_view =
-        std::make_unique<rd_file_view_struct>(fortio, flags, inv_map);
+    auto file_view = std::make_unique<FileView>(fortio, flags, inv_map);
 
     try {
         file_view->kw_list =
