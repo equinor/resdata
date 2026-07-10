@@ -71,6 +71,7 @@ public:
     void fflush() const;
     void rewind() const;
     [[nodiscard]] const char *filename_ref() const;
+    [[nodiscard]] const std::string &filename() const { return m_filename; };
     [[nodiscard]] bool fmt_file() const;
     [[nodiscard]] offset_type ftell() const;
     bool fseek(offset_type offset, int whence);

@@ -125,14 +125,12 @@ class WellState {
 
     void add_wellhead(const RSTHead &header, const rd_kw_type *iwel_kw,
                       int well_nr, const std::string &grid_name, int grid_nr);
-    bool add_rates(rd_file_view_type *rst_view, int well_nr);
-    int get_lgr_well_nr(const rd_file_view_type *file_view);
-    void add_connections(const rd_file_view_type *rst_view,
-                         const std::string &grid_name, int grid_nr,
-                         int well_nr);
-    void add_global_connections(const rd_file_view_type *rst_view, int well_nr);
-    void add_LGR_connections(const rd_grid_type *grid,
-                             rd_file_view_type *file_view);
+    bool add_rates(rd::FileView *rst_view, int well_nr);
+    int get_lgr_well_nr(rd::FileView *file_view);
+    void add_connections(rd::FileView *rst_view, const std::string &grid_name,
+                         int grid_nr, int well_nr);
+    void add_global_connections(rd::FileView *rst_view, int well_nr);
+    void add_LGR_connections(const rd_grid_type *grid, rd::FileView *file_view);
     std::shared_ptr<WellConnection> get_wellhead(const std::string &grid_name) {
         const auto it = name_wellhead.find(grid_name);
         return it != name_wellhead.end() ? it->second : nullptr;
@@ -185,9 +183,9 @@ public:
     [[nodiscard]] bool has_global_connections() const {
         return has_grid_connections(RD_GRID_GLOBAL_GRID);
     }
-    void add_connections(const rd_grid_type *grid, rd_file_view_type *rst_view,
+    void add_connections(const rd_grid_type *grid, rd::FileView *rst_view,
                          int well_nr);
-    bool add_MSW(rd_file_view_type *rst_view, int well_nr,
+    bool add_MSW(rd::FileView *rst_view, int well_nr,
                  bool load_segment_information);
 
     static std::shared_ptr<WellState>
@@ -195,9 +193,9 @@ public:
                           int report_nr, int global_well_nr,
                           bool load_segment_information);
     static std::shared_ptr<WellState>
-    read_wells_in_restart(rd_file_view_type *file_view,
-                          const rd_grid_type *grid, int report_nr,
-                          int global_well_nr, bool load_segment_information);
+    read_wells_in_restart(rd::FileView *file_view, const rd_grid_type *grid,
+                          int report_nr, int global_well_nr,
+                          bool load_segment_information);
     std::vector<std::shared_ptr<WellConnection>> *
     get_grid_connections(const std::string &grid_name) {
         auto it = connections.find(grid_name);

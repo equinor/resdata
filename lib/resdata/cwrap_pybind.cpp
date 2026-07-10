@@ -208,20 +208,6 @@ template <> rd_file_type *from_cwrap<rd_file_type>(py::handle obj) {
     return cast_cwrap<rd_file_type>(obj);
 }
 
-py::object ResdataFileView() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.resfile").attr("ResdataFileView");
-    }
-    return cls;
-}
-
-template <> rd_file_view_type *from_cwrap<rd_file_view_type>(py::handle obj) {
-    if (!py::isinstance(obj, ResdataFileView()))
-        throw py::type_error("Expected ResdataFileView, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<rd_file_view_type>(obj);
-}
 py::object ResdataSubsidence() {
     static py::object cls;
     if (!cls) {

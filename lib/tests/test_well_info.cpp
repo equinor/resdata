@@ -191,17 +191,17 @@ bool is_loaded(std::shared_ptr<FileKW> file_kw) {
 TEST_CASE_METHOD(Tmpdir, "keywords are lazily loaded", "[well][transaction]") {
     auto path = write_three_kw_file(dirname);
     rd_file_ptr file = open_rd_file(path);
-    auto *view = rd_file_get_global_view(file.get());
+    auto view = rd_file_get_global_view(file.get());
 
-    auto fk0 = rd_file_view_iget_file_kw(view, 0);
-    auto fk1 = rd_file_view_iget_file_kw(view, 1);
-    auto fk2 = rd_file_view_iget_file_kw(view, 2);
+    auto fk0 = view->get_file_kw(0);
+    auto fk1 = view->get_file_kw(1);
+    auto fk2 = view->get_file_kw(2);
 
     REQUIRE_FALSE(is_loaded(fk0));
     REQUIRE_FALSE(is_loaded(fk1));
     REQUIRE_FALSE(is_loaded(fk2));
 
-    rd_file_view_iget_kw(view, 0);
+    view->get_kw(0);
 
     REQUIRE(is_loaded(fk0));
     REQUIRE_FALSE(is_loaded(fk1));

@@ -13,6 +13,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/rd_file_view.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
 #include <resdata/rd_grav.hpp>
@@ -107,7 +108,7 @@ static void rd_grav_survey_free(rd_grav_survey_type *grav_survey) {
     delete grav_survey;
 }
 
-static const char *get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
+static std::string get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
     if (rd_version == ECLIPSE100) {
         switch (phase) {
         case (RD_OIL_PHASE):
@@ -197,10 +198,11 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     }
 }
 
-static rd_grav_phase_type *
-rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
-                    rd_phase_enum phase, const rd_file_view_type *restart_file,
-                    grav_calc_type calc_type) {
+static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
+                                               rd_grav_survey_type *survey,
+                                               rd_phase_enum phase,
+                                               rd::FileView *restart_file,
+                                               grav_calc_type calc_type) {
 
     const rd_file_type *init_file = rd_grav->init_file;
     const rd::rd_grid_cache *grid_cache = rd_grav->grid_cache;
@@ -226,11 +228,11 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
             rd_kw_type *fip_kw;
 
             if (phase == RD_OIL_PHASE)
-                fip_kw = rd_file_view_iget_named_kw(restart_file, FIPOIL_KW, 0);
+                fip_kw = restart_file->get_kw(FIPOIL_KW, 0);
             else if (phase == RD_GAS_PHASE)
-                fip_kw = rd_file_view_iget_named_kw(restart_file, FIPGAS_KW, 0);
+                fip_kw = restart_file->get_kw(FIPGAS_KW, 0);
             else
-                fip_kw = rd_file_view_iget_named_kw(restart_file, FIPWAT_KW, 0);
+                fip_kw = restart_file->get_kw(FIPWAT_KW, 0);
 
             for (int iactive = 0; iactive < size; iactive++) {
                 double fip = rd_kw_iget_as_double(fip_kw, iactive);
@@ -243,21 +245,17 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
             }
         } else {
             rd_version_enum rd_version = rd_file_get_rd_version(init_file);
-            const char *den_kw_name = get_den_kw(phase, rd_version);
-            const rd_kw_type *den_kw =
-                rd_file_view_iget_named_kw(restart_file, den_kw_name, 0);
+            const std::string den_kw_name = get_den_kw(phase, rd_version);
+            const rd_kw_type *den_kw = restart_file->get_kw(den_kw_name, 0);
 
             if (calc_type == GRAV_CALC_RFIP) {
                 rd_kw_type *rfip_kw;
                 if (phase == RD_OIL_PHASE)
-                    rfip_kw =
-                        rd_file_view_iget_named_kw(restart_file, RFIPOIL_KW, 0);
+                    rfip_kw = restart_file->get_kw(RFIPOIL_KW, 0);
                 else if (phase == RD_GAS_PHASE)
-                    rfip_kw =
-                        rd_file_view_iget_named_kw(restart_file, RFIPGAS_KW, 0);
+                    rfip_kw = restart_file->get_kw(RFIPGAS_KW, 0);
                 else
-                    rfip_kw =
-                        rd_file_view_iget_named_kw(restart_file, RFIPWAT_KW, 0);
+                    rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
 
                 {
                     int iactive;
@@ -271,20 +269,18 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
                 /* (calc_type == GRAV_CALC_RPORV) || (calc_type == GRAV_CALC_PORMOD) */
                 rd_kw_type *sat_kw;
                 bool private_sat_kw = false;
-                if (rd_file_view_has_kw(restart_file, sat_kw_name))
-                    sat_kw = rd_file_view_iget_named_kw(restart_file,
-                                                        sat_kw_name, 0);
+                if (restart_file->has_kw(std::string(sat_kw_name)))
+                    sat_kw = restart_file->get_kw(sat_kw_name, 0);
                 else {
                     /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
-                    const rd_kw_type *swat_kw =
-                        rd_file_view_iget_named_kw(restart_file, "SWAT", 0);
+                    const rd_kw_type *swat_kw = restart_file->get_kw("SWAT", 0);
                     sat_kw = rd_kw_alloc_copy(swat_kw);
                     rd_kw_scalar_set_float(sat_kw, 1.0);
                     rd_kw_inplace_sub(sat_kw, swat_kw); /* sat = 1 - SWAT */
 
-                    if (rd_file_view_has_kw(restart_file, "SGAS")) {
+                    if (restart_file->has_kw("SGAS")) {
                         const rd_kw_type *sgas_kw =
-                            rd_file_view_iget_named_kw(restart_file, "SGAS", 0);
+                            restart_file->get_kw("SGAS", 0);
                         rd_kw_inplace_sub(sat_kw, sgas_kw); /* sat -= SGAS */
                     }
                     private_sat_kw = true;
@@ -318,7 +314,7 @@ static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
 
 static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
                                       rd_grav_survey_type *survey,
-                                      const rd_file_view_type *restart_file,
+                                      rd::FileView *restart_file,
                                       grav_calc_type calc_type) {
     int phases = rd_file_get_phases(rd_grav->init_file);
     if (phases & RD_OIL_PHASE) {
@@ -453,15 +449,13 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
 */
 
 static rd_grav_survey_type *
-rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
-                           const rd_file_view_type *restart_file,
+rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
                            const std::string &name) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
 
-    if (rd_file_view_has_kw(restart_file, RPORV_KW)) {
-        rd_kw_type *rporv_kw =
-            rd_file_view_iget_named_kw(restart_file, RPORV_KW, 0);
+    if (restart_file->has_kw(RPORV_KW)) {
+        rd_kw_type *rporv_kw = restart_file->get_kw(RPORV_KW, 0);
         int iactive;
         for (iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
             survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
@@ -483,8 +477,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
 }
 
 static rd_grav_survey_type *
-rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
-                            const rd_file_view_type *restart_file,
+rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
                             const std::string &name) {
     rd::rd_grid_cache &grid_cache = *(rd_grav->grid_cache);
     rd_grav_survey_type *survey =
@@ -492,8 +485,8 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
 
     rd_kw_type *init_porv_kw = rd_file_iget_named_kw(
         rd_grav->init_file, PORV_KW, 0); /* Global indexing */
-    rd_kw_type *pormod_kw = rd_file_view_iget_named_kw(restart_file, PORMOD_KW,
-                                                       0); /* Active indexing */
+    rd_kw_type *pormod_kw =
+        restart_file->get_kw(PORMOD_KW, 0); /* Active indexing */
     const int size = grid_cache.size();
     const auto &global_index = grid_cache.global_index();
     int active_index;
@@ -518,10 +511,9 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
    possibly also the rd_grav_add_std_density() functions.
 */
 
-static rd_grav_survey_type *
-rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
-                         const rd_file_view_type *restart_file,
-                         const std::string &name) {
+static rd_grav_survey_type *rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
+                                                     rd::FileView *restart_file,
+                                                     const std::string &name) {
 
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_FIP);
@@ -536,8 +528,7 @@ rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
 }
 
 static rd_grav_survey_type *
-rd_grav_survey_alloc_RFIP(rd_grav_type *rd_grav,
-                          const rd_file_view_type *restart_file,
+rd_grav_survey_alloc_RFIP(rd_grav_type *rd_grav, rd::FileView *restart_file,
                           const std::string &name) {
 
     rd_grav_survey_type *survey =
@@ -598,9 +589,9 @@ static void rd_grav_add_survey__(rd_grav_type *grav, const std::string &name,
     grav->surveys[name] = survey;
 }
 
-rd_grav_survey_type *
-rd_grav_add_survey_RPORV(rd_grav_type *grav, const std::string &name,
-                         const rd_file_view_type *restart_file) {
+rd_grav_survey_type *rd_grav_add_survey_RPORV(rd_grav_type *grav,
+                                              const std::string &name,
+                                              rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RPORV(grav, restart_file, name);
 
@@ -611,9 +602,9 @@ rd_grav_add_survey_RPORV(rd_grav_type *grav, const std::string &name,
     return survey;
 }
 
-rd_grav_survey_type *
-rd_grav_add_survey_FIP(rd_grav_type *grav, const std::string &name,
-                       const rd_file_view_type *restart_file) {
+rd_grav_survey_type *rd_grav_add_survey_FIP(rd_grav_type *grav,
+                                            const std::string &name,
+                                            rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_FIP(grav, restart_file, name);
     if (survey == NULL)
@@ -622,9 +613,9 @@ rd_grav_add_survey_FIP(rd_grav_type *grav, const std::string &name,
     return survey;
 }
 
-rd_grav_survey_type *
-rd_grav_add_survey_RFIP(rd_grav_type *grav, const std::string &name,
-                        const rd_file_view_type *restart_file) {
+rd_grav_survey_type *rd_grav_add_survey_RFIP(rd_grav_type *grav,
+                                             const std::string &name,
+                                             rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RFIP(grav, restart_file, name);
     if (survey == NULL)
@@ -633,9 +624,9 @@ rd_grav_add_survey_RFIP(rd_grav_type *grav, const std::string &name,
     return survey;
 }
 
-rd_grav_survey_type *
-rd_grav_add_survey_PORMOD(rd_grav_type *grav, const std::string &name,
-                          const rd_file_view_type *restart_file) {
+rd_grav_survey_type *rd_grav_add_survey_PORMOD(rd_grav_type *grav,
+                                               const std::string &name,
+                                               rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_PORMOD(grav, restart_file, name);
     if (survey == NULL)

@@ -118,6 +118,12 @@ def test_iget_named_kw_with_out_of_range_index_raises_indexerror(sample_file):
             rd_file.global_view.iget_named_kw("PRESSURE", 2)
 
 
+def test_iget_named_kw_with_negative_index_raises_indexerror(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        with pytest.raises(IndexError):
+            rd_file.global_view.iget_named_kw("PRESSURE", -1)
+
+
 def test_getitem_by_index(sample_file):
     with open_rd_file(sample_file) as rd_file:
         view = rd_file.global_view
@@ -197,6 +203,12 @@ def test_that_block_view_with_out_of_range_index_raises_indexerror(sample_file):
     with open_rd_file(sample_file) as rd_file:
         with pytest.raises(IndexError):
             rd_file.global_view.block_view("PRESSURE", 5)
+
+
+def test_block_view_with_negative_index_counts_from_end(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view("PRESSURE", -1)
+        assert list(block[0]) == pytest.approx([4.0, 5.0, 6.0])
 
 
 def test_block_view_with_out_of_range_negative_index_raises_indexerror(sample_file):

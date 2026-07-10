@@ -88,12 +88,12 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
                    rd_subsidence_free);
 
-    rd_file_view_type *view1 =
-        rd_file_get_restart_view(restart.get(), 0, -1, -1, -1);
-    REQUIRE(view1 != nullptr);
+    auto view1 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(0);
+    REQUIRE(view1);
 
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1);
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view1);
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1.get());
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view1.get());
 
     const double youngs_modulus = 5e8;
     const double poisson_ratio = 0.3;
@@ -139,15 +139,15 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel two source points two vintages") {
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
                    rd_subsidence_free);
 
-    rd_file_view_type *view1 =
-        rd_file_get_restart_view(restart.get(), 0, -1, -1, -1);
-    rd_file_view_type *view2 =
-        rd_file_get_restart_view(restart.get(), 1, -1, -1, -1);
+    auto view1 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(0);
+    auto view2 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(1);
     REQUIRE(view1 != nullptr);
     REQUIRE(view2 != nullptr);
 
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1);
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view2);
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1.get());
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view2.get());
 
     const double youngs_modulus = 5e8;
     const double poisson_ratio = 0.3;
@@ -185,9 +185,9 @@ TEST_CASE_METHOD(Tmpdir, "Geertsma kernel with seabed") {
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
                    rd_subsidence_free);
 
-    rd_file_view_type *view1 =
-        rd_file_get_restart_view(restart.get(), 0, -1, -1, -1);
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1);
+    auto view1 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(0);
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1.get());
 
     const double youngs_modulus = 5e8;
     const double poisson_ratio = 0.3;
@@ -222,13 +222,13 @@ TEST_CASE_METHOD(Tmpdir,
         subsidence(rd_subsidence_alloc(grid.get(), init.get()),
                    rd_subsidence_free);
 
-    rd_file_view_type *view1 =
-        rd_file_get_restart_view(restart.get(), 0, -1, -1, -1);
-    rd_file_view_type *view2 =
-        rd_file_get_restart_view(restart.get(), 1, -1, -1, -1);
+    auto view1 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(0);
+    auto view2 = rd_file_get_global_view(restart.get())
+                     ->restart_view_from_seqnum_index(1);
 
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1);
-    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view2);
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1.get());
+    rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S2", view2.get());
 
     const double youngs_modulus = 5e8;
     const double poisson_ratio = 0.3;
@@ -286,9 +286,9 @@ TEST_CASE_METHOD(Tmpdir, "Subsidence survey validation") {
     }
 
     SECTION("unknown monitor survey throws") {
-        rd_file_view_type *view1 =
-            rd_file_get_restart_view(restart.get(), 0, -1, -1, -1);
-        rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1);
+        auto view1 = rd_file_get_global_view(restart.get())
+                         ->restart_view_from_seqnum_index(0);
+        rd_subsidence_add_survey_PRESSURE(subsidence.get(), "S1", view1.get());
         REQUIRE(rd_subsidence_has_survey(subsidence.get(), "S1"));
 
         REQUIRE_THROWS_AS(rd_subsidence_eval_geertsma_rporv(

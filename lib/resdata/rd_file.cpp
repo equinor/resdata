@@ -7,10 +7,13 @@
 
 #include <ios>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>
+#include <fmt/format.h>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
@@ -97,16 +100,13 @@
 
 struct rd_file_struct {
     UTIL_TYPE_ID_DECLARATION;
-    ERT::FortIO *fortio; /* The source of all the keywords - must be retained
-                            open for reading for the entire lifetime of the
-                            rd_file object. */
-    rd_file_view_type
-        *global_view; /* The index of all the rd_kw instances in the file. */
-    rd_file_view_type *active_view; /* The currently active index. */
+    std::shared_ptr<rd::FileContext> context;
+    std::shared_ptr<rd::FileView>
+        global_view; /* The index of all the rd_kw instances in the file. */
+    std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
     bool read_only;
-    FileMode flags;
-    vector_type *map_stack;
-    inv_map_type *inv_view;
+    std::unique_ptr<vector_type, decltype(&vector_free)> map_stack{
+        nullptr, &vector_free};
 };
 
 /*
@@ -135,18 +135,16 @@ struct rd_file_struct {
 UTIL_SAFE_CAST_FUNCTION(rd_file, RD_FILE_ID)
 UTIL_IS_INSTANCE_FUNCTION(rd_file, RD_FILE_ID)
 
-static rd_file_type *rd_file_alloc_empty(FileMode flags) {
-    rd_file_type *rd_file = (rd_file_type *)util_malloc(sizeof *rd_file);
+static rd_file_type *rd_file_alloc_empty() {
+    rd_file_type *rd_file = new rd_file_type();
     UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
-    rd_file->map_stack = vector_alloc_new();
-    rd_file->inv_view = new inv_map_type();
-    rd_file->flags = flags;
+    rd_file->map_stack.reset(vector_alloc_new());
     return rd_file;
 }
 
 void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
                            int offset) {
-    rd_file_view_fwrite(rd_file->active_view, target, offset);
+    rd_file->active_view->write(target, offset);
 }
 
 /**
@@ -170,7 +168,7 @@ void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
 */
 
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file_view_get_num_named_kw(rd_file->active_view, kw);
+    return rd_file->active_view->num_named_kw(kw);
 }
 
 /**
@@ -178,7 +176,7 @@ int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
     instance.
 */
 int rd_file_get_size(const rd_file_type *rd_file) {
-    return rd_file_view_get_size(rd_file->active_view);
+    return rd_file->active_view->size();
 }
 
 /**
@@ -186,15 +184,15 @@ int rd_file_get_size(const rd_file_type *rd_file) {
    rd_kw 'kw'.
 */
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file_view_has_kw(rd_file->active_view, kw);
+    return rd_file->active_view->has_kw(kw);
 }
 
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
-    return rd_file->fortio->filename_ref();
+    return rd_file->context->fortio.filename_ref();
 }
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
-    return rd_file_view_iget_kw(file->active_view, global_index);
+    return file->active_view->get_kw(global_index);
 }
 
 /*
@@ -205,53 +203,26 @@ rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
 
 rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
                                   int ith) {
-    return rd_file_view_iget_named_kw(file->active_view, kw, ith);
+    return file->active_view->get_kw(kw, ith);
 }
 
-rd_file_view_type *rd_file_get_global_view(rd_file_type *rd_file) {
+std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file) {
     return rd_file->global_view;
 }
 
-// Very deprecated ...
-rd_file_view_type *rd_file_get_active_view(rd_file_type *rd_file) {
+std::shared_ptr<rd::FileView> rd_file_get_active_view(rd_file_type *rd_file) {
     return rd_file->active_view;
 }
 
-rd_file_view_type *rd_file_get_global_blockview(rd_file_type *rd_file,
-                                                const char *kw, int occurence) {
-    rd_file_view_type *view =
-        rd_file_view_add_blockview(rd_file->global_view, kw, occurence);
-    return view;
+std::shared_ptr<rd::FileView>
+rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
+                             int occurence) {
+    return rd_file->global_view->blockview(kw, kw, occurence);
 }
 
-static rd_file_view_type *rd_file_alloc_global_blockview2(rd_file_type *rd_file,
-                                                          const char *start_kw,
-                                                          const char *end_kw,
-                                                          int occurence) {
-    rd_file_view_type *view = rd_file_view_alloc_blockview2(
-        rd_file->global_view, start_kw, end_kw, occurence);
-    return view;
-}
-
-rd_file_view_type *rd_file_alloc_global_blockview(rd_file_type *rd_file,
-                                                  const char *kw,
-                                                  int occurence) {
-    return rd_file_alloc_global_blockview2(rd_file, kw, kw, occurence);
-}
-
-rd_file_view_type *rd_file_get_restart_view(rd_file_type *rd_file,
-                                            int input_index, int report_step,
-                                            time_t sim_time, double sim_days) {
-    rd_file_view_type *view = rd_file_view_add_restart_view(
-        rd_file->global_view, input_index, report_step, sim_time, sim_days);
-    return view;
-}
-
-rd_file_view_type *rd_file_get_summary_view(rd_file_type *rd_file,
-                                            int report_step) {
-    rd_file_view_type *view =
-        rd_file_view_add_summary_view(rd_file->global_view, report_step);
-    return view;
+std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
+                                                       int report_step) {
+    return rd_file->global_view->summary_view(report_step);
 }
 
 /*
@@ -272,18 +243,18 @@ rd_file_view_type *rd_file_get_summary_view(rd_file_type *rd_file,
 */
 
 static void rd_file_scan(rd_file_type *rd_file) {
-    rd_file->fortio->fseek(0, SEEK_SET);
+    rd_file->context->fortio.fseek(0, SEEK_SET);
     {
         rd_kw_ptr work_kw = make_rd_kw("WORK-KW", 0, RD_INT, nullptr);
 
         while (true) {
-            if (rd_file->fortio->read_at_eof())
+            if (rd_file->context->fortio.read_at_eof())
                 break;
 
             {
-                offset_type current_offset = rd_file->fortio->ftell();
+                offset_type current_offset = rd_file->context->fortio.ftell();
                 rd_read_status_enum read_status =
-                    rd_kw_fread_header(work_kw.get(), *rd_file->fortio);
+                    rd_kw_fread_header(work_kw.get(), rd_file->context->fortio);
                 if (read_status == RD_KW_READ_FAIL)
                     break;
 
@@ -291,8 +262,8 @@ static void rd_file_scan(rd_file_type *rd_file) {
                     auto file_kw =
                         std::make_shared<FileKW>(work_kw.get(), current_offset);
 
-                    if (file_kw->skip_data(*rd_file->fortio)) {
-                        rd_file_view_add_kw(rd_file->global_view, file_kw);
+                    if (file_kw->skip_data(rd_file->context->fortio)) {
+                        rd_file->global_view->add_kw(file_kw);
                     } else {
                         break;
                     }
@@ -300,7 +271,7 @@ static void rd_file_scan(rd_file_type *rd_file) {
             }
         }
     }
-    rd_file_view_make_index(rd_file->global_view);
+    rd_file->global_view->make_index();
 }
 
 static void rd_file_select_global(rd_file_type *rd_file) {
@@ -323,7 +294,7 @@ static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
     bool fmt_file;
     rd_fmt_file(filename, &fmt_file);
 
-    if (rd_file_view_check_flags(flags, FileMode::WRITABLE))
+    if ((flags & FileMode::WRITABLE) == FileMode::WRITABLE)
         return std::make_unique<ERT::FortIO>(
             filename, std::ios_base::in | std::ios_base::out, fmt_file);
     else
@@ -337,16 +308,17 @@ rd_file_type *rd_file_open(const char *filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
     if (fortio) {
-        rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
-        rd_file->fortio = fortio.release();
-        rd_file->global_view =
-            new FileView(rd_file->fortio, &rd_file->flags, rd_file->inv_view);
+        rd_file_ptr rd_file(rd_file_alloc_empty(), &rd_file_free);
+        rd_file->context =
+            std::make_shared<rd::FileContext>(std::move(*fortio), flags);
+        rd_file->global_view = std::make_shared<rd::FileView>(rd_file->context);
 
         rd_file_scan(rd_file.get());
         rd_file_select_global(rd_file.get());
 
-        if (rd_file_view_check_flags(rd_file->flags, FileMode::CLOSE_STREAM))
-            rd_file->fortio->fclose_stream();
+        if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
+            FileMode::CLOSE_STREAM)
+            rd_file->context->fortio.fclose_stream();
 
         return rd_file.release();
     } else
@@ -354,29 +326,19 @@ rd_file_type *rd_file_open(const char *filename, FileMode flags) {
 }
 
 bool rd_file_writable(const rd_file_type *rd_file) {
-    return rd_file_view_check_flags(rd_file->flags, FileMode::WRITABLE);
+    return (rd_file->context->flags & FileMode::WRITABLE) == FileMode::WRITABLE;
 }
 
-/**
-   The rd_file_close() function will close the fortio instance and
-   free all the data created by the rd_file instance; this includes
-   the rd_kw instances which have been loaded on demand.
-*/
-
+/** The rd_file_close() function will close the fortio instance */
 void rd_file_close(rd_file_type *rd_file) {
-    if (rd_file->fortio != NULL)
-        delete rd_file->fortio;
-
-    if (rd_file->global_view)
-        delete rd_file->global_view;
-
-    delete rd_file->inv_view;
-    vector_free(rd_file->map_stack);
-    free(rd_file);
+    if (rd_file->context)
+        rd_file->context->fortio.fclose_stream();
 }
+
+void rd_file_free(rd_file_type *rd_file) { delete rd_file; }
 
 bool rd_file_load_all(rd_file_type *rd_file) {
-    return rd_file_view_load_all(rd_file->active_view);
+    return rd_file->active_view->load_all();
 }
 
 /* Functions specialized to work with restart files.  */
@@ -389,7 +351,7 @@ bool rd_file_load_all(rd_file_type *rd_file) {
 */
 
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
-    return rd_file_view_has_sim_time(rd_file->active_view, sim_time);
+    return rd_file->active_view->has_sim_time(sim_time);
 }
 
 /*
@@ -418,9 +380,7 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
  */
 
 int rd_file_get_restart_index(const rd_file_type *rd_file, time_t sim_time) {
-    int active_index =
-        rd_file_view_find_sim_time(rd_file->active_view, sim_time);
-    return active_index;
+    return rd_file->active_view->find_sim_time(sim_time);
 }
 
 /**
@@ -430,7 +390,7 @@ int rd_file_get_restart_index(const rd_file_type *rd_file, time_t sim_time) {
 */
 
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
-    return rd_file_view_has_report_step(rd_file->active_view, report_step);
+    return rd_file->active_view->has_report_step(report_step);
 }
 
 /**
@@ -442,12 +402,12 @@ bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
 
 time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
                                      int index) {
-    return rd_file_view_iget_restart_sim_date(restart_file->active_view, index);
+    return restart_file->active_view->restart_sim_date(index);
 }
 
 double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
                                      int index) {
-    return rd_file_view_iget_restart_sim_days(restart_file->active_view, index);
+    return restart_file->active_view->restart_sim_days(index);
 }
 
 /*
@@ -522,33 +482,31 @@ bool rd_file_writable( const rd_file_type * rd_file ) {
 */
 
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
-    FileKW *file_kw = rd_file->inv_view->at(rd_kw);
-    if (rd_file->fortio->assert_stream_open()) {
+    FileKW *file_kw = rd_file->context->inv_map.at(rd_kw);
+    if (rd_file->context->fortio.assert_stream_open()) {
 
-        file_kw->inplace_write(*rd_file->fortio);
+        file_kw->inplace_write(rd_file->context->fortio);
 
-        if (rd_file_view_check_flags(rd_file->flags, FileMode::CLOSE_STREAM))
-            rd_file->fortio->fclose_stream();
+        if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
+            FileMode::CLOSE_STREAM)
+            rd_file->context->fortio.fclose_stream();
 
         return true;
     } else
         return false;
 }
 
-static rd_file_view_type *rd_file_get_relative_blockview(rd_file_type *rd_file,
-                                                         const char *kw,
-                                                         int occurence) {
-    rd_file_view_type *view =
-        rd_file_view_add_blockview(rd_file->active_view, kw, occurence);
-    return view;
+static std::shared_ptr<rd::FileView>
+rd_file_get_relative_blockview(rd_file_type *rd_file, const char *kw,
+                               int occurence) {
+    return rd_file->active_view->blockview(kw, kw, occurence);
 }
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence) {
-    rd_file_view_type *blockmap =
-        rd_file_get_relative_blockview(rd_file, kw, occurence);
-    if (blockmap != NULL) {
-        rd_file->active_view = blockmap;
+    if (auto blockmap =
+            rd_file_get_relative_blockview(rd_file, kw, occurence)) {
+        rd_file->active_view = std::move(blockmap);
         return true;
     } else
         return false;
@@ -601,11 +559,11 @@ bool rd_file_write_index(const rd_file_type *rd_file,
         return false;
     {
         char *filename =
-            util_split_alloc_filename(rd_file->fortio->filename_ref());
+            util_split_alloc_filename(rd_file->context->fortio.filename_ref());
         util_fwrite_string(filename, ostream);
         free(filename);
     }
-    rd_file_view_write_index(rd_file->global_view, ostream);
+    rd_file->global_view->write_index(ostream);
     fclose(ostream);
     return true;
 }
@@ -613,29 +571,32 @@ bool rd_file_write_index(const rd_file_type *rd_file,
 rd_file_type *rd_file_fast_open(const char *file_name,
                                 const char *index_file_name, FileMode flags) {
     if (!rd_file_index_valid0(file_name, index_file_name))
-        return NULL;
+        return nullptr;
 
     std::unique_ptr<FILE, decltype(&fclose)> istream(
         fopen(index_file_name, "rb"), fclose);
     if (!istream)
-        return NULL;
+        return nullptr;
 
     if (rd_file_index_valid1(file_name, istream.get())) {
         auto fortio = rd_file_alloc_fortio(file_name, flags);
         if (fortio) {
-            rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
-            rd_file->fortio = fortio.release();
-            rd_file->global_view =
-                rd_file_view_fread_alloc(rd_file->fortio, &rd_file->flags,
-                                         rd_file->inv_view, istream.get());
+            rd_file_ptr rd_file(rd_file_alloc_empty(), &rd_file_free);
+            rd_file->context =
+                std::make_shared<rd::FileContext>(std::move(*fortio), flags);
+            auto global_view =
+                rd::FileView::read(rd_file->context, istream.get());
+            if (!global_view)
+                return nullptr;
+            rd_file->global_view = std::move(global_view);
             if (rd_file->global_view) {
                 rd_file_select_global(rd_file.get());
-                if (rd_file_view_check_flags(rd_file->flags,
-                                             FileMode::CLOSE_STREAM))
-                    rd_file->fortio->fclose_stream();
+                if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
+                    FileMode::CLOSE_STREAM)
+                    rd_file->context->fortio.fclose_stream();
                 return rd_file.release();
             }
         }
     }
-    return NULL;
+    return nullptr;
 }

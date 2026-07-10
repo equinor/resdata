@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -38,34 +39,25 @@ PYBIND11_MODULE(_grav, m) {
 
     m.def("_add_survey_RPORV",
           [](py::handle self, const std::string &name,
-             py::handle restart_file) -> py::object {
+             rd::FileView *restart_file) -> py::object {
               auto *grav = from_cwrap<rd_grav_type>(self);
-              auto *restart_file_ptr =
-                  from_cwrap<rd_file_view_type>(restart_file);
-
-              auto *survey =
-                  rd_grav_add_survey_RPORV(grav, name, restart_file_ptr);
+              auto *survey = rd_grav_add_survey_RPORV(grav, name, restart_file);
               if (survey == nullptr)
                   return py::none();
               return py::int_(reinterpret_cast<uintptr_t>(survey));
           });
 
     m.def("_add_survey_PORMOD", [](py::handle self, const std::string &name,
-                                   py::handle restart_file) {
+                                   rd::FileView *restart_file) {
         auto *grav = from_cwrap<rd_grav_type>(self);
-        auto *restart_file_ptr = from_cwrap<rd_file_view_type>(restart_file);
-        rd_grav_add_survey_PORMOD(grav, name, restart_file_ptr);
+        rd_grav_add_survey_PORMOD(grav, name, restart_file);
     });
 
     m.def("_add_survey_FIP",
           [](py::handle self, const std::string &name,
-             py::handle restart_file) -> py::object {
+             rd::FileView *restart_file) -> py::object {
               auto *grav = from_cwrap<rd_grav_type>(self);
-              auto *restart_file_ptr =
-                  from_cwrap<rd_file_view_type>(restart_file);
-
-              auto *survey =
-                  rd_grav_add_survey_FIP(grav, name, restart_file_ptr);
+              auto *survey = rd_grav_add_survey_FIP(grav, name, restart_file);
 
               if (survey == nullptr) {
                   return py::none();
@@ -75,11 +67,9 @@ PYBIND11_MODULE(_grav, m) {
           });
 
     m.def("_add_survey_RFIP", [](py::handle self, const std::string &name,
-                                 py::handle restart_file) {
+                                 rd::FileView *restart_file) {
         auto *grav = from_cwrap<rd_grav_type>(self);
-        auto *restart_file_ptr = from_cwrap<rd_file_view_type>(restart_file);
-
-        rd_grav_add_survey_RFIP(grav, name, restart_file_ptr);
+        rd_grav_add_survey_RFIP(grav, name, restart_file);
     });
 
     m.def("_eval",

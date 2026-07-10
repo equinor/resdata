@@ -1,6 +1,8 @@
 #include <cstdlib>
-
 #include <ctime>
+
+#include <memory>
+
 #include <ert/util/test_util.hpp>
 
 #include <resdata/rd_grid.hpp>
@@ -16,25 +18,27 @@ void test_file(const char *filename, int occurence, bool exists,
     int report_step = rd_filename_report_nr(filename);
     rd_file_type *rst_file = rd_file_open(filename);
     rd_file_enum file_type = rd_get_file_type(filename, NULL, NULL);
-    rd_file_view_type *rst_view;
+    std::shared_ptr<rd::FileView> rst_view;
 
     if (file_type == RD_RESTART_FILE)
         rst_view = rd_file_get_global_view(rst_file);
     else
-        rst_view = rd_file_get_restart_view(rst_file, occurence, -1, -1, -1);
+        rst_view =
+            rd_file_get_global_view(rst_file)->restart_view_from_seqnum_index(
+                occurence);
 
     if (exists) {
-        test_assert_not_NULL(rst_view);
-        auto rst_head = RSTHead::read(rst_view, report_step);
+        test_assert_not_NULL(rst_view.get());
+        auto rst_head = RSTHead::read(rst_view.get(), report_step);
 
         if (occurence == 0) {
-            auto rst_head0 = RSTHead::read(rst_view, report_step);
+            auto rst_head0 = RSTHead::read(rst_view.get(), report_step);
 
             test_assert_true(rst_head == rst_head0);
         }
         test_assert_true(rst_head == true_header);
     } else
-        test_assert_NULL(rst_view);
+        test_assert_NULL(rst_view.get());
 }
 
 int main(int argc, char **argv) {

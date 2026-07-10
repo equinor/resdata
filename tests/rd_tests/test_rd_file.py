@@ -423,3 +423,154 @@ def test_save_kw_on_read_only_file_raises(tmpdir):
 
         with pytest.raises(OSError, match="opened read only"):
             read_only.save_kw(loaded_kw)
+
+
+def _restart_kw(name, dtype, values):
+    kw = ResdataKW(name, len(values), dtype)
+    for index, value in enumerate(values):
+        kw[index] = value
+    return kw
+
+
+def _restart_intehead(day, month, year):
+    header = ResdataKW("INTEHEAD", 67, ResDataType.RD_INT)
+    header[64] = day
+    header[65] = month
+    header[66] = year
+    return header
+
+
+def _write_restart_file(path):
+    """Write a minimal, valid restart file with two report steps.
+
+    Layout per block: SEQNUM, INTEHEAD, PRESSURE, SWAT. The two INTEHEADs
+    encode the simulation dates 2000-01-01 and 2010-01-01 so that the
+    date/restart lookups return meaningful values. Two blocks are written so
+    that the first block can be extracted with an explicit ``end_kw`` of
+    ``SEQNUM`` (working around bug #1247 in ``block_view``, which mishandles a
+    ``None`` end keyword).
+    """
+    with openFortIO(path, mode=FortIO.WRITE_MODE) as f:
+        _restart_kw("SEQNUM", ResDataType.RD_INT, [10]).fwrite(f)
+        _restart_intehead(1, 1, 2000).fwrite(f)
+        _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [1.0, 2.0, 3.0]).fwrite(f)
+        _restart_kw("SWAT", ResDataType.RD_FLOAT, [0.1, 0.2, 0.3]).fwrite(f)
+        _restart_kw("SEQNUM", ResDataType.RD_INT, [20]).fwrite(f)
+        _restart_intehead(1, 1, 2010).fwrite(f)
+        _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [4.0, 5.0, 6.0]).fwrite(f)
+        _restart_kw("SWAT", ResDataType.RD_FLOAT, [0.4, 0.5, 0.6]).fwrite(f)
+
+
+@pytest.fixture
+def objects_from_closed_file(tmp_path):
+    """Return (rd_file, view, kw) read inside an ``open_rd_file`` context that
+    has since been closed.
+    """
+    path = str(tmp_path / "R.UNRST")
+    _write_restart_file(path)
+
+    with open_rd_file(path) as rd_file:
+        # The first restart block is delimited by the next SEQNUM keyword
+        view = rd_file.block_view2("SEQNUM", "SEQNUM", 0)
+        kw = view["PRESSURE"][0]
+        assert list(kw) == pytest.approx([1.0, 2.0, 3.0])
+
+    # The context manager has now closed the file
+    return rd_file, view, kw
+
+
+def test_that_resdata_file_is_usable_after_close(objects_from_closed_file):
+    rd_file, _, _ = objects_from_closed_file
+
+    assert rd_file
+    assert rd_file.get_filename().endswith("R.UNRST")
+    assert len(rd_file) == 8
+    assert rd_file.size == 8
+    assert rd_file.unique_size == 4
+    assert set(rd_file.keys()) == {"SEQNUM", "INTEHEAD", "PRESSURE", "SWAT"}
+    assert len(rd_file.headers) == 8
+
+    assert rd_file.has_kw("PRESSURE")
+    assert "SWAT" in rd_file
+    assert rd_file.num_named_kw("PRESSURE") == 2
+
+    assert rd_file.iget_kw(2).name == "PRESSURE"
+    assert rd_file.iget_named_kw("SWAT", 0).name == "SWAT"
+    assert list(rd_file["PRESSURE"][0]) == pytest.approx([1.0, 2.0, 3.0])
+
+    assert rd_file.report_steps == [10, 20]
+    assert rd_file.report_list == [10, 20]
+    assert rd_file.num_report_steps() == 2
+    assert rd_file.has_report_step(10)
+    assert not rd_file.has_report_step(99)
+    assert rd_file.has_sim_time(datetime.datetime(2000, 1, 1))
+    assert rd_file.dates == [
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2010, 1, 1),
+    ]
+
+    assert len(rd_file.block_view2("SEQNUM", "SEQNUM", 0)) == 4
+    assert len(rd_file.restart_view(report_step=10)) >= 1
+
+
+def test_that_resdata_file_view_is_usable_after_close(
+    objects_from_closed_file,
+):
+    _, view, _ = objects_from_closed_file
+
+    assert "ResdataFileView" in repr(view)
+    assert len(view) == 4
+    assert "PRESSURE" in view
+    assert view.num_keywords("PRESSURE") == 1
+    assert view.unique_size() == 4
+    assert set(view.unique_kw()) == {"SEQNUM", "INTEHEAD", "PRESSURE", "SWAT"}
+
+    assert view.iget_named_kw("PRESSURE", 0).name == "PRESSURE"
+    assert view[2].name == "PRESSURE"
+
+    # reading SWAT now forces a lazy reopen
+    assert list(view["SWAT"][0]) == pytest.approx([0.1, 0.2, 0.3])
+
+    assert "PRESSURE" in view.block_view2("PRESSURE", "SWAT", 0)
+    assert view.block_view("PRESSURE", 0)["PRESSURE"][0].name == "PRESSURE"
+    assert len(view.restart_view(report_step=10)) >= 1
+
+
+def test_that_resdata_kw_is_usable_after_context_close(objects_from_closed_file):
+    _, _, kw = objects_from_closed_file
+
+    assert kw.name == "PRESSURE"
+    assert kw.get_name() == "PRESSURE"
+    assert len(kw) == 3
+    assert kw[0] == pytest.approx(1.0)
+    assert list(kw) == pytest.approx([1.0, 2.0, 3.0])
+
+    assert kw.data_type.is_float()
+    assert kw.header == ("PRESSURE", 3, kw.type_name())
+
+    assert kw.get_min() == pytest.approx(1.0)
+    assert kw.get_max() == pytest.approx(3.0)
+    assert kw.get_min_max() == pytest.approx((1.0, 3.0))
+    assert kw.sum() == pytest.approx(6.0)
+
+    assert list(kw.numpy_view()) == pytest.approx([1.0, 2.0, 3.0])
+    assert list(kw.numpy_copy()) == pytest.approx([1.0, 2.0, 3.0])
+
+    kw_copy = kw.copy()
+    assert kw.equal(kw_copy)
+    assert kw == kw_copy
+    assert "PRESSURE" in str(kw)
+
+
+def test_that_kws_are_valid_after_closing_the_file(tmp_path):
+    path = str(tmp_path / "R.UNRST")
+    _write_restart_file(path)
+
+    rd_file = ResdataFile(path)
+    kw = rd_file["PRESSURE"][0]
+    assert list(kw) == pytest.approx([1.0, 2.0, 3.0])
+
+    rd_file.close()
+
+    assert kw.name == "PRESSURE"
+    assert list(kw) == pytest.approx([1.0, 2.0, 3.0])

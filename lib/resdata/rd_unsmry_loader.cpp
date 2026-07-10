@@ -2,6 +2,7 @@
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <ert/util/int_vector.hpp>
@@ -12,6 +13,7 @@
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_file_kw.hpp>
+#include <resdata/rd_kw.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
@@ -26,28 +28,29 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
       time_index(rd_smspec_get_time_index(smspec)),
       time_seconds(rd_smspec_get_time_seconds(smspec)),
       sim_start(rd_smspec_get_start_time(smspec)) {
-    rd_file_ptr file = open_rd_file(filename, file_options);
-    if (!file)
-        throw std::bad_alloc();
-
-    if (!rd_file_has_kw(file.get(), PARAMS_KW)) {
+    {
+        rd_file_ptr file = open_rd_file(filename, file_options);
+        if (!file)
+            throw std::bad_alloc();
+        this->file = std::move(file);
+    }
+    if (!rd_file_has_kw(this->file.get(), PARAMS_KW)) {
         throw std::bad_alloc();
     }
 
-    if (rd_file_get_num_named_kw(file.get(), PARAMS_KW) !=
-        rd_file_get_num_named_kw(file.get(), MINISTEP_KW)) {
+    if (rd_file_get_num_named_kw(this->file.get(), PARAMS_KW) !=
+        rd_file_get_num_named_kw(this->file.get(), MINISTEP_KW)) {
         throw std::bad_alloc();
     }
 
     this->date_index = {{rd_smspec_get_date_day_index(smspec),
                          rd_smspec_get_date_month_index(smspec),
                          rd_smspec_get_date_year_index(smspec)}};
-    rd_file_view_type *file_view = rd_file_get_global_view(file.get());
-    int length = rd_file_view_get_num_named_kw(file_view, PARAMS_KW);
+    auto file_view = rd_file_get_global_view(this->file.get());
+    int length = file_view->num_named_kw(PARAMS_KW);
 
     if (length > 0) {
-        const rd_kw_type *params_kw =
-            rd_file_view_iget_named_kw(file_view, PARAMS_KW, 0);
+        const rd_kw_type *params_kw = file_view->get_kw(PARAMS_KW, 0);
         if (params_kw == nullptr)
             throw std::invalid_argument(
                 "Malformed summary file: missing PARAMS keyword entry");
@@ -58,12 +61,9 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
                 "Malformed summary file: PARAMS keyword is not float");
     }
 
-    this->file = file.release();
     this->file_view = file_view;
     this->m_length = length;
 }
-
-unsmry_loader::~unsmry_loader() { rd_file_close(file); }
 
 int unsmry_loader::length() const { return this->m_length; }
 
@@ -78,13 +78,13 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
     float value;
 
     for (int index = 0; index < this->length(); index++) {
-        rd_file_view_index_fload_kw(file_view, PARAMS_KW, index,
-                                    index_map.get(), (char *)&value);
+        file_view->index_fload_kw(PARAMS_KW, index, index_map.get(),
+                                  (char *)&value);
         data[index] = value;
     }
 
-    if (rd_file_view_flags_set(file_view, FileMode::CLOSE_STREAM))
-        rd_file_view_fclose_stream(file_view);
+    if (file_view->has_flags(FileMode::CLOSE_STREAM))
+        file_view->close();
 
     return data;
 }
@@ -93,8 +93,8 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 double unsmry_loader::iget(int time_index, int params_index) const {
     auto index_map = make_int_vector(1, params_index);
     float value;
-    rd_file_view_index_fload_kw(this->file_view, PARAMS_KW, time_index,
-                                index_map.get(), (char *)&value);
+    file_view->index_fload_kw(PARAMS_KW, time_index, index_map.get(),
+                              (char *)&value);
     return value;
 }
 
@@ -111,8 +111,8 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
         int_vector_iset(index_map.get(), 2, this->date_index[2]);
 
         float values[3];
-        rd_file_view_index_fload_kw(this->file_view, PARAMS_KW, time_index,
-                                    index_map.get(), (char *)&values);
+        file_view->index_fload_kw(PARAMS_KW, time_index, index_map.get(),
+                                  (char *)&values);
 
         return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
                             util_roundf(values[2]));
@@ -132,8 +132,7 @@ double unsmry_loader::iget_sim_seconds(int time_index) const {
 std::vector<int> unsmry_loader::report_steps(int offset) const {
     std::vector<int> report_steps;
     int current_step = offset;
-    for (int i = 0; i < rd_file_view_get_size(this->file_view); i++) {
-        const auto file_kw = rd_file_view_iget_file_kw(this->file_view, i);
+    for (const auto &file_kw : *file_view) {
         if (SEQHDR_KW == file_kw->get_header())
             current_step++;
 

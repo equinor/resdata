@@ -37,6 +37,7 @@
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/nnc_info.hpp>
+#include <resdata/rd_file_view.hpp>
 
 namespace fs = std::filesystem;
 
@@ -2388,17 +2389,16 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
     */
 
     for (int i = 0; i < num_nnchead_kw; i++) {
-        auto lgr_view = rd_file_view_ptr(
-            rd_file_alloc_global_blockview(rd_file, NNCHEAD_KW, i));
-        rd_kw_type *nnchead_kw =
-            rd_file_view_iget_named_kw(lgr_view.get(), NNCHEAD_KW, 0);
+        auto lgr_view = rd_file_get_global_view(rd_file)->blockview(
+            NNCHEAD_KW, NNCHEAD_KW, i);
+        if (!lgr_view)
+            throw std::runtime_error("Could not find NNC section of grid file");
+        rd_kw_type *nnchead_kw = lgr_view->get_kw(NNCHEAD_KW, 0);
         int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
 
-        if (rd_file_view_has_kw(lgr_view.get(), NNC1_KW)) {
-            const rd_kw_type *nnc1 =
-                rd_file_view_iget_named_kw(lgr_view.get(), NNC1_KW, 0);
-            const rd_kw_type *nnc2 =
-                rd_file_view_iget_named_kw(lgr_view.get(), NNC2_KW, 0);
+        if (lgr_view->has_kw(NNC1_KW)) {
+            const rd_kw_type *nnc1 = lgr_view->get_kw(NNC1_KW, 0);
+            const rd_kw_type *nnc2 = lgr_view->get_kw(NNC2_KW, 0);
 
             {
                 rd_grid_type *grid =
@@ -2409,11 +2409,9 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
             }
         }
 
-        if (rd_file_view_has_kw(lgr_view.get(), NNCL_KW)) {
-            const rd_kw_type *nncl =
-                rd_file_view_iget_named_kw(lgr_view.get(), NNCL_KW, 0);
-            const rd_kw_type *nncg =
-                rd_file_view_iget_named_kw(lgr_view.get(), NNCG_KW, 0);
+        if (lgr_view->has_kw(NNCL_KW)) {
+            const rd_kw_type *nncl = lgr_view->get_kw(NNCL_KW, 0);
+            const rd_kw_type *nncg = lgr_view->get_kw(NNCG_KW, 0);
             {
                 rd_grid_type *grid =
                     (lgr_nr > 0)

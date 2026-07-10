@@ -17,21 +17,21 @@ void rd_grav_free(rd_grav_type *rd_grav_config);
 rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid,
                             const rd_file_type *init_file);
 
-rd_grav_survey_type *
-rd_grav_add_survey_FIP(rd_grav_type *grav, const std::string &name,
-                       const rd_file_view_type *restart_file);
+rd_grav_survey_type *rd_grav_add_survey_FIP(rd_grav_type *grav,
+                                            const std::string &name,
+                                            rd::FileView *restart_file);
 
-rd_grav_survey_type *
-rd_grav_add_survey_PORMOD(rd_grav_type *grav, const std::string &name,
-                          const rd_file_view_type *restart_file);
+rd_grav_survey_type *rd_grav_add_survey_PORMOD(rd_grav_type *grav,
+                                               const std::string &name,
+                                               rd::FileView *restart_file);
 
-rd_grav_survey_type *
-rd_grav_add_survey_RPORV(rd_grav_type *grav, const std::string &name,
-                         const rd_file_view_type *restart_file);
+rd_grav_survey_type *rd_grav_add_survey_RPORV(rd_grav_type *grav,
+                                              const std::string &name,
+                                              rd::FileView *restart_file);
 
-rd_grav_survey_type *
-rd_grav_add_survey_RFIP(rd_grav_type *grav, const std::string &name,
-                        const rd_file_view_type *restart_file);
+rd_grav_survey_type *rd_grav_add_survey_RFIP(rd_grav_type *grav,
+                                             const std::string &name,
+                                             rd::FileView *restart_file);
 
 double rd_grav_eval(const rd_grav_type *grav, const std::string &base,
                     const std::optional<std::string> &monitor,

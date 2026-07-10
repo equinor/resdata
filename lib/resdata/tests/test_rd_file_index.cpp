@@ -2,6 +2,8 @@
 #include <utime.h>
 
 #include <ios>
+#include <memory>
+#include <string>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -14,9 +16,10 @@
 #include <resdata/rd_type.hpp>
 
 void test_load_nonexisting_file() {
-    rd_file_type *rd_file =
-        rd_file_fast_open("base_file", "a_file_that_does_not_exist_2384623");
-    test_assert_NULL(rd_file);
+    rd_file_ptr rd_file{
+        rd_file_fast_open("base_file", "a_file_that_does_not_exist_2384623"),
+        &rd_file_free};
+    test_assert_NULL(rd_file.get());
 }
 
 void test_create_and_load_index_file() {
@@ -43,11 +46,10 @@ void test_create_and_load_index_file() {
         //finished creating data file
 
         //creating rd_file
-        rd_file_type *rd_file = rd_file_open(file_name);
-        test_assert_true(rd_file_has_kw(rd_file, "TEST1_KW"));
-        rd_file_write_index(rd_file, index_file_name);
-        int rd_file_size = rd_file_get_size(rd_file);
-        rd_file_close(rd_file);
+        auto rd_file = open_rd_file(std::string(file_name));
+        test_assert_true(rd_file_has_kw(rd_file.get(), "TEST1_KW"));
+        rd_file_write_index(rd_file.get(), index_file_name);
+        int rd_file_size = rd_file_get_size(rd_file.get());
         //finished using rd_file
 
         test_assert_false(rd_file_index_valid(file_name, "nofile"));
@@ -62,29 +64,28 @@ void test_create_and_load_index_file() {
         utime(index_file_name, &tm2);
         test_assert_true(rd_file_index_valid(file_name, index_file_name));
 
-        rd_file_type *rd_file_index =
-            rd_file_fast_open(file_name, index_file_name);
-        test_assert_true(rd_file_is_instance(rd_file_index));
-        test_assert_true(rd_file_get_global_view(rd_file_index));
+        rd_file_ptr rd_file_index{rd_file_fast_open(file_name, index_file_name),
+                                  &rd_file_free};
+        test_assert_true(rd_file_is_instance(rd_file_index.get()));
 
-        test_assert_int_equal(rd_file_size, rd_file_get_size(rd_file_index));
+        test_assert_int_equal(rd_file_size,
+                              rd_file_get_size(rd_file_index.get()));
 
-        test_assert_true(rd_file_has_kw(rd_file_index, "TEST1_KW"));
-        test_assert_true(rd_file_has_kw(rd_file_index, "TEST2_KW"));
+        test_assert_true(rd_file_has_kw(rd_file_index.get(), "TEST1_KW"));
+        test_assert_true(rd_file_has_kw(rd_file_index.get(), "TEST2_KW"));
 
-        rd_kw_type *kwi1 = rd_file_iget_kw(rd_file_index, 0);
+        rd_kw_type *kwi1 = rd_file_iget_kw(rd_file_index.get(), 0);
         test_assert_true(rd_kw_equal(kw1, kwi1));
         test_assert_double_equal(537.0, rd_kw_iget_as_double(kwi1, 0));
         test_assert_double_equal(546.0, rd_kw_iget_as_double(kwi1, 9));
 
-        rd_kw_type *kwi2 = rd_file_iget_kw(rd_file_index, 1);
+        rd_kw_type *kwi2 = rd_file_iget_kw(rd_file_index.get(), 1);
         test_assert_true(rd_kw_equal(kw2, kwi2));
         test_assert_double_equal(0.15, rd_kw_iget_as_double(kwi2, 1));
         test_assert_double_equal(0.60, rd_kw_iget_as_double(kwi2, 4));
 
         rd_kw_free(kw1);
         rd_kw_free(kw2);
-        rd_file_close(rd_file_index);
     }
 }
 

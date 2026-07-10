@@ -152,7 +152,7 @@ private:
     void build_index();
     void fwrite_report(int report_step, ERT::FortIO &fortio) const;
     bool check_file(rd_file_type *rd_file);
-    void add_rd_file(int report_step, const rd_file_view_type *summary_view);
+    void add_rd_file(int report_step, rd::FileView &summary_view);
 };
 
 } // namespace rd

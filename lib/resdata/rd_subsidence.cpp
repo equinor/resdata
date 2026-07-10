@@ -69,7 +69,7 @@ struct rd_subsidence_survey_struct {
 
 static std::unique_ptr<rd_subsidence_survey_type>
 rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
-                                    const rd_file_view_type *restart_view,
+                                    rd::FileView *restart_view,
                                     const std::string &name) {
 
     auto survey(
@@ -80,14 +80,14 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
 
     rd_kw_type *init_porv_kw = rd_file_iget_named_kw(
         rd_subsidence->init_file, PORV_KW, 0); /*Global indexing*/
-    rd_kw_type *pressure_kw = rd_file_view_iget_named_kw(
-        restart_view, PRESSURE_KW, 0); /*Active indexing*/
+    rd_kw_type *pressure_kw =
+        restart_view->get_kw(PRESSURE_KW, 0); /*Active indexing*/
 
     rd_kw_type *rporv_kw = nullptr;
-    if (rd_file_view_has_kw(restart_view, RPORV_KW)) {
+    if (restart_view->has_kw(RPORV_KW)) {
         survey->dynamic_porevolume =
             std::vector<double>(rd_subsidence->grid_cache->size(), 0.0);
-        rporv_kw = rd_file_view_iget_named_kw(restart_view, RPORV_KW, 0);
+        rporv_kw = restart_view->get_kw(RPORV_KW, 0);
     }
 
     for (int active_index = 0; active_index < size; active_index++) {
@@ -219,7 +219,7 @@ rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
 rd_subsidence_survey_type *
 rd_subsidence_add_survey_PRESSURE(rd_subsidence_type *subsidence,
                                   const std::string &name,
-                                  const rd_file_view_type *restart_view) {
+                                  rd::FileView *restart_view) {
     auto survey =
         rd_subsidence_survey_alloc_PRESSURE(subsidence, restart_view, name);
     rd_subsidence_survey_type *ret = survey.get();

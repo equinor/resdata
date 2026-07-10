@@ -14,6 +14,7 @@
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
+#include <string>
 
 static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
                                  ert_rd_unit_enum output_unit) {
@@ -36,15 +37,13 @@ void test_write_depth(rd_grid_type *grid) {
         rd_grid_fwrite_depth(grid, init_file, RD_METRIC_UNITS);
     }
     {
-        rd_file_type *init_file = rd_file_open("INIT");
-        rd_kw_type *depth = rd_file_iget_named_kw(init_file, "DEPTH", 0);
+        auto init_file = open_rd_file(std::string("INIT"));
+        rd_kw_type *depth = rd_file_iget_named_kw(init_file.get(), "DEPTH", 0);
 
         test_assert_int_equal(rd_kw_get_size(depth), rd_grid_get_nactive(grid));
         for (int i = 0; i < rd_grid_get_nactive(grid); i++)
             test_assert_double_equal(rd_kw_iget_as_double(depth, i),
                                      rd_grid_get_cdepth1A(grid, i));
-
-        rd_file_close(init_file);
     }
 }
 
@@ -89,10 +88,10 @@ void test_write_dims(const rd_grid_type *grid) {
         rd_grid_fwrite_dims(grid, init_file, RD_METRIC_UNITS);
     }
     {
-        rd_file_type *init_file = rd_file_open("INIT");
-        rd_kw_type *DX = rd_file_iget_named_kw(init_file, "DX", 0);
-        rd_kw_type *DY = rd_file_iget_named_kw(init_file, "DY", 0);
-        rd_kw_type *DZ = rd_file_iget_named_kw(init_file, "DZ", 0);
+        auto init_file = open_rd_file(std::string("INIT"));
+        rd_kw_type *DX = rd_file_iget_named_kw(init_file.get(), "DX", 0);
+        rd_kw_type *DY = rd_file_iget_named_kw(init_file.get(), "DY", 0);
+        rd_kw_type *DZ = rd_file_iget_named_kw(init_file.get(), "DZ", 0);
 
         test_assert_int_equal(rd_kw_get_size(DX), rd_grid_get_nactive(grid));
         test_assert_int_equal(rd_kw_get_size(DY), rd_grid_get_nactive(grid));
@@ -105,7 +104,6 @@ void test_write_dims(const rd_grid_type *grid) {
             test_assert_double_equal(rd_kw_iget_as_double(DZ, i),
                                      rd_grid_get_cell_dz1A(grid, i));
         }
-        rd_file_close(init_file);
     }
 }
 

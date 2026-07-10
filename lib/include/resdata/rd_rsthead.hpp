@@ -123,20 +123,16 @@ struct RSTHead {
             this->dualp = false;
     }
 
-    inline static RSTHead read(const rd_file_view_type *rst_view,
-                               int report_step) {
-        const rd_kw_type *intehead_kw =
-            rd_file_view_iget_named_kw(rst_view, INTEHEAD_KW, 0);
-        const rd_kw_type *doubhead_kw =
-            rd_file_view_iget_named_kw(rst_view, DOUBHEAD_KW, 0);
+    inline static RSTHead read(rd::FileView *rst_view, int report_step) {
+        const rd_kw_type *intehead_kw = rst_view->get_kw(INTEHEAD_KW, 0);
+        const rd_kw_type *doubhead_kw = rst_view->get_kw(DOUBHEAD_KW, 0);
         const rd_kw_type *logihead_kw = NULL;
 
-        if (rd_file_view_has_kw(rst_view, LOGIHEAD_KW))
-            logihead_kw = rd_file_view_iget_named_kw(rst_view, LOGIHEAD_KW, 0);
+        if (rst_view->has_kw(LOGIHEAD_KW))
+            logihead_kw = rst_view->get_kw(LOGIHEAD_KW, 0);
 
-        if (rd_file_view_has_kw(rst_view, SEQNUM_KW)) {
-            const rd_kw_type *seqnum_kw =
-                rd_file_view_iget_named_kw(rst_view, SEQNUM_KW, 0);
+        if (rst_view->has_kw(SEQNUM_KW)) {
+            const rd_kw_type *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
             report_step = rd_kw_iget_int(seqnum_kw, 0);
         }
 

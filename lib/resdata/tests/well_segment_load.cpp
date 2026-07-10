@@ -16,15 +16,17 @@
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
-    rd_file_type *rst_file = rd_file_open(Xfile);
-    rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
-    auto rst_head = RSTHead::read(rst_view, rd_filename_report_nr(Xfile));
-    const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
-    const rd_kw_type *iseg_kw = rd_file_iget_named_kw(rst_file, ISEG_KW, 0);
-    well_rseg_loader_type *rseg_loader = well_rseg_loader_alloc(rst_view);
+    auto rst_file = open_rd_file(std::string(Xfile));
+    auto rst_view = rd_file_get_active_view(rst_file.get());
+    auto rst_head = RSTHead::read(rst_view.get(), rd_filename_report_nr(Xfile));
+    const rd_kw_type *iwel_kw =
+        rd_file_iget_named_kw(rst_file.get(), IWEL_KW, 0);
+    const rd_kw_type *iseg_kw =
+        rd_file_iget_named_kw(rst_file.get(), ISEG_KW, 0);
+    well_rseg_loader_type *rseg_loader = well_rseg_loader_alloc(rst_view.get());
 
     test_install_SIGNALS();
-    test_assert_not_NULL(rst_file);
+    test_assert_not_NULL(rst_file.get());
 
     for (int well_nr = 0; well_nr < rst_head.nwells; well_nr++) {
         int iwel_offset = rst_head.niwelz * well_nr;
@@ -80,6 +82,5 @@ int main(int argc, char **argv) {
             well_segment_collection_free(segments2);
         }
     }
-    rd_file_close(rst_file);
     exit(0);
 }
