@@ -16,8 +16,8 @@
 
 using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
 
-typedef struct rd_file_view_struct rd_file_view_type;
-struct rd_file_view_struct {
+typedef struct FileView rd_file_view_type;
+struct FileView {
     std::vector<std::shared_ptr<FileKW>> kw_list;
     std::map<std::string, std::vector<int>> kw_index;
     std::vector<std::string>
@@ -29,8 +29,7 @@ struct rd_file_view_struct {
     std::vector<std::unique_ptr<rd_file_view_type>> child_list;
     FileMode *flags;
 
-    rd_file_view_struct(ERT::FortIO *fortio, FileMode *flags,
-                        inv_map_type *inv_map)
+    FileView(ERT::FortIO *fortio, FileMode *flags, inv_map_type *inv_map)
         : fortio(fortio), inv_map(inv_map), flags(flags) {};
 };
 

@@ -339,8 +339,8 @@ rd_file_type *rd_file_open(const char *filename, FileMode flags) {
     if (fortio) {
         rd_file_ptr rd_file(rd_file_alloc_empty(flags), &rd_file_close);
         rd_file->fortio = fortio.release();
-        rd_file->global_view = new rd_file_view_struct(
-            rd_file->fortio, &rd_file->flags, rd_file->inv_view);
+        rd_file->global_view =
+            new FileView(rd_file->fortio, &rd_file->flags, rd_file->inv_view);
 
         rd_file_scan(rd_file.get());
         rd_file_select_global(rd_file.get());
