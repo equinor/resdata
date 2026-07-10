@@ -1,6 +1,9 @@
+#include <cstdio>
 #include <cstdlib>
 
+#include <memory>
 #include <vector>
+#include <algorithm>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -11,9 +14,7 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_kw_magic.hpp>
-
-#include <vector>
-#include <algorithm>
+#include <resdata/rd_kw.hpp>
 
 template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
 
@@ -28,16 +29,15 @@ template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
 
 void test_scan(const char *grid_filename) {
     rd_grid_type *rd_grid = rd_grid_alloc(grid_filename);
-    rd_file_type *grid_file = rd_file_open(grid_filename);
-    int block_nr;
+    rd_file_ptr grid_file = open_rd_file(std::string(grid_filename));
 
-    for (block_nr = 0;
-         block_nr < rd_file_get_num_named_kw(grid_file, NNCHEAD_KW);
+    for (int block_nr = 0;
+         block_nr < rd_file_get_num_named_kw(grid_file.get(), NNCHEAD_KW);
          block_nr++) {
         rd_grid_type *lgr = rd_grid;
         int lgr_nr;
-        rd_file_view_ptr nnc_view(
-            rd_file_alloc_global_blockview(grid_file, NNCHEAD_KW, block_nr));
+        auto nnc_view = rd_file_get_global_view(grid_file.get())
+                            ->blockview(NNCHEAD_KW, NNCHEAD_KW, block_nr);
         {
             if (block_nr > 0)
                 lgr = rd_grid_iget_lgr(rd_grid, block_nr - 1);
@@ -45,11 +45,9 @@ void test_scan(const char *grid_filename) {
 
             /* Internal nnc */
             {
-                if (rd_file_view_has_kw(nnc_view.get(), NNC1_KW)) {
-                    rd_kw_type *nnc1_kw =
-                        rd_file_view_iget_named_kw(nnc_view.get(), NNC1_KW, 0);
-                    rd_kw_type *nnc2_kw =
-                        rd_file_view_iget_named_kw(nnc_view.get(), NNC2_KW, 0);
+                if (nnc_view->has_kw(NNC1_KW)) {
+                    rd_kw_type *nnc1_kw = nnc_view->get_kw(NNC1_KW, 0);
+                    rd_kw_type *nnc2_kw = nnc_view->get_kw(NNC2_KW, 0);
                     int i;
                     for (i = 0; i < rd_kw_get_size(nnc1_kw); i++) {
                         const int g1 = rd_kw_iget_int(nnc1_kw, i) - 1;
@@ -73,13 +71,10 @@ void test_scan(const char *grid_filename) {
 
         /* Global -> lgr */
         {
-            if (rd_file_view_has_kw(nnc_view.get(), NNCG_KW)) {
-                rd_kw_type *nnchead_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNCHEAD_KW, 0);
-                rd_kw_type *nncg_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNCG_KW, 0);
-                rd_kw_type *nncl_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNCL_KW, 0);
+            if (nnc_view->has_kw(NNCG_KW)) {
+                rd_kw_type *nnchead_kw = nnc_view->get_kw(NNCHEAD_KW, 0);
+                rd_kw_type *nncg_kw = nnc_view->get_kw(NNCG_KW, 0);
+                rd_kw_type *nncl_kw = nnc_view->get_kw(NNCL_KW, 0);
                 int i;
                 int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
                 for (i = 0; i < rd_kw_get_size(nncg_kw); i++) {
@@ -103,13 +98,10 @@ void test_scan(const char *grid_filename) {
 
         /* Amalgamated: LGR -> LGR */
         {
-            if (rd_file_view_has_kw(nnc_view.get(), NNCHEADA_KW)) {
-                rd_kw_type *nncheada_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNCHEADA_KW, 0);
-                rd_kw_type *nnc1_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNA1_KW, 0);
-                rd_kw_type *nnc2_kw =
-                    rd_file_view_iget_named_kw(nnc_view.get(), NNA2_KW, 0);
+            if (nnc_view->has_kw(NNCHEADA_KW)) {
+                rd_kw_type *nncheada_kw = nnc_view->get_kw(NNCHEADA_KW, 0);
+                rd_kw_type *nnc1_kw = nnc_view->get_kw(NNA1_KW, 0);
+                rd_kw_type *nnc2_kw = nnc_view->get_kw(NNA2_KW, 0);
                 int lgr_nr1 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC1_INDEX);
                 int lgr_nr2 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC2_INDEX);
 
@@ -133,8 +125,7 @@ void test_scan(const char *grid_filename) {
 }
 
 int main(int argc, char **argv) {
-    int iarg;
-    for (iarg = 1; iarg < argc; iarg++) {
+    for (int iarg = 1; iarg < argc; iarg++) {
         printf("Checking file: %s \n", argv[iarg]);
         test_scan(argv[iarg]);
     }

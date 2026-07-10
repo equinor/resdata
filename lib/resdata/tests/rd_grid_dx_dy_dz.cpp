@@ -11,6 +11,7 @@
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>
+#include <resdata/rd_kw.hpp>
 
 namespace fs = std::filesystem;
 
@@ -25,14 +26,14 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         std::cerr << "Could not open " << grid_fname << std::endl;
         exit(-1);
     }
-    rd_file_type *init_file = rd_file_open(init_fname.c_str());
-    if (init_file == NULL) {
+    auto init_file = open_rd_file(init_fname);
+    if (!init_file) {
         std::cerr << "Could not open " << init_fname << std::endl;
         exit(-1);
     }
-    rd_kw_type *dx = rd_file_iget_named_kw(init_file, "DX", 0);
-    rd_kw_type *dy = rd_file_iget_named_kw(init_file, "DY", 0);
-    rd_kw_type *dz = rd_file_iget_named_kw(init_file, "DZ", 0);
+    rd_kw_type *dx = rd_file_iget_named_kw(init_file.get(), "DX", 0);
+    rd_kw_type *dy = rd_file_iget_named_kw(init_file.get(), "DY", 0);
+    rd_kw_type *dz = rd_file_iget_named_kw(init_file.get(), "DZ", 0);
     for (int a = 0; a < rd_grid_get_active_size(grid.get()); a += 100) {
         int g = rd_grid_get_global_index1A(grid.get(), a);
 
@@ -52,7 +53,6 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         test_assert_true(err_y < eps_y);
         test_assert_true(err_z < eps_z);
     }
-    rd_file_close(init_file);
 }
 
 int main(int argc, char **argv) {

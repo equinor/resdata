@@ -197,7 +197,7 @@ public:
        WellState for each well.*/
     void add_wells(rd_file_type *rst_file, int report_nr,
                    bool load_segment_information);
-    void add_wells(rd_file_view_type *rst_view, int report_nr,
+    void add_wells(rd::FileView *rst_view, int report_nr,
                    bool load_segment_information);
     /** Will fail if the rst_file instance is a non-unified restart file,
        because these files do not have the SEQNUM keyword. */

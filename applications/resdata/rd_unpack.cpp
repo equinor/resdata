@@ -16,6 +16,14 @@
    for more details.
 */
 
+#include <cstddef>
+#include <cstdio>
+
+#include <ios>
+#include <memory>
+#include <filesystem>
+#include <string>
+
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
@@ -23,7 +31,8 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw_magic.hpp>
-#include <filesystem>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_file_view.hpp>
 
 namespace fs = std::filesystem;
 
@@ -55,7 +64,7 @@ static void unpack_file(const fs::path &filepath) {
         size = rd_file_get_num_named_kw(src_file.get(), "SEQNUM");
 
     for (int block_index = 0; block_index < size; block_index++) {
-        rd_file_view_type *active_view;
+        std::shared_ptr<rd::FileView> active_view;
 
         if (target_type == RD_SUMMARY_FILE) {
             active_view = rd_file_get_global_blockview(src_file.get(),
@@ -66,7 +75,7 @@ static void unpack_file(const fs::path &filepath) {
             rd_kw_type *seqnum_kw;
             active_view = rd_file_get_global_blockview(src_file.get(),
                                                        SEQNUM_KW, block_index);
-            seqnum_kw = rd_file_view_iget_named_kw(active_view, SEQNUM_KW, 0);
+            seqnum_kw = active_view->get_kw(SEQNUM_KW, 0);
             report_step = rd_kw_iget_int(seqnum_kw, 0);
             offset = 1;
         }
@@ -81,7 +90,7 @@ static void unpack_file(const fs::path &filepath) {
         fs::path target_file =
             rd::filename(filepath.stem(), target_type, fmt_file, report_step);
         ERT::FortIO fortio_target(target_file, std::ios_base::out, fmt_file);
-        rd_file_view_fwrite(active_view, fortio_target, offset);
+        active_view->write(fortio_target, offset);
     }
 }
 

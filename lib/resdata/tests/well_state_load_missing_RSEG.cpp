@@ -24,9 +24,9 @@ int main(int argc, char **argv) {
 
         rd_grid_type *grid = rd_grid_alloc(grid_file);
         rd_file_type *rst_file = rd_file_open(rst_file_name);
-        rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
+        auto rst_view = rd_file_get_active_view(rst_file);
         auto header =
-            RSTHead::read(rst_view, rd_filename_report_nr(rst_file_name));
+            RSTHead::read(rst_view.get(), rd_filename_report_nr(rst_file_name));
         const char *well_name = "WELL";
         int report_nr = 100;
         time_t valid_from = -1;
@@ -38,15 +38,15 @@ int main(int argc, char **argv) {
              global_well_nr++) {
             WellState well_state(well_name, global_well_nr, open, type,
                                  report_nr, valid_from);
-            well_state.add_connections(grid, rst_view, 0);
-            well_state.add_MSW(rst_view, global_well_nr,
+            well_state.add_connections(grid, rst_view.get(), 0);
+            well_state.add_MSW(rst_view.get(), global_well_nr,
                                load_segment_information);
 
             {
                 const well_segment_collection_type *segments =
                     well_state.get_segments();
 
-                if (!rd_file_view_has_kw(rst_view, RSEG_KW))
+                if (!rst_view->has_kw(RSEG_KW))
                     test_assert_int_equal(
                         0, well_segment_collection_get_size(segments));
             }

@@ -1,5 +1,7 @@
 #include <cstdlib>
 
+#include <string>
+
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
 
@@ -95,13 +97,12 @@ int main(int argc, char **argv) {
             if (argc == 1)
                 test_assert_true(rd_grid_get_unit_system(rd_grid.get()) ==
                                  RD_METRIC_UNITS);
-            rd_file_type *rd_file = rd_file_open(grid_file);
+            auto rd_file = open_rd_file(std::string(grid_file));
 
-            export_actnum(rd_grid.get(), rd_file);
-            export_coord(rd_grid.get(), rd_file);
-            export_zcorn(rd_grid.get(), rd_file);
-            export_mapaxes(rd_grid.get(), rd_file);
-            rd_file_close(rd_file);
+            export_actnum(rd_grid.get(), rd_file.get());
+            export_coord(rd_grid.get(), rd_file.get());
+            export_zcorn(rd_grid.get(), rd_file.get());
+            export_mapaxes(rd_grid.get(), rd_file.get());
         }
     }
 }

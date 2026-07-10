@@ -10,14 +10,14 @@
 #include <resdata/rd_file_flag.hpp>
 
 struct well_rseg_loader_struct {
-    rd_file_view_type *rst_view;
+    rd::FileView *rst_view;
     int_vector_type *relative_index_map;
     int_vector_type *absolute_index_map;
     char *buffer;
     const char *kw;
 };
 
-well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view) {
+well_rseg_loader_type *well_rseg_loader_alloc(rd::FileView *rst_view) {
     well_rseg_loader_type *loader =
         (well_rseg_loader_type *)util_malloc(sizeof *loader);
 
@@ -39,8 +39,8 @@ well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view) {
 
 void well_rseg_loader_free(well_rseg_loader_type *loader) {
 
-    if (rd_file_view_flags_set(loader->rst_view, FileMode::CLOSE_STREAM))
-        rd_file_view_fclose_stream(loader->rst_view);
+    if (loader->rst_view->has_flags(FileMode::CLOSE_STREAM))
+        loader->rst_view->close();
 
     int_vector_free(loader->relative_index_map);
     int_vector_free(loader->absolute_index_map);
@@ -61,8 +61,7 @@ double *well_rseg_loader_load_values(const well_rseg_loader_type *loader,
         int_vector_iset(index_map, index, relative_index + rseg_offset);
     }
 
-    rd_file_view_index_fload_kw(loader->rst_view, loader->kw, 0, index_map,
-                                loader->buffer);
+    loader->rst_view->index_fload_kw(loader->kw, 0, index_map, loader->buffer);
 
     return (double *)loader->buffer;
 }

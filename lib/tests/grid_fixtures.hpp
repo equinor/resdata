@@ -83,6 +83,12 @@ inline void write_int_kw(ERT::FortIO &fortio, const char *name,
     write_int_kw(fortio, name, values.data(), static_cast<int>(values.size()));
 }
 
+inline void write_int_kw(ERT::FortIO &fortio, const std::string &name,
+                         const std::vector<int> &values) {
+    write_int_kw(fortio, name.c_str(), values.data(),
+                 static_cast<int>(values.size()));
+}
+
 inline void write_float_kw(ERT::FortIO &fortio, const char *name,
                            const float *values, int size) {
     auto kw = make_rd_kw(name, size, RD_FLOAT);

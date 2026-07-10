@@ -791,12 +791,11 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
     auto restart_file = open_rd_file(restart_name + smspec_ext);
     REQUIRE(restart_file != nullptr);
-    rd_file_view_type *view = rd_file_get_global_view(restart_file.get());
-    REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
+    auto view = rd_file_get_global_view(restart_file.get());
+    REQUIRE(view->has_kw(RESTART_KW));
 
     SECTION("Parent case name is padded across 8-char blocks") {
-        rd_kw_type *restart_kw =
-            rd_file_view_iget_named_kw(view, RESTART_KW, 0);
+        rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
         REQUIRE(rd_kw_get_size(restart_kw) == 8);
         REQUIRE(std::string(static_cast<const char *>(
                     rd_kw_iget_ptr(restart_kw, 0))) == "CASE1   ");
@@ -833,9 +832,9 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
     }
 
     auto smspec_file = open_rd_file(name + ".SMSPEC");
-    rd_file_view_type *view = rd_file_get_global_view(smspec_file.get());
-    REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
-    rd_kw_type *restart_kw = rd_file_view_iget_named_kw(view, RESTART_KW, 0);
+    auto view = rd_file_get_global_view(smspec_file.get());
+    REQUIRE(view->has_kw(RESTART_KW));
+    rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
     REQUIRE(rd_kw_get_size(restart_kw) == 8);
     for (int n = 0; n < 8; ++n) {
         const std::string expected = "WWWWGGG" + std::to_string(n);

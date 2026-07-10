@@ -4,7 +4,7 @@
 
 typedef struct well_rseg_loader_struct well_rseg_loader_type;
 
-well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view);
+well_rseg_loader_type *well_rseg_loader_alloc(rd::FileView *rst_view);
 void well_rseg_loader_free(well_rseg_loader_type *well_rseg_loader);
 
 double *

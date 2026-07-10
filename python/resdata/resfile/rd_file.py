@@ -152,9 +152,7 @@ class ResdataFile(BaseCClass):
             raise OSError('Failed to open file "%s"' % filename)
         else:
             super().__init__(c_ptr)
-            self.global_view: ResdataFileView = ResdataFileView.createCReference(
-                _file._get_global_view(self), self
-            )
+            self.global_view: ResdataFileView = _file._get_global_view(self)
 
     def save_kw(self, kw):
         """
@@ -191,12 +189,25 @@ class ResdataFile(BaseCClass):
         return len(self.global_view)
 
     def close(self):
-        if self:
-            _file._close(self)
-            self._invalidateCPointer()
+        """Closes the file handle used to read data.
+
+        There are two caveats:
+
+          1. Stale cached ResdataKW instances: A ResdataKW that was already
+             read before ``close()`` keeps the data it held at that time. It is
+             a snapshot: it is not refreshed and will not reflect any later
+             modifications made to the file.
+
+          2. Lazy re-opening of ResdataFileView: Keyword data is loaded lazily,
+             so a keyword that was *not* yet read when ``close()`` was called is
+             read on first access. Accessing such a keyword through a
+             ResdataFileView (or through this ResdataFile)
+             re-opens the file on disk to read it.
+        """
+        _file._close(self)
 
     def free(self):
-        self.close()
+        _file._free(self)
 
     def block_view(self, kw, kw_index):
         if kw not in self:

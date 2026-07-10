@@ -23,12 +23,15 @@ void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
-    rd_file_type *rst_file = rd_file_open(Xfile);
-    auto rst_head = RSTHead::read(rd_file_get_global_view(rst_file),
+    auto rst_file = open_rd_file(std::string(Xfile));
+    auto rst_head = RSTHead::read(rd_file_get_global_view(rst_file.get()).get(),
                                   rd_filename_report_nr(Xfile));
-    const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
-    const rd_kw_type *icon_kw = rd_file_iget_named_kw(rst_file, ICON_KW, 0);
-    const rd_kw_type *scon_kw = rd_file_iget_named_kw(rst_file, SCON_KW, 0);
+    const rd_kw_type *iwel_kw =
+        rd_file_iget_named_kw(rst_file.get(), IWEL_KW, 0);
+    const rd_kw_type *icon_kw =
+        rd_file_iget_named_kw(rst_file.get(), ICON_KW, 0);
+    const rd_kw_type *scon_kw =
+        rd_file_iget_named_kw(rst_file.get(), SCON_KW, 0);
     const rd_kw_type *xcon_kw = 0;
 
     well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 0,
@@ -51,7 +54,5 @@ int main(int argc, char **argv) {
                       55.195);
     well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 2, 2,
                       18.032);
-
-    rd_file_close(rst_file);
     exit(0);
 }

@@ -17,7 +17,7 @@ rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
 rd_subsidence_survey_type *
 rd_subsidence_add_survey_PRESSURE(rd_subsidence_type *subsidence,
                                   const std::string &name,
-                                  const rd_file_view_type *restart_view);
+                                  rd::FileView *restart_view);
 
 bool rd_subsidence_has_survey(const rd_subsidence_type *subsidence,
                               const std::string &name);

@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -34,12 +35,13 @@ PYBIND11_MODULE(_subsidence, m) {
         rd_subsidence_free(from_cwrap<rd_subsidence_type>(self));
     });
 
-    m.def("_add_survey_PRESSURE", [](py::handle self, std::string survey_name,
-                                     py::handle restart_file_view) {
-        rd_subsidence_add_survey_PRESSURE(
-            from_cwrap<rd_subsidence_type>(self), survey_name,
-            from_cwrap<rd_file_view_type>(restart_file_view));
-    });
+    m.def("_add_survey_PRESSURE",
+          [](py::handle self, std::string survey_name,
+             std::shared_ptr<rd::FileView> restart_file_view) {
+              rd_subsidence_add_survey_PRESSURE(
+                  from_cwrap<rd_subsidence_type>(self), survey_name,
+                  restart_file_view.get());
+          });
 
     m.def("_eval", [](py::handle self, std::string base,
                       std::optional<std::string> monitor, py::object region,

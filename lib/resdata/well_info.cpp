@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -17,39 +18,40 @@
 
 namespace {
 struct close_guard {
-    explicit close_guard(rd_file_view_type *file_view)
+    explicit close_guard(rd::FileView *file_view)
         : file_view(file_view),
-          was_set(rd_file_view_drop_flag(file_view, FileMode::CLOSE_STREAM)) {}
+          was_set(file_view->drop_flags(FileMode::CLOSE_STREAM)) {}
 
     ~close_guard() {
         if (was_set)
-            rd_file_view_add_flag(file_view, FileMode::CLOSE_STREAM);
+            file_view->add_flag(FileMode::CLOSE_STREAM);
     }
     close_guard(const close_guard &) = delete;
     close_guard &operator=(const close_guard &) = delete;
 
-    rd_file_view_type *file_view;
+    rd::FileView *file_view;
     bool was_set;
 };
 
 struct clear_guard {
-    explicit clear_guard(rd_file_view_type *file_view) : file_view(file_view) {}
+    explicit clear_guard(std::shared_ptr<rd::FileView> file_view)
+        : file_view(file_view) {}
 
-    ~clear_guard() { rd_file_view_clear(file_view); }
+    ~clear_guard() { file_view->clear(); }
     clear_guard(const clear_guard &) = delete;
     clear_guard &operator=(const clear_guard &) = delete;
 
-    rd_file_view_type *file_view;
+    std::shared_ptr<rd::FileView> file_view;
 };
 } // namespace
 
 void WellInfo::add_wells(rd_file_type *rst_file, int report_nr,
                          bool load_segment_information) {
-    rd_file_view_type *rst_view = rd_file_get_active_view(rst_file);
-    add_wells(rst_view, report_nr, load_segment_information);
+    auto rst_view = rd_file_get_active_view(rst_file);
+    add_wells(rst_view.get(), report_nr, load_segment_information);
 }
 
-void WellInfo::add_wells(rd_file_view_type *rst_view, int report_nr,
+void WellInfo::add_wells(rd::FileView *rst_view, int report_nr,
                          bool load_segment_information) {
     close_guard close_stream_guard(rst_view);
     auto global_header = RSTHead::read(rst_view, report_nr);
@@ -69,18 +71,20 @@ void WellInfo::add_wells(rd_file_view_type *rst_view, int report_nr,
 
 void WellInfo::add_UNRST_wells(rd_file_type *rst_file,
                                bool load_segment_information) {
-    rd_file_view_type *rst_view = rd_file_get_global_view(rst_file);
-    int num_blocks = rd_file_view_get_num_named_kw(rst_view, SEQNUM_KW);
-    for (int block_nr = 0; block_nr < num_blocks; block_nr++) {
+    auto rst_view = rd_file_get_global_view(rst_file);
+    size_t num_blocks = rst_view->num_named_kw(SEQNUM_KW);
+    for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
 
-        rd_file_view_type *step_view =
-            rd_file_view_add_restart_view(rst_view, block_nr, -1, -1, -1);
-        const rd_kw_type *seqnum_kw =
-            rd_file_view_iget_named_kw(step_view, SEQNUM_KW, 0);
+        auto step_view = rst_view->restart_view_from_seqnum_index(block_nr);
+        if (!step_view)
+            throw std::runtime_error(
+                fmt::format("Could not find restart step: {}", block_nr));
+
+        const rd_kw_type *seqnum_kw = step_view->get_kw(SEQNUM_KW, 0);
         int report_nr = rd_kw_iget_int(seqnum_kw, 0);
 
         clear_guard clear(rst_view);
-        add_wells(step_view, report_nr, load_segment_information);
+        add_wells(step_view.get(), report_nr, load_segment_information);
     }
 }
 

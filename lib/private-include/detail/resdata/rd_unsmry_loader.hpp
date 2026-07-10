@@ -1,4 +1,5 @@
 #include <ctime>
+#include <memory>
 #include <string>
 #include <array>
 #include <vector>
@@ -14,7 +15,6 @@ class unsmry_loader {
 public:
     unsmry_loader(const rd_smspec_type *smspec, const std::string &filename,
                   FileMode file_options = FileMode::DEFAULT);
-    ~unsmry_loader();
 
     std::vector<double> get_vector(int pos) const;
     std::vector<double> sim_seconds() const;
@@ -34,8 +34,8 @@ private:
     int m_length; //Number of PARAMS in the UNSMRY file
 
     std::array<int, 3> date_index;
-    rd_file_type *file;
-    rd_file_view_type *file_view;
+    rd_file_ptr file{nullptr, &rd_file_free};
+    std::shared_ptr<rd::FileView> file_view;
 };
 
 } // namespace rd

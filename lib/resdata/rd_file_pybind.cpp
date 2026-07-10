@@ -23,7 +23,7 @@ PYBIND11_MODULE(_file, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_file.py and rd_file.cpp";
 
-    m.def("_open", [](std::string filename, FileMode &flags) -> py::object {
+    m.def("_open", [](std::string filename, FileMode flags) -> py::object {
         auto *file = rd_file_open(filename.c_str(), flags);
         if (file == nullptr)
             return py::none();
@@ -56,6 +56,9 @@ PYBIND11_MODULE(_file, m) {
     m.def("_close", [](py::handle self) {
         rd_file_close(from_cwrap<rd_file_type>(self));
     });
+    m.def("_free", [](py::handle self) {
+        rd_file_free(from_cwrap<rd_file_type>(self));
+    });
     m.def("_iget_restart_time", [](py::handle self, int index) {
         return static_cast<std::int64_t>(rd_file_iget_restart_sim_date(
             from_cwrap<rd_file_type>(self), index));
@@ -82,13 +85,9 @@ PYBIND11_MODULE(_file, m) {
         return rd_file_has_sim_time(from_cwrap<rd_file_type>(self),
                                     static_cast<time_t>(sim_time));
     });
-    m.def(
-        "_get_global_view",
-        [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
-                rd_file_get_global_view(from_cwrap<rd_file_type>(self)));
-        },
-        py::return_value_policy::reference);
+    m.def("_get_global_view", [](py::handle self) {
+        return rd_file_get_global_view(from_cwrap<rd_file_type>(self));
+    });
     m.def("_write_index", [](py::handle self, std::string index_filename) {
         return rd_file_write_index(from_cwrap<rd_file_type>(self),
                                    index_filename.c_str());

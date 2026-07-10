@@ -561,26 +561,23 @@ bool rd_sum_file_data::check_file(rd_file_type *rd_file) {
 */
 
 void rd_sum_file_data::add_rd_file(int report_step,
-                                   const rd_file_view_type *summary_view) {
+                                   rd::FileView &summary_view) {
     validate_report_step(report_step);
 
-    int num_ministep = rd_file_view_get_num_named_kw(summary_view, PARAMS_KW);
+    size_t num_ministep = summary_view.num_named_kw(PARAMS_KW);
     if (num_ministep > 0) {
-        int ikw;
 
-        for (ikw = 0; ikw < num_ministep; ikw++) {
-            rd_kw_type *ministep_kw =
-                rd_file_view_iget_named_kw(summary_view, MINISTEP_KW, ikw);
-            rd_kw_type *params_kw =
-                rd_file_view_iget_named_kw(summary_view, PARAMS_KW, ikw);
+        for (size_t ikw = 0; ikw < num_ministep; ikw++) {
+            rd_kw_type *ministep_kw = summary_view.get_kw(MINISTEP_KW, ikw);
+            rd_kw_type *params_kw = summary_view.get_kw(PARAMS_KW, ikw);
 
             {
                 int ministep_nr = rd_kw_iget_int(ministep_kw, 0);
+                std::string filename = summary_view.filename();
                 std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
                     tstep(rd_sum_tstep_alloc_from_file(
                               report_step, ministep_nr, params_kw,
-                              rd_file_view_get_src_file(summary_view),
-                              this->rd_smspec),
+                              filename.c_str(), this->rd_smspec),
                           &rd_sum_tstep_free);
 
                 if (tstep)
@@ -616,8 +613,8 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             {
                 rd_file_ptr rd_file = open_rd_file(std::string(data_file));
                 if (rd_file && check_file(rd_file.get())) {
-                    this->add_rd_file(report_step,
-                                      rd_file_get_global_view(rd_file.get()));
+                    auto global_view = rd_file_get_global_view(rd_file.get());
+                    this->add_rd_file(report_step, *global_view);
                 }
             }
         }
@@ -648,11 +645,11 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             SEQHDR block in the unified summary file is block zero (in
             ert counting).
         */
-                    rd_file_view_type *summary_view =
+                    auto summary_view =
                         rd_file_get_summary_view(rd_file.get(), block_index);
                     if (summary_view) {
                         this->add_rd_file(block_index + first_report_step,
-                                          summary_view);
+                                          *summary_view);
                         block_index++;
                     } else
                         break;

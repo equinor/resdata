@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include <ios>
+#include <string>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -30,14 +31,13 @@ void test_writable(size_t data_size) {
     }
 
     for (int i = 0; i < 4; ++i) {
-        rd_file_type *rd_file =
-            rd_file_open(data_file_name, FileMode::WRITABLE);
+        auto rd_file =
+            open_rd_file(std::string(data_file_name), FileMode::WRITABLE);
         rd_kw_type *loaded_kw =
-            rd_file_view_iget_kw(rd_file_get_global_view(rd_file), 0);
+            rd_file_get_global_view(rd_file.get())->get_kw(0);
         test_assert_true(rd_kw_equal(kw, loaded_kw));
 
-        rd_file_save_kw(rd_file, loaded_kw);
-        rd_file_close(rd_file);
+        rd_file_save_kw(rd_file.get(), loaded_kw);
     }
 
     rd_kw_free(kw);
@@ -51,10 +51,9 @@ void test_truncated() {
         rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", RD_METRIC_UNITS);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TEST.EGRID");
-        test_assert_true(rd_file_is_instance(rd_file));
-        num_kw = rd_file_get_size(rd_file);
-        rd_file_close(rd_file);
+        auto rd_file = open_rd_file(std::string("TEST.EGRID"));
+        test_assert_true(rd_file_is_instance(rd_file.get()));
+        num_kw = rd_file_get_size(rd_file.get());
     }
 
     {
@@ -64,9 +63,8 @@ void test_truncated() {
         fclose(stream);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TEST.EGRID");
-        test_assert_true(rd_file_get_size(rd_file) < num_kw);
-        rd_file_close(rd_file);
+        auto rd_file = open_rd_file(std::string("TEST.EGRID"));
+        test_assert_true(rd_file_get_size(rd_file.get()) < num_kw);
     }
 }
 
@@ -78,10 +76,9 @@ void test_mixed_case() {
         rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", RD_METRIC_UNITS);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID");
-        test_assert_true(rd_file_is_instance(rd_file));
-        num_kw = rd_file_get_size(rd_file);
-        rd_file_close(rd_file);
+        auto rd_file = open_rd_file(std::string("TESTcase.EGRID"));
+        test_assert_true(rd_file_is_instance(rd_file.get()));
+        num_kw = rd_file_get_size(rd_file.get());
     }
 
     {
@@ -91,9 +88,8 @@ void test_mixed_case() {
         fclose(stream);
     }
     {
-        rd_file_type *rd_file = rd_file_open("TESTcase.EGRID");
-        test_assert_true(rd_file_get_size(rd_file) < num_kw);
-        rd_file_close(rd_file);
+        auto rd_file = open_rd_file(std::string("TESTcase.EGRID"));
+        test_assert_true(rd_file_get_size(rd_file.get()) < num_kw);
     }
 }
 

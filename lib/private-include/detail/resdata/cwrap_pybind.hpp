@@ -22,4 +22,3 @@ inline void register_exceptions(pybind11::module &m) {
 
 pybind11::object CTime();
 pybind11::object ResdataKW();
-pybind11::object ResdataFileView();

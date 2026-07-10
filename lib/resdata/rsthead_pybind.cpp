@@ -19,32 +19,31 @@ PYBIND11_MODULE(_rsthead, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings for rd_rsthead.hpp";
     py::class_<RSTHead>(m, "ResdataRestartHead")
-        .def(py::init([](std::optional<std::tuple<int, py::handle, py::handle,
-                                                  std::optional<py::handle>>>
-                             kw_arg,
-                         std::optional<py::handle> rst_view) {
-                 if (kw_arg == std::nullopt && rst_view == std::nullopt)
-                     throw std::invalid_argument(
-                         "Cannot construct ResdataRestartHead without one of "
-                         "kw_arg "
-                         "and rst_view, both were None!");
+        .def(
+            py::init([](std::optional<std::tuple<int, py::handle, py::handle,
+                                                 std::optional<py::handle>>>
+                            kw_arg,
+                        std::optional<std::shared_ptr<rd::FileView>> rst_view) {
+                if (kw_arg == std::nullopt && rst_view == std::nullopt)
+                    throw std::invalid_argument(
+                        "Cannot construct ResdataRestartHead without one of "
+                        "kw_arg "
+                        "and rst_view, both were None!");
 
-                 if (kw_arg.has_value()) {
-                     return new RSTHead(
-                         std::get<0>(*kw_arg),
-                         from_cwrap<rd_kw_type>(std::get<1>(*kw_arg)),
-                         from_cwrap<rd_kw_type>(std::get<2>(*kw_arg)),
-                         from_cwrap<rd_kw_type>(std::get<3>(*kw_arg)));
-                 } else {
-                     return std::make_unique<RSTHead>(
-                                RSTHead::read(
-                                    from_cwrap<rd_file_view_type>(*rst_view),
-                                    -1))
-                         .release();
-                 }
-             }),
-             py::arg("kw_arg") = std::nullopt,
-             py::arg("rst_view") = std::nullopt)
+                if (kw_arg.has_value()) {
+                    return new RSTHead(
+                        std::get<0>(*kw_arg),
+                        from_cwrap<rd_kw_type>(std::get<1>(*kw_arg)),
+                        from_cwrap<rd_kw_type>(std::get<2>(*kw_arg)),
+                        from_cwrap<rd_kw_type>(std::get<3>(*kw_arg)));
+                } else {
+                    return std::make_unique<RSTHead>(
+                               RSTHead::read(rst_view->get(), -1))
+                        .release();
+                }
+            }),
+            py::arg("kw_arg") = std::nullopt,
+            py::arg("rst_view") = std::nullopt)
         .def("get_report_step", [](RSTHead &self) { return self.report_step; })
         .def("get_sim_date",
              [](RSTHead &self) {

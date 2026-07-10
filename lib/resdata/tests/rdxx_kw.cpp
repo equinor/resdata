@@ -164,12 +164,12 @@ void test_read_write() {
         }
 
         {
-            rd_file_type *f = rd_file_open("test_file");
-            rd_kw_type *d_kw = rd_file_iget_named_kw(f, "DOUBLE", 0);
-            rd_kw_type *f_kw = rd_file_iget_named_kw(f, "FLOAT", 0);
-            rd_kw_type *i_kw = rd_file_iget_named_kw(f, "INT", 0);
-            rd_kw_type *b_kw = rd_file_iget_named_kw(f, "BOOL", 0);
-            rd_kw_type *s_kw = rd_file_iget_named_kw(f, "STRING", 0);
+            auto f = open_rd_file(std::string("test_file"));
+            rd_kw_type *d_kw = rd_file_iget_named_kw(f.get(), "DOUBLE", 0);
+            rd_kw_type *f_kw = rd_file_iget_named_kw(f.get(), "FLOAT", 0);
+            rd_kw_type *i_kw = rd_file_iget_named_kw(f.get(), "INT", 0);
+            rd_kw_type *b_kw = rd_file_iget_named_kw(f.get(), "BOOL", 0);
+            rd_kw_type *s_kw = rd_file_iget_named_kw(f.get(), "STRING", 0);
 
             for (size_t i = 0; i < d_data.size(); i++)
                 test_assert_true(d_data[i] == rd_kw_iget_double(d_kw, i));
@@ -189,8 +189,6 @@ void test_read_write() {
                 s8.erase(s8.find_last_not_of(' ') + 1);
                 test_assert_true(s_data[i] == s8);
             }
-
-            rd_file_close(f);
         }
     }
 }
