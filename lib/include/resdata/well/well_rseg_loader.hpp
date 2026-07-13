@@ -1,11 +1,6 @@
-#ifndef ERT_WELL_RSEG_LOADER_H
-#define ERT_WELL_RSEG_LOADER_H
+#pragma once
 
 #include <resdata/rd_file_view.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct well_rseg_loader_struct well_rseg_loader_type;
 
@@ -15,9 +10,3 @@ void well_rseg_loader_free(well_rseg_loader_type *well_rseg_loader);
 double *
 well_rseg_loader_load_values(const well_rseg_loader_type *well_rseg_loader,
                              int rseg_offset);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
