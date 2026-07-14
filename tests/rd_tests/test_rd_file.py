@@ -432,6 +432,77 @@ def _restart_kw(name, dtype, values):
     return kw
 
 
+@pytest.fixture
+def block_view_file(tmp_path):
+    """A file laid out as: SEQNUM PRESSURE SWAT PRESSURE SWAT."""
+    path = str(tmp_path / "TEST")
+    with openFortIO(path, mode=FortIO.WRITE_MODE) as f:
+        _restart_kw("SEQNUM", ResDataType.RD_INT, [10]).fwrite(f)
+        _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [1.0, 2.0, 3.0]).fwrite(f)
+        _restart_kw("SWAT", ResDataType.RD_FLOAT, [0.1, 0.2, 0.3]).fwrite(f)
+        _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [4.0, 5.0, 6.0]).fwrite(f)
+        _restart_kw("SWAT", ResDataType.RD_FLOAT, [0.4, 0.5, 0.6]).fwrite(f)
+    return path
+
+
+def _kw_names(view):
+    return [view[i].name for i in range(len(view))]
+
+
+def test_block_view_returns_block_up_to_next_occurrence(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view("PRESSURE", 0)
+        assert _kw_names(block) == ["PRESSURE", "SWAT"]
+
+
+def test_block_view_last_block_extends_to_end_of_file(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view("PRESSURE", 1)
+        assert _kw_names(block) == ["PRESSURE", "SWAT"]
+
+
+def test_block_view_with_negative_index_counts_from_end(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view("PRESSURE", -1)
+        assert list(block["PRESSURE"][0]) == pytest.approx([4.0, 5.0, 6.0])
+
+
+def test_block_view_with_unknown_keyword_raises_keyerror(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        with pytest.raises(KeyError):
+            rd_file.block_view("NOSUCHKW", 0)
+
+
+def test_block_view_with_out_of_range_index_raises_indexerror(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        with pytest.raises(IndexError):
+            rd_file.block_view("PRESSURE", 5)
+
+
+def test_block_view2_with_none_start_kw_reads_from_start_of_file(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view2(None, "PRESSURE", 0)
+        assert _kw_names(block) == ["SEQNUM"]
+
+
+def test_block_view2_with_none_stop_kw_reads_to_end_of_file(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view2("SEQNUM", None, 0)
+        assert _kw_names(block) == ["SEQNUM", "PRESSURE", "SWAT", "PRESSURE", "SWAT"]
+
+
+def test_block_view2_with_none_start_and_stop_returns_all_keywords(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        block = rd_file.block_view2(None, None, 0)
+        assert _kw_names(block) == ["SEQNUM", "PRESSURE", "SWAT", "PRESSURE", "SWAT"]
+
+
+def test_block_view2_with_unknown_stop_keyword_raises_keyerror(block_view_file):
+    with open_rd_file(block_view_file) as rd_file:
+        with pytest.raises(KeyError, match="The keyword:FAULTY is not in file"):
+            rd_file.block_view2("SEQNUM", "FAULTY", 0)
+
+
 def _restart_intehead(day, month, year):
     header = ResdataKW("INTEHEAD", 67, ResDataType.RD_INT)
     header[64] = day

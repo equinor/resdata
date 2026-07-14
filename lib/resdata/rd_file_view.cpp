@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <ctime>
+#include <algorithm>
 
 #include <iostream>
 #include <exception>
@@ -163,27 +164,14 @@ FileView::blockview(const std::optional<std::string> &start_kw,
         return {nullptr};
 
     auto block_map = std::make_shared<FileView>(context);
-    size_t index = 0;
-    if (start_kw)
-        index = kw_index.at(*start_kw).at(occurence);
-
-    {
-        auto file_kw = kw_list[index];
-        while (true) {
-            block_map->add_kw(file_kw);
-
-            index++;
-            if (index == kw_list.size())
-                break;
-            else {
-                if (end_kw) {
-                    file_kw = kw_list[index];
-                    if (*end_kw == file_kw->get_header())
-                        break;
-                }
-            }
-        }
-    }
+    auto begin =
+        kw_list.begin() + (start_kw ? kw_index.at(*start_kw).at(occurence) : 0);
+    auto stop = end_kw ? std::find_if(begin + 1, kw_list.end(),
+                                      [&](const auto &kw) {
+                                          return *end_kw == kw->get_header();
+                                      })
+                       : kw_list.end();
+    block_map->kw_list.assign(begin, stop);
     block_map->make_index();
     return block_map;
 }

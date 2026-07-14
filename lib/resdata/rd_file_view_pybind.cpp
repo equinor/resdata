@@ -207,7 +207,35 @@ PYBIND11_MODULE(rd_file_view, m) {
 
                 return self->blockview(start_kw, stop_kw, occurence);
             },
-            py::arg("start_kw"), py::arg("stop_kw"), py::arg("start_index"))
+            py::arg("start_kw"), py::arg("stop_kw"), py::arg("start_index"),
+            "A view of the keywords between start_kw and stop_kw.\n"
+            "\n"
+            "The returned ResdataFileView starts at the start_index'th\n"
+            "occurrence of start_kw (inclusive) and ends just before the\n"
+            "first occurrence of stop_kw that follows it (exclusive):\n"
+            "\n"
+            "   # File: SEQNUM PRESSURE SWAT PRESSURE SWAT\n"
+            "   view = file_view.block_view2(\"SEQNUM\", \"PRESSURE\", 0)\n"
+            "   # view contains: SEQNUM\n"
+            "\n"
+            "start_kw and stop_kw may be None:\n"
+            "\n"
+            "   * If start_kw is None the view starts at the first keyword in\n"
+            "     the file and start_index is ignored.\n"
+            "   * If stop_kw is None the view extends to the end of the file.\n"
+            "\n"
+            "So block_view2(None, None, 0) returns a view containing every\n"
+            "keyword in the file, in order:\n"
+            "\n"
+            "   # File: SEQNUM PRESSURE SWAT PRESSURE SWAT\n"
+            "   view = file_view.block_view2(None, None, 0)\n"
+            "   # view contains: SEQNUM PRESSURE SWAT PRESSURE SWAT\n"
+            "\n"
+            "start_index selects which occurrence of start_kw to start at. A\n"
+            "negative index counts from the end, so -1 is the last.\n"
+            "\n"
+            "Raises KeyError if start_kw or stop_kw is given but not present\n"
+            "in the file, and IndexError if start_index is out of range.\n")
         .def(
             "block_view",
             [](rd::FileView *self, std::string kw, py::int_ start_index) {
@@ -228,7 +256,27 @@ PYBIND11_MODULE(rd_file_view, m) {
 
                 return self->blockview(kw, kw, index.cast<size_t>());
             },
-            py::arg("kw"), py::arg("kw_index"))
+            py::arg("kw"), py::arg("kw_index"),
+            "A view of the keyword block delimited by kw.\n"
+            "\n"
+            "The returned ResdataFileView contains the keywords from the\n"
+            "kw_index'th occurrence of kw (inclusive) up to, but not\n"
+            "including, the next occurrence of kw. In other words the file is\n"
+            "treated as a sequence of blocks that each start with kw, and\n"
+            "this method returns one such block:\n"
+            "\n"
+            "   # File: HEADER DATA1 DATA2 HEADER DATA1 DATA2\n"
+            "   view = file_view.block_view(\"HEADER\", 1)\n"
+            "   # view contains: HEADER DATA1 DATA2   (the second block)\n"
+            "\n"
+            "The last block extends to the end of the file.\n"
+            "\n"
+            "kw_index selects which occurrence of kw starts the block. A\n"
+            "negative index counts from the end, so -1 is the last\n"
+            "occurrence.\n"
+            "\n"
+            "Raises KeyError if kw is not present in the file, and IndexError\n"
+            "if kw_index is out of range.\n")
         .def(
             "restart_view",
             [](rd::FileView &self, std::optional<py::int_> seqnum_index,

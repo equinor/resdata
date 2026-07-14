@@ -235,6 +235,40 @@ def test_block_view2_with_negative_index_counts_from_end(sample_file):
         assert "PRESSURE" in block
 
 
+def _kw_names(view):
+    return [view[i].name for i in range(len(view))]
+
+
+def test_block_view_returns_block_up_to_next_occurrence(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view("PRESSURE", 0)
+        assert _kw_names(block) == ["PRESSURE", "SWAT"]
+
+
+def test_block_view_last_block_extends_to_end_of_file(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view("PRESSURE", 1)
+        assert _kw_names(block) == ["PRESSURE", "SWAT"]
+
+
+def test_block_view2_with_none_start_kw_reads_from_start_of_file(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view2(None, "PRESSURE", 0)
+        assert _kw_names(block) == ["SEQNUM"]
+
+
+def test_block_view2_with_none_stop_kw_reads_to_end_of_file(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view2("SEQNUM", None, 0)
+        assert _kw_names(block) == ["SEQNUM", "PRESSURE", "SWAT", "PRESSURE", "SWAT"]
+
+
+def test_block_view2_with_none_start_and_stop_returns_all_keywords(sample_file):
+    with open_rd_file(sample_file) as rd_file:
+        block = rd_file.global_view.block_view2(None, None, 0)
+        assert _kw_names(block) == ["SEQNUM", "PRESSURE", "SWAT", "PRESSURE", "SWAT"]
+
+
 def test_that_restart_view_iget_named_kw_with_index_returns_the_array(restart_file):
     with open_rd_file(restart_file) as rd_file:
         view = rd_file.global_view
