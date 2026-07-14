@@ -131,7 +131,7 @@ bool FileView::load_all() {
     return loadOK;
 }
 
-void FileView::write(ERT::FortIO &target, int offset) {
+void FileView::write(ERT::FortIO &target, size_t offset) {
     for (size_t index = offset; index < kw_list.size(); index++) {
         rd_kw_type *rd_kw = get_kw(index);
         rd_kw_fwrite(rd_kw, target);

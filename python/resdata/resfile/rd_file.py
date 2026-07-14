@@ -535,7 +535,7 @@ class ResdataFile(BaseCClass):
            >>> fortio.close()
 
         """
-        _file._fwrite(self, fortio, 0)
+        _file._fwrite(self, fortio)
 
     def write_index(self, index_file_name):
         if not self or not _file._write_index(self, index_file_name):

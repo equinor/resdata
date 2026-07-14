@@ -55,7 +55,7 @@ static void unpack_file(const fs::path &filepath) {
     }
     rd_file_ptr src_file = open_rd_file(filename);
     int size;
-    int offset;
+    size_t offset;
     int report_step = 0;
 
     if (target_type == RD_SUMMARY_FILE)
