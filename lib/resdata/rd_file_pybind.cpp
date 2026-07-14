@@ -74,8 +74,8 @@ PYBIND11_MODULE(_file, m) {
     m.def("_get_src_file", [](py::handle self) {
         return rd_file_get_src_file(from_cwrap<rd_file_type>(self));
     });
-    m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio, int offset) {
-        rd_file_fwrite_fortio(from_cwrap<rd_file_type>(self), fortio, offset);
+    m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
+        rd_file_fwrite_fortio(from_cwrap<rd_file_type>(self), fortio, 0);
     });
     m.def("_has_report_step", [](py::handle self, int report_step) {
         return rd_file_has_report_step(from_cwrap<rd_file_type>(self),

@@ -143,7 +143,7 @@ static rd_file_type *rd_file_alloc_empty() {
 }
 
 void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
-                           int offset) {
+                           size_t offset) {
     rd_file->active_view->write(target, offset);
 }
 
