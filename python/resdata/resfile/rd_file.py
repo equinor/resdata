@@ -209,7 +209,29 @@ class ResdataFile(BaseCClass):
     def free(self):
         _file._free(self)
 
-    def block_view(self, kw, kw_index):
+    def block_view(self, kw: str, kw_index: int) -> ResdataFileView:
+        """A view of the keyword block delimited by ``kw``.
+
+        The returned :class:`ResdataFileView` contains the keywords from the
+        ``kw_index``'th occurrence of ``kw`` (inclusive) up to, but not
+        including, the next occurrence of ``kw``. In other words the file is
+        treated as a sequence of blocks that each start with ``kw``, and this
+        method returns one such block::
+
+            # File: HEADER DATA1 DATA2 HEADER DATA1 DATA2
+            view = rd_file.block_view("HEADER", 1)
+            # view contains: HEADER DATA1 DATA2   (the second block)
+
+        The last block extends to the end of the file.
+
+        ``kw_index`` selects which occurrence of ``kw`` starts the block. A
+        negative index counts from the end, so ``-1`` is the last occurrence.
+
+        :param kw: The keyword that delimits the blocks.
+        :param kw_index: Which occurrence of ``kw`` to start the block at.
+        :raises KeyError: If ``kw`` is not present in the file.
+        :raises IndexError: If ``kw_index`` is out of range.
+        """
         if kw not in self:
             raise KeyError('No such keyword "%s".' % kw)
         ls = self.global_view.num_keywords(kw)
@@ -222,7 +244,44 @@ class ResdataFile(BaseCClass):
             "Index out of range, must be in [0, %d), was %d." % (ls, kw_index)
         )
 
-    def block_view2(self, start_kw, stop_kw, start_index):
+    def block_view2(
+        self, start_kw: str | None, stop_kw: str | None, start_index: int
+    ) -> ResdataFileView:
+        """Return a view of the keywords between ``start_kw`` and ``stop_kw``.
+
+        The returned :class:`ResdataFileView` starts at the ``start_index``'th
+        occurrence of ``start_kw`` (inclusive) and ends just before the first
+        occurrence of ``stop_kw`` that follows it (exclusive)::
+
+            # File: SEQNUM PRESSURE SWAT PRESSURE SWAT
+            view = rd_file.block_view2("SEQNUM", "PRESSURE", 0)
+            # view contains: SEQNUM   (up to, but not including, PRESSURE)
+
+        ``start_kw`` and ``stop_kw`` may be ``None``:
+
+        * If ``start_kw`` is ``None`` the view starts at the first keyword in
+          the file and ``start_index`` is ignored.
+        * If ``stop_kw`` is ``None`` the view extends to the end of the file.
+
+        So ``block_view2(None, None, 0)`` returns a view containing every
+        keyword in the file, in order::
+
+            # File: SEQNUM PRESSURE SWAT PRESSURE SWAT
+            view = rd_file.block_view2(None, None, 0)
+            # view contains: SEQNUM PRESSURE SWAT PRESSURE SWAT
+
+        ``start_index`` selects which occurrence of ``start_kw`` to start at. A
+        negative index counts from the end, so ``-1`` is the last occurrence.
+
+        :param start_kw: The keyword to start at, or ``None`` for the start of
+            the file.
+        :param stop_kw: The keyword to stop before, or ``None`` for the end of
+            the file.
+        :param start_index: Which occurrence of ``start_kw`` to start at.
+        :raises KeyError: If ``start_kw`` or ``stop_kw`` is given but not
+            present in the file.
+        :raises IndexError: If ``start_index`` is out of range.
+        """
         return self.global_view.block_view2(start_kw, stop_kw, start_index)
 
     def restart_view(
