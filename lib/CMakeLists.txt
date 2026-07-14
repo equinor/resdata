@@ -384,13 +384,6 @@ add_test(
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu4
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu5)
 
-# The rd_win64 application is not built as a proper test integrated into the
-# CTEST system. Should be invoked manually on Windows.
-if(ERT_WINDOWS)
-  add_executable(rd_lfs resdata/tests/rd_lfs.cpp util/test_util.cpp)
-  target_link_libraries(rd_lfs resdata)
-endif()
-
 #
 # geometry
 #
