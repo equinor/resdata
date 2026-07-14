@@ -1477,7 +1477,7 @@ def _write_restart_chain(restart_step, prediction_start):
         num_mini_step=10,
         sim_start=datetime.date(2000, 1, 1),
         data_start=prediction_start(history),
-        restart_case=os.path.join(os.getcwd(), "HISTORY"),
+        restart_case="HISTORY",
         restart_step=restart_step,
     )
     prediction.fwrite()
@@ -1490,8 +1490,8 @@ def test_summary_restart_chain_with_overlap():
         restart_step=5, prediction_start=lambda h: h.get_report_time(5)
     )
     assert summary.first_report == 1
-    assert summary.last_report == 10
-    assert len(summary) == 100
+    assert summary.last_report == 15
+    assert len(summary) == 149
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1501,8 +1501,8 @@ def test_summary_restart_chain_with_gap():
         prediction_start=lambda h: h.end_date + datetime.timedelta(days=30),
     )
     assert summary.first_report == 1
-    assert summary.last_report == 10
-    assert len(summary) == 100
+    assert summary.last_report == 20
+    assert len(summary) == 200
 
 
 @pytest.mark.usefixtures("use_tmpdir")
