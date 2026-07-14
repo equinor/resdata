@@ -629,18 +629,27 @@ bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
     return false;
 }
 
-/**
-   Returns the last index included in report step @report_step.
-   Observe that if the dataset does not include @report_step at all,
-   the function will return INVALID_MINISTEP_NR; this must be checked for in the
-   calling scope.
-*/
-
+/** The last index included in report step @report_step. If the dataset does
+    not contain @report_step, the function will raise std::invalid_argument. */
 int rd_sum_data_iget_report_end(const rd_sum_data_type *data, int report_step) {
     const auto &index_node = data->index.lookup_report(report_step);
     const auto &file_data = data->data_files[index_node.data_index];
     auto range = file_data->report_range(report_step);
-    return range.second;
+    int end = range.second;
+    if (end >= index_node.length) {
+        /* report_range() returns the report's extent within the file, but
+           if the time of steps overlap between files, the final timesteps are
+           truncated because the next file takes over, so we use the last step
+           in the file. */
+        end = index_node.length - 1;
+    }
+
+    if (file_data->iget_report(end) != report_step)
+        throw std::invalid_argument(
+            "Could not locate report step " + std::to_string(report_step) +
+            " within the retained range of its summary file");
+
+    return end + index_node.offset;
 }
 
 int rd_sum_data_iget_report_step(const rd_sum_data_type *data,
@@ -881,13 +890,6 @@ time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,
         return rd_smspec_get_start_time(data->smspec);
     else {
         int internal_index = rd_sum_data_iget_report_end(data, report_step);
-        if (internal_index == -1)
-            throw std::out_of_range(
-                "Tried to look up step nr: " + std::to_string(report_step) +
-                " from the restart file in summary file, but it does not "
-                "exist. \n" +
-                "The step entries in summary file must cover all entries "
-                "in the restart file.");
         return rd_sum_data_iget_sim_time(data, internal_index);
     }
 }
