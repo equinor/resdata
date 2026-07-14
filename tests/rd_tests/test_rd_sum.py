@@ -1,8 +1,12 @@
 import datetime
+import itertools
 import os.path
 import shutil
+from dataclasses import dataclass, replace
 from textwrap import dedent
+from typing import TypeAlias
 
+import hypothesis.strategies as st
 import numpy as np
 import pandas as pd
 import pytest
@@ -27,7 +31,9 @@ from resfo_utilities.testing import (
     SummaryStep,
     UnitSystem,
     Unsmry,
+    smspecs,
     summaries,
+    summary_variables,
 )
 
 from tests import ResdataTest, equinor_test
@@ -1201,6 +1207,15 @@ def test_summary_get_report_time():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_summary_get_report_time_with_invalid_step_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(ValueError, match="Internal error when looking up report"):
+        summary.get_report_time(99999)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_interp_vector_with_date_list():
     create_summary(
         summary_keys=("FOPR",),
@@ -1503,6 +1518,302 @@ def test_summary_restart_chain_with_gap():
     assert summary.first_report == 1
     assert summary.last_report == 20
     assert len(summary) == 200
+
+
+def _load_restart_chain(prediction_start, restart_step=5, **load_kwargs):
+    """Write a HISTORY case and a PREDICTION case restarting from it"""
+    history = createSummary(
+        "HISTORY",
+        [("FOPT", None, 0, "SM3")],
+        sim_length_days=100,
+        num_report_step=10,
+        num_mini_step=10,
+        sim_start=datetime.date(2000, 1, 1),
+    )
+    history.fwrite()
+    prediction = createSummary(
+        "PREDICTION",
+        [("FOPT", None, 0, "SM3")],
+        sim_length_days=100,
+        num_report_step=10,
+        num_mini_step=10,
+        sim_start=datetime.date(2000, 1, 1),
+        data_start=prediction_start(history),
+        restart_case="HISTORY",
+        restart_step=restart_step,
+    )
+    prediction.fwrite()
+    return Summary("PREDICTION", include_restart=True, **load_kwargs), history
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_drops_history_reports_at_or_after_prediction_start():
+    summary, history = _load_restart_chain(lambda h: h.get_report_time(5))
+    prediction_start = history.get_report_time(5)
+    idx = _boundary_index(summary, history)
+    assert all(summary.iget_date(i).date() < prediction_start for i in range(idx))
+    assert all(
+        summary.iget_date(i).date() >= prediction_start
+        for i in range(idx, len(summary))
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_with_gap_retains_all_history_reports():
+    summary, history = _load_restart_chain(
+        lambda h: h.end_date + datetime.timedelta(days=30), restart_step=10
+    )
+    prediction = Summary("PREDICTION", include_restart=False)
+    assert summary.first_report == 1
+    assert len(summary) == len(history) + len(prediction)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_with_prediction_starting_at_history_start_retains_no_history_data():
+    summary, _ = _load_restart_chain(lambda h: h.start_date, restart_step=1)
+    prediction = Summary("PREDICTION", include_restart=False)
+    assert len(summary) == len(prediction)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_length_equals_history_before_boundary_plus_prediction():
+    summary, history = _load_restart_chain(lambda h: h.get_report_time(5))
+    prediction = Summary("PREDICTION", include_restart=False)
+    retained_history = sum(
+        1
+        for i in range(len(history))
+        if history.iget_date(i).date() < history.get_report_time(5)
+    )
+    assert len(summary) == retained_history + len(prediction)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_values_switch_from_history_to_prediction_at_the_boundary():
+    summary, history = _load_restart_chain(lambda h: h.get_report_time(5))
+    idx = _boundary_index(summary, history)
+    prediction = Summary("PREDICTION", include_restart=False)
+    assert summary["FOPT"].values[idx - 1] == pytest.approx(
+        history["FOPT"].values[idx - 1]
+    )
+    assert summary["FOPT"].values[idx] == pytest.approx(prediction["FOPT"].values[0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_interpolated_value_is_continuous_at_the_boundary():
+    summary, history = _load_restart_chain(lambda h: h.get_report_time(5))
+    idx = _boundary_index(summary, history)
+    before = summary.get_interp("FOPT", date=summary.iget_date(idx - 1))
+    after = summary.get_interp("FOPT", date=summary.iget_date(idx))
+    assert after >= before
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_first_and_last_values_come_from_the_correct_cases():
+    summary, history = _load_restart_chain(lambda h: h.get_report_time(5))
+    prediction = Summary("PREDICTION", include_restart=False)
+    assert summary.first_value("FOPT") == pytest.approx(history.first_value("FOPT"))
+    assert summary.last_value("FOPT") == pytest.approx(prediction.last_value("FOPT"))
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_loading_with_include_restart_false_ignores_the_parent_case():
+    _load_restart_chain(lambda h: h.get_report_time(5))
+    with_parent = Summary("PREDICTION", include_restart=True)
+    without_parent = Summary("PREDICTION", include_restart=False)
+    assert len(without_parent) < len(with_parent)
+    assert without_parent.first_report == 6
+    assert with_parent.first_report == 1
+
+
+def _boundary_index(summary, history):
+    """Index of the first PREDICTION-sourced timestep, i.e. the first timestep
+    whose date is at or after the PREDICTION data start (history report 5).
+    """
+    prediction_start = history.get_report_time(5)
+    return next(
+        i
+        for i in range(len(summary))
+        if summary.iget_date(i).date() >= prediction_start
+    )
+
+
+Name: TypeAlias = str
+
+
+@dataclass
+class RestartChain:
+    """A chain of restarted summary cases, parent first and main case last."""
+
+    cases: list[tuple[Name, Smspec, Unsmry]]
+
+    @property
+    def name(self) -> Name:
+        """Name of the last (main) case - the one to load."""
+        return self.cases[-1][0]
+
+    def to_files(self) -> None:
+        """Write every case's .SMSPEC/.UNSMRY pair to the current directory."""
+        for name, smspec, unsmry in self.cases:
+            smspec.to_file(f"{name}.SMSPEC")
+            unsmry.to_file(f"{name}.UNSMRY")
+
+
+_chain_values = st.floats(
+    min_value=0.1, max_value=1e9, allow_nan=False, allow_infinity=False
+)
+_chain_start_dates = st.datetimes(
+    min_value=datetime.datetime(1970, 1, 1),
+    max_value=datetime.datetime(2030, 1, 1),
+)
+
+
+@st.composite
+def restart_chains(draw, min_cases: int = 2, max_cases: int = 4) -> RestartChain:
+    """Hypothesis strategy for chains of restarted summary cases.
+
+    A single strictly increasing timeline of whole-day report dates is generated
+    and then cut into overlapping cases. Each case is restarted from the previous.
+    """
+    template = draw(
+        smspecs(
+            sum_keys=st.lists(summary_variables(), min_size=1, max_size=5),
+            use_days=st.just(True),
+        )
+    )
+    # Ensure keys are unique
+    assume(len(set(template.summary_keys())) == len(template.keywords))
+
+    # A strictly increasing timeline of whole-day offsets with D[0] == 0.
+    deltas = draw(
+        st.lists(
+            st.integers(min_value=1, max_value=200),
+            min_size=max_cases,
+            max_size=15,
+            unique=True,
+        )
+    )
+    offsets = [0.0]
+    for delta in sorted(deltas):
+        offsets.append(offsets[-1] + float(delta))
+    total = len(offsets)
+
+    num_cases = draw(st.integers(min_value=min_cases, max_value=min(max_cases, total)))
+    # Case k will start at time index cut_indices[k]
+    cut_indices = [0] + sorted(
+        draw(
+            st.lists(
+                st.integers(min_value=1, max_value=total - 1),
+                min_size=num_cases - 1,
+                max_size=num_cases - 1,
+                unique=True,
+            )
+        )
+    )
+
+    base = draw(_chain_start_dates)
+    n_params = len(template.keywords)
+    cases = []
+    for k, start_index in enumerate(cut_indices):
+        name = f"RCHAIN{k}"
+        case_offsets = [offsets[j] for j in range(start_index, total)]
+        smspec = replace(
+            template,
+            start_date=Date.from_datetime(base),
+            restart="" if k == 0 else cases[k - 1][0],
+            restarted_from_step=start_index,
+        )
+        unsmry = Unsmry(
+            steps=[
+                SummaryStep(
+                    j,
+                    [
+                        SummaryMiniStep(
+                            j,
+                            [
+                                offset,
+                                *draw(
+                                    st.lists(
+                                        _chain_values,
+                                        min_size=n_params - 1,
+                                        max_size=n_params - 1,
+                                    )
+                                ),
+                            ],
+                        )
+                    ],
+                )
+                for j, offset in enumerate(case_offsets)
+            ]
+        )
+        cases.append((name, smspec, unsmry))
+    return RestartChain(cases)
+
+
+@given(chain=restart_chains(), lazy=st.booleans())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_has_a_strictly_increasing_timeline(chain, lazy):
+    chain.to_files()
+    summary = Summary(chain.name, include_restart=True, lazy_load=lazy)
+    dates = summary.dates
+    assert all(a < b for a, b in itertools.pairwise(dates))
+    assert len(summary) == len(set(dates))
+
+    days = summary.days
+    assert all(a < b for a, b in itertools.pairwise(days))
+    # Simulated days are measured from the chain's own data start.
+    assert days[0] == pytest.approx(summary.first_day)
+
+
+@given(chain=restart_chains())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_report_steps_are_contiguous(chain):
+    chain.to_files()
+    summary = Summary(chain.name, include_restart=True, lazy_load=False)
+    reports = [summary.iget_report(i) for i in range(len(summary))]
+    # The chain always begins at report 1
+    assert reports[0] == summary.first_report == 1
+    assert reports[-1] == summary.last_report
+    assert {b - a for a, b in itertools.pairwise(reports)} == {1}
+    assert summary.get_report_step(report_only=True) == list(
+        range(summary.first_report, summary.last_report + 1)
+    )
+    assert set(range(summary.first_report, summary.last_report + 1)) <= set(
+        summary.get_report_step(report_only=False)
+    )
+
+
+@given(chain=restart_chains())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_report_time_matches_last_timestep(chain):
+    chain.to_files()
+    summary = Summary(chain.name, include_restart=True, lazy_load=False)
+    for report in range(summary.first_report, summary.last_report + 1):
+        indices = [i for i in range(len(summary)) if summary.iget_report(i) == report]
+        assert summary.iget_date(indices[-1]).date() == summary.get_report_time(report)
+
+
+@given(chain=restart_chains())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_pandas_frame_has_one_sorted_unique_row_per_step(chain):
+    chain.to_files()
+    summary = Summary(chain.name, include_restart=True, lazy_load=False)
+    frame = summary.pandas_frame()
+    assert len(frame) == len(summary)
+    assert list(frame.index) == sorted(frame.index)
+    assert frame.index.is_unique
+
+
+@given(chain=restart_chains())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_generated_restart_chain_is_identical_under_lazy_and_eager_load(chain):
+    chain.to_files()
+    lazy = Summary(chain.name, include_restart=True, lazy_load=True)
+    eager = Summary(chain.name, include_restart=True, lazy_load=False)
+    assert len(lazy) == len(eager)
+    assert lazy.dates == eager.dates
+    assert [lazy.iget_report(i) for i in range(len(lazy))] == [
+        eager.iget_report(i) for i in range(len(eager))
+    ]
 
 
 @pytest.mark.usefixtures("use_tmpdir")

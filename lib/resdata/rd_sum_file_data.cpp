@@ -231,21 +231,11 @@ int rd_sum_file_data::length_before(time_t end_time) const {
 }
 
 int rd_sum_file_data::report_before(time_t end_time) const {
-    if (end_time < this->first_report())
+    int len = this->length_before(end_time);
+    if (len <= 0)
         throw std::invalid_argument("time argument before first report step");
 
-    int r = this->first_report();
-    int last_report = this->last_report();
-    while (true) {
-        if (r == last_report)
-            return last_report;
-
-        auto next_range = this->index.report_range(r + 1);
-        if (this->iget_sim_time(next_range.first) > end_time)
-            return r;
-
-        r += 1;
-    }
+    return this->index[len - 1].report_step;
 }
 
 int rd_sum_file_data::first_report() const {
