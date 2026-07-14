@@ -105,8 +105,6 @@ struct rd_file_struct {
         global_view; /* The index of all the rd_kw instances in the file. */
     std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
     bool read_only;
-    std::unique_ptr<vector_type, decltype(&vector_free)> map_stack{
-        nullptr, &vector_free};
 };
 
 /*
@@ -138,7 +136,6 @@ UTIL_IS_INSTANCE_FUNCTION(rd_file, RD_FILE_ID)
 static rd_file_type *rd_file_alloc_empty() {
     rd_file_type *rd_file = new rd_file_type();
     UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
-    rd_file->map_stack.reset(vector_alloc_new());
     return rd_file;
 }
 
