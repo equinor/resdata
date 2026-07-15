@@ -24,14 +24,14 @@ struct File {
           active_view(std::move(active_view)) {};
     static std::unique_ptr<File> open(const std::string &filename,
                                       FileMode flags = FileMode::DEFAULT);
+    static std::unique_ptr<File> fast_open(const std::string &file_name,
+                                           const std::string &index_file_name,
+                                           FileMode flags = FileMode::DEFAULT);
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 bool rd_file_load_all(rd_file_type *rd_file);
-rd_file_type *rd_file_fast_open(const char *filename,
-                                const char *index_filename,
-                                FileMode flags = FileMode::DEFAULT);
 bool rd_file_write_index(const rd_file_type *rd_file,
                          const char *index_filename);
 bool rd_file_index_valid(const char *file_name, const char *index_file_name);

@@ -148,11 +148,8 @@ class ResdataFile(BaseCClass):
         else:
             c_ptr = _file._fast_open(filename, index_filename, flags)
 
-        if c_ptr is None:
-            raise OSError('Failed to open file "%s"' % filename)
-        else:
-            super().__init__(c_ptr)
-            self.global_view: ResdataFileView = _file._get_global_view(self)
+        super().__init__(c_ptr)
+        self.global_view: ResdataFileView = _file._get_global_view(self)
 
     def save_kw(self, kw):
         """

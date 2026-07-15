@@ -29,15 +29,14 @@ PYBIND11_MODULE(_file, m) {
             return py::none();
         return py::cast(reinterpret_cast<std::uintptr_t>(file));
     });
-    m.def("_fast_open",
-          [](std::string filename, std::string index_filename,
-             FileMode flags) -> py::object {
-              auto *file = rd_file_fast_open(filename.c_str(),
-                                             index_filename.c_str(), flags);
-              if (file == nullptr)
-                  return py::none();
-              return py::cast(reinterpret_cast<std::uintptr_t>(file));
-          });
+    m.def(
+        "_fast_open",
+        [](std::string filename, std::string index_filename,
+           FileMode flags) -> py::object {
+            auto *file =
+                rd::File::fast_open(filename, index_filename, flags).release();
+            return py::cast(reinterpret_cast<std::uintptr_t>(file));
+        });
     m.def("_get_file_type", [](std::string filename) {
         bool fmt_file = false;
         int report_step = 0;

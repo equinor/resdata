@@ -487,32 +487,34 @@ bool rd_file_write_index(const rd_file_type *rd_file,
     return true;
 }
 
-rd_file_type *rd_file_fast_open(const char *file_name,
-                                const char *index_file_name, FileMode flags) {
-    if (!rd_file_index_valid0(file_name, index_file_name))
-        return nullptr;
+rd_file_ptr rd::File::fast_open(const std::string &file_name,
+                                const std::string &index_file_name,
+                                FileMode flags) {
+    if (!rd_file_index_valid0(file_name.c_str(), index_file_name.c_str()))
+        throw std::ios_base::failure(
+            fmt::format("Failed to open file \"{}\"", filename));
 
     std::unique_ptr<FILE, decltype(&fclose)> istream(
-        fopen(index_file_name, "rb"), fclose);
+        fopen(index_file_name.c_str(), "rb"), fclose);
     if (!istream)
-        return nullptr;
+        throw std::ios_base::failure(
+            fmt::format("Failed to open file \"{}\"", filename));
 
-    if (rd_file_index_valid1(file_name, istream.get())) {
-        auto fortio = rd_file_alloc_fortio(file_name, flags);
-        auto context =
-            std::make_shared<rd::FileContext>(std::move(*fortio), flags);
-        auto global_view = rd::FileView::read(context, istream.get());
-        if (!global_view)
-            return nullptr;
-        auto rd_file = std::make_unique<rd::File>(
-            context, global_view, std::shared_ptr<rd::FileView>{nullptr});
-        if (rd_file->global_view) {
-            rd_file_select_global(rd_file.get());
-            if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
-                FileMode::CLOSE_STREAM)
-                rd_file->context->fortio.fclose_stream();
-            return rd_file.release();
-        }
-    }
-    return nullptr;
+    if (!rd_file_index_valid1(file_name.c_str(), istream.get()))
+        throw std::ios_base::failure(
+            fmt::format("Failed to open file \"{}\"", filename));
+
+    auto fortio = rd_file_alloc_fortio(file_name, flags);
+    auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
+    auto global_view = rd::FileView::read(context, istream.get());
+    if (!global_view)
+        throw std::ios_base::failure(
+            fmt::format("Failed to open file \"{}\"", filename));
+    auto rd_file = std::make_unique<rd::File>(
+        context, global_view, std::shared_ptr<rd::FileView>{nullptr});
+    rd_file_select_global(rd_file.get());
+    if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
+        FileMode::CLOSE_STREAM)
+        rd_file->context->fortio.fclose_stream();
+    return rd_file;
 }
