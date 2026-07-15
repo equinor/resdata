@@ -132,12 +132,6 @@ namespace fs = std::filesystem;
 
 */
 
-/** Will return the number of times a particular keyword occurs in a
-    rd_file instance. Will return 0 if the keyword can not be found. */
-int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file->global_view->num_named_kw(kw);
-}
-
 /** The total number of rd_kw instances in the rd_file instance. */
 int rd_file_get_size(const rd_file_type *rd_file) {
     return rd_file->global_view->size();

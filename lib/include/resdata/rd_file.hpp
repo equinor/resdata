@@ -37,11 +37,14 @@ struct File {
     [[nodiscard]] bool has_kw(const std::string &kw) const {
         return global_view->has_kw(kw);
     }
+    /** The number of times @kw occurs in the File */
+    [[nodiscard]] size_t num_named_kw(const std::string &kw) const {
+        return global_view->num_named_kw(kw);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_size(const rd_file_type *rd_file);
 const char *rd_file_get_src_file(const rd_file_type *rd_file);
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);

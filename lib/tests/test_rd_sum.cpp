@@ -1447,9 +1447,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             rd_kw_resize(units, 5);
             rd_kw_iset_char_ptr(units, 4, "BARS");
 
-            const int num_params =
-                rd_file_get_num_named_kw(sum_in.get(), "PARAMS");
-            for (int i = 0; i < num_params; ++i) {
+            for (size_t i = 0; i < sum_in->num_named_kw("PARAMS"); ++i) {
                 rd_kw_type *params_kw =
                     rd_file_iget_named_kw(sum_in.get(), "PARAMS", i);
                 rd_kw_resize(params_kw, 5);

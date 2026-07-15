@@ -36,8 +36,8 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
         throw std::bad_alloc();
     }
 
-    if (rd_file_get_num_named_kw(this->file.get(), PARAMS_KW) !=
-        rd_file_get_num_named_kw(this->file.get(), MINISTEP_KW)) {
+    if (this->file->num_named_kw(PARAMS_KW) !=
+        this->file->num_named_kw(MINISTEP_KW)) {
         throw std::bad_alloc();
     }
 
