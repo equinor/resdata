@@ -16,12 +16,9 @@ struct File {
     std::shared_ptr<rd::FileContext> context;
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
-    std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
     File(std::shared_ptr<rd::FileContext> context,
-         std::shared_ptr<rd::FileView> global_view,
-         std::shared_ptr<rd::FileView> active_view)
-        : context(std::move(context)), global_view(std::move(global_view)),
-          active_view(std::move(active_view)) {};
+         std::shared_ptr<rd::FileView> global_view)
+        : context(std::move(context)), global_view(std::move(global_view)) {};
     static std::unique_ptr<File> open(const std::string &filename,
                                       FileMode flags = FileMode::DEFAULT);
     static std::unique_ptr<File> fast_open(const std::string &file_name,
@@ -55,7 +52,6 @@ std::shared_ptr<rd::FileView>
 rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
                              int occurence);
 std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file);
-std::shared_ptr<rd::FileView> rd_file_get_active_view(rd_file_type *rd_file);
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw);
 
 double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,

@@ -47,7 +47,7 @@ namespace fs = std::filesystem;
    the rd_file_view type. The rd_file_view type is not used outside this file.
 
    When the file is opened an index of all the keywords is created and
-   stored in the field global_map, and the field active_view is set to
+   stored in the field global_map, and the field global_view is set to
    point to global_map, i.e. all query/get operations on the rd_file
    will be based on the complete index:
 
@@ -119,7 +119,7 @@ namespace fs = std::filesystem;
 
 void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
                            size_t offset) {
-    rd_file->active_view->write(target, offset);
+    rd_file->global_view->write(target, offset);
 }
 
 /**
@@ -140,17 +140,17 @@ void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
 /** Will return the number of times a particular keyword occurs in a
     rd_file instance. Will return 0 if the keyword can not be found. */
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file->active_view->num_named_kw(kw);
+    return rd_file->global_view->num_named_kw(kw);
 }
 
 /** The total number of rd_kw instances in the rd_file instance. */
 int rd_file_get_size(const rd_file_type *rd_file) {
-    return rd_file->active_view->size();
+    return rd_file->global_view->size();
 }
 
 /** true if the rd_file instance has at-least one occurence of @kw. */
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file->active_view->has_kw(kw);
+    return rd_file->global_view->has_kw(kw);
 }
 
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
@@ -158,21 +158,17 @@ const char *rd_file_get_src_file(const rd_file_type *rd_file) {
 }
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
-    return file->active_view->get_kw(global_index);
+    return file->global_view->get_kw(global_index);
 }
 
 /** Will return the ith occurence of @kw in @file. */
 rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
                                   int ith) {
-    return file->active_view->get_kw(kw, ith);
+    return file->global_view->get_kw(kw, ith);
 }
 
 std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file) {
     return rd_file->global_view;
-}
-
-std::shared_ptr<rd::FileView> rd_file_get_active_view(rd_file_type *rd_file) {
-    return rd_file->active_view;
 }
 
 std::shared_ptr<rd::FileView>
@@ -258,8 +254,7 @@ rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
 
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = std::make_shared<rd::FileView>(context);
-    auto rd_file = std::make_unique<rd::File>(
-        context, global_view, global_view);
+    auto rd_file = std::make_unique<rd::File>(context, global_view);
 
     rd_file_scan(rd_file.get());
 
@@ -281,7 +276,7 @@ void rd_file_close(rd_file_type *rd_file) {
 }
 
 bool rd_file_load_all(rd_file_type *rd_file) {
-    return rd_file->active_view->load_all();
+    return rd_file->global_view->load_all();
 }
 
 /* Functions specialized to work with restart files.  */
@@ -292,7 +287,7 @@ bool rd_file_load_all(rd_file_type *rd_file) {
     rd_file and look for @sim_time. If the value is found true is
     returned, otherwise false. */
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
-    return rd_file->active_view->has_sim_time(sim_time);
+    return rd_file->global_view->has_sim_time(sim_time);
 }
 
 /** Will determine the restart block corresponding to the
@@ -317,14 +312,14 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
 
     Specially in the case of LGRs the block restriction should be used. */
 int rd_file_get_restart_index(const rd_file_type *rd_file, time_t sim_time) {
-    return rd_file->active_view->find_sim_time(sim_time);
+    return rd_file->global_view->find_sim_time(sim_time);
 }
 
 /** Will look through all the SEQNUM kw instances of the current
     rd_file and look for @report_step. If the value is found true is
     returned, otherwise false. */
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
-    return rd_file->active_view->has_report_step(report_step);
+    return rd_file->global_view->has_report_step(report_step);
 }
 
 /** Will look up the INTEHEAD keyword in a rd_file_type
@@ -333,12 +328,12 @@ bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
     Will return -1 if the requested INTEHEAD keyword can not be found. */
 time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
                                      int index) {
-    return restart_file->active_view->restart_sim_date(index);
+    return restart_file->global_view->restart_sim_date(index);
 }
 
 double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
                                      int index) {
-    return restart_file->active_view->restart_sim_days(index);
+    return restart_file->global_view->restart_sim_days(index);
 }
 
 /** The input @file must be either an INIT file or a restart file. Will
@@ -413,14 +408,14 @@ bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
 static std::shared_ptr<rd::FileView>
 rd_file_get_relative_blockview(rd_file_type *rd_file, const char *kw,
                                int occurence) {
-    return rd_file->active_view->blockview(kw, kw, occurence);
+    return rd_file->global_view->blockview(kw, kw, occurence);
 }
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence) {
     if (auto blockmap =
             rd_file_get_relative_blockview(rd_file, kw, occurence)) {
-        rd_file->active_view = std::move(blockmap);
+        rd_file->global_view = std::move(blockmap);
         return true;
     } else
         return false;
@@ -539,8 +534,7 @@ rd_file_ptr rd::File::fast_open(const std::string &file_name,
     auto fortio = rd_file_alloc_fortio(file_name, flags);
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = rd::FileView::read(context, istream.get());
-    auto rd_file = std::make_unique<rd::File>(
-        context, global_view, global_view);
+    auto rd_file = std::make_unique<rd::File>(context, global_view);
     if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
         FileMode::CLOSE_STREAM)
         rd_file->context->fortio.fclose_stream();

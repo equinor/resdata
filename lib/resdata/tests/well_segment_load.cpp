@@ -17,7 +17,7 @@
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
     auto rst_file = rd::File::open(Xfile);
-    auto rst_view = rd_file_get_active_view(rst_file.get());
+    auto rst_view = rd_file_get_global_view(rst_file.get());
     auto rst_head = RSTHead::read(rst_view.get(), rd_filename_report_nr(Xfile));
     const rd_kw_type *iwel_kw =
         rd_file_iget_named_kw(rst_file.get(), IWEL_KW, 0);

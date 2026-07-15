@@ -47,7 +47,7 @@ struct clear_guard {
 
 void WellInfo::add_wells(rd_file_type *rst_file, int report_nr,
                          bool load_segment_information) {
-    auto rst_view = rd_file_get_active_view(rst_file);
+    auto rst_view = rd_file_get_global_view(rst_file);
     add_wells(rst_view.get(), report_nr, load_segment_information);
 }
 
