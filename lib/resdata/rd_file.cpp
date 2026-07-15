@@ -36,7 +36,7 @@
    hierarchy (see the file overview.txt in this directory); it works
    with a collection of rd_kw instances and has various query
    functions, however it does not utilize knowledge of the
-   structure/content of the files in the way e.g. rd_grid.c does[1].
+   structure/content of the files in the way e.g. rd_grid.c.
 
    The main datatype here is the rd_file type, but in addition each
    rd_kw instance is wrapped in an rd_file_kw (implemented in
@@ -88,22 +88,12 @@
    (i.e. simulation time or report step) to the occurence number (see
    rd_rstfile for more details).
 
-   [1]: This is not entirely true - in the file rd_rstfile.c; which
-        is included from this file are several specialized function
-        for working with restart files. However the restart files are
-        still treated as collections of rd_kw instances, and not
-        internalized as in e.g. rd_sum.
-*/
-
-
-
-/*
-  This illustrates the indexing. The rd_file instance contains in
-  total 7 rd_kw instances, the global index [0...6] is the internal
-  way to access the various keywords. The kw_index is a hash table
-  with entries 'SEQHDR', 'MINISTEP' and 'PARAMS'. Each entry in the
-  hash table is an integer vector which again contains the internal
-  index of the various occurences:
+   The following illustrates the indexing. The rd_file contains in
+   total 7 rd_kw instances, the global index [0...6] is the internal
+   way to access the various keywords. The kw_index is a hash table
+   with entries 'SEQHDR', 'MINISTEP' and 'PARAMS'. Each entry in the
+   hash table is an integer vector which again contains the internal
+   index of the various occurences:
 
    ------------------
    SEQHDR            \
@@ -118,6 +108,10 @@
    kw_index    = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}    <== This is hash table.
    kw_list     = [SEQHDR , MINISTEP , PARAMS , MINISTEP , PARAMS , MINISTEP , PARAMS]
 
+   [1]: This is not entirely true - there are several specialized function
+        for working with restart files. However the restart files are
+        still treated as collections of rd_kw instances, and not
+        internalized as in e.g. rd_sum.
 */
 
 static rd_file_type *rd_file_alloc_empty() {
@@ -154,18 +148,12 @@ int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
     return rd_file->active_view->num_named_kw(kw);
 }
 
-/**
-    Returns the total number of rd_kw instances in the rd_file
-    instance.
-*/
+/** The total number of rd_kw instances in the rd_file instance. */
 int rd_file_get_size(const rd_file_type *rd_file) {
     return rd_file->active_view->size();
 }
 
-/**
-   Returns true if the rd_file instance has at-least one occurence of
-   rd_kw 'kw'.
-*/
+/** true if the rd_file instance has at-least one occurence of @kw. */
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
     return rd_file->active_view->has_kw(kw);
 }
@@ -178,12 +166,7 @@ rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
     return file->active_view->get_kw(global_index);
 }
 
-/*
-   This function will return the ith occurence of 'kw' in
-   rd_file. Will abort hard if the request can not be satisifed - use
-   query functions if you can not take that.
-*/
-
+/** Will return the ith occurence of @kw in @file. */
 rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
                                   int ith) {
     return file->active_view->get_kw(kw, ith);
@@ -212,11 +195,10 @@ std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
   Different functions to open and close a file.
 */
 
-/**
-   The rd_file_scan() function will scan through the whole file and build up an
-   index of all the kewyords. The map created from this scan will be stored
-   under the 'global_view' field; and all subsequent lookup operations will
-   ultimately be based on the global map.
+/** Will scan through the whole file and build an index of all kewyords.
+   The map created from this scan will be stored under the 'global_view'
+   field; and all subsequent lookup operations will ultimately be based
+   on the global map.
 
    The rd_file_scan function will scan through the file as long as it finds
    valid rd_kw instances on the disk; it will return when EOF is encountered or
@@ -224,7 +206,6 @@ std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
    file the rd_file_scan function will index the valid keywords which are in
    the file, possible garbage at the end will be ignored.
 */
-
 static void rd_file_scan(rd_file_type *rd_file) {
     rd_file->context->fortio.fseek(0, SEEK_SET);
     {
@@ -261,17 +242,6 @@ static void rd_file_select_global(rd_file_type *rd_file) {
     rd_file->active_view = rd_file->global_view;
 }
 
-/**
-   The fundamental open file function; all alternative open()
-   functions start by calling this one. This function will read
-   through the complete file, extract all the keyword headers and
-   create the map/index stored in the global_view field of the rd_file
-   structure. No keyword data will be loaded from the file.
-
-   The rd_file instance will retain an open fortio reference to the
-   file until rd_file_close() is called.
-*/
-
 static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
                                                          FileMode flags) {
     bool fmt_file;
@@ -287,6 +257,15 @@ static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
     return nullptr;
 }
 
+/** The fundamental open file function; all alternative open()
+   functions start by calling this one. This function will read
+   through the complete file, extract all the keyword headers and
+   create the map/index stored in the global_view field of the rd_file
+   structure. No keyword data will be loaded from the file.
+
+   The rd_file instance will retain an open fortio reference to the
+   file until rd_file_close() is called.
+*/
 rd_file_type *rd_file_open(const char *filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
@@ -327,62 +306,50 @@ bool rd_file_load_all(rd_file_type *rd_file) {
 /* Functions specialized to work with restart files.  */
 
 /* Query functions. */
-/**
-   Will look through all the INTEHEAD kw instances of the current
-   rd_file and look for @sim_time. If the value is found true is
-   returned, otherwise false.
-*/
 
+/** Will look through all the INTEHEAD kw instances of the current
+    rd_file and look for @sim_time. If the value is found true is
+    returned, otherwise false. */
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
     return rd_file->active_view->has_sim_time(sim_time);
 }
 
-/*
-  This function will determine the restart block corresponding to the
-  world time @sim_time; if @sim_time can not be found the function
-  will return 0.
+/** Will determine the restart block corresponding to the
+    world time @sim_time; if @sim_time can not be found the function
+    will return 0.
 
-  The returned index is the 'occurence number' in the restart file,
-  i.e. in the (quite typical case) that not all report steps are
-  present the return value will not agree with report step.
+    The returned index is the 'occurence number' in the restart file,
+    i.e. in the (quite typical case) that not all report steps are
+    present the return value will not agree with report step.
 
-  The return value from this function can then be used to get a
-  corresponding solution field directly, or the file map can
-  restricted to this block.
+    The return value from this function can then be used to get a
+    corresponding solution field directly, or the file map can
+    restricted to this block.
 
-  Direct access:
+    Direct access:
 
-     int index = rd_file_get_restart_index( rd_file , sim_time );
-     if (index >= 0) {
-        rd_kw_type * pressure_kw = rd_file_iget_named_kw( rd_file , "PRESSURE" , index );
-        ....
-     }
+       int index = rd_file_get_restart_index( rd_file , sim_time );
+       if (index >= 0) {
+          rd_kw_type * pressure_kw = rd_file_iget_named_kw( rd_file , "PRESSURE" , index );
+          ....
+       }
 
-
-  Specially in the case of LGRs the block restriction should be used.
- */
-
+    Specially in the case of LGRs the block restriction should be used. */
 int rd_file_get_restart_index(const rd_file_type *rd_file, time_t sim_time) {
     return rd_file->active_view->find_sim_time(sim_time);
 }
 
-/**
-   Will look through all the SEQNUM kw instances of the current
-   rd_file and look for @report_step. If the value is found true is
-   returned, otherwise false.
-*/
-
+/** Will look through all the SEQNUM kw instances of the current
+    rd_file and look for @report_step. If the value is found true is
+    returned, otherwise false. */
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
     return rd_file->active_view->has_report_step(report_step);
 }
 
-/**
-   This function will look up the INTEHEAD keyword in a rd_file_type
-   instance, and calculate simulation date from this instance.
+/** Will look up the INTEHEAD keyword in a rd_file_type
+    instance, and calculate simulation date from this instance.
 
-   Will return -1 if the requested INTEHEAD keyword can not be found.
-*/
-
+    Will return -1 if the requested INTEHEAD keyword can not be found. */
 time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
                                      int index) {
     return restart_file->active_view->restart_sim_date(index);
@@ -393,16 +360,13 @@ double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
     return restart_file->active_view->restart_sim_days(index);
 }
 
-/*
-  The input @file must be either an INIT file or a restart file. Will
-  fail hard if an INTEHEAD kw can not be found - or if the INTEHEAD
-  keyword is not sufficiently large.
+/** The input @file must be either an INIT file or a restart file. Will
+    fail hard if an INTEHEAD kw can not be found - or if the INTEHEAD
+    keyword is not sufficiently large.
 
-  The eclipse files can distinguish between ECLIPSE300 ( value == 300)
-  and ECLIPSE300-Thermal option (value == 500). This function will
-  return ECLIPSE300 in both those cases.
-*/
-
+    The eclipse files can distinguish between ECLIPSE300 ( value == 300)
+    and ECLIPSE300-Thermal option (value == 500). This function will
+    return ECLIPSE300 in both those cases. */
 rd_version_enum rd_file_get_rd_version(const rd_file_type *file) {
     rd_kw_type *intehead_kw = rd_file_iget_named_kw(file, INTEHEAD_KW, 0);
     int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
@@ -427,7 +391,7 @@ rd_version_enum rd_file_get_rd_version(const rd_file_type *file) {
     return (rd_version_enum)0;
 }
 
-/*
+/**
   1: Oil
   2: Water
   3: Oil + water
@@ -436,21 +400,13 @@ rd_version_enum rd_file_get_rd_version(const rd_file_type *file) {
   6: Gas + water
   7: Gas + Water + Oil
 */
-
 int rd_file_get_phases(const rd_file_type *init_file) {
     rd_kw_type *intehead_kw = rd_file_iget_named_kw(init_file, INTEHEAD_KW, 0);
     int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
     return phases;
 }
 
-/*
-bool rd_file_writable( const rd_file_type * rd_file ) {
-  return fortio_writable( rd_file->fortio );
-}
-*/
-
-/*
-  Will save the content of @rd_kw to the on-disk file wrapped by the
+/** Will save the content of @rd_kw to the on-disk file wrapped by the
   rd_file instance. This function is quite strict:
 
   1. The actual keyword which should be updated is identified using
@@ -463,7 +419,6 @@ bool rd_file_writable( const rd_file_type * rd_file ) {
   3. The rd_file must have been opened with one of the _writable()
      open functions.
 */
-
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
     FileKW *file_kw = rd_file->context->inv_map.at(rd_kw);
     if (rd_file->context->fortio.assert_stream_open()) {
