@@ -134,11 +134,8 @@ void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
 
 */
 
-/*
-  Will return the number of times a particular keyword occurs in a
-  rd_file instance. Will return 0 if the keyword can not be found.
-*/
-
+/** Will return the number of times a particular keyword occurs in a
+    rd_file instance. Will return 0 if the keyword can not be found. */
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
     return rd_file->active_view->num_named_kw(kw);
 }
@@ -199,8 +196,7 @@ std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
    valid rd_kw instances on the disk; it will return when EOF is encountered or
    an invalid rd_kw instance is detected. This implies that for a partly broken
    file the rd_file_scan function will index the valid keywords which are in
-   the file, possible garbage at the end will be ignored.
-*/
+   the file, possible garbage at the end will be ignored. */
 static void rd_file_scan(rd_file_type *rd_file) {
     rd_file->context->fortio.fseek(0, SEEK_SET);
     {
@@ -259,8 +255,7 @@ rd_file_alloc_fortio(const std::string &filename, FileMode flags) {
    structure. No keyword data will be loaded from the file.
 
    The rd_file instance will retain an open fortio reference to the
-   file until rd_file_close() is called.
-*/
+   file until rd_file_close() is called. */
 rd_file_type *rd_file_open(const std::string &filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
@@ -392,8 +387,7 @@ rd_version_enum rd_file_get_rd_version(const rd_file_type *file) {
   4: Gas
   5: Gas + Oil
   6: Gas + water
-  7: Gas + Water + Oil
-*/
+  7: Gas + Water + Oil */
 int rd_file_get_phases(const rd_file_type *init_file) {
     rd_kw_type *intehead_kw = rd_file_iget_named_kw(init_file, INTEHEAD_KW, 0);
     int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
@@ -401,18 +395,17 @@ int rd_file_get_phases(const rd_file_type *init_file) {
 }
 
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
-  rd_file instance. This function is quite strict:
+    rd_file instance. This function is quite strict:
 
-  1. The actual keyword which should be updated is identified using
-     pointer comparison; i.e. the rd_kw argument must be the actual
-     return value from an earlier rd_file_get_kw() operation.
+    1. The actual keyword which should be updated is identified using
+       pointer comparison; i.e. the rd_kw argument must be the actual
+       return value from an earlier rd_file_get_kw() operation.
 
-  2. The header data of the rd_kw must be unmodified, and will throw
-     std::runtime_error if there is a mismatch.
+    2. The header data of the rd_kw must be unmodified, and will throw
+       std::runtime_error if there is a mismatch.
 
-  3. The rd_file must have been opened with one of the _writable()
-     open functions.
-*/
+    3. The rd_file must have been opened with one of the _writable()
+       open functions. */
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
     FileKW *file_kw = rd_file->context->inv_map.at(rd_kw);
     if (rd_file->context->fortio.assert_stream_open()) {
