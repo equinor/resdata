@@ -40,7 +40,7 @@ bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_size(const rd_file_type *rd_file);
 const char *rd_file_get_src_file(const rd_file_type *rd_file);
-rd_version_enum rd_file_get_rd_version(const rd_file_type *file);
+rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
 void rd_file_fwrite_fortio(const rd_file_type *ec_file, ERT::FortIO &fortio,
                            size_t offset);
 

@@ -353,28 +353,25 @@ double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
     The eclipse files can distinguish between ECLIPSE300 ( value == 300)
     and ECLIPSE300-Thermal option (value == 500). This function will
     return ECLIPSE300 in both those cases. */
-rd_version_enum rd_file_get_rd_version(const rd_file_type *file) {
+rd_version_enum rd_file_get_simulator_version(const rd_file_type *file) {
     rd_kw_type *intehead_kw = rd_file_iget_named_kw(file, INTEHEAD_KW, 0);
     int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
 
-    if (int_value == INTEHEAD_ECLIPSE100_VALUE)
+    switch (int_value) {
+    case INTEHEAD_ECLIPSE100_VALUE:
         return ECLIPSE100;
-
-    if (int_value == INTEHEAD_ECLIPSE300_VALUE)
+    case INTEHEAD_ECLIPSE300_VALUE:
         return ECLIPSE300;
-
-    if (int_value == INTEHEAD_ECLIPSE300THERMAL_VALUE)
+    case INTEHEAD_ECLIPSE300THERMAL_VALUE:
         return ECLIPSE300_THERMAL;
-
-    if (int_value == INTEHEAD_INTERSECT_VALUE)
+    case INTEHEAD_INTERSECT_VALUE:
         return INTERSECT;
-
-    if (int_value == INTEHEAD_FRONTSIM_VALUE)
+    case INTEHEAD_FRONTSIM_VALUE:
         return FRONTSIM;
-
-    util_abort("%s: Simulator version value:%d not recognized \n", __func__,
-               int_value);
-    return (rd_version_enum)0;
+    default:
+        throw std::invalid_argument(fmt::format(
+            "Simulator version value:{} not recognized", int_value));
+    }
 }
 
 /**
