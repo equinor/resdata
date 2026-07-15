@@ -104,7 +104,6 @@ struct rd_file_struct {
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
     std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
-    bool read_only;
 };
 
 /*
