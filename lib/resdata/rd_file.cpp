@@ -114,11 +114,6 @@
         internalized as in e.g. rd_sum.
 */
 
-static rd_file_type *rd_file_alloc_empty() {
-    rd_file_type *rd_file = new rd_file_type();
-    return rd_file;
-}
-
 void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
                            size_t offset) {
     rd_file->active_view->write(target, offset);
@@ -242,10 +237,10 @@ static void rd_file_select_global(rd_file_type *rd_file) {
     rd_file->active_view = rd_file->global_view;
 }
 
-static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
-                                                         FileMode flags) {
+static std::unique_ptr<ERT::FortIO>
+rd_file_alloc_fortio(const std::string &filename, FileMode flags) {
     bool fmt_file;
-    rd_fmt_file(filename, &fmt_file);
+    rd_fmt_file(filename.c_str(), &fmt_file);
 
     if ((flags & FileMode::WRITABLE) == FileMode::WRITABLE)
         return std::make_unique<ERT::FortIO>(
@@ -266,14 +261,15 @@ static std::unique_ptr<ERT::FortIO> rd_file_alloc_fortio(const char *filename,
    The rd_file instance will retain an open fortio reference to the
    file until rd_file_close() is called.
 */
-rd_file_type *rd_file_open(const char *filename, FileMode flags) {
+rd_file_type *rd_file_open(const std::string &filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
     if (fortio) {
-        rd_file_ptr rd_file(rd_file_alloc_empty(), &rd_file_free);
-        rd_file->context =
+        auto context =
             std::make_shared<rd::FileContext>(std::move(*fortio), flags);
-        rd_file->global_view = std::make_shared<rd::FileView>(rd_file->context);
+        auto global_view = std::make_shared<rd::FileView>(context);
+        auto rd_file = std::make_unique<rd_file_struct>(
+            context, global_view, std::shared_ptr<rd::FileView>{nullptr});
 
         rd_file_scan(rd_file.get());
         rd_file_select_global(rd_file.get());
@@ -296,8 +292,6 @@ void rd_file_close(rd_file_type *rd_file) {
     if (rd_file->context)
         rd_file->context->fortio.fclose_stream();
 }
-
-void rd_file_free(rd_file_type *rd_file) { delete rd_file; }
 
 bool rd_file_load_all(rd_file_type *rd_file) {
     return rd_file->active_view->load_all();
@@ -519,14 +513,13 @@ rd_file_type *rd_file_fast_open(const char *file_name,
     if (rd_file_index_valid1(file_name, istream.get())) {
         auto fortio = rd_file_alloc_fortio(file_name, flags);
         if (fortio) {
-            rd_file_ptr rd_file(rd_file_alloc_empty(), &rd_file_free);
-            rd_file->context =
+            auto context =
                 std::make_shared<rd::FileContext>(std::move(*fortio), flags);
-            auto global_view =
-                rd::FileView::read(rd_file->context, istream.get());
+            auto global_view = rd::FileView::read(context, istream.get());
             if (!global_view)
                 return nullptr;
-            rd_file->global_view = std::move(global_view);
+            auto rd_file = std::make_unique<rd_file_struct>(
+                context, global_view, std::shared_ptr<rd::FileView>{nullptr});
             if (rd_file->global_view) {
                 rd_file_select_global(rd_file.get());
                 if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
