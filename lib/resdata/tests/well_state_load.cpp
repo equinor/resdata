@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
                 well_state.get_branches();
 
             if (well_state.is_MSW()) {
-                test_assert_true(rd_file_has_kw(rst_file.get(), ISEG_KW));
+                test_assert_true(rst_file->has_kw(ISEG_KW));
                 test_assert_int_not_equal(
                     well_segment_collection_get_size(segments), 0);
                 test_assert_int_not_equal(

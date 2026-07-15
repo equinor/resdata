@@ -1876,7 +1876,7 @@ static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
     rd_kw_type *lgrname_kw =
         rd_file_iget_named_kw(rd_file, LGR_KW, grid_nr - 1);
     lgr_grid->name = rd_kw_iget_stripped_string(lgrname_kw, 0);
-    if (rd_file_has_kw(rd_file, LGR_PARENT_KW)) {
+    if (rd_file->has_kw(LGR_PARENT_KW)) {
         rd_kw_type *parent_kw =
             rd_file_iget_named_kw(rd_file, LGR_PARENT_KW, grid_nr - 1);
         std::string parent = rd_kw_iget_stripped_string(parent_kw, 0);
@@ -2508,13 +2508,13 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
 
     if (grid_nr == 0) {
         /* MAPAXES and COARSENING only apply to the global grid. */
-        if (rd_file_has_kw(rd_file, MAPAXES_KW))
+        if (rd_file->has_kw(MAPAXES_KW))
             mapaxes_kw = rd_file_iget_named_kw(rd_file, MAPAXES_KW, 0);
 
-        if (rd_file_has_kw(rd_file, CORSNUM_KW))
+        if (rd_file->has_kw(CORSNUM_KW))
             corsnum_kw = rd_file_iget_named_kw(rd_file, CORSNUM_KW, 0);
 
-        if (rd_file_has_kw(rd_file, GRIDUNIT_KW))
+        if (rd_file->has_kw(GRIDUNIT_KW))
             gridunit_kw = rd_file_iget_named_kw(rd_file, GRIDUNIT_KW, 0);
     }
 
@@ -2680,14 +2680,14 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     // 2: Fetching the mapaxes data from the MAPAXES keyword; the
     //    keyword is optional, and is only applicable to the global grid.
     {
-        if ((grid_nr == 0) && (rd_file_has_kw(rd_file, MAPAXES_KW))) {
+        if ((grid_nr == 0) && (rd_file->has_kw(MAPAXES_KW))) {
             const rd_kw_type *mapaxes_kw =
                 rd_file_iget_named_kw(rd_file, MAPAXES_KW, 0);
             mapaxes_data = rd_grid_get_mapaxes_from_kw__(mapaxes_kw);
         }
     }
 
-    if ((grid_nr == 0) && (rd_file_has_kw(rd_file, GRIDUNIT_KW)))
+    if ((grid_nr == 0) && (rd_file->has_kw(GRIDUNIT_KW)))
         unit_system = rd_grid_check_unit_system(
             rd_file_iget_named_kw(rd_file, GRIDUNIT_KW, 0));
 

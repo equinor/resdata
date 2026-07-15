@@ -143,11 +143,6 @@ int rd_file_get_size(const rd_file_type *rd_file) {
     return rd_file->global_view->size();
 }
 
-/** true if the rd_file instance has at-least one occurence of @kw. */
-bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
-    return rd_file->global_view->has_kw(kw);
-}
-
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
     return rd_file->context->fortio.filename_ref();
 }
@@ -259,12 +254,6 @@ rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
 
 bool rd_file_writable(const rd_file_type *rd_file) {
     return (rd_file->context->flags & FileMode::WRITABLE) == FileMode::WRITABLE;
-}
-
-/** The rd_file_close() function will close the fortio instance */
-void rd_file_close(rd_file_type *rd_file) {
-    if (rd_file->context)
-        rd_file->context->fortio.fclose_stream();
 }
 
 /* Functions specialized to work with restart files.  */
