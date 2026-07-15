@@ -183,8 +183,6 @@ void *util_calloc(size_t elements, size_t element_size);
 void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size);
 void *util_alloc_copy(const void *, size_t);
 char *util_fread_alloc_file_content(const char *, int *);
-void util_fwrite_string(const char *, FILE *);
-char *util_fread_alloc_string(FILE *);
 void util_endian_flip_vector(void *data, int element_size, int elements);
 
 void util_double_vector_max_min(int, const double *, double *, double *);

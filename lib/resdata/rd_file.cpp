@@ -449,6 +449,21 @@ static void check_valid_index(const std::string &file_name,
                         file_name, index_file_name));
 }
 
+char *util_fread_alloc_string(FILE *stream) {
+    int len;
+    char *s = NULL;
+    util_fread(&len, sizeof len, 1, stream, __func__);
+    if (len > 0) {
+        s = (char *)util_calloc(len + 1, sizeof *s);
+        util_fread(s, 1, len + 1, stream, __func__);
+    } else if (len == -1) /* Magic length for "" */ {
+        s = (char *)util_calloc(1, sizeof *s);
+        util_fread(s, 1, 1, stream, __func__);
+    }
+    return s;
+}
+
+
 static void check_valid_index_stream(const std::string &file_name,
                                      FILE *stream) {
     bool name_equal;
@@ -461,6 +476,29 @@ static void check_valid_index_stream(const std::string &file_name,
     if (!name_equal)
         throw std::ios_base::failure(fmt::format(
             "Index file did not contain a valid index for \"{}\"", file_name));
+}
+
+
+/** The util_fwrite_string / util_fread_string are BROKEN when it comes
+   to NULL / versus an empty string "":
+
+    1. When writing 'NULL' to disk what is actually found on the disk
+       is the sequence "0".
+
+    2. When writing the empty string - i.e. "" - what hits the disk is
+       the sequence "-1\0"; i.e. the -1 is used as a magic flag to
+       indicate the empty string. */
+void util_fwrite_string(const char *s, FILE *stream) {
+    int len = 0;
+    if (s != NULL) {
+        len = strlen(s);
+        if (len == 0)
+            util_fwrite_int(-1, stream); /* Writing magic string for "" */
+        else
+            util_fwrite(&len, sizeof len, 1, stream, __func__);
+        util_fwrite(s, 1, len + 1, stream, __func__);
+    } else
+        util_fwrite(&len, sizeof len, 1, stream, __func__);
 }
 
 bool rd_file_write_index(const rd_file_type *rd_file,
