@@ -11,7 +11,6 @@
 #include <utility>
 
 #include <ert/util/vector.hpp>
-#include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>
 #include <fmt/format.h>
 
@@ -96,7 +95,6 @@
         internalized as in e.g. rd_sum.
 */
 
-#define RD_FILE_ID 776107
 
 
 /*
@@ -122,12 +120,8 @@
 
 */
 
-UTIL_SAFE_CAST_FUNCTION(rd_file, RD_FILE_ID)
-UTIL_IS_INSTANCE_FUNCTION(rd_file, RD_FILE_ID)
-
 static rd_file_type *rd_file_alloc_empty() {
     rd_file_type *rd_file = new rd_file_type();
-    UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
     return rd_file;
 }
 

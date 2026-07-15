@@ -11,11 +11,8 @@
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file_flag.hpp>
 
-#include "ert/util/type_macros.hpp"
-
 typedef struct rd_file_struct rd_file_type;
 struct rd_file_struct {
-    UTIL_TYPE_ID_DECLARATION;
     std::shared_ptr<rd::FileContext> context;
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
@@ -66,8 +63,6 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time);
 
 std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
                                                        int report_step);
-
-UTIL_IS_INSTANCE_HEADER(rd_file);
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);

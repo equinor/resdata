@@ -52,7 +52,6 @@ void test_truncated() {
     }
     {
         auto rd_file = open_rd_file(std::string("TEST.EGRID"));
-        test_assert_true(rd_file_is_instance(rd_file.get()));
         num_kw = rd_file_get_size(rd_file.get());
     }
 
@@ -77,7 +76,6 @@ void test_mixed_case() {
     }
     {
         auto rd_file = open_rd_file(std::string("TESTcase.EGRID"));
-        test_assert_true(rd_file_is_instance(rd_file.get()));
         num_kw = rd_file_get_size(rd_file.get());
     }
 
