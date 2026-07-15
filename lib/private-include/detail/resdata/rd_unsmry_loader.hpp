@@ -34,7 +34,7 @@ private:
     int m_length; //Number of PARAMS in the UNSMRY file
 
     std::array<int, 3> date_index;
-    rd_file_ptr file{nullptr, &rd_file_free};
+    rd_file_ptr file{nullptr};
     std::shared_ptr<rd::FileView> file_view;
 };
 

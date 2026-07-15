@@ -10,6 +10,7 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file_flag.hpp>
+#include <utility>
 
 typedef struct rd_file_struct rd_file_type;
 struct rd_file_struct {
@@ -17,9 +18,14 @@ struct rd_file_struct {
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
     std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
+    rd_file_struct(std::shared_ptr<rd::FileContext> context,
+                   std::shared_ptr<rd::FileView> global_view,
+                   std::shared_ptr<rd::FileView> active_view)
+        : context(std::move(context)), global_view(std::move(global_view)),
+          active_view(std::move(active_view)) {};
 };
 bool rd_file_load_all(rd_file_type *rd_file);
-rd_file_type *rd_file_open(const char *filename,
+rd_file_type *rd_file_open(const std::string &filename,
                            FileMode flags = FileMode::DEFAULT);
 rd_file_type *rd_file_fast_open(const char *filename,
                                 const char *index_filename,
@@ -28,7 +34,6 @@ bool rd_file_write_index(const rd_file_type *rd_file,
                          const char *index_filename);
 bool rd_file_index_valid(const char *file_name, const char *index_file_name);
 void rd_file_close(rd_file_type *rd_file);
-void rd_file_free(rd_file_type *rd_file);
 rd_kw_type *rd_file_icopy_kw(const rd_file_type *rd_file, int index);
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);
@@ -67,13 +72,13 @@ std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);
 
-using rd_file_ptr = std::unique_ptr<rd_file_type, decltype(&rd_file_free)>;
+using rd_file_ptr = std::unique_ptr<rd_file_type>;
 
 inline rd_file_ptr open_rd_file(const std::string &path,
                                 FileMode flags = FileMode::DEFAULT) {
-    return {rd_file_open(path.c_str(), flags), &rd_file_free};
+    return rd_file_ptr{rd_file_open(path, flags)};
 }
 inline rd_file_ptr open_rd_file(const std::filesystem::path &path,
                                 FileMode flags = FileMode::DEFAULT) {
-    return {rd_file_open(path.string().c_str(), flags), &rd_file_free};
+    return rd_file_ptr{rd_file_open(path.string(), flags)};
 }
