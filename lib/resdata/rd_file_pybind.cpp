@@ -85,8 +85,7 @@ PYBIND11_MODULE(_file, m) {
         return rd_file_get_global_view(from_cwrap<rd_file_type>(self));
     });
     m.def("_write_index", [](py::handle self, std::string index_filename) {
-        return rd_file_write_index(from_cwrap<rd_file_type>(self),
-                                   index_filename.c_str());
+        return from_cwrap<rd::File>(self)->write_index(index_filename);
     });
 }
 } // namespace

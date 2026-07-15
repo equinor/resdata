@@ -495,17 +495,15 @@ static void write_sized_string(const std::string &s, FILE *stream) {
     checked_fwrite(s, stream);
 }
 
-bool rd_file_write_index(const rd_file_type *rd_file,
-                         const char *index_filename) {
-    FILE *ostream = fopen(index_filename, "wb");
+bool rd::File::write_index(const std::string &index_filename) {
+    std::unique_ptr<FILE, decltype(&fclose)> ostream(
+        fopen(index_filename.c_str(), "wb"), fclose);
     if (!ostream)
         return false;
 
-    write_sized_string(
-        fs::path{rd_file->context->fortio.filename()}.filename().string(),
-        ostream);
-    rd_file->global_view->write_index(ostream);
-    fclose(ostream);
+    write_sized_string(fs::path{context->fortio.filename()}.filename().string(),
+                       ostream.get());
+    global_view->write_index(ostream.get());
     return true;
 }
 

@@ -26,7 +26,7 @@ void test_create_and_load_index_file() {
     rd::util::TestArea ta("Load_index");
     {
         const char *file_name = "initial_data_file";
-        const char *index_file_name = "index_file";
+        const std::string index_file_name = "index_file";
 
         //creating the data file
         int data_size = 10;
@@ -47,7 +47,7 @@ void test_create_and_load_index_file() {
         //creating rd_file
         auto rd_file = rd::File::open(file_name);
         test_assert_true(rd_file_has_kw(rd_file.get(), "TEST1_KW"));
-        rd_file_write_index(rd_file.get(), index_file_name);
+        rd_file->write_index(index_file_name);
         int rd_file_size = rd_file_get_size(rd_file.get());
         //finished using rd_file
 
@@ -59,9 +59,9 @@ void test_create_and_load_index_file() {
         struct utimbuf tm1 = {1, 1};
         struct utimbuf tm2 = {2, 2};
         utime(file_name, &tm2);
-        utime(index_file_name, &tm1);
+        utime(index_file_name.c_str(), &tm1);
         utime(file_name, &tm1);
-        utime(index_file_name, &tm2);
+        utime(index_file_name.c_str(), &tm2);
 
         rd_file_ptr rd_file_index =
             rd::File::fast_open(file_name, index_file_name);
