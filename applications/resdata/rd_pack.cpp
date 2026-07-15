@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
                     rd_kw_iset_int(seqnum_kw.get(), 0, report_step);
                     rd_kw_fwrite(seqnum_kw.get(), target);
                 }
-                rd_file_fwrite_fortio(src_file.get(), target, 0);
+                src_file->write(target, 0);
             } /* Else skipping file of incorrect type. */
         }
     }
