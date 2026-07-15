@@ -186,20 +186,6 @@ public:
                                     std::to_string(report));
     }
 
-    /*
-      This will check that we have a datafile which report range covers the
-      report argument, in adition there can be 'holes' in the series - that must
-      be checked by actually querying the data_file object.
-    */
-
-    bool has_report(int report) const {
-        for (const auto &node : this->index)
-            if (node.report1 <= report && node.report2 >= report)
-                return true;
-
-        return false;
-    }
-
     IndexNode &back() { return this->index.back(); }
 
     void clear() { this->index.clear(); }
