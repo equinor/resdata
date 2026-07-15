@@ -257,14 +257,6 @@ bool WellState::add_MSW(rd::FileView *rst_view, int well_nr,
 }
 
 std::shared_ptr<WellState> WellState::read_wells_in_restart(
-    rd_file_type *rd_file, const rd_grid_type *grid, int report_nr,
-    int global_well_nr, bool load_segment_information) {
-    auto active_view = rd_file_get_active_view(rd_file);
-    return read_wells_in_restart(active_view.get(), grid, report_nr,
-                                 global_well_nr, load_segment_information);
-}
-
-std::shared_ptr<WellState> WellState::read_wells_in_restart(
     rd::FileView *file_view, const rd_grid_type *grid, int report_nr,
     int global_well_nr, bool load_segment_information) {
     if (file_view->has_kw(IWEL_KW)) {
