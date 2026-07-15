@@ -27,12 +27,11 @@ struct File {
     void write(ERT::FortIO &target, size_t offset) {
         global_view->write(target, offset);
     };
+    bool write_index(const std::string &index_filename);
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-bool rd_file_write_index(const rd_file_type *rd_file,
-                         const char *index_filename);
 void rd_file_close(rd_file_type *rd_file);
 rd_kw_type *rd_file_icopy_kw(const rd_file_type *rd_file, int index);
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
