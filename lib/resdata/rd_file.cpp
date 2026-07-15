@@ -270,10 +270,6 @@ void rd_file_close(rd_file_type *rd_file) {
         rd_file->context->fortio.fclose_stream();
 }
 
-bool rd_file_load_all(rd_file_type *rd_file) {
-    return rd_file->global_view->load_all();
-}
-
 /* Functions specialized to work with restart files.  */
 
 /* Query functions. */

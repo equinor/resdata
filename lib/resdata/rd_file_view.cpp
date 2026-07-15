@@ -115,23 +115,6 @@ int FileView::find_kw_value(const std::string &kw, const void *value) {
     return global_index;
 }
 
-bool FileView::load_all() {
-    bool loadOK = false;
-
-    if (context->fortio.assert_stream_open()) {
-        for (auto &file_kw : kw_list) {
-            auto rd_kw = file_kw->get_kw(context->fortio);
-            context->inv_map[rd_kw] = file_kw.get();
-        }
-        loadOK = true;
-    }
-
-    if (has_flags(FileMode::CLOSE_STREAM))
-        context->fortio.fclose_stream();
-
-    return loadOK;
-}
-
 void FileView::write(ERT::FortIO &target, size_t offset) {
     for (size_t index = offset; index < kw_list.size(); index++) {
         rd_kw_type *rd_kw = get_kw(index);

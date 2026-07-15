@@ -31,7 +31,6 @@ struct File {
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-bool rd_file_load_all(rd_file_type *rd_file);
 bool rd_file_write_index(const rd_file_type *rd_file,
                          const char *index_filename);
 void rd_file_close(rd_file_type *rd_file);
