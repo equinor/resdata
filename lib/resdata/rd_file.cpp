@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <filesystem>
 
 #include <ert/util/vector.hpp>
 #include <ert/util/util.hpp>
@@ -25,6 +26,7 @@
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_util.hpp>
 
+namespace fs = std::filesystem;
 /**
    This file implements functionality to load a file in
    restart format. The implementation works by first searching through
@@ -451,12 +453,11 @@ static void check_valid_index_stream(const std::string &file_name,
                                      FILE *stream) {
     bool name_equal;
     char *source_file = util_fread_alloc_string(stream);
-    char *input_name = util_split_alloc_filename(file_name.c_str());
+    std::string input_name = fs::path{file_name}.filename().string();
 
-    name_equal = util_string_equal(source_file, input_name);
+    name_equal = util_string_equal(source_file, input_name.c_str());
 
     free(source_file);
-    free(input_name);
     if (!name_equal)
         throw std::ios_base::failure(fmt::format(
             "Index file did not contain a valid index for \"{}\"", file_name));
@@ -467,12 +468,12 @@ bool rd_file_write_index(const rd_file_type *rd_file,
     FILE *ostream = fopen(index_filename, "wb");
     if (!ostream)
         return false;
-    {
-        char *filename =
-            util_split_alloc_filename(rd_file->context->fortio.filename_ref());
-        util_fwrite_string(filename, ostream);
-        free(filename);
-    }
+
+    util_fwrite_string(fs::path{rd_file->context->fortio.filename()}
+                           .filename()
+                           .string()
+                           .c_str(),
+                       ostream);
     rd_file->global_view->write_index(ostream);
     fclose(ostream);
     return true;
