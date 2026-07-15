@@ -16,9 +16,9 @@
 #include <resdata/rd_type.hpp>
 
 void test_load_nonexisting_file() {
-    rd_file_ptr rd_file{
-        rd_file_fast_open("base_file", "a_file_that_does_not_exist_2384623")};
-    test_assert_NULL(rd_file.get());
+    test_assert_throw(
+        rd::File::fast_open("base_file", "a_file_that_does_not_exist_2384623"),
+        std::ios_base::failure);
 }
 
 void test_create_and_load_index_file() {
@@ -63,8 +63,8 @@ void test_create_and_load_index_file() {
         utime(index_file_name, &tm2);
         test_assert_true(rd_file_index_valid(file_name, index_file_name));
 
-        rd_file_ptr rd_file_index{
-            rd_file_fast_open(file_name, index_file_name)};
+        rd_file_ptr rd_file_index =
+            rd::File::fast_open(file_name, index_file_name);
 
         test_assert_int_equal(rd_file_size,
                               rd_file_get_size(rd_file_index.get()));
