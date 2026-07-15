@@ -50,9 +50,8 @@ PYBIND11_MODULE(_file, m) {
         rd_file_save_kw(from_cwrap<rd_file_type>(self),
                         from_cwrap<rd_kw_type>(kw));
     });
-    m.def("_close", [](py::handle self) {
-        rd_file_close(from_cwrap<rd_file_type>(self));
-    });
+    m.def("_close",
+          [](py::handle self) { from_cwrap<rd_file_type>(self)->close(); });
     m.def("_free",
           [](py::handle self) { delete from_cwrap<rd_file_type>(self); });
     m.def("_iget_restart_time", [](py::handle self, int index) {

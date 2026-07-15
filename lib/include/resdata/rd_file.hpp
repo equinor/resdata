@@ -28,11 +28,15 @@ struct File {
         global_view->write(target, offset);
     };
     bool write_index(const std::string &index_filename);
+    /** The rd_file_close() function will close the fortio instance */
+    void close() {
+        if (context)
+            context->fortio.fclose_stream();
+    };
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-void rd_file_close(rd_file_type *rd_file);
 rd_kw_type *rd_file_icopy_kw(const rd_file_type *rd_file, int index);
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);

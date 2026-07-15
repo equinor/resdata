@@ -240,10 +240,7 @@ rd_file_alloc_fortio(const std::string &filename, FileMode flags) {
    functions start by calling this one. This function will read
    through the complete file, extract all the keyword headers and
    create the map/index stored in the global_view field of the rd_file
-   structure. No keyword data will be loaded from the file.
-
-   The rd_file instance will retain an open fortio reference to the
-   file until rd_file_close() is called. */
+   structure. No keyword data will be loaded from the file.*/
 rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
