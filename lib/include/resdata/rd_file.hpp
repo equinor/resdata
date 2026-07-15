@@ -14,6 +14,13 @@
 #include "ert/util/type_macros.hpp"
 
 typedef struct rd_file_struct rd_file_type;
+struct rd_file_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    std::shared_ptr<rd::FileContext> context;
+    std::shared_ptr<rd::FileView>
+        global_view; /* The index of all the rd_kw instances in the file. */
+    std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
+};
 bool rd_file_load_all(rd_file_type *rd_file);
 rd_file_type *rd_file_open(const char *filename,
                            FileMode flags = FileMode::DEFAULT);

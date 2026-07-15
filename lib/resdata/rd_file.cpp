@@ -98,13 +98,6 @@
 
 #define RD_FILE_ID 776107
 
-struct rd_file_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    std::shared_ptr<rd::FileContext> context;
-    std::shared_ptr<rd::FileView>
-        global_view; /* The index of all the rd_kw instances in the file. */
-    std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
-};
 
 /*
   This illustrates the indexing. The rd_file instance contains in
