@@ -54,16 +54,16 @@ static void unpack_file(const fs::path &filepath) {
                "ambigous - starting with 0001  -> \n");
     }
     rd_file_ptr src_file = rd::File::open(filename);
-    int size;
+    size_t size;
     size_t offset;
     int report_step = 0;
 
     if (target_type == RD_SUMMARY_FILE)
-        size = rd_file_get_num_named_kw(src_file.get(), "SEQHDR");
+        size = src_file->num_named_kw("SEQHDR");
     else
-        size = rd_file_get_num_named_kw(src_file.get(), "SEQNUM");
+        size = src_file->num_named_kw("SEQNUM");
 
-    for (int block_index = 0; block_index < size; block_index++) {
+    for (size_t block_index = 0; block_index < size; block_index++) {
         std::shared_ptr<rd::FileView> active_view;
 
         if (target_type == RD_SUMMARY_FILE) {
