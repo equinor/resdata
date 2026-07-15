@@ -53,7 +53,7 @@ static void unpack_file(const fs::path &filepath) {
         printf("** Warning: when unpacking unified summary files it as "
                "ambigous - starting with 0001  -> \n");
     }
-    rd_file_ptr src_file = open_rd_file(filename);
+    rd_file_ptr src_file = rd::File::open(filename);
     int size;
     size_t offset;
     int report_step = 0;

@@ -1,7 +1,6 @@
 #pragma once
 #include <ctime>
 
-#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -12,21 +11,24 @@
 #include <resdata/rd_file_flag.hpp>
 #include <utility>
 
-typedef struct rd_file_struct rd_file_type;
-struct rd_file_struct {
+namespace rd {
+struct File {
     std::shared_ptr<rd::FileContext> context;
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
     std::shared_ptr<rd::FileView> active_view; /* The currently active index. */
-    rd_file_struct(std::shared_ptr<rd::FileContext> context,
-                   std::shared_ptr<rd::FileView> global_view,
-                   std::shared_ptr<rd::FileView> active_view)
+    File(std::shared_ptr<rd::FileContext> context,
+         std::shared_ptr<rd::FileView> global_view,
+         std::shared_ptr<rd::FileView> active_view)
         : context(std::move(context)), global_view(std::move(global_view)),
           active_view(std::move(active_view)) {};
+    static std::unique_ptr<File> open(const std::string &filename,
+                                      FileMode flags = FileMode::DEFAULT);
 };
+} // namespace rd
+using rd_file_ptr = std::unique_ptr<rd::File>;
+using rd_file_type = rd::File;
 bool rd_file_load_all(rd_file_type *rd_file);
-rd_file_type *rd_file_open(const std::string &filename,
-                           FileMode flags = FileMode::DEFAULT);
 rd_file_type *rd_file_fast_open(const char *filename,
                                 const char *index_filename,
                                 FileMode flags = FileMode::DEFAULT);
@@ -71,14 +73,3 @@ std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);
-
-using rd_file_ptr = std::unique_ptr<rd_file_type>;
-
-inline rd_file_ptr open_rd_file(const std::string &path,
-                                FileMode flags = FileMode::DEFAULT) {
-    return rd_file_ptr{rd_file_open(path, flags)};
-}
-inline rd_file_ptr open_rd_file(const std::filesystem::path &path,
-                                FileMode flags = FileMode::DEFAULT) {
-    return rd_file_ptr{rd_file_open(path.string(), flags)};
-}

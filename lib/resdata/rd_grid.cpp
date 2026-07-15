@@ -2539,7 +2539,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
         throw std::invalid_argument(fmt::format(
             "{}: wrong file type - expected .EGRID file", grid_file));
     {
-        auto rd_file = open_rd_file(std::string(grid_file));
+        auto rd_file = rd::File::open(std::string(grid_file));
         if (rd_file) {
             int num_grid = rd_file_get_num_named_kw(rd_file.get(), GRIDHEAD_KW);
             auto main_grid = rd_grid_alloc_EGRID__(nullptr, rd_file.get(), 0,
@@ -2776,7 +2776,7 @@ static rd_grid_ptr rd_grid_alloc_GRID(const char *grid_file,
             "{}: wrong file type - expected .GRID file", grid_file));
 
     int cell_offset = 0;
-    rd_file_ptr rd_file = open_rd_file(std::string(grid_file));
+    rd_file_ptr rd_file = rd::File::open(grid_file);
     int num_grid = rd_file_get_num_named_kw(rd_file.get(), DIMENS_KW);
     int grid_nr;
     int dualp_flag;

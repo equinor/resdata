@@ -254,13 +254,12 @@ rd_file_alloc_fortio(const std::string &filename, FileMode flags) {
 
    The rd_file instance will retain an open fortio reference to the
    file until rd_file_close() is called. */
-rd_file_type *rd_file_open(const std::string &filename, FileMode flags) {
+rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
-    auto context =
-        std::make_shared<rd::FileContext>(std::move(*fortio), flags);
+    auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = std::make_shared<rd::FileView>(context);
-    auto rd_file = std::make_unique<rd_file_struct>(
+    auto rd_file = std::make_unique<rd::File>(
         context, global_view, std::shared_ptr<rd::FileView>{nullptr});
 
     rd_file_scan(rd_file.get());
@@ -270,7 +269,7 @@ rd_file_type *rd_file_open(const std::string &filename, FileMode flags) {
         FileMode::CLOSE_STREAM)
         rd_file->context->fortio.fclose_stream();
 
-    return rd_file.release();
+    return rd_file;
 }
 
 bool rd_file_writable(const rd_file_type *rd_file) {
@@ -505,7 +504,7 @@ rd_file_type *rd_file_fast_open(const char *file_name,
         auto global_view = rd::FileView::read(context, istream.get());
         if (!global_view)
             return nullptr;
-        auto rd_file = std::make_unique<rd_file_struct>(
+        auto rd_file = std::make_unique<rd::File>(
             context, global_view, std::shared_ptr<rd::FileView>{nullptr});
         if (rd_file->global_view) {
             rd_file_select_global(rd_file.get());

@@ -25,9 +25,9 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         std::cerr << "Could not open " << grid_fname << std::endl;
         exit(-1);
     }
-    std::unique_ptr<rd_file_type> init_file;
+    std::unique_ptr<rd::File> init_file;
     try {
-        init_file = open_rd_file(init_fname);
+        init_file = rd::File::open(init_fname);
     } catch (const std::ios_base::failure &e) {
         std::cerr << "Could not open " << init_fname << ": " << e.what()
                   << std::endl;

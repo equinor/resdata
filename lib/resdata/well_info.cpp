@@ -90,7 +90,7 @@ void WellInfo::add_UNRST_wells(rd_file_type *rst_file,
 
 void WellInfo::load_rstfile(const std::string &filename,
                             bool load_segment_information) {
-    rd_file_ptr rd_file = open_rd_file(filename);
+    rd_file_ptr rd_file = rd::File::open(filename);
     load_rstfile(rd_file.get(), load_segment_information);
 }
 

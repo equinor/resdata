@@ -29,9 +29,7 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
       time_seconds(rd_smspec_get_time_seconds(smspec)),
       sim_start(rd_smspec_get_start_time(smspec)) {
     {
-        rd_file_ptr file = open_rd_file(filename, file_options);
-        if (!file)
-            throw std::bad_alloc();
+        rd_file_ptr file = rd::File::open(filename, file_options);
         this->file = std::move(file);
     }
     if (!rd_file_has_kw(this->file.get(), PARAMS_KW)) {

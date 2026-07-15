@@ -23,7 +23,7 @@ void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
-    auto rst_file = open_rd_file(std::string(Xfile));
+    auto rst_file = rd::File::open(Xfile);
     auto rst_head = RSTHead::read(rd_file_get_global_view(rst_file.get()).get(),
                                   rd_filename_report_nr(Xfile));
     const rd_kw_type *iwel_kw =

@@ -16,16 +16,15 @@
 void test_file(const char *filename, int occurence, bool exists,
                const RSTHead &true_header) {
     int report_step = rd_filename_report_nr(filename);
-    rd_file_type *rst_file = rd_file_open(filename);
+    rd_file_ptr rst_file = rd::File::open(filename);
     rd_file_enum file_type = rd_get_file_type(filename, NULL, NULL);
     std::shared_ptr<rd::FileView> rst_view;
 
     if (file_type == RD_RESTART_FILE)
-        rst_view = rd_file_get_global_view(rst_file);
+        rst_view = rd_file_get_global_view(rst_file.get());
     else
-        rst_view =
-            rd_file_get_global_view(rst_file)->restart_view_from_seqnum_index(
-                occurence);
+        rst_view = rd_file_get_global_view(rst_file.get())
+                       ->restart_view_from_seqnum_index(occurence);
 
     if (exists) {
         test_assert_not_NULL(rst_view.get());

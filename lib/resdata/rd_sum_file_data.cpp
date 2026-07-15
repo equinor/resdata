@@ -601,7 +601,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
                 util_abort("%s: file:%s has wrong type \n", __func__,
                            data_file);
             {
-                rd_file_ptr rd_file = open_rd_file(std::string(data_file));
+                rd_file_ptr rd_file = rd::File::open(data_file);
                 if (rd_file && check_file(rd_file.get())) {
                     auto global_view = rd_file_get_global_view(rd_file.get());
                     this->add_rd_file(report_step, *global_view);
@@ -621,8 +621,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
 
             // Is this correct for a restarted chain of UNSMRY files? Looks like the
             // report step sequence will be restarted?
-            rd_file_ptr rd_file =
-                open_rd_file(std::string(stringlist_iget(filelist, 0)));
+            rd_file_ptr rd_file = rd::File::open(stringlist_iget(filelist, 0));
             if (rd_file && check_file(rd_file.get())) {
                 int first_report_step =
                     rd_smspec_get_first_step(this->rd_smspec);

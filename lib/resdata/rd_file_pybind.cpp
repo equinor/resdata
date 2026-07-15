@@ -24,7 +24,7 @@ PYBIND11_MODULE(_file, m) {
     m.doc() = "pybind11 bindings between rd_file.py and rd_file.cpp";
 
     m.def("_open", [](std::string filename, FileMode flags) -> py::object {
-        auto *file = rd_file_open(filename.c_str(), flags);
+        auto *file = rd::File::open(filename, flags).release();
         if (file == nullptr)
             return py::none();
         return py::cast(reinterpret_cast<std::uintptr_t>(file));
