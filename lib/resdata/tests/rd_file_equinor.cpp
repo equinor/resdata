@@ -13,8 +13,7 @@
 
 void test_close_stream2(const char *src_file, const char *target_file) {
     util_copy_file(src_file, target_file);
-    auto rd_file =
-        open_rd_file(std::string(target_file), FileMode::CLOSE_STREAM);
+    auto rd_file = rd::File::open(target_file, FileMode::CLOSE_STREAM);
 
     rd_file_load_all(rd_file.get());
     unlink(target_file);
@@ -25,15 +24,13 @@ void test_close_stream2(const char *src_file, const char *target_file) {
 void test_loadall(const char *src_file, const char *target_file) {
     util_copy_file(src_file, target_file);
     {
-        auto rd_file =
-            open_rd_file(std::string(target_file), FileMode::CLOSE_STREAM);
+        auto rd_file = rd::File::open(target_file, FileMode::CLOSE_STREAM);
 
         test_assert_true(rd_file_load_all(rd_file.get()));
     }
 
     {
-        auto rd_file =
-            open_rd_file(std::string(target_file), FileMode::CLOSE_STREAM);
+        auto rd_file = rd::File::open(target_file, FileMode::CLOSE_STREAM);
         unlink(target_file);
 
         test_assert_false(rd_file_load_all(rd_file.get()));
@@ -43,8 +40,7 @@ void test_loadall(const char *src_file, const char *target_file) {
 void test_close_stream1(const char *src_file, const char *target_file) {
     util_copy_file(src_file, target_file);
 
-    auto rd_file =
-        open_rd_file(std::string(target_file), FileMode::CLOSE_STREAM);
+    auto rd_file = rd::File::open(target_file, FileMode::CLOSE_STREAM);
     rd_kw_type *kw0 = rd_file_iget_kw(rd_file.get(), 0);
     rd_kw_type *kw1 = rd_file_iget_kw(rd_file.get(), 1);
     unlink(target_file);
@@ -66,7 +62,7 @@ void test_writable(const char *src_file) {
 
     ta.copy_file(src_file);
     {
-        auto rd_file = open_rd_file(std::string(fname), FileMode::WRITABLE);
+        auto rd_file = rd::File::open(fname, FileMode::WRITABLE);
         rd_kw_type *swat = rd_file_iget_named_kw(rd_file.get(), "SWAT", 0);
         rd_kw_type *swat0 = rd_kw_alloc_copy(swat);
         test_assert_true(rd_kw_equal(swat, swat0));
@@ -74,7 +70,7 @@ void test_writable(const char *src_file) {
         rd_file_save_kw(rd_file.get(), swat);
         test_assert_true(rd_file_writable(rd_file.get()));
 
-        auto rd_file2 = open_rd_file(std::string(fname));
+        auto rd_file2 = rd::File::open(fname);
         swat = rd_file_iget_named_kw(rd_file2.get(), "SWAT", 0);
         test_assert_true(
             util_double_approx_equal(rd_kw_iget_float(swat, 0), 1000));

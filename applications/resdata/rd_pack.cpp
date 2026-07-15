@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
                         filelist.at(i - 1).c_str(), filelist.at(i).c_str());
 
                 prev_report_step = report_step;
-                rd_file_ptr src_file = open_rd_file(filelist.at(i));
+                rd_file_ptr src_file = rd::File::open(filelist.at(i));
                 if (target_type == RD_UNIFIED_RESTART_FILE) {
                     /* Must insert the SEQNUM keyword first. */
                     rd_kw_iset_int(seqnum_kw.get(), 0, report_step);

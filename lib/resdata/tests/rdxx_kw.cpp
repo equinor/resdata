@@ -164,7 +164,7 @@ void test_read_write() {
         }
 
         {
-            auto f = open_rd_file(std::string("test_file"));
+            auto f = rd::File::open(std::string("test_file"));
             rd_kw_type *d_kw = rd_file_iget_named_kw(f.get(), "DOUBLE", 0);
             rd_kw_type *f_kw = rd_file_iget_named_kw(f.get(), "FLOAT", 0);
             rd_kw_type *i_kw = rd_file_iget_named_kw(f.get(), "INT", 0);

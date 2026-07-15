@@ -789,7 +789,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     }
 
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
-    auto restart_file = open_rd_file(restart_name + smspec_ext);
+    auto restart_file = rd::File::open(restart_name + smspec_ext);
     REQUIRE(restart_file != nullptr);
     auto view = rd_file_get_global_view(restart_file.get());
     REQUIRE(view->has_kw(RESTART_KW));
@@ -831,7 +831,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
         rd_sum_fwrite(rd_sum.get());
     }
 
-    auto smspec_file = open_rd_file(name + ".SMSPEC");
+    auto smspec_file = rd::File::open(name + ".SMSPEC");
     auto view = rd_file_get_global_view(smspec_file.get());
     REQUIRE(view->has_kw(RESTART_KW));
     rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
@@ -1421,8 +1421,8 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         }
         WHEN("CASE3 is post-processed into CASE4 by appending a duplicate "
              "BPR keyword and a WTPRWI1 placeholder") {
-            auto smspec_in = open_rd_file(case3_path + ".SMSPEC");
-            auto sum_in = open_rd_file(case3_path + ".UNSMRY");
+            auto smspec_in = rd::File::open(case3_path + ".SMSPEC");
+            auto sum_in = rd::File::open(case3_path + ".UNSMRY");
 
             rd_kw_type *keywords =
                 rd_file_iget_named_kw(smspec_in.get(), "KEYWORDS", 0);

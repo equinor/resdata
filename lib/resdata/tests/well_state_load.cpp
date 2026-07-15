@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
     const char *rst_file_name = argv[2];
 
     rd_grid_type *grid = rd_grid_alloc(grid_file);
-    rd_file_type *rst_file = rd_file_open(rst_file_name);
-    auto rst_view = rd_file_get_global_view(rst_file);
+    rd_file_ptr rst_file = rd::File::open(rst_file_name);
+    auto rst_view = rd_file_get_global_view(rst_file.get());
     auto header =
         RSTHead::read(rst_view.get(), rd_filename_report_nr(rst_file_name));
     const char *well_name = "WELL";
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
                 well_state.get_branches();
 
             if (well_state.is_MSW()) {
-                test_assert_true(rd_file_has_kw(rst_file, ISEG_KW));
+                test_assert_true(rd_file_has_kw(rst_file.get(), ISEG_KW));
                 test_assert_int_not_equal(
                     well_segment_collection_get_size(segments), 0);
                 test_assert_int_not_equal(

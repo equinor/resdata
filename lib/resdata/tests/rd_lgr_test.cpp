@@ -12,7 +12,7 @@
 int main(int argc, char **argv) {
     const char *grid_file = argv[1];
     rd_grid_ptr rd_grid = read_grid(grid_file);
-    auto rd_file = open_rd_file(std::string(grid_file));
+    auto rd_file = rd::File::open(grid_file);
 
     rd_grid_test_lgr_consistency(rd_grid.get());
 

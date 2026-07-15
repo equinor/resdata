@@ -45,7 +45,7 @@ void test_create_and_load_index_file() {
         //finished creating data file
 
         //creating rd_file
-        auto rd_file = open_rd_file(std::string(file_name));
+        auto rd_file = rd::File::open(file_name);
         test_assert_true(rd_file_has_kw(rd_file.get(), "TEST1_KW"));
         rd_file_write_index(rd_file.get(), index_file_name);
         int rd_file_size = rd_file_get_size(rd_file.get());
