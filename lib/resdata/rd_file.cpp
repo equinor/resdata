@@ -7,6 +7,7 @@
 
 #include <ios>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <filesystem>
@@ -449,56 +450,71 @@ static void check_valid_index(const std::string &file_name,
                         file_name, index_file_name));
 }
 
-char *util_fread_alloc_string(FILE *stream) {
-    int len;
-    char *s = NULL;
-    util_fread(&len, sizeof len, 1, stream, __func__);
-    if (len > 0) {
-        s = (char *)util_calloc(len + 1, sizeof *s);
-        util_fread(s, 1, len + 1, stream, __func__);
-    } else if (len == -1) /* Magic length for "" */ {
-        s = (char *)util_calloc(1, sizeof *s);
-        util_fread(s, 1, 1, stream, __func__);
-    }
+template <typename T> T checked_fread(FILE *f) {
+    static_assert(std::is_trivially_copyable_v<T>,
+                  "checked_fread requires a trivially copyable type");
+    T out{};
+    if (fread(&out, sizeof(T), 1, f) != 1)
+        throw std::runtime_error(
+            fmt::format("read failed: {}", strerror(errno)));
+    return out;
+}
+
+inline std::string checked_fread(std::size_t n, FILE *f) {
+    std::string s(n, '\0');
+    if (n > 0 && std::fread(s.data(), 1, n, f) != n)
+        throw std::runtime_error(
+            fmt::format("read failed: {}", strerror(errno)));
     return s;
 }
 
+/** When writing the empty string we write the sequence "-1\0".
+    This was used before to disambiguate with the potential for s being NULL,
+    which wrote the sequence "0". */
+static std::string read_sized_string(FILE *stream) {
+    int len = checked_fread<int>(stream);
+    if (len == -1) {              /* length indicates "" */
+        checked_fread(1, stream); /* consume the trailing nul */
+        return "";
+    }
+    if (len <= 0)
+        return ""; /* length indicates NULL; return "" without consuming nul */
+    std::string s = checked_fread(len, stream);
+    checked_fread(1, stream); /* consume the trailing nul */
+    return s;
+}
 
 static void check_valid_index_stream(const std::string &file_name,
                                      FILE *stream) {
-    bool name_equal;
-    char *source_file = util_fread_alloc_string(stream);
+    std::string source_file = read_sized_string(stream);
     std::string input_name = fs::path{file_name}.filename().string();
 
-    name_equal = util_string_equal(source_file, input_name.c_str());
-
-    free(source_file);
-    if (!name_equal)
+    if (source_file != input_name)
         throw std::ios_base::failure(fmt::format(
             "Index file did not contain a valid index for \"{}\"", file_name));
 }
 
+template <typename T> void checked_fwrite(const T &s, FILE *f) {
+    static_assert(std::is_trivially_copyable_v<T>,
+                  "checked_fwrite requires a trivially copyable type");
+    if (fwrite(&s, sizeof(s), 1, f) != 1)
+        throw std::runtime_error(
+            fmt::format("write failed: {}", strerror(errno)));
+}
 
-/** The util_fwrite_string / util_fread_string are BROKEN when it comes
-   to NULL / versus an empty string "":
+inline void checked_fwrite(const std::string &s, FILE *f) {
+    std::size_t nbytes = s.size() + 1;
+    if (std::fwrite(s.data(), 1, nbytes, f) != nbytes)
+        throw std::runtime_error(
+            fmt::format("write failed: {}", strerror(errno)));
+}
 
-    1. When writing 'NULL' to disk what is actually found on the disk
-       is the sequence "0".
-
-    2. When writing the empty string - i.e. "" - what hits the disk is
-       the sequence "-1\0"; i.e. the -1 is used as a magic flag to
-       indicate the empty string. */
-void util_fwrite_string(const char *s, FILE *stream) {
-    int len = 0;
-    if (s != NULL) {
-        len = strlen(s);
-        if (len == 0)
-            util_fwrite_int(-1, stream); /* Writing magic string for "" */
-        else
-            util_fwrite(&len, sizeof len, 1, stream, __func__);
-        util_fwrite(s, 1, len + 1, stream, __func__);
-    } else
-        util_fwrite(&len, sizeof len, 1, stream, __func__);
+static void write_sized_string(const std::string &s, FILE *stream) {
+    if (s.size() == 0)
+        checked_fwrite<int>(-1, stream); /* Writing magic string for "" */
+    else
+        checked_fwrite<int>(static_cast<int>(s.size()), stream);
+    checked_fwrite(s, stream);
 }
 
 bool rd_file_write_index(const rd_file_type *rd_file,
@@ -507,11 +523,9 @@ bool rd_file_write_index(const rd_file_type *rd_file,
     if (!ostream)
         return false;
 
-    util_fwrite_string(fs::path{rd_file->context->fortio.filename()}
-                           .filename()
-                           .string()
-                           .c_str(),
-                       ostream);
+    write_sized_string(
+        fs::path{rd_file->context->fortio.filename()}.filename().string(),
+        ostream);
     rd_file->global_view->write_index(ostream);
     fclose(ostream);
     return true;
