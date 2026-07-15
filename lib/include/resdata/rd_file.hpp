@@ -24,6 +24,9 @@ struct File {
     static std::unique_ptr<File> fast_open(const std::string &file_name,
                                            const std::string &index_file_name,
                                            FileMode flags = FileMode::DEFAULT);
+    void write(ERT::FortIO &target, size_t offset) {
+        global_view->write(target, offset);
+    };
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
@@ -38,8 +41,6 @@ int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_size(const rd_file_type *rd_file);
 const char *rd_file_get_src_file(const rd_file_type *rd_file);
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
-void rd_file_fwrite_fortio(const rd_file_type *ec_file, ERT::FortIO &fortio,
-                           size_t offset);
 
 int rd_file_get_phases(const rd_file_type *init_file);
 

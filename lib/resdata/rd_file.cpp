@@ -117,11 +117,6 @@ namespace fs = std::filesystem;
         internalized as in e.g. rd_sum.
 */
 
-void rd_file_fwrite_fortio(const rd_file_type *rd_file, ERT::FortIO &target,
-                           size_t offset) {
-    rd_file->global_view->write(target, offset);
-}
-
 /**
    Here comes several functions for querying the rd_file instance, and
    getting pointers to the rd_kw content of the rd_file. For getting
