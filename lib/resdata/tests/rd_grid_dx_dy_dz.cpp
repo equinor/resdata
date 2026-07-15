@@ -1,13 +1,12 @@
 #include <cstdlib>
-#include <csignal>
 #include <cmath>
 
+#include <memory>
 #include <string>
 #include <filesystem>
 #include <iostream>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>
@@ -26,9 +25,12 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         std::cerr << "Could not open " << grid_fname << std::endl;
         exit(-1);
     }
-    auto init_file = open_rd_file(init_fname);
-    if (!init_file) {
-        std::cerr << "Could not open " << init_fname << std::endl;
+    std::unique_ptr<rd_file_type> init_file;
+    try {
+        init_file = open_rd_file(init_fname);
+    } catch (const std::ios_base::failure &e) {
+        std::cerr << "Could not open " << init_fname << ": " << e.what()
+                  << std::endl;
         exit(-1);
     }
     rd_kw_type *dx = rd_file_iget_named_kw(init_file.get(), "DX", 0);
