@@ -656,40 +656,6 @@ const rd_smspec_type *rd_sum_file_data::smspec() const {
     return this->rd_smspec;
 }
 
-bool rd_sum_file_data::report_step_equal(const rd_sum_file_data &other,
-                                         bool strict) const {
-    if (strict && this->first_report() != other.first_report())
-        return false;
-
-    if (strict && (this->last_report() != other.last_report()))
-        return false;
-
-    int report_step = std::max(this->first_report(), other.first_report());
-    int last_report = std::min(this->last_report(), other.last_report());
-    while (true) {
-        int time_index1 = this->report_range(report_step).second;
-        int time_index2 = other.report_range(report_step).second;
-
-        if ((time_index1 != INVALID_MINISTEP_NR) &&
-            (time_index2 != INVALID_MINISTEP_NR)) {
-            time_t time1 = this->iget_sim_time(time_index1);
-            time_t time2 = other.iget_sim_time(time_index2);
-
-            if (time1 != time2)
-                return false;
-
-        } else if (time_index1 != time_index2) {
-            if (strict)
-                return false;
-        }
-
-        report_step++;
-        if (report_step > last_report)
-            break;
-    }
-    return true;
-}
-
 int rd_sum_file_data::report_step_from_days(double sim_days) const {
     int report_step = this->first_report();
     double sim_seconds = sim_days * 86400;

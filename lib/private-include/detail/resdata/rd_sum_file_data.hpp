@@ -121,7 +121,6 @@ public:
     double get_sim_length() const;
 
     std::pair<int, int> report_range(int report_step) const;
-    bool report_step_equal(const rd_sum_file_data &other, bool strict) const;
 
     /** Returns the last report step strictly before @end_time */
     int report_before(time_t end_time) const;
