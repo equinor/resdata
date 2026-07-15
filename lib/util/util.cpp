@@ -2177,45 +2177,6 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
     return util_string_replace_inplace__(_buffer, expr, subs);
 }
 
-/*
-   The util_fwrite_string / util_fread_string are BROKEN when it comes
-   to NULL / versus an empty string "":
-
-    1. When writing 'NULL' to disk what is actually found on the disk
-       is the sequence "0".
-
-    2. When writing the empty string - i.e. "" - what hits the disk is
-       the sequence "-1\0"; i.e. the -1 is used as a magic flag to
-       indicate the empty string.
-*/
-
-void util_fwrite_string(const char *s, FILE *stream) {
-    int len = 0;
-    if (s != NULL) {
-        len = strlen(s);
-        if (len == 0)
-            util_fwrite_int(-1, stream); /* Writing magic string for "" */
-        else
-            util_fwrite(&len, sizeof len, 1, stream, __func__);
-        util_fwrite(s, 1, len + 1, stream, __func__);
-    } else
-        util_fwrite(&len, sizeof len, 1, stream, __func__);
-}
-
-char *util_fread_alloc_string(FILE *stream) {
-    int len;
-    char *s = NULL;
-    util_fread(&len, sizeof len, 1, stream, __func__);
-    if (len > 0) {
-        s = (char *)util_calloc(len + 1, sizeof *s);
-        util_fread(s, 1, len + 1, stream, __func__);
-    } else if (len == -1) /* Magic length for "" */ {
-        s = (char *)util_calloc(1, sizeof *s);
-        util_fread(s, 1, 1, stream, __func__);
-    }
-    return s;
-}
-
 void util_fwrite_offset(offset_type value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
