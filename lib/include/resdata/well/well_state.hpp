@@ -189,10 +189,6 @@ public:
                  bool load_segment_information);
 
     static std::shared_ptr<WellState>
-    read_wells_in_restart(rd_file_type *rd_file, const rd_grid_type *grid,
-                          int report_nr, int global_well_nr,
-                          bool load_segment_information);
-    static std::shared_ptr<WellState>
     read_wells_in_restart(rd::FileView *file_view, const rd_grid_type *grid,
                           int report_nr, int global_well_nr,
                           bool load_segment_information);
