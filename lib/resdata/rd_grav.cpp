@@ -244,7 +244,8 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                 grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
             }
         } else {
-            rd_version_enum rd_version = rd_file_get_simulator_version(init_file);
+            rd_version_enum rd_version =
+                rd_file_get_simulator_version(init_file);
             const std::string den_kw_name = get_den_kw(phase, rd_version);
             const rd_kw_type *den_kw = restart_file->get_kw(den_kw_name, 0);
 
