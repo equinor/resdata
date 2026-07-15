@@ -25,8 +25,8 @@
    strings, and the total number of strings. It is mostly to avoid
    sending both argc and argv.
 
-   Most of the functionality is implemented through vector.c and
-   stateless functions in util.c
+   Most of the functionality is implemented through vector.cpp and
+   stateless functions in util.cpp
 */
 
 #ifdef __cplusplus
