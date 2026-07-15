@@ -650,7 +650,7 @@ bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other) {
 
 static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd_file_type *header) {
-    if (!rd_file_has_kw(header, RESTART_KW))
+    if (!header->has_kw(RESTART_KW))
         return;
     const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
     if (restart_kw == nullptr)
@@ -837,7 +837,7 @@ const int *rd_smspec_get_index_map(const rd_smspec_type *smspec) {
 static const char *get_active_keyword_alias(rd_file_type *header,
                                             const char *keyword) {
     if (strcmp(keyword, WGNAMES_KW) == 0 || strcmp(keyword, NAMES_KW) == 0)
-        return rd_file_has_kw(header, WGNAMES_KW) ? WGNAMES_KW : NAMES_KW;
+        return header->has_kw(WGNAMES_KW) ? WGNAMES_KW : NAMES_KW;
 
     return keyword;
 }
@@ -845,8 +845,8 @@ static const char *get_active_keyword_alias(rd_file_type *header,
 static bool rd_smspec_check_header(rd_file_type *header) {
     bool OK = true;
     for (size_t i = 0; i < num_req_keywords && OK; i++) {
-        OK &= rd_file_has_kw(header, get_active_keyword_alias(
-                                         header, smspec_required_keywords[i]));
+        OK &= header->has_kw(
+            get_active_keyword_alias(header, smspec_required_keywords[i]));
     }
 
     return OK;
@@ -893,10 +893,10 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         rd_smspec->params_size = rd_kw_get_size(keywords);
 
-        if (rd_file_has_kw(header.get(), NUMS_KW))
+        if (header->has_kw(NUMS_KW))
             nums = rd_file_iget_named_kw(header.get(), NUMS_KW, 0);
 
-        if (rd_file_has_kw(header.get(), INTEHEAD_KW)) {
+        if (header->has_kw(INTEHEAD_KW)) {
             const rd_kw_type *intehead =
                 rd_file_iget_named_kw(header.get(), INTEHEAD_KW, 0);
             if (intehead == NULL)
@@ -911,11 +911,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
       */
         }
 
-        if (rd_file_has_kw(header.get(),
-                           LGRS_KW)) { /* The file has LGR information. */
-            if (!rd_file_has_kw(header.get(), NUMLX_KW) ||
-                !rd_file_has_kw(header.get(), NUMLY_KW) ||
-                !rd_file_has_kw(header.get(), NUMLZ_KW))
+        if (header->has_kw(LGRS_KW)) { /* The file has LGR information. */
+            if (!header->has_kw(NUMLX_KW) || !header->has_kw(NUMLY_KW) ||
+                !header->has_kw(NUMLZ_KW))
                 throw std::invalid_argument(
                     "SMSPEC header has LGRS keyword but is missing one or "
                     "more required LGR index keywords (NUMLX, NUMLY, NUMLZ)");

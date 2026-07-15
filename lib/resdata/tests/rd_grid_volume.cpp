@@ -31,10 +31,10 @@ int main(int argc, char **argv) {
     double total_diff = 0;
     int error_count = 0;
 
-    if (rd_file_has_kw(init.get(), "NTG"))
+    if (init->has_kw("NTG"))
         NTG = rd_file_iget_named_kw(init.get(), "NTG", 0);
 
-    if (rd_file_has_kw(init.get(), "MULTPV"))
+    if (init->has_kw("MULTPV"))
         multpv = rd_file_iget_named_kw(init.get(), "MULTPV", 0);
 
     for (int iactive = 0; iactive < rd_grid_get_nactive(grid.get());

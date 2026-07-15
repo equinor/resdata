@@ -520,7 +520,7 @@ double rd_sum_file_data::get_days_start() const {
 }
 
 bool rd_sum_file_data::check_file(rd_file_type *rd_file) {
-    return rd_file_has_kw(rd_file, PARAMS_KW) &&
+    return rd_file->has_kw(PARAMS_KW) &&
            (rd_file_get_num_named_kw(rd_file, PARAMS_KW) ==
             rd_file_get_num_named_kw(rd_file, MINISTEP_KW));
 }

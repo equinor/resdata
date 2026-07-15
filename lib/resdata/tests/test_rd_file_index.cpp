@@ -46,7 +46,7 @@ void test_create_and_load_index_file() {
 
         //creating rd_file
         auto rd_file = rd::File::open(file_name);
-        test_assert_true(rd_file_has_kw(rd_file.get(), "TEST1_KW"));
+        test_assert_true(rd_file->has_kw("TEST1_KW"));
         rd_file->write_index(index_file_name);
         int rd_file_size = rd_file_get_size(rd_file.get());
         //finished using rd_file
@@ -69,8 +69,8 @@ void test_create_and_load_index_file() {
         test_assert_int_equal(rd_file_size,
                               rd_file_get_size(rd_file_index.get()));
 
-        test_assert_true(rd_file_has_kw(rd_file_index.get(), "TEST1_KW"));
-        test_assert_true(rd_file_has_kw(rd_file_index.get(), "TEST2_KW"));
+        test_assert_true(rd_file_index->has_kw("TEST1_KW"));
+        test_assert_true(rd_file_index->has_kw("TEST2_KW"));
 
         rd_kw_type *kwi1 = rd_file_iget_kw(rd_file_index.get(), 0);
         test_assert_true(rd_kw_equal(kw1, kwi1));

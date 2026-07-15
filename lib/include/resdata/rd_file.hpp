@@ -33,11 +33,14 @@ struct File {
         if (context)
             context->fortio.fclose_stream();
     };
+    /** true if the File has at-least one occurence of @kw. */
+    [[nodiscard]] bool has_kw(const std::string &kw) const {
+        return global_view->has_kw(kw);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw);
 int rd_file_get_size(const rd_file_type *rd_file);
 const char *rd_file_get_src_file(const rd_file_type *rd_file);
