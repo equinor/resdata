@@ -51,17 +51,17 @@ void test_create_and_load_index_file() {
         int rd_file_size = rd_file_get_size(rd_file.get());
         //finished using rd_file
 
-        test_assert_false(rd_file_index_valid(file_name, "nofile"));
-        test_assert_false(rd_file_index_valid("nofile", index_file_name));
+        test_assert_throw(rd::File::fast_open(file_name, "nofile"),
+                          std::ios_base::failure);
+        test_assert_throw(rd::File::fast_open("nofile", index_file_name),
+                          std::ios_base::failure);
 
         struct utimbuf tm1 = {1, 1};
         struct utimbuf tm2 = {2, 2};
         utime(file_name, &tm2);
         utime(index_file_name, &tm1);
-        test_assert_false(rd_file_index_valid(file_name, index_file_name));
         utime(file_name, &tm1);
         utime(index_file_name, &tm2);
-        test_assert_true(rd_file_index_valid(file_name, index_file_name));
 
         rd_file_ptr rd_file_index =
             rd::File::fast_open(file_name, index_file_name);

@@ -94,7 +94,7 @@ std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, size_t num) {
     size_t num_read = fread(buffer.get(), 1, buffer_size, stream);
 
     if (num_read != buffer_size) {
-        throw std::runtime_error("error reading rd_file_type index file");
+        throw std::ios_base::failure("error reading rd_file_type index file");
     }
 
     std::vector<std::shared_ptr<FileKW>> kw_list(num);

@@ -215,8 +215,9 @@ SCENARIO_METHOD(Tmpdir, "Reading a FileKW past the end of the stream fails") {
             auto disk_kw = FileKW::read(stream, 1);
             REQUIRE(*disk_kw[0] == original);
 
-            THEN("Reading another entry throws a runtime_error") {
-                REQUIRE_THROWS_AS(FileKW::read(stream, 1), std::runtime_error);
+            THEN("Reading another entry throws") {
+                REQUIRE_THROWS_AS(FileKW::read(stream, 1),
+                                  std::ios_base::failure);
             }
             std::fclose(stream);
         }

@@ -34,7 +34,6 @@ using rd_file_type = rd::File;
 bool rd_file_load_all(rd_file_type *rd_file);
 bool rd_file_write_index(const rd_file_type *rd_file,
                          const char *index_filename);
-bool rd_file_index_valid(const char *file_name, const char *index_file_name);
 void rd_file_close(rd_file_type *rd_file);
 rd_kw_type *rd_file_icopy_kw(const rd_file_type *rd_file, int index);
 bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw);
