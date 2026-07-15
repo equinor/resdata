@@ -478,16 +478,11 @@ std::shared_ptr<FileView> FileView::read(std::shared_ptr<FileContext> context,
 
     int index_size = util_fread_int(istream);
     if (index_size < 0)
-        return {nullptr};
+        throw std::ios_base::failure(
+            fmt::format("Invalid index size: {}", index_size));
     auto file_view = std::make_shared<FileView>(std::move(context));
 
-    try {
-        file_view->kw_list =
-            FileKW::read(istream, static_cast<size_t>(index_size));
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return nullptr;
-    }
+    file_view->kw_list = FileKW::read(istream, static_cast<size_t>(index_size));
 
     file_view->make_index();
     return file_view;

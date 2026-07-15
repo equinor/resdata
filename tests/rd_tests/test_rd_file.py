@@ -193,7 +193,9 @@ class ResdataFileTest(ResdataTest):
 
                 # Renaming the file so the extensions differ
                 os.rename("TEST.DAT", "TEST.BIN")
-                with self.assertRaisesRegex(OSError, 'Failed to open file "TEST.BIN"'):
+                with self.assertRaisesRegex(
+                    OSError, "Index file did not contain a valid index"
+                ):
                     ResdataFile("TEST.BIN", index_filename="INDEX_FILE")
 
     def test_that_opening_a_rd_file_with_a_corrupt_index_raises(self):
@@ -217,7 +219,7 @@ class ResdataFileTest(ResdataTest):
                 fh.seek(4 + name_len + 1)
                 fh.write(struct.pack("i", -1))
 
-            with self.assertRaisesRegex(OSError, "Failed to open file"):
+            with self.assertRaisesRegex(OSError, "Invalid index size: -1"):
                 ResdataFile("TEST", index_filename="INDEX_FILE")
 
     def test_that_opening_a_rd_file_with_a_truncated_index_raises(self):
@@ -240,7 +242,7 @@ class ResdataFileTest(ResdataTest):
                 (name_len,) = struct.unpack("i", fh.read(4))
                 fh.truncate(4 + name_len + 1 + 4)
 
-            with self.assertRaisesRegex(OSError, "Failed to open file"):
+            with self.assertRaisesRegex(OSError, "error reading.* index file"):
                 ResdataFile("TEST", index_filename="INDEX_FILE")
 
     def test_that_writing_an_index_to_a_read_only_location_raises(self):
@@ -295,7 +297,7 @@ class ResdataFileTest(ResdataTest):
             rd_file.write_index("INDEX_FILE")
             rd_file.close()
 
-            with self.assertRaisesRegex(OSError, 'Failed to open file "NO_SUCH_FILE"'):
+            with self.assertRaisesRegex(OSError, 'File "NO_SUCH_FILE" does not exist'):
                 ResdataFile("NO_SUCH_FILE", index_filename="INDEX_FILE")
 
     def test_that_fast_opening_with_a_missing_index_file_raises(self):
@@ -308,7 +310,7 @@ class ResdataFileTest(ResdataTest):
             with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
                 kw.fwrite(f)
 
-            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+            with self.assertRaisesRegex(OSError, 'File "NO_SUCH_INDEX" does not exist'):
                 ResdataFile("TEST", index_filename="NO_SUCH_INDEX")
 
     def test_that_fast_opening_with_a_stale_index_raises(self):
@@ -329,7 +331,9 @@ class ResdataFileTest(ResdataTest):
             index_stat = os.stat("INDEX_FILE")
             os.utime("TEST", (index_stat.st_atime + 10, index_stat.st_mtime + 10))
 
-            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+            with self.assertRaisesRegex(
+                OSError, 'The file "TEST" is newer than its index file'
+            ):
                 ResdataFile("TEST", index_filename="INDEX_FILE")
 
     def test_that_fast_opening_with_a_foreign_index_raises(self):
@@ -350,7 +354,9 @@ class ResdataFileTest(ResdataTest):
             other.write_index("OTHER_INDEX")
             other.close()
 
-            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+            with self.assertRaisesRegex(
+                OSError, 'Index file did not contain a valid index for "TEST"'
+            ):
                 ResdataFile("TEST", index_filename="OTHER_INDEX")
 
     def test_save_kw(self):

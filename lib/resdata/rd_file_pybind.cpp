@@ -25,8 +25,6 @@ PYBIND11_MODULE(_file, m) {
 
     m.def("_open", [](std::string filename, FileMode flags) -> py::object {
         auto *file = rd::File::open(filename, flags).release();
-        if (file == nullptr)
-            return py::none();
         return py::cast(reinterpret_cast<std::uintptr_t>(file));
     });
     m.def(

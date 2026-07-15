@@ -431,44 +431,35 @@ bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
         return false;
 }
 
-static bool rd_file_index_valid0(const char *file_name,
-                                 const char *index_file_name) {
-    if (!util_file_exists(file_name))
-        return false;
+static void check_valid_index(const std::string &file_name,
+                              const std::string &index_file_name) {
+    if (!util_file_exists(file_name.c_str()))
+        throw std::ios_base::failure(
+            fmt::format("File \"{}\" does not exist", file_name));
 
-    if (!util_file_exists(index_file_name))
-        return false;
+    if (!util_file_exists(index_file_name.c_str()))
+        throw std::ios_base::failure(
+            fmt::format("File \"{}\" does not exist", index_file_name));
 
-    if (util_file_difftime(file_name, index_file_name) > 0)
-        return false;
-
-    return true;
+    if (util_file_difftime(file_name.c_str(), index_file_name.c_str()) > 0)
+        throw std::ios_base::failure(
+            fmt::format("The file \"{}\" is newer than its index file \"{}\"",
+                        file_name, index_file_name));
 }
 
-static bool rd_file_index_valid1(const char *file_name, FILE *stream) {
+static void check_valid_index_stream(const std::string &file_name,
+                                     FILE *stream) {
     bool name_equal;
     char *source_file = util_fread_alloc_string(stream);
-    char *input_name = util_split_alloc_filename(file_name);
+    char *input_name = util_split_alloc_filename(file_name.c_str());
 
     name_equal = util_string_equal(source_file, input_name);
 
     free(source_file);
     free(input_name);
-    return name_equal;
-}
-
-bool rd_file_index_valid(const char *file_name, const char *index_file_name) {
-    if (!rd_file_index_valid0(file_name, index_file_name))
-        return false;
-
-    bool valid = false;
-    FILE *stream = fopen(index_file_name, "rb");
-    if (stream) {
-        valid = rd_file_index_valid1(file_name, stream);
-        fclose(stream);
-    }
-
-    return valid;
+    if (!name_equal)
+        throw std::ios_base::failure(fmt::format(
+            "Index file did not contain a valid index for \"{}\"", file_name));
 }
 
 bool rd_file_write_index(const rd_file_type *rd_file,
@@ -490,26 +481,19 @@ bool rd_file_write_index(const rd_file_type *rd_file,
 rd_file_ptr rd::File::fast_open(const std::string &file_name,
                                 const std::string &index_file_name,
                                 FileMode flags) {
-    if (!rd_file_index_valid0(file_name.c_str(), index_file_name.c_str()))
-        throw std::ios_base::failure(
-            fmt::format("Failed to open file \"{}\"", filename));
+    check_valid_index(file_name, index_file_name);
 
     std::unique_ptr<FILE, decltype(&fclose)> istream(
         fopen(index_file_name.c_str(), "rb"), fclose);
     if (!istream)
         throw std::ios_base::failure(
-            fmt::format("Failed to open file \"{}\"", filename));
+            fmt::format("Failed to open file \"{}\"", index_file_name));
 
-    if (!rd_file_index_valid1(file_name.c_str(), istream.get()))
-        throw std::ios_base::failure(
-            fmt::format("Failed to open file \"{}\"", filename));
+    check_valid_index_stream(file_name, istream.get());
 
     auto fortio = rd_file_alloc_fortio(file_name, flags);
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = rd::FileView::read(context, istream.get());
-    if (!global_view)
-        throw std::ios_base::failure(
-            fmt::format("Failed to open file \"{}\"", filename));
     auto rd_file = std::make_unique<rd::File>(
         context, global_view, std::shared_ptr<rd::FileView>{nullptr});
     rd_file_select_global(rd_file.get());
