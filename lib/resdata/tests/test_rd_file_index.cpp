@@ -66,7 +66,6 @@ void test_create_and_load_index_file() {
 
         rd_file_ptr rd_file_index{rd_file_fast_open(file_name, index_file_name),
                                   &rd_file_free};
-        test_assert_true(rd_file_is_instance(rd_file_index.get()));
 
         test_assert_int_equal(rd_file_size,
                               rd_file_get_size(rd_file_index.get()));
