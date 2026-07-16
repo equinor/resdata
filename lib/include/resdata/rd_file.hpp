@@ -45,11 +45,12 @@ struct File {
     [[nodiscard]] rd_kw_type *get_kw(const std::string &kw, int ith) const {
         return global_view->get_kw(kw, ith);
     }
+    /** The total number of rd_kws in the File. */
+    [[nodiscard]] size_t size() const { return global_view->size(); }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-int rd_file_get_size(const rd_file_type *rd_file);
 const char *rd_file_get_src_file(const rd_file_type *rd_file);
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
 

@@ -132,11 +132,6 @@ namespace fs = std::filesystem;
 
 */
 
-/** The total number of rd_kw instances in the rd_file instance. */
-int rd_file_get_size(const rd_file_type *rd_file) {
-    return rd_file->global_view->size();
-}
-
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
     return rd_file->context->fortio.filename_ref();
 }
