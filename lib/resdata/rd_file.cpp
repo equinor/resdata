@@ -132,10 +132,6 @@ namespace fs = std::filesystem;
 
 */
 
-const char *rd_file_get_src_file(const rd_file_type *rd_file) {
-    return rd_file->context->fortio.filename_ref();
-}
-
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
     return file->global_view->get_kw(global_index);
 }

@@ -97,8 +97,9 @@ void WellInfo::load_rstfile(const std::string &filename,
 void WellInfo::load_rstfile(rd_file_type *rd_file,
                             bool load_segment_information) {
     int report_nr;
-    const char *filename = rd_file_get_src_file(rd_file);
-    rd_file_enum file_type = rd_get_file_type(filename, nullptr, &report_nr);
+    std::string filename = rd_file->filename();
+    rd_file_enum file_type =
+        rd_get_file_type(filename.c_str(), nullptr, &report_nr);
     if ((file_type == RD_RESTART_FILE) ||
         (file_type == RD_UNIFIED_RESTART_FILE)) {
         if (file_type == RD_RESTART_FILE)

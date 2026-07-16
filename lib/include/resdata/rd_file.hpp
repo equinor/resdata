@@ -47,11 +47,14 @@ struct File {
     }
     /** The total number of rd_kws in the File. */
     [[nodiscard]] size_t size() const { return global_view->size(); }
+
+    [[nodiscard]] std::string filename() const {
+        return context->fortio.filename();
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-const char *rd_file_get_src_file(const rd_file_type *rd_file);
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
 
 int rd_file_get_phases(const rd_file_type *init_file);
