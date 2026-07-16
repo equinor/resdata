@@ -67,7 +67,7 @@ PYBIND11_MODULE(_file, m) {
                                          static_cast<time_t>(sim_time));
     });
     m.def("_get_src_file", [](py::handle self) {
-        return rd_file_get_src_file(from_cwrap<rd_file_type>(self));
+        return from_cwrap<rd_file_type>(self)->filename();
     });
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
         from_cwrap<rd::File>(self)->write(fortio, 0);
