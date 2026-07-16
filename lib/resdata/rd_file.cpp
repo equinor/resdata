@@ -121,12 +121,6 @@ std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file) {
     return rd_file->global_view;
 }
 
-std::shared_ptr<rd::FileView>
-rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
-                             int occurence) {
-    return rd_file->global_view->blockview(kw, kw, occurence);
-}
-
 std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
                                                        int report_step) {
     return rd_file->global_view->summary_view(report_step);

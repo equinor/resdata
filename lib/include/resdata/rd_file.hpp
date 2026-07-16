@@ -54,14 +54,15 @@ struct File {
     [[nodiscard]] bool is_writable() const {
         return (context->flags & FileMode::WRITABLE) == FileMode::WRITABLE;
     }
+    std::shared_ptr<rd::FileView> blockview(const std::string &kw,
+                                            size_t occurence) {
+        return global_view->blockview(kw, kw, occurence);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-std::shared_ptr<rd::FileView>
-rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
-                             int occurence);
 std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file);
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw);
 
