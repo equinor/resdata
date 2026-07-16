@@ -271,15 +271,14 @@ double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
 
     3. The rd_file must have been opened with one of the _writable()
        open functions. */
-bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
-    FileKW *file_kw = rd_file->context->inv_map.at(rd_kw);
-    if (rd_file->context->fortio.assert_stream_open()) {
+bool rd::File::save_kw(const rd_kw_type *rd_kw) {
+    FileKW *file_kw = context->inv_map.at(rd_kw);
+    if (context->fortio.assert_stream_open()) {
 
-        file_kw->inplace_write(rd_file->context->fortio);
+        file_kw->inplace_write(context->fortio);
 
-        if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
-            FileMode::CLOSE_STREAM)
-            rd_file->context->fortio.fclose_stream();
+        if ((context->flags & FileMode::CLOSE_STREAM) == FileMode::CLOSE_STREAM)
+            context->fortio.fclose_stream();
 
         return true;
     } else

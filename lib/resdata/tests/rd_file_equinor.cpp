@@ -22,7 +22,7 @@ void test_writable(const char *src_file) {
         rd_kw_type *swat0 = rd_kw_alloc_copy(swat);
         test_assert_true(rd_kw_equal(swat, swat0));
         rd_kw_iset_float(swat, 0, 1000.0);
-        rd_file_save_kw(rd_file.get(), swat);
+        rd_file->save_kw(swat);
         test_assert_true(rd_file->is_writable());
 
         auto rd_file2 = rd::File::open(fname);
