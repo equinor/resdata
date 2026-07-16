@@ -58,6 +58,10 @@ struct File {
                                             size_t occurence) {
         return global_view->blockview(kw, kw, occurence);
     }
+    std::shared_ptr<rd::FileView> summary_view(int report_step) {
+        return global_view->summary_view(report_step);
+    }
+
     [[nodiscard]] std::shared_ptr<rd::FileView> get_global_view() const {
         return global_view;
     }
@@ -87,9 +91,6 @@ int rd_file_get_restart_index(const rd_file_type *restart_file,
                               time_t sim_time);
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step);
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time);
-
-std::shared_ptr<rd::FileView> rd_file_get_summary_view(rd_file_type *rd_file,
-                                                       int report_step);
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);

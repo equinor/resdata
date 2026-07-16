@@ -633,8 +633,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             SEQHDR block in the unified summary file is block zero (in
             ert counting).
         */
-                    auto summary_view =
-                        rd_file_get_summary_view(rd_file.get(), block_index);
+                    auto summary_view = rd_file->summary_view(block_index);
                     if (summary_view) {
                         this->add_rd_file(block_index + first_report_step,
                                           *summary_view);
