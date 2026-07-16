@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     std::string init_file =
         rd::filename(path_case, RD_INIT_FILE, false, 0).string();
 
-    rd_file_ptr init = rd::File::open(init_file);
+    std::unique_ptr<rd::File> init = rd::File::open(init_file);
     rd_grid_ptr grid = read_grid(grid_file);
     const rd_kw_type *poro_kw = init->get_kw("PORO", 0);
     const rd_kw_type *porv_kw = init->get_kw("PORV", 0);

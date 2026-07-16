@@ -16,7 +16,7 @@
 void test_file(const char *filename, int occurence, bool exists,
                const RSTHead &true_header) {
     int report_step = rd_filename_report_nr(filename);
-    rd_file_ptr rst_file = rd::File::open(filename);
+    std::unique_ptr<rd::File> rst_file = rd::File::open(filename);
     rd_file_enum file_type = rd_get_file_type(filename, NULL, NULL);
     std::shared_ptr<rd::FileView> rst_view;
 

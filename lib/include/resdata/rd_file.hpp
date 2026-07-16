@@ -124,4 +124,3 @@ struct File {
     }
 };
 } // namespace rd
-using rd_file_ptr = std::unique_ptr<rd::File>;

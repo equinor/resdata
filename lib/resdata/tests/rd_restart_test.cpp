@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     bool OK = true;
     const char *unrst_file = argv[1];
 
-    rd_file_ptr rst_file = rd::File::open(unrst_file);
+    std::unique_ptr<rd::File> rst_file = rd::File::open(unrst_file);
 
     OK = OK && test_get(rst_file.get(), 1, 1, 1998, -1);
     OK = OK && test_get(rst_file.get(), 17, 9, 2003, -1);

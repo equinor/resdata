@@ -63,7 +63,7 @@ void test_create_and_load_index_file() {
         utime(file_name, &tm1);
         utime(index_file_name.c_str(), &tm2);
 
-        rd_file_ptr rd_file_index =
+        std::unique_ptr<rd::File> rd_file_index =
             rd::File::fast_open(file_name, index_file_name);
 
         test_assert_size_t_equal(rd_file_size, rd_file_index->size());
