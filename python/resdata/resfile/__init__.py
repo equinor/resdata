@@ -18,10 +18,11 @@ format files.
 """
 
 from ._open_fortio import openFortIO
+from ._open_rd_file import open_rd_file
 from .fortio import FortIO
 from .rd_3d_file import Resdata3DFile
 from .rd_3dkw import Resdata3DKW
-from .rd_file import ResdataFile, open_rd_file
+from .rd_file import ResdataFile
 from .rd_file_view import ResdataFileView
 from .rd_init_file import ResdataInitFile
 from .rd_kw import ResdataKW
