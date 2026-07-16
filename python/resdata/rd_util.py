@@ -10,40 +10,10 @@ In addition to the enum definitions there are a few stateless
 functions from rd_util.c which are not bound to any class type.
 """
 
-import ctypes
-
 from cwrap import BaseCEnum
 
 from resdata import ResdataPrototype
-from resdata._file_mode import FileMode
-
-
-class FileType(BaseCEnum):
-    TYPE_NAME = "rd_file_enum"
-    OTHER = None
-    RESTART = None
-    UNIFIED_RESTART = None
-    SUMMARY = None
-    UNIFIED_SUMMARY = None
-    SUMMARY_HEADER = None
-    GRID = None
-    EGRID = None
-    INIT = None
-    RFT = None
-    DATA = None
-
-
-FileType.addEnum("OTHER", 0)
-FileType.addEnum("RESTART", 1)
-FileType.addEnum("UNIFIED_RESTART", 2)
-FileType.addEnum("SUMMARY", 4)
-FileType.addEnum("UNIFIED_SUMMARY", 8)
-FileType.addEnum("SUMMARY_HEADER", 16)
-FileType.addEnum("GRID", 32)
-FileType.addEnum("EGRID", 64)
-FileType.addEnum("INIT", 128)
-FileType.addEnum("RFT", 256)
-FileType.addEnum("DATA", 512)
+from resdata._rd_util import FileMode, FileType, _get_file_type
 
 
 class Phase(BaseCEnum):
@@ -75,9 +45,6 @@ UnitSystem.addEnum("PVT_M", 4)
 
 class ResdataUtil:
     _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
-    _get_file_type = ResdataPrototype(
-        "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
-    )
     _get_start_date = ResdataPrototype("rd_time_t rd_get_start_date(char*)", bind=False)
     _get_report_step = ResdataPrototype("int rd_filename_report_nr(char*)", bind=False)
 
@@ -93,11 +60,9 @@ class ResdataUtil:
         return ResdataUtil._get_num_cpu(datafile)
 
     @staticmethod
-    def get_file_type(filename):
-        """
-        Will inspect an ECLIPSE filename and return an integer type flag.
-        """
-        file_type, fmt, step = ResdataUtil.inspect_extension(filename)
+    def get_file_type(filename: str) -> FileType:
+        """Inspect the ECLIPSE filename and return the FileType."""
+        file_type, _, _ = ResdataUtil.inspect_extension(filename)
         return file_type
 
     @staticmethod
@@ -105,22 +70,16 @@ class ResdataUtil:
         return ResdataUtil._get_start_date(datafile).datetime()
 
     @staticmethod
-    def inspect_extension(filename):
+    def inspect_extension(filename: str) -> tuple[FileType, bool, int | None]:
         """Will inspect a filename and return a tuple consisting of
         a FileType, a bool for formatted or not, and an
         integer for the step number.
         """
-        fmt_file = ctypes.c_bool()
-        report_step = ctypes.c_int(-1)
-        file_type = ResdataUtil._get_file_type(
-            filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
-        )
-        if report_step.value == -1:
-            step = None
-        else:
-            step = report_step.value
-
-        return (file_type, fmt_file.value, step)
+        report: int | None
+        file_type, fmt, report = _get_file_type(filename)
+        if report == -1:
+            report = None
+        return file_type, fmt, report
 
     @staticmethod
     def report_step(filename):

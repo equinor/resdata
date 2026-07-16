@@ -38,18 +38,18 @@ namespace fs = std::filesystem;
 
 static void unpack_file(const fs::path &filepath) {
     std::string filename = filepath;
-    rd_file_enum target_type = RD_OTHER_FILE;
-    rd_file_enum file_type;
+    FileType target_type = FileType::OTHER;
+    FileType file_type;
     bool fmt_file;
     file_type = rd_get_file_type(filename.c_str(), &fmt_file, NULL);
-    if (file_type == RD_UNIFIED_SUMMARY_FILE)
-        target_type = RD_SUMMARY_FILE;
-    else if (file_type == RD_UNIFIED_RESTART_FILE)
-        target_type = RD_RESTART_FILE;
+    if (file_type == FileType::UNIFIED_SUMMARY)
+        target_type = FileType::SUMMARY;
+    else if (file_type == FileType::UNIFIED_RESTART)
+        target_type = FileType::RESTART;
     else
         util_exit("Can only unpack unified summary and restart files\n");
 
-    if (target_type == RD_SUMMARY_FILE) {
+    if (target_type == FileType::SUMMARY) {
         printf("** Warning: when unpacking unified summary files it as "
                "ambigous - starting with 0001  -> \n");
     }
@@ -58,7 +58,7 @@ static void unpack_file(const fs::path &filepath) {
     size_t offset;
     int report_step = 0;
 
-    if (target_type == RD_SUMMARY_FILE)
+    if (target_type == FileType::SUMMARY)
         size = src_file->num_named_kw("SEQHDR");
     else
         size = src_file->num_named_kw("SEQNUM");
@@ -66,7 +66,7 @@ static void unpack_file(const fs::path &filepath) {
     for (size_t block_index = 0; block_index < size; block_index++) {
         std::shared_ptr<rd::FileView> active_view;
 
-        if (target_type == RD_SUMMARY_FILE) {
+        if (target_type == FileType::SUMMARY) {
             active_view = src_file->blockview(SEQHDR_KW, block_index);
             report_step += 1;
             offset = 0;

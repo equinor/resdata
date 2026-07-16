@@ -17,10 +17,10 @@ void test_file(const char *filename, int occurence, bool exists,
                const RSTHead &true_header) {
     int report_step = rd_filename_report_nr(filename);
     std::unique_ptr<rd::File> rst_file = rd::File::open(filename);
-    rd_file_enum file_type = rd_get_file_type(filename, NULL, NULL);
+    FileType file_type = rd_get_file_type(filename, NULL, NULL);
     std::shared_ptr<rd::FileView> rst_view;
 
-    if (file_type == RD_RESTART_FILE)
+    if (file_type == FileType::RESTART)
         rst_view = rst_file->get_global_view();
     else
         rst_view = rst_file->get_global_view()->restart_view_from_seqnum_index(

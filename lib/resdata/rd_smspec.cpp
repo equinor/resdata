@@ -470,7 +470,7 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
 void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
                       bool fmt_file) {
     std::string filename =
-        rd::filename(rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0).string();
+        rd::filename(rd_case, FileType::SUMMARY_HEADER, fmt_file, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
 
     rd_smspec_fortio_fwrite(smspec, fortio);
@@ -697,7 +697,7 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
     if (restart_path.is_relative()) {
         restart_path = dir / restart_path;
     }
-    smspec_header = rd::filename(restart_path, RD_SUMMARY_HEADER_FILE,
+    smspec_header = rd::filename(restart_path, FileType::SUMMARY_HEADER,
                                  rd_smspec->formatted, 0)
                         .string();
 

@@ -13,11 +13,11 @@ namespace fs = std::filesystem;
 int main(int argc, char **argv) {
     fs::path case_path(argv[1]);
     std::string grid_file =
-        rd::filename(case_path, RD_EGRID_FILE, false, 0).string();
+        rd::filename(case_path, FileType::EGRID, false, 0).string();
     std::string init_file =
-        rd::filename(case_path, RD_INIT_FILE, false, 0).string();
+        rd::filename(case_path, FileType::INIT, false, 0).string();
     std::string rst_file =
-        rd::filename(case_path, RD_RESTART_FILE, false, 0).string();
+        rd::filename(case_path, FileType::RESTART, false, 0).string();
 
     rd_grid_ptr rd_grid = read_grid(grid_file);
     std::unique_ptr<rd::File> RST_file = rd::File::open(rst_file);

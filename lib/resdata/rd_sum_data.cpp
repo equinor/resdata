@@ -276,7 +276,7 @@ rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
 static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
                                        const fs::path &rd_case, bool fmt_case) {
     std::string filename =
-        rd::filename(rd_case, RD_UNIFIED_SUMMARY_FILE, fmt_case, 0).string();
+        rd::filename(rd_case, FileType::UNIFIED_SUMMARY, fmt_case, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_case);
 
     for (auto &data_file : data->data_files)
