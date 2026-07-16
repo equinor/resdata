@@ -11,25 +11,6 @@
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_kw.hpp>
 
-void test_close_stream1(const char *src_file, const char *target_file) {
-    util_copy_file(src_file, target_file);
-
-    auto rd_file = rd::File::open(target_file, FileMode::CLOSE_STREAM);
-    rd_kw_type *kw0 = rd_file_iget_kw(rd_file.get(), 0);
-    rd_kw_type *kw1 = rd_file_iget_kw(rd_file.get(), 1);
-    unlink(target_file);
-    rd_kw_type *kw1b = rd_file_iget_kw(rd_file.get(), 1);
-
-    test_assert_not_NULL(kw0);
-    test_assert_not_NULL(kw1);
-    test_assert_ptr_equal(kw1, kw1b);
-
-    rd_kw_type *kw2 = rd_file_iget_kw(rd_file.get(), 2);
-    test_assert_NULL(kw2);
-
-    test_assert_false(rd_file->is_writable());
-}
-
 void test_writable(const char *src_file) {
     rd::util::TestArea ta("file_writable");
     char *fname = util_split_alloc_filename(src_file);
@@ -53,14 +34,11 @@ void test_writable(const char *src_file) {
 
 int main(int argc, char **argv) {
     const char *src_file = argv[1];
-    const char *target_file = argv[2];
-
     {
         rd::util::TestArea ta("file_equinor");
 
         ta.copy_file(src_file);
 
-        test_close_stream1(src_file, target_file);
         test_writable(src_file);
     }
     exit(0);

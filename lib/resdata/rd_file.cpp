@@ -117,25 +117,6 @@ namespace fs = std::filesystem;
         internalized as in e.g. rd_sum.
 */
 
-/**
-   Here comes several functions for querying the rd_file instance, and
-   getting pointers to the rd_kw content of the rd_file. For getting
-   rd_kw instances there are two principally different access methods:
-
-   * rd::File::get_kw(): This function will take a keyword
-   (char *) and an integer as input. The integer corresponds to the
-   ith occurence of the keyword in the file.
-
-   * rd_file_iget_kw(): This function just takes an integer index as
-   input, and returns the corresponding rd_kw instance - without
-   considering which keyword it is.
-
-*/
-
-rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
-    return file->global_view->get_kw(global_index);
-}
-
 std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file) {
     return rd_file->global_view;
 }

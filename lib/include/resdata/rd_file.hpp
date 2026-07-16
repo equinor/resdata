@@ -59,7 +59,6 @@ struct File {
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index);
 std::shared_ptr<rd::FileView>
 rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
                              int occurence);
