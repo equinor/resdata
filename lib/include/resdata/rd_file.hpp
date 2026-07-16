@@ -78,13 +78,14 @@ struct File {
 
         3. The File must have been opened with FileMode::WRITABLE. */
     bool save_kw(const rd_kw_type *rd_kw);
+    double restart_sim_days(int index) {
+        return global_view->restart_sim_days(index);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
-                                     int index);
 time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
                                      int occurence);
 int rd_file_get_restart_index(const rd_file_type *restart_file,

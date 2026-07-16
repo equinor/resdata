@@ -249,11 +249,6 @@ time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
     return restart_file->global_view->restart_sim_date(index);
 }
 
-double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
-                                     int index) {
-    return restart_file->global_view->restart_sim_days(index);
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 
