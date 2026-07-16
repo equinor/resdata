@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 
     rd_grid_type *grid = rd_grid_alloc(grid_file);
     rd_file_ptr rst_file = rd::File::open(rst_file_name);
-    auto rst_view = rd_file_get_global_view(rst_file.get());
+    auto rst_view = rst_file->get_global_view();
     auto header =
         RSTHead::read(rst_view.get(), rd_filename_report_nr(rst_file_name));
     const char *well_name = "WELL";

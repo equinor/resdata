@@ -32,8 +32,7 @@ void test_writable(size_t data_size) {
 
     for (int i = 0; i < 4; ++i) {
         auto rd_file = rd::File::open(data_file_name, FileMode::WRITABLE);
-        rd_kw_type *loaded_kw =
-            rd_file_get_global_view(rd_file.get())->get_kw(0);
+        rd_kw_type *loaded_kw = rd_file->get_global_view()->get_kw(0);
         test_assert_true(rd_kw_equal(kw, loaded_kw));
 
         rd_file_save_kw(rd_file.get(), loaded_kw);

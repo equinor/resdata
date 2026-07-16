@@ -2393,8 +2393,7 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
     */
 
     for (size_t i = 0; i < num_nnchead_kw; i++) {
-        auto lgr_view = rd_file_get_global_view(rd_file)->blockview(
-            NNCHEAD_KW, NNCHEAD_KW, i);
+        auto lgr_view = rd_file->blockview(NNCHEAD_KW, i);
         if (!lgr_view)
             throw std::runtime_error("Could not find NNC section of grid file");
         rd_kw_type *nnchead_kw = lgr_view->get_kw(NNCHEAD_KW, 0);

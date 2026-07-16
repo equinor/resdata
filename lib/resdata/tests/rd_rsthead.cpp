@@ -21,10 +21,10 @@ void test_file(const char *filename, int occurence, bool exists,
     std::shared_ptr<rd::FileView> rst_view;
 
     if (file_type == RD_RESTART_FILE)
-        rst_view = rd_file_get_global_view(rst_file.get());
+        rst_view = rst_file->get_global_view();
     else
-        rst_view = rd_file_get_global_view(rst_file.get())
-                       ->restart_view_from_seqnum_index(occurence);
+        rst_view = rst_file->get_global_view()->restart_view_from_seqnum_index(
+            occurence);
 
     if (exists) {
         test_assert_not_NULL(rst_view.get());

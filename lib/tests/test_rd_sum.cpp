@@ -791,7 +791,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
     auto restart_file = rd::File::open(restart_name + smspec_ext);
     REQUIRE(restart_file != nullptr);
-    auto view = rd_file_get_global_view(restart_file.get());
+    auto view = restart_file->get_global_view();
     REQUIRE(view->has_kw(RESTART_KW));
 
     SECTION("Parent case name is padded across 8-char blocks") {
@@ -832,7 +832,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
     }
 
     auto smspec_file = rd::File::open(name + ".SMSPEC");
-    auto view = rd_file_get_global_view(smspec_file.get());
+    auto view = smspec_file->get_global_view();
     REQUIRE(view->has_kw(RESTART_KW));
     rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
     REQUIRE(rd_kw_get_size(restart_kw) == 8);
