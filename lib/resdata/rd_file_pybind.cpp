@@ -71,8 +71,7 @@ PYBIND11_MODULE(_file, m) {
         from_cwrap<rd::File>(self)->write(fortio, 0);
     });
     m.def("_has_report_step", [](py::handle self, int report_step) {
-        return rd_file_has_report_step(from_cwrap<rd_file_type>(self),
-                                       report_step);
+        return from_cwrap<rd_file_type>(self)->has_report_step(report_step);
     });
     m.def("_has_sim_time", [](py::handle self, std::int64_t sim_time) {
         return rd_file_has_sim_time(from_cwrap<rd_file_type>(self),

@@ -208,13 +208,6 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
     return rd_file->global_view->has_sim_time(sim_time);
 }
 
-/** Will look through all the SEQNUM kw instances of the current
-    rd_file and look for @report_step. If the value is found true is
-    returned, otherwise false. */
-bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
-    return rd_file->global_view->has_report_step(report_step);
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 
