@@ -18,7 +18,6 @@
 
 #include <cstdlib>
 
-
 #include <ios>
 #include <memory>
 #include <algorithm>

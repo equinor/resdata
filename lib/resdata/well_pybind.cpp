@@ -42,9 +42,12 @@ void load_rstfile(WellInfo *well_info, py::handle rst_file,
             throw py::error_already_set();
         }
         well_info->load_rstfile(rst_file_name, load_segment_information);
-    } else
-        well_info->load_rstfile(from_cwrap<rd::File>(rst_file),
+    } else if (py::isinstance<rd::File>(rst_file))
+        well_info->load_rstfile(rst_file.cast<rd::File *>(),
                                 load_segment_information);
+    else
+        throw py::type_error("Expected a filename or ResdataFile, got " +
+                             static_cast<std::string>(py::repr(rst_file)));
 }
 
 template <class... Ts> struct overload : Ts... {

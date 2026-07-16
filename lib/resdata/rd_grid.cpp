@@ -2616,7 +2616,7 @@ static int rd_grid_dual_porosity_GRID_check(rd::File *rd_file) {
     else {
         int dualp_flag = FILEHEAD_DUAL_POROSITY;
         size_t num_corners = rd_file->num_named_kw(CORNERS_KW);
-        int matrix_index = 0;
+        size_t matrix_index = 0;
         size_t fracture_index;
 
         rd_kw_type *matrix_kw;
