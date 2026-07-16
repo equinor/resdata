@@ -312,11 +312,25 @@ static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
     survey->phase_map[std::string(rd_get_phase_name(phase))] = grav_phase;
 }
 
+/**
+  1: Oil
+  2: Water
+  3: Oil + water
+  4: Gas
+  5: Gas + Oil
+  6: Gas + water
+  7: Gas + Water + Oil */
+static int get_phases(const rd_file_type *init_file) {
+    rd_kw_type *intehead_kw = init_file->get_kw(INTEHEAD_KW, 0);
+    int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
+    return phases;
+}
+
 static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
                                       rd_grav_survey_type *survey,
                                       rd::FileView *restart_file,
                                       grav_calc_type calc_type) {
-    int phases = rd_file_get_phases(rd_grav->init_file);
+    int phases = get_phases(rd_grav->init_file);
     if (phases & RD_OIL_PHASE) {
         rd_grav_phase_type *oil_phase = rd_grav_phase_alloc(
             rd_grav, survey, RD_OIL_PHASE, restart_file, calc_type);
