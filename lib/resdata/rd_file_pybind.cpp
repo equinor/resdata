@@ -44,7 +44,7 @@ PYBIND11_MODULE(_file, m) {
                                report_step);
     });
     m.def("_writable", [](py::handle self) {
-        return rd_file_writable(from_cwrap<rd_file_type>(self));
+        return from_cwrap<rd_file_type>(self)->is_writable();
     });
     m.def("_save_kw", [](py::handle self, py::handle kw) {
         rd_file_save_kw(from_cwrap<rd_file_type>(self),

@@ -27,7 +27,7 @@ void test_close_stream1(const char *src_file, const char *target_file) {
     rd_kw_type *kw2 = rd_file_iget_kw(rd_file.get(), 2);
     test_assert_NULL(kw2);
 
-    test_assert_false(rd_file_writable(rd_file.get()));
+    test_assert_false(rd_file->is_writable());
 }
 
 void test_writable(const char *src_file) {
@@ -42,7 +42,7 @@ void test_writable(const char *src_file) {
         test_assert_true(rd_kw_equal(swat, swat0));
         rd_kw_iset_float(swat, 0, 1000.0);
         rd_file_save_kw(rd_file.get(), swat);
-        test_assert_true(rd_file_writable(rd_file.get()));
+        test_assert_true(rd_file->is_writable());
 
         auto rd_file2 = rd::File::open(fname);
         swat = rd_file2->get_kw("SWAT", 0);
