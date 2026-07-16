@@ -71,14 +71,11 @@ bool WellState::add_rates(rd::FileView *rst_view, int well_nr) {
     return has_xwel_kw;
 }
 
-/*
-  This function assumes that the rd_file state has been restricted
-  to one LGR block with the rd_file_subselect_block() function.
+/** This function assumes that the rd_file state has been restricted
+  to one LGR block.
 
-  Return value: -1 means that the well is not found in this LGR at
-  all.
-*/
-
+  Return value -1 means that the well is not found in this LGR at
+  all. */
 int WellState::get_lgr_well_nr(rd::FileView *file_view) {
     int well_nr = -1;
 
@@ -136,11 +133,8 @@ WellType well_state_translate_rd_type_int(int int_type) {
     return type;
 }
 
-/*
-  This function assumes that the rd_file state has been restricted
-  to one LGR block with the rd_file_subselect_block() function.
-*/
-
+/** This function assumes that the rd_file state has been restricted
+    to one LGR block. */
 void WellState::add_connections(rd::FileView *rst_view,
                                 const std::string &grid_name, int grid_nr,
                                 int well_nr) {
