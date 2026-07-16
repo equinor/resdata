@@ -20,9 +20,9 @@ int main(int argc, char **argv) {
         rd::filename(case_path, RD_RESTART_FILE, false, 0).string();
 
     rd_grid_ptr rd_grid = read_grid(grid_file);
-    rd_file_ptr RST_file = rd::File::open(rst_file);
-    rd_file_ptr INIT_file = rd::File::open(init_file);
-    rd_file_ptr GRID_file = rd::File::open(grid_file);
+    std::unique_ptr<rd::File> RST_file = rd::File::open(rst_file);
+    std::unique_ptr<rd::File> INIT_file = rd::File::open(init_file);
+    std::unique_ptr<rd::File> GRID_file = rd::File::open(grid_file);
 
     {
         rd_kw_type *actnum = GRID_file->get_kw("ACTNUM", 0);

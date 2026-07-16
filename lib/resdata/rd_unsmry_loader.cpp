@@ -29,7 +29,7 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
       time_seconds(rd_smspec_get_time_seconds(smspec)),
       sim_start(rd_smspec_get_start_time(smspec)) {
     {
-        rd_file_ptr file = rd::File::open(filename, file_options);
+        std::unique_ptr<rd::File> file = rd::File::open(filename, file_options);
         this->file = std::move(file);
     }
     if (!this->file->has_kw(PARAMS_KW)) {

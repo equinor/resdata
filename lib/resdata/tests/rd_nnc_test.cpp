@@ -29,7 +29,7 @@ template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
 
 void test_scan(const char *grid_filename) {
     rd_grid_type *rd_grid = rd_grid_alloc(grid_filename);
-    rd_file_ptr grid_file = rd::File::open(grid_filename);
+    std::unique_ptr<rd::File> grid_file = rd::File::open(grid_filename);
 
     for (size_t block_nr = 0; block_nr < grid_file->num_named_kw(NNCHEAD_KW);
          block_nr++) {

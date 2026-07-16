@@ -174,7 +174,8 @@ rd_file_alloc_fortio(const std::string &filename, FileMode flags) {
    through the complete file, extract all the keyword headers and
    create the map/index stored in the global_view field of the rd_file
    structure. No keyword data will be loaded from the file.*/
-rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
+std::unique_ptr<rd::File> rd::File::open(const std::string &filename,
+                                         FileMode flags) {
     auto fortio = rd_file_alloc_fortio(filename, flags);
 
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
@@ -311,9 +312,9 @@ bool rd::File::write_index(const std::string &index_filename) {
     return true;
 }
 
-rd_file_ptr rd::File::fast_open(const std::string &file_name,
-                                const std::string &index_file_name,
-                                FileMode flags) {
+std::unique_ptr<rd::File>
+rd::File::fast_open(const std::string &file_name,
+                    const std::string &index_file_name, FileMode flags) {
     check_valid_index(file_name, index_file_name);
 
     std::unique_ptr<FILE, decltype(&fclose)> istream(

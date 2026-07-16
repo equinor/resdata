@@ -2761,7 +2761,7 @@ static rd_grid_ptr rd_grid_alloc_GRID(const char *grid_file,
             "{}: wrong file type - expected .GRID file", grid_file));
 
     size_t cell_offset = 0;
-    rd_file_ptr rd_file = rd::File::open(grid_file);
+    std::unique_ptr<rd::File> rd_file = rd::File::open(grid_file);
     size_t num_grid = rd_file->num_named_kw(DIMENS_KW);
     int dualp_flag;
 
