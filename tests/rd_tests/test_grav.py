@@ -123,6 +123,68 @@ class ResdataGravTest(ResdataTest):
             response = grav.eval("rporv", None, (0, 0, 0), phase_mask=7)
             assert response == pytest.approx(-0.015846654333235285, rel=1e-9)
 
+    def _aquifer_kw(self, predicate):
+        kw = ResdataKW("AQUIFERN", self.grid.get_global_size(), ResDataType.RD_INT)
+        for i in range(self.grid.get_global_size()):
+            kw[i] = -1 if predicate(i) else 0
+        return kw
+
+    def _rporv_response_with_aquifer(self, tmpdir, mp, aquifer_kw):
+        kws = [
+            self._float_kw(name)
+            for name in [
+                "PORO",
+                "PORV",
+                "RPORV",
+                "SWAT",
+                "SGAS",
+                "OIL_DEN",
+                "GAS_DEN",
+                "WAT_DEN",
+            ]
+        ]
+        init_kws = [aquifer_kw] if aquifer_kw is not None else None
+        grav, restart_view = self._all_phase_grav(tmpdir, mp, kws, init_kws=init_kws)
+        grav.add_survey_RPORV("rporv", restart_view)
+        return grav.eval("rporv", None, (0, 0, 0), phase_mask=7)
+
+    def test_aquifer_cells_are_excluded(self):
+        # A negative AQUIFERN value marks a numerical aquifer cell, which must
+        # be ignored in the gravity response.
+        with self.monkeypatch.context() as mp:
+            even = self._rporv_response_with_aquifer(
+                self.tmp_path_factory.mktemp("grav_aquifer_even", numbered=True),
+                mp,
+                self._aquifer_kw(lambda i: i % 2 == 0),
+            )
+        with self.monkeypatch.context() as mp:
+            odd = self._rporv_response_with_aquifer(
+                self.tmp_path_factory.mktemp("grav_aquifer_odd", numbered=True),
+                mp,
+                self._aquifer_kw(lambda i: i % 2 == 1),
+            )
+        with self.monkeypatch.context() as mp:
+            all_excluded = self._rporv_response_with_aquifer(
+                self.tmp_path_factory.mktemp("grav_aquifer_all", numbered=True),
+                mp,
+                self._aquifer_kw(lambda i: True),
+            )
+        with self.monkeypatch.context() as mp:
+            all_included = self._rporv_response_with_aquifer(
+                self.tmp_path_factory.mktemp("grav_aquifer_none", numbered=True),
+                mp,
+                self._aquifer_kw(lambda i: False),
+            )
+
+        assert even == pytest.approx(-0.006440997281125721, rel=1e-9)
+        assert odd == pytest.approx(-0.00940565705210959, rel=1e-9)
+        assert all_excluded == pytest.approx(0.0)
+        assert all_included == pytest.approx(-0.015846654333235285, rel=1e-9)
+
+        # since the response is a linear sum over the non-aquifer cells, the two
+        # halves must add up to the response where no cell is an aquifer.
+        assert even + odd == pytest.approx(all_included, rel=1e-9)
+
     def test_all_phases_rfip_e100(self):
         kws = [
             self._float_kw(name)
@@ -184,18 +246,22 @@ class ResdataGravTest(ResdataTest):
             self._float_kw(name)
             for name in ["PORO", "PORV", "SWAT", "OIL_DEN", "RPORV"]
         ]
-        tmpdir = self.tmp_path_factory.mktemp("grav_intersect", numbered=True)
-        with self.monkeypatch.context() as mp:
-            mp.chdir(tmpdir)
-            write_grav_case("TEST", kws, phases=1, version=700)  # INTERSECT
-            init = ResdataFile("TEST.INIT")
-            grav = ResdataGrav(self.grid, init)
-            restart_file = ResdataFile("TEST.UNRST")
-            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
-            grav.new_std_density(1, 0.5)
-            grav.add_std_density(1, 0, 0.5)
-            with pytest.raises(ValueError, match=r"unrecognized simulator id"):
-                grav.add_survey_RPORV("rporv", restart_view)
+        for version in (700, 800):  # INTERSECT, FRONTSIM
+            with self.subTest(version=version):
+                tmpdir = self.tmp_path_factory.mktemp("grav_sim_id", numbered=True)
+                with self.monkeypatch.context() as mp:
+                    mp.chdir(tmpdir)
+                    write_grav_case("TEST", kws, phases=1, version=version)
+                    init = ResdataFile("TEST.INIT")
+                    grav = ResdataGrav(self.grid, init)
+                    restart_file = ResdataFile("TEST.UNRST")
+                    restart_view = restart_file.restart_view(
+                        sim_time=datetime.date(2000, 1, 1)
+                    )
+                    grav.new_std_density(1, 0.5)
+                    grav.add_std_density(1, 0, 0.5)
+                    with pytest.raises(ValueError, match=r"unrecognized simulator id"):
+                        grav.add_survey_RPORV("rporv", restart_view)
 
     def test_create(self):
         kws = [
