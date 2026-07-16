@@ -575,6 +575,29 @@ class SumTest(ResdataTest):
             case = Summary("UNITS")
             self.assertEqual(case.unit_system, UnitSystem.LAB)
 
+    def test_load_non_unified_case_via_summary_extension(self):
+        tmpdir = self.tmp_path_factory.mktemp("non_unified", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            rd_sum = Summary.writer(
+                "CASE", datetime.date(2010, 1, 1), 3, 3, 3, unified=False
+            )
+            rd_sum.add_variable("FOPT", num=0, unit="SM3")
+            for report_step in range(1, 4):
+                t_step = rd_sum.add_t_step(report_step, sim_days=float(report_step))
+                t_step["FOPT"] = report_step * 100.0
+            rd_sum.fwrite()
+
+            # A non-unified case is written as separate CASE.Snnnn files.
+            self.assertTrue(os.path.exists("CASE.S0001"))
+            self.assertFalse(os.path.exists("CASE.UNSMRY"))
+
+            # Passing a path whose extension is a non-unified summary file
+            # (.S0001) exercises the non-unified branch of the case loader.
+            case = Summary("CASE.S0001")
+            self.assertEqual(len(case), 3)
+            self.assertEqual(case.numpy_vector("FOPT")[-1], 300.0)
+
     def test_numpy_vector(self):
         case = create_case()
 

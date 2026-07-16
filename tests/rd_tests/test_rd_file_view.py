@@ -280,6 +280,20 @@ def test_that_restart_view_iget_named_kw_with_index_returns_the_array(restart_fi
         )
 
 
+def test_restart_view_with_negative_seqnum_index_raises(restart_file):
+    with open_rd_file(restart_file) as rd_file:
+        with pytest.raises(ValueError, match="seqnum_index cannot be negative"):
+            rd_file.global_view.restart_view(seqnum_index=-1)
+
+
+def test_restart_view_with_too_large_seqnum_index_raises(restart_file):
+    with open_rd_file(restart_file) as rd_file:
+        with pytest.raises(
+            ValueError, match="No such restart block could be identified"
+        ):
+            rd_file.global_view.restart_view(seqnum_index=2)
+
+
 def test_restart_view_by_report_step(restart_file):
     with open_rd_file(restart_file) as rd_file:
         view = rd_file.global_view.restart_view(report_step=20)

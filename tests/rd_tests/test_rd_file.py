@@ -162,6 +162,40 @@ class ResdataFileTest(ResdataTest):
                 "NNC2",
             ]
 
+    def test_that_the_index_stores_the_filename_with_extension(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_index_name", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            os.mkdir("sub")
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("sub/TEST.DAT", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("sub/TEST.DAT")
+            rd_file.write_index("sub/INDEX_FILE")
+            rd_file.close()
+
+            # The index stores only the base filename, keeping the extension but
+            # dropping the directory component.
+            with open("sub/INDEX_FILE", "rb") as fh:
+                (name_len,) = struct.unpack("i", fh.read(4))
+                stored_name = fh.read(name_len).decode("ascii")
+            self.assertEqual(stored_name, "TEST.DAT")
+
+            # Loading from within the file's directory works even though the
+            # index was written with a different directory prefix,
+            # because the stored name is directory independent.
+            with CWDContext("sub"):
+                rd_file_index = ResdataFile("TEST.DAT", index_filename="INDEX_FILE")
+                self.assertIn("KW1", rd_file_index)
+
+                # Renaming the file so the extensions differ
+                os.rename("TEST.DAT", "TEST.BIN")
+                with self.assertRaisesRegex(OSError, 'Failed to open file "TEST.BIN"'):
+                    ResdataFile("TEST.BIN", index_filename="INDEX_FILE")
+
     def test_that_opening_a_rd_file_with_a_corrupt_index_raises(self):
         tmpdir = self.tmp_path_factory.mktemp("python_rd_file_bad_index", numbered=True)
         with self.monkeypatch.context() as mp:
@@ -208,6 +242,116 @@ class ResdataFileTest(ResdataTest):
 
             with self.assertRaisesRegex(OSError, "Failed to open file"):
                 ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_writing_an_index_to_a_read_only_location_raises(self):
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("cannot test permission errors as root")
+
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_ro_index", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            os.mkdir("read_only")
+            os.chmod("read_only", 0o500)
+            try:
+                rd_file = ResdataFile("TEST")
+                with self.assertRaises(OSError):
+                    rd_file.write_index("read_only/INDEX_FILE")
+            finally:
+                os.chmod("read_only", 0o700)
+
+    def test_that_opening_a_non_existing_file_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp("python_rd_file_missing", numbered=True)
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            with self.assertRaisesRegex(OSError, "File NO_SUCH_FILE does not exist"):
+                ResdataFile("NO_SUCH_FILE")
+
+    def test_that_opening_a_non_existing_file_writable_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_missing_rw", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            with self.assertRaisesRegex(
+                OSError, "Failed to open FortIO file NO_SUCH_FILE"
+            ):
+                ResdataFile("NO_SUCH_FILE", flags=FileMode.WRITABLE)
+
+    def test_that_fast_opening_with_a_missing_source_file_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_fast_no_source", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("TEST")
+            rd_file.write_index("INDEX_FILE")
+            rd_file.close()
+
+            with self.assertRaisesRegex(OSError, 'Failed to open file "NO_SUCH_FILE"'):
+                ResdataFile("NO_SUCH_FILE", index_filename="INDEX_FILE")
+
+    def test_that_fast_opening_with_a_missing_index_file_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_fast_no_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+                ResdataFile("TEST", index_filename="NO_SUCH_INDEX")
+
+    def test_that_fast_opening_with_a_stale_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_stale_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("TEST")
+            rd_file.write_index("INDEX_FILE")
+            rd_file.close()
+
+            # Make the source file newer than its index so the index is stale.
+            index_stat = os.stat("INDEX_FILE")
+            os.utime("TEST", (index_stat.st_atime + 10, index_stat.st_mtime + 10))
+
+            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_fast_opening_with_a_foreign_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_foreign_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+            with openFortIO("OTHER", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            # Build an index that stores "OTHER" as its source filename and use
+            # it to open "TEST"; the stored name does not match the file.
+            other = ResdataFile("OTHER")
+            other.write_index("OTHER_INDEX")
+            other.close()
+
+            with self.assertRaisesRegex(OSError, 'Failed to open file "TEST"'):
+                ResdataFile("TEST", index_filename="OTHER_INDEX")
 
     def test_save_kw(self):
         tmpdir = self.tmp_path_factory.mktemp("python_rd_file_save_kw", numbered=True)
@@ -423,11 +567,12 @@ def _write_single_kw_file(filename, kw_name="MY_KEY", size=5):
     return kw
 
 
-def test_save_kw_roundtrip_with_own_kw(tmpdir):
+@pytest.mark.parametrize("extra_flags", [FileMode.DEFAULT, FileMode.CLOSE_STREAM])
+def test_save_kw_roundtrip_with_own_kw(tmpdir, extra_flags):
     with tmpdir.as_cwd():
         _write_single_kw_file("TEST")
 
-        rd_file = ResdataFile("TEST", flags=FileMode.WRITABLE)
+        rd_file = ResdataFile("TEST", flags=FileMode.WRITABLE | extra_flags)
         loaded_kw = rd_file["MY_KEY"][0]
         loaded_kw[0] = 42
 
@@ -435,6 +580,22 @@ def test_save_kw_roundtrip_with_own_kw(tmpdir):
         rd_file.close()
 
         assert ResdataFile("TEST")["MY_KEY"][0][0] == 42
+
+
+@pytest.mark.parametrize("extra_flags", [FileMode.DEFAULT, FileMode.CLOSE_STREAM])
+def test_fast_open_with_index_roundtrip(tmpdir, extra_flags):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        rd_file = ResdataFile("TEST")
+        rd_file.write_index("INDEX_FILE")
+        rd_file.close()
+
+        fast_opened = ResdataFile(
+            "TEST", flags=extra_flags, index_filename="INDEX_FILE"
+        )
+        assert "MY_KEY" in fast_opened
+        assert list(fast_opened["MY_KEY"][0]) == [0, 1, 2, 3, 4]
 
 
 def test_save_kw_with_kw_from_different_file_raises(tmpdir):
@@ -695,3 +856,107 @@ def test_that_kws_are_valid_after_closing_the_file(tmp_path):
 
     assert kw.name == "PRESSURE"
     assert list(kw) == pytest.approx([1.0, 2.0, 3.0])
+
+
+def test_report_list_on_non_restart_file_raises_type_error(tmpdir):
+    with tmpdir.as_cwd():
+        kw = ResdataKW("HEADER", 1, ResDataType.RD_INT)
+        kw[0] = 0
+        with openFortIO("CASE.INIT", mode=FortIO.WRITE_MODE) as f:
+            kw.fwrite(f)
+
+        rd_file = ResdataFile("CASE.INIT")
+        with pytest.raises(TypeError, match="which is not a restart file"):
+            rd_file.report_list
+
+
+def test_iget_kw_with_copy_returns_independent_copy(tmpdir):
+    with tmpdir.as_cwd():
+        kw = _write_single_kw_file("CASE.INIT", kw_name="MY_KEY", size=5)
+
+        rd_file = ResdataFile("CASE.INIT")
+        copied = rd_file.iget_kw(0, copy=True)
+        assert copied.name == "MY_KEY"
+        assert list(copied) == list(kw)
+
+        # The copy is independent of the file-owned keyword.
+        copied[0] = 42
+        assert rd_file.iget_kw(0)[0] == 0
+
+
+def test_restart_get_kw_with_copy_returns_independent_copy(tmpdir):
+    with tmpdir.as_cwd():
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        create_restart(grid, "TEST", [1.0])
+
+        with open_rd_file("TEST.UNRST") as rd_file:
+            copied = rd_file.restart_get_kw(
+                "PRESSURE", datetime.datetime(2000, 1, 1), copy=True
+            )
+            assert copied.name == "PRESSURE"
+
+            original_value = rd_file.restart_get_kw(
+                "PRESSURE", datetime.datetime(2000, 1, 1)
+            )[0]
+            copied[0] = original_value + 1.0
+            assert (
+                rd_file.restart_get_kw("PRESSURE", datetime.datetime(2000, 1, 1))[0]
+                == original_value
+            )
+
+
+def test_restart_get_kw_with_missing_time_raises_index_error(tmpdir):
+    with tmpdir.as_cwd():
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        create_restart(grid, "TEST", [1.0])
+
+        with open_rd_file("TEST.UNRST") as rd_file:
+            with pytest.raises(IndexError, match="at time"):
+                rd_file.restart_get_kw("PRESSURE", datetime.datetime(1999, 1, 1))
+
+
+def test_restart_get_kw_with_unknown_keyword_raises_key_error(tmpdir):
+    with tmpdir.as_cwd():
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        create_restart(grid, "TEST", [1.0])
+
+        with open_rd_file("TEST.UNRST") as rd_file:
+            with pytest.raises(KeyError, match="not recognized"):
+                rd_file.restart_get_kw("NOSUCHKW", datetime.datetime(2000, 1, 1))
+
+
+def test_restart_get_kw_for_keyword_missing_at_time_raises_index_error(tmpdir):
+    with tmpdir.as_cwd():
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        # RPORV is only written for the first report step (2000), not the second.
+        create_restart(grid, "TEST", [1.0], p2=[2.0], rporv1=[3.0])
+
+        with open_rd_file("TEST.UNRST") as rd_file:
+            assert rd_file.has_kw("RPORV")
+            with pytest.raises(IndexError, match="at time"):
+                rd_file.restart_get_kw("RPORV", datetime.datetime(2010, 1, 1))
+
+
+def test_report_dates_falls_back_to_intehead_without_seqnum(tmpdir):
+    with tmpdir.as_cwd():
+        intehead = ResdataKW("INTEHEAD", 67, ResDataType.RD_INT)
+        intehead[64] = 1  # day
+        intehead[65] = 1  # month
+        intehead[66] = 2000  # year
+        with openFortIO("CASE.INIT", mode=FortIO.WRITE_MODE) as f:
+            intehead.fwrite(f)
+
+        rd_file = ResdataFile("CASE.INIT")
+        assert not rd_file.has_kw("SEQNUM")
+        assert rd_file.report_dates == [datetime.datetime(2000, 1, 1)]
+
+
+def test_report_dates_without_seqnum_or_intehead_returns_none(tmpdir):
+    with tmpdir.as_cwd():
+        kw = ResdataKW("HEADER", 1, ResDataType.RD_INT)
+        kw[0] = 0
+        with openFortIO("CASE.INIT", mode=FortIO.WRITE_MODE) as f:
+            kw.fwrite(f)
+
+        rd_file = ResdataFile("CASE.INIT")
+        assert rd_file.report_dates is None
