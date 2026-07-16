@@ -80,14 +80,14 @@ struct File {
 
     /// Functions specialized to work with restart files.
 
-    double restart_sim_days(int index) {
+    double restart_sim_days(size_t index) {
         return global_view->restart_sim_days(index);
     }
-    time_t restart_sim_date(int index) {
+    time_t restart_sim_date(size_t index) {
         return global_view->restart_sim_date(index);
     }
     /** Will determine the restart block corresponding to @sim_time;
-       if @sim_time can not be found the function -1 is returned.
+       if @sim_time can not be found std::nullopt is returned.
 
         The returned index is the 'occurence number' in the restart file,
         i.e. in the (quite typical case) that not all report steps are
@@ -99,14 +99,14 @@ struct File {
 
         Direct access:
 
-           int index = rd_file->find_sim_time(sim_time);
-           if (index >= 0) {
-              rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index );
+           auto index = rd_file->find_sim_time(sim_time);
+           if (index.has_value()) {
+              rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index.value() );
               ....
            }
 
         In the case of LGRs the block restriction should be used. */
-    int find_sim_time(time_t sim_time) {
+    std::optional<size_t> find_sim_time(time_t sim_time) {
         return global_view->find_sim_time(sim_time);
     }
 
