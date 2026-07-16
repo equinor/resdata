@@ -197,17 +197,6 @@ rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
     return rd_file;
 }
 
-/* Functions specialized to work with restart files.  */
-
-/* Query functions. */
-
-/** Will look through all the INTEHEAD kw instances of the current
-    rd_file and look for @sim_time. If the value is found true is
-    returned, otherwise false. */
-bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
-    return rd_file->global_view->has_sim_time(sim_time);
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 
