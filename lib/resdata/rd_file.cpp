@@ -12,7 +12,6 @@
 #include <utility>
 #include <filesystem>
 
-#include <ert/util/vector.hpp>
 #include <ert/util/util.hpp>
 #include <fmt/format.h>
 
@@ -20,8 +19,6 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
-#include <resdata/rd_endian_flip.hpp>
-#include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_file_flag.hpp>
