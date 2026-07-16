@@ -26,12 +26,9 @@ int main(int argc, char **argv) {
     auto rst_file = rd::File::open(Xfile);
     auto rst_head = RSTHead::read(rd_file_get_global_view(rst_file.get()).get(),
                                   rd_filename_report_nr(Xfile));
-    const rd_kw_type *iwel_kw =
-        rd_file_iget_named_kw(rst_file.get(), IWEL_KW, 0);
-    const rd_kw_type *icon_kw =
-        rd_file_iget_named_kw(rst_file.get(), ICON_KW, 0);
-    const rd_kw_type *scon_kw =
-        rd_file_iget_named_kw(rst_file.get(), SCON_KW, 0);
+    const rd_kw_type *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
+    const rd_kw_type *icon_kw = rst_file->get_kw(ICON_KW, 0);
+    const rd_kw_type *scon_kw = rst_file->get_kw(SCON_KW, 0);
     const rd_kw_type *xcon_kw = 0;
 
     well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 0,

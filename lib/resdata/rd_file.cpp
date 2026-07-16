@@ -122,7 +122,7 @@ namespace fs = std::filesystem;
    getting pointers to the rd_kw content of the rd_file. For getting
    rd_kw instances there are two principally different access methods:
 
-   * rd_file_iget_named_kw(): This function will take a keyword
+   * rd::File::get_kw(): This function will take a keyword
    (char *) and an integer as input. The integer corresponds to the
    ith occurence of the keyword in the file.
 
@@ -143,12 +143,6 @@ const char *rd_file_get_src_file(const rd_file_type *rd_file) {
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
     return file->global_view->get_kw(global_index);
-}
-
-/** Will return the ith occurence of @kw in @file. */
-rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
-                                  int ith) {
-    return file->global_view->get_kw(kw, ith);
 }
 
 std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file) {
@@ -277,7 +271,7 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
 
        int index = rd_file_get_restart_index( rd_file , sim_time );
        if (index >= 0) {
-          rd_kw_type * pressure_kw = rd_file_iget_named_kw( rd_file , "PRESSURE" , index );
+          rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index );
           ....
        }
 
@@ -315,7 +309,7 @@ double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
     and ECLIPSE300-Thermal option (value == 500). This function will
     return ECLIPSE300 in both those cases. */
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file) {
-    rd_kw_type *intehead_kw = rd_file_iget_named_kw(file, INTEHEAD_KW, 0);
+    rd_kw_type *intehead_kw = file->get_kw(INTEHEAD_KW, 0);
     int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
 
     switch (int_value) {
@@ -344,7 +338,7 @@ rd_version_enum rd_file_get_simulator_version(const rd_file_type *file) {
   6: Gas + water
   7: Gas + Water + Oil */
 int rd_file_get_phases(const rd_file_type *init_file) {
-    rd_kw_type *intehead_kw = rd_file_iget_named_kw(init_file, INTEHEAD_KW, 0);
+    rd_kw_type *intehead_kw = init_file->get_kw(INTEHEAD_KW, 0);
     int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
     return phases;
 }

@@ -652,7 +652,7 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd_file_type *header) {
     if (!header->has_kw(RESTART_KW))
         return;
-    const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
+    const rd_kw_type *restart_kw = header->get_kw(RESTART_KW, 0);
     if (restart_kw == nullptr)
         throw std::invalid_argument(
             "RESTART keyword lookup failed despite keyword presence");
@@ -859,13 +859,11 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
     if (header && rd_smspec_check_header(header.get())) {
         const char *names_alias =
             get_active_keyword_alias(header.get(), WGNAMES_KW);
-        rd_kw_type *wells = rd_file_iget_named_kw(header.get(), names_alias, 0);
-        rd_kw_type *keywords =
-            rd_file_iget_named_kw(header.get(), KEYWORDS_KW, 0);
-        rd_kw_type *startdat =
-            rd_file_iget_named_kw(header.get(), STARTDAT_KW, 0);
-        rd_kw_type *units = rd_file_iget_named_kw(header.get(), UNITS_KW, 0);
-        rd_kw_type *dimens = rd_file_iget_named_kw(header.get(), DIMENS_KW, 0);
+        rd_kw_type *wells = header->get_kw(names_alias, 0);
+        rd_kw_type *keywords = header->get_kw(KEYWORDS_KW, 0);
+        rd_kw_type *startdat = header->get_kw(STARTDAT_KW, 0);
+        rd_kw_type *units = header->get_kw(UNITS_KW, 0);
+        rd_kw_type *dimens = header->get_kw(DIMENS_KW, 0);
         rd_kw_type *nums = NULL;
         rd_kw_type *lgrs = NULL;
         rd_kw_type *numlx = NULL;
@@ -894,11 +892,10 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
         rd_smspec->params_size = rd_kw_get_size(keywords);
 
         if (header->has_kw(NUMS_KW))
-            nums = rd_file_iget_named_kw(header.get(), NUMS_KW, 0);
+            nums = header->get_kw(NUMS_KW, 0);
 
         if (header->has_kw(INTEHEAD_KW)) {
-            const rd_kw_type *intehead =
-                rd_file_iget_named_kw(header.get(), INTEHEAD_KW, 0);
+            const rd_kw_type *intehead = header->get_kw(INTEHEAD_KW, 0);
             if (intehead == NULL)
                 throw std::invalid_argument(
                     "INTEHEAD keyword lookup failed despite keyword presence");
@@ -917,10 +914,10 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                 throw std::invalid_argument(
                     "SMSPEC header has LGRS keyword but is missing one or "
                     "more required LGR index keywords (NUMLX, NUMLY, NUMLZ)");
-            lgrs = rd_file_iget_named_kw(header.get(), LGRS_KW, 0);
-            numlx = rd_file_iget_named_kw(header.get(), NUMLX_KW, 0);
-            numly = rd_file_iget_named_kw(header.get(), NUMLY_KW, 0);
-            numlz = rd_file_iget_named_kw(header.get(), NUMLZ_KW, 0);
+            lgrs = header->get_kw(LGRS_KW, 0);
+            numlx = header->get_kw(NUMLX_KW, 0);
+            numly = header->get_kw(NUMLY_KW, 0);
+            numlz = header->get_kw(NUMLZ_KW, 0);
 
             rd_smspec->has_lgr = true;
         } else

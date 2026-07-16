@@ -38,7 +38,7 @@ void test_write_depth(rd_grid_type *grid) {
     }
     {
         auto init_file = rd::File::open("INIT");
-        rd_kw_type *depth = rd_file_iget_named_kw(init_file.get(), "DEPTH", 0);
+        rd_kw_type *depth = init_file->get_kw("DEPTH", 0);
 
         test_assert_int_equal(rd_kw_get_size(depth), rd_grid_get_nactive(grid));
         for (int i = 0; i < rd_grid_get_nactive(grid); i++)
@@ -89,9 +89,9 @@ void test_write_dims(const rd_grid_type *grid) {
     }
     {
         auto init_file = rd::File::open("INIT");
-        rd_kw_type *DX = rd_file_iget_named_kw(init_file.get(), "DX", 0);
-        rd_kw_type *DY = rd_file_iget_named_kw(init_file.get(), "DY", 0);
-        rd_kw_type *DZ = rd_file_iget_named_kw(init_file.get(), "DZ", 0);
+        rd_kw_type *DX = init_file->get_kw("DX", 0);
+        rd_kw_type *DY = init_file->get_kw("DY", 0);
+        rd_kw_type *DZ = init_file->get_kw("DZ", 0);
 
         test_assert_int_equal(rd_kw_get_size(DX), rd_grid_get_nactive(grid));
         test_assert_int_equal(rd_kw_get_size(DY), rd_grid_get_nactive(grid));

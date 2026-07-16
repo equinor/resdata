@@ -1424,32 +1424,27 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             auto smspec_in = rd::File::open(case3_path + ".SMSPEC");
             auto sum_in = rd::File::open(case3_path + ".UNSMRY");
 
-            rd_kw_type *keywords =
-                rd_file_iget_named_kw(smspec_in.get(), "KEYWORDS", 0);
+            rd_kw_type *keywords = smspec_in->get_kw("KEYWORDS", 0);
             rd_kw_resize(keywords, 5);
             rd_kw_iset_char_ptr(keywords, 3, "WTPRWI1");
             rd_kw_iset_char_ptr(keywords, 4, "BPR");
 
-            rd_kw_type *nums =
-                rd_file_iget_named_kw(smspec_in.get(), "NUMS", 0);
+            rd_kw_type *nums = smspec_in->get_kw("NUMS", 0);
             rd_kw_resize(nums, 5);
             int *nums_ptr = rd_kw_get_int_ptr(nums);
             nums_ptr[3] = 5;
             nums_ptr[4] = 8;
 
-            rd_kw_type *wgnames =
-                rd_file_iget_named_kw(smspec_in.get(), "WGNAMES", 0);
+            rd_kw_type *wgnames = smspec_in->get_kw("WGNAMES", 0);
             rd_kw_resize(wgnames, 5);
             rd_kw_iset_char_ptr(wgnames, 4, ":+:+:+:+");
 
-            rd_kw_type *units =
-                rd_file_iget_named_kw(smspec_in.get(), "UNITS", 0);
+            rd_kw_type *units = smspec_in->get_kw("UNITS", 0);
             rd_kw_resize(units, 5);
             rd_kw_iset_char_ptr(units, 4, "BARS");
 
             for (size_t i = 0; i < sum_in->num_named_kw("PARAMS"); ++i) {
-                rd_kw_type *params_kw =
-                    rd_file_iget_named_kw(sum_in.get(), "PARAMS", i);
+                rd_kw_type *params_kw = sum_in->get_kw("PARAMS", i);
                 rd_kw_resize(params_kw, 5);
                 auto *ptr = static_cast<float *>(rd_kw_get_void_ptr(params_kw));
                 ptr[4] = ptr[3];
