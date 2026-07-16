@@ -19,7 +19,12 @@ from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest
 
-from ._grid_fixtures import write_egrid_with_gridhead_dims, write_grid_file_with_lgrs
+from ._grid_fixtures import (
+    write_dual_porosity_egrid_with_lgr,
+    write_dual_porosity_grid_file,
+    write_egrid_with_gridhead_dims,
+    write_grid_file_with_lgrs,
+)
 
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.
@@ -819,6 +824,58 @@ def test_that_grid_is_loaded_from_case_with_data_extension(tmpdir, grid_extensio
             f.write("dummy")
 
         assert grid.equal(Grid("CASE.DATA"))
+
+
+def test_that_matching_dual_porosity_grid_file_is_dual(tmp_path):
+    grid_file = tmp_path / "DUAL.GRID"
+    write_dual_porosity_grid_file(grid_file, 2, 2, 2)
+
+    grid = Grid(str(grid_file))
+    assert grid.dual_grid()
+    assert grid.get_dims() == (2, 2, 2, 8)
+    assert grid.get_num_active_fracture() == 8
+
+
+def test_that_dual_porosity_grid_file_with_lgr_is_loaded(tmp_path):
+    grid_file = tmp_path / "DUAL_LGR.GRID"
+    write_dual_porosity_grid_file(
+        grid_file,
+        2,
+        2,
+        2,
+        lgrs=[{"lgr_name": "LGR1", "nx": 1, "ny": 1, "nz": 1, "host_cell": 1}],
+    )
+
+    grid = Grid(str(grid_file))
+    assert grid.dual_grid()
+    assert grid.get_dims() == (2, 2, 2, 8)
+    assert grid.get_num_lgr() == 1
+
+
+def test_that_dual_porosity_egrid_with_lgr_roundtrips_as_grid(tmp_path):
+    egrid_file = tmp_path / "CASE.EGRID"
+    grid_file = tmp_path / "CASE.GRID"
+    write_dual_porosity_egrid_with_lgr(
+        egrid_file, nx=3, ny=2, nz=1, lgr_dims=(2, 2, 1), host_ijk=(0, 0, 0)
+    )
+
+    source = Grid(str(egrid_file))
+    source.save_GRID(str(grid_file))
+    grid = Grid(str(grid_file))
+
+    assert grid.dual_grid()
+    assert grid.get_dims() == (3, 2, 1, 6)
+    assert grid.get_global_size() == 6
+    assert grid.get_num_active() == 6
+    assert grid.get_num_active_fracture() == 6
+    assert grid.get_num_lgr() == 1
+    lgr = grid.get_lgr("LGR1")
+    assert lgr.get_dims() == (2, 2, 1, 4)
+    assert lgr.dual_grid()
+    assert lgr.get_global_size() == 4
+    assert lgr.get_num_active_fracture() == 4
+
+    assert grid.equal(source, include_lgr=True)
 
 
 def test_write_grdecl(tmpdir):

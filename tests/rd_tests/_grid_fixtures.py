@@ -441,6 +441,69 @@ def write_egrid_dual_porosity(
         _write_nnc_pair(f, 0, NNC1_KW, NNC2_KW, nnc1, nnc2)
 
 
+def write_dual_porosity_egrid_with_lgr(
+    filename: Path,
+    nx: int,
+    ny: int,
+    nz: int,
+    lgr_dims: tuple[int, int, int],
+    host_ijk: tuple[int, int, int] = (0, 0, 0),
+    lgr_name: str = "LGR1",
+) -> None:
+    """Write a dual-porosity EGRID that additionally contains a single
+    dual-porosity LGR refining one host cell.
+
+    The host grid is a regular grid with unit cells, and the LGR is an
+    LGR that fills host_ijk evenly.
+    """
+    main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0)
+
+    lnx, lny, lnz = lgr_dims
+    hi, hj, hk = host_ijk
+
+    # Generate lgr_grid at (0,0,0)
+    lgr_grid = make_rectangular_grid(
+        lnx,
+        lny,
+        lnz,
+        1.0 / lnx,
+        1.0 / lny,
+        1.0 / lnz,
+        None,
+    )
+    host_global = hi + hj * nx + hk * nx * ny
+
+    # Move the lgr_grid from (0,0,0) to host_ijk
+    lgr_coord = lgr_grid.export_coord()
+    for p in range(0, len(lgr_coord), 3):
+        lgr_coord[p] = lgr_coord[p] + float(hi)
+        lgr_coord[p + 1] = lgr_coord[p + 1] + float(hj)
+        lgr_coord[p + 2] = lgr_coord[p + 2] + float(hk)
+    lgr_zcorn = lgr_grid.export_zcorn()
+    for i in range(len(lgr_zcorn)):
+        lgr_zcorn[i] = lgr_zcorn[i] + float(hk)
+
+    dual = CELL_ACTIVE_MATRIX | CELL_ACTIVE_FRACTURE
+
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_filehead(f, FILEHEAD_DUAL_POROSITY)
+        _write_gridhead(f, nx, ny, nz, 0)
+        main_grid.export_coord().fwrite(f)
+        main_grid.export_zcorn().fwrite(f)
+        write_int_kw(f, ACTNUM_KW, [dual] * main_grid.get_global_size())
+        write_empty_kw(f, ENDGRID_KW)
+
+        write_char_kw(f, LGR_KW, [lgr_name])
+        write_char_kw(f, LGR_PARENT_KW, [""])
+        _write_gridhead(f, lnx, lny, lnz, 1)
+        lgr_coord.fwrite(f)
+        lgr_zcorn.fwrite(f)
+        write_int_kw(f, ACTNUM_KW, [dual] * lgr_grid.get_global_size())
+        write_int_kw(f, HOSTNUM_KW, [host_global + 1] * lgr_grid.get_global_size())
+        write_empty_kw(f, ENDGRID_KW)
+        write_empty_kw(f, ENDLGR_KW)
+
+
 def _extruded_unit_corners(i: int, j: int, z0: float, z1: float) -> list:
     return [
         float(i),
@@ -551,6 +614,56 @@ def write_grid_file_with_lgrs(
                             UNIT_CELL_CORNERS,
                         )
                         lgr_global += 1
+
+
+def _write_dual_porosity_cells(
+    f: FortIO,
+    nx: int,
+    ny: int,
+    nz_half: int,
+    host_cell: int = 0,
+) -> None:
+    nz = 2 * nz_half
+    global_index = 0
+    for k in range(nz):
+        layer = k % nz_half
+        for j in range(ny):
+            for i in range(nx):
+                corners = _extruded_unit_corners(i, j, float(layer), float(layer + 1))
+                _write_grid_cell(f, i, j, k, global_index, host_cell, corners)
+                global_index += 1
+
+
+def write_dual_porosity_grid_file(
+    filename: Path,
+    nx: int,
+    ny: int,
+    nz: int,
+    lgrs: Sequence[dict] = (),
+) -> None:
+    """Write a GRID file with dual porosity
+
+    Each entry in ``lgrs`` is a dict with keys ``lgr_name``, ``nx``, ``ny``,
+    ``nz`` and ``host_cell``
+    """
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_grid_dimens(f, nx, ny, 2 * nz)
+        _write_grid_mapunits(f)
+        _write_grid_gridunit(f)
+        _write_grid_radial_false(f)
+        _write_dual_porosity_cells(f, nx, ny, nz)
+
+        for lgr in lgrs:
+            write_char_kw(f, LGR_KW, [lgr["lgr_name"]])
+            _write_grid_dimens(f, lgr["nx"], lgr["ny"], 2 * lgr["nz"])
+            _write_grid_radial_false(f)
+            _write_dual_porosity_cells(
+                f,
+                lgr["nx"],
+                lgr["ny"],
+                lgr["nz"],
+                host_cell=lgr.get("host_cell", 0),
+            )
 
 
 def write_grid_file_with_mapaxes(filename: Path, mapaxes: Sequence[float]) -> None:
