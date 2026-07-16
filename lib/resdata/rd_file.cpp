@@ -292,34 +292,6 @@ double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
     return restart_file->global_view->restart_sim_days(index);
 }
 
-/** The input @file must be either an INIT file or a restart file. Will
-    fail hard if an INTEHEAD kw can not be found - or if the INTEHEAD
-    keyword is not sufficiently large.
-
-    The eclipse files can distinguish between ECLIPSE300 ( value == 300)
-    and ECLIPSE300-Thermal option (value == 500). This function will
-    return ECLIPSE300 in both those cases. */
-rd_version_enum rd_file_get_simulator_version(const rd_file_type *file) {
-    rd_kw_type *intehead_kw = file->get_kw(INTEHEAD_KW, 0);
-    int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
-
-    switch (int_value) {
-    case INTEHEAD_ECLIPSE100_VALUE:
-        return ECLIPSE100;
-    case INTEHEAD_ECLIPSE300_VALUE:
-        return ECLIPSE300;
-    case INTEHEAD_ECLIPSE300THERMAL_VALUE:
-        return ECLIPSE300_THERMAL;
-    case INTEHEAD_INTERSECT_VALUE:
-        return INTERSECT;
-    case INTEHEAD_FRONTSIM_VALUE:
-        return FRONTSIM;
-    default:
-        throw std::invalid_argument(fmt::format(
-            "Simulator version value:{} not recognized", int_value));
-    }
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 
@@ -198,6 +199,33 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     }
 }
 
+/** Determine simulator version from an INIT file or restart file.
+
+    Will raise std::out_of_range if an INTEHEAD kw cannot be found.
+    Will raise std::invalid_argument if the INTEHEAD
+    keyword is not sufficiently large or the value at INTEHEAD_IPROG_INDEX
+    is invalid. */
+static rd_version_enum get_simulator_version(const rd_file_type *file) {
+    rd_kw_type *intehead_kw = file->get_kw(INTEHEAD_KW, 0);
+    int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
+
+    switch (int_value) {
+    case INTEHEAD_ECLIPSE100_VALUE:
+        return ECLIPSE100;
+    case INTEHEAD_ECLIPSE300_VALUE:
+        return ECLIPSE300;
+    case INTEHEAD_ECLIPSE300THERMAL_VALUE:
+        return ECLIPSE300_THERMAL;
+    case INTEHEAD_INTERSECT_VALUE:
+        return INTERSECT;
+    case INTEHEAD_FRONTSIM_VALUE:
+        return FRONTSIM;
+    default:
+        throw std::invalid_argument(fmt::format(
+            "Simulator version value:{} not recognized", int_value));
+    }
+}
+
 static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                                                rd_grav_survey_type *survey,
                                                rd_phase_enum phase,
@@ -243,8 +271,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                 grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
             }
         } else {
-            rd_version_enum rd_version =
-                rd_file_get_simulator_version(init_file);
+            rd_version_enum rd_version = get_simulator_version(init_file);
             const std::string den_kw_name = get_den_kw(phase, rd_version);
             const rd_kw_type *den_kw = restart_file->get_kw(den_kw_name, 0);
 
