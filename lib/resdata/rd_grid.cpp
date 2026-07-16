@@ -4672,6 +4672,12 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
                           ert_rd_unit_enum output_unit) {
     int coords_size = 5;
     bool fmt_file = false;
+    {
+        bool is_fmt;
+
+        if (rd_get_file_type(filename, &is_fmt, NULL) != RD_OTHER_FILE)
+            fmt_file = is_fmt;
+    }
 
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
     if (grid->children.size() > 0)
