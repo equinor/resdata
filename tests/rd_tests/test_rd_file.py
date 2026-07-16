@@ -3,6 +3,7 @@ import gc
 import os.path
 import shutil
 import struct
+from pathlib import Path
 
 import pytest
 from resdata import FileMode, FileType, ResDataType
@@ -10,7 +11,7 @@ from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, open_rd_file, openFortIO
 from resdata.util.util import CWDContext
 
-from tests import ResdataTest
+from tests import ResdataTest, source_root
 
 from .create_restart import create_restart
 
@@ -111,6 +112,55 @@ class ResdataFileTest(ResdataTest):
 
             with CWDContext("path"):
                 rd_file = ResdataFile("TEST", index_filename="index")
+
+    def test_that_write_index_stays_binary_compatible(self):
+        # The index file written by ResdataFile.write_index must remain
+        # binary-compatible so that index files committed by earlier versions of
+        # resdata keep working.
+        grid_file = (
+            Path(source_root())
+            / "test-data"
+            / "local"
+            / "ECLIPSE"
+            / "faarikaal"
+            / "faarikaal1.EGRID"
+        )
+        snapshot_index = grid_file.with_suffix(grid_file.suffix + ".index")
+
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_index_compat", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            shutil.copyfile(grid_file, "faarikaal1.EGRID")
+
+            rd_file = ResdataFile("faarikaal1.EGRID")
+            rd_file.write_index("faarikaal1.EGRID.index")
+            rd_file.close()
+
+            self.assertEqual(
+                Path("faarikaal1.EGRID.index").read_bytes(),
+                snapshot_index.read_bytes(),
+            )
+            read_with_index = ResdataFile(
+                "faarikaal1.EGRID", index_filename="faarikaal1.EGRID.index"
+            )
+            assert [
+                read_with_index.iget_kw(i).name for i in range(len(read_with_index))
+            ] == [
+                "FILEHEAD",
+                "MAPUNITS",
+                "MAPAXES",
+                "GRIDUNIT",
+                "GRIDHEAD",
+                "COORD",
+                "ZCORN",
+                "ACTNUM",
+                "ENDGRID",
+                "NNCHEAD",
+                "NNC1",
+                "NNC2",
+            ]
 
     def test_that_opening_a_rd_file_with_a_corrupt_index_raises(self):
         tmpdir = self.tmp_path_factory.mktemp("python_rd_file_bad_index", numbered=True)
