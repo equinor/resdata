@@ -353,7 +353,7 @@ foreach(
   test_well_segment
   well_segment_conn
   well_segment_collection
-  rd_file)
+  test_rd_file)
   add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
   target_link_libraries(${name} resdata)
   target_include_directories(
