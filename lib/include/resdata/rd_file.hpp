@@ -84,13 +84,34 @@ struct File {
     time_t restart_sim_date(int index) {
         return global_view->restart_sim_date(index);
     }
+    /** Will determine the restart block corresponding to @sim_time;
+       if @sim_time can not be found the function -1 is returned.
+
+        The returned index is the 'occurence number' in the restart file,
+        i.e. in the (quite typical case) that not all report steps are
+        present the return value will not agree with report step.
+
+        The return value from this function can then be used to get a
+        corresponding solution field directly, or the file map can
+        restricted to this block.
+
+        Direct access:
+
+           int index = rd_file->find_sim_time(sim_time);
+           if (index >= 0) {
+              rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index );
+              ....
+           }
+
+        In the case of LGRs the block restriction should be used. */
+    int find_sim_time(time_t sim_time) {
+        return global_view->find_sim_time(sim_time);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-int rd_file_get_restart_index(const rd_file_type *restart_file,
-                              time_t sim_time);
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step);
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time);
 

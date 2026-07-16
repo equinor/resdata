@@ -7,7 +7,7 @@
 bool test_get(rd_file_type *rst_file, int day, int month, int year,
               int expected_index) {
     time_t sim_time = rd_make_date(day, month, year);
-    int seqnum_index = rd_file_get_restart_index(rst_file, sim_time);
+    int seqnum_index = rst_file->find_sim_time(sim_time);
     if (seqnum_index == expected_index)
         return true;
     else {
