@@ -242,7 +242,70 @@ class ResdataFileTest(ResdataTest):
                 (name_len,) = struct.unpack("i", fh.read(4))
                 fh.truncate(4 + name_len + 1 + 4)
 
-            with self.assertRaisesRegex(OSError, "error reading.* index file"):
+            with self.assertRaises(OSError):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_opening_a_rd_file_with_an_empty_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_empty_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            # An empty index file cannot contain a valid index.
+            open("INDEX_FILE", "wb").close()
+
+            with self.assertRaisesRegex(
+                OSError, 'Index file did not contain a valid index for "TEST"'
+            ):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_opening_a_rd_file_with_a_number_only_index_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_number_index", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            # An index file containing only a 4 byte integer is not a valid
+            # index: the integer is read as the length of the stored source
+            # filename, but there are no following bytes to read.
+            with open("INDEX_FILE", "wb") as fh:
+                fh.write(struct.pack("i", 16))
+
+            with self.assertRaisesRegex(
+                OSError, 'Index file did not contain a valid index for "TEST"'
+            ):
+                ResdataFile("TEST", index_filename="INDEX_FILE")
+
+    def test_that_opening_a_rd_file_truncated_within_a_keyword_header_raises(self):
+        tmpdir = self.tmp_path_factory.mktemp(
+            "python_rd_file_partial_header", numbered=True
+        )
+        with self.monkeypatch.context() as mp:
+            mp.chdir(tmpdir)
+            kw = ResdataKW("KW1", 100, ResDataType.RD_INT)
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw.fwrite(f)
+
+            rd_file = ResdataFile("TEST")
+            rd_file.write_index("INDEX_FILE")
+            rd_file.close()
+
+            # Keep the source-filename string and the (positive) keyword count,
+            # then cut off partway through the first keyword header so only a
+            # handful of its bytes remain.
+            with open("INDEX_FILE", "r+b") as fh:
+                (name_len,) = struct.unpack("i", fh.read(4))
+                fh.truncate(4 + name_len + 1 + 4 + 10)
+
+            with self.assertRaises(OSError):
                 ResdataFile("TEST", index_filename="INDEX_FILE")
 
     def test_that_writing_an_index_to_a_read_only_location_raises(self):

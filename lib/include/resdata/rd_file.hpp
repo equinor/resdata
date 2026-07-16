@@ -2,13 +2,14 @@
 #include <ctime>
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file_flag.hpp>
-#include <utility>
 
 namespace rd {
 struct File {
@@ -26,7 +27,11 @@ struct File {
     void write(ERT::FortIO &target, size_t offset) {
         global_view->write(target, offset);
     };
-    bool write_index(const std::string &index_filename);
+    /** Write an index of this file to @index_filename.
+
+       Throws std::ios_base::failure if the index file cannot be opened or
+       written. */
+    void write_index(const std::string &index_filename);
     /** The rd_file_close() function will close the fortio instance */
     void close() {
         if (context)

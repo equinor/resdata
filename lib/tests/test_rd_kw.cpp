@@ -372,8 +372,11 @@ TEST_CASE_METHOD(Tmpdir, "fseek_kw throws on missing keyword", "[rd_kw]") {
 TEST_CASE_METHOD(Tmpdir, "FileKW::read guards against buffer_size overflow",
                  "[rd_kw]") {
     auto path = (dirname / "FILE").string();
-    std::FILE *stream = std::fopen(path.c_str(), "wb+");
-    REQUIRE(stream != nullptr);
-    REQUIRE_THROWS_AS(FileKW::read(stream, SIZE_MAX), std::bad_alloc);
-    std::fclose(stream);
+    {
+        std::ofstream create(path, std::ios_base::binary);
+        REQUIRE(create.good());
+    }
+    std::ifstream stream(path, std::ios_base::binary);
+    REQUIRE(stream.good());
+    REQUIRE_THROWS_AS(FileKW::read(stream, SIZE_MAX), std::length_error);
 }

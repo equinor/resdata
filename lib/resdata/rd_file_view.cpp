@@ -1,14 +1,14 @@
-#include <cstdio>
 #include <ctime>
-#include <algorithm>
 
 #include <iostream>
-#include <exception>
 #include <stdexcept>
 #include <string>
 #include <memory>
 #include <optional>
 #include <fmt/format.h>
+#include <algorithm>
+#include <utility>
+#include <vector>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
@@ -439,8 +439,9 @@ std::shared_ptr<FileView> FileView::summary_view(int report_step) {
     return blockview(SEQHDR_KW, SEQHDR_KW, report_step);
 }
 
-void FileView::write_index(FILE *ostream) const {
-    util_fwrite_int(static_cast<int>(size()), ostream);
+void FileView::write_index(std::ostream &ostream) const {
+    int n = static_cast<int>(size());
+    ostream.write(reinterpret_cast<const char *>(&n), sizeof(n));
 
     for (const auto &file_kw : kw_list) {
         file_kw->write_header(ostream);
@@ -448,9 +449,9 @@ void FileView::write_index(FILE *ostream) const {
 }
 
 std::shared_ptr<FileView> FileView::read(std::shared_ptr<FileContext> context,
-                                         FILE *istream) {
-
-    int index_size = util_fread_int(istream);
+                                         std::istream &istream) {
+    int index_size = 0;
+    istream.read(reinterpret_cast<char *>(&index_size), sizeof(index_size));
     if (index_size < 0)
         throw std::ios_base::failure(
             fmt::format("Invalid index size: {}", index_size));

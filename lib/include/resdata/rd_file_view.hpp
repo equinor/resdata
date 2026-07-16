@@ -1,6 +1,7 @@
 #pragma once
-#include <cstdio>
 #include <ctime>
+#include <istream>
+#include <ostream>
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -132,10 +133,18 @@ public:
     std::shared_ptr<FileView> summary_view(int report_step);
 
     void close();
-    void write_index(FILE *ostream) const;
+    /** Write the index of this view to @ostream.
 
+       The stream is expected to have its exception mask configured (e.g.
+       std::ios_base::failbit | std::ios_base::badbit) */
+    void write_index(std::ostream &ostream) const;
+
+    /** Read a view index from @istream.
+
+       The stream is expected to have its exception mask configured (e.g.
+       std::ios_base::failbit | std::ios_base::badbit) */
     static std::shared_ptr<FileView> read(std::shared_ptr<FileContext> context,
-                                          FILE *istream);
+                                          std::istream &istream);
 
     void clear();
 };
