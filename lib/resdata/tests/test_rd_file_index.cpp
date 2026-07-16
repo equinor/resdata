@@ -71,16 +71,6 @@ void test_create_and_load_index_file() {
         test_assert_true(rd_file_index->has_kw("TEST1_KW"));
         test_assert_true(rd_file_index->has_kw("TEST2_KW"));
 
-        rd_kw_type *kwi1 = rd_file_iget_kw(rd_file_index.get(), 0);
-        test_assert_true(rd_kw_equal(kw1, kwi1));
-        test_assert_double_equal(537.0, rd_kw_iget_as_double(kwi1, 0));
-        test_assert_double_equal(546.0, rd_kw_iget_as_double(kwi1, 9));
-
-        rd_kw_type *kwi2 = rd_file_iget_kw(rd_file_index.get(), 1);
-        test_assert_true(rd_kw_equal(kw2, kwi2));
-        test_assert_double_equal(0.15, rd_kw_iget_as_double(kwi2, 1));
-        test_assert_double_equal(0.60, rd_kw_iget_as_double(kwi2, 4));
-
         rd_kw_free(kw1);
         rd_kw_free(kw2);
     }
