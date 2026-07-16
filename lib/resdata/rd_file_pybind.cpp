@@ -74,8 +74,8 @@ PYBIND11_MODULE(_file, m) {
         return from_cwrap<rd_file_type>(self)->has_report_step(report_step);
     });
     m.def("_has_sim_time", [](py::handle self, std::int64_t sim_time) {
-        return rd_file_has_sim_time(from_cwrap<rd_file_type>(self),
-                                    static_cast<time_t>(sim_time));
+        return from_cwrap<rd_file_type>(self)->has_sim_time(
+            static_cast<time_t>(sim_time));
     });
     m.def("_get_global_view", [](py::handle self) {
         return from_cwrap<rd_file_type>(self)->get_global_view();

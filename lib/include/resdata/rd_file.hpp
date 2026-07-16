@@ -78,6 +78,9 @@ struct File {
 
         3. The File must have been opened with FileMode::WRITABLE. */
     bool save_kw(const rd_kw_type *rd_kw);
+
+    /// Functions specialized to work with restart files.
+
     double restart_sim_days(int index) {
         return global_view->restart_sim_days(index);
     }
@@ -114,12 +117,16 @@ struct File {
     bool has_report_step(int report_step) {
         return global_view->has_report_step(report_step);
     }
+    /** Will look through all the INTEHEAD kw instances of the current
+        rd_file and look for @sim_time. If the value is found true is
+        returned, otherwise false. */
+    bool has_sim_time(time_t sim_time) {
+        return global_view->has_sim_time(sim_time);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-
-bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time);
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
                              int occurence);

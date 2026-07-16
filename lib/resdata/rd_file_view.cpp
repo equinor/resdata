@@ -248,7 +248,7 @@ we have introduced the following concepts:
     step. The simulation time is stored as integers DAY, MONTH, YEAR
     in the INTEHEAD keyword; the function INTEHEAD_date() will extract
     the DAY, MONTH and YEAR values from an INTEHEAD keyword instance
-    and convert to a time_t instance. The functions rd_file_has_has_sim_time()
+    and convert to a time_t instance. The function has_sim_time()
     can be used to query for simulation times and get the
     corresponding block maps.
 
