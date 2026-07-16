@@ -2782,15 +2782,22 @@ static rd_grid_ptr rd_grid_alloc_GRID(const char *grid_file,
     int dualp_flag;
 
     dualp_flag = rd_grid_dual_porosity_GRID_check(rd_file.get());
+
+    /* For dual porosity GRID files every grid stores twice as many
+       COORDS/CORNERS keywords as the global size (the first half
+       holds the matrix cells and the second half the fracture cells), so
+       the offset into the keyword list must advance by that amount. */
+    int cell_stride = (dualp_flag != FILEHEAD_SINGLE_POROSITY) ? 2 : 1;
+
     auto main_grid = rd_grid_alloc_GRID__(NULL, rd_file.get(), cell_offset, 0,
                                           dualp_flag, apply_mapaxes);
-    cell_offset += rd_grid_get_global_size(main_grid.get());
+    cell_offset += rd_grid_get_global_size(main_grid.get()) * cell_stride;
 
     for (grid_nr = 1; grid_nr < num_grid; grid_nr++) {
         auto lgr_grid =
             rd_grid_alloc_GRID__(main_grid.get(), rd_file.get(), cell_offset,
                                  grid_nr, dualp_flag, false);
-        cell_offset += rd_grid_get_global_size(lgr_grid.get());
+        cell_offset += rd_grid_get_global_size(lgr_grid.get()) * cell_stride;
         auto *lgr = rd_grid_add_lgr(main_grid.get(), std::move(lgr_grid));
         {
             rd_grid_type *host_grid;
