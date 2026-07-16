@@ -81,13 +81,14 @@ struct File {
     double restart_sim_days(int index) {
         return global_view->restart_sim_days(index);
     }
+    time_t restart_sim_date(int index) {
+        return global_view->restart_sim_date(index);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
-                                     int occurence);
 int rd_file_get_restart_index(const rd_file_type *restart_file,
                               time_t sim_time);
 bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step);

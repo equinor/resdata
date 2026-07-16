@@ -54,8 +54,8 @@ PYBIND11_MODULE(_file, m) {
     m.def("_free",
           [](py::handle self) { delete from_cwrap<rd_file_type>(self); });
     m.def("_iget_restart_time", [](py::handle self, int index) {
-        return static_cast<std::int64_t>(rd_file_iget_restart_sim_date(
-            from_cwrap<rd_file_type>(self), index));
+        return static_cast<std::int64_t>(
+            from_cwrap<rd_file_type>(self)->restart_sim_date(index));
     });
     m.def("_iget_restart_days", [](py::handle self, int index) {
         return from_cwrap<rd_file_type>(self)->restart_sim_days(index);
