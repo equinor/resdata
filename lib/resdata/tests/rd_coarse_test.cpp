@@ -48,11 +48,11 @@ void test_coarse_cell(const rd_grid_type *grid, rd_coarse_cell_type *cell) {
 int main(int argc, char **argv) {
     fs::path case_path(argv[1]);
     std::string egrid_file =
-        rd::filename(case_path, RD_EGRID_FILE, false, 0).string();
+        rd::filename(case_path, FileType::EGRID, false, 0).string();
     std::string rst_file =
-        rd::filename(case_path, RD_RESTART_FILE, false, 0).string();
+        rd::filename(case_path, FileType::RESTART, false, 0).string();
     std::string init_file =
-        rd::filename(case_path, RD_INIT_FILE, false, 0).string();
+        rd::filename(case_path, FileType::INIT, false, 0).string();
 
     rd_grid_ptr GRID = read_grid(egrid_file);
     std::unique_ptr<rd::File> RST_file = rd::File::open(rst_file);

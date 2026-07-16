@@ -18,17 +18,21 @@
 
 #include <cstdlib>
 
-#include <ert/util/util.hpp>
-#include <ert/util/stringlist.hpp>
 
-#include <resdata/rd_file.hpp>
-#include <resdata/rd_util.hpp>
-#include <resdata/rd_endian_flip.hpp>
-#include <resdata/rd_type.hpp>
+#include <ios>
+#include <memory>
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <filesystem>
+
+#include <ert/util/util.hpp>
+
+#include <resdata/rd_file.hpp>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_type.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_kw.hpp>
 
 namespace fs = std::filesystem;
 
@@ -42,19 +46,19 @@ int main(int argc, char **argv) {
         /* File type and formatted / unformatted is determined from the first argument on the command line. */
         fs::path filepath(argv[1]);
         std::string filename = filepath.string();
-        rd_file_enum file_type, target_type;
+        FileType file_type, target_type;
         bool fmt_file;
 
         /** Look at the first command line argument to determine type and formatted/unformatted status. */
         file_type = rd_get_file_type(filename.c_str(), &fmt_file, NULL);
-        if (file_type == RD_SUMMARY_FILE)
-            target_type = RD_UNIFIED_SUMMARY_FILE;
-        else if (file_type == RD_RESTART_FILE)
-            target_type = RD_UNIFIED_RESTART_FILE;
+        if (file_type == FileType::SUMMARY)
+            target_type = FileType::UNIFIED_SUMMARY;
+        else if (file_type == FileType::RESTART)
+            target_type = FileType::UNIFIED_RESTART;
         else {
             util_exit("The rd_pack program can only be used with "
                       "restart files or summary files.\n");
-            target_type = RD_OTHER_FILE;
+            target_type = FileType::OTHER;
         }
         /*
          * Will pack to cwd, even though the source files might be
@@ -72,14 +76,14 @@ int main(int argc, char **argv) {
         rd_kw_ptr seqnum_kw(nullptr, &rd_kw_free);
         ERT::FortIO target(target_file, std::ios_base::out, fmt_file);
 
-        if (target_type == RD_UNIFIED_RESTART_FILE) {
+        if (target_type == FileType::UNIFIED_RESTART) {
             int dummy;
             seqnum_kw.reset(rd_kw_alloc_new("SEQNUM", 1, RD_INT, &dummy));
         }
 
         int prev_report_step = -1;
         for (int i = 0; i < num_files; i++) {
-            rd_file_enum this_file_type;
+            FileType this_file_type;
             int report_step;
             this_file_type =
                 rd_get_file_type(filelist.at(i).c_str(), NULL, &report_step);
@@ -92,7 +96,7 @@ int main(int argc, char **argv) {
                 prev_report_step = report_step;
                 std::unique_ptr<rd::File> src_file =
                     rd::File::open(filelist.at(i));
-                if (target_type == RD_UNIFIED_RESTART_FILE) {
+                if (target_type == FileType::UNIFIED_RESTART) {
                     /* Must insert the SEQNUM keyword first. */
                     rd_kw_iset_int(seqnum_kw.get(), 0, report_step);
                     rd_kw_fwrite(seqnum_kw.get(), target);

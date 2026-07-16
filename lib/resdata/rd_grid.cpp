@@ -2526,9 +2526,9 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
 static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                                                  bool apply_mapaxes,
                                                  const int *ext_actnum) {
-    rd_file_enum file_type;
+    FileType file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
-    if (file_type != RD_EGRID_FILE)
+    if (file_type != FileType::EGRID)
         throw std::invalid_argument(fmt::format(
             "{}: wrong file type - expected .EGRID file", grid_file));
     {
@@ -2754,9 +2754,9 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
 static rd_grid_ptr rd_grid_alloc_GRID(const char *grid_file,
                                       bool apply_mapaxes) {
 
-    rd_file_enum file_type;
+    FileType file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
-    if (file_type != RD_GRID_FILE)
+    if (file_type != FileType::GRID)
         throw std::invalid_argument(fmt::format(
             "{}: wrong file type - expected .GRID file", grid_file));
 
@@ -2877,13 +2877,13 @@ rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
    with these keywords.
 */
 static rd_grid_ptr rd_grid_alloc__(const char *grid_file, bool apply_mapaxes) {
-    rd_file_enum file_type;
+    FileType file_type;
     rd_grid_ptr rd_grid{nullptr, &rd_grid_free};
 
     file_type = rd_get_file_type(grid_file, NULL, NULL);
-    if (file_type == RD_GRID_FILE)
+    if (file_type == FileType::GRID)
         rd_grid = rd_grid_alloc_GRID(grid_file, apply_mapaxes);
-    else if (file_type == RD_EGRID_FILE)
+    else if (file_type == FileType::EGRID)
         rd_grid = rd_grid_alloc_EGRID(grid_file, apply_mapaxes);
     else
         throw std::invalid_argument(fmt::format(
@@ -2922,25 +2922,25 @@ rd_grid_type *rd_grid_alloc(const char *grid_file) {
 */
 static std::optional<std::string>
 rd_grid_alloc_case_filename(const char *case_input) {
-    rd_file_enum file_type;
+    FileType file_type;
     bool fmt_file;
     file_type = rd_get_file_type(case_input, &fmt_file, NULL);
     fs::path case_path(case_input);
     case_path = case_path.parent_path() / case_path.stem();
 
-    if (file_type == RD_GRID_FILE)
+    if (file_type == FileType::GRID)
         return case_input; /* Case 1 */
-    else if (file_type == RD_EGRID_FILE)
+    else if (file_type == FileType::EGRID)
         return case_input; /* Case 1 */
     else {
         std::optional<std::string> grid_file = std::nullopt;
-        if ((file_type == RD_OTHER_FILE) ||
+        if ((file_type == FileType::OTHER) ||
             (file_type ==
-             RD_DATA_FILE)) { /* Case 3 - only basename recognized */
-            fs::path EGRID = rd::filename(case_path, RD_EGRID_FILE, false);
-            fs::path GRID = rd::filename(case_path, RD_GRID_FILE, false);
-            fs::path FEGRID = rd::filename(case_path, RD_EGRID_FILE, true);
-            fs::path FGRID = rd::filename(case_path, RD_GRID_FILE, true);
+             FileType::DATA)) { /* Case 3 - only basename recognized */
+            fs::path EGRID = rd::filename(case_path, FileType::EGRID, false);
+            fs::path GRID = rd::filename(case_path, FileType::GRID, false);
+            fs::path FEGRID = rd::filename(case_path, FileType::EGRID, true);
+            fs::path FGRID = rd::filename(case_path, FileType::GRID, true);
 
             if (rd::try_exists(EGRID))
                 grid_file = EGRID.string();
@@ -2952,8 +2952,8 @@ rd_grid_alloc_case_filename(const char *case_input) {
                 grid_file = FGRID.string();
             /* else: could not find a GRID/EGRID. */
         } else { /* Case 2 - we know the formatted / unformatted status. */
-            fs::path EGRID = rd::filename(case_path, RD_EGRID_FILE, fmt_file);
-            fs::path GRID = rd::filename(case_path, RD_GRID_FILE, fmt_file);
+            fs::path EGRID = rd::filename(case_path, FileType::EGRID, fmt_file);
+            fs::path GRID = rd::filename(case_path, FileType::GRID, fmt_file);
 
             if (rd::try_exists(EGRID))
                 grid_file = EGRID.string();
@@ -4662,7 +4662,7 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
     {
         bool is_fmt;
 
-        if (rd_get_file_type(filename, &is_fmt, NULL) != RD_OTHER_FILE)
+        if (rd_get_file_type(filename, &is_fmt, NULL) != FileType::OTHER)
             fmt_file = is_fmt;
     }
 
@@ -5247,7 +5247,7 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
     {
         bool is_fmt;
 
-        if (rd_get_file_type(filename, &is_fmt, NULL) != RD_OTHER_FILE)
+        if (rd_get_file_type(filename, &is_fmt, NULL) != FileType::OTHER)
             fmt_file = is_fmt;
     }
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);

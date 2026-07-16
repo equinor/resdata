@@ -68,81 +68,81 @@ int rd_filename_report_nr(const char *filename) {
 /*
  We accept mixed lowercase/uppercase Eclipse file extensions even if Eclipse itself does not accept them.
 */
-static rd_file_enum rd_inspect_extension(const char *ext, bool *_fmt_file,
-                                         int *_report_nr) {
-    rd_file_enum file_type = RD_OTHER_FILE;
+static FileType rd_inspect_extension(const char *ext, bool *_fmt_file,
+                                     int *_report_nr) {
+    FileType file_type = FileType::OTHER;
     bool fmt_file = true;
     int report_nr = -1;
     char *upper_ext = util_alloc_strupr_copy(ext);
     if (strcmp(upper_ext, "UNRST") == 0) {
-        file_type = RD_UNIFIED_RESTART_FILE;
+        file_type = FileType::UNIFIED_RESTART;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FUNRST") == 0) {
-        file_type = RD_UNIFIED_RESTART_FILE;
+        file_type = FileType::UNIFIED_RESTART;
         fmt_file = true;
     } else if (strcmp(upper_ext, "UNSMRY") == 0) {
-        file_type = RD_UNIFIED_SUMMARY_FILE;
+        file_type = FileType::UNIFIED_SUMMARY;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FUNSMRY") == 0) {
-        file_type = RD_UNIFIED_SUMMARY_FILE;
+        file_type = FileType::UNIFIED_SUMMARY;
         fmt_file = true;
     } else if (strcmp(upper_ext, "SMSPEC") == 0) {
-        file_type = RD_SUMMARY_HEADER_FILE;
+        file_type = FileType::SUMMARY_HEADER;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FSMSPEC") == 0) {
-        file_type = RD_SUMMARY_HEADER_FILE;
+        file_type = FileType::SUMMARY_HEADER;
         fmt_file = true;
     } else if (strcmp(upper_ext, "GRID") == 0) {
-        file_type = RD_GRID_FILE;
+        file_type = FileType::GRID;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FGRID") == 0) {
-        file_type = RD_GRID_FILE;
+        file_type = FileType::GRID;
         fmt_file = true;
     } else if (strcmp(upper_ext, "EGRID") == 0) {
-        file_type = RD_EGRID_FILE;
+        file_type = FileType::EGRID;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FEGRID") == 0) {
-        file_type = RD_EGRID_FILE;
+        file_type = FileType::EGRID;
         fmt_file = true;
     } else if (strcmp(upper_ext, "INIT") == 0) {
-        file_type = RD_INIT_FILE;
+        file_type = FileType::INIT;
         fmt_file = false;
     } else if (strcmp(upper_ext, "FINIT") == 0) {
-        file_type = RD_INIT_FILE;
+        file_type = FileType::INIT;
         fmt_file = true;
     } else if (strcmp(upper_ext, "FRFT") == 0) {
-        file_type = RD_RFT_FILE;
+        file_type = FileType::RFT;
         fmt_file = true;
     } else if (strcmp(upper_ext, "RFT") == 0) {
-        file_type = RD_RFT_FILE;
+        file_type = FileType::RFT;
         fmt_file = false;
     } else if (strcmp(upper_ext, "DATA") == 0) {
-        file_type = RD_DATA_FILE;
+        file_type = FileType::DATA;
         fmt_file = true; /* Not really relevant ... */
     } else {
         switch (upper_ext[0]) {
         case ('X'):
-            file_type = RD_RESTART_FILE;
+            file_type = FileType::RESTART;
             fmt_file = false;
             break;
         case ('F'):
-            file_type = RD_RESTART_FILE;
+            file_type = FileType::RESTART;
             fmt_file = true;
             break;
         case ('S'):
-            file_type = RD_SUMMARY_FILE;
+            file_type = FileType::SUMMARY;
             fmt_file = false;
             break;
         case ('A'):
-            file_type = RD_SUMMARY_FILE;
+            file_type = FileType::SUMMARY;
             fmt_file = true;
             break;
         default:
-            file_type = RD_OTHER_FILE;
+            file_type = FileType::OTHER;
         }
-        if (file_type != RD_OTHER_FILE)
+        if (file_type != FileType::OTHER)
             if (!util_sscanf_int(&upper_ext[1], &report_nr))
-                file_type = RD_OTHER_FILE;
+                file_type = FileType::OTHER;
     }
 
     if (_fmt_file != NULL)
@@ -163,40 +163,40 @@ static rd_file_enum rd_inspect_extension(const char *ext, bool *_fmt_file,
   report number this corresponds to.
 */
 
-rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
-                              int *report_nr) {
+FileType rd_get_file_type(const char *filename, bool *fmt_file,
+                          int *report_nr) {
     char *ext = (char *)strrchr(filename, '.');
     if (ext == NULL)
-        return RD_OTHER_FILE;
+        return FileType::OTHER;
 
     return rd_inspect_extension(&ext[1], fmt_file, report_nr);
 }
 
-static const char *rd_get_file_pattern(rd_file_enum file_type, bool fmt_file) {
+static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
     if (fmt_file) {
         switch (file_type) {
-        case (RD_OTHER_FILE):
+        case (FileType::OTHER):
             return RD_OTHER_FILE_FMT_PATTERN; /* '*' */
             break;
-        case (RD_UNIFIED_RESTART_FILE):
+        case (FileType::UNIFIED_RESTART):
             return RD_UNIFIED_RESTART_FMT_PATTERN;
             break;
-        case (RD_UNIFIED_SUMMARY_FILE):
+        case (FileType::UNIFIED_SUMMARY):
             return RD_UNIFIED_SUMMARY_FMT_PATTERN;
             break;
-        case (RD_GRID_FILE):
+        case (FileType::GRID):
             return RD_GRID_FMT_PATTERN;
             break;
-        case (RD_EGRID_FILE):
+        case (FileType::EGRID):
             return RD_EGRID_FMT_PATTERN;
             break;
-        case (RD_INIT_FILE):
+        case (FileType::INIT):
             return RD_INIT_FMT_PATTERN;
             break;
-        case (RD_RFT_FILE):
+        case (FileType::RFT):
             return RD_RFT_FMT_PATTERN;
             break;
-        case (RD_DATA_FILE):
+        case (FileType::DATA):
             return RD_DATA_PATTERN;
             break;
         default:
@@ -206,25 +206,25 @@ static const char *rd_get_file_pattern(rd_file_enum file_type, bool fmt_file) {
         }
     } else {
         switch (file_type) {
-        case (RD_OTHER_FILE):
+        case (FileType::OTHER):
             return RD_OTHER_FILE_UFMT_PATTERN; /* '*' */
             break;
-        case (RD_UNIFIED_RESTART_FILE):
+        case (FileType::UNIFIED_RESTART):
             return RD_UNIFIED_RESTART_UFMT_PATTERN;
             break;
-        case (RD_UNIFIED_SUMMARY_FILE):
+        case (FileType::UNIFIED_SUMMARY):
             return RD_UNIFIED_SUMMARY_UFMT_PATTERN;
             break;
-        case (RD_GRID_FILE):
+        case (FileType::GRID):
             return RD_GRID_UFMT_PATTERN;
             break;
-        case (RD_EGRID_FILE):
+        case (FileType::EGRID):
             return RD_EGRID_UFMT_PATTERN;
             break;
-        case (RD_INIT_FILE):
+        case (FileType::INIT):
             return RD_INIT_UFMT_PATTERN;
             break;
-        case (RD_RFT_FILE):
+        case (FileType::RFT):
             return RD_RFT_UFMT_PATTERN;
             break;
         default:
@@ -259,75 +259,75 @@ static bool base_has_upper(const char *input_base) {
 */
 
 static char *rd_alloc_filename_static(const char *path, const char *base,
-                                      rd_file_enum file_type, bool fmt_file,
+                                      FileType file_type, bool fmt_file,
                                       int report_nr) {
     char *filename;
     char *ext;
     switch (file_type) {
-    case (RD_RESTART_FILE):
+    case (FileType::RESTART):
         if (fmt_file)
             ext = util_alloc_sprintf("F%04d", report_nr);
         else
             ext = util_alloc_sprintf("X%04d", report_nr);
         break;
 
-    case (RD_UNIFIED_RESTART_FILE):
+    case (FileType::UNIFIED_RESTART):
         if (fmt_file)
             ext = util_alloc_string_copy("FUNRST");
         else
             ext = util_alloc_string_copy("UNRST");
         break;
 
-    case (RD_SUMMARY_FILE):
+    case (FileType::SUMMARY):
         if (fmt_file)
             ext = util_alloc_sprintf("A%04d", report_nr);
         else
             ext = util_alloc_sprintf("S%04d", report_nr);
         break;
 
-    case (RD_UNIFIED_SUMMARY_FILE):
+    case (FileType::UNIFIED_SUMMARY):
         if (fmt_file)
             ext = util_alloc_string_copy("FUNSMRY");
         else
             ext = util_alloc_string_copy("UNSMRY");
         break;
 
-    case (RD_SUMMARY_HEADER_FILE):
+    case (FileType::SUMMARY_HEADER):
         if (fmt_file)
             ext = util_alloc_string_copy("FSMSPEC");
         else
             ext = util_alloc_string_copy("SMSPEC");
         break;
 
-    case (RD_GRID_FILE):
+    case (FileType::GRID):
         if (fmt_file)
             ext = util_alloc_string_copy("FGRID");
         else
             ext = util_alloc_string_copy("GRID");
         break;
 
-    case (RD_EGRID_FILE):
+    case (FileType::EGRID):
         if (fmt_file)
             ext = util_alloc_string_copy("FEGRID");
         else
             ext = util_alloc_string_copy("EGRID");
         break;
 
-    case (RD_INIT_FILE):
+    case (FileType::INIT):
         if (fmt_file)
             ext = util_alloc_string_copy("FINIT");
         else
             ext = util_alloc_string_copy("INIT");
         break;
 
-    case (RD_RFT_FILE):
+    case (FileType::RFT):
         if (fmt_file)
             ext = util_alloc_string_copy("FRFT");
         else
             ext = util_alloc_string_copy("RFT");
         break;
 
-    case (RD_DATA_FILE):
+    case (FileType::DATA):
         ext = util_alloc_string_copy("DATA");
         break;
 
@@ -351,10 +351,10 @@ static char *rd_alloc_filename_static(const char *path, const char *base,
 namespace rd {
 /**
  * Given the path to a case, eg. test-data/local/eclipse/SIMPLE,
- * get path to the file of the given type, e.g for RD_EGRID_FILE
+ * get path to the file of the given type, e.g for FileType::EGRID
  * you get test-data/local/eclipse/SIMPLE.EGRID.
  */
-fs::path filename(fs::path casepath, rd_file_enum file_type, bool fmt_file,
+fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
                   int report_nr) {
     std::string directory = casepath.parent_path().string();
     std::string basename = casepath.filename().string();
@@ -394,7 +394,7 @@ int rd_fname_report_cmp(const void *f1, const void *f2) {
 /**
    This function will scan the directory @path (or cwd if @path == NULL)
    for all files of type @file_type. If base == NULL it will use
-   '*' as pattern for basename. If file_type == RD_OTHER_FILE it will
+   '*' as pattern for basename. If file_type == FileType::OTHER it will
    use '*' as pattern for the extension (as a consequence files which do
    not originate from the simulator will also be included).
 
@@ -457,7 +457,7 @@ static bool restart_lowercase_BINARY(const char *filename, const void *base) {
 }
 
 static int rd_select_predicate_filelist(const char *path, const char *base,
-                                        rd_file_enum file_type, bool fmt_file,
+                                        FileType file_type, bool fmt_file,
                                         bool upper_case,
                                         stringlist_type *filelist) {
     file_pred_ftype *predicate = NULL;
@@ -469,7 +469,7 @@ static int rd_select_predicate_filelist(const char *path, const char *base,
         free(tmp);
     }
 
-    if (file_type == RD_SUMMARY_FILE) {
+    if (file_type == FileType::SUMMARY) {
         if (fmt_file) {
             if (upper_case)
                 predicate = summary_UPPERCASE_ASCII;
@@ -481,7 +481,7 @@ static int rd_select_predicate_filelist(const char *path, const char *base,
             else
                 predicate = summary_lowercase_BINARY;
         }
-    } else if (file_type == RD_RESTART_FILE) {
+    } else if (file_type == FileType::RESTART) {
         if (fmt_file) {
             if (upper_case)
                 predicate = restart_UPPERCASE_ASCII;
@@ -505,13 +505,12 @@ static int rd_select_predicate_filelist(const char *path, const char *base,
     return stringlist_get_size(filelist);
 }
 
-int rd_select_filelist(const char *path, const char *base,
-                       rd_file_enum file_type, bool fmt_file,
-                       stringlist_type *filelist) {
+int rd_select_filelist(const char *path, const char *base, FileType file_type,
+                       bool fmt_file, stringlist_type *filelist) {
     stringlist_clear(filelist);
 
     bool upper_case = base_has_upper(base);
-    if (file_type == RD_SUMMARY_FILE || file_type == RD_RESTART_FILE)
+    if (file_type == FileType::SUMMARY || file_type == FileType::RESTART)
         return rd_select_predicate_filelist(path, base, file_type, fmt_file,
                                             upper_case, filelist);
 
@@ -541,13 +540,13 @@ bool rd_fmt_file(const char *filename, bool *__fmt_file) {
     const int min_size = 256; /* Very small */
 
     int report_nr;
-    rd_file_enum file_type;
+    FileType file_type;
     bool status = true;
     bool fmt_file = 0;
 
     if (util_file_exists(filename)) {
         file_type = rd_get_file_type(filename, &fmt_file, &report_nr);
-        if (file_type == RD_OTHER_FILE) {
+        if (file_type == FileType::OTHER) {
             if (util_file_size(filename) > min_size)
                 fmt_file = util_fmt_bit8(filename);
             else
@@ -555,7 +554,7 @@ bool rd_fmt_file(const char *filename, bool *__fmt_file) {
         }
     } else {
         file_type = rd_get_file_type(filename, &fmt_file, &report_nr);
-        if (file_type == RD_OTHER_FILE)
+        if (file_type == FileType::OTHER)
             status = false; // Do not know ??
     }
 

@@ -27,7 +27,7 @@ import re
 from cwrap import BaseCClass
 
 import resdata.resfile._file as _file
-from resdata import FileMode, FileType
+from resdata.rd_util import FileMode, FileType, ResdataUtil
 from resdata.util.util import CTime
 
 from .rd_file_view import ResdataFileView
@@ -38,9 +38,8 @@ class ResdataFile(BaseCClass):
     TYPE_NAME = "rd_file"
 
     @staticmethod
-    def get_filetype(filename):
-        file_type, fmt_file, report_step = _file._get_file_type(filename)
-        file_type = FileType(file_type)
+    def get_filetype(filename: str) -> tuple[FileType, bool | None, int | None]:
+        file_type, fmt_file, report_step = ResdataUtil.inspect_extension(filename)
         if file_type not in [
             FileType.RESTART,
             FileType.SUMMARY,

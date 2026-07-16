@@ -35,14 +35,6 @@ PYBIND11_MODULE(_file, m) {
                 rd::File::fast_open(filename, index_filename, flags).release();
             return py::cast(reinterpret_cast<std::uintptr_t>(file));
         });
-    m.def("_get_file_type", [](std::string filename) {
-        bool fmt_file = false;
-        int report_step = 0;
-        auto file_type =
-            rd_get_file_type(filename.c_str(), &fmt_file, &report_step);
-        return std::make_tuple(static_cast<int>(file_type), fmt_file,
-                               report_step);
-    });
     m.def("_writable", [](py::handle self) {
         return from_cwrap<rd::File>(self)->is_writable();
     });

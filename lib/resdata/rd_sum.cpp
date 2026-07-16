@@ -163,7 +163,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
         return;
 
     fs::path restart_path =
-        rd::filename(fs::path(restart_header), RD_SUMMARY_HEADER_FILE,
+        rd::filename(fs::path(restart_header), FileType::SUMMARY_HEADER,
                      rd_smspec_get_formatted(rd_sum->smspec.get()), -1);
     rd_sum_ptr restart_case =
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
@@ -188,17 +188,17 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
         return false;
 
     if (rd_sum_fread_data(rd_sum, data_files, lazy_load, file_options)) {
-        rd_file_enum file_type =
+        FileType file_type =
             rd_get_file_type(stringlist_iget(data_files, 0), NULL, NULL);
 
-        if (file_type == RD_SUMMARY_FILE)
+        if (file_type == FileType::SUMMARY)
             rd_sum->unified = false;
-        else if (file_type == RD_UNIFIED_SUMMARY_FILE)
+        else if (file_type == FileType::UNIFIED_SUMMARY)
             rd_sum->unified = true;
         else
             throw std::invalid_argument(
-                "FileTypeError, should be RD_SUMMARY_FILE OR "
-                "RD_UNIFIED_SUMMARY_FILE");
+                "FileTypeError, should be FileType::SUMMARY OR "
+                "FileType::UNIFIED_SUMMARY");
     } else
         return false;
 
@@ -237,12 +237,12 @@ static void rd_alloc_summary_data_files(const fs::path &path,
                                         const fs::path &base, bool fmt_file,
                                         stringlist_type *filelist) {
     std::string unif_data_file =
-        rd::filename(path / base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1)
+        rd::filename(path / base, FileType::UNIFIED_SUMMARY, fmt_file, -1)
             .string();
     std::string pstr = path.string();
     std::string bstr = base.string();
-    int files = rd_select_filelist(pstr.c_str(), bstr.c_str(), RD_SUMMARY_FILE,
-                                   fmt_file, filelist);
+    int files = rd_select_filelist(pstr.c_str(), bstr.c_str(),
+                                   FileType::SUMMARY, fmt_file, filelist);
 
     if ((files > 0) && fs::exists(unif_data_file)) {
         /*
@@ -331,25 +331,25 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
         base = _base;
 
     if (!ext.empty()) {
-        rd_file_enum input_type;
+        FileType input_type;
 
         std::string filename = base.string() + ext;
         input_type = rd_get_file_type(filename.c_str(), &fmt_input, NULL);
 
-        if ((input_type != RD_OTHER_FILE) && (input_type != RD_DATA_FILE)) {
+        if ((input_type != FileType::OTHER) && (input_type != FileType::DATA)) {
             /*
              The file has been recognized as a file type from which we can
              at least infer formatted/unformatted information.
             */
             fmt_set = true;
             switch (input_type) {
-            case (RD_SUMMARY_FILE):
-            case (RD_RESTART_FILE):
+            case (FileType::SUMMARY):
+            case (FileType::RESTART):
                 unif_input = false;
                 unif_set = true;
                 break;
-            case (RD_UNIFIED_SUMMARY_FILE):
-            case (RD_UNIFIED_RESTART_FILE):
+            case (FileType::UNIFIED_SUMMARY):
+            case (FileType::UNIFIED_RESTART):
                 unif_input = true;
                 unif_set = true;
                 break;
@@ -364,9 +364,9 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
   */
 
     std::string fsmspec_file =
-        rd::filename(path / base, RD_SUMMARY_HEADER_FILE, true, -1).string();
+        rd::filename(path / base, FileType::SUMMARY_HEADER, true, -1).string();
     std::string smspec_file =
-        rd::filename(path / base, RD_SUMMARY_HEADER_FILE, false, -1).string();
+        rd::filename(path / base, FileType::SUMMARY_HEADER, false, -1).string();
 
     /* Neither file exists */
     if (!rd::try_exists(fsmspec_file) && !rd::try_exists(smspec_file))
@@ -410,7 +410,7 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
 
         if (unif_input) {
             fs::path unif_data_file = rd::filename(
-                path / base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
+                path / base, FileType::UNIFIED_SUMMARY, fmt_file, -1);
             if (fs::exists(unif_data_file)) {
                 stringlist_append_copy(filelist,
                                        unif_data_file.string().c_str());
@@ -418,7 +418,7 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
         } else {
             std::string pstr = path.string();
             std::string bstr = base.string();
-            rd_select_filelist(pstr.c_str(), bstr.c_str(), RD_SUMMARY_FILE,
+            rd_select_filelist(pstr.c_str(), bstr.c_str(), FileType::SUMMARY,
                                fmt_file, filelist);
         }
     } else

@@ -499,7 +499,7 @@ void rd_sum_file_data::fwrite_multiple(const std::string &rd_case,
          report_step <= this->last_report(); report_step++) {
         if (this->has_report(report_step)) {
             fs::path filename =
-                rd::filename(rd_case, RD_SUMMARY_FILE, fmt_case, report_step);
+                rd::filename(rd_case, FileType::SUMMARY, fmt_case, report_step);
             ERT::FortIO fortio(filename.string(), std::ios_base::out, fmt_case);
 
             fwrite_report(report_step, fortio);
@@ -581,22 +581,22 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
     if (stringlist_get_size(filelist) == 0)
         return false;
 
-    rd_file_enum file_type =
+    FileType file_type =
         rd_get_file_type(stringlist_iget(filelist, 0), NULL, NULL);
-    if ((stringlist_get_size(filelist) > 1) && (file_type != RD_SUMMARY_FILE))
+    if ((stringlist_get_size(filelist) > 1) && (file_type != FileType::SUMMARY))
         util_abort("%s: internal error - when calling with more than one file "
                    "- you can not supply a unified file - come on?! \n",
                    __func__);
 
-    if (file_type == RD_SUMMARY_FILE) {
+    if (file_type == FileType::SUMMARY) {
 
         /* Not unified. */
         for (int filenr = 0; filenr < stringlist_get_size(filelist); filenr++) {
             const char *data_file = stringlist_iget(filelist, filenr);
-            rd_file_enum file_type;
+            FileType file_type;
             int report_step;
             file_type = rd_get_file_type(data_file, NULL, &report_step);
-            if (file_type != RD_SUMMARY_FILE)
+            if (file_type != FileType::SUMMARY)
                 util_abort("%s: file:%s has wrong type \n", __func__,
                            data_file);
             {
@@ -607,7 +607,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
                 }
             }
         }
-    } else if (file_type == RD_UNIFIED_SUMMARY_FILE) {
+    } else if (file_type == FileType::UNIFIED_SUMMARY) {
         if (lazy_load) {
             try {
                 this->loader.reset(new unsmry_loader(

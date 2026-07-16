@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     char *grid_file = util_alloc_filename(NULL, case_path, "EGRID");
     stringlist_type *file_list = stringlist_alloc_new();
     rd_grid_ptr grid = read_grid(grid_file);
-    rd_select_filelist(NULL, case_path, RD_RESTART_FILE, false, file_list);
+    rd_select_filelist(NULL, case_path, FileType::RESTART, false, file_list);
 
     printf("Searching in:%s \n", case_path);
     test_assert_int_equal(4, stringlist_get_size(file_list));

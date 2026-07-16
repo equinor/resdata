@@ -16,23 +16,23 @@
 
 #include <resdata/rd_type.hpp>
 
+enum class FileType : int {
+    OTHER = 0,
+    RESTART = 1,
+    UNIFIED_RESTART = 2,
+    SUMMARY = 4,
+    UNIFIED_SUMMARY = 8,
+    SUMMARY_HEADER = 16,
+    GRID = 32,
+    EGRID = 64,
+    INIT = 128,
+    RFT = 256,
+    DATA = 512
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef enum {
-    RD_OTHER_FILE = 0,
-    RD_RESTART_FILE = 1,
-    RD_UNIFIED_RESTART_FILE = 2,
-    RD_SUMMARY_FILE = 4,
-    RD_UNIFIED_SUMMARY_FILE = 8,
-    RD_SUMMARY_HEADER_FILE = 16,
-    RD_GRID_FILE = 32,
-    RD_EGRID_FILE = 64,
-    RD_INIT_FILE = 128,
-    RD_RFT_FILE = 256,
-    RD_DATA_FILE = 512
-} rd_file_enum;
 
 /*
     This enum enumerates the four different ways summary and restart information
@@ -111,8 +111,8 @@ typedef enum {
 #endif
 
 extern "C" int rd_filename_report_nr(const char *);
-extern "C" rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
-                                         int *report_nr);
+extern "C" FileType rd_get_file_type(const char *filename, bool *fmt_file,
+                                     int *report_nr);
 extern "C" time_t rd_get_start_date(const char *);
 extern "C" int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);
@@ -124,14 +124,13 @@ time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
 
 const char *rd_get_phase_name(rd_phase_enum phase);
 
-int rd_select_filelist(const char *path, const char *base,
-                       rd_file_enum file_type, bool fmt_file,
-                       stringlist_type *filelist);
+int rd_select_filelist(const char *path, const char *base, FileType file_type,
+                       bool fmt_file, stringlist_type *filelist);
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);
 namespace rd {
-std::filesystem::path filename(std::filesystem::path path, rd_file_enum,
+std::filesystem::path filename(std::filesystem::path path, FileType,
                                bool fmt_file, int report_nr = -1);
 
 inline bool try_exists(std::filesystem::path p) noexcept {

@@ -97,11 +97,11 @@ void WellInfo::load_rstfile(const std::string &filename,
 void WellInfo::load_rstfile(rd::File *rd_file, bool load_segment_information) {
     int report_nr;
     std::string filename = rd_file->filename();
-    rd_file_enum file_type =
+    FileType file_type =
         rd_get_file_type(filename.c_str(), nullptr, &report_nr);
-    if ((file_type == RD_RESTART_FILE) ||
-        (file_type == RD_UNIFIED_RESTART_FILE)) {
-        if (file_type == RD_RESTART_FILE)
+    if ((file_type == FileType::RESTART) ||
+        (file_type == FileType::UNIFIED_RESTART)) {
+        if (file_type == FileType::RESTART)
             add_wells(rd_file, report_nr, load_segment_information);
         else
             add_UNRST_wells(rd_file, load_segment_information);
