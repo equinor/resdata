@@ -19,6 +19,8 @@ from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest
 
+from ._grid_fixtures import write_egrid_with_gridhead_dims, write_grid_file_with_lgrs
+
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.
 CORNER_HOME = {
@@ -911,6 +913,85 @@ def test_that_grdecl_with_actnum_dimensions_raises(tmp_path):
     filename.write_text(invalid_actnum_dimensions_grdecl)
     with pytest.raises(ValueError, match="size of ACTNUM keyword = 4"):
         Grid.load_from_file(str(filename))
+
+
+negative_dimensions = [(-1, 1, 1), (1, -1, 1), (1, 1, -1)]
+
+
+def _negative_dimensions_grdecl(nx, ny, nz):
+    return f"""
+MAPUNITS
+ 'METRES  '
+/
+GRIDUNIT
+ 'METRES  ' '        '
+/
+SPECGRID
+  {nx}  {ny}  {nz}  1  F
+/
+COORD
+   0.00000000E+00
+/
+ZCORN
+   0.00000000E+00
+/
+"""
+
+
+@pytest.mark.parametrize("nx, ny, nz", negative_dimensions)
+def test_that_grdecl_with_negative_dimensions_raises(tmp_path, nx, ny, nz):
+    filename = tmp_path / "negative.grdecl"
+    filename.write_text(_negative_dimensions_grdecl(nx, ny, nz))
+    with pytest.raises(ValueError, match="Dimensions of grid were negative"):
+        Grid.load_from_file(str(filename))
+
+
+@pytest.mark.parametrize("nx, ny, nz", negative_dimensions)
+def test_that_egrid_with_negative_dimensions_raises(tmp_path, nx, ny, nz):
+    filename = tmp_path / "NEGATIVE.EGRID"
+    write_egrid_with_gridhead_dims(filename, (nx, ny, nz))
+    with pytest.raises(ValueError, match="Invalid grid dimensions"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("nx, ny, nz", negative_dimensions)
+def test_that_egrid_lgr_with_negative_dimensions_raises(tmp_path, nx, ny, nz):
+    filename = tmp_path / "NEGATIVE_LGR.EGRID"
+    write_egrid_with_gridhead_dims(filename, (1, 1, 1), lgr_dims=(nx, ny, nz))
+    with pytest.raises(ValueError, match="Invalid grid dimensions"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("nx, ny, nz", negative_dimensions)
+def test_that_grid_with_negative_dimensions_raises(tmp_path, nx, ny, nz):
+    filename = tmp_path / "NEGATIVE.GRID"
+    write_grid_file_with_lgrs(filename, nx, ny, nz)
+    with pytest.raises(ValueError, match="Dimensions of grid were negative"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("nx, ny, nz", negative_dimensions)
+def test_that_grid_lgr_with_negative_dimensions_raises(tmp_path, nx, ny, nz):
+    filename = tmp_path / "NEGATIVE_LGR.GRID"
+    write_grid_file_with_lgrs(
+        filename,
+        1,
+        1,
+        1,
+        [
+            {
+                "lgr_name": "LGR1",
+                "parent_name": "",
+                "emit_parent": False,
+                "nx": nx,
+                "ny": ny,
+                "nz": nz,
+                "host_cell": 1,
+            }
+        ],
+    )
+    with pytest.raises(ValueError, match="Dimensions of grid were negative"):
+        Grid(str(filename))
 
 
 names = st.text(
