@@ -223,22 +223,6 @@ bool rd::File::save_kw(const rd_kw_type *rd_kw) {
         return false;
 }
 
-static std::shared_ptr<rd::FileView>
-rd_file_get_relative_blockview(rd_file_type *rd_file, const char *kw,
-                               int occurence) {
-    return rd_file->global_view->blockview(kw, kw, occurence);
-}
-
-bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
-                             int occurence) {
-    if (auto blockmap =
-            rd_file_get_relative_blockview(rd_file, kw, occurence)) {
-        rd_file->global_view = std::move(blockmap);
-        return true;
-    } else
-        return false;
-}
-
 static void check_valid_index(const std::string &file_name,
                               const std::string &index_file_name) {
     if (!util_file_exists(file_name.c_str()))

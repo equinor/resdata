@@ -127,6 +127,3 @@ struct File {
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-
-bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
-                             int occurence);
