@@ -240,15 +240,6 @@ bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step) {
     return rd_file->global_view->has_report_step(report_step);
 }
 
-/** Will look up the INTEHEAD keyword in a rd_file_type
-    instance, and calculate simulation date from this instance.
-
-    Will return -1 if the requested INTEHEAD keyword can not be found. */
-time_t rd_file_iget_restart_sim_date(const rd_file_type *restart_file,
-                                     int index) {
-    return restart_file->global_view->restart_sim_date(index);
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 
