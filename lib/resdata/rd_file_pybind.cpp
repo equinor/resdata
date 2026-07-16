@@ -61,8 +61,8 @@ PYBIND11_MODULE(_file, m) {
         return from_cwrap<rd_file_type>(self)->restart_sim_days(index);
     });
     m.def("_get_restart_index", [](py::handle self, std::int64_t sim_time) {
-        return rd_file_get_restart_index(from_cwrap<rd_file_type>(self),
-                                         static_cast<time_t>(sim_time));
+        return from_cwrap<rd_file_type>(self)->find_sim_time(
+            static_cast<time_t>(sim_time));
     });
     m.def("_get_src_file", [](py::handle self) {
         return from_cwrap<rd_file_type>(self)->filename();

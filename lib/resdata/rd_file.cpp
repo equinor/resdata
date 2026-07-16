@@ -208,31 +208,6 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
     return rd_file->global_view->has_sim_time(sim_time);
 }
 
-/** Will determine the restart block corresponding to the
-    world time @sim_time; if @sim_time can not be found the function
-    will return 0.
-
-    The returned index is the 'occurence number' in the restart file,
-    i.e. in the (quite typical case) that not all report steps are
-    present the return value will not agree with report step.
-
-    The return value from this function can then be used to get a
-    corresponding solution field directly, or the file map can
-    restricted to this block.
-
-    Direct access:
-
-       int index = rd_file_get_restart_index( rd_file , sim_time );
-       if (index >= 0) {
-          rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index );
-          ....
-       }
-
-    Specially in the case of LGRs the block restriction should be used. */
-int rd_file_get_restart_index(const rd_file_type *rd_file, time_t sim_time) {
-    return rd_file->global_view->find_sim_time(sim_time);
-}
-
 /** Will look through all the SEQNUM kw instances of the current
     rd_file and look for @report_step. If the value is found true is
     returned, otherwise false. */
