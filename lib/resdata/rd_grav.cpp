@@ -50,7 +50,7 @@ typedef struct rd_grav_phase_struct rd_grav_phase_type;
 */
 
 struct rd_grav_struct {
-    const rd_file_type *
+    const rd::File *
         init_file; /* The init file - a shared reference owned by calling scope. */
     rd::rd_grid_cache *
         grid_cache; /* An internal specialized structure to facilitate fast grid lookup. */
@@ -205,7 +205,7 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     Will raise std::invalid_argument if the INTEHEAD
     keyword is not sufficiently large or the value at INTEHEAD_IPROG_INDEX
     is invalid. */
-static rd_version_enum get_simulator_version(const rd_file_type *file) {
+static rd_version_enum get_simulator_version(const rd::File *file) {
     rd_kw_type *intehead_kw = file->get_kw(INTEHEAD_KW, 0);
     int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
 
@@ -232,7 +232,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                                                rd::FileView *restart_file,
                                                grav_calc_type calc_type) {
 
-    const rd_file_type *init_file = rd_grav->init_file;
+    const rd::File *init_file = rd_grav->init_file;
     const rd::rd_grid_cache *grid_cache = rd_grav->grid_cache;
     const char *sat_kw_name = rd_get_phase_name(phase);
     {
@@ -347,7 +347,7 @@ static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
   5: Gas + Oil
   6: Gas + water
   7: Gas + Water + Oil */
-static int get_phases(const rd_file_type *init_file) {
+static int get_phases(const rd::File *init_file) {
     rd_kw_type *intehead_kw = init_file->get_kw(INTEHEAD_KW, 0);
     int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
     return phases;
@@ -409,7 +409,7 @@ rd_grav_survey_alloc_empty(const rd_grav_type *rd_grav, const std::string &name,
 */
 
 static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
-                                        const rd_file_type *init_file) {
+                                        const rd::File *init_file) {
     const rd::rd_grid_cache &grid_cache = *(survey->grid_cache);
     int active_size = grid_cache.size();
     const rd_kw_type *init_porv_kw = init_file->get_kw(PORV_KW, 0);
@@ -505,7 +505,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
                                  " keyword");
 
     {
-        const rd_file_type *init_file = rd_grav->init_file;
+        const rd::File *init_file = rd_grav->init_file;
         rd_grav_survey_assert_RPORV(survey, init_file);
         if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
                                        GRAV_CALC_RPORV)) {
@@ -612,8 +612,7 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
    all surveys have been added.
 */
 
-rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid,
-                            const rd_file_type *init_file) {
+rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid, const rd::File *init_file) {
     rd_grav_type *rd_grav = new rd_grav_type();
 
     rd_grav->init_file = init_file;

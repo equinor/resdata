@@ -9,7 +9,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file.hpp>
 
-void export_actnum(const rd_grid_type *rd_grid, rd_file_type *rd_file) {
+void export_actnum(const rd_grid_type *rd_grid, rd::File *rd_file) {
     rd_kw_type *actnum_kw = rd_file->get_kw("ACTNUM", 0);
     int *actnum =
         (int *)util_malloc(rd_kw_get_size(actnum_kw) * sizeof *actnum);
@@ -21,7 +21,7 @@ void export_actnum(const rd_grid_type *rd_grid, rd_file_type *rd_file) {
     free(actnum);
 }
 
-void export_coord(const rd_grid_type *grid, rd_file_type *rd_file) {
+void export_coord(const rd_grid_type *grid, rd::File *rd_file) {
     rd_kw_type *coord_kw = rd_file->get_kw("COORD", 0);
     test_assert_int_equal(rd_kw_get_size(coord_kw),
                           rd_grid_get_coord_size(grid));
@@ -42,7 +42,7 @@ void export_coord(const rd_grid_type *grid, rd_file_type *rd_file) {
     }
 }
 
-void export_zcorn(const rd_grid_type *grid, rd_file_type *rd_file) {
+void export_zcorn(const rd_grid_type *grid, rd::File *rd_file) {
     rd_kw_type *zcorn_kw = rd_file->get_kw("ZCORN", 0);
     test_assert_int_equal(rd_kw_get_size(zcorn_kw),
                           rd_grid_get_zcorn_size(grid));
@@ -66,7 +66,7 @@ void export_zcorn(const rd_grid_type *grid, rd_file_type *rd_file) {
     }
 }
 
-void export_mapaxes(const rd_grid_type *grid, rd_file_type *rd_file) {
+void export_mapaxes(const rd_grid_type *grid, rd::File *rd_file) {
     if (rd_file->has_kw("MAPAXES")) {
         rd_kw_type *mapaxes_kw = rd_file->get_kw("MAPAXES", 0);
         double mapaxes[6];

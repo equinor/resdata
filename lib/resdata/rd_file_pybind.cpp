@@ -44,41 +44,40 @@ PYBIND11_MODULE(_file, m) {
                                report_step);
     });
     m.def("_writable", [](py::handle self) {
-        return from_cwrap<rd_file_type>(self)->is_writable();
+        return from_cwrap<rd::File>(self)->is_writable();
     });
     m.def("_save_kw", [](py::handle self, py::handle kw) {
-        from_cwrap<rd_file_type>(self)->save_kw(from_cwrap<rd_kw_type>(kw));
+        from_cwrap<rd::File>(self)->save_kw(from_cwrap<rd_kw_type>(kw));
     });
     m.def("_close",
-          [](py::handle self) { from_cwrap<rd_file_type>(self)->close(); });
-    m.def("_free",
-          [](py::handle self) { delete from_cwrap<rd_file_type>(self); });
+          [](py::handle self) { from_cwrap<rd::File>(self)->close(); });
+    m.def("_free", [](py::handle self) { delete from_cwrap<rd::File>(self); });
     m.def("_iget_restart_time", [](py::handle self, int index) {
         return static_cast<std::int64_t>(
-            from_cwrap<rd_file_type>(self)->restart_sim_date(index));
+            from_cwrap<rd::File>(self)->restart_sim_date(index));
     });
     m.def("_iget_restart_days", [](py::handle self, int index) {
-        return from_cwrap<rd_file_type>(self)->restart_sim_days(index);
+        return from_cwrap<rd::File>(self)->restart_sim_days(index);
     });
     m.def("_get_restart_index", [](py::handle self, std::int64_t sim_time) {
-        return from_cwrap<rd_file_type>(self)->find_sim_time(
+        return from_cwrap<rd::File>(self)->find_sim_time(
             static_cast<time_t>(sim_time));
     });
     m.def("_get_src_file", [](py::handle self) {
-        return from_cwrap<rd_file_type>(self)->filename();
+        return from_cwrap<rd::File>(self)->filename();
     });
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
         from_cwrap<rd::File>(self)->write(fortio, 0);
     });
     m.def("_has_report_step", [](py::handle self, int report_step) {
-        return from_cwrap<rd_file_type>(self)->has_report_step(report_step);
+        return from_cwrap<rd::File>(self)->has_report_step(report_step);
     });
     m.def("_has_sim_time", [](py::handle self, std::int64_t sim_time) {
-        return from_cwrap<rd_file_type>(self)->has_sim_time(
+        return from_cwrap<rd::File>(self)->has_sim_time(
             static_cast<time_t>(sim_time));
     });
     m.def("_get_global_view", [](py::handle self) {
-        return from_cwrap<rd_file_type>(self)->get_global_view();
+        return from_cwrap<rd::File>(self)->get_global_view();
     });
     m.def("_write_index", [](py::handle self, std::string index_filename) {
         return from_cwrap<rd::File>(self)->write_index(index_filename);

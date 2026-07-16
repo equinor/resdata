@@ -208,7 +208,7 @@ namespace fs = std::filesystem;
       --------
 
       {
-         rd_file_type * restart_data = rd_file_fread_alloc(restart_filename , true);                      // load some restart info to inspect
+         rd::File * restart_data = rd_file_fread_alloc(restart_filename , true);                      // load some restart info to inspect
          rd_grid_type * grid         = rd_grid_alloc(grid_filename , true);                               // bootstrap rd_grid instance
          stringlist_type * lgr_names  = rd_grid_alloc_name_list( grid );                                   // get a list of all the lgr names.
 
@@ -1872,8 +1872,7 @@ static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
    the parent_name is set to nullopt.
 */
 static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
-                                       const rd_file_type *rd_file,
-                                       int grid_nr) {
+                                       const rd::File *rd_file, int grid_nr) {
     rd_kw_type *lgrname_kw = rd_file->get_kw(LGR_KW, grid_nr - 1);
     lgr_grid->name = rd_kw_iget_stripped_string(lgrname_kw, 0);
     if (rd_file->has_kw(LGR_PARENT_KW)) {
@@ -1894,8 +1893,7 @@ static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
    cool?). anyway global -> NULL.
 */
 static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
-                                      const rd_file_type *rd_file,
-                                      int grid_nr) {
+                                      const rd::File *rd_file, int grid_nr) {
     rd_kw_type *lgr_kw = rd_file->get_kw(LGR_KW, grid_nr - 1);
     lgr_grid->name = rd_kw_iget_stripped_string(lgr_kw, 0);
     {
@@ -2378,7 +2376,7 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
 /**
   This function reads the non-neighbour connection data from file and initializes the grid structure with the the nnc data
 */
-static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
+static void rd_grid_init_nnc(rd_grid_type *main_grid, rd::File *rd_file) {
     size_t num_nnchead_kw = rd_file->num_named_kw(NNCHEAD_KW);
 
     /*
@@ -2432,7 +2430,7 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
   LGRs) and initializes the grid structure with the nnc data.
 */
 static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
-                                         rd_file_type *rd_file) {
+                                         rd::File *rd_file) {
     size_t num_nncheada_kw = rd_file->num_named_kw(NNCHEADA_KW);
 
     for (size_t i = 0; i < num_nncheada_kw; i++) {
@@ -2466,7 +2464,7 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
    support LGRs.
 */
 static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
-                                         const rd_file_type *rd_file,
+                                         const rd::File *rd_file,
                                          size_t grid_nr, bool apply_mapaxes,
                                          const int *ext_actnum) {
     rd_kw_type *gridhead_kw = rd_file->get_kw(GRIDHEAD_KW, grid_nr);
@@ -2602,7 +2600,7 @@ static rd_grid_ptr rd_grid_alloc_GRID_data__(
     return grid;
 }
 
-static int rd_grid_dual_porosity_GRID_check(rd_file_type *rd_file) {
+static int rd_grid_dual_porosity_GRID_check(rd::File *rd_file) {
     rd_kw_type *dimens_kw = rd_file->get_kw(DIMENS_KW, 0);
     int nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
     int ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
@@ -2650,7 +2648,7 @@ static int rd_grid_dual_porosity_GRID_check(rd_file_type *rd_file) {
 }
 
 static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
-                                        const rd_file_type *rd_file,
+                                        const rd::File *rd_file,
                                         size_t cell_offset, size_t grid_nr,
                                         int dualp_flag, bool apply_mapaxes) {
     int nx, ny, nz;

@@ -519,7 +519,7 @@ double rd_sum_file_data::get_days_start() const {
     return node.sim_seconds * 86400;
 }
 
-bool rd_sum_file_data::check_file(rd_file_type *rd_file) {
+bool rd_sum_file_data::check_file(rd::File *rd_file) {
     return rd_file->has_kw(PARAMS_KW) && (rd_file->num_named_kw(PARAMS_KW) ==
                                           rd_file->num_named_kw(MINISTEP_KW));
 }

@@ -201,11 +201,11 @@ py::object ResdataFile() {
     return cls;
 }
 
-template <> rd_file_type *from_cwrap<rd_file_type>(py::handle obj) {
+template <> rd::File *from_cwrap<rd::File>(py::handle obj) {
     if (!py::isinstance(obj, ResdataFile()))
         throw py::type_error("Expected ResdataFile, got " +
                              static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<rd_file_type>(obj);
+    return cast_cwrap<rd::File>(obj);
 }
 
 py::object ResdataSubsidence() {

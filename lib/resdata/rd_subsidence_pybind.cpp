@@ -21,9 +21,8 @@ PYBIND11_MODULE(_subsidence, m) {
     m.doc() = "pybind11 bindings for rd_subsidence.cpp";
 
     m.def("_alloc", [](py::handle grid, py::handle init_file) -> py::object {
-        auto *subsidence =
-            rd_subsidence_alloc(from_cwrap<rd_grid_type>(grid),
-                                from_cwrap<rd_file_type>(init_file));
+        auto *subsidence = rd_subsidence_alloc(from_cwrap<rd_grid_type>(grid),
+                                               from_cwrap<rd::File>(init_file));
 
         if (subsidence == nullptr)
             return py::none();

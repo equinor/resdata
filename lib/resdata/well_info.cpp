@@ -45,7 +45,7 @@ struct clear_guard {
 };
 } // namespace
 
-void WellInfo::add_wells(rd_file_type *rst_file, int report_nr,
+void WellInfo::add_wells(rd::File *rst_file, int report_nr,
                          bool load_segment_information) {
     auto rst_view = rst_file->get_global_view();
     add_wells(rst_view.get(), report_nr, load_segment_information);
@@ -69,7 +69,7 @@ void WellInfo::add_wells(rd::FileView *rst_view, int report_nr,
     }
 }
 
-void WellInfo::add_UNRST_wells(rd_file_type *rst_file,
+void WellInfo::add_UNRST_wells(rd::File *rst_file,
                                bool load_segment_information) {
     auto rst_view = rst_file->get_global_view();
     size_t num_blocks = rst_view->num_named_kw(SEQNUM_KW);
@@ -94,8 +94,7 @@ void WellInfo::load_rstfile(const std::string &filename,
     load_rstfile(rd_file.get(), load_segment_information);
 }
 
-void WellInfo::load_rstfile(rd_file_type *rd_file,
-                            bool load_segment_information) {
+void WellInfo::load_rstfile(rd::File *rd_file, bool load_segment_information) {
     int report_nr;
     std::string filename = rd_file->filename();
     rd_file_enum file_type =

@@ -17,7 +17,7 @@
 */
 
 bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
-                                        const rd_file_type *init_file) {
+                                        const rd::File *init_file) {
     bool *aquifer_cell =
         (bool *)util_calloc(grid_cache.size(), sizeof *aquifer_cell);
 

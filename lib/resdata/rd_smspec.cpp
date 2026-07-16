@@ -649,7 +649,7 @@ bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other) {
 }
 
 static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
-                                   const rd_file_type *header) {
+                                   const rd::File *header) {
     if (!header->has_kw(RESTART_KW))
         return;
     const rd_kw_type *restart_kw = header->get_kw(RESTART_KW, 0);
@@ -834,7 +834,7 @@ const int *rd_smspec_get_index_map(const rd_smspec_type *smspec) {
  * situations occur in the future, this is a sane starting point for general
  * support.
  */
-static const char *get_active_keyword_alias(rd_file_type *header,
+static const char *get_active_keyword_alias(rd::File *header,
                                             const char *keyword) {
     if (strcmp(keyword, WGNAMES_KW) == 0 || strcmp(keyword, NAMES_KW) == 0)
         return header->has_kw(WGNAMES_KW) ? WGNAMES_KW : NAMES_KW;
@@ -842,7 +842,7 @@ static const char *get_active_keyword_alias(rd_file_type *header,
     return keyword;
 }
 
-static bool rd_smspec_check_header(rd_file_type *header) {
+static bool rd_smspec_check_header(rd::File *header) {
     bool OK = true;
     for (size_t i = 0; i < num_req_keywords && OK; i++) {
         OK &= header->has_kw(
