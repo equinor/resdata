@@ -107,12 +107,18 @@ struct File {
     int find_sim_time(time_t sim_time) {
         return global_view->find_sim_time(sim_time);
     }
+
+    /** Will look through all the SEQNUM kw instances of the current
+        rd_file and look for @report_step. If the value is found true is
+        returned, otherwise false. */
+    bool has_report_step(int report_step) {
+        return global_view->has_report_step(report_step);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-bool rd_file_has_report_step(const rd_file_type *rd_file, int report_step);
 bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time);
 
 bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,

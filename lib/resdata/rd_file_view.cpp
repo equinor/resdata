@@ -241,8 +241,8 @@ we have introduced the following concepts:
     i.e. to perform queries based on the report_step we must load the
     SEQNUM keyword and read its value.
 
-        rd_file_has_report_step( rd_file , 5 ) => True
-        rd_file_has_report_step( rd_file , 2 ) => False
+        rd_file->has_report_step(5) => True
+        rd_file->has_report_step(2) => False
 
  sim_time: This corresponds to the true simulation time of the report
     step. The simulation time is stored as integers DAY, MONTH, YEAR
