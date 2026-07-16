@@ -55,7 +55,6 @@ struct File {
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
 
 bool rd_file_writable(const rd_file_type *rd_file);
 
