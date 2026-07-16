@@ -61,12 +61,23 @@ struct File {
     [[nodiscard]] std::shared_ptr<rd::FileView> get_global_view() const {
         return global_view;
     }
+
+    /** Will save the content of @rd_kw to the File.
+
+        This function is quite strict:
+        1. The actual keyword which should be updated is identified using
+           pointer comparison; i.e. the rd_kw argument must be the actual
+           return value from an earlier get_kw() operation.
+
+        2. The header data of the rd_kw must be unmodified, and will throw
+           std::runtime_error if there is a mismatch.
+
+        3. The File must have been opened with FileMode::WRITABLE. */
+    bool save_kw(const rd_kw_type *rd_kw);
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-
-bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw);
 
 double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,
                                      int index);
