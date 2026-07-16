@@ -64,10 +64,8 @@ int main(int argc, char **argv) {
     }
 
     {
-        const rd_kw_type *swat0 =
-            rd_file_iget_named_kw(RST_file.get(), "SWAT", 0);
-        const rd_kw_type *porv =
-            rd_file_iget_named_kw(INIT_file.get(), "PORV", 0);
+        const rd_kw_type *swat0 = RST_file->get_kw("SWAT", 0);
+        const rd_kw_type *porv = INIT_file->get_kw("PORV", 0);
 
         test_assert_int_equal(rd_kw_get_size(swat0),
                               rd_grid_get_active_size(GRID.get()));

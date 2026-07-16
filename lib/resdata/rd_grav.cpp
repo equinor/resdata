@@ -220,8 +220,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
         grav_phase->work = NULL;
 
         if (calc_type == GRAV_CALC_FIP) {
-            rd_kw_type *pvtnum_kw =
-                rd_file_iget_named_kw(init_file, PVTNUM_KW, 0);
+            rd_kw_type *pvtnum_kw = init_file->get_kw(PVTNUM_KW, 0);
             const std::vector<double> std_density =
                 rd_grav->std_density[std::string(rd_get_phase_name(phase))];
 
@@ -372,8 +371,7 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
                                         const rd_file_type *init_file) {
     const rd::rd_grid_cache &grid_cache = *(survey->grid_cache);
     int active_size = grid_cache.size();
-    const rd_kw_type *init_porv_kw =
-        rd_file_iget_named_kw(init_file, PORV_KW, 0);
+    const rd_kw_type *init_porv_kw = init_file->get_kw(PORV_KW, 0);
     int check_points = std::min(100, active_size);
     int check_nr = 0;
     const std::vector<int> &global_index = grid_cache.global_index();
@@ -484,8 +482,8 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_PORMOD);
 
-    rd_kw_type *init_porv_kw = rd_file_iget_named_kw(
-        rd_grav->init_file, PORV_KW, 0); /* Global indexing */
+    rd_kw_type *init_porv_kw =
+        rd_grav->init_file->get_kw(PORV_KW, 0); /* Global indexing */
     rd_kw_type *pormod_kw =
         restart_file->get_kw(PORMOD_KW, 0); /* Active indexing */
     const int size = grid_cache.size();

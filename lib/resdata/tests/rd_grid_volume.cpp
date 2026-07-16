@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
 
     rd_file_ptr init = rd::File::open(init_file);
     rd_grid_ptr grid = read_grid(grid_file);
-    const rd_kw_type *poro_kw = rd_file_iget_named_kw(init.get(), "PORO", 0);
-    const rd_kw_type *porv_kw = rd_file_iget_named_kw(init.get(), "PORV", 0);
+    const rd_kw_type *poro_kw = init->get_kw("PORO", 0);
+    const rd_kw_type *porv_kw = init->get_kw("PORV", 0);
     rd_kw_type *multpv = NULL;
     rd_kw_type *NTG = NULL;
     bool error_found = false;
@@ -32,10 +32,10 @@ int main(int argc, char **argv) {
     int error_count = 0;
 
     if (init->has_kw("NTG"))
-        NTG = rd_file_iget_named_kw(init.get(), "NTG", 0);
+        NTG = init->get_kw("NTG", 0);
 
     if (init->has_kw("MULTPV"))
-        multpv = rd_file_iget_named_kw(init.get(), "MULTPV", 0);
+        multpv = init->get_kw("MULTPV", 0);
 
     for (int iactive = 0; iactive < rd_grid_get_nactive(grid.get());
          ++iactive) {

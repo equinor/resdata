@@ -78,8 +78,8 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
     const auto &global_index = grid_cache.global_index();
     const int size = grid_cache.size();
 
-    rd_kw_type *init_porv_kw = rd_file_iget_named_kw(
-        rd_subsidence->init_file, PORV_KW, 0); /*Global indexing*/
+    rd_kw_type *init_porv_kw =
+        rd_subsidence->init_file->get_kw(PORV_KW, 0); /*Global indexing*/
     rd_kw_type *pressure_kw =
         restart_view->get_kw(PRESSURE_KW, 0); /*Active indexing*/
 

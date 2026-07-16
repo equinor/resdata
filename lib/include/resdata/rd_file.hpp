@@ -41,6 +41,10 @@ struct File {
     [[nodiscard]] size_t num_named_kw(const std::string &kw) const {
         return global_view->num_named_kw(kw);
     }
+    /** Will return the ith occurence of @kw the File. */
+    [[nodiscard]] rd_kw_type *get_kw(const std::string &kw, int ith) const {
+        return global_view->get_kw(kw, ith);
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
@@ -54,8 +58,6 @@ int rd_file_get_phases(const rd_file_type *init_file);
 bool rd_file_writable(const rd_file_type *rd_file);
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index);
-rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
-                                  int ith);
 std::shared_ptr<rd::FileView>
 rd_file_get_global_blockview(rd_file_type *rd_file, const char *kw,
                              int occurence);

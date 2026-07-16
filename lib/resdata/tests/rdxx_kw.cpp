@@ -165,11 +165,11 @@ void test_read_write() {
 
         {
             auto f = rd::File::open(std::string("test_file"));
-            rd_kw_type *d_kw = rd_file_iget_named_kw(f.get(), "DOUBLE", 0);
-            rd_kw_type *f_kw = rd_file_iget_named_kw(f.get(), "FLOAT", 0);
-            rd_kw_type *i_kw = rd_file_iget_named_kw(f.get(), "INT", 0);
-            rd_kw_type *b_kw = rd_file_iget_named_kw(f.get(), "BOOL", 0);
-            rd_kw_type *s_kw = rd_file_iget_named_kw(f.get(), "STRING", 0);
+            rd_kw_type *d_kw = f->get_kw("DOUBLE", 0);
+            rd_kw_type *f_kw = f->get_kw("FLOAT", 0);
+            rd_kw_type *i_kw = f->get_kw("INT", 0);
+            rd_kw_type *b_kw = f->get_kw("BOOL", 0);
+            rd_kw_type *s_kw = f->get_kw("STRING", 0);
 
             for (size_t i = 0; i < d_data.size(); i++)
                 test_assert_true(d_data[i] == rd_kw_iget_double(d_kw, i));
