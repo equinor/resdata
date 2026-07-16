@@ -595,19 +595,3 @@ class ResdataFile(BaseCClass):
     def write_index(self, index_file_name):
         if not self or not _file._write_index(self, index_file_name):
             raise OSError("Failed to write index file:%s" % index_file_name)
-
-
-class ResdataFileContextManager:
-    def __init__(self, rd_file):
-        self.__rd_file = rd_file
-
-    def __enter__(self):
-        return self.__rd_file
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__rd_file.close()
-        return False
-
-
-def open_rd_file(file_name, flags=FileMode.DEFAULT):
-    return ResdataFileContextManager(ResdataFile(file_name, flags))
