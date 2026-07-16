@@ -1,22 +1,20 @@
-#include <cstdint>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <ios>
+#include <istream>
 #include <memory>
-#include <new>
+#include <ostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_util.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/FortIO.hpp>
-#include <ert/util/perm_vector.hpp>
 #include <resdata/rd_type.hpp>
 
 void FileKW::assert_kw() const {
@@ -69,62 +67,49 @@ void FileKW::inplace_write(ERT::FortIO &fortio) const {
     rd_kw_fwrite_data(kw.get(), fortio);
 }
 
-void FileKW::write_header(FILE *stream) {
+void FileKW::write_header(std::ostream &stream) const {
     size_t header_length = header.size();
     for (size_t i = 0; i < RD_STRING8_LENGTH; i++) {
         if (i < header_length)
-            fputc(header[i], stream);
+            stream.put(header[i]);
         else
-            fputc(' ', stream);
+            stream.put(' ');
     }
 
-    util_fwrite_int(kw_size, stream);
-    util_fwrite_offset(file_offset, stream);
-    util_fwrite_int(rd_type_get_type(data_type), stream);
-    util_fwrite_size_t(rd_type_get_sizeof_iotype(data_type), stream);
+    int type = rd_type_get_type(data_type);
+    size_t type_size = rd_type_get_sizeof_iotype(data_type);
+    stream.write(reinterpret_cast<const char *>(&kw_size), sizeof(kw_size));
+    stream.write(reinterpret_cast<const char *>(&file_offset),
+                 sizeof(file_offset));
+    stream.write(reinterpret_cast<const char *>(&type), sizeof(type));
+    stream.write(reinterpret_cast<const char *>(&type_size), sizeof(type_size));
 }
 
-std::vector<std::shared_ptr<FileKW>> FileKW::read(FILE *stream, size_t num) {
-    size_t file_kw_size = RD_STRING8_LENGTH + 2 * sizeof(int) +
-                          sizeof(offset_type) + sizeof(size_t);
-    if (num > SIZE_MAX / file_kw_size)
-        throw std::bad_alloc{};
-    size_t buffer_size = num * file_kw_size;
-    auto buffer = rd::checked_malloc<char>(buffer_size);
-    size_t num_read = fread(buffer.get(), 1, buffer_size, stream);
+std::vector<std::shared_ptr<FileKW>> FileKW::read(std::istream &stream,
+                                                  size_t num) {
+    std::vector<std::shared_ptr<FileKW>> kw_list;
+    kw_list.reserve(num);
 
-    if (num_read != buffer_size) {
-        throw std::ios_base::failure("error reading rd::File index file");
-    }
-
-    std::vector<std::shared_ptr<FileKW>> kw_list(num);
     for (size_t ikw = 0; ikw < num; ikw++) {
-        char header[RD_STRING8_LENGTH + 1];
-        int kw_size;
-        offset_type file_offset;
-        rd_type_enum rd_type;
-        size_t type_size;
+        std::array<char, RD_STRING8_LENGTH> header_buf{};
+        stream.read(header_buf.data(), header_buf.size());
+        auto header_end = std::find(header_buf.begin(), header_buf.end(), ' ');
+        std::string header(header_buf.begin(), header_end);
 
-        char *bp = buffer.get() + ikw * file_kw_size;
-        {
-            char *hp = header;
-            char *end = header + RD_STRING8_LENGTH;
-            while (*bp != ' ' && hp != end)
-                *hp++ = *bp++;
-            *hp = '\0';
-            bp = buffer.get() + ikw * file_kw_size + RD_STRING8_LENGTH;
-        }
-        memcpy(&kw_size, bp, sizeof kw_size);
-        bp += sizeof kw_size;
-        memcpy(&file_offset, bp, sizeof file_offset);
-        bp += sizeof file_offset;
-        memcpy(&rd_type, bp, sizeof rd_type);
-        bp += sizeof rd_type;
-        memcpy(&type_size, bp, sizeof type_size);
-        bp += sizeof type_size;
+        int kw_size = 0;
+        offset_type file_offset = 0;
+        int type = 0;
+        size_t type_size = 0;
+        stream.read(reinterpret_cast<char *>(&kw_size), sizeof(kw_size));
+        stream.read(reinterpret_cast<char *>(&file_offset),
+                    sizeof(file_offset));
+        stream.read(reinterpret_cast<char *>(&type), sizeof(type));
+        stream.read(reinterpret_cast<char *>(&type_size), sizeof(type_size));
 
-        kw_list[ikw] = std::make_shared<FileKW>(
-            file_offset, rd_type_create(rd_type, type_size), kw_size, header);
+        kw_list.push_back(std::make_shared<FileKW>(
+            file_offset,
+            rd_type_create(static_cast<rd_type_enum>(type), type_size), kw_size,
+            std::move(header)));
     }
     return kw_list;
 }

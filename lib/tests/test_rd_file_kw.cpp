@@ -85,17 +85,17 @@ SCENARIO_METHOD(Tmpdir, "A FileKW index entry is written and read back") {
 
         auto filename = (dirname / "index").string();
         {
-            FILE *stream = std::fopen(filename.c_str(), "wb");
-            REQUIRE(stream != nullptr);
+            std::ofstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             original.write_header(stream);
-            std::fclose(stream);
         }
 
         WHEN("The entry is read back from the stream") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             auto kw_list = FileKW::read(stream, 1);
-            std::fclose(stream);
 
             THEN("A single FileKW equal to the original is recovered") {
                 REQUIRE(kw_list.size() == 1);
@@ -113,19 +113,19 @@ SCENARIO_METHOD(Tmpdir, "Several FileKW index entries are written and read") {
 
         auto filename = (dirname / "index").string();
         {
-            FILE *stream = std::fopen(filename.c_str(), "wb");
-            REQUIRE(stream != nullptr);
+            std::ofstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             first.write_header(stream);
             second.write_header(stream);
             third.write_header(stream);
-            std::fclose(stream);
         }
 
         WHEN("All three entries are read back") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             auto kw_list = FileKW::read(stream, 3);
-            std::fclose(stream);
 
             THEN("Each recovered FileKW equals its original in order") {
                 REQUIRE(kw_list.size() == 3);
@@ -136,13 +136,13 @@ SCENARIO_METHOD(Tmpdir, "Several FileKW index entries are written and read") {
         }
 
         WHEN("More entries are requested than are present") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
             THEN("read throws a runtime_error") {
                 REQUIRE_THROWS_AS(FileKW::read(stream, 10), std::runtime_error);
             }
-            std::fclose(stream);
         }
     }
 }
@@ -154,17 +154,17 @@ SCENARIO_METHOD(Tmpdir, "A full width eight character header round-trips") {
 
         auto filename = (dirname / "index").string();
         {
-            FILE *stream = std::fopen(filename.c_str(), "wb");
-            REQUIRE(stream != nullptr);
+            std::ofstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             original.write_header(stream);
-            std::fclose(stream);
         }
 
         WHEN("The entry is read back") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             auto kw_list = FileKW::read(stream, 1);
-            std::fclose(stream);
 
             THEN("The full eight character header is recovered intact") {
                 REQUIRE(kw_list.size() == 1);
@@ -179,16 +179,15 @@ SCENARIO_METHOD(Tmpdir, "Reading zero FileKW entries yields an empty list") {
     GIVEN("An open but empty stream") {
         auto filename = (dirname / "empty").string();
         {
-            FILE *stream = std::fopen(filename.c_str(), "wb");
-            REQUIRE(stream != nullptr);
-            std::fclose(stream);
+            std::ofstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
         }
 
         WHEN("read is asked for zero entries") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             auto kw_list = FileKW::read(stream, 0);
-            std::fclose(stream);
 
             THEN("An empty list is returned without error") {
                 REQUIRE(kw_list.empty());
@@ -203,15 +202,16 @@ SCENARIO_METHOD(Tmpdir, "Reading a FileKW past the end of the stream fails") {
 
         auto filename = (dirname / "index").string();
         {
-            FILE *stream = std::fopen(filename.c_str(), "wb");
-            REQUIRE(stream != nullptr);
+            std::ofstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             original.write_header(stream);
-            std::fclose(stream);
         }
 
         WHEN("The single entry has already been consumed") {
-            FILE *stream = std::fopen(filename.c_str(), "rb");
-            REQUIRE(stream != nullptr);
+            std::ifstream stream(filename, std::ios_base::binary);
+            REQUIRE(stream.good());
+            stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             auto disk_kw = FileKW::read(stream, 1);
             REQUIRE(*disk_kw[0] == original);
 
@@ -219,7 +219,6 @@ SCENARIO_METHOD(Tmpdir, "Reading a FileKW past the end of the stream fails") {
                 REQUIRE_THROWS_AS(FileKW::read(stream, 1),
                                   std::ios_base::failure);
             }
-            std::fclose(stream);
         }
     }
 }

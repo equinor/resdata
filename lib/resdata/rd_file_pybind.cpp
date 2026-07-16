@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <ios>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -744,14 +745,12 @@ PYBIND11_MODULE(rd_file, m) {
             "   >>> fortio.close()\n")
         .def(
             "write_index",
-            [](rd::File &self, std::string index_file_name) {
-                if (self.size() == 0 || !self.write_index(index_file_name)) {
-                    PyErr_SetString(PyExc_OSError,
-                                    fmt::format("Failed to write index file:{}",
-                                                index_file_name)
-                                        .c_str());
-                    throw py::error_already_set();
-                }
+            [](rd::File &self, const std::string &index_file_name) {
+                if (self.size() == 0)
+                    throw std::ios_base::failure(
+                        fmt::format("Cannot write index for empty file:{}",
+                                    index_file_name));
+                self.write_index(index_file_name);
             },
             py::arg("index_file_name"))
         .def_property_readonly("global_view", &rd::File::get_global_view);

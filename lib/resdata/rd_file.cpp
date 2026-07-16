@@ -1,13 +1,11 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cerrno>
-#include <ctime>
 
 #include <ios>
+#include <fstream>
+#include <istream>
+#include <ostream>
+#include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <filesystem>
@@ -233,83 +231,62 @@ static void check_valid_index(const std::string &file_name,
                         file_name, index_file_name));
 }
 
-template <typename T> T checked_fread(FILE *f) {
-    static_assert(std::is_trivially_copyable_v<T>,
-                  "checked_fread requires a trivially copyable type");
-    T out{};
-    if (fread(&out, sizeof(T), 1, f) != 1)
-        throw std::runtime_error(
-            fmt::format("read failed: {}", strerror(errno)));
-    return out;
-}
-
-inline std::string checked_fread(std::size_t n, FILE *f) {
-    std::string s(n, '\0');
-    if (n > 0 && std::fread(s.data(), 1, n, f) != n)
-        throw std::runtime_error(
-            fmt::format("read failed: {}", strerror(errno)));
-    return s;
-}
-
 /** When writing the empty string we write the sequence "-1\0".
     This was used before to disambiguate with the potential for s being NULL,
-    which wrote the sequence "0". */
-static std::string read_sized_string(FILE *stream) {
-    int len = checked_fread<int>(stream);
-    if (len == -1) {              /* length indicates "" */
-        checked_fread(1, stream); /* consume the trailing nul */
+    which wrote the sequence "0".
+
+    The stream is expected to throw on read failure (failbit/badbit are set in
+    its exception mask by the caller). */
+static std::string read_sized_string(std::istream &stream) {
+    int len = 0;
+    stream.read(reinterpret_cast<char *>(&len), sizeof(len));
+    if (len == -1) {      /* length indicates "" */
+        stream.ignore(1); /* consume the trailing nul */
         return "";
     }
     if (len <= 0)
         return ""; /* length indicates NULL; return "" without consuming nul */
-    std::string s = checked_fread(len, stream);
-    checked_fread(1, stream); /* consume the trailing nul */
+    std::string s(static_cast<std::size_t>(len), '\0');
+    stream.read(s.data(), len);
+    stream.ignore(1); /* consume the trailing nul */
     return s;
 }
 
 static void check_valid_index_stream(const std::string &file_name,
-                                     FILE *stream) {
-    std::string source_file = read_sized_string(stream);
+                                     std::istream &stream) {
     std::string input_name = fs::path{file_name}.filename().string();
+    std::string source_file;
+    try {
+        source_file = read_sized_string(stream);
+    } catch (const std::ios_base::failure &) {
+        std::throw_with_nested(std::ios_base::failure(fmt::format(
+            "Index file did not contain a valid index for \"{}\"", file_name)));
+    }
 
     if (source_file != input_name)
         throw std::ios_base::failure(fmt::format(
             "Index file did not contain a valid index for \"{}\"", file_name));
 }
 
-template <typename T> void checked_fwrite(const T &s, FILE *f) {
-    static_assert(std::is_trivially_copyable_v<T>,
-                  "checked_fwrite requires a trivially copyable type");
-    if (fwrite(&s, sizeof(s), 1, f) != 1)
-        throw std::runtime_error(
-            fmt::format("write failed: {}", strerror(errno)));
+static void write_sized_string(const std::string &s, std::ostream &stream) {
+    int len = s.empty() ? -1 /* magic marker for "" */
+                        : static_cast<int>(s.size());
+    stream.write(reinterpret_cast<const char *>(&len), sizeof(len));
+    stream.write(s.data(), static_cast<std::streamsize>(s.size()));
+    stream.put('\0');
 }
 
-inline void checked_fwrite(const std::string &s, FILE *f) {
-    std::size_t nbytes = s.size() + 1;
-    if (std::fwrite(s.data(), 1, nbytes, f) != nbytes)
-        throw std::runtime_error(
-            fmt::format("write failed: {}", strerror(errno)));
-}
-
-static void write_sized_string(const std::string &s, FILE *stream) {
-    if (s.size() == 0)
-        checked_fwrite<int>(-1, stream); /* Writing magic string for "" */
-    else
-        checked_fwrite<int>(static_cast<int>(s.size()), stream);
-    checked_fwrite(s, stream);
-}
-
-bool rd::File::write_index(const std::string &index_filename) {
-    std::unique_ptr<FILE, decltype(&fclose)> ostream(
-        fopen(index_filename.c_str(), "wb"), fclose);
+void rd::File::write_index(const std::string &index_filename) {
+    std::ofstream ostream(index_filename, std::ios_base::binary);
     if (!ostream)
-        return false;
+        throw std::ios_base::failure(fmt::format(
+            "Failed to open index file \"{}\" for writing", index_filename));
+    ostream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
     write_sized_string(fs::path{context->fortio.filename()}.filename().string(),
-                       ostream.get());
-    global_view->write_index(ostream.get());
-    return true;
+                       ostream);
+    global_view->write_index(ostream);
+    ostream.flush();
 }
 
 std::unique_ptr<rd::File>
@@ -317,17 +294,17 @@ rd::File::fast_open(const std::string &file_name,
                     const std::string &index_file_name, FileMode flags) {
     check_valid_index(file_name, index_file_name);
 
-    std::unique_ptr<FILE, decltype(&fclose)> istream(
-        fopen(index_file_name.c_str(), "rb"), fclose);
+    std::ifstream istream(index_file_name, std::ios_base::binary);
     if (!istream)
         throw std::ios_base::failure(
             fmt::format("Failed to open file \"{}\"", index_file_name));
+    istream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
-    check_valid_index_stream(file_name, istream.get());
+    check_valid_index_stream(file_name, istream);
 
     auto fortio = rd_file_alloc_fortio(file_name, flags);
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
-    auto global_view = rd::FileView::read(context, istream.get());
+    auto global_view = rd::FileView::read(context, istream);
     auto rd_file = std::make_unique<rd::File>(context, global_view);
     if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
         FileMode::CLOSE_STREAM)

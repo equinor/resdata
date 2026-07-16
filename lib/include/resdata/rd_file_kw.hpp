@@ -1,8 +1,9 @@
 #pragma once
-#include <cstdio>
-
+#include <cstddef>
+#include <istream>
 #include <memory>
 #include <utility>
+#include <ostream>
 #include <vector>
 #include <string>
 
@@ -68,7 +69,12 @@ public:
     rd_kw_type *get_kw(ERT::FortIO &fortio);
 
     bool skip_data(ERT::FortIO &fortio) const;
-    static std::vector<std::shared_ptr<FileKW>> read(FILE *stream, size_t num);
+    /** Read @num keyword headers from @stream.
+
+       The stream is expected to have its exception mask configured (e.g.
+       std::ios_base::failbit | std::ios_base::badbit) */
+    static std::vector<std::shared_ptr<FileKW>> read(std::istream &stream,
+                                                     size_t num);
 
     /** Clear the cached kw. Note: previous pointers to
        kws are invalidated. */
@@ -76,5 +82,9 @@ public:
 
     /** Overwrite the file contents with the new content of the rd_kw. */
     void inplace_write(ERT::FortIO &fortio) const;
-    void write_header(FILE *stream);
+    /** Write this keyword's header to @stream.
+
+       The stream is expected to have its exception mask configured (e.g.
+       std::ios_base::failbit | std::ios_base::badbit) */
+    void write_header(std::ostream &stream) const;
 };
