@@ -1007,13 +1007,22 @@ class Grid(BaseCClass):
         _grid._fprintf_grdecl2(self, cfile, int(output_unit))
 
     def save_EGRID(self, filename, output_unit=None):
+        """Save the grid as an EGRID file.
+
+        Uses the given file extension to determine whether to write
+        formatted or unformatted. If filename has extension .FEGRID
+        it writes formatted output, if not it writes unformatted.
+        """
         if output_unit is None:
             output_unit = self.unit_system
         _grid._fwrite_EGRID2(self, filename, int(output_unit))
 
     def save_GRID(self, filename, output_unit=UnitSystem.METRIC):
-        """
-        Will save the current grid as a GRID file.
+        """Save the grid as a GRID file.
+
+        Uses the given file extension to determine whether to write
+        formatted or unformatted. If filename has extension .FGRID
+        it writes formatted output, if not it writes unformatted.
         """
         _grid._fwrite_GRID2(self, filename, int(output_unit))
 

@@ -803,6 +803,24 @@ def test_save_grid(tmpdir):
         assert grid.equal(Grid("grid.GRID"))
 
 
+@pytest.mark.parametrize("grid_extension", ["EGRID", "GRID", "FEGRID", "FGRID"])
+def test_that_grid_is_loaded_from_case_with_data_extension(tmpdir, grid_extension):
+    grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
+    with tmpdir.as_cwd():
+        grid_file = "CASE." + grid_extension
+        if "EGRID" in grid_extension:
+            grid.save_EGRID(grid_file)
+        else:
+            grid.save_GRID(grid_file)
+
+        # The .DATA file is not a grid file; the loader should locate the
+        # sibling grid file sharing the same basename.
+        with open("CASE.DATA", "w") as f:
+            f.write("dummy")
+
+        assert grid.equal(Grid("CASE.DATA"))
+
+
 def test_write_grdecl(tmpdir):
     kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_DOUBLE)
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
