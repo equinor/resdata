@@ -57,8 +57,6 @@ using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 rd_version_enum rd_file_get_simulator_version(const rd_file_type *file);
 
-int rd_file_get_phases(const rd_file_type *init_file);
-
 bool rd_file_writable(const rd_file_type *rd_file);
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index);

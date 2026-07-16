@@ -320,20 +320,6 @@ rd_version_enum rd_file_get_simulator_version(const rd_file_type *file) {
     }
 }
 
-/**
-  1: Oil
-  2: Water
-  3: Oil + water
-  4: Gas
-  5: Gas + Oil
-  6: Gas + water
-  7: Gas + Water + Oil */
-int rd_file_get_phases(const rd_file_type *init_file) {
-    rd_kw_type *intehead_kw = init_file->get_kw(INTEHEAD_KW, 0);
-    int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
-    return phases;
-}
-
 /** Will save the content of @rd_kw to the on-disk file wrapped by the
     rd_file instance. This function is quite strict:
 
