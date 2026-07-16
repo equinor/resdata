@@ -44,14 +44,14 @@ void test_writable(size_t data_size) {
 
 void test_truncated() {
     rd::util::TestArea ta("truncate_file");
-    int num_kw;
+    size_t num_kw{};
     {
         rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
         rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", RD_METRIC_UNITS);
     }
     {
         auto rd_file = rd::File::open("TEST.EGRID");
-        num_kw = rd_file_get_size(rd_file.get());
+        num_kw = rd_file->size();
     }
 
     {
@@ -62,20 +62,20 @@ void test_truncated() {
     }
     {
         auto rd_file = rd::File::open("TEST.EGRID");
-        test_assert_true(rd_file_get_size(rd_file.get()) < num_kw);
+        test_assert_true(rd_file->size() < num_kw);
     }
 }
 
 void test_mixed_case() {
     rd::util::TestArea ta("mixed_case_file");
-    int num_kw;
+    size_t num_kw{};
     {
         rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
         rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", RD_METRIC_UNITS);
     }
     {
         auto rd_file = rd::File::open("TESTcase.EGRID");
-        num_kw = rd_file_get_size(rd_file.get());
+        num_kw = rd_file->size();
     }
 
     {
@@ -86,7 +86,7 @@ void test_mixed_case() {
     }
     {
         auto rd_file = rd::File::open("TESTcase.EGRID");
-        test_assert_true(rd_file_get_size(rd_file.get()) < num_kw);
+        test_assert_true(rd_file->size() < num_kw);
     }
 }
 
