@@ -41,7 +41,7 @@ struct File {
         return global_view->num_named_kw(kw);
     }
     /** Will return the ith occurence of @kw the File. */
-    [[nodiscard]] rd_kw_type *get_kw(const std::string &kw, int ith) const {
+    [[nodiscard]] rd_kw_type *get_kw(const std::string &kw, size_t ith) const {
         return global_view->get_kw(kw, ith);
     }
     /** The total number of rd_kws in the File. */

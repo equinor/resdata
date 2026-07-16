@@ -631,6 +631,33 @@ def test_save_kw_with_standalone_kw_raises(tmpdir):
             writable.save_kw(standalone_kw)
 
 
+def test_report_steps_on_non_restart_file_returns_empty_list(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        rd_file = ResdataFile("TEST")
+
+        assert rd_file.report_steps == []
+
+
+def test_num_report_steps_on_non_restart_file_returns_zero(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        rd_file = ResdataFile("TEST")
+
+        assert rd_file.num_report_steps() == 0
+
+
+def test_report_dates_on_non_restart_file_returns_none(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST")
+
+        rd_file = ResdataFile("TEST")
+
+        assert rd_file.report_dates is None
+
+
 def test_save_kw_on_read_only_file_raises(tmpdir):
     with tmpdir.as_cwd():
         _write_single_kw_file("TEST")

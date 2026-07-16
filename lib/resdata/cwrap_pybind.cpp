@@ -193,21 +193,6 @@ template <> int_vector_type *from_cwrap<int_vector_type>(py::handle obj) {
     return cast_cwrap<int_vector_type>(obj);
 }
 
-py::object ResdataFile() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.resfile").attr("ResdataFile");
-    }
-    return cls;
-}
-
-template <> rd::File *from_cwrap<rd::File>(py::handle obj) {
-    if (!py::isinstance(obj, ResdataFile()))
-        throw py::type_error("Expected ResdataFile, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<rd::File>(obj);
-}
-
 py::object ResdataSubsidence() {
     static py::object cls;
     if (!cls) {
