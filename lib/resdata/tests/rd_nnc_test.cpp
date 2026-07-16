@@ -35,8 +35,7 @@ void test_scan(const char *grid_filename) {
          block_nr++) {
         rd_grid_type *lgr = rd_grid;
         int lgr_nr;
-        auto nnc_view = rd_file_get_global_view(grid_file.get())
-                            ->blockview(NNCHEAD_KW, NNCHEAD_KW, block_nr);
+        auto nnc_view = grid_file->blockview(NNCHEAD_KW, block_nr);
         {
             if (block_nr > 0)
                 lgr = rd_grid_iget_lgr(rd_grid, block_nr - 1);

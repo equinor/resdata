@@ -602,7 +602,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
             {
                 rd_file_ptr rd_file = rd::File::open(data_file);
                 if (rd_file && check_file(rd_file.get())) {
-                    auto global_view = rd_file_get_global_view(rd_file.get());
+                    auto global_view = rd_file->get_global_view();
                     this->add_rd_file(report_step, *global_view);
                 }
             }

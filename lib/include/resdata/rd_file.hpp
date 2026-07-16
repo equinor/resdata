@@ -58,12 +58,14 @@ struct File {
                                             size_t occurence) {
         return global_view->blockview(kw, kw, occurence);
     }
+    [[nodiscard]] std::shared_ptr<rd::FileView> get_global_view() const {
+        return global_view;
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
 
-std::shared_ptr<rd::FileView> rd_file_get_global_view(rd_file_type *rd_file);
 bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw);
 
 double rd_file_iget_restart_sim_days(const rd_file_type *restart_file,

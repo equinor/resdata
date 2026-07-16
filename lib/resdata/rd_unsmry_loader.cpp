@@ -44,7 +44,7 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
     this->date_index = {{rd_smspec_get_date_day_index(smspec),
                          rd_smspec_get_date_month_index(smspec),
                          rd_smspec_get_date_year_index(smspec)}};
-    auto file_view = rd_file_get_global_view(this->file.get());
+    auto file_view = this->file->get_global_view();
     int length = file_view->num_named_kw(PARAMS_KW);
 
     if (length > 0) {

@@ -81,7 +81,7 @@ PYBIND11_MODULE(_file, m) {
                                     static_cast<time_t>(sim_time));
     });
     m.def("_get_global_view", [](py::handle self) {
-        return rd_file_get_global_view(from_cwrap<rd_file_type>(self));
+        return from_cwrap<rd_file_type>(self)->get_global_view();
     });
     m.def("_write_index", [](py::handle self, std::string index_filename) {
         return from_cwrap<rd::File>(self)->write_index(index_filename);
