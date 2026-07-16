@@ -228,6 +228,34 @@ def make_rectangular_grid(
     return GridGenerator.create_rectangular((nx, ny, nz), (dx, dy, dz), actnum)
 
 
+def write_egrid_with_gridhead_dims(
+    filename: Path,
+    main_dims: tuple[int, int, int],
+    lgr_dims: tuple[int, int, int] | None = None,
+) -> None:
+    """Write an EGRID whose GRIDHEAD reports ``main_dims`` (and, when
+    ``lgr_dims`` is given, an LGR whose GRIDHEAD reports ``lgr_dims``).
+
+    Except for the set dimensions, the file is a 1x1x1 grid, so the dimensions
+    will not match the actual unless main_dims=(1,1,1).
+    """
+    body_grid = make_rectangular_grid(1, 1, 1, 1.0, 1.0, 1.0)
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_filehead(f)
+        _write_gridhead(f, *main_dims, 0)
+        _write_grid_body(f, body_grid)
+        write_empty_kw(f, ENDGRID_KW)
+
+        if lgr_dims is not None:
+            write_char_kw(f, LGR_KW, ["LGR1"])
+            write_char_kw(f, LGR_PARENT_KW, [""])
+            _write_gridhead(f, *lgr_dims, 1)
+            _write_grid_body(f, body_grid)
+            write_int_kw(f, HOSTNUM_KW, [1] * body_grid.get_global_size())
+            write_empty_kw(f, ENDGRID_KW)
+            write_empty_kw(f, ENDLGR_KW)
+
+
 def write_egrid_with_single_lgr(
     filename: Path,
     nx: int,

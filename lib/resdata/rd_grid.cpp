@@ -2235,6 +2235,11 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
                         const rd_kw_type *actnum_kw,    /* Can be NULL */
                         const rd_kw_type *mapaxes_kw) { /* Can be NULL */
 
+    if (nx < 0 || ny < 0 || nz < 0)
+        throw std::invalid_argument(
+            fmt::format("Dimensions of grid were negative: nx={}, ny={}, nz={}",
+                        nx, ny, nz));
+
     const int *actnum_data = NULL;
     if (actnum_kw) {
         const int64_t expected_actnum_size = int64_t{nx} * ny * nz;
@@ -2609,6 +2614,11 @@ static int rd_grid_dual_porosity_GRID_check(rd_file_type *rd_file) {
     int ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
     int nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
 
+    if (nx < 0 || ny < 0 || nz < 0)
+        throw std::invalid_argument(
+            fmt::format("Dimensions of grid were negative: nx={}, ny={}, nz={}",
+                        nx, ny, nz));
+
     if ((nz % 2) == 1)
         return FILEHEAD_SINGLE_POROSITY;
     else {
@@ -2661,6 +2671,10 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
         nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
         ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
         nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
+        if (nx < 0 || ny < 0 || nz < 0)
+            throw std::invalid_argument(fmt::format(
+                "Dimensions of grid were negative: nx={}, ny={}, nz={}", nx, ny,
+                nz));
     }
 
     // 2: Fetching the mapaxes data from the MAPAXES keyword; the
