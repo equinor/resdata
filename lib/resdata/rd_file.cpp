@@ -231,10 +231,6 @@ rd_file_ptr rd::File::open(const std::string &filename, FileMode flags) {
     return rd_file;
 }
 
-bool rd_file_writable(const rd_file_type *rd_file) {
-    return (rd_file->context->flags & FileMode::WRITABLE) == FileMode::WRITABLE;
-}
-
 /* Functions specialized to work with restart files.  */
 
 /* Query functions. */

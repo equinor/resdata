@@ -51,12 +51,13 @@ struct File {
     [[nodiscard]] std::string filename() const {
         return context->fortio.filename();
     }
+    [[nodiscard]] bool is_writable() const {
+        return (context->flags & FileMode::WRITABLE) == FileMode::WRITABLE;
+    }
 };
 } // namespace rd
 using rd_file_ptr = std::unique_ptr<rd::File>;
 using rd_file_type = rd::File;
-
-bool rd_file_writable(const rd_file_type *rd_file);
 
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index);
 std::shared_ptr<rd::FileView>
