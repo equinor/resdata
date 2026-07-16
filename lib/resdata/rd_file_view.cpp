@@ -29,7 +29,7 @@ void FileView::make_index() {
     distinct_kw.clear();
     kw_index.clear();
 
-    int global_index = 0;
+    size_t global_index = 0;
     for (const auto &file_kw : kw_list) {
         const std::string &header = file_kw->get_header();
         if (kw_index.find(header) == kw_index.end())
@@ -98,21 +98,18 @@ void FileView::index_fload_kw(const std::string &kw, int index,
     }
 }
 
-int FileView::find_kw_value(const std::string &kw, const void *value) {
-    int global_index = -1;
+std::optional<size_t> FileView::find_kw_value(const std::string &kw,
+                                              const void *value) {
     if (has_kw(kw)) {
         const auto &index_list = kw_index.at(kw);
-        size_t index = 0;
-        while (index < index_list.size()) {
-            rd_kw_type *rd_kw = get_kw(index_list[index]);
+        for (auto index : index_list) {
+            rd_kw_type *rd_kw = get_kw(index);
             if (rd_kw_data_equal(rd_kw, value)) {
-                global_index = index_list[index];
-                break;
+                return index;
             }
-            index++;
         }
     }
-    return global_index;
+    return std::nullopt;
 }
 
 void FileView::write(ERT::FortIO &target, size_t offset) {
@@ -122,21 +119,17 @@ void FileView::write(ERT::FortIO &target, size_t offset) {
     }
 }
 
-int FileView::get_occurence(size_t global_index) {
+size_t FileView::get_occurence(size_t global_index) {
     const auto &file_kw = kw_list[global_index];
     const std::string &header = file_kw->get_header();
     const auto &index_vector = kw_index.at(header);
 
-    int occurence = -1;
     for (size_t i = 0; i < index_vector.size(); i++) {
         if (index_vector[i] == global_index)
-            occurence = static_cast<int>(i);
+            return i;
     }
-    if (occurence < 0)
-        throw std::out_of_range(
-            fmt::format("Could not find index {}", global_index));
-
-    return occurence;
+    throw std::out_of_range(
+        fmt::format("Could not find index {}", global_index));
 }
 
 std::shared_ptr<FileView>
@@ -147,8 +140,9 @@ FileView::blockview(const std::optional<std::string> &start_kw,
         return {nullptr};
 
     auto block_map = std::make_shared<FileView>(context);
-    auto begin =
-        kw_list.begin() + (start_kw ? kw_index.at(*start_kw).at(occurence) : 0);
+    auto begin = kw_list.begin() +
+                 static_cast<std::vector<size_t>::iterator::difference_type>(
+                     start_kw ? kw_index.at(*start_kw).at(occurence) : 0);
     auto stop = end_kw ? std::find_if(begin + 1, kw_list.end(),
                                       [&](const auto &kw) {
                                           return *end_kw == kw->get_header();
@@ -273,7 +267,7 @@ static time_t rd_rsthead_date(const rd_kw_type *intehead_kw) {
                         rd_kw_iget_int(intehead_kw, INTEHEAD_YEAR_INDEX));
 }
 
-time_t FileView::restart_sim_date(int seqnum_index) {
+time_t FileView::restart_sim_date(size_t seqnum_index) {
     time_t sim_time = -1;
     std::shared_ptr<FileView> seqnum_map =
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
@@ -286,7 +280,7 @@ time_t FileView::restart_sim_date(int seqnum_index) {
     return sim_time;
 }
 
-double FileView::restart_sim_days(int seqnum_index) {
+double FileView::restart_sim_days(size_t seqnum_index) {
     double sim_days = 0;
     std::shared_ptr<FileView> seqnum_map =
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
@@ -323,7 +317,7 @@ SWAT
 find_sim_time with time_t of "01.03.2000" will return 1. This will
 in general NOT agree with the DATES step number.
 
-If the sim_time can not be found the function will return -1.
+If the sim_time can not be found the function will return nullopt;
 
 Observe that the function requires on-the-second-equality; which is
 of course quite strict.
@@ -331,19 +325,16 @@ of course quite strict.
 Each report step only has one occurence of SEQNUM, but one INTEHEAD
 for each LGR; i.e. one should call iselect_rstblock() prior to
 calling this function. */
-int FileView::find_sim_time(time_t sim_time) {
-    int seqnum_index = -1;
+std::optional<size_t> FileView::find_sim_time(time_t sim_time) {
     if (has_kw(INTEHEAD_KW)) {
         const auto &intehead_index_list = kw_index.at(INTEHEAD_KW);
         for (size_t index = 0; index < intehead_index_list.size(); index++) {
             const rd_kw_type *intehead_kw = get_kw(intehead_index_list[index]);
-            if (rd_rsthead_date(intehead_kw) == sim_time) {
-                seqnum_index = static_cast<int>(index);
-                break;
-            }
+            if (rd_rsthead_date(intehead_kw) == sim_time)
+                return index;
         }
     }
-    return seqnum_index;
+    return std::nullopt;
 }
 
 bool FileView::has_sim_time(time_t sim_time) {
@@ -351,7 +342,7 @@ bool FileView::has_sim_time(time_t sim_time) {
     if (num_INTEHEAD == 0)
         return false; /* We have no INTEHEAD headers - probably not a restart file at all. */
     else {
-        int intehead_index = 0;
+        size_t intehead_index = 0;
         while (true) {
             time_t itime = restart_sim_date(intehead_index);
 
@@ -373,7 +364,7 @@ bool FileView::has_sim_days(double sim_days) {
     if (num_DOUBHEAD == 0)
         return false; /* We have no DOUBHEAD headers - probably not a restart file at all. */
     else {
-        int doubhead_index = 0;
+        size_t doubhead_index = 0;
         while (true) {
             double file_sim_days = restart_sim_days(doubhead_index);
 
@@ -396,11 +387,11 @@ FileView::restart_view_from_seqnum_index(size_t index) {
 }
 std::shared_ptr<FileView>
 FileView::restart_view_from_report_step(int report_step) {
-    int global_index = find_kw_value(SEQNUM_KW, &report_step);
-    if (global_index < 0)
+    auto global_index = find_kw_value(SEQNUM_KW, &report_step);
+    if (!global_index.has_value())
         throw std::invalid_argument(
             fmt::format("No such restart block could be identified"));
-    return restart_view_from_seqnum_index(get_occurence(global_index));
+    return restart_view_from_seqnum_index(get_occurence(global_index.value()));
 }
 
 std::shared_ptr<FileView>

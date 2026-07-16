@@ -2,6 +2,7 @@
 #include <cstdio>
 
 #include <memory>
+#include <utility>
 #include <vector>
 #include <string>
 
@@ -31,7 +32,7 @@ public:
     FileKW(offset_type file_offset, rd_data_type data_type, int kw_size,
            std::string header)
         : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
-          header(header) {};
+          header(std::move(header)) {};
     /** Create a new FileKW based on header information from
         the input keyword.
 

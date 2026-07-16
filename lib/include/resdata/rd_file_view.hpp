@@ -32,7 +32,7 @@ struct FileContext {
 
 class FileView {
     std::vector<std::shared_ptr<FileKW>> kw_list;
-    std::map<std::string, std::vector<int>> kw_index;
+    std::map<std::string, std::vector<size_t>> kw_index;
     std::vector<std::string>
         distinct_kw; /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
     std::shared_ptr<FileContext> context;
@@ -41,8 +41,9 @@ class FileView {
         return get_file_kw(kw_index.at(kw).at(ith));
     }
     [[nodiscard]] rd_kw_type *get_kw(const std::shared_ptr<FileKW> &file_kw);
-    [[nodiscard]] int find_kw_value(const std::string &kw, const void *value);
-    [[nodiscard]] int get_occurence(size_t global_index);
+    [[nodiscard]] std::optional<size_t> find_kw_value(const std::string &kw,
+                                                      const void *value);
+    [[nodiscard]] size_t get_occurence(size_t global_index);
     [[nodiscard]] bool has_sim_days(double sim_days);
 
 public:
@@ -107,20 +108,20 @@ public:
               size_t occurence = 0);
 
     bool has_report_step(int report_step) {
-        return find_kw_value(SEQNUM_KW, &report_step) >= 0;
+        return find_kw_value(SEQNUM_KW, &report_step).has_value();
     }
     /** The sim_date of the ith=@seqnum_index step in a restart file.
 
       returns -1 if there is no such step */
-    time_t restart_sim_date(int seqnum_index);
+    time_t restart_sim_date(size_t seqnum_index);
     /** The number of days since start of the ith=@seqnum_index step in a restart file.
 
       returns 0.0 if there is no such step */
-    double restart_sim_days(int seqnum_index);
+    double restart_sim_days(size_t seqnum_index);
     /** The index of the step with the given sim_time
 
-      returns -1 if there is no such step */
-    int find_sim_time(time_t sim_time);
+      returns nullopt if there is no such step */
+    std::optional<size_t> find_sim_time(time_t sim_time);
     bool has_sim_time(time_t sim_time);
 
     std::shared_ptr<FileView> restart_view_from_seqnum_index(size_t index);

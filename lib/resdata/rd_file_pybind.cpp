@@ -518,12 +518,12 @@ PYBIND11_MODULE(rd_file, m) {
             [](py::object py_self, std::string kw_name, py::object dtime,
                bool copy) -> py::object {
                 auto &self = py_self.cast<rd::File &>();
-                int index = self.find_sim_time(
+                auto index = self.find_sim_time(
                     CTime()(dtime).attr("value")().cast<time_t>());
-                if (index >= 0) {
-                    if ((int)self.num_named_kw(kw_name) > index) {
-                        py::object kw =
-                            py_self.attr("iget_named_kw")(kw_name, index);
+                if (index.has_value()) {
+                    if (self.num_named_kw(kw_name) > index.value()) {
+                        py::object kw = py_self.attr("iget_named_kw")(
+                            kw_name, py::int_(index.value()));
                         if (copy)
                             return ResdataKW().attr("copy")(kw);
                         return kw;
@@ -712,7 +712,7 @@ PYBIND11_MODULE(rd_file, m) {
             "instance.\n")
         .def(
             "iget_restart_sim_time",
-            [](rd::File &self, int index) {
+            [](rd::File &self, size_t index) {
                 return CTime()(py::int_(static_cast<std::int64_t>(
                                    self.restart_sim_date(index))))
                     .attr("datetime")();
