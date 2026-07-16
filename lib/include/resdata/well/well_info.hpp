@@ -185,7 +185,7 @@ public:
        get a invalid_argument exception. */
     void load_rstfile(const std::string &filename,
                       bool load_segment_information);
-    void load_rstfile(rd_file_type *rd_file, bool load_segment_information);
+    void load_rstfile(rd::File *rd_file, bool load_segment_information);
     /** Assumes that (sub)select_block() has been used on the
        rd_file instance @rst_file; and the function will load well
        information from the first block available in the file only. To
@@ -195,13 +195,13 @@ public:
 
        This function will go through all the wells by number and create a
        WellState for each well.*/
-    void add_wells(rd_file_type *rst_file, int report_nr,
+    void add_wells(rd::File *rst_file, int report_nr,
                    bool load_segment_information);
     void add_wells(rd::FileView *rst_view, int report_nr,
                    bool load_segment_information);
     /** Will fail if the rst_file instance is a non-unified restart file,
        because these files do not have the SEQNUM keyword. */
-    void add_UNRST_wells(rd_file_type *rst_file, bool load_segment_information);
+    void add_UNRST_wells(rd::File *rst_file, bool load_segment_information);
     [[nodiscard]] size_t num_wells() const { return well_names.size(); };
     [[nodiscard]] std::string get_well_name(size_t well_index) const {
         return well_names.at(well_index);

@@ -32,7 +32,7 @@ namespace fs = std::filesystem;
    in the file. The actual keyword data is not loaded before they are
    explicitly requested.
 
-   The rd_file_type is the middle layer of abstraction in the resdata
+   The rd::File is the middle layer of abstraction in the resdata
    hierarchy (see the file overview.txt in this directory); it works
    with a collection of rd_kw instances and has various query
    functions, however it does not utilize knowledge of the
@@ -124,7 +124,7 @@ namespace fs = std::filesystem;
    an invalid rd_kw instance is detected. This implies that for a partly broken
    file the rd_file_scan function will index the valid keywords which are in
    the file, possible garbage at the end will be ignored. */
-static void rd_file_scan(rd_file_type *rd_file) {
+static void rd_file_scan(rd::File *rd_file) {
     rd_file->context->fortio.fseek(0, SEEK_SET);
     {
         rd_kw_ptr work_kw = make_rd_kw("WORK-KW", 0, RD_INT, nullptr);

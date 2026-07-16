@@ -152,7 +152,7 @@ private:
     void append_tstep(rd_sum_tstep_type *tstep);
     void build_index();
     void fwrite_report(int report_step, ERT::FortIO &fortio) const;
-    bool check_file(rd_file_type *rd_file);
+    bool check_file(rd::File *rd_file);
     void add_rd_file(int report_step, rd::FileView &summary_view);
 };
 

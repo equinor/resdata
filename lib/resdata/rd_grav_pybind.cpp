@@ -26,7 +26,7 @@ PYBIND11_MODULE(_grav, m) {
 
     m.def("_alloc", [](py::handle grid, py::handle init_file) -> py::object {
         auto *grid_ptr = from_cwrap<rd_grid_type>(grid);
-        auto *init_file_ptr = from_cwrap<rd_file_type>(init_file);
+        auto *init_file_ptr = from_cwrap<rd::File>(init_file);
 
         auto *grav = rd_grav_alloc(grid_ptr, init_file_ptr);
 

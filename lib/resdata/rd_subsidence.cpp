@@ -39,7 +39,7 @@
    calculating the subsidence from time lapse ECLIPSE simulations.
 */
 struct rd_subsidence_struct {
-    const rd_file_type *
+    const rd::File *
         init_file; /* The init file - a shared reference owned by calling scope. */
     std::unique_ptr<rd::rd_grid_cache> grid_cache{nullptr};
     std::unique_ptr<bool[], decltype(&free)> aquifer_cell{nullptr, &free};
@@ -207,7 +207,7 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
 */
 
 rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
-                                        const rd_file_type *init_file) {
+                                        const rd::File *init_file) {
     auto rd_subsidence = std::make_unique<rd_subsidence_type>();
     rd_subsidence->init_file = init_file;
     rd_subsidence->grid_cache = std::make_unique<rd::rd_grid_cache>(rd_grid);

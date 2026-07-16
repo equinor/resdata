@@ -43,7 +43,7 @@ void load_rstfile(WellInfo *well_info, py::handle rst_file,
         }
         well_info->load_rstfile(rst_file_name, load_segment_information);
     } else
-        well_info->load_rstfile(from_cwrap<rd_file_type>(rst_file),
+        well_info->load_rstfile(from_cwrap<rd::File>(rst_file),
                                 load_segment_information);
 }
 

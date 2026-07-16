@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
-                                        const rd_file_type *init_file);
+                                        const rd::File *init_file);
 
 double rd_grav_common_eval_biot_savart(const rd::rd_grid_cache &grid_cache,
                                        rd_region_type *region,
