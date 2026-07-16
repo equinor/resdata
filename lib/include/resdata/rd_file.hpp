@@ -7,7 +7,6 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/FortIO.hpp>
-#include <resdata/rd_util.hpp>
 #include <resdata/rd_file_flag.hpp>
 #include <utility>
 
