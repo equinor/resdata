@@ -117,10 +117,6 @@ namespace fs = std::filesystem;
         internalized as in e.g. rd_sum.
 */
 
-/*
-  Different functions to open and close a file.
-*/
-
 /** Will scan through the whole file and build an index of all kewyords.
    The map created from this scan will be stored under the 'global_view'
    field; and all subsequent lookup operations will ultimately be based
