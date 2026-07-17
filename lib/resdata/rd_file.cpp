@@ -218,11 +218,11 @@ bool rd::File::save_kw(const rd_kw_type *rd_kw) {
 
 static void check_valid_index(const std::string &file_name,
                               const std::string &index_file_name) {
-    if (!util_file_exists(file_name.c_str()))
+    if (!fs::exists(file_name))
         throw std::ios_base::failure(
             fmt::format("File \"{}\" does not exist", file_name));
 
-    if (!util_file_exists(index_file_name.c_str()))
+    if (!fs::exists(index_file_name))
         throw std::ios_base::failure(
             fmt::format("File \"{}\" does not exist", index_file_name));
 
