@@ -232,21 +232,23 @@ static void check_valid_index(const std::string &file_name,
                         file_name, index_file_name));
 }
 
-/** When writing the empty string we write the sequence "-1\0".
-    This was used before to disambiguate with the potential for s being NULL,
-    which wrote the sequence "0".
+// We disallow reading strings longer than 32767 bytes
+// as this is the most permissive length of a file path
+// using windows LongPathsEnabled behavior.
+constexpr int max_len = 32767;
 
-    The stream is expected to throw on read failure (failbit/badbit are set in
-    its exception mask by the caller). */
-static std::string read_sized_string(std::istream &stream) {
+static std::string read_index_filename(std::istream &stream) {
     int len = 0;
     stream.read(reinterpret_cast<char *>(&len), sizeof(len));
-    if (len == -1) {      /* length indicates "" */
-        stream.ignore(1); /* consume the trailing nul */
-        return "";
-    }
     if (len <= 0)
-        return ""; /* length indicates NULL; return "" without consuming nul */
+        throw std::ios_base::failure(fmt::format(
+            "Index file contained empty or negative sized filename: size={}",
+            len));
+
+    if (len > max_len)
+        throw std::ios_base::failure(
+            fmt::format("Invalid filename length: {}", len));
+
     std::string s(static_cast<std::size_t>(len), '\0');
     stream.read(s.data(), len);
     stream.ignore(1); /* consume the trailing nul */
@@ -258,7 +260,7 @@ static void check_valid_index_stream(const std::string &file_name,
     std::string input_name = fs::path{file_name}.filename().string();
     std::string source_file;
     try {
-        source_file = read_sized_string(stream);
+        source_file = read_index_filename(stream);
     } catch (const std::ios_base::failure &) {
         std::throw_with_nested(std::ios_base::failure(fmt::format(
             "Index file did not contain a valid index for \"{}\"", file_name)));
@@ -269,9 +271,13 @@ static void check_valid_index_stream(const std::string &file_name,
             "Index file did not contain a valid index for \"{}\"", file_name));
 }
 
-static void write_sized_string(const std::string &s, std::ostream &stream) {
-    int len = s.empty() ? -1 /* magic marker for "" */
-                        : static_cast<int>(s.size());
+static void write_index_filename(const std::string &s, std::ostream &stream) {
+    if (s.empty())
+        throw std::ios_base::failure("Index filename must not be empty");
+    if (s.size() > static_cast<std::size_t>(max_len))
+        throw std::ios_base::failure(
+            fmt::format("Invalid index filename length: {}", s.size()));
+    int len = static_cast<int>(s.size());
     stream.write(reinterpret_cast<const char *>(&len), sizeof(len));
     stream.write(s.data(), static_cast<std::streamsize>(s.size()));
     stream.put('\0');
@@ -284,8 +290,8 @@ void rd::File::write_index(const std::string &index_filename) {
             "Failed to open index file \"{}\" for writing", index_filename));
     ostream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
-    write_sized_string(fs::path{context->fortio.filename()}.filename().string(),
-                       ostream);
+    write_index_filename(
+        fs::path{context->fortio.filename()}.filename().string(), ostream);
     global_view->write_index(ostream);
     ostream.flush();
 }
