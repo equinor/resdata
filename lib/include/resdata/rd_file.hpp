@@ -12,13 +12,16 @@
 #include <resdata/rd_file_flag.hpp>
 
 namespace rd {
-struct File {
+class File {
     std::shared_ptr<rd::FileContext> context;
     std::shared_ptr<rd::FileView>
         global_view; /* The index of all the rd_kw instances in the file. */
     File(std::shared_ptr<rd::FileContext> context,
          std::shared_ptr<rd::FileView> global_view)
         : context(std::move(context)), global_view(std::move(global_view)) {};
+    void scan();
+
+public:
     static std::unique_ptr<File> open(const std::string &filename,
                                       FileMode flags = FileMode::DEFAULT);
     static std::unique_ptr<File> fast_open(const std::string &file_name,

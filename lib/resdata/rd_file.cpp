@@ -122,19 +122,19 @@ namespace fs = std::filesystem;
    an invalid rd_kw instance is detected. This implies that for a partly broken
    file the rd_file_scan function will index the valid keywords which are in
    the file, possible garbage at the end will be ignored. */
-static void rd_file_scan(rd::File *rd_file) {
-    rd_file->context->fortio.fseek(0, SEEK_SET);
+void rd::File::scan() {
+    context->fortio.fseek(0, SEEK_SET);
     {
         rd_kw_ptr work_kw = make_rd_kw("WORK-KW", 0, RD_INT, nullptr);
 
         while (true) {
-            if (rd_file->context->fortio.read_at_eof())
+            if (context->fortio.read_at_eof())
                 break;
 
             {
-                offset_type current_offset = rd_file->context->fortio.ftell();
+                offset_type current_offset = context->fortio.ftell();
                 rd_read_status_enum read_status =
-                    rd_kw_fread_header(work_kw.get(), rd_file->context->fortio);
+                    rd_kw_fread_header(work_kw.get(), context->fortio);
                 if (read_status == RD_KW_READ_FAIL)
                     break;
 
@@ -142,8 +142,8 @@ static void rd_file_scan(rd::File *rd_file) {
                     auto file_kw =
                         std::make_shared<FileKW>(work_kw.get(), current_offset);
 
-                    if (file_kw->skip_data(rd_file->context->fortio)) {
-                        rd_file->global_view->add_kw(file_kw);
+                    if (file_kw->skip_data(context->fortio)) {
+                        global_view->add_kw(file_kw);
                     } else {
                         break;
                     }
@@ -151,7 +151,7 @@ static void rd_file_scan(rd::File *rd_file) {
             }
         }
     }
-    rd_file->global_view->make_index();
+    global_view->make_index();
 }
 
 static std::unique_ptr<ERT::FortIO>
@@ -178,9 +178,10 @@ std::unique_ptr<rd::File> rd::File::open(const std::string &filename,
 
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = std::make_shared<rd::FileView>(context);
-    auto rd_file = std::make_unique<rd::File>(context, global_view);
+    auto rd_file =
+        std::unique_ptr<rd::File>(new rd::File(context, global_view));
 
-    rd_file_scan(rd_file.get());
+    rd_file->scan();
 
     if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
         FileMode::CLOSE_STREAM)
@@ -305,7 +306,8 @@ rd::File::fast_open(const std::string &file_name,
     auto fortio = rd_file_alloc_fortio(file_name, flags);
     auto context = std::make_shared<rd::FileContext>(std::move(*fortio), flags);
     auto global_view = rd::FileView::read(context, istream);
-    auto rd_file = std::make_unique<rd::File>(context, global_view);
+    auto rd_file =
+        std::unique_ptr<rd::File>(new rd::File(context, global_view));
     if ((rd_file->context->flags & FileMode::CLOSE_STREAM) ==
         FileMode::CLOSE_STREAM)
         rd_file->context->fortio.fclose_stream();
