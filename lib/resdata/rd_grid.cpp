@@ -207,37 +207,31 @@ namespace fs = std::filesystem;
       example:
       --------
 
-      {
-         rd::File * restart_data = rd_file_fread_alloc(restart_filename , true);                      // load some restart info to inspect
-         rd_grid_type * grid         = rd_grid_alloc(grid_filename , true);                               // bootstrap rd_grid instance
-         stringlist_type * lgr_names  = rd_grid_alloc_name_list( grid );                                   // get a list of all the lgr names.
+         auto restart_data = rd::File::open(restart_filename);
+         auto grid = read_grid(grid_filename);
+         int num_lgr = rd_grid_get_num_lgr(grid.get());
 
-         printf("grid:%s has %d a total of %d lgr's \n", grid_filename , stringlist_get_size( lgr_names ));
-         for (int lgr_nr = 0; lgr_nr < stringlist_get_size( lgr_names); lgr_nr++) {
-            rd_grid_type * lgr_grid  = rd_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));    // get the rd_grid instance of the lgr - by name.
-            rd_kw_type   * pressure_kw;
-            int nx,ny,nz,active_size;
-            rd_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                             // get some size info from this lgr.
-            printf("lgr:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
+         printf("grid:%s has %d a total of %d lgr's \n", grid_filename.c_str() , num_lgr);
+         for (int lgr_nr = 0; lgr_nr < num_lgr; lgr_nr++) {
+            rd_grid_type * lgr_grid  = rd_grid_iget_lgr(grid.get(), lgr_nr);
+            int nx, ny, nz, active_size;
+            rd_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size); // get some size info from this lgr.
+            printf("lgr:%s has %d x %d x %d elements \n", rd_grid_get_name(lgr_grid) , nx , ny , nz);
 
             // ok - now we want to extract the solution vector (pressure) corresponding to this lgr:
-            pressure_kw = rd_file->get_kw("pressure", rd_grid_get_grid_nr( lgr_grid ));
-                                                                    /|\
-                                                                     |
-                                                                     |
-                                                      we query the lgr_grid instance to find which
-                                                      occurence of the solution data we should look
-                                                      up in the rd_file instance with restart data.
+            rd_kw_type *pressure_kw = restart_data->get_kw("PRESSURE", rd_grid_get_lgr_nr(lgr_grid));
+                                                              ///               /|\
+                                                              ///                |
+                                                              ///                |
+                                                              /// we query the lgr_grid instance to find which
+                                                              /// occurence of the solution data we should look
+                                                              /// up in the rd_file instance with restart data.
 
             {
-               int center_index = rd_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );          // ask the lgr_grid to get the index at the center of the lgr grid.
-               printf("the pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , rd_kw_iget_as_double( pressure_kw , center_index ));
+               int center_index = rd_grid_get_global_index3(lgr_grid, nx/2, ny/2, nz/2);          // ask the lgr_grid to get the index at the center of the lgr grid.
+               printf("the pressure in the middle of %s is %g \n", rd_grid_get_name(lgr_grid) , rd_kw_iget_as_double(pressure_kw , center_index));
             }
          }
-         rd_file_free( restart_data );
-         rd_grid_free( grid );
-         stringlist_free( lgr_names );
-     }
 
   About coarse groups
   -------------------
@@ -320,18 +314,19 @@ namespace fs = std::filesystem;
       convention. The following shows a possible solution:
 
       {
-         char fracture_kw[9];
-         char matrix_kw[9];
-         int  matrix_size   = rd_grid_get_nactive( rd_grid );
-         int  fracture_size = rd_grid_get_nactive_fracture( rd_grid );
+        char fracture_kw[9];
+        char matrix_kw[9];
+        int matrix_size = rd_grid_get_nactive(rd_grid);
+        int fracture_size = rd_grid_get_nactive_fracture(rd_grid);
 
-         swat = rd_file_iget_name_kw( rst_file , "SWAT" , 0);
+        rd_kw_type *swat = rst_file.get_kw("SWAT", 0);
 
-         snsprintf(fracture_kw , 9 , "F-%6s" , rd_kw_get_header( swat ));
-         snsprintf(matrix_kw   , 9 , "M-%6s" , rd_kw_get_header( swat ));
+        snprintf(fracture_kw, 9, "F-%6s", rd_kw_get_header(swat));
+        snprintf(matrix_kw, 9, "M-%6s", rd_kw_get_header(swat));
 
-         rd_kw_type * M = rd_kw_alloc_sub_copy( swat , matrix_kw   , 0  , matrix_size );
-         rd_kw_type * F = rd_kw_alloc_sub_copy( swat , fracture_kw , matrix_size  , fracture_size );
+        rd_kw_type *M = rd_kw_alloc_sub_copy(swat, matrix_kw, 0, matrix_size);
+        rd_kw_type *F =
+            rd_kw_alloc_sub_copy(swat, fracture_kw, matrix_size, fracture_size);
       }
 
   About nnc
@@ -354,37 +349,32 @@ namespace fs = std::filesystem;
   Example usage:
   --------------
 
-     rd_grid_type * grid = rd_grid_alloc("FILE.EGRID");
+    auto grid = read_grid("FILE.EGRID");
 
-     // Get a int_vector instance with all the cells which have nnc info
-     // attached.
-     const int_vector_type * cells_with_nnc = rd_grid_get_nnc_index_list( grid );
+    // Iterate over all the cells with nnc info:
+    for (int i = 0; i < rd_grid_get_global_size(grid.get()); i++) {
+        const nnc_info_type *nnc_info =
+            rd_grid_get_cell_nnc_info1(grid.get(), i);
 
-     // Iterate over all the cells with nnc info:
-     for (int i=0; i < int_vector_size( cells_with_nnc ); i++) {
-         int cell_index =  int_vector_iget( cells_with_nnc , i);
-         const nnc_info_type * nnc_info = rd_grid_get_nnc_info1( grid , cell_index);
+        if (!nnc_info)
+            continue;
 
-         // Get all the nnc connections from @cell_index to other cells in the same grid
-         {
-            const int_vector_type * nnc_list = nnc_info_get_self_index_list( nnc_info );
-            for (int j=0; j < int_vector_size( nnc_list ); j++)
-               printf("Cell[%d] -> %d  in the same grid \n",cell_index , int_vector_iget(nnc_list , j));
-         }
+        for (int lgr_index = 0; lgr_index < nnc_info_get_size(nnc_info);
+             lgr_index++) {
+            nnc_vector_type *nnc_vector =
+                nnc_info_iget_vector(nnc_info, lgr_index);
+            int lgr_nr = nnc_vector_get_lgr_nr(nnc_vector);
+            if (lgr_nr != nnc_info_get_lgr_nr(nnc_info)) {
+                const int_vector_type *nnc_list =
+                    nnc_vector_get_index_list(nnc_vector);
+                for (int j = 0; j < int_vector_size(nnc_list); j++)
+                    printf("Cell[%d] -> %d  in lgr:%d/%s \n", cell_index,
+                           int_vector_iget(nnc_list, j), lgr_nr,
+                           rd_grid_get_lgr_name(rd_grid, lgr_nr));
+            }
+        }
+    }
 
-
-         {
-             for (int lgr_index=0; lgr_index < nnc_info_get_size( nnc_info ); lgr_index++) {
-                nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
-                int lgr_nr = nnc_vector_get_lgr_nr( nnc_vector );
-                if (lgr_nr != nnc_info_get_lgr_nr( nnc_info )) {
-                   const int_vector_type * nnc_list = nnc_vector_get_index_list( nnc_vector );
-                   for (int j=0; j < int_vector_size( nnc_list ); j++)
-                       printf("Cell[%d] -> %d  in lgr:%d/%s \n",cell_index , int_vector_iget(nnc_list , j) , lgr_nr  , rd_grid_get_lgr_name(rd_grid , lgr_nr));
-                }
-             }
-         }
-     }
 
 
   Dual porosity and nnc: In ECLIPSE the connection between the matrix
