@@ -98,20 +98,6 @@ void FileView::index_fload_kw(const std::string &kw, int index,
     }
 }
 
-std::optional<size_t> FileView::find_kw_value(const std::string &kw,
-                                              const void *value) {
-    if (has_kw(kw)) {
-        const auto &index_list = kw_index.at(kw);
-        for (auto index : index_list) {
-            rd_kw_type *rd_kw = get_kw(index);
-            if (rd_kw_data_equal(rd_kw, value)) {
-                return index;
-            }
-        }
-    }
-    return std::nullopt;
-}
-
 void FileView::write(ERT::FortIO &target, size_t offset) {
     for (size_t index = offset; index < kw_list.size(); index++) {
         rd_kw_type *rd_kw = get_kw(index);
@@ -268,29 +254,29 @@ static time_t rd_rsthead_date(const rd_kw_type *intehead_kw) {
 }
 
 time_t FileView::restart_sim_date(size_t seqnum_index) {
-    time_t sim_time = -1;
     std::shared_ptr<FileView> seqnum_map =
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
 
     if (seqnum_map) {
         rd_kw_type *intehead_kw = seqnum_map->get_kw(INTEHEAD_KW, 0);
-        sim_time = rd_rsthead_date(intehead_kw);
+        return rd_rsthead_date(intehead_kw);
     }
 
-    return sim_time;
+    throw std::out_of_range(
+        fmt::format("Did not find seqnum with index {}", seqnum_index));
 }
 
 double FileView::restart_sim_days(size_t seqnum_index) {
-    double sim_days = 0;
     std::shared_ptr<FileView> seqnum_map =
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
 
     if (seqnum_map) {
         rd_kw_type *doubhead_kw = seqnum_map->get_kw(DOUBHEAD_KW, 0);
-        sim_days = rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX);
+        return rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX);
     }
 
-    return sim_days;
+    throw std::out_of_range(
+        fmt::format("Did not find seqnum with index {}", seqnum_index));
 }
 
 /* Will scan through the rd_file looking for INTEHEAD
@@ -338,47 +324,7 @@ std::optional<size_t> FileView::find_sim_time(time_t sim_time) {
 }
 
 bool FileView::has_sim_time(time_t sim_time) {
-    size_t num_INTEHEAD = num_named_kw(INTEHEAD_KW);
-    if (num_INTEHEAD == 0)
-        return false; /* We have no INTEHEAD headers - probably not a restart file at all. */
-    else {
-        size_t intehead_index = 0;
-        while (true) {
-            time_t itime = restart_sim_date(intehead_index);
-
-            if (itime == sim_time) /* Perfect hit. */
-                return true;
-
-            if (itime > sim_time)
-                return false; /* We have gone past the target_time - i.e. we do not have it. */
-
-            intehead_index++;
-            if (intehead_index == num_INTEHEAD)
-                return false; /* We have iterated through the whole thing without finding sim_time. */
-        }
-    }
-}
-
-bool FileView::has_sim_days(double sim_days) {
-    size_t num_DOUBHEAD = num_named_kw(DOUBHEAD_KW);
-    if (num_DOUBHEAD == 0)
-        return false; /* We have no DOUBHEAD headers - probably not a restart file at all. */
-    else {
-        size_t doubhead_index = 0;
-        while (true) {
-            double file_sim_days = restart_sim_days(doubhead_index);
-
-            if (util_double_approx_equal(sim_days, file_sim_days))
-                return true;
-
-            if (file_sim_days > sim_days)
-                return false;
-
-            doubhead_index++;
-            if (doubhead_index == num_DOUBHEAD)
-                return false;
-        }
-    }
+    return find_sim_time(sim_time).has_value();
 }
 
 std::shared_ptr<FileView>
@@ -387,52 +333,36 @@ FileView::restart_view_from_seqnum_index(size_t index) {
 }
 std::shared_ptr<FileView>
 FileView::restart_view_from_report_step(int report_step) {
-    auto global_index = find_kw_value(SEQNUM_KW, &report_step);
-    if (!global_index.has_value())
+    auto block = find_block(SEQNUM_KW, [&](const rd_kw_type *seqnum_kw) {
+        return rd_kw_data_equal(seqnum_kw, &report_step);
+    });
+    if (!block.has_value())
         throw std::invalid_argument(
             fmt::format("No such restart block could be identified"));
-    return restart_view_from_seqnum_index(get_occurence(global_index.value()));
+    return restart_view_from_seqnum_index(block.value());
 }
 
 std::shared_ptr<FileView>
 FileView::restart_view_from_sim_time(time_t sim_time) {
-    size_t num_seqnum = num_named_kw(SEQNUM_KW);
-
-    for (size_t s_idx = 0; s_idx < num_seqnum; s_idx++) {
-        std::shared_ptr<FileView> seqnum_map =
-            blockview(SEQNUM_KW, SEQNUM_KW, s_idx);
-
-        if (!seqnum_map)
-            continue;
-
-        if (seqnum_map->has_sim_time(sim_time))
-            return seqnum_map;
-    }
-    throw std::invalid_argument(
-        fmt::format("No such restart block could be identified"));
+    auto block = find_block(INTEHEAD_KW, [&](const rd_kw_type *intehead_kw) {
+        return rd_rsthead_date(intehead_kw) == sim_time;
+    });
+    if (!block.has_value())
+        throw std::invalid_argument(
+            fmt::format("No such restart block could be identified"));
+    return restart_view_from_seqnum_index(block.value());
 }
 
 std::shared_ptr<FileView>
 FileView::restart_view_from_sim_days(double sim_days) {
-    size_t num_seqnum = num_named_kw(SEQNUM_KW);
-    size_t seqnum_index = 0;
-
-    while (true) {
-        std::shared_ptr<FileView> seqnum_map =
-            blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
-
-        if (seqnum_map) {
-            if (seqnum_map->has_sim_days(sim_days)) {
-                return seqnum_map;
-            } else {
-                seqnum_index++;
-            }
-        }
-
-        if (num_seqnum == seqnum_index)
-            throw std::invalid_argument(
-                fmt::format("No such restart block could be identified"));
-    }
+    auto block = find_block(DOUBHEAD_KW, [&](const rd_kw_type *doubhead_kw) {
+        return util_double_approx_equal(
+            sim_days, rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX));
+    });
+    if (!block.has_value())
+        throw std::invalid_argument(
+            fmt::format("No such restart block could be identified"));
+    return restart_view_from_seqnum_index(block.value());
 }
 
 std::shared_ptr<FileView> FileView::summary_view(int report_step) {

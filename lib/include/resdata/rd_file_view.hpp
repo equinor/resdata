@@ -1,6 +1,7 @@
 #pragma once
 #include <ctime>
 #include <istream>
+#include <iterator>
 #include <ostream>
 #include <unordered_map>
 #include <memory>
@@ -42,10 +43,49 @@ class FileView {
         return get_file_kw(kw_index.at(kw).at(ith));
     }
     [[nodiscard]] rd_kw_type *get_kw(const std::shared_ptr<FileKW> &file_kw);
-    [[nodiscard]] std::optional<size_t> find_kw_value(const std::string &kw,
-                                                      const void *value);
     [[nodiscard]] size_t get_occurence(size_t global_index);
-    [[nodiscard]] bool has_sim_days(double sim_days);
+
+    /** Finds the occurrence of the first block for which @predicate holds for @header_kw.
+
+        Each SEQNUM keyword begins a block that extends to the next SEQNUM, or to
+        the end of the file for the last block. The block's header keyword is the
+        first @header_kw occurring inside it. @predicate is invoked with that
+        keyword; the first block for which it returns true yields its block index.
+        Returns std::nullopt if there is no such block.*/
+    template <typename Predicate>
+    [[nodiscard]] std::optional<size_t> find_block(const std::string &header_kw,
+                                                   Predicate predicate) {
+        auto seqnum_it = kw_index.find(SEQNUM_KW);
+        if (seqnum_it == kw_index.end())
+            return std::nullopt;
+        auto header_it = kw_index.find(header_kw);
+        if (header_it == kw_index.end())
+            return std::nullopt;
+
+        const std::vector<size_t> &seqnum_list = seqnum_it->second;
+        const std::vector<size_t> &header_list = header_it->second;
+        auto header_cursor = header_list.begin();
+
+        for (auto start = seqnum_list.begin(); start != seqnum_list.end();
+             ++start) {
+            auto next = std::next(start);
+            const size_t block_end =
+                (next != seqnum_list.end()) ? *next : kw_list.size();
+
+            // Advance to the first header keyword inside this block.
+            while (header_cursor != header_list.end() &&
+                   *header_cursor < *start)
+                ++header_cursor;
+
+            if (header_cursor == header_list.end())
+                break;
+
+            if (*header_cursor < block_end && predicate(get_kw(*header_cursor)))
+                return static_cast<size_t>(
+                    std::distance(seqnum_list.begin(), start));
+        }
+        return std::nullopt;
+    }
 
 public:
     explicit FileView(std::shared_ptr<FileContext> context)
@@ -109,17 +149,21 @@ public:
               size_t occurence = 0);
 
     bool has_report_step(int report_step) {
-        return find_kw_value(SEQNUM_KW, &report_step).has_value();
+        return find_block(SEQNUM_KW,
+                          [&](const rd_kw_type *seqnum_kw) {
+                              return rd_kw_data_equal(seqnum_kw, &report_step);
+                          })
+            .has_value();
     }
     /** The sim_date of the ith=@seqnum_index step in a restart file.
 
-      returns -1 if there is no such step */
+      throws std::out_of_range if there is no such index. */
     time_t restart_sim_date(size_t seqnum_index);
     /** The number of days since start of the ith=@seqnum_index step in a restart file.
 
-      returns 0.0 if there is no such step */
+      throws std::out_of_range if there is no such index. */
     double restart_sim_days(size_t seqnum_index);
-    /** The index of the step with the given sim_time
+    /** The kw index of the INTHEAD kw with the given sim_time.
 
       returns nullopt if there is no such step */
     std::optional<size_t> find_sim_time(time_t sim_time);

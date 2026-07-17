@@ -720,11 +720,14 @@ PYBIND11_MODULE(rd_file, m) {
             },
             py::arg("index"),
             "Will locate restart block nr @index and return the true time\n"
-            "as a datetime instance.\n")
+            "as a datetime instance. Throws IndexError if index is larger\n"
+            "than the amount of restart steps.\n")
         .def("iget_restart_sim_days", &rd::File::restart_sim_days,
              py::arg("index"),
              "Will locate restart block nr @index and return the number of\n"
-             "days (in METRIC at least ...) since the simulation started.\n")
+             "days (in METRIC at least ...) since the simulation started.\n"
+             "Throws IndexError if the index is larger than the amount of\n"
+             "restart steps.\n")
         .def("get_filename", &rd::File::filename,
              "Name of the file currently loaded.\n")
         .def(

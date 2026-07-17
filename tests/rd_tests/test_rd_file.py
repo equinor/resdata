@@ -3,9 +3,12 @@ import gc
 import os.path
 import shutil
 import struct
+import tempfile
 from pathlib import Path
 
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 from resdata import FileMode, FileType, ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, open_rd_file, openFortIO
@@ -591,7 +594,10 @@ def test_report_list(tmpdir):
             )
             assert rd_file.report_steps == [10]
             assert rd_file.iget_restart_sim_time(0) == datetime.datetime(2000, 1, 1)
-            assert rd_file.iget_restart_sim_days(1) == 0.0
+            with pytest.raises(IndexError, match="Did not find seqnum"):
+                rd_file.iget_restart_sim_days(1)
+            with pytest.raises(IndexError, match="Did not find seqnum"):
+                rd_file.iget_restart_sim_time(1)
             with openFortIO("TEST2.UNRST", FortIO.WRITE_MODE) as fortio:
                 rd_file.fwrite(fortio)
 
@@ -1047,6 +1053,18 @@ def test_report_dates_falls_back_to_intehead_without_seqnum(tmpdir):
         assert rd_file.report_dates == [datetime.datetime(2000, 1, 1)]
 
 
+def test_has_sim_time_correctly_identifies_dates_in_non_unified_file(tmpdir):
+    with tmpdir.as_cwd():
+        with openFortIO("CASE.X0000", mode=FortIO.WRITE_MODE) as f:
+            _restart_intehead(1, 1, 2000).fwrite(f)
+            _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [1.0, 2.0, 3.0]).fwrite(f)
+
+        rd_file = ResdataFile("CASE.X0000")
+        assert not rd_file.has_kw("SEQNUM")
+        assert rd_file.has_sim_time(datetime.datetime(2000, 1, 1))
+        assert not rd_file.has_sim_time(datetime.datetime(2010, 1, 1))
+
+
 def test_report_dates_without_seqnum_or_intehead_returns_none(tmpdir):
     with tmpdir.as_cwd():
         kw = ResdataKW("HEADER", 1, ResDataType.RD_INT)
@@ -1056,3 +1074,117 @@ def test_report_dates_without_seqnum_or_intehead_returns_none(tmpdir):
 
         rd_file = ResdataFile("CASE.INIT")
         assert rd_file.report_dates is None
+
+
+@st.composite
+def restart_blocks(draw):
+    """Generate a list of restart blocks for a (possibly empty) restart file.
+
+    Each block is a ``(report_step, sim_time, sim_days)`` triple that will be
+    written to file as a ``SEQNUM``/``INTEHEAD``/``DOUBHEAD`` section. The
+    blocks are sorted so that both ``sim_time`` and ``sim_days`` are strictly
+    increasing, matching the ordering assumption of the underlying restart
+    lookup routines.
+    """
+    count = draw(st.integers(min_value=0, max_value=5))
+    dates = sorted(
+        draw(
+            st.lists(
+                st.dates(
+                    min_value=datetime.date(1970, 1, 2),
+                    max_value=datetime.date(2100, 1, 1),
+                ),
+                min_size=count,
+                max_size=count,
+                unique=True,
+            )
+        )
+    )
+    report_steps = sorted(
+        draw(
+            st.lists(
+                st.integers(min_value=0, max_value=100000),
+                min_size=count,
+                max_size=count,
+                unique=True,
+            )
+        )
+    )
+
+    blocks = []
+    for date, report_step in zip(dates, report_steps):
+        sim_time = datetime.datetime(date.year, date.month, date.day)
+        sim_days = float((date - dates[0]).days)
+        blocks.append((report_step, sim_time, sim_days))
+    return blocks
+
+
+def _write_restart_blocks(path, blocks):
+    """Write ``blocks`` as consecutive SEQNUM/INTEHEAD/DOUBHEAD sections.
+
+    Each block also carries a ``PRESSURE`` keyword whose single value equals the
+    block's report step.
+    """
+    with openFortIO(path, mode=FortIO.WRITE_MODE) as f:
+        for report_step, sim_time, sim_days in blocks:
+            _restart_kw("SEQNUM", ResDataType.RD_INT, [report_step]).fwrite(f)
+            _restart_intehead(sim_time.day, sim_time.month, sim_time.year).fwrite(f)
+            _restart_kw("DOUBHEAD", ResDataType.RD_DOUBLE, [sim_days]).fwrite(f)
+            _restart_kw("PRESSURE", ResDataType.RD_FLOAT, [float(report_step)]).fwrite(
+                f
+            )
+
+
+@given(blocks=restart_blocks())
+def test_has_and_restart_view_match_written_restart_blocks(blocks):
+    report_steps = {report_step for report_step, _, _ in blocks}
+    sim_times = {sim_time for _, sim_time, _ in blocks}
+    step_by_time = {sim_time: report_step for report_step, sim_time, _ in blocks}
+    step_by_days = {sim_days: report_step for report_step, _, sim_days in blocks}
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        path = os.path.join(tmp_dir, "TEST.UNRST")
+        _write_restart_blocks(path, blocks)
+
+        with open_rd_file(path) as rd_file:
+            # Every written report step / sim_time is reported as present.
+            for report_step in report_steps:
+                assert rd_file.has_report_step(report_step)
+            for sim_time in sim_times:
+                assert rd_file.has_sim_time(sim_time)
+
+            # Values that were not written are absent.
+            missing_step = (max(report_steps) + 1) if report_steps else 0
+            assert not rd_file.has_report_step(missing_step)
+            assert not rd_file.has_sim_time(datetime.datetime(1969, 1, 1))
+
+            # A restart view exists for every written sim_time / sim_days
+            for sim_time, report_step in step_by_time.items():
+                view = rd_file.restart_view(sim_time=sim_time)
+                assert view["SEQNUM"][0][0] == report_step
+                assert view["PRESSURE"][0][0] == pytest.approx(float(report_step))
+            for sim_days, report_step in step_by_days.items():
+                view = rd_file.restart_view(sim_days=sim_days)
+                assert view["SEQNUM"][0][0] == report_step
+                assert view["PRESSURE"][0][0] == pytest.approx(float(report_step))
+
+            # The i-th seqnum_index view is the i-th block in file order.
+            for seqnum_index, (report_step, _, _) in enumerate(blocks):
+                view = rd_file.restart_view(seqnum_index=seqnum_index)
+                assert view["SEQNUM"][0][0] == report_step
+                assert view["PRESSURE"][0][0] == pytest.approx(float(report_step))
+
+            for sim_time, report_step in step_by_time.items():
+                pressure = rd_file.restart_get_kw("PRESSURE", sim_time)
+                assert pressure[0] == pytest.approx(float(report_step))
+
+            for seqnum_index, (_, sim_time, sim_days) in enumerate(blocks):
+                assert rd_file.iget_restart_sim_time(seqnum_index) == sim_time
+                assert rd_file.iget_restart_sim_days(seqnum_index) == pytest.approx(
+                    sim_days
+                )
+
+            with pytest.raises(ValueError):
+                rd_file.restart_view(sim_time=datetime.datetime(1969, 1, 1))
+            with pytest.raises(ValueError):
+                rd_file.restart_view(sim_days=-1.0)
