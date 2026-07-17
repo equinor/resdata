@@ -116,7 +116,7 @@ namespace fs = std::filesystem;
   coords      |
   corners     |
   coords      |
-  corners     |      normal coord / corners kewyords
+  corners     |      normal coord / corners keywords
   coords      |      for the nine coarse cells. observe
   corners     |      that when reading in these cells it is
   coords      |      impossible to know that some of the
