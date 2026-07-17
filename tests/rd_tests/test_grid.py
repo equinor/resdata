@@ -360,10 +360,6 @@ class GridTest(ResdataTest):
         p7 = grid.get_node_pos(10, 20, 30)
         self.assertEqual(p7, (10, 20, 30))
 
-    # The broken file was previously handled by the rd_file_open() call internally
-    # in the rd_grid implementation. That will now not fail for a broken file, and then
-    # the grid class needs to do more/better checking itself.
-    @skip("Needs better error checking inside in the rd_grid")
     def test_truncated_file(self):
         grid = GridGen.create_rectangular((10, 20, 30), (1, 1, 1))
         tmpdir = self.tmp_path_factory.mktemp("python_rd_grid_truncated", numbered=True)
@@ -375,7 +371,7 @@ class GridTest(ResdataTest):
             with open("TEST.EGRID", "r+") as f:
                 f.truncate(size // 2)
 
-            with self.assertRaises(IOError):
+            with self.assertRaises(IndexError):
                 Grid("TEST.EGRID")
 
     def test_posXY1(self):
