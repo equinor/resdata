@@ -1,17 +1,13 @@
+#pragma once
 #include <cstdlib>
+
+#include <memory>
 
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_pointset.hpp>
 #include <ert/geometry/geo_polygon.hpp>
-
-#ifndef ERT_GEO_REGION_H
-#define ERT_GEO_REGION_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct geo_region_struct geo_region_type;
 
@@ -42,14 +38,7 @@ void geo_region_deselect_above_line(geo_region_type *region,
 void geo_region_deselect_below_line(geo_region_type *region,
                                     const double xcoords[2],
                                     const double ycoords[2]);
-
-#ifdef __cplusplus
-}
-#include <memory>
-
 using geo_region_ptr =
     std::unique_ptr<geo_region_type, decltype(&geo_region_free)>;
 geo_region_ptr make_geo_region(const geo_pointset_ptr &pointset,
                                bool preselect);
-#endif
-#endif

@@ -1,9 +1,5 @@
-#ifndef ERT_GEO_POINTSET_H
-#define ERT_GEO_POINTSET_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
+#include <memory>
 
 typedef struct geo_pointset_struct geo_pointset_type;
 
@@ -31,12 +27,6 @@ void geo_pointset_iadd(geo_pointset_type *pointset,
 void geo_pointset_isub(geo_pointset_type *self, const geo_pointset_type *other);
 void geo_pointset_isqrt(geo_pointset_type *pointset);
 
-#ifdef __cplusplus
-}
-#include <memory>
-
 using geo_pointset_ptr =
     std::unique_ptr<geo_pointset_type, decltype(&geo_pointset_free)>;
 geo_pointset_ptr make_geo_pointset(bool external_z);
-#endif
-#endif
