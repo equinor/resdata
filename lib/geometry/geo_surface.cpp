@@ -107,10 +107,11 @@ static void geo_surface_fprintf_irap_header(const geo_surface_type *surface,
 }
 
 static void geo_surface_fprintf_zcoord(const geo_surface_type *surface,
-                                       FILE *stream, const double *zcoord) {
+                                       FILE *stream) {
+    const auto &zcoord = geo_pointset_get_zcoord(surface->pointset);
     int num_columns = 6;
     const char *fmt = "%12.4f  ";
-    for (int i = 0; i < geo_surface_get_size(surface); i++) {
+    for (size_t i = 0; i < zcoord.size(); i++) {
         fprintf(stream, fmt, zcoord[i]);
 
         if (((i + 1) % num_columns) == 0)
@@ -119,20 +120,18 @@ static void geo_surface_fprintf_zcoord(const geo_surface_type *surface,
 }
 
 static void geo_surface_fprintf_irap__(const geo_surface_type *surface,
-                                       const char *filename,
-                                       const double *zcoord) {
+                                       const char *filename) {
     FILE *stream = util_mkdir_fopen(filename, "w");
     {
         geo_surface_fprintf_irap_header(surface, stream);
-        geo_surface_fprintf_zcoord(surface, stream, zcoord);
+        geo_surface_fprintf_zcoord(surface, stream);
     }
     fclose(stream);
 }
 
 void geo_surface_fprintf_irap(const geo_surface_type *surface,
                               const char *filename) {
-    const double *zcoord = geo_pointset_get_zcoord(surface->pointset);
-    geo_surface_fprintf_irap__(surface, filename, zcoord);
+    geo_surface_fprintf_irap__(surface, filename);
 }
 
 geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
