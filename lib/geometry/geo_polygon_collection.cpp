@@ -14,7 +14,7 @@
 
 struct geo_polygon_collection_struct {
     UTIL_TYPE_ID_DECLARATION;
-    vector_type *polygon_list;
+    vector_ptr polygon_list = new_vector();
     std::map<std::string, geo_polygon_type *> polygon_map;
 };
 
@@ -24,12 +24,11 @@ UTIL_IS_INSTANCE_FUNCTION(geo_polygon_collection,
 geo_polygon_collection_type *geo_polygon_collection_alloc() {
     geo_polygon_collection_type *polygons = new geo_polygon_collection_type();
     UTIL_TYPE_ID_INIT(polygons, GEO_POLYGON_COLLECTION_TYPE_ID);
-    polygons->polygon_list = vector_alloc_new();
     return polygons;
 }
 
 int geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
-    return vector_get_size(polygons->polygon_list);
+    return vector_get_size(polygons->polygon_list.get());
 }
 
 geo_polygon_type *
@@ -57,10 +56,10 @@ bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
         return false;
     else {
         if (polygon_owner)
-            vector_append_owned_ref(polygons->polygon_list, polygon,
+            vector_append_owned_ref(polygons->polygon_list.get(), polygon,
                                     geo_polygon_free__);
         else
-            vector_append_ref(polygons->polygon_list, polygon);
+            vector_append_ref(polygons->polygon_list.get(), polygon);
 
         if (name)
             polygons->polygon_map[name] = polygon;
@@ -78,14 +77,13 @@ bool geo_polygon_collection_has_polygon(
 }
 
 void geo_polygon_collection_free(geo_polygon_collection_type *polygons) {
-    vector_free(polygons->polygon_list);
     delete polygons;
 }
 
 geo_polygon_type *
 geo_polygon_collection_iget_polygon(const geo_polygon_collection_type *polygons,
                                     int index) {
-    return (geo_polygon_type *)vector_iget(polygons->polygon_list, index);
+    return (geo_polygon_type *)vector_iget(polygons->polygon_list.get(), index);
 }
 
 geo_polygon_type *

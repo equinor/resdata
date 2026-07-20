@@ -22,6 +22,12 @@
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>
 
+#include <ert/geometry/geo_polygon.hpp>
+#include <ert/geometry/geo_polygon_collection.hpp>
+#include <ert/geometry/geo_pointset.hpp>
+#include <ert/geometry/geo_region.hpp>
+#include <ert/geometry/geo_surface.hpp>
+
 #include <detail/resdata/cwrap_pybind.hpp>
 
 namespace py = pybind11;
@@ -248,4 +254,86 @@ py::object CTime() {
         cls = py::module_::import("resdata.util.util").attr("CTime");
     }
     return cls;
+}
+
+py::object CPolyline() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.geometry").attr("CPolyline");
+    }
+    return cls;
+}
+
+template <> geo_polygon_type *from_cwrap<geo_polygon_type>(py::handle obj) {
+    if (!py::isinstance(obj, CPolyline()))
+        throw py::type_error("Expected CPolyline, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<geo_polygon_type>(obj);
+}
+
+py::object GeoPointset() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.geometry").attr("GeoPointset");
+    }
+    return cls;
+}
+
+template <> geo_pointset_type *from_cwrap<geo_pointset_type>(py::handle obj) {
+    if (!py::isinstance(obj, GeoPointset()))
+        throw py::type_error("Expected GeoPointset, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<geo_pointset_type>(obj);
+}
+
+py::object CPolylineCollection() {
+    static py::object cls;
+    if (!cls) {
+        cls =
+            py::module_::import("resdata.geometry").attr("CPolylineCollection");
+    }
+    return cls;
+}
+
+template <>
+geo_polygon_collection_type *
+from_cwrap<geo_polygon_collection_type>(py::handle obj) {
+    if (!py::isinstance(obj, CPolylineCollection()))
+        throw py::type_error("Expected CPolylineCollection, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<geo_polygon_collection_type>(obj);
+}
+
+py::object GeoRegion() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.geometry").attr("GeoRegion");
+    }
+    return cls;
+}
+
+template <> geo_region_type *from_cwrap<geo_region_type>(py::handle obj) {
+    if (!py::isinstance(obj, GeoRegion()))
+        throw py::type_error("Expected GeoRegion, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<geo_region_type>(obj);
+}
+py::object Surface() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.geometry").attr("Surface");
+    }
+    return cls;
+}
+
+template <> geo_surface_type *from_cwrap<geo_surface_type>(py::handle obj) {
+    if (!py::isinstance(obj, Surface()))
+        throw py::type_error("Expected Surface, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<geo_surface_type>(obj);
 }
