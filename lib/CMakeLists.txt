@@ -92,7 +92,6 @@ add_library(
   resdata/well_rseg_loader.cpp
   resdata/FortIO.cpp
   geometry/geo_surface.cpp
-  geometry/geo_util.cpp
   geometry/geo_pointset.cpp
   geometry/geo_region.cpp
   geometry/geo_polygon.cpp

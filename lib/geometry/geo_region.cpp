@@ -5,7 +5,6 @@
 #include <ert/util/bool_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
-#include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_pointset.hpp>
 #include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
