@@ -309,8 +309,7 @@ Observe that the function requires on-the-second-equality; which is
 of course quite strict.
 
 Each report step only has one occurence of SEQNUM, but one INTEHEAD
-for each LGR; i.e. one should call iselect_rstblock() prior to
-calling this function. */
+for each LGR.*/
 std::optional<size_t> FileView::find_sim_time(time_t sim_time) {
     if (has_kw(INTEHEAD_KW)) {
         const auto &intehead_index_list = kw_index.at(INTEHEAD_KW);
