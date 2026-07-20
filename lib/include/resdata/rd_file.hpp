@@ -94,26 +94,11 @@ public:
     time_t restart_sim_date(size_t index) {
         return global_view->restart_sim_date(index);
     }
-    /** Will determine the restart block corresponding to @sim_time;
-       if @sim_time can not be found std::nullopt is returned.
+    /** The occurrence number of INTEHEAD index for the given @sim_time;
+        if @sim_time can not be found std::nullopt is returned.
 
-        The returned index is the 'occurence number' in the restart file,
-        i.e. in the (quite typical case) that not all report steps are
-        present the return value will not agree with report step.
-
-        The return value from this function can then be used to get a
-        corresponding solution field directly, or the file map can
-        restricted to this block.
-
-        Direct access:
-
-           auto index = rd_file->find_sim_time(sim_time);
-           if (index.has_value()) {
-              rd_kw_type * pressure_kw = rd_file->get_kw("PRESSURE", index.value() );
-              ....
-           }
-
-        In the case of LGRs the block restriction should be used. */
+        In the case of LGRs there may be multiple INTEHEADs per SEQNUM
+        so blockview should be used. */
     std::optional<size_t> find_sim_time(time_t sim_time) {
         return global_view->find_sim_time(sim_time);
     }
