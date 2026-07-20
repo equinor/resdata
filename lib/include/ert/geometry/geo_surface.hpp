@@ -1,11 +1,7 @@
-#ifndef ERT_GEO_SURFACE_H
-#define ERT_GEO_SURFACE_H
+#pragma once
+#include <memory>
 
 #include <ert/geometry/geo_pointset.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct geo_surface_struct geo_surface_type;
 
@@ -43,14 +39,8 @@ void geo_surface_iadd(geo_surface_type *self, const geo_surface_type *other);
 void geo_surface_imul(geo_surface_type *self, const geo_surface_type *other);
 void geo_surface_isqrt(geo_surface_type *surface);
 
-#ifdef __cplusplus
-}
-#include <memory>
 using geo_surface_ptr =
     std::unique_ptr<geo_surface_type, decltype(&geo_surface_free)>;
 
 geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
                                  double xstart, double ystart, double angle);
-
-#endif
-#endif

@@ -1,11 +1,8 @@
-#ifndef ERT_GEO_POLYGON_H
-#define ERT_GEO_POLYGON_H
+#pragma once
+#include <memory>
+#include <string>
 
 #include <ert/util/type_macros.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct geo_polygon_struct geo_polygon_type;
 
@@ -34,14 +31,7 @@ bool geo_polygon_equal(const geo_polygon_type *polygon1,
 
 UTIL_IS_INSTANCE_HEADER(geo_polygon);
 
-#ifdef __cplusplus
-}
-#include <memory>
-#include <string>
-
 using geo_polygon_ptr =
     std::unique_ptr<geo_polygon_type, decltype(&geo_polygon_free)>;
 
 geo_polygon_ptr make_geo_polygon(std::string name);
-#endif
-#endif

@@ -1,13 +1,7 @@
-#ifndef ERT_GEO_POLYGON_COLLECTION_H
-#define ERT_GEO_POLYGON_COLLECTION_H
-
+#pragma once
 #include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct geo_polygon_collection_struct geo_polygon_collection_type;
 
@@ -30,8 +24,3 @@ geo_polygon_collection_get_polygon(const geo_polygon_collection_type *polygons,
                                    const char *polygon_name);
 
 UTIL_IS_INSTANCE_HEADER(geo_polygon_collection);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
