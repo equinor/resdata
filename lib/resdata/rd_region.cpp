@@ -4,7 +4,6 @@
 #include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
 
-#include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 
 #include <resdata/rd_kw.hpp>

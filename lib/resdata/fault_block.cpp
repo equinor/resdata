@@ -3,7 +3,6 @@
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
 
-#include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_polygon_collection.hpp>
 

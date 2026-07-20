@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -13,12 +14,10 @@ void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y);
 void geo_polygon_add_point_front(geo_polygon_type *polygon, double x, double y);
 geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename);
 bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x,
-                                double y);
-bool geo_polygon_contains_point__(const geo_polygon_type *polygon, double x,
-                                  double y, bool force_edge_inside);
+                                double y, bool force_edge_inside = false);
 void geo_polygon_reset(geo_polygon_type *polygon);
 void geo_polygon_close(geo_polygon_type *polygoon);
-int geo_polygon_get_size(const geo_polygon_type *polygon);
+size_t geo_polygon_get_size(const geo_polygon_type *polygon);
 void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
                          double *y);
 bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,

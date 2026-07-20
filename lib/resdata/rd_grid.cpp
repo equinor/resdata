@@ -24,7 +24,6 @@
 #include <ert/util/vector.hpp>
 #include <ert/util/stringlist.hpp>
 
-#include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 
 #include <resdata/rd_util.hpp>
@@ -3555,7 +3554,7 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
         geo_polygon_add_point(polygon, corner_pos[0], corner_pos[1]);
     }
     geo_polygon_close(polygon);
-    return geo_polygon_contains_point__(polygon, x, y, true);
+    return geo_polygon_contains_point(polygon, x, y, true);
 }
 
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
