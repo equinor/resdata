@@ -162,8 +162,7 @@ find_package(pybind11 CONFIG REQUIRED)
 # <classname>_pybind.cpp in lib/resdata/ py_pkg_path : install/output package
 # path under python/ (e.g. resdata/grid)
 function(add_resdata_pybind_module module_name source_file py_pkg_path)
-  pybind11_add_module(${module_name} resdata/${source_file}
-                      resdata/cwrap_pybind.cpp)
+  pybind11_add_module(${module_name} ${source_file} resdata/cwrap_pybind.cpp)
   target_link_libraries(${module_name} PRIVATE resdata fmt::fmt)
   target_include_directories(
     ${module_name}
@@ -206,19 +205,32 @@ function(add_resdata_pybind_module module_name source_file py_pkg_path)
                               ${PROJECT_SOURCE_DIR}/python/${py_pkg_path})
 endfunction()
 
-add_resdata_pybind_module(_grid rd_grid_pybind.cpp resdata/grid)
-add_resdata_pybind_module(_kw rd_kw_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(_rsthead rsthead_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(rd_file rd_file_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(rd_file_view rd_file_view_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(fortio fortio_pybind.cpp resdata/resfile)
-add_resdata_pybind_module(well well_pybind.cpp resdata)
-add_resdata_pybind_module(_subsidence rd_subsidence_pybind.cpp
+add_resdata_pybind_module(_grid resdata/rd_grid_pybind.cpp resdata/grid)
+add_resdata_pybind_module(_kw resdata/rd_kw_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(_rsthead resdata/rsthead_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(rd_file resdata/rd_file_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(rd_file_view resdata/rd_file_view_pybind.cpp
+                          resdata/resfile)
+add_resdata_pybind_module(fortio resdata/fortio_pybind.cpp resdata/resfile)
+add_resdata_pybind_module(well resdata/well_pybind.cpp resdata)
+add_resdata_pybind_module(_subsidence resdata/rd_subsidence_pybind.cpp
                           resdata/gravimetry)
-add_resdata_pybind_module(_grav rd_grav_pybind.cpp resdata/gravimetry)
-add_resdata_pybind_module(_rd_sum rd_sum_pybind.cpp resdata/summary)
-add_resdata_pybind_module(_type rd_type_pybind.cpp resdata/types)
-add_resdata_pybind_module(_rd_util rd_util_pybind.cpp resdata)
+add_resdata_pybind_module(_grav resdata/rd_grav_pybind.cpp resdata/gravimetry)
+add_resdata_pybind_module(_rd_sum resdata/rd_sum_pybind.cpp resdata/summary)
+add_resdata_pybind_module(_type resdata/rd_type_pybind.cpp resdata/types)
+add_resdata_pybind_module(_rd_util resdata/rd_util_pybind.cpp resdata)
+
+add_resdata_pybind_module(_cpolyline geometry/geo_polygon_pybind.cpp
+                          resdata/geometry)
+add_resdata_pybind_module(
+  _cpolyline_collection geometry/geo_polygon_collection_pybind.cpp
+  resdata/geometry)
+add_resdata_pybind_module(_geo_pointset geometry/geo_pointset_pybind.cpp
+                          resdata/geometry)
+add_resdata_pybind_module(_geo_region geometry/geo_region_pybind.cpp
+                          resdata/geometry)
+add_resdata_pybind_module(_surface geometry/geo_surface_pybind.cpp
+                          resdata/geometry)
 
 if(NOT BUILD_TESTS)
   return()

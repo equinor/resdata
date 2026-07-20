@@ -2,12 +2,11 @@
 Create a polygon
 """
 
-import ctypes
 import os.path
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.geometry._cpolyline as _cpolyline
 
 from .geometry_tools import GeometryTools
 
@@ -15,31 +14,8 @@ from .geometry_tools import GeometryTools
 class CPolyline(BaseCClass):
     TYPE_NAME = "rd_geo_polygon"
 
-    _alloc_new = ResdataPrototype("void* geo_polygon_alloc(char*)", bind=False)
-    _fread_alloc_irap = ResdataPrototype(
-        "rd_geo_polygon_obj geo_polygon_fload_alloc_irap(char*)", bind=False
-    )
-    _add_point = ResdataPrototype(
-        "void geo_polygon_add_point(rd_geo_polygon, double, double)"
-    )
-    _add_point_front = ResdataPrototype(
-        "void geo_polygon_add_point_front(rd_geo_polygon, double, double)"
-    )
-    _free = ResdataPrototype("void geo_polygon_free(rd_geo_polygon)")
-    _size = ResdataPrototype("int geo_polygon_get_size(rd_geo_polygon)")
-    _iget_xy = ResdataPrototype(
-        "void geo_polygon_iget_xy(rd_geo_polygon, int, double*, double*)"
-    )
-    _segment_intersects = ResdataPrototype(
-        "bool geo_polygon_segment_intersects(rd_geo_polygon, double, double, double, double)"
-    )
-    _get_name = ResdataPrototype("char* geo_polygon_get_name(rd_geo_polygon)")
-    _set_name = ResdataPrototype("void geo_polygon_set_name(rd_geo_polygon, char*)")
-    _segment_length = ResdataPrototype("double geo_polygon_get_length(rd_geo_polygon)")
-    _equal = ResdataPrototype("bool geo_polygon_equal(rd_geo_polygon, rd_geo_polygon)")
-
     def __init__(self, name=None, init_points=()):
-        c_ptr = self._alloc_new(name)
+        c_ptr = _cpolyline._alloc_new(name)
         super().__init__(c_ptr)
         for xc, yc in init_points:
             self.addPoint(xc, yc)
@@ -49,9 +25,9 @@ class CPolyline(BaseCClass):
         if not os.path.isfile(filename):
             raise OSError("No such file:%s" % filename)
 
-        polyline = cls._fread_alloc_irap(filename)
+        polyline = cls.createPythonObject(_cpolyline._fread_alloc_irap(filename))
         if name is not None:
-            polyline._set_name(name)
+            _cpolyline._set_name(polyline, name)
         return polyline
 
     def __str__(self):
@@ -72,7 +48,7 @@ class CPolyline(BaseCClass):
         return str(self)
 
     def __len__(self):
-        return self._size()
+        return _cpolyline._size(self)
 
     def __getitem__(self, index):
         if not isinstance(index, int):
@@ -82,18 +58,14 @@ class CPolyline(BaseCClass):
             index += len(self)
 
         if 0 <= index < len(self):
-            x = ctypes.c_double()
-            y = ctypes.c_double()
-            self._iget_xy(index, ctypes.byref(x), ctypes.byref(y))
-
-            return (x.value, y.value)
+            return _cpolyline._iget_xy(self, index)
         else:
             raise IndexError(
                 "Invalid index:%d valid range: [0,%d)" % (index, len(self))
             )
 
     def segmentIntersects(self, p1, p2):
-        return self._segment_intersects(p1[0], p1[1], p2[0], p2[1])
+        return _cpolyline._segment_intersects(self, p1[0], p1[1], p2[0], p2[1])
 
     def intersects(self, polyline):
         if len(self) > 1:
@@ -122,16 +94,18 @@ class CPolyline(BaseCClass):
         return copy
 
     def __eq__(self, other):
+        if not isinstance(other, CPolyline):
+            return NotImplemented
         if super().__eq__(other):
             return True
         else:
-            return self._equal(other)
+            return _cpolyline._equal(self, other)
 
     def segmentLength(self):
         if len(self) == 0:
             raise ValueError("Can not measure length of zero point polyline")
 
-        return self._segment_length()
+        return _cpolyline._segment_length(self)
 
     def extendToBBox(self, bbox, start=True):
         if start:
@@ -156,15 +130,15 @@ class CPolyline(BaseCClass):
 
     def addPoint(self, xc, yc, front=False):
         if front:
-            self._add_point_front(xc, yc)
+            _cpolyline._add_point_front(self, xc, yc)
         else:
-            self._add_point(xc, yc)
+            _cpolyline._add_point(self, xc, yc)
 
     def getName(self):
-        return self._get_name()
+        return _cpolyline._get_name(self)
 
     def free(self):
-        self._free()
+        _cpolyline._free(self)
 
     def unzip(self):
         x_list = []

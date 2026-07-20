@@ -1,19 +1,13 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.geometry._geo_pointset as _geo_pointset
 
 
 class GeoPointset(BaseCClass):
     TYPE_NAME = "rd_geo_points"
 
-    _alloc = ResdataPrototype("void* geo_pointset_alloc(bool)", bind=False)
-    _free = ResdataPrototype("void geo_pointset_free(rd_geo_points)")
-    _get_size = ResdataPrototype("int geo_pointset_get_size(rd_geo_points)")
-    _equal = ResdataPrototype("bool geo_pointset_equal(rd_geo_points, rd_geo_points)")
-    _iget_z = ResdataPrototype("double geo_pointset_iget_z(rd_geo_points, int)")
-
     def __init__(self, external_z=False):
-        c_ptr = self._alloc(external_z)
+        c_ptr = _geo_pointset._alloc(external_z)
         if c_ptr:
             super().__init__(c_ptr)
         else:
@@ -26,7 +20,7 @@ class GeoPointset(BaseCClass):
 
     def __eq__(self, other):
         if isinstance(other, GeoPointset):
-            return self._equal(other)
+            return _geo_pointset._equal(self, other)
         return NotImplemented
 
     def __getitem__(self, key):
@@ -36,7 +30,7 @@ class GeoPointset(BaseCClass):
             if idx < 0:
                 idx += size
             if 0 <= idx < size:
-                return self._iget_z(idx)
+                return _geo_pointset._iget_z(self, idx)
             else:
                 raise IndexError(
                     "Invalid index, must be in [0, %d), was: %d." % (size, key)
@@ -46,10 +40,10 @@ class GeoPointset(BaseCClass):
             raise ValueError("Index must be int, not %s." % type(key))
 
     def __len__(self):
-        return self._get_size()
+        return _geo_pointset._get_size(self)
 
     def __repr__(self):
         return self._create_repr("len=%d" % len(self))
 
     def free(self):
-        self._free()
+        _geo_pointset._free(self)

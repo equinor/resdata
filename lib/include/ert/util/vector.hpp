@@ -46,5 +46,8 @@ UTIL_SAFE_CAST_HEADER(vector);
 
 #ifdef __cplusplus
 }
+#include <memory>
+using vector_ptr = std::unique_ptr<vector_type, decltype(&vector_free)>;
+inline vector_ptr new_vector() { return {vector_alloc_new(), &vector_free}; }
 #endif
 #endif
