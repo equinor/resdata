@@ -1,3 +1,4 @@
+import pytest
 from resdata.geometry import GeometryTools, Polyline
 from resdata.geometry.xyz_io import XYZIo
 
@@ -181,3 +182,81 @@ class PolylineTest(ResdataTest):
         self.assertEqual(l3[2], (0.75, 0.75))
         self.assertEqual(l3[3], (1.00, 1.00))
         self.assertEqual(len(l3), 4)
+
+
+def test_that_str_lists_all_points():
+    polyline = Polyline(init_points=[(0, 0), (1, 2)])
+
+    text = str(polyline)
+
+    assert text == "Polyline:[ (0,0) (1,2) ]"
+
+
+def test_that_polylines_of_different_length_are_not_equal():
+    short = Polyline(init_points=[(0, 0)])
+    long = Polyline(init_points=[(0, 0), (1, 1)])
+
+    assert short != long
+
+
+def test_that_polylines_with_a_differing_point_are_not_equal():
+    first = Polyline(init_points=[(0, 0), (1, 1)])
+    second = Polyline(init_points=[(0, 0), (2, 2)])
+
+    assert first != second
+
+
+def test_that_equal_polylines_compare_equal():
+    first = Polyline(init_points=[(0, 0), (1, 1)])
+    second = Polyline(init_points=[(0, 0), (1, 1)])
+
+    assert first == second
+
+
+def test_that_assert_closed_appends_the_first_point_keeping_z():
+    polyline = Polyline(init_points=[(0, 0, 5), (1, 1, 6), (2, 0, 7)])
+
+    polyline.assertClosed()
+
+    assert polyline.isClosed()
+    assert polyline[-1] == (0, 0, 5)
+
+
+def test_that_unzip2_returns_only_x_and_y_for_three_dimensional_points():
+    polyline = Polyline(init_points=[(1, 2, 9), (3, 4, 8)])
+
+    x, y = polyline.unzip2()
+
+    assert x == [1, 3]
+    assert y == [2, 4]
+
+
+def test_that_getitem_out_of_range_raises_index_error():
+    polyline = Polyline(init_points=[(0, 0), (1, 1)])
+
+    with pytest.raises(IndexError):
+        polyline[5]
+
+
+def test_that_connect_returns_the_shortest_link_to_the_target():
+    polyline = Polyline(init_points=[(0, 0), (0, 1)])
+    target = Polyline(init_points=[(10, 0), (10, 1)])
+
+    link = polyline.connect(target)
+
+    # The link starts at one of the polyline endpoints and ends at its
+    # projection onto the target line, a horizontal distance of 10 away.
+    assert link[0] in [(0, 0), (0, 1)]
+    assert link[1][0] == pytest.approx(10.0)
+    assert GeometryTools.distance(link[0], link[1]) == pytest.approx(10.0)
+
+
+def test_that_connect_uses_the_first_endpoint_when_it_is_closer():
+    polyline = Polyline(init_points=[(0, 0), (0, 5)])
+    target = Polyline(init_points=[(-5, 1), (5, 1)])
+
+    link = polyline.connect(target)
+
+    # The first endpoint (0, 0) is closest to the target line y=1.
+    assert link[0] == (0, 0)
+    assert link[1] == pytest.approx((0.0, 1.0))

@@ -247,7 +247,7 @@ class Surface(BaseCClass):
         return self._get_ny()
 
     def getPointset(self) -> GeoPointset:
-        return self._get_pointset()
+        return self._get_pointset().setParent(self)
 
     def _assert_idx_or_i_and_j(self, idx, i, j):
         if idx is None:

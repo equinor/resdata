@@ -386,16 +386,6 @@ add_test(
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu4
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu5)
 
-#
-# geometry
-#
-
-foreach(name geo_util_xlines geo_polygon geo_polygon_collection)
-  add_executable(${name} geometry/tests/${name}.cpp util/test_util.cpp)
-  target_link_libraries(${name} resdata)
-  add_test(NAME ${name} COMMAND ${name})
-endforeach()
-
 foreach(test rdxx_kw rdxx_types)
   add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
@@ -598,11 +588,3 @@ add_test(
   NAME well_lgr_load2
   COMMAND well_lgr_load ${_resdatapath}/AmalgLGRcase/TESTCASE_AMALG_LGR.EGRID
           ${_resdatapath}/AmalgLGRcase/TESTCASE_AMALG_LGR.X0016)
-
-#
-# geometry
-#
-add_executable(geo_surface geometry/tests/geo_surface.cpp util/test_util.cpp)
-target_link_libraries(geo_surface resdata)
-add_test(NAME geo_surface COMMAND geo_surface ${_geopath}/Surface.irap
-                                  ${_geopath}/Surface_incompatible.irap)

@@ -1,5 +1,6 @@
 import gc
 
+import pytest
 from resdata.geometry import CPolyline, CPolylineCollection
 from resdata.geometry.xyz_io import XYZIo
 from resdata.util.util import DoubleVector
@@ -123,3 +124,47 @@ class CPolylineCollectionTest(ResdataTest):
         tail = p2[-1]
         self.assertEqual(tail, (20, 120))
         self.assertEqual(p2.getName(), "POLY2")
+
+
+def test_that_negative_index_counts_from_the_end():
+    collection = CPolylineCollection()
+    collection.createPolyline(name="first")
+    collection.createPolyline(name="second")
+
+    assert collection[-1].getName() == "second"
+
+
+def test_that_indexing_with_a_non_int_non_str_raises_type_error():
+    collection = CPolylineCollection()
+
+    with pytest.raises(TypeError, match="must be string or integer"):
+        collection[1.5]
+
+
+def test_that_naming_an_existing_cpolyline_object_raises_value_error():
+    collection = CPolylineCollection()
+    polyline = CPolyline(name="border", init_points=[(0, 0), (1, 1)])
+
+    with pytest.raises(ValueError, match="name keyword argument"):
+        collection.addPolyline(polyline, name="other")
+
+
+def test_that_creating_two_polylines_with_the_same_name_raises_key_error():
+    collection = CPolylineCollection()
+    collection.createPolyline(name="border")
+
+    with pytest.raises(KeyError, match="already has an object"):
+        collection.createPolyline(name="border")
+
+
+def test_that_a_reference_polyline_can_be_added_to_another_collection():
+    source = CPolylineCollection()
+    source.createPolyline(name="border")
+    reference = source["border"]
+    assert reference.isReference()
+
+    target = CPolylineCollection()
+    target.addPolyline(reference)
+
+    assert "border" in target
+    assert len(target) == 1
