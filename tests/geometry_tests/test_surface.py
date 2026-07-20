@@ -1,5 +1,8 @@
 import random
 
+import hypothesis.strategies as st
+import pytest
+from hypothesis import given
 from resdata.geometry import Surface
 
 from tests import ResdataTest
@@ -225,3 +228,170 @@ class SurfaceTest(ResdataTest):
 
         xy = s.getXY(-1)
         self.assertEqual((xstart + xinc * (nx - 1), ystart + yinc * (ny - 1)), xy)
+
+
+def _make_surface(nx=3, ny=2):
+    return Surface(nx=nx, ny=ny, xinc=1.0, yinc=1.0, xstart=0.0, ystart=0.0, angle=0.0)
+
+
+def test_that_a_surface_is_not_equal_to_a_non_surface():
+    surface = _make_surface()
+
+    assert surface != 5
+
+
+def test_that_subtracting_incompatible_surfaces_raises_value_error():
+    surface = _make_surface(3, 2)
+    other = _make_surface(2, 2)
+
+    with pytest.raises(ValueError, match="incompatible surfaces"):
+        surface -= other
+
+
+def test_that_multiplying_incompatible_surfaces_raises_value_error():
+    surface = _make_surface(3, 2)
+    other = _make_surface(2, 2)
+
+    with pytest.raises(ValueError, match="ncompatible surfaces"):
+        surface *= other
+
+
+def test_that_subtracting_a_scalar_shifts_every_value():
+    surface = _make_surface()
+    surface.assign(5.0)
+
+    surface -= 2.0
+
+    assert all(surface[i] == pytest.approx(3.0) for i in range(len(surface)))
+
+
+def test_that_idiv_scales_every_value_by_the_inverse():
+    surface = _make_surface()
+    surface.assign(8.0)
+
+    result = surface.__idiv__(2.0)
+
+    assert all(result[i] == pytest.approx(4.0) for i in range(len(result)))
+
+
+def test_that_div_returns_a_scaled_copy_without_mutating_the_original():
+    surface = _make_surface()
+    surface.assign(8.0)
+
+    copy = surface.__div__(2.0)
+
+    assert all(copy[i] == pytest.approx(4.0) for i in range(len(copy)))
+    assert all(surface[i] == pytest.approx(8.0) for i in range(len(surface)))
+
+
+def test_that_setting_a_value_with_a_non_int_index_raises_type_error():
+    surface = _make_surface()
+
+    with pytest.raises(TypeError, match="must be integer"):
+        surface["x"] = 1.0
+
+
+def test_that_getxy_out_of_range_raises_index_error():
+    surface = _make_surface()
+
+    with pytest.raises(IndexError):
+        surface.getXY(len(surface) + 10)
+
+
+def test_that_getxy_with_a_non_int_index_raises_type_error():
+    surface = _make_surface()
+
+    with pytest.raises(TypeError, match="must be integer"):
+        surface.getXY("x")
+
+
+def test_that_getxyz_without_idx_or_ij_raises_value_error():
+    surface = _make_surface()
+
+    with pytest.raises(ValueError, match="i and j must be ints"):
+        surface.getXYZ()
+
+
+def test_that_getxyz_with_both_idx_and_ij_raises_value_error():
+    surface = _make_surface()
+
+    with pytest.raises(ValueError, match="i and j must be None"):
+        surface.getXYZ(idx=0, i=1)
+
+
+def test_that_getxyz_with_out_of_range_ij_raises_index_error():
+    surface = _make_surface(3, 2)
+
+    with pytest.raises(IndexError, match="Index error"):
+        surface.getXYZ(i=100, j=0)
+
+
+def test_that_getxyz_by_index_matches_getxyz_by_ij():
+    surface = _make_surface(3, 2)
+    surface.assign(1.0)
+
+    idx = 1 * surface.getNX() + 2  # j=1, i=2
+
+    assert surface.getXYZ(idx=idx) == surface.getXYZ(i=2, j=1)
+
+
+# The irap ascii format stores values with four decimals, so we quantize every
+# input to four decimals to make the write/read round trip lossless.
+def _quantized_floats(min_value, max_value):
+    return st.floats(
+        min_value=min_value,
+        max_value=max_value,
+        allow_nan=False,
+        allow_infinity=False,
+    ).map(lambda value: round(value, 4))
+
+
+@st.composite
+def surfaces(draw):
+    nx = draw(st.integers(min_value=1, max_value=8))
+    ny = draw(st.integers(min_value=1, max_value=8))
+    surface = draw(
+        st.builds(
+            Surface,
+            nx=st.just(nx),
+            ny=st.just(ny),
+            xinc=_quantized_floats(0.1, 1000.0),
+            yinc=_quantized_floats(0.1, 1000.0),
+            xstart=_quantized_floats(-10000.0, 10000.0),
+            ystart=_quantized_floats(-10000.0, 10000.0),
+            angle=_quantized_floats(-180.0, 180.0),
+        )
+    )
+    zvalues = draw(
+        st.lists(
+            _quantized_floats(-10000.0, 10000.0),
+            min_size=nx * ny,
+            max_size=nx * ny,
+        )
+    )
+    for index, zvalue in enumerate(zvalues):
+        surface[index] = zvalue
+    return surface
+
+
+@given(surface=surfaces())
+def test_that_writing_and_reading_a_surface_returns_an_equal_surface(
+    surface, tmp_path_factory
+):
+    path = tmp_path_factory.mktemp("surface_roundtrip") / "surface.irap"
+
+    surface.write(str(path))
+
+    assert Surface(filename=str(path)) == surface
+
+
+def test_that_writing_a_surface_creates_missing_parent_directories(tmp_path):
+    surface = _make_surface()
+    path = tmp_path / "missing" / "nested" / "surface.irap"
+
+    assert not path.parent.exists()
+
+    surface.write(str(path))
+
+    assert path.exists()
+    assert Surface(filename=str(path)) == surface

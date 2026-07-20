@@ -1,3 +1,4 @@
+import pytest
 from resdata.geometry import CPolyline, GeoPointset, GeoRegion, Surface
 
 from tests import ResdataTest
@@ -84,3 +85,47 @@ class GeoRegionTest(ResdataTest):
             georegion.select_above(((2,), (1, 3)))
         with self.assertRaises(ValueError):
             georegion.select_above((("not-a-number", 2), (1, 3)))
+
+
+def _make_region(preselect=False):
+    surface = Surface(nx=3, ny=2, xinc=1.0, yinc=1.0, xstart=0.0, ystart=0.0, angle=0.0)
+    surface.assign(1.0)
+    pointset = surface.getPointset()
+    return GeoRegion(pointset, preselect=preselect)
+
+
+def test_that_selecting_with_a_non_polyline_raises_value_error():
+    region = _make_region()
+
+    with pytest.raises(ValueError, match="Need to select with a CPolyline"):
+        region.select_inside("not a polyline")
+
+
+def test_that_selecting_inside_a_covering_polygon_selects_every_point():
+    region = _make_region()
+    polygon = CPolyline(init_points=[(-1, -1), (10, -1), (10, 10), (-1, 10), (-1, -1)])
+
+    region.select_inside(polygon)
+
+    assert len(region) == 6
+
+
+def test_that_selecting_above_and_deselecting_below_a_line_are_consistent():
+    region = _make_region()
+    line = ((-1.0, 0.5), (10.0, 0.5))
+
+    region.select_above(line)
+    selected_above = len(region)
+
+    region.deselect_below(line)
+
+    # Deselecting below a line the points are already above should be a no-op.
+    assert len(region) == selected_above
+    assert selected_above > 0
+
+
+def test_that_preselected_region_starts_with_all_points_active():
+    region = _make_region(preselect=True)
+
+    assert len(region) == 6
+    assert "preselected" in repr(region)

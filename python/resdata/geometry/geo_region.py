@@ -49,6 +49,10 @@ class GeoRegion(BaseCClass):
         c_ptr = self._alloc(pointset, self._preselect)
         if c_ptr:
             super().__init__(c_ptr)
+            # The C geo_region only borrows the pointset, so we must keep a
+            # reference to it (and, transitively, whatever owns its memory)
+            # alive for as long as the region exists.
+            self._pointset = pointset
         else:
             raise ValueError(
                 "Could not construct GeoRegion from pointset %s." % pointset

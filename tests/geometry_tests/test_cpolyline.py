@@ -1,5 +1,6 @@
 import math
 
+import pytest
 from resdata.geometry import CPolyline, Polyline
 from resdata.geometry.xyz_io import XYZIo
 
@@ -162,3 +163,75 @@ class CPolylineTest(ResdataTest):
         x, y = pl.unzip()
         self.assertEqual(x, [0, 1, 2])
         self.assertEqual(y, [3, 4, 5])
+
+
+def test_that_repr_matches_str():
+    polyline = CPolyline(name="border", init_points=[(0, 0), (1, 1)])
+
+    assert repr(polyline) == str(polyline)
+
+
+def test_that_adding_two_polylines_concatenates_their_points():
+    first = CPolyline(init_points=[(0, 0), (1, 1)])
+    second = CPolyline(init_points=[(2, 2), (3, 3)])
+
+    joined = first + second
+
+    assert len(joined) == 4
+    assert joined[0] == pytest.approx((0, 0))
+    assert joined[3] == pytest.approx((3, 3))
+
+
+def test_that_right_adding_a_point_sequence_prepends_it():
+    polyline = CPolyline(init_points=[(2, 2), (3, 3)])
+
+    joined = [(0, 0), (1, 1)] + polyline
+
+    assert len(joined) == 4
+    assert joined[0] == pytest.approx((0, 0))
+    assert joined[3] == pytest.approx((3, 3))
+
+
+def test_that_segment_length_of_empty_polyline_raises_value_error():
+    polyline = CPolyline(name="empty")
+
+    with pytest.raises(ValueError, match="zero point polyline"):
+        polyline.segmentLength()
+
+
+def test_that_unzip2_returns_separate_x_and_y_lists():
+    polyline = CPolyline(init_points=[(1, 2), (3, 4)])
+
+    x, y = polyline.unzip2()
+
+    assert x == pytest.approx([1, 3])
+    assert y == pytest.approx([2, 4])
+
+
+def test_that_getitem_with_non_integer_index_raises_type_error():
+    polyline = CPolyline(init_points=[(0, 0), (1, 1)])
+
+    with pytest.raises(TypeError, match="Index argument must be integer"):
+        polyline["first"]
+
+
+def test_that_connect_links_the_nearest_endpoint_to_the_target():
+    polyline = CPolyline(init_points=[(0, 0), (0, 5)])
+    target = CPolyline(init_points=[(-5, 1), (5, 1)])
+
+    link = polyline.connect(target)
+
+    # The first endpoint (0, 0) is closest to the target line y=1.
+    assert link[0] == pytest.approx((0, 0))
+    assert link[1] == pytest.approx((0.0, 1.0))
+
+
+def test_that_connect_uses_the_last_endpoint_when_it_is_closer():
+    polyline = CPolyline(init_points=[(0, 5), (0, 0)])
+    target = CPolyline(init_points=[(-5, 1), (5, 1)])
+
+    link = polyline.connect(target)
+
+    # The last endpoint (0, 0) is closest to the target line y=1.
+    assert link[0] == pytest.approx((0, 0))
+    assert link[1] == pytest.approx((0.0, 1.0))
