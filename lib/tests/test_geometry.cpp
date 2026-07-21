@@ -133,6 +133,174 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
     }
 }
 
+TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
+    GIVEN("A square polygon with vertical edges at x=0 and x=10") {
+        auto polygon = make_geo_polygon("square");
+        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
+        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
+        geo_polygon_close(polygon.get());
+
+        WHEN("Checking an interior point with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, true);
+
+            THEN("The interior point is reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+
+        WHEN("Checking a point off a vertical edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 20.0, true);
+
+            THEN("The outside point is reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+
+        WHEN("Checking a point on a vertical edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 0.0, 5.0, true);
+
+            THEN("The point on the vertical edge is reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+    }
+}
+
+TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
+    GIVEN("A square polygon with horizontal edges at y=0 and y=10") {
+        auto polygon = make_geo_polygon("square");
+        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
+        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
+        geo_polygon_close(polygon.get());
+
+        WHEN("Checking a point on a horizontal edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 0.0, true);
+
+            THEN("The point on the horizontal edge is reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+
+        WHEN("Checking a point off a horizontal edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 20.0, 0.0, true);
+
+            THEN("The outside point is reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+    }
+}
+
+TEST_CASE("geo_polygon_contains_point handles general sloped edges",
+          "[geometry]") {
+    GIVEN("A triangular polygon with a sloped hypotenuse") {
+        auto polygon = make_geo_polygon("triangle");
+        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
+        geo_polygon_close(polygon.get());
+
+        WHEN("Checking a point on the sloped edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, true);
+
+            THEN("The point on the sloped edge is reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+
+        WHEN("Checking a point on the line of the sloped edge, but beyond "
+             "its endpoints, with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 20.0, -10.0, true);
+
+            THEN("The outside point is reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+
+        WHEN("Checking a point off the sloped edge with force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 8.0, 8.0, true);
+
+            THEN("The outside point is reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+    }
+}
+
+TEST_CASE("geo_polygon_contains_point ray casting without force_edge_inside",
+          "[geometry]") {
+    GIVEN("A square polygon") {
+        auto polygon = make_geo_polygon("square");
+        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
+        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
+        geo_polygon_close(polygon.get());
+
+        WHEN("Checking an interior point without force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, false);
+
+            THEN("The interior point is reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+
+        WHEN("Checking an exterior point without force_edge_inside") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 20.0, 20.0, false);
+
+            THEN("The exterior point is reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+    }
+}
+
+TEST_CASE("geo_polygon_contains_point ignores degenerate zero-length edges",
+          "[geometry]") {
+    GIVEN("A square polygon with a duplicated point creating a zero-length "
+          "edge") {
+        auto polygon = make_geo_polygon("square_with_duplicate");
+        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
+        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
+        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
+        geo_polygon_close(polygon.get());
+
+        WHEN("Checking an interior point") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, false);
+
+            THEN("The interior point is still reported as inside") {
+                REQUIRE(inside == true);
+            }
+        }
+
+        WHEN("Checking an exterior point") {
+            bool inside =
+                geo_polygon_contains_point(polygon.get(), 20.0, 20.0, false);
+
+            THEN("The exterior point is still reported as outside") {
+                REQUIRE(inside == false);
+            }
+        }
+    }
+}
+
 TEST_CASE("geo_region index list management", "[geometry]") {
     GIVEN("A pointset with 5 points") {
         auto pointset = make_geo_pointset(true);

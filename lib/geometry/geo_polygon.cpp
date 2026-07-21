@@ -65,34 +65,27 @@ void geo_polygon_close(geo_polygon_type *polygon) {
     geo_polygon_add_point(polygon, x, y);
 }
 
-static bool on_edge(double _x1, double _y1, double _x2, double _y2, double x0,
+static bool on_edge(double x1, double y1, double x2, double y2, double x0,
                     double y0) {
-    double x1 = util_double_min(_x1, _x2);
-    double x2 = util_double_max(_x1, _x2);
-    double y1 = util_double_min(_y1, _y2);
-    double y2 = util_double_max(_y1, _y2);
+    double xmin = util_double_min(x1, x2);
+    double xmax = util_double_max(x1, x2);
+    double ymin = util_double_min(y1, y2);
+    double ymax = util_double_max(y1, y2);
 
-    {
-        /* Vertical line */
-        if (((x1 == x2) && (x0 == x1)) && ((y1 <= y0) && (y0 <= y2)))
-            return true;
+    /* Vertical line */
+    if (x1 == x2)
+        return (x0 == x1) && (ymin <= y0) && (y0 <= ymax);
 
-        /* Horizontal line */
-        if (((x1 <= x0) && (x0 <= x2)) && ((y1 == y2) && (y0 == y1)))
-            return true;
+    /* Horizontal line */
+    if (y1 == y2)
+        return (xmin <= x0) && (x0 <= xmax) && (y0 == y1);
 
-        /* General slope */
-        {
-            double a = (y2 - y1) / (x2 - x1);
-            double yc = a * (x0 - x1) + y1;
+    /* General slope */
+    double a = (y2 - y1) / (x2 - x1);
+    double yc = a * (x0 - x1) + y1;
 
-            if (yc == y0) {
-                if ((x1 <= x0) && (x0 <= x2))
-                    return true;
-            }
-        }
-        return false;
-    }
+    return (yc == y0) && (xmin <= x0) && (x0 <= xmax) && (ymin <= y0) &&
+           (y0 <= ymax);
 }
 
 /*
