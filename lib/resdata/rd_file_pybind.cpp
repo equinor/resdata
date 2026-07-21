@@ -510,8 +510,12 @@ PYBIND11_MODULE(rd_file, m) {
                     throw py::index_error(
                         fmt::format("Too large index: {}",
                                     py::str(index).cast<std::string>()));
-                return create_kw_reference(
+                auto kw = create_kw_reference(
                     view->get_kw(kw_name, index.cast<size_t>()), py_self);
+                if (copy)
+                    return ResdataKW().attr("copy")(kw);
+                else
+                    return kw;
             },
             py::arg("kw_name"), py::arg("index"), py::arg("copy") = false)
         .def(
