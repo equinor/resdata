@@ -83,7 +83,7 @@ class Surface(BaseCClass):
             if self.headerEqual(other):
                 _surface._imul(self, other)
             else:
-                raise ValueError("Tried to add multiply ncompatible surfaces")
+                raise ValueError("Tried to multiply incompatible surfaces")
         else:
             _surface._scale(self, other)
         return self

@@ -252,7 +252,7 @@ def test_that_multiplying_incompatible_surfaces_raises_value_error():
     surface = _make_surface(3, 2)
     other = _make_surface(2, 2)
 
-    with pytest.raises(ValueError, match="ncompatible surfaces"):
+    with pytest.raises(ValueError, match="incompatible surfaces"):
         surface *= other
 
 
