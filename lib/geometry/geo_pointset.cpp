@@ -68,8 +68,8 @@ geo_pointset_get_zcoord(const geo_pointset_type *pointset) {
 }
 
 static void geo_pointset_assert_index(const geo_pointset_type *pointset,
-                                      int index) {
-    if ((index < 0) || (static_cast<size_t>(index) >= pointset->xcoord.size()))
+                                      size_t index) {
+    if (index >= pointset->xcoord.size())
         throw std::out_of_range(
             "invalid pointset index " + std::to_string(index) +
             ", size: " + std::to_string(pointset->xcoord.size()));
@@ -86,7 +86,7 @@ static void geo_pointset_assert_zindex(const geo_pointset_type *pointset,
         throw std::runtime_error("z coordinate not set");
 }
 
-void geo_pointset_iget_xy(const geo_pointset_type *pointset, int index,
+void geo_pointset_iget_xy(const geo_pointset_type *pointset, size_t index,
                           double *x, double *y) {
     geo_pointset_assert_index(pointset, index);
     *x = pointset->xcoord[index];

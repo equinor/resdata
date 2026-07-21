@@ -266,7 +266,9 @@ geo_pointset_type *geo_surface_get_pointset(const geo_surface_type *surface) {
 void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
                          double *y) {
     const geo_pointset_type *pointset = geo_surface_get_pointset(surface);
-    geo_pointset_iget_xy(pointset, index, x, y);
+    if (index < 0)
+        throw std::out_of_range("Index was negative: " + std::to_string(index));
+    geo_pointset_iget_xy(pointset, static_cast<size_t>(index), x, y);
 }
 
 int geo_surface_get_size(const geo_surface_type *surface) {

@@ -16,9 +16,7 @@ struct geo_region_struct {
     int_vector_ptr index_list{nullptr, int_vector_free};
     const geo_pointset_type *pointset;
 
-    [[nodiscard]] int size() const {
-        return static_cast<int>(active_mask.size());
-    }
+    [[nodiscard]] size_t size() const { return active_mask.size(); }
 };
 
 geo_region_type *geo_region_alloc(const geo_pointset_type *pointset,
@@ -41,16 +39,17 @@ static void geo_region_invalidate_index_list(geo_region_type *region) {
 static void geo_region_assert_index_list(geo_region_type *region) {
     if (!region->index_valid) {
         int_vector_reset(region->index_list.get());
-        for (int i = 0; i < region->size(); i++)
+        for (size_t i = 0; i < region->size(); i++)
             if (region->active_mask[i])
-                int_vector_append(region->index_list.get(), i);
+                int_vector_append(region->index_list.get(),
+                                  static_cast<int>(i));
 
         region->index_valid = true;
     }
 }
 
 void geo_region_reset(geo_region_type *region) {
-    for (int i = 0; i < region->size(); i++)
+    for (size_t i = 0; i < region->size(); i++)
         region->active_mask[i] = region->preselect;
     geo_region_invalidate_index_list(region);
 }
@@ -61,7 +60,7 @@ static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
 
-    for (int i = 0; i < region->size(); i++) {
+    for (size_t i = 0; i < region->size(); i++) {
         double x, y;
         bool is_inside;
         geo_pointset_iget_xy(region->pointset, i, &x, &y);
@@ -100,7 +99,7 @@ static void geo_region_select_line__(geo_region_type *region,
     double vx = xcoords[1] - xcoords[0]; // Vector from point 1 to point 2
     double vy = ycoords[1] - ycoords[0];
 
-    for (int i = 0; i < region->size(); i++) {
+    for (size_t i = 0; i < region->size(); i++) {
         bool above;
         double x, y;
         double px, py;
