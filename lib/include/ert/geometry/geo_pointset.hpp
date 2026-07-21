@@ -9,7 +9,7 @@ void geo_pointset_free(geo_pointset_type *pointset);
 void geo_pointset_add_xyz(geo_pointset_type *pointset, double x, double y,
                           double z);
 int geo_pointset_get_size(const geo_pointset_type *pointset);
-void geo_pointset_iget_xy(const geo_pointset_type *pointset, int index,
+void geo_pointset_iget_xy(const geo_pointset_type *pointset, size_t index,
                           double *x, double *y);
 const std::vector<double> &
 geo_pointset_get_zcoord(const geo_pointset_type *pointset);
