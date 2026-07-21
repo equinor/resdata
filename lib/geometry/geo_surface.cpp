@@ -1,17 +1,24 @@
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
+
+#include <filesystem>
+#include <ios>
+#include <iomanip>
+#include <istream>
+#include <ostream>
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <optional>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_pointset.hpp>
 #include <ert/geometry/geo_surface.hpp>
 
 #define __PI 3.14159265
-#define GEO_SURFACE_TYPE_ID 111743
-
 struct geo_surface_struct {
-    UTIL_TYPE_ID_DECLARATION;
     // Irap data:
     int nx, ny;
     double rot_angle; // Radians
@@ -20,7 +27,7 @@ struct geo_surface_struct {
     double vec1[2];
     double vec2[2];
 
-    geo_pointset_type *pointset;
+    geo_pointset_ptr pointset{nullptr, geo_pointset_free};
 };
 
 static void geo_surface_copy_header(const geo_surface_type *src,
@@ -38,15 +45,14 @@ static void geo_surface_copy_header(const geo_surface_type *src,
 }
 
 static geo_surface_type *geo_surface_alloc_empty(bool internal_z) {
-    geo_surface_type *surface =
-        (geo_surface_type *)util_malloc(sizeof *surface);
-    UTIL_TYPE_ID_INIT(surface, GEO_SURFACE_TYPE_ID)
-    surface->pointset = geo_pointset_alloc(internal_z);
+    geo_surface_type *surface = new geo_surface_struct();
+    surface->pointset.reset(geo_pointset_alloc(internal_z));
     return surface;
 }
 
-static void geo_surface_init_regular(geo_surface_type *surface,
-                                     const double *zcoord) {
+static void
+geo_surface_init_regular(geo_surface_type *surface,
+                         const std::optional<std::vector<double>> &zcoord) {
     int zstride_nx = 1;
     int zstride_ny = surface->nx;
 
@@ -56,88 +62,82 @@ static void geo_surface_init_regular(geo_surface_type *surface,
                        iy * surface->vec2[0];
             double y = surface->origo[1] + ix * surface->vec1[1] +
                        iy * surface->vec2[1];
-            if (zcoord != NULL) {
+            if (zcoord) {
                 int z_index = ix * zstride_nx + iy * zstride_ny;
-                geo_pointset_add_xyz(surface->pointset, x, y, zcoord[z_index]);
+                geo_pointset_add_xyz(surface->pointset.get(), x, y,
+                                     (*zcoord)[z_index]);
             } else
-                geo_pointset_add_xyz(surface->pointset, x, y, 0);
+                geo_pointset_add_xyz(surface->pointset.get(), x, y, 0);
         }
     }
 }
 
-static bool geo_surface_fscanf_zcoord(const geo_surface_type *surface,
-                                      FILE *stream, double *zcoord) {
-    int index = 0;
-
-    while (true) {
-        if (fscanf(stream, "%lg", &zcoord[index]) == 1)
-            index++;
-        else
-            return false; // File is too short
-
-        if (index == surface->nx * surface->ny) {
-            double extra_value;
-            int fscanf_return = fscanf(stream, "%lg", &extra_value);
-            return (fscanf_return ==
-                    EOF); // no more data dangling at the end of the file.
-        }
+static void geo_surface_fscanf_zcoord(std::istream &stream,
+                                      std::vector<double> &zcoord) {
+    for (double &z : zcoord) {
+        if (!(stream >> z))
+            throw std::invalid_argument(
+                "Failed to read irap file: too few zcoord values");
     }
+    double extra_value;
+    if (stream >> extra_value)
+        throw std::invalid_argument(
+            "Failed to read irap file: too many zcoord values");
 }
 
 static void geo_surface_fprintf_irap_header(const geo_surface_type *surface,
-                                            FILE *stream) {
-    const char *float_fmt = "%12.4f\n";
-    const char *int_fmt = "%d\n";
+                                            std::ostream &stream) {
 
-    fprintf(stream, int_fmt, -996);
-    fprintf(stream, int_fmt, surface->ny);
-    fprintf(stream, float_fmt, surface->cell_size[0]);
-    fprintf(stream, float_fmt, surface->cell_size[1]);
-    fprintf(stream, float_fmt, surface->origo[0]);
-    fprintf(stream, float_fmt,
-            surface->origo[0] + surface->cell_size[0] * (surface->nx - 1));
-    fprintf(stream, float_fmt, surface->origo[1]);
-    fprintf(stream, float_fmt,
-            surface->origo[1] + surface->cell_size[1] * (surface->ny - 1));
-    fprintf(stream, int_fmt, surface->nx);
-    fprintf(stream, float_fmt, surface->rot_angle * 180 / __PI);
-    fprintf(stream, float_fmt, surface->origo[0]);
-    fprintf(stream, float_fmt, surface->origo[1]);
-    fprintf(stream, "0  0  0  0  0  0  0  \n");
+    stream << -996 << "\n"
+           << surface->ny << "\n"
+           << std::setw(12) << surface->cell_size[0] << "\n"
+           << std::setw(12) << surface->cell_size[1] << "\n"
+           << std::setw(12) << surface->origo[0] << "\n"
+           << std::setw(12)
+           << surface->origo[0] + surface->cell_size[0] * (surface->nx - 1)
+           << "\n"
+           << std::setw(12) << surface->origo[1] << "\n"
+           << std::setw(12)
+           << surface->origo[1] + surface->cell_size[1] * (surface->ny - 1)
+           << "\n"
+           << surface->nx << "\n"
+           << std::setw(12) << surface->rot_angle * 180 / __PI << "\n"
+           << std::setw(12) << surface->origo[0] << "\n"
+           << std::setw(12) << surface->origo[1] << "\n"
+           << "0  0  0  0  0  0  0  \n";
 }
 
 static void geo_surface_fprintf_zcoord(const geo_surface_type *surface,
-                                       FILE *stream) {
-    const auto &zcoord = geo_pointset_get_zcoord(surface->pointset);
+                                       std::ofstream &stream) {
+    const auto &zcoord = geo_pointset_get_zcoord(surface->pointset.get());
     int num_columns = 6;
-    const char *fmt = "%12.4f  ";
     for (size_t i = 0; i < zcoord.size(); i++) {
-        fprintf(stream, fmt, zcoord[i]);
+        stream << std::setw(12) << zcoord[i] << " ";
 
         if (((i + 1) % num_columns) == 0)
-            fprintf(stream, "\n");
+            stream << "\n";
     }
-}
-
-static void geo_surface_fprintf_irap__(const geo_surface_type *surface,
-                                       const char *filename) {
-    FILE *stream = util_mkdir_fopen(filename, "w");
-    {
-        geo_surface_fprintf_irap_header(surface, stream);
-        geo_surface_fprintf_zcoord(surface, stream);
-    }
-    fclose(stream);
 }
 
 void geo_surface_fprintf_irap(const geo_surface_type *surface,
-                              const char *filename) {
-    geo_surface_fprintf_irap__(surface, filename);
+                              const std::string &filename) {
+    std::filesystem::path path(filename);
+    if (path.has_parent_path())
+        std::filesystem::create_directories(path.parent_path());
+
+    std::ofstream stream(filename);
+    stream << std::setprecision(4) << std::fixed;
+    if (!stream)
+        throw std::ios_base::failure("Could not open file " + filename);
+
+    geo_surface_fprintf_irap_header(surface, stream);
+    geo_surface_fprintf_zcoord(surface, stream);
 }
 
 geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
                                         double yinc, double xstart,
                                         double ystart, double angle) {
-    geo_surface_type *surface = geo_surface_alloc_empty(true);
+    geo_surface_ptr surface{geo_surface_alloc_empty(true), geo_surface_free};
 
     surface->origo[0] = xstart;
     surface->origo[1] = ystart;
@@ -153,73 +153,64 @@ geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
 
     surface->cell_size[0] = xinc;
     surface->cell_size[1] = yinc;
-    geo_surface_init_regular(surface, NULL);
-    return surface;
+    geo_surface_init_regular(surface.get(), std::nullopt);
+    return surface.release();
 }
 
 static void geo_surface_fload_irap_header(geo_surface_type *surface,
-                                          FILE *stream) {
-    int const996;
-    int ny, nx;
+                                          std::istream &stream) {
+    int const996, ny, nx;
     double xinc, yinc, xstart, xend, ystart, yend, angle;
 
-    if (fscanf(stream, "%d  %d  %lg  %lg  %lg  %lg  %lg  %lg  %d  %lg",
-               &const996, &ny, &xinc, &yinc, &xstart, &xend, &ystart, &yend,
-               &nx, &angle) == 10) {
-        {
-            // Some information is rewritten/not used.
-            double d;
-            int i;
-            if (fscanf(stream, "%lg %lg %d %d %d %d %d %d %d ", &d, &d, &i, &i,
-                       &i, &i, &i, &i, &i) != 9)
-                util_abort("%s: reading irap header failed \n", __func__);
-        }
+    if (!(stream >> const996 >> ny >> xinc >> yinc >> xstart >> xend >>
+          ystart >> yend >> nx >> angle))
+        throw std::invalid_argument("reading irap header failed");
 
-        surface->origo[0] = xstart;
-        surface->origo[1] = ystart;
-        surface->rot_angle = angle * __PI / 180.0;
-        surface->nx = nx;
-        surface->ny = ny;
+    {
+        // Some information is rewritten/not used.
+        double d;
+        int i;
+        if (!(stream >> d >> d >> i >> i >> i >> i >> i >> i >> i))
+            throw std::invalid_argument("reading irap header failed");
+    }
 
-        surface->vec1[0] = xinc * cos(surface->rot_angle);
-        surface->vec1[1] = xinc * sin(surface->rot_angle);
+    surface->origo[0] = xstart;
+    surface->origo[1] = ystart;
+    surface->rot_angle = angle * __PI / 180.0;
+    surface->nx = nx;
+    surface->ny = ny;
 
-        surface->vec2[0] = -yinc * sin(surface->rot_angle);
-        surface->vec2[1] = yinc * cos(surface->rot_angle);
+    surface->vec1[0] = xinc * cos(surface->rot_angle);
+    surface->vec1[1] = xinc * sin(surface->rot_angle);
 
-        surface->cell_size[0] = xinc;
-        surface->cell_size[1] = yinc;
-    } else
-        util_abort("%s: reading irap header failed\n", __func__);
+    surface->vec2[0] = -yinc * sin(surface->rot_angle);
+    surface->vec2[1] = yinc * cos(surface->rot_angle);
+
+    surface->cell_size[0] = xinc;
+    surface->cell_size[1] = yinc;
 }
 
-static bool geo_surface_fload_irap(geo_surface_type *surface,
-                                   const char *filename, bool loadz) {
-    bool read_ok = true;
+static void geo_surface_fload_irap(geo_surface_type *surface,
+                                   const std::string &filename, bool loadz) {
+    std::ifstream stream(filename);
+    if (!stream)
+        throw std::ios_base::failure("Could not open file " + filename);
+    geo_surface_fload_irap_header(surface, stream);
     {
-        FILE *stream = util_fopen(filename, "r");
-        geo_surface_fload_irap_header(surface, stream);
-        {
-            double *zcoord = NULL;
-
-            if (loadz) {
-                if (surface->nx < 0 || surface->ny < 0)
-                    util_abort("%s : surface size was negative: %dx%d\n",
-                               __func__, surface->nx, surface->ny);
-                zcoord =
-                    (double *)util_calloc(static_cast<size_t>(surface->nx) *
-                                              static_cast<size_t>(surface->ny),
-                                          sizeof *zcoord);
-                read_ok = geo_surface_fscanf_zcoord(surface, stream, zcoord);
-            }
-
-            if (read_ok)
-                geo_surface_init_regular(surface, zcoord);
-            free(zcoord);
+        std::optional<std::vector<double>> zcoord = std::nullopt;
+        if (loadz) {
+            if (surface->nx < 0 || surface->ny < 0)
+                throw std::invalid_argument("surface size was negative: " +
+                                            std::to_string(surface->nx) + "x" +
+                                            std::to_string(surface->ny));
+            zcoord = std::make_optional<std::vector<double>>(
+                static_cast<size_t>(surface->nx) *
+                static_cast<size_t>(surface->ny));
+            geo_surface_fscanf_zcoord(stream, *zcoord);
         }
-        fclose(stream);
+
+        geo_surface_init_regular(surface, zcoord);
     }
-    return read_ok;
 }
 
 bool geo_surface_equal_header(const geo_surface_type *surface1,
@@ -245,63 +236,31 @@ bool geo_surface_equal_header(const geo_surface_type *surface1,
     return equal;
 }
 
-/**
-   The loading will fail hard if the header of surface does not agree
-   with the header found in file.
-*/
-
-bool geo_surface_fload_irap_zcoord(const geo_surface_type *surface,
-                                   const char *filename, double *zcoord) {
-    FILE *stream = util_fopen__(filename, "r");
-    if (stream) {
-        bool loadOK = true;
-        {
-            geo_surface_type *tmp_surface = geo_surface_alloc_empty(false);
-
-            geo_surface_fload_irap_header(tmp_surface, stream);
-            loadOK = geo_surface_equal_header(surface, tmp_surface);
-            geo_surface_free(tmp_surface);
-        }
-        if (loadOK)
-            loadOK = geo_surface_fscanf_zcoord(surface, stream, zcoord);
-
-        fclose(stream);
-        return loadOK;
-    } else
-        return false;
-}
-
-geo_surface_type *geo_surface_fload_alloc_irap(const char *filename,
+geo_surface_type *geo_surface_fload_alloc_irap(const std::string &filename,
                                                bool loadz) {
-    geo_surface_type *surface = geo_surface_alloc_empty(loadz);
-    bool load_ok = geo_surface_fload_irap(surface, filename, loadz);
-    if (!load_ok) {
-        geo_surface_free(surface);
-        surface = NULL;
-    }
-    return surface;
+    geo_surface_ptr surface{geo_surface_alloc_empty(loadz), geo_surface_free};
+    geo_surface_fload_irap(surface.get(), filename, loadz);
+    return surface.release();
 }
 
 geo_surface_type *geo_surface_alloc_copy(const geo_surface_type *src,
                                          bool copy_zdata) {
-    geo_surface_type *target = geo_surface_alloc_empty(true);
+    geo_surface_ptr target{geo_surface_alloc_empty(true), geo_surface_free};
 
-    geo_surface_copy_header(src, target);
-    if (!geo_surface_equal_header(src, target))
-        util_abort("%s: headers not equal after copy \n", __func__);
+    geo_surface_copy_header(src, target.get());
+    if (!geo_surface_equal_header(src, target.get()))
+        throw std::runtime_error("headers not equal after copy");
 
-    geo_pointset_memcpy(src->pointset, target->pointset, copy_zdata);
+    geo_pointset_memcpy(src->pointset.get(), target->pointset.get(),
+                        copy_zdata);
 
-    return target;
+    return target.release();
 }
 
-void geo_surface_free(geo_surface_type *surface) {
-    geo_pointset_free(surface->pointset);
-    free(surface);
-}
+void geo_surface_free(geo_surface_type *surface) { delete surface; }
 
 geo_pointset_type *geo_surface_get_pointset(const geo_surface_type *surface) {
-    return surface->pointset;
+    return surface->pointset.get();
 }
 
 void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
@@ -311,7 +270,7 @@ void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
 }
 
 int geo_surface_get_size(const geo_surface_type *surface) {
-    return geo_pointset_get_size(surface->pointset);
+    return geo_pointset_get_size(surface->pointset.get());
 }
 
 int geo_surface_get_nx(const geo_surface_type *surface) { return surface->nx; }
@@ -321,55 +280,56 @@ int geo_surface_get_ny(const geo_surface_type *surface) { return surface->ny; }
 bool geo_surface_equal(const geo_surface_type *surface1,
                        const geo_surface_type *surface2) {
     if (geo_surface_equal_header(surface1, surface2))
-        return geo_pointset_equal(surface1->pointset, surface2->pointset);
+        return geo_pointset_equal(surface1->pointset.get(),
+                                  surface2->pointset.get());
     else
         return false;
 }
 
 double geo_surface_iget_zvalue(const geo_surface_type *surface, int index) {
-    return geo_pointset_iget_z(surface->pointset, index);
+    return geo_pointset_iget_z(surface->pointset.get(), index);
 }
 
 void geo_surface_iset_zvalue(geo_surface_type *surface, int index,
                              double value) {
-    return geo_pointset_iset_z(surface->pointset, index, value);
+    return geo_pointset_iset_z(surface->pointset.get(), index, value);
 }
 
 void geo_surface_assign_value(const geo_surface_type *src, double value) {
-    geo_pointset_assign_z(src->pointset, value);
+    geo_pointset_assign_z(src->pointset.get(), value);
 }
 
 void geo_surface_shift(const geo_surface_type *src, double value) {
-    geo_pointset_shift_z(src->pointset, value);
+    geo_pointset_shift_z(src->pointset.get(), value);
 }
 
 void geo_surface_scale(const geo_surface_type *src, double value) {
-    geo_pointset_scale_z(src->pointset, value);
+    geo_pointset_scale_z(src->pointset.get(), value);
 }
 
 void geo_surface_iadd(geo_surface_type *self, const geo_surface_type *other) {
     if (geo_surface_equal_header(self, other))
-        geo_pointset_iadd(self->pointset, other->pointset);
+        geo_pointset_iadd(self->pointset.get(), other->pointset.get());
     else
-        util_abort("%s: tried to combine incompatible surfaces\n", __func__);
+        throw std::invalid_argument("tried to combine incompatible surfaces");
 }
 
 void geo_surface_isub(geo_surface_type *self, const geo_surface_type *other) {
     if (geo_surface_equal_header(self, other))
-        geo_pointset_isub(self->pointset, other->pointset);
+        geo_pointset_isub(self->pointset.get(), other->pointset.get());
     else
-        util_abort("%s: tried to combine incompatible surfaces\n", __func__);
+        throw std::invalid_argument("tried to combine incompatible surfaces");
 }
 
 void geo_surface_imul(geo_surface_type *self, const geo_surface_type *other) {
     if (geo_surface_equal_header(self, other))
-        geo_pointset_imul(self->pointset, other->pointset);
+        geo_pointset_imul(self->pointset.get(), other->pointset.get());
     else
-        util_abort("%s: tried to combine incompatible surfaces\n", __func__);
+        throw std::invalid_argument("tried to combine incompatible surfaces");
 }
 
 void geo_surface_isqrt(geo_surface_type *surface) {
-    geo_pointset_isqrt(surface->pointset);
+    geo_pointset_isqrt(surface->pointset.get());
 }
 
 geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
