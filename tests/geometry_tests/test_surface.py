@@ -335,6 +335,30 @@ def test_that_getxyz_by_index_matches_getxyz_by_ij():
     assert surface.getXYZ(idx=idx) == surface.getXYZ(i=2, j=1)
 
 
+def test_that_loading_a_surface_with_a_malformed_header_raises_value_error(tmp_path):
+    path = tmp_path / "malformed_header.irap"
+    path.write_text("this is not a surface\n")
+
+    with pytest.raises(ValueError, match="reading irap header failed"):
+        Surface(str(path))
+
+
+def test_that_loading_a_surface_with_a_truncated_header_raises_value_error(tmp_path):
+    path = tmp_path / "truncated_header.irap"
+    path.write_text("-996 3 50 50 0 100 0 100 4 0\n0.0 0.0\n")
+
+    with pytest.raises(ValueError, match="reading irap header failed"):
+        Surface(str(path))
+
+
+def test_that_loading_a_surface_with_a_negative_size_raises_value_error(tmp_path):
+    path = tmp_path / "negative_size.irap"
+    path.write_text("-996 -3 50 50 0 100 0 100 -4 0\n0.0 0.0 0 0 0 0 0 0 0\n")
+
+    with pytest.raises(ValueError, match="surface size was negative"):
+        Surface(str(path))
+
+
 # The irap ascii format stores values with four decimals, so we quantize every
 # input to four decimals to make the write/read round trip lossless.
 def _quantized_floats(min_value, max_value):

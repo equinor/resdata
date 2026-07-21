@@ -20,7 +20,7 @@ PYBIND11_MODULE(_surface, m) {
         "_alloc",
         [](std::string filename, bool loadz) {
             return reinterpret_cast<std::uintptr_t>(
-                geo_surface_fload_alloc_irap(filename.c_str(), loadz));
+                geo_surface_fload_alloc_irap(filename, loadz));
         },
         py::return_value_policy::reference);
     m.def(
@@ -49,8 +49,7 @@ PYBIND11_MODULE(_surface, m) {
                                 value);
     });
     m.def("_write", [](py::handle self, std::string filename) {
-        geo_surface_fprintf_irap(from_cwrap<geo_surface_type>(self),
-                                 filename.c_str());
+        geo_surface_fprintf_irap(from_cwrap<geo_surface_type>(self), filename);
     });
     m.def("_equal", [](py::handle self, py::handle other) {
         return geo_surface_equal(from_cwrap<geo_surface_type>(self),
