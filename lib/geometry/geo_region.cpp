@@ -1,37 +1,34 @@
 #include <cstdlib>
+#include <vector>
 
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
-#include <ert/util/bool_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_pointset.hpp>
 #include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 
-#define GEO_REGION_TYPE_ID 4431973
-
 struct geo_region_struct {
-    UTIL_TYPE_ID_DECLARATION;
     bool preselect;
     bool index_valid;
-    bool *active_mask;
-    int_vector_type *index_list;
+    std::vector<bool> active_mask;
+    int_vector_ptr index_list{nullptr, int_vector_free};
     const geo_pointset_type *pointset;
-    int pointset_size;
+
+    [[nodiscard]] int size() const {
+        return static_cast<int>(active_mask.size());
+    }
 };
 
 geo_region_type *geo_region_alloc(const geo_pointset_type *pointset,
                                   bool preselect) {
-    geo_region_type *region = (geo_region_type *)util_malloc(sizeof *region);
-    UTIL_TYPE_ID_INIT(region, GEO_REGION_TYPE_ID);
+    auto region = new geo_region_type();
 
     region->pointset = pointset;
-    region->pointset_size = geo_pointset_get_size(pointset);
     region->preselect = preselect;
-    region->index_list = int_vector_alloc(0, 0);
-    region->active_mask =
-        (bool *)util_calloc(region->pointset_size, sizeof *region->active_mask);
+    region->index_list.reset(int_vector_alloc(0, 0));
+    region->active_mask.resize(geo_pointset_get_size(pointset));
     geo_region_reset(region);
 
     return region;
@@ -43,33 +40,28 @@ static void geo_region_invalidate_index_list(geo_region_type *region) {
 
 static void geo_region_assert_index_list(geo_region_type *region) {
     if (!region->index_valid) {
-        int_vector_reset(region->index_list);
-        for (int i = 0; i < region->pointset_size; i++)
+        int_vector_reset(region->index_list.get());
+        for (int i = 0; i < region->size(); i++)
             if (region->active_mask[i])
-                int_vector_append(region->index_list, i);
+                int_vector_append(region->index_list.get(), i);
 
         region->index_valid = true;
     }
 }
 
 void geo_region_reset(geo_region_type *region) {
-    for (int i = 0; i < region->pointset_size; i++)
+    for (int i = 0; i < region->size(); i++)
         region->active_mask[i] = region->preselect;
     geo_region_invalidate_index_list(region);
 }
 
-void geo_region_free(geo_region_type *region) {
-    int_vector_free(region->index_list);
-    free(region->active_mask);
-    free(region);
-}
+void geo_region_free(geo_region_type *region) { delete region; }
 
 static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
 
-    for (int i = 0; i < region->pointset_size; i++) {
-
+    for (int i = 0; i < region->size(); i++) {
         double x, y;
         bool is_inside;
         geo_pointset_iget_xy(region->pointset, i, &x, &y);
@@ -108,7 +100,7 @@ static void geo_region_select_line__(geo_region_type *region,
     double vx = xcoords[1] - xcoords[0]; // Vector from point 1 to point 2
     double vy = ycoords[1] - ycoords[0];
 
-    for (int i = 0; i < region->pointset_size; i++) {
+    for (int i = 0; i < region->size(); i++) {
         bool above;
         double x, y;
         double px, py;
@@ -171,7 +163,7 @@ void geo_region_deselect_below_line(geo_region_type *region,
 
 const int_vector_type *geo_region_get_index_list(geo_region_type *region) {
     geo_region_assert_index_list(region);
-    return region->index_list;
+    return region->index_list.get();
 }
 
 /** Note that the geo_region is borrowing the pointset and
