@@ -1,11 +1,13 @@
 #pragma once
+#include <memory>
+#include <vector>
+
 #include <ert/util/int_vector.hpp>
 #include <ert/util/double_vector.hpp>
 
 #include <ert/geometry/geo_polygon_collection.hpp>
 
 #include <resdata/rd_grid.hpp>
-#include <resdata/rd_kw.hpp>
 
 /* fault_block_layer_type is fully defined in fault_block_layer.hpp; a
    FaultBlock only needs to keep a pointer back to its parent layer. */
@@ -61,8 +63,8 @@ public:
     /** Trace edge cannot be called on a detached FaultBlock */
     bool trace_edge(double_vector_type *x_list, double_vector_type *y_list,
                     int_vector_type *cell_list) const;
-    /** list_neighbours cannot be called on a detached FaultBlock */
-    void list_neighbours(bool connected_only,
-                         const geo_polygon_collection_type *polylines,
-                         int_vector_type *neighbour_list) const;
+    /** get_neighbours cannot be called on a detached FaultBlock */
+    [[nodiscard]] std::vector<std::shared_ptr<FaultBlock>>
+    get_neighbours(bool connected_only,
+                   const geo_polygon_collection_type *polylines) const;
 };

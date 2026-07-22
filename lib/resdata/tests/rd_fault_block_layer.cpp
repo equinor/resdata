@@ -130,23 +130,20 @@ void test_neighbours(rd_grid_type *grid) {
     fault_block_layer_load_kw(layer, rd_kw);
 
     {
-        int_vector_type *neighbours = int_vector_alloc(0, 0);
         {
             auto block = fault_block_layer_get_block(layer, 1);
 
-            test_assert_int_equal(0, int_vector_size(neighbours));
-            block->list_neighbours(false, polylines, neighbours);
-            test_assert_int_equal(0, int_vector_size(neighbours));
+            auto neighbours = block->get_neighbours(false, polylines);
+            test_assert_int_equal(0, static_cast<int>(neighbours.size()));
         }
 
         {
             auto block = fault_block_layer_get_block(layer, 2);
 
-            block->list_neighbours(false, polylines, neighbours);
-            test_assert_int_equal(1, int_vector_size(neighbours));
-            test_assert_true(int_vector_contains(neighbours, 3));
+            auto neighbours = block->get_neighbours(false, polylines);
+            test_assert_int_equal(1, static_cast<int>(neighbours.size()));
+            test_assert_int_equal(3, neighbours[0]->get_id());
         }
-        int_vector_free(neighbours);
     }
 
     geo_polygon_collection_free(polylines);

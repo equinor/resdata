@@ -34,6 +34,15 @@ py::object make_edge_polygon(FaultBlock &self) {
     return polyline;
 }
 
+py::object fault_block_reference(std::shared_ptr<FaultBlock> block,
+                                 py::handle parent) {
+    if (!block)
+        return py::none();
+    py::object obj = py::cast(block);
+    obj.attr("_parent_layer_ref") = parent;
+    return obj;
+}
+
 } // namespace
 
 PYBIND11_MODULE(fault_block, m) {
@@ -155,25 +164,20 @@ PYBIND11_MODULE(fault_block, m) {
             py::arg("polyline"))
         .def(
             "get_neighbours",
-            [](py::object py_self, py::object polylines, bool connected_only) {
-                FaultBlock &self = py_self.cast<FaultBlock &>();
+            [](py::object self, py::object polylines, bool connected_only) {
                 if (polylines.is_none())
                     polylines = CPolylineCollection()();
 
-                auto neighbour_ids = make_int_vector(0, 0);
-                self.list_neighbours(
+                auto &block = self.cast<FaultBlock &>();
+                auto neighbours = block.get_neighbours(
                     connected_only,
-                    from_cwrap<geo_polygon_collection_type>(polylines),
-                    neighbour_ids.get());
+                    from_cwrap<geo_polygon_collection_type>(polylines));
 
-                py::object parent_layer = py_self.attr("get_parent_layer")();
-                py::list neighbour_list;
-                int n = int_vector_size(neighbour_ids.get());
-                for (int idx = 0; idx < n; idx++) {
-                    int id = int_vector_iget(neighbour_ids.get(), idx);
-                    neighbour_list.append(parent_layer.attr("get_block")(id));
-                }
-                return neighbour_list;
+                py::object parent = self.attr("_parent_layer_ref");
+                py::list result;
+                for (const auto &neighbour : neighbours)
+                    result.append(fault_block_reference(neighbour, parent));
+                return result;
             },
             py::arg("polylines") = py::none(), py::arg("connected_only") = true,
             "Will return a list of FaultBlock instances which are in direct\n"
