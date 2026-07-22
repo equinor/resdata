@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <tuple>
 #include <unistd.h>
 
 #include <ert/util/test_util.hpp>
@@ -50,34 +51,27 @@ void test_create_invalid(rd_grid_type *grid) {
 void test_trace_edge(rd_grid_type *grid) {
     const int k = 1;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
-    double_vector_type *x_list = double_vector_alloc(0, 0);
-    double_vector_type *y_list = double_vector_alloc(0, 0);
     auto block = fault_block_layer_safe_get_block(layer, 99);
-    int_vector_type *cell_list = int_vector_alloc(0, 0);
 
-    test_assert_false(block->trace_edge(x_list, y_list, cell_list));
+    test_assert_true(block->trace_edge().empty());
     block->add_cell(0, 0);
-    test_assert_true(block->trace_edge(x_list, y_list, cell_list));
-    test_assert_int_equal(4, double_vector_size(x_list));
-    test_assert_int_equal(4, double_vector_size(y_list));
+    auto edge = block->trace_edge();
+    test_assert_int_equal(4, static_cast<int>(edge.size()));
 
-    test_assert_double_equal(0, double_vector_iget(x_list, 0));
-    test_assert_double_equal(1, double_vector_iget(x_list, 1));
-    test_assert_double_equal(1, double_vector_iget(x_list, 2));
-    test_assert_double_equal(0, double_vector_iget(x_list, 3));
+    test_assert_double_equal(0, std::get<0>(edge[0]));
+    test_assert_double_equal(1, std::get<0>(edge[1]));
+    test_assert_double_equal(1, std::get<0>(edge[2]));
+    test_assert_double_equal(0, std::get<0>(edge[3]));
 
-    test_assert_double_equal(0, double_vector_iget(y_list, 0));
-    test_assert_double_equal(0, double_vector_iget(y_list, 1));
-    test_assert_double_equal(1, double_vector_iget(y_list, 2));
-    test_assert_double_equal(1, double_vector_iget(y_list, 3));
+    test_assert_double_equal(0, std::get<1>(edge[0]));
+    test_assert_double_equal(0, std::get<1>(edge[1]));
+    test_assert_double_equal(1, std::get<1>(edge[2]));
+    test_assert_double_equal(1, std::get<1>(edge[3]));
 
-    test_assert_int_equal(1, int_vector_size(cell_list));
-    test_assert_int_equal(0, int_vector_iget(cell_list, 0));
+    for (const auto &corner : edge)
+        test_assert_int_equal(0, std::get<2>(corner));
 
     fault_block_layer_free(layer);
-    int_vector_free(cell_list);
-    double_vector_free(x_list);
-    double_vector_free(y_list);
 }
 
 void test_export(rd_grid_type *grid) {

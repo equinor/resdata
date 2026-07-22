@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <tuple>
 #include <vector>
 
 #include <ert/util/int_vector.hpp>
@@ -60,11 +61,15 @@ public:
     [[nodiscard]] const int_vector_type *get_global_index_list() const;
     void copy_content(const FaultBlock &src_block);
 
-    /** Trace edge cannot be called on a detached FaultBlock */
-    bool trace_edge(double_vector_type *x_list, double_vector_type *y_list,
-                    int_vector_type *cell_list) const;
-    /** get_neighbours cannot be called on a detached FaultBlock */
+    /** Traces the outer edge of this block and returns the list of
+        (x, y, cell_index) corner points that make up its boundary polygon,
+        where cell_index is the index of the cell at that corner.
+
+        Cannot be called on a detached FaultBlock. */
+    [[nodiscard]] std::vector<std::tuple<double, double, int>>
+    trace_edge() const;
     [[nodiscard]] std::vector<std::shared_ptr<FaultBlock>>
+    /** get_neighbours cannot be called on a detached FaultBlock */
     get_neighbours(bool connected_only,
                    const geo_polygon_collection_type *polylines) const;
 };

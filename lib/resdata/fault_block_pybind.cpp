@@ -21,16 +21,11 @@ struct FaultBlockCell {
 };
 
 py::object make_edge_polygon(FaultBlock &self) {
-    auto x_list = make_double_vector(0, 0);
-    auto y_list = make_double_vector(0, 0);
-    auto cell_list = make_int_vector(0, 0);
-    self.trace_edge(x_list.get(), y_list.get(), cell_list.get());
-
     py::object polyline = Polyline()();
-    int n = double_vector_size(x_list.get());
-    for (int idx = 0; idx < n; idx++)
-        polyline.attr("addPoint")(double_vector_iget(x_list.get(), idx),
-                                  double_vector_iget(y_list.get(), idx));
+    for (const auto &[x, y, cell_index] : self.trace_edge()) {
+        (void)cell_index;
+        polyline.attr("addPoint")(x, y);
+    }
     return polyline;
 }
 
