@@ -75,8 +75,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
         }
 
         WHEN("Adding a block") {
-            fault_block_type *block =
-                fault_block_layer_add_block(layer.get(), 3);
+            auto block = fault_block_layer_add_block(layer.get(), 3);
 
             THEN("The layer has one block") {
                 REQUIRE(fault_block_layer_get_size(layer.get()) == 1);
@@ -98,14 +97,12 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
                 REQUIRE(fault_block_layer_iget_block(layer.get(), 0) == block);
             }
 
-            THEN("get_block_id matches") {
-                REQUIRE(fault_block_get_id(block) == 3);
-            }
+            THEN("get_block_id matches") { REQUIRE(block->get_id() == 3); }
         }
 
         WHEN("Adding the same block id twice") {
             fault_block_layer_add_block(layer.get(), 5);
-            fault_block_type *dup = fault_block_layer_add_block(layer.get(), 5);
+            auto dup = fault_block_layer_add_block(layer.get(), 5);
 
             THEN("The second add returns NULL") { REQUIRE(dup == nullptr); }
 
@@ -115,8 +112,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
         }
 
         WHEN("safe_get_block is called for a non-existing id") {
-            fault_block_type *block =
-                fault_block_layer_safe_get_block(layer.get(), 7);
+            auto block = fault_block_layer_safe_get_block(layer.get(), 7);
 
             THEN("The block is created and returned") {
                 REQUIRE(block != nullptr);
@@ -126,12 +122,11 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
 
         WHEN("safe_get_block is called for an existing id") {
             fault_block_layer_add_block(layer.get(), 2);
-            fault_block_type *block =
-                fault_block_layer_safe_get_block(layer.get(), 2);
+            auto block = fault_block_layer_safe_get_block(layer.get(), 2);
 
             THEN("The existing block is returned") {
                 REQUIRE(block != nullptr);
-                REQUIRE(fault_block_get_id(block) == 2);
+                REQUIRE(block->get_id() == 2);
                 REQUIRE(fault_block_layer_get_size(layer.get()) == 1);
             }
         }
@@ -190,22 +185,19 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
                     REQUIRE(fault_block_layer_get_size(layer.get()) == 3);
                 }
                 THEN("The first block contains the 1 cells") {
-                    const fault_block_type *block =
-                        fault_block_layer_iget_block(layer.get(), 0);
-                    REQUIRE(fault_block_get_size(block) == 2);
+                    auto block = fault_block_layer_iget_block(layer.get(), 0);
+                    REQUIRE(block->get_size() == 2);
                     REQUIRE(layer_iget_cell_value(geo_layer, 0, 0) == 1);
                     REQUIRE(layer_iget_cell_value(geo_layer, 1, 0) == 1);
                 }
                 THEN("The second block contains the 0 cells") {
-                    const fault_block_type *block =
-                        fault_block_layer_iget_block(layer.get(), 1);
-                    REQUIRE(fault_block_get_size(block) == 21);
+                    auto block = fault_block_layer_iget_block(layer.get(), 1);
+                    REQUIRE(block->get_size() == 21);
                     REQUIRE(layer_iget_cell_value(geo_layer, 3, 3) == 2);
                 }
                 THEN("The third block contains the 2 cells") {
-                    const fault_block_type *block =
-                        fault_block_layer_iget_block(layer.get(), 2);
-                    REQUIRE(fault_block_get_size(block) == 2);
+                    auto block = fault_block_layer_iget_block(layer.get(), 2);
+                    REQUIRE(block->get_size() == 2);
                     REQUIRE(layer_iget_cell_value(geo_layer, 1, 1) == 3);
                     REQUIRE(layer_iget_cell_value(geo_layer, 2, 1) == 3);
                 }
@@ -220,16 +212,14 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
                     REQUIRE(fault_block_layer_get_size(layer.get()) == 2);
                 }
                 THEN("The first block contains the 1 cells") {
-                    const fault_block_type *block =
-                        fault_block_layer_iget_block(layer.get(), 0);
-                    REQUIRE(fault_block_get_size(block) == 2);
+                    auto block = fault_block_layer_iget_block(layer.get(), 0);
+                    REQUIRE(block->get_size() == 2);
                     REQUIRE(layer_iget_cell_value(geo_layer, 0, 0) == 1);
                     REQUIRE(layer_iget_cell_value(geo_layer, 1, 0) == 1);
                 }
                 THEN("The second block contains the 2 cells") {
-                    const fault_block_type *block =
-                        fault_block_layer_iget_block(layer.get(), 1);
-                    REQUIRE(fault_block_get_size(block) == 2);
+                    auto block = fault_block_layer_iget_block(layer.get(), 1);
+                    REQUIRE(block->get_size() == 2);
                     REQUIRE(layer_iget_cell_value(geo_layer, 1, 1) == 2);
                     REQUIRE(layer_iget_cell_value(geo_layer, 2, 1) == 2);
                 }
@@ -299,24 +289,23 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
         }
         AND_GIVEN("A layer with block containing two cells") {
-            fault_block_type *src_block =
-                fault_block_layer_add_block(layer.get(), 1);
-            fault_block_add_cell(src_block, 0, 0);
-            fault_block_add_cell(src_block, 1, 0);
+            auto src_block = fault_block_layer_add_block(layer.get(), 1);
+            src_block->add_cell(0, 0);
+            src_block->add_cell(1, 0);
 
             WHEN("insert_block_content is called on another layer") {
                 auto dst_layer = make_fb_layer(grid.get(), 0);
                 fault_block_layer_insert_block_content(dst_layer.get(),
-                                                       src_block);
+                                                       *src_block);
 
                 THEN("The destination layer has one block") {
                     REQUIRE(fault_block_layer_get_size(dst_layer.get()) == 1);
                 }
 
                 THEN("The inserted block has two cells") {
-                    fault_block_type *inserted =
+                    auto inserted =
                         fault_block_layer_iget_block(dst_layer.get(), 0);
-                    REQUIRE(fault_block_get_size(inserted) == 2);
+                    REQUIRE(inserted->get_size() == 2);
                 }
             }
         }
@@ -353,15 +342,13 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
                 }
 
                 THEN("iget_block(0) returns block id 2") {
-                    fault_block_type *b =
-                        fault_block_layer_iget_block(layer.get(), 0);
-                    REQUIRE(fault_block_get_id(b) == 2);
+                    auto b = fault_block_layer_iget_block(layer.get(), 0);
+                    REQUIRE(b->get_id() == 2);
                 }
 
                 THEN("iget_block(1) returns block id 3") {
-                    fault_block_type *b =
-                        fault_block_layer_iget_block(layer.get(), 1);
-                    REQUIRE(fault_block_get_id(b) == 3);
+                    auto b = fault_block_layer_iget_block(layer.get(), 1);
+                    REQUIRE(b->get_id() == 3);
                 }
 
                 THEN("blocks 2 and 3 are still accessible by id") {
@@ -421,8 +408,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
 
             WHEN("Block 5 is deleted and then re-added") {
                 fault_block_layer_del_block(layer.get(), 5);
-                fault_block_type *new_block =
-                    fault_block_layer_add_block(layer.get(), 5);
+                auto new_block = fault_block_layer_add_block(layer.get(), 5);
 
                 THEN("The new add succeeds") { REQUIRE(new_block != nullptr); }
 

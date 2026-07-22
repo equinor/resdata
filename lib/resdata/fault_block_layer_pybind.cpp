@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include <pybind11/pybind11.h>
@@ -15,11 +16,19 @@
 namespace py = pybind11;
 
 namespace {
-py::object fault_block_reference(fault_block_type *block, py::handle parent) {
+/* Attaches a "_parent_layer_ref" attribute to the FaultBlock
+   so that FaultBlock.get_parent_layer() can get implemented correctly.
+   This causes a cycle from parent->blocks (std::shared_ptr<FaultBlock>)->
+   FaultBlock._parent_layer_ref (__dict__ of python object) -> parent.
+   However, when __dict__ is GC'd the cycle is broken and there is no
+   memory leak.*/
+py::object fault_block_reference(std::shared_ptr<FaultBlock> block,
+                                 py::handle parent) {
     if (!block)
         return py::none();
-    return FaultBlock().attr("createCReference")(
-        reinterpret_cast<std::uintptr_t>(block), parent);
+    py::object obj = py::cast(block);
+    obj.attr("_parent_layer_ref") = parent;
+    return obj;
 }
 } // namespace
 
@@ -89,10 +98,9 @@ PYBIND11_MODULE(_fault_block_layer, m) {
         fault_block_layer_scan_layer(from_cwrap<fault_block_layer_type>(self),
                                      from_cwrap<layer_type>(layer));
     });
-    m.def("_insert_block_content", [](py::handle self, py::handle block) {
+    m.def("_insert_block_content", [](py::handle self, FaultBlock &block) {
         fault_block_layer_insert_block_content(
-            from_cwrap<fault_block_layer_type>(self),
-            from_cwrap<fault_block_type>(block));
+            from_cwrap<fault_block_layer_type>(self), block);
     });
     m.def("_export_kw", [](py::handle self, py::handle kw) {
         return fault_block_layer_export(

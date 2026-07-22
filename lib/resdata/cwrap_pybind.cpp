@@ -341,22 +341,6 @@ template <> geo_surface_type *from_cwrap<geo_surface_type>(py::handle obj) {
     return cast_cwrap<geo_surface_type>(obj);
 }
 
-py::object FaultBlock() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.grid.faults").attr("FaultBlock");
-    }
-    return cls;
-}
-
-template <> fault_block_type *from_cwrap<fault_block_type>(py::handle obj) {
-    if (!py::isinstance(obj, FaultBlock()))
-        throw py::type_error("Expected FaultBlock, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<fault_block_type>(obj);
-}
-
 py::object FaultBlockLayer() {
     static py::object cls;
     if (!cls) {
@@ -389,4 +373,18 @@ template <> layer_type *from_cwrap<layer_type>(py::handle obj) {
                              static_cast<std::string>(py::repr(obj)));
 
     return cast_cwrap<layer_type>(obj);
+}
+
+py::object GeometryTools() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("GeometryTools");
+    return cls;
+}
+
+py::object Polyline() {
+    static py::object cls;
+    if (!cls)
+        cls = py::module_::import("resdata.geometry").attr("Polyline");
+    return cls;
 }

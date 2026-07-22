@@ -661,3 +661,29 @@ def test_that_get_geo_layer_does_not_return_dangling_pointer():
     gc.collect()
 
     assert layer.get_nx() == 16
+
+
+def test_that_deleted_fault_block_stays_alive_when_referenced_from_python():
+    """This is a regression test for a use-after-free: FaultBlockLayer.delete_block()
+    used to remove the underlying C++ FaultBlock even while a Python FaultBlock
+    wrapper referencing it was still alive."""
+    grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+    layer = FaultBlockLayer(grid, 0)
+    block = layer.add_block(1)
+    block.add_cell(0, 0)
+    block.add_cell(1, 0)
+
+    layer.delete_block(1)
+    assert 1 not in layer
+
+    gc.collect()
+
+    # The block itself is still valid but detached
+    assert len(block) == 2
+    assert block.get_block_id() == 1
+    assert block.get_centroid() == (1.0, 0.5)
+    with pytest.raises(ValueError, match="detached"):
+        block.get_neighbours()
+    with pytest.raises(ValueError, match="detached"):
+        block.get_edge_polygon()
+
