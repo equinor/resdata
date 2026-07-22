@@ -3,8 +3,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <resdata/rd_kw.hpp>
-
 template <typename T> T *from_cwrap(pybind11::handle obj);
 template <typename T> T *from_cwrap(std::optional<pybind11::handle> obj);
 
@@ -24,3 +22,7 @@ pybind11::object CTime();
 pybind11::object ResdataKW();
 pybind11::object CPolyline();
 pybind11::object GeoPointset();
+pybind11::object IntVector();
+pybind11::object FaultBlock();
+pybind11::object FaultBlockLayer();
+pybind11::object Layer();
