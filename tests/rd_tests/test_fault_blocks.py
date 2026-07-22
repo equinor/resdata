@@ -1,12 +1,11 @@
-#!/usr/bin/env python
 import gc
 
 import cwrap
 import pytest
 from resdata import ResDataType
 from resdata.geometry import CPolylineCollection, Polyline
-from resdata.grid import Grid, GridGenerator, ResdataRegion
-from resdata.grid.faults import Fault, FaultBlock, FaultBlockLayer, FaultCollection
+from resdata.grid import GridGenerator, ResdataRegion
+from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection, Layer
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
@@ -259,6 +258,52 @@ class FaultBlockTest(ResdataTest):
         # with self.assertRaises:
         #    layer.getEdgePolygon( )
 
+    def test_fault_block_edge_polygon_concave_shape(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        layer = FaultBlockLayer(grid, 0)
+        block = layer.add_block(1)
+
+        # Plus/cross shape:
+        #      (1,2)
+        # (0,1)(1,1)(2,1)
+        #      (1,0)
+        for i, j in [(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)]:
+            block.add_cell(i, j)
+
+        edge_polygon = block.get_edge_polygon()
+        self.assertEqual(len(edge_polygon), 12)
+
+        expected_corners = {
+            (1.0, 0.0),
+            (2.0, 0.0),
+            (2.0, 1.0),
+            (3.0, 1.0),
+            (3.0, 2.0),
+            (2.0, 2.0),
+            (2.0, 3.0),
+            (1.0, 3.0),
+            (1.0, 2.0),
+            (0.0, 2.0),
+            (0.0, 1.0),
+            (1.0, 1.0),
+        }
+        self.assertEqual({(p[0], p[1]) for p in edge_polygon}, expected_corners)
+
+    def test_fault_block_edge_polygon_interior_start_cell(self):
+        grid = GridGenerator.create_rectangular((6, 6, 1), (1, 1, 1))
+        layer = FaultBlockLayer(grid, 0)
+        block = layer.add_block(1)
+
+        cells = [(i, j) for i in range(4) for j in range(4)]
+        # Register the interior cell (1,1) first, so tracing starts there
+        interior_first = [(1, 1)] + [c for c in cells if c != (1, 1)]
+        for i, j in interior_first:
+            block.add_cell(i, j)
+
+        edge_polygon = block.get_edge_polygon()
+        self.assertEqual(len(edge_polygon), 16)
+        self.assertEqual(block.get_centroid(), (2.0, 2.0))
+
     def test_fault_block_layer(self):
         with self.assertRaises(ValueError):
             layer = FaultBlockLayer(self.grid, -1)
@@ -410,6 +455,18 @@ class FaultBlockTest(ResdataTest):
         with self.assertRaises(TypeError):
             layer.export_keyword(kw2)
 
+        layer.scan_keyword(self.kw)
+        export_kw = ResdataKW(
+            "FAULTBLK", self.grid.get_global_size(), ResDataType.RD_INT
+        )
+        export_kw.assign(0)
+        layer.export_keyword(export_kw)
+
+        for blk in layer:
+            for cell in blk:
+                g = self.grid.get_global_index(ijk=(cell.i, cell.j, cell.k))
+                self.assertEqual(export_kw[g], blk.get_block_id())
+
     def test_internal_blocks(self):
         nx = 8
         ny = 8
@@ -478,6 +535,115 @@ class FaultBlockTest(ResdataTest):
         layer.scan_keyword(kw)
         block = layer[0]
         self.assertEqual(str(block), "Block ID: %d" % block.get_block_id())
+
+    def test_fault_block_cell_str(self):
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+        kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
+        kw.assign(7)
+        layer = FaultBlockLayer(grid, 0)
+        layer.scan_keyword(kw)
+        block = layer[0]
+        cell = block[0]
+        self.assertEqual(str(cell), "(%d,%d)" % (cell.i, cell.j))
+
+    def test_fault_block_not_directly_instantiable(self):
+        with self.assertRaises(NotImplementedError):
+            FaultBlock()
+
+    def test_fault_block_indexing(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
+        kw.assign(0)
+        for j in range(1, 4):
+            for i in range(1, 4):
+                g = i + j * grid.get_nx()
+                kw[g] = 1
+
+        layer = FaultBlockLayer(grid, 0)
+        layer.scan_keyword(kw)
+        block = layer[0]
+
+        # Negative indexing should count back from the end.
+        self.assertEqual(block[-1].i, block[len(block) - 1].i)
+        self.assertEqual(block[-1].j, block[len(block) - 1].j)
+
+        with self.assertRaises(IndexError):
+            block[len(block)]
+
+        with self.assertRaises(TypeError):
+            block["not-an-index"]
+
+    def test_fault_block_count_inside(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
+        kw.assign(0)
+        for j in range(1, 4):
+            for i in range(1, 4):
+                g = i + j * grid.get_nx()
+                kw[g] = 1
+
+        layer = FaultBlockLayer(grid, 0)
+        layer.scan_keyword(kw)
+        self.assertEqual(len(layer), 2)
+        block = layer[1]
+        self.assertEqual(len(block), 9)
+
+        polygon_all = Polyline(
+            init_points=[(0.0, 0.0), (5.0, 0.0), (5.0, 5.0), (0.0, 5.0)]
+        )
+        self.assertEqual(block.count_inside(polygon_all), 9)
+
+        polygon_none = Polyline(
+            init_points=[(100.0, 100.0), (101.0, 100.0), (101.0, 101.0)]
+        )
+        self.assertEqual(block.count_inside(polygon_none), 0)
+
+    def test_fault_block_layer_k(self):
+        layer = FaultBlockLayer(self.grid, 3)
+        self.assertEqual(layer.k, 3)
+        self.assertEqual(layer.k, layer.get_k())
+
+    def test_fault_block_layer_repr(self):
+        layer = FaultBlockLayer(self.grid, 3)
+        rep = repr(layer)
+        self.assertIn("size=", rep)
+        self.assertIn("k=3", rep)
+
+    def test_fault_block_layer_scan_layer(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        geo_layer = Layer(grid.get_nx(), grid.get_ny())
+        for j in range(1, 4):
+            for i in range(1, 4):
+                geo_layer[i, j] = 1
+
+        fault_block_layer = FaultBlockLayer(grid, 0)
+        fault_block_layer.scan_layer(geo_layer)
+        self.assertEqual(len(fault_block_layer), 1)
+        self.assertEqual(len(fault_block_layer[0]), 9)
+
+    def test_fault_block_layer_insert_block_content(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
+        kw.assign(0)
+        for j in range(1, 4):
+            for i in range(1, 4):
+                g = i + j * grid.get_nx()
+                kw[g] = 1
+
+        layer = FaultBlockLayer(grid, 0)
+        layer.scan_keyword(kw)
+        self.assertEqual(len(layer), 2)
+        src_block = layer[1]
+        self.assertEqual(len(src_block), 9)
+
+        layer.insert_block_content(src_block)
+        self.assertEqual(len(layer), 3)
+        new_block = layer[-1]
+        self.assertEqual(len(new_block), len(src_block))
+        self.assertEqual(
+            sorted(new_block.get_global_index_list()),
+            sorted(src_block.get_global_index_list()),
+        )
 
 
 def test_that_get_geo_layer_does_not_return_dangling_pointer():

@@ -29,8 +29,19 @@ class LayerTest(ResdataTest):
         with self.assertRaises(ValueError):
             layer[100] = 199
 
+        # i valid, j invalid
+        with self.assertRaises(ValueError):
+            layer[5, 100] = 199
+
         layer[5, 5] = 88
         self.assertEqual(layer[5, 5], 88)
+
+    def test_nx_ny_properties(self):
+        layer = Layer(7, 4)
+        self.assertEqual(layer.nx, 7)
+        self.assertEqual(layer.ny, 4)
+        self.assertEqual(layer.nx, layer.get_nx())
+        self.assertEqual(layer.ny, layer.get_ny())
 
     def test_contact(self):
         nx = 20
@@ -43,6 +54,18 @@ class LayerTest(ResdataTest):
 
         with self.assertRaises(IndexError):
             layer.cell_contact((20, 0), (1, 1))
+
+        # i2 out of range, with i1 valid
+        with self.assertRaises(IndexError):
+            layer.cell_contact((1, 1), (20, 0))
+
+        # j1 out of range, with i1, i2 valid
+        with self.assertRaises(IndexError):
+            layer.cell_contact((1, 10), (1, 1))
+
+        # j2 out of range, with i1, i2, j1 valid
+        with self.assertRaises(IndexError):
+            layer.cell_contact((1, 1), (1, 10))
 
         self.assertFalse(layer.cell_contact((0, 0), (2, 0)))
         self.assertFalse(layer.cell_contact((1, 0), (1, 0)))
@@ -169,6 +192,14 @@ class LayerTest(ResdataTest):
         with self.assertRaises(ValueError):
             layer.add_ij_barrier([(7, 8), (6, 5)])
 
+        # i1 == i2, but j2 out of range [0, ny]
+        with self.assertRaises(ValueError):
+            layer.add_ij_barrier([(7, 5), (7, 15)])
+
+        # j1 == j2, but i2 out of range [0, nx]
+        with self.assertRaises(ValueError):
+            layer.add_ij_barrier([(5, 7), (15, 7)])
+
         p1 = (0, 4)
         p2 = (0, 5)
         self.assertTrue(layer.cell_contact(p1, p2))
@@ -245,6 +276,10 @@ class LayerTest(ResdataTest):
             layer.active_cell(d + 1, d + 2)
 
         self.assertTrue(layer.active_cell(1, 2))
+
+        grid = GridGenerator.create_rectangular((d + 1, d, 1), (1, 1, 1))
+        with self.assertRaises(ValueError):
+            layer.update_active(grid, 0)
 
         grid = GridGenerator.create_rectangular((d, d + 1, 1), (1, 1, 1))
         with self.assertRaises(ValueError):

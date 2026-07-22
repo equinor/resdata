@@ -14,6 +14,7 @@ from resdata.grid.faults import (
     FaultSegment,
     SegmentMap,
 )
+from resdata.grid.faults.fault_collection import dequote
 from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
@@ -65,6 +66,10 @@ class FaultTest(ResdataTest):
         with self.assertRaises(ValueError):
             faults = FaultCollection(self.faults1, self.faults2)
 
+    def test_get_grid(self):
+        faults = FaultCollection(self.grid)
+        self.assertIs(faults.get_grid(), self.grid)
+
     def test_split_line(self):
         faults = FaultCollection(self.grid)
         with self.assertRaises(ValueError):
@@ -94,13 +99,23 @@ class FaultTest(ResdataTest):
     def test_empty_fault(self):
         f = Fault(self.grid, "NAME")
         self.assertEqual("NAME", f.get_name())
+        self.assertEqual("NAME", f.name)
+        self.assertEqual("Fault:NAME", str(f))
 
         with self.assertRaises(Exception):
             g = f["Key"]
 
+    def test_fault_layer_k_properties(self):
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+        fault = Fault(grid, "Layered")
+        layer = fault[0]
+        self.assertEqual(0, layer.get_k())
+        self.assertEqual(layer.get_k(), layer.k)
+
     def test_empty_faultLine(self):
         fl = FaultLine(self.grid, 10)
         self.assertEqual(10, fl.get_k())
+        self.assertEqual(fl.get_k(), fl.k)
         self.assertEqual(0, len(fl))
 
         with self.assertRaises(TypeError):
@@ -144,6 +159,7 @@ class FaultTest(ResdataTest):
         assert not S2.joins(S5)
         assert not S5.joins(S2)
         assert S6.joins(S5)
+        self.assertIsInstance(hash(S1), int)
 
     def test_segment_map(self):
         S1 = FaultSegment(0, 10)
@@ -153,10 +169,16 @@ class FaultTest(ResdataTest):
         SM.add_segment(S1)
         SM.add_segment(S2)
         assert len(SM) == 3
+        self.assertEqual(
+            str(SM),
+            "{0: {10: 0 -> 10}, 10: {0: 0 -> 10, 20: 10 -> 20}, 20: {10: 10 -> 20}}",
+        )
         SM.verify()
         SM.add_segment(S5)
         assert len(SM) == 5
         SM.print_content()
+        SM.del_segment(S1)
+        SM.verify()
 
     def test_faultLine(self):
         fl = FaultLine(self.grid, 10)
@@ -403,6 +425,39 @@ class FaultTest(ResdataTest):
         extra = Fault.join_faults(fault1, fault3, 0)
         self.assertEqual(extra, [(2, 10), (2, 6), (5, 6)])
 
+    def test_join_faults_touching_ray_pairs(self):
+        grid = GridGenerator.create_rectangular((8, 8, 1), (1, 1, 1))
+
+        f1 = Fault(grid, "Touching1")
+        f1.add_record(0, 0, 0, 1, 0, 0, "X")
+        f2 = Fault(grid, "Touching2")
+        f2.add_record(0, 2, 0, 0, 0, 0, "Y")
+        self.assertIsNone(Fault.join_faults(f1, f2, 0))
+
+    def test_join_faults_i_ray_pair(self):
+        grid = GridGenerator.create_rectangular((8, 8, 1), (1, 1, 1))
+        f1 = Fault(grid, "ThirdA")
+        f1.add_record(0, 0, 0, 0, 0, 0, "X")
+        f2 = Fault(grid, "ThirdB")
+        f2.add_record(2, 2, 0, 0, 0, 0, "Y")
+        self.assertEqual(Fault.join_faults(f1, f2, 0), [(1, 1), (2, 1)])
+
+    def test_join_faults_j_ray_pair(self):
+        grid = GridGenerator.create_rectangular((8, 8, 1), (1, 1, 1))
+        f1 = Fault(grid, "FourthA")
+        f1.add_record(0, 0, 0, 0, 0, 0, "X")
+        f2 = Fault(grid, "FourthB")
+        f2.add_record(0, 0, 1, 1, 0, 0, "Y")
+        self.assertEqual(Fault.join_faults(f1, f2, 0), [(1, 1), (1, 2)])
+
+    def test_join_faults_j_negative_ray_pair(self):
+        grid = GridGenerator.create_rectangular((8, 8, 1), (1, 1, 1))
+        f1 = Fault(grid, "SecondA")
+        f1.add_record(0, 0, 2, 2, 0, 0, "X")
+        f2 = Fault(grid, "SecondB")
+        f2.add_record(0, 0, 0, 0, 0, 0, "Y")
+        self.assertEqual(Fault.join_faults(f1, f2, 0), [(1, 2), (1, 1)])
+
     def test_contact(self):
         grid = GridGenerator.create_rectangular((100, 100, 10), (1, 1, 1))
 
@@ -628,6 +683,20 @@ class FaultTest(ResdataTest):
         true_nb_cells1 = [(nx - 1, -1), (2 * nx - 1, -1), (3 * nx - 1, -1)]
         self.assertListEqual(nb_cells1, true_nb_cells1)
 
+    def test_neighbour_cells_reversed_segment_order(self):
+        grid = GridGenerator.create_rectangular((10, 8, 1), (1, 1, 1))
+
+        vertical = FaultLine(grid, 0)
+        vertical.try_append(FaultSegment(58, 25))
+        self.assertEqual(vertical.get_neighbor_cells(), [(22, 23), (32, 33), (42, 43)])
+
+        horizontal = FaultLine(grid, 0)
+        horizontal.try_append(FaultSegment(29, 25))
+        self.assertEqual(
+            horizontal.get_neighbor_cells(),
+            [(13, 23), (14, 24), (15, 25), (16, 26)],
+        )
+
     def test_polyline_intersection(self):
         grid = GridGenerator.create_rectangular((100, 100, 10), (0.25, 0.25, 1))
 
@@ -719,6 +788,29 @@ class FaultTest(ResdataTest):
         end_join = fault1.end_join(polyline2, 0)
         assert not end_join
 
+    def test_extend_to_polyline_multiple_intersections(self):
+        grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
+        fault = Fault(grid, "Fault")
+        fault.add_record(0, 0, 0, 2, 0, 0, "X")
+
+        zigzag = CPolyline(init_points=[(0, 4), (2, 5), (0, 6), (2, 7), (0, 8)])
+        self.assertEqual(fault.extend_to_polyline(zigzag, 0), [(1, 3), (1, 4.5)])
+
+    def test_extend_to_polyline_intersection_and_fourth_strategy(self):
+        grid = GridGenerator.create_rectangular((4, 4, 1), (1, 1, 1))
+
+        touching_fault = Fault(grid, "Touching")
+        touching_fault.add_record(0, 0, 0, 0, 0, 0, "X-")
+        touching_fault.add_record(0, 0, 0, 0, 0, 0, "Y")
+        crossing = CPolyline(init_points=[(0, 1), (2, 1)])
+        self.assertIsNone(touching_fault.extend_to_polyline(crossing, 0))
+
+        reverse_fault = Fault(grid, "Reverse")
+        reverse_fault.add_record(0, 0, 0, 0, 0, 0, "X")
+        reverse_fault.add_record(0, 0, 0, 0, 0, 0, "Y-")
+        target = CPolyline(init_points=[(2, 0), (2, 2)])
+        self.assertEqual(reverse_fault.extend_to_polyline(target, 0), [(1, 1), (2, 2)])
+
     def test_extend_polyline_on(self):
         grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
 
@@ -749,6 +841,24 @@ class FaultTest(ResdataTest):
 
         points = fault1.extend_polyline_onto(polyline3, 0)
         self.assertIsNone(points)
+
+    def test_extend_polyline_on_prefers_shorter_extension(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        fault = Fault(grid, "Fault")
+        fault.add_record(0, 3, 2, 2, 0, 0, "Y")
+
+        shorter_at_tail = CPolyline(init_points=[(0, 0), (0, 1), (0, 2)])
+        self.assertEqual(
+            fault.extend_polyline_onto(shorter_at_tail, 0), [(0, 2), (0, 3)]
+        )
+
+    def test_extend_polyline_on_returns_tail_extension(self):
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+        fault = Fault(grid, "Fault")
+        fault.add_record(0, 3, 2, 2, 0, 0, "Y")
+
+        tail_only = CPolyline(init_points=[(0, 0), (1, 0), (1, 1)])
+        self.assertEqual(fault.extend_polyline_onto(tail_only, 0), [(1, 1), (1, 3)])
 
     def test_stepped(self):
         grid = GridGenerator.create_rectangular((6, 1, 4), (1, 1, 1))
@@ -825,6 +935,13 @@ class FaultTest(ResdataTest):
         self.assertEqual(p1, (2, 1))
         self.assertEqual(p2, (2, 2))
 
+    def test_connectWithPolyline_empty_layer(self):
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+        fault = Fault(grid, "Empty")
+        fault[0]
+        polyline = CPolyline(init_points=[(0, 0), (1, 1)])
+        self.assertIsNone(fault.connect_with_polyline(polyline, 0))
+
     def test_fault_line_reverse_and_dump(self):
 
         fl = FaultLine(self.grid, 10)
@@ -838,6 +955,10 @@ class FaultTest(ResdataTest):
         # After reverse, the polyline endpoints should be swapped.
         pl = fl.get_polyline()
         self.assertEqual(len(pl), len(fl) + 1)
+
+        with contextlib.redirect_stdout(io.StringIO()) as stream:
+            fl.dump()
+        self.assertIn("Corner:", stream.getvalue())
 
     def test_t_junction_processSegments(self):
         nx, ny, nz = 10, 10, 1
@@ -909,3 +1030,13 @@ class FaultTest(ResdataTest):
         line2 = fault2.extend_to_b_box(bbox, 0, start=True)
         assert line2.getName() == "Extend:Fault2"
         assert line2 == CPolyline(init_points=[(2, 0), (2, 0)])
+
+        unnamed = Fault(grid, "")
+        unnamed.add_record(1, 1, 0, 1, 0, 0, "X")
+        line3 = unnamed.extend_to_b_box(bbox, 0, start=True)
+        self.assertIsNone(line3.getName())
+        self.assertEqual(line3, CPolyline(init_points=[(2, 0), (2, 0)]))
+
+
+def test_dequote_is_idempotent_without_quotes():
+    assert dequote("hello") == "hello"
