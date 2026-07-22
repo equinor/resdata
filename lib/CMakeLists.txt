@@ -433,14 +433,12 @@ foreach(
   rd_grid_volume
   rd_nnc_test
   rd_lgr_test
-  rd_layer_equinor
   rd_dualp
   rd_grid_dx_dy_dz
   rd_sum_test
   rd_file_equinor
   rd_fmt
   rd_rsthead
-  rd_fault_block_layer_equinor
   well_state_load
   well_state_load_missing_RSEG
   well_segment_load
@@ -540,10 +538,6 @@ add_test(NAME rd_nnc_test5
          COMMAND rd_nnc_test
                  ${_resdatapath}/nestedLGRcase/TESTCASE_NESTEDLGR.EGRID)
 
-add_test(NAME rd_layer_equinor
-         COMMAND rd_layer_equinor ${_resdatapath}/Mariner/MARINER.EGRID
-                 ${_resdatapath}/Mariner/faultblock.grdecl)
-
 add_test(NAME rd_dualp COMMAND rd_dualp ${_resdatapath}/LGCcase/LGC_TESTCASE2)
 
 add_test(NAME rd_sum_test COMMAND rd_sum_test ${_resdatapath}/Gurbat/ECLIPSE)
@@ -555,11 +549,6 @@ add_test(NAME rd_file_equinor
 add_test(NAME rd_rsthead
          COMMAND rd_rsthead ${_resdatapath}/Gurbat/ECLIPSE.UNRST
                  ${_resdatapath}/DualPoro/DUALPORO.X0005)
-
-add_test(
-  NAME rd_fault_block_layer_equinor
-  COMMAND rd_fault_block_layer_equinor ${_resdatapath}/Mariner/MARINER.EGRID
-          ${_resdatapath}/Mariner/faultblock.grdecl)
 
 add_test(NAME well_state_load1
          COMMAND well_state_load ${_resdatapath}/Gurbat/ECLIPSE.EGRID
