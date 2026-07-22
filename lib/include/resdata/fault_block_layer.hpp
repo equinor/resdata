@@ -1,15 +1,10 @@
-#ifndef ERT_FAULT_BLOCK_LAYER_H
-#define ERT_FAULT_BLOCK_LAYER_H
+#pragma once
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/fault_block.hpp>
 #include <resdata/layer.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 UTIL_IS_INSTANCE_HEADER(fault_block_layer);
 
@@ -45,8 +40,3 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
                               rd_kw_type *faultblock_kw);
 rd_grid_type *fault_block_layer_get_grid(const fault_block_layer_type *layer);
 layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
