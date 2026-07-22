@@ -55,7 +55,7 @@ class Layer(BaseCClass):
                 % (grid.get_ny(), self.get_ny())
             )
 
-        if k >= grid.get_nz():
+        if not (0 <= k < grid.get_nz()):
             raise ValueError("K value invalid: Grid range [0,%d)" % grid.get_nz())
 
         _layer._update_active(self, grid, k)
@@ -94,16 +94,16 @@ class Layer(BaseCClass):
         i2, j2 = p2
 
         if not 0 <= i1 < self.get_nx():
-            raise IndexError("Invalid i1:%d" % i1)
+            raise IndexError(f"Invalid i1:{i1}")
 
         if not 0 <= i2 < self.get_nx():
-            raise IndexError("Invalid i2:%d" % i2)
+            raise IndexError(f"Invalid i2:{i2}")
 
         if not 0 <= j1 < self.get_ny():
-            raise IndexError("Invalid i1:%d" % j1)
+            raise IndexError(f"Invalid j1:{j1}")
 
         if not 0 <= j2 < self.get_ny():
-            raise IndexError("Invalid i2:%d" % j2)
+            raise IndexError(f"Invalid j2:{j2}")
 
         return _layer._cell_contact(self, i1, j1, i2, j2)
 
@@ -148,15 +148,17 @@ class Layer(BaseCClass):
         for p2 in ij_list[1:]:
             i2, j2 = p2
             if i1 == i2 or j1 == j2:
+                if not 0 <= i1 <= nx:
+                    raise ValueError(f"i value:{i1} invalid. Valid range: [0,{nx}]")
+
                 if not 0 <= i2 <= nx:
-                    raise ValueError(
-                        "i value:%d invalid. Valid range: [0,%d] " % (i1, i2)
-                    )
+                    raise ValueError(f"i value:{i2} invalid. Valid range: [0,{nx}]")
+
+                if not 0 <= j1 <= ny:
+                    raise ValueError(f"j value:{j1} invalid. Valid range: [0,{ny}]")
 
                 if not 0 <= j2 <= ny:
-                    raise ValueError(
-                        "i value:%d invalid. Valid range: [0,%d] " % (j1, j2)
-                    )
+                    raise ValueError(f"j value:{j2} invalid. Valid range: [0,{ny}]")
 
                 _layer._add_ijbarrier(self, i1, j1, i2, j2)
                 p1 = p2
