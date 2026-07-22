@@ -29,7 +29,7 @@ class ResdataFileEquinorTest(ResdataTest):
             mp.chdir(tmpdir)
             f0 = ResdataFile(self.test_file)
             f0.write_index("index")
-            f1 = ResdataFile(self.test_file, 0, "index")
+            f1 = ResdataFile(self.test_file, index_filename="index")
             for kw0, kw1 in zip(f0, f1):
                 self.assertEqual(kw0, kw1)
 
