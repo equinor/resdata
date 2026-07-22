@@ -16,9 +16,9 @@ struct geo_pointset_struct {
     std::optional<std::vector<double>> zcoord;
 };
 
-geo_pointset_type *geo_pointset_alloc(bool internal_z) {
+geo_pointset_type *geo_pointset_alloc(bool external_z) {
     auto pointset = new geo_pointset_type();
-    if (internal_z)
+    if (external_z)
         pointset->zcoord = std::vector<double>();
     return pointset;
 }
@@ -27,7 +27,7 @@ void geo_pointset_memcpy(const geo_pointset_type *src,
                          geo_pointset_type *target, bool copy_zdata) {
     if (src->zcoord.has_value() != target->zcoord.has_value())
         throw std::invalid_argument("when copying geo_pointset they must have "
-                                    "equal value for internal_z");
+                                    "equal value for external_z");
 
     target->xcoord.assign(src->xcoord.begin(), src->xcoord.end());
     target->ycoord.assign(src->ycoord.begin(), src->ycoord.end());
