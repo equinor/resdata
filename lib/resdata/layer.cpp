@@ -1,17 +1,17 @@
-#include <cstring>
-#include <cstdlib>
+#include <cstddef>
 #include <cmath>
 
+#include <memory>
+#include <stdexcept>
 #include <vector>
 #include <algorithm>
 #include <array>
+#include <fmt/format.h>
 
-#include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
 
+#include <resdata/rd_grid.hpp>
 #include <resdata/layer.hpp>
-
-#define LAYER_TYPE_ID 55185409
 
 struct Cell {
     int value;
@@ -22,31 +22,30 @@ struct Cell {
 };
 
 struct layer_struct {
-    UTIL_TYPE_ID_DECLARATION;
     int nx, ny;
     std::vector<Cell> cells;
     int cell_sum;
 
     [[nodiscard]] int interior_index(int i, int j) const {
         if ((i < 0) || (i >= this->nx))
-            util_abort("%s: invalid i value:%d Valid range: [0,%d) \n",
-                       __func__, i, this->nx);
+            throw std::out_of_range(fmt::format(
+                "invalid i value:{} Valid range: [0,{})", i, this->nx));
 
         if ((j < 0) || (j >= this->ny))
-            util_abort("%s: invalid j value:%d Valid range: [0,%d) \n",
-                       __func__, j, this->ny);
+            throw std::out_of_range(fmt::format(
+                "invalid j value:{} Valid range: [0,{})", j, this->ny));
 
         return i + j * (this->nx + 1);
     }
 
     [[nodiscard]] int global_index(int i, int j) const {
         if ((i < 0) || (i > this->nx))
-            util_abort("%s: invalid i value:%d Valid range: [0,%d] \n",
-                       __func__, i, this->nx);
+            throw std::out_of_range(fmt::format(
+                "invalid i value:{} Valid range: [0,{}]", i, this->nx));
 
         if ((j < 0) || (j > this->ny))
-            util_abort("%s: invalid j value:%d Valid range: [0,%d] \n",
-                       __func__, j, this->ny);
+            throw std::out_of_range(fmt::format(
+                "invalid j value:{} Valid range: [0,{}]", j, this->ny));
 
         return i + j * (this->nx + 1);
     }
@@ -68,17 +67,15 @@ struct layer_struct {
     }
 };
 
-UTIL_IS_INSTANCE_FUNCTION(layer, LAYER_TYPE_ID)
-UTIL_SAFE_CAST_FUNCTION(layer, LAYER_TYPE_ID)
-
 layer_type *layer_alloc(int nx, int ny) {
-    auto layer = new layer_type;
-    UTIL_TYPE_ID_INIT(layer, LAYER_TYPE_ID);
+    if (nx < 0 || ny < 0)
+        throw std::invalid_argument(
+            fmt::format("layer size is negative: {}x{}", nx, ny));
+
+    layer_ptr layer{new layer_type(), &layer_free};
     layer->nx = nx;
     layer->ny = ny;
     layer->cell_sum = 0;
-    if (nx < 0 || ny < 0)
-        util_abort("%s : layer size is negative: %dx%d\n", __func__, nx, ny);
     layer->cells = std::vector<Cell>((static_cast<size_t>(layer->nx) + 1) *
                                          (static_cast<size_t>(layer->ny) + 1),
                                      {
@@ -88,7 +85,7 @@ layer_type *layer_alloc(int nx, int ny) {
                                          false,
                                          true,
                                      });
-    return layer;
+    return layer.release();
 }
 
 void layer_free(layer_type *layer) { delete layer; }
@@ -170,25 +167,25 @@ void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
 static int layer_get_global_edge_index(const layer_type *layer, int i, int j,
                                        edge_dir_enum dir) {
     if ((i < 0) || (j < 0))
-        util_abort("%s: invalid value for i,j \n", __func__);
+        throw std::out_of_range("invalid value for i,j");
 
     if ((i > layer->nx) || (j > layer->ny))
-        util_abort("%s: invalid value for i,j \n", __func__);
+        throw std::out_of_range("invalid value for i,j");
 
     if (i == layer->nx) {
         if (j == layer->ny)
-            util_abort("%s: invalid value for i,j \n", __func__);
+            throw std::out_of_range("invalid value for i,j");
 
         if (dir != LEFT_EDGE)
-            util_abort("%s: invalid value for i,j \n", __func__);
+            throw std::out_of_range("invalid value for i,j");
     }
 
     if (j == layer->ny) {
         if (i == layer->nx)
-            util_abort("%s: invalid value for i,j \n", __func__);
+            throw std::out_of_range("invalid value for i,j");
 
         if (dir != BOTTOM_EDGE)
-            util_abort("%s: invalid value for i,j \n", __func__);
+            throw std::out_of_range("invalid value for i,j");
     }
 
     return i + j * (layer->nx + 1);
@@ -271,7 +268,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
                                          value, LEFT_EDGE, corner_list,
                                          cell_list);
             else
-                util_abort("%s: dir == BOTTOM_EDGE \n", __func__);
+                throw std::logic_error("dir == BOTTOM_EDGE");
         }
 
         if (dir == RIGHT_EDGE) {
@@ -288,7 +285,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
                                          value, BOTTOM_EDGE, corner_list,
                                          cell_list);
             else
-                util_abort("%s: dir == RIGHT_EDGE \n", __func__);
+                throw std::logic_error("dir == RIGHT_EDGE");
         }
 
         if (dir == TOP_EDGE) {
@@ -304,7 +301,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
                                          value, RIGHT_EDGE, corner_list,
                                          cell_list);
             else
-                util_abort("%s: dir == TOP_EDGE \n", __func__);
+                throw std::logic_error("dir == TOP_EDGE");
         }
 
         if (dir == LEFT_EDGE) {
@@ -321,7 +318,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
                                          value, TOP_EDGE, corner_list,
                                          cell_list);
             else
-                util_abort("%s: dir == LEFT_EDGE \n", __func__);
+                throw std::logic_error("dir == LEFT_EDGE");
         }
     }
 }
@@ -375,7 +372,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                 layer_trace_block_edge__(layer, start_corner, i, j, value,
                                          LEFT_EDGE, corner_list, cell_list);
             } else
-                util_abort("%s: Internal error \n", __func__);
+                throw std::logic_error("Internal error");
 
             int_vector_select_unique(cell_list);
             return true;
@@ -466,12 +463,14 @@ int layer_replace_cell_values(layer_type *layer, int old_value, int new_value) {
 
 static void layer_assert_cell_index(const layer_type *layer, int i, int j) {
     if ((i < 0) || (j < 0))
-        util_abort("%s: invalid value for i,j  i:%d  [0,%d)    j:%d  [0,%d) \n",
-                   __func__, i, layer->nx, j, layer->ny);
+        throw std::out_of_range(
+            fmt::format("invalid value for i,j  i:{}  [0,{})    j:{}  [0,{})",
+                        i, layer->nx, j, layer->ny));
 
     if ((i >= layer->nx) || (j >= layer->ny))
-        util_abort("%s: invalid value for i,j  i:%d  [0,%d)    j:%d  [0,%d) \n",
-                   __func__, i, layer->nx, j, layer->ny);
+        throw std::out_of_range(
+            fmt::format("invalid value for i,j  i:{}  [0,{})    j:{}  [0,{})",
+                        i, layer->nx, j, layer->ny));
 }
 
 bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
@@ -511,8 +510,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             }
         }
     } else
-        util_abort("%s: fatal error must have i1 == i2 || j1 == j2 \n",
-                   __func__);
+        throw std::invalid_argument("must have i1 == i2 || j1 == j2");
 }
 
 void layer_add_barrier(layer_type *layer, int c1, int c2) {
@@ -578,9 +576,8 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
                                    src_layer->cells.end());
         target_layer->cell_sum = src_layer->cell_sum;
     } else
-        util_abort("%s: fatal error - tried to copy elements between layers of "
-                   "different size\n",
-                   __func__);
+        throw std::invalid_argument(
+            "cannot copy elements between layers of different size");
 }
 
 void layer_assign(layer_type *layer, int value) {
