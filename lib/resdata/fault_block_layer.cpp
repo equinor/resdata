@@ -1,33 +1,23 @@
+#include <cstddef>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
-#include <ert/util/double_vector.hpp>
-#include <ert/util/vector.hpp>
+#include <ert/util/util.hpp>
 
+#include <fmt/core.h>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/fault_block.hpp>
 #include <resdata/layer.hpp>
+#include <resdata/rd_type.hpp>
 
 #include <memory>
+#include <stdexcept>
+#include <utility>
 #include <vector>
+#include <fmt/format.h>
 
 #define FAULT_BLOCK_LAYER_ID 2297476
-
-/*
-   The fault_block object is implemented as a separate object type in
-   the fault_block.c file; however the fault blocks should be closely
-   linked to the layer object in the fault_block_layer structure - it
-   is therefore not possible/legal to create a fault block instance by
-   itself. To support that encapsulation the fault_block.c file is included
-   here, and the functions:
-
-     fault_block_alloc();
-     fault_block_free();
-
-   Which must be called through the fault_block_layer class are made
-   declared here.
-*/
 
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id);
@@ -39,7 +29,7 @@ struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     rd_grid_type *grid;
     std::vector<int> block_map;
-    layer_type *layer;
+    layer_ptr layer{nullptr, &layer_free};
     int k;
     std::vector<block_ptr> blocks;
 
@@ -50,9 +40,10 @@ struct fault_block_layer_struct {
             if (index >= 0)
                 return block_map[index];
             else {
-                util_abort("%s: index:%d is invalid - only accepts positive "
-                           "indices.\n",
-                           __func__, index);
+                throw std::out_of_range(
+                    fmt::format("index:{} is invalid - only accepts positive "
+                                "indices",
+                                index));
             }
         }
     }
@@ -194,7 +185,8 @@ fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, int k) {
         layer->k = k;
         layer->block_map = std::vector<int>(0);
         layer->blocks = std::vector<block_ptr>();
-        layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
+        layer->layer.reset(
+            layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid)));
 
         return layer.release();
     }
@@ -263,10 +255,7 @@ int fault_block_layer_get_k(const fault_block_layer_type *layer) {
     return layer->k;
 }
 
-void fault_block_layer_free(fault_block_layer_type *layer) {
-    layer_free(layer->layer);
-    delete layer;
-}
+void fault_block_layer_free(fault_block_layer_type *layer) { delete layer; }
 
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
                                             const fault_block_type *src_block) {
@@ -284,7 +273,8 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
         for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
             for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
-                int cell_value = layer_iget_cell_value(layer->layer, i, j);
+                int cell_value =
+                    layer_iget_cell_value(layer->layer.get(), i, j);
                 rd_kw_iset_int(faultblock_kw, g, cell_value);
             }
         }
@@ -298,5 +288,5 @@ rd_grid_type *fault_block_layer_get_grid(const fault_block_layer_type *layer) {
 }
 
 layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer) {
-    return layer->layer;
+    return layer->layer.get();
 }
