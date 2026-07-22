@@ -44,9 +44,9 @@ static void geo_surface_copy_header(const geo_surface_type *src,
     }
 }
 
-static geo_surface_type *geo_surface_alloc_empty(bool internal_z) {
+static geo_surface_type *geo_surface_alloc_empty(bool external_z) {
     geo_surface_type *surface = new geo_surface_struct();
-    surface->pointset.reset(geo_pointset_alloc(internal_z));
+    surface->pointset.reset(geo_pointset_alloc(external_z));
     return surface;
 }
 
