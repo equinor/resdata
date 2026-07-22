@@ -1,4 +1,6 @@
 #pragma once
+#include <cstddef>
+#include <memory>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/double_vector.hpp>
@@ -11,12 +13,11 @@
 
 typedef struct fault_block_struct fault_block_type;
 
-void fault_block_free__(void *arg);
+void fault_block_free(fault_block_type *block);
 int fault_block_get_size(const fault_block_type *block);
 double fault_block_get_xc(fault_block_type *fault_block);
 double fault_block_get_yc(fault_block_type *fault_block);
 int fault_block_get_id(const fault_block_type *block);
-int fault_block_get_size(const fault_block_type *fault_block);
 void fault_block_export_cell(const fault_block_type *fault_block, int index,
                              int *i, int *j, int *k, double *x, double *y,
                              double *z);
@@ -37,4 +38,5 @@ void fault_block_list_neighbours(const fault_block_type *block,
                                  const geo_polygon_collection_type *polylines,
                                  int_vector_type *neighbour_list);
 
-UTIL_IS_INSTANCE_HEADER(fault_block);
+using fault_block_ptr =
+    std::unique_ptr<fault_block_type, decltype(&fault_block_free)>;

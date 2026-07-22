@@ -77,7 +77,7 @@ PYBIND11_MODULE(_fault_block, m) {
                   from_cwrap<int_vector_type>(neighbour_list));
           });
     m.def("_free", [](py::handle self) {
-        fault_block_free__(from_cwrap<fault_block_type>(self));
+        fault_block_free(from_cwrap<fault_block_type>(self));
     });
 }
 } // namespace

@@ -1,6 +1,5 @@
 #include <vector>
 
-#include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
@@ -13,69 +12,46 @@
 #include <resdata/layer.hpp>
 
 #include "detail/resdata/layer_cxx.hpp"
-
-#define FAULT_BLOCK_ID 3297376
+#include "ert/util/double_vector.hpp"
 
 struct fault_block_struct {
-    UTIL_TYPE_ID_DECLARATION;
     rd_grid_type *grid;
     const fault_block_layer_type *parent_layer;
-    int_vector_type *i_list;
-    int_vector_type *j_list;
-    int_vector_type *global_index_list;
-    int_vector_type *region_list;
+    int_vector_ptr i_list = make_int_vector(0, 0);
+    int_vector_ptr j_list = make_int_vector(0, 0);
+    int_vector_ptr global_index_list = make_int_vector(0, 0);
+    int_vector_ptr region_list = make_int_vector(0, 0);
     int block_id;
     int k;
     double xc, yc;
-    bool valid_center;
+    bool valid_center = false;
 };
-
-UTIL_IS_INSTANCE_FUNCTION(fault_block, FAULT_BLOCK_ID);
-static UTIL_SAFE_CAST_FUNCTION(fault_block, FAULT_BLOCK_ID);
 
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id) {
-    fault_block_type *block = (fault_block_type *)util_malloc(sizeof *block);
-    UTIL_TYPE_ID_INIT(block, FAULT_BLOCK_ID);
+    auto block = new fault_block_type();
     block->parent_layer = parent_layer;
     block->grid = fault_block_layer_get_grid(parent_layer);
     block->k = fault_block_layer_get_k(parent_layer);
     block->block_id = block_id;
-
-    block->i_list = int_vector_alloc(0, 0);
-    block->j_list = int_vector_alloc(0, 0);
-    block->global_index_list = int_vector_alloc(0, 0);
-    block->region_list = int_vector_alloc(0, 0);
-    block->valid_center = false;
     return block;
 }
 
 int fault_block_get_size(const fault_block_type *block) {
-    return int_vector_size(block->i_list);
+    return int_vector_size(block->i_list.get());
 }
 
 int fault_block_get_id(const fault_block_type *block) {
     return block->block_id;
 }
 
-void fault_block_free(fault_block_type *block) {
-    int_vector_free(block->i_list);
-    int_vector_free(block->j_list);
-    int_vector_free(block->region_list);
-    int_vector_free(block->global_index_list);
-    free(block);
-}
-
-void fault_block_free__(void *arg) {
-    fault_block_type *block = fault_block_safe_cast(arg);
-    fault_block_free(block);
-}
+void fault_block_free(fault_block_type *block) { delete block; }
 
 void fault_block_add_cell(fault_block_type *fault_block, int i, int j) {
-    int_vector_append(fault_block->i_list, i);
-    int_vector_append(fault_block->j_list, j);
+    int_vector_append(fault_block->i_list.get(), i);
+    int_vector_append(fault_block->j_list.get(), j);
     int_vector_append(
-        fault_block->global_index_list,
+        fault_block->global_index_list.get(),
         rd_grid_get_global_index3(fault_block->grid, i, j, fault_block->k));
     fault_block->valid_center = false;
     layer_iset_cell_value(
@@ -85,18 +61,19 @@ void fault_block_add_cell(fault_block_type *fault_block, int i, int j) {
 
 void fault_block_assign_to_region(fault_block_type *fault_block,
                                   int region_id) {
-    if (int_vector_size(fault_block->region_list) == 0)
-        int_vector_append(fault_block->region_list, region_id);
+    if (int_vector_size(fault_block->region_list.get()) == 0)
+        int_vector_append(fault_block->region_list.get(), region_id);
     else {
-        if (int_vector_index_sorted(fault_block->region_list, region_id) == -1)
-            int_vector_append(fault_block->region_list, region_id);
+        if (int_vector_index_sorted(fault_block->region_list.get(),
+                                    region_id) == -1)
+            int_vector_append(fault_block->region_list.get(), region_id);
     }
-    int_vector_sort(fault_block->region_list);
+    int_vector_sort(fault_block->region_list.get());
 }
 
 const int_vector_type *
 fault_block_get_region_list(const fault_block_type *fault_block) {
-    return fault_block->region_list;
+    return fault_block->region_list.get();
 }
 
 static void fault_block_assert_center(fault_block_type *fault_block) {
@@ -105,9 +82,10 @@ static void fault_block_assert_center(fault_block_type *fault_block) {
         double xc = 0;
         double yc = 0;
 
-        for (index = 0; index < int_vector_size(fault_block->i_list); index++) {
-            int i = int_vector_iget(fault_block->i_list, index);
-            int j = int_vector_iget(fault_block->j_list, index);
+        for (index = 0; index < int_vector_size(fault_block->i_list.get());
+             index++) {
+            int i = int_vector_iget(fault_block->i_list.get(), index);
+            int j = int_vector_iget(fault_block->j_list.get(), index);
             int g = rd_grid_get_global_index3(fault_block->grid, i, j,
                                               fault_block->k);
             double x, y, z;
@@ -117,8 +95,8 @@ static void fault_block_assert_center(fault_block_type *fault_block) {
             yc += y;
         }
 
-        fault_block->xc = xc / int_vector_size(fault_block->i_list);
-        fault_block->yc = yc / int_vector_size(fault_block->i_list);
+        fault_block->xc = xc / int_vector_size(fault_block->i_list.get());
+        fault_block->yc = yc / int_vector_size(fault_block->i_list.get());
     }
     fault_block->valid_center = true;
 }
@@ -136,24 +114,24 @@ double fault_block_get_yc(fault_block_type *fault_block) {
 void fault_block_export_cell(const fault_block_type *fault_block, int index,
                              int *i, int *j, int *k, double *x, double *y,
                              double *z) {
-    *i = int_vector_iget(fault_block->i_list, index);
-    *j = int_vector_iget(fault_block->j_list, index);
+    *i = int_vector_iget(fault_block->i_list.get(), index);
+    *j = int_vector_iget(fault_block->j_list.get(), index);
     *k = fault_block->k;
 
     rd_grid_get_xyz3(fault_block->grid, *i, *j, *k, x, y, z);
 }
 
 static int fault_block_iget_i(const fault_block_type *fault_block, int index) {
-    return int_vector_iget(fault_block->i_list, index);
+    return int_vector_iget(fault_block->i_list.get(), index);
 }
 
 static int fault_block_iget_j(const fault_block_type *fault_block, int index) {
-    return int_vector_iget(fault_block->j_list, index);
+    return int_vector_iget(fault_block->j_list.get(), index);
 }
 
 const int_vector_type *
 fault_block_get_global_index_list(const fault_block_type *fault_block) {
-    return fault_block->global_index_list;
+    return fault_block->global_index_list.get();
 }
 
 bool fault_block_trace_edge(const fault_block_type *block,
@@ -266,9 +244,9 @@ void fault_block_list_neighbours(const fault_block_type *block,
     {
         int c;
         layer_type *layer = fault_block_layer_get_layer(block->parent_layer);
-        for (c = 0; c < int_vector_size(block->i_list); c++) {
-            int i = int_vector_iget(block->i_list, c);
-            int j = int_vector_iget(block->j_list, c);
+        for (c = 0; c < int_vector_size(block->i_list.get()); c++) {
+            int i = int_vector_iget(block->i_list.get(), c);
+            int j = int_vector_iget(block->j_list.get(), c);
 
             if (fault_block_connected_neighbour(block, i, j, i - 1, j,
                                                 connected_only, polylines))
@@ -298,9 +276,8 @@ void fault_block_list_neighbours(const fault_block_type *block,
 
 void fault_block_copy_content(fault_block_type *target_block,
                               const fault_block_type *src_block) {
-    int b;
-    for (b = 0; b < int_vector_size(src_block->i_list); b++)
+    for (int b = 0; b < int_vector_size(src_block->i_list.get()); b++)
         fault_block_add_cell(target_block,
-                             int_vector_iget(src_block->i_list, b),
-                             int_vector_iget(src_block->j_list, b));
+                             int_vector_iget(src_block->i_list.get(), b),
+                             int_vector_iget(src_block->j_list.get(), b));
 }
