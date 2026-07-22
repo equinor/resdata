@@ -9,7 +9,7 @@
 
 /*
   The elements in this enum are (ab)used as indexes into a int[] vector;
-  i.e. the must span the values 0..3.
+  i.e. they must span the values 0..3.
 */
 typedef enum {
     RIGHT_EDGE = 0,
