@@ -357,6 +357,7 @@ foreach(
   rd_kw_fread
   rd_kw_grdecl
   rd_kw_init
+  rd_layer
   rd_nnc_info_test
   rd_nnc_vector
   test_rd_file_index
@@ -382,12 +383,6 @@ if(HAVE_UTIL_ABORT_INTERCEPT)
                                 util/test_util.cpp)
   target_link_libraries(rd_grid_corner resdata)
   add_test(NAME rd_grid_corner COMMAND rd_grid_corner)
-
-  add_executable(rd_layer resdata/tests/rd_layer.cpp util/test_util.cpp)
-  target_link_libraries(rd_layer resdata)
-  target_include_directories(
-    rd_layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-  add_test(NAME rd_layer COMMAND rd_layer)
 endif()
 
 add_executable(rd_get_num_cpu resdata/tests/rd_get_num_cpu_test.cpp

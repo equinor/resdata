@@ -1,28 +1,11 @@
-#include <cstdlib>
-
+#include <stdexcept>
 #include <vector>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.hpp>
 
 #include <resdata/layer.hpp>
 #include "detail/resdata/layer_cxx.hpp"
-
-void test_create() {
-    layer_type *layer = layer_alloc(10, 20);
-    test_assert_true(layer_is_instance(layer));
-    layer_free(layer);
-}
-
-void get_invalid_layer_cell1(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_cell_value(layer, 100, 100);
-}
-
-void get_invalid_layer_cell2(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_cell_value(layer, -100, -100);
-}
+#include "ert/util/int_vector.hpp"
 
 void test_get_cell() {
     layer_type *layer = layer_alloc(10, 10);
@@ -38,58 +21,22 @@ void test_get_cell() {
     layer_free(layer);
 }
 
-void get_invalid_layer_edge1(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 10, 10, RIGHT_EDGE);
-}
-
-void get_invalid_layer_edge2(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 10, 0, RIGHT_EDGE);
-}
-
-void get_invalid_layer_edge3(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 10, 0, BOTTOM_EDGE);
-}
-
-void get_invalid_layer_edge4(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 0, 10, TOP_EDGE);
-}
-
-void get_invalid_layer_edge5(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 0, 10, RIGHT_EDGE);
-}
-
-void get_invalid_layer_edge6(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 0, 10, LEFT_EDGE);
-}
-
-void get_invalid_layer_edge7(void *arg) {
-    layer_type *layer = layer_safe_cast(arg);
-    layer_iget_edge_value(layer, 10, 0, TOP_EDGE);
-}
-
 void test_get_invalid_edge() {
-    layer_type *layer = layer_alloc(10, 10);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge1, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge2, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge3, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge4, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge5, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge6, layer);
-    test_assert_util_abort("layer_get_global_edge_index",
-                           get_invalid_layer_edge7, layer);
-    layer_free(layer);
+    layer_ptr layer = make_layer(10, 10);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 10, 10, RIGHT_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 10, 0, RIGHT_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 10, 0, BOTTOM_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 0, 10, TOP_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 0, 10, RIGHT_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 0, 10, LEFT_EDGE),
+                      std::out_of_range);
+    test_assert_throw(layer_iget_edge_value(layer.get(), 10, 10, TOP_EDGE),
+                      std::out_of_range);
 }
 
 void test_edge() {
@@ -348,7 +295,6 @@ void test_copy() {
 }
 
 int main(int argc, char **argv) {
-    test_create();
     test_get_cell();
     test_get_invalid_edge();
     test_edge();

@@ -38,8 +38,6 @@ void layer_iset_cell_value(layer_type *layer, int i, int j, int value);
 int layer_iget_edge_value(const layer_type *layer, int i, int j,
                           edge_dir_enum dir);
 bool layer_cell_on_edge(const layer_type *layer, int i, int j);
-int layer_get_ny(const layer_type *layer);
-int layer_get_nx(const layer_type *layer);
 int layer_get_cell_sum(const layer_type *layer);
 bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
@@ -59,9 +57,6 @@ void layer_assign(layer_type *layer, int value);
 void layer_cells_equal(const layer_type *layer, int value,
                        int_vector_type *i_list, int_vector_type *j_list);
 int layer_count_equal(const layer_type *layer, int value);
-
-UTIL_IS_INSTANCE_HEADER(layer);
-UTIL_SAFE_CAST_HEADER(layer);
 
 using layer_ptr = std::unique_ptr<layer_type, decltype(&layer_free)>;
 layer_ptr make_layer(int, int);
