@@ -339,7 +339,7 @@ static bool layer_find_edge(const layer_type *layer, int *i, int *j,
 bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
-                            int_vector_type *cell_list) {
+                            int_vector_type *cell_list, bool dedup_cells) {
     const Cell &cell = layer->interior_cell(start_i, start_j);
     if (cell.value == value) {
         int i = start_i;
@@ -374,7 +374,8 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
             } else
                 throw std::logic_error("Internal error");
 
-            int_vector_select_unique(cell_list);
+            if (dedup_cells)
+                int_vector_select_unique(cell_list);
             return true;
         }
     }

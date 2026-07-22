@@ -6,6 +6,7 @@
 
 bool layer_trace_block_edge(const layer_type *layer, int i, int j, int value,
                             std::vector<int_point2d_type> &corner_list,
-                            int_vector_type *cell_list);
+                            int_vector_type *cell_list,
+                            bool dedup_cells = true);
 
 #endif

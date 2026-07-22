@@ -1,5 +1,7 @@
 #include <stdexcept>
 #include <memory>
+#include <cstddef>
+#include <tuple>
 #include <vector>
 #include <set>
 
@@ -14,7 +16,6 @@
 #include <resdata/layer.hpp>
 
 #include "detail/resdata/layer_cxx.hpp"
-#include "ert/util/double_vector.hpp"
 
 FaultBlock::FaultBlock(fault_block_layer_type *parent_layer, int block_id)
     : grid(fault_block_layer_get_grid(parent_layer)),
@@ -105,38 +106,33 @@ const int_vector_type *FaultBlock::get_global_index_list() const {
     return global_index_list.get();
 }
 
-bool FaultBlock::trace_edge(double_vector_type *x_list,
-                            double_vector_type *y_list,
-                            int_vector_type *cell_list) const {
+std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
+    std::vector<std::tuple<double, double, int>> edge;
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot use trace_edge on a detached fault block");
-    if (get_size() > 0) {
-        std::vector<int_point2d_type> corner_list;
-        {
-            int start_i = iget_i(0);
-            int start_j = iget_j(0);
+    if (get_size() == 0)
+        return edge;
 
-            layer_trace_block_edge(fault_block_layer_get_layer(parent_layer),
-                                   start_i, start_j, block_id, corner_list,
-                                   cell_list);
-        }
+    std::vector<int_point2d_type> corner_list;
+    auto cell_list = make_int_vector(0, 0);
+    int start_i = iget_i(0);
+    int start_j = iget_j(0);
 
-        if (x_list && y_list) {
-            double_vector_reset(x_list);
-            double_vector_reset(y_list);
-            for (const auto &p : corner_list) {
-                double x, y, z;
+    layer_trace_block_edge(fault_block_layer_get_layer(parent_layer), start_i,
+                           start_j, block_id, corner_list, cell_list.get(),
+                           /*dedup_cells=*/false);
 
-                rd_grid_get_corner_xyz(grid, p.i, p.j, k, &x, &y, &z);
-                double_vector_append(x_list, x);
-                double_vector_append(y_list, y);
-            }
-        }
+    edge.reserve(corner_list.size());
+    for (std::size_t idx = 0; idx < corner_list.size(); idx++) {
+        const auto &p = corner_list[idx];
+        double x, y, z;
 
-        return true;
-    } else
-        return false;
+        rd_grid_get_corner_xyz(grid, p.i, p.j, k, &x, &y, &z);
+        edge.emplace_back(
+            x, y, int_vector_iget(cell_list.get(), static_cast<int>(idx)));
+    }
+    return edge;
 }
 
 bool FaultBlock::neighbour_xpolyline(
