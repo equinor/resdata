@@ -14,6 +14,13 @@
    FaultBlock only needs to keep a pointer back to its parent layer. */
 typedef struct fault_block_layer_struct fault_block_layer_type;
 
+/** A single (i,j,k) cell of a FaultBlock, together with its (x,y,z)
+    cell-center coordinates. */
+struct FaultBlockCell {
+    int i, j, k;
+    double x, y, z;
+};
+
 /** A FaultBlock instance is a collection of cells - identified by (i,j)
     pairs - in one particular layer (i.e. one k value) which are considered
     to be one connected unit.*/
@@ -52,8 +59,7 @@ public:
     [[nodiscard]] int get_id() const;
     double get_xc();
     double get_yc();
-    void export_cell(int index, int *i, int *j, int *k, double *x, double *y,
-                     double *z) const;
+    [[nodiscard]] FaultBlockCell export_cell(int index) const;
     void assign_to_region(int region_id);
     [[nodiscard]] const int_vector_type *get_region_list() const;
     /** add_cell cannot be called on a detached FaultBlock */

@@ -85,13 +85,14 @@ double FaultBlock::get_yc() {
     return yc;
 }
 
-void FaultBlock::export_cell(int index, int *i, int *j, int *k_out, double *x,
-                             double *y, double *z) const {
-    *i = int_vector_iget(i_list.get(), index);
-    *j = int_vector_iget(j_list.get(), index);
-    *k_out = k;
+FaultBlockCell FaultBlock::export_cell(int index) const {
+    FaultBlockCell cell;
+    cell.i = int_vector_iget(i_list.get(), index);
+    cell.j = int_vector_iget(j_list.get(), index);
+    cell.k = k;
 
-    rd_grid_get_xyz3(grid, *i, *j, *k_out, x, y, z);
+    rd_grid_get_xyz3(grid, cell.i, cell.j, cell.k, &cell.x, &cell.y, &cell.z);
+    return cell;
 }
 
 int FaultBlock::iget_i(int index) const {
