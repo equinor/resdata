@@ -63,4 +63,5 @@ int layer_count_equal(const layer_type *layer, int value);
 UTIL_IS_INSTANCE_HEADER(layer);
 UTIL_SAFE_CAST_HEADER(layer);
 
-std::unique_ptr<layer_type, decltype(&layer_free)> make_layer(int, int);
+using layer_ptr = std::unique_ptr<layer_type, decltype(&layer_free)>;
+layer_ptr make_layer(int, int);
