@@ -1,6 +1,6 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.grid.faults._fault_block_layer as _fault_block_layer
 
 from .fault import Fault
 from .fault_block import FaultBlock
@@ -9,51 +9,9 @@ from .layer import Layer
 
 class FaultBlockLayer(BaseCClass):
     TYPE_NAME = "rd_fault_block_layer"
-    _alloc = ResdataPrototype(
-        "void* fault_block_layer_alloc(rd_grid,  int)", bind=False
-    )
-    _free = ResdataPrototype("void fault_block_layer_free(rd_fault_block_layer)")
-    _size = ResdataPrototype("int fault_block_layer_get_size(rd_fault_block_layer)")
-    _iget_block = ResdataPrototype(
-        "rd_fault_block_ref fault_block_layer_iget_block(rd_fault_block_layer, int)"
-    )
-    _add_block = ResdataPrototype(
-        "rd_fault_block_ref fault_block_layer_add_block(rd_fault_block_layer, int)"
-    )
-    _get_block = ResdataPrototype(
-        "rd_fault_block_ref fault_block_layer_get_block(rd_fault_block_layer, int)"
-    )
-    _del_block = ResdataPrototype(
-        "void fault_block_layer_del_block(rd_fault_block_layer, int)"
-    )
-    _has_block = ResdataPrototype(
-        "bool fault_block_layer_has_block(rd_fault_block_layer, int)"
-    )
-    _scan_keyword = ResdataPrototype(
-        "bool fault_block_layer_scan_kw(rd_fault_block_layer, rd_kw)"
-    )
-    _load_keyword = ResdataPrototype(
-        "bool fault_block_layer_load_kw(rd_fault_block_layer, rd_kw)"
-    )
-    _getK = ResdataPrototype("int fault_block_layer_get_k(rd_fault_block_layer)")
-    _get_next_id = ResdataPrototype(
-        "int fault_block_layer_get_next_id(rd_fault_block_layer)"
-    )
-    _scan_layer = ResdataPrototype(
-        "void fault_block_layer_scan_layer(rd_fault_block_layer, rd_layer)"
-    )
-    _insert_block_content = ResdataPrototype(
-        "void fault_block_layer_insert_block_content(rd_fault_block_layer, rd_fault_block)"
-    )
-    _export_kw = ResdataPrototype(
-        "bool fault_block_layer_export(rd_fault_block_layer, rd_kw)"
-    )
-    _get_layer = ResdataPrototype(
-        "rd_layer_ref fault_block_layer_get_layer(rd_fault_block_layer)"
-    )
 
     def __init__(self, grid, k):
-        c_ptr = self._alloc(grid, k)
+        c_ptr = _fault_block_layer._alloc(grid, k)
         if c_ptr:
             super().__init__(c_ptr)
         else:
@@ -66,7 +24,7 @@ class FaultBlockLayer(BaseCClass):
         self.grid_ref = grid
 
     def __len__(self):
-        return self._size()
+        return _fault_block_layer._size(self)
 
     def __repr__(self):
         return self._create_repr("size=%d, k=%d" % (len(self), self.get_k()))
@@ -77,7 +35,7 @@ class FaultBlockLayer(BaseCClass):
                 index += len(self)
 
             if 0 <= index < len(self):
-                return self._iget_block(index).setParent(self)
+                return _fault_block_layer._iget_block(self, index)
             else:
                 raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
         elif isinstance(index, tuple):
@@ -97,13 +55,13 @@ class FaultBlockLayer(BaseCClass):
             raise TypeError("Index should be integer type")
 
     def __contains__(self, block_id):
-        return self._has_block(block_id)
+        return _fault_block_layer._has_block(self, block_id)
 
     def scan_keyword(self, fault_block_kw):
         """
         Will reorder the block ids, and ensure single connectedness. Assign block_id to zero blocks.
         """
-        ok = self._scan_keyword(fault_block_kw)
+        ok = _fault_block_layer._scan_keyword(self, fault_block_kw)
         if not ok:
             raise ValueError(
                 "The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d"
@@ -118,7 +76,7 @@ class FaultBlockLayer(BaseCClass):
         """
         Will load directly from keyword - without reorder; ignoring zero.
         """
-        ok = self._load_keyword(fault_block_kw)
+        ok = _fault_block_layer._load_keyword(self, fault_block_kw)
         if not ok:
             raise ValueError(
                 "The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d"
@@ -131,13 +89,13 @@ class FaultBlockLayer(BaseCClass):
 
     def get_block(self, block_id) -> FaultBlock:
         if block_id in self:
-            return self._get_block(block_id).setParent(self)
+            return _fault_block_layer._get_block(self, block_id)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
     def delete_block(self, block_id):
         if block_id in self:
-            self._del_block(block_id)
+            _fault_block_layer._del_block(self, block_id)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
@@ -148,26 +106,26 @@ class FaultBlockLayer(BaseCClass):
         if block_id in self:
             raise KeyError("Layer already contains block with ID:%s" % block_id)
         else:
-            return self._add_block(block_id).setParent(self)
+            return _fault_block_layer._add_block(self, block_id)
 
     def get_next_id(self):
-        return self._get_next_id()
+        return _fault_block_layer._get_next_id(self)
 
     def get_k(self):
-        return self._getK()
+        return _fault_block_layer._getK(self)
 
     @property
     def k(self):
-        return self._getK()
+        return _fault_block_layer._getK(self)
 
     def free(self):
-        self._free()
+        _fault_block_layer._free(self)
 
     def scan_layer(self, layer: Layer) -> None:
-        self._scan_layer(layer)
+        _fault_block_layer._scan_layer(self, layer)
 
     def insert_block_content(self, block):
-        self._insert_block_content(block)
+        _fault_block_layer._insert_block_content(self, block)
 
     def export_keyword(self, kw):
         if len(kw) != self.grid_ref.get_global_size():
@@ -180,7 +138,7 @@ class FaultBlockLayer(BaseCClass):
         if not kw.data_type.is_int():
             raise TypeError("The target kewyord must be of integer type")
 
-        self._export_kw(kw)
+        _fault_block_layer._export_kw(self, kw)
 
     def add_fault_barrier(self, fault, link_segments=False):
         layer = self.get_geo_layer()
@@ -214,7 +172,7 @@ class FaultBlockLayer(BaseCClass):
 
     def get_geo_layer(self) -> Layer:
         """Returns the underlying geometric layer."""
-        return self._get_layer().setParent(self)
+        return _fault_block_layer._get_layer(self)
 
     def cell_contact(self, p1, p2):
         layer = self.get_geo_layer()

@@ -1,51 +1,15 @@
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype
+import resdata.grid.faults._layer as _layer
 from resdata.grid import Grid
 from resdata.util.util import IntVector
 
 
 class Layer(BaseCClass):
     TYPE_NAME = "rd_layer"
-    _alloc = ResdataPrototype("void* layer_alloc(int,  int)", bind=False)
-    _free = ResdataPrototype("void layer_free(rd_layer)")
-    _get_nx = ResdataPrototype("int layer_get_nx(rd_layer)")
-    _get_ny = ResdataPrototype("int layer_get_ny(rd_layer)")
-    _set_cell = ResdataPrototype("void layer_iset_cell_value(rd_layer, int, int, int)")
-    _get_cell = ResdataPrototype("int layer_iget_cell_value(rd_layer, int, int)")
-    _get_bottom_barrier = ResdataPrototype(
-        "bool layer_iget_bottom_barrier(rd_layer, int, int)"
-    )
-    _get_left_barrier = ResdataPrototype(
-        "bool layer_iget_left_barrier(rd_layer, int, int)"
-    )
-    _cell_contact = ResdataPrototype(
-        "bool layer_cell_contact(rd_layer, int, int, int, int)"
-    )
-    _add_barrier = ResdataPrototype("void layer_add_barrier(rd_layer, int, int)")
-    _add_ijbarrier = ResdataPrototype(
-        "void layer_add_ijbarrier(rd_layer, int, int, int, int)"
-    )
-    _add_interp_barrier = ResdataPrototype(
-        "void layer_add_interp_barrier(rd_layer, int, int)"
-    )
-    _clear_cells = ResdataPrototype("void layer_clear_cells(rd_layer)")
-    _assign = ResdataPrototype("void layer_assign(rd_layer, int)")
-    _cell_sum = ResdataPrototype("int layer_get_cell_sum(rd_layer)")
-    _update_connected = ResdataPrototype(
-        "void layer_update_connected_cells(rd_layer,int,int,int,int)"
-    )
-    _cells_equal = ResdataPrototype(
-        "void layer_cells_equal(rd_layer, int,rd_int_vector,rd_int_vector)"
-    )
-    _count_equal = ResdataPrototype("int layer_count_equal(rd_layer, int)")
-    _active_cell = ResdataPrototype("bool layer_iget_active(rd_layer, int,int)")
-    _update_active = ResdataPrototype(
-        "bool layer_update_active(rd_layer, rd_grid, int)"
-    )
 
     def __init__(self, nx, ny):
-        c_ptr = self._alloc(nx, ny)
+        c_ptr = _layer._alloc(nx, ny)
         if c_ptr:
             super().__init__(c_ptr)
         else:
@@ -72,11 +36,11 @@ class Layer(BaseCClass):
 
     def __setitem__(self, index, value):
         i, j = self.__unpack_index(index)
-        self._set_cell(i, j, value)
+        _layer._set_cell(self, i, j, value)
 
     def active_cell(self, i, j):
         self._assert_ij(i, j)
-        return self._active_cell(i, j)
+        return _layer._active_cell(self, i, j)
 
     def update_active(self, grid: Grid, k):
         if grid.get_nx() != self.get_nx():
@@ -94,36 +58,36 @@ class Layer(BaseCClass):
         if k >= grid.get_nz():
             raise ValueError("K value invalid: Grid range [0,%d)" % grid.get_nz())
 
-        self._update_active(grid, k)
+        _layer._update_active(self, grid, k)
 
     def __getitem__(self, index):
         i, j = self.__unpack_index(index)
-        return self._get_cell(i, j)
+        return _layer._get_cell(self, i, j)
 
     def bottom_barrier(self, i, j):
         self._assert_ij(i, j)
-        return self._get_bottom_barrier(i, j)
+        return _layer._get_bottom_barrier(self, i, j)
 
     def left_barrier(self, i, j):
         self._assert_ij(i, j)
-        return self._get_left_barrier(i, j)
+        return _layer._get_left_barrier(self, i, j)
 
     def get_nx(self):
-        return self._get_nx()
+        return _layer._get_nx(self)
 
     @property
     def nx(self):
-        return self._get_nx()
+        return _layer._get_nx(self)
 
     def get_ny(self):
-        return self._get_ny()
+        return _layer._get_ny(self)
 
     @property
     def ny(self):
-        return self._get_ny()
+        return _layer._get_ny(self)
 
     def free(self):
-        self._free()
+        _layer._free(self)
 
     def cell_contact(self, p1, p2):
         i1, j1 = p1
@@ -141,10 +105,10 @@ class Layer(BaseCClass):
         if not 0 <= j2 < self.get_ny():
             raise IndexError("Invalid i2:%d" % j2)
 
-        return self._cell_contact(i1, j1, i2, j2)
+        return _layer._cell_contact(self, i1, j1, i2, j2)
 
     def add_interp_barrier(self, c1, c2):
-        self._add_interp_barrier(c1, c2)
+        _layer._add_interp_barrier(self, c1, c2)
 
     def add_polyline_barrier(self, polyline, grid, k):
         if len(polyline) > 1:
@@ -163,7 +127,7 @@ class Layer(BaseCClass):
         for index, fault_line in enumerate(fault_layer):
             for segment in fault_line:
                 c1, c2 = segment.get_corners()
-                self._add_barrier(c1, c2)
+                _layer._add_barrier(self, c1, c2)
 
             if index < num_lines - 1:
                 next_line = fault_layer[index + 1]
@@ -194,27 +158,27 @@ class Layer(BaseCClass):
                         "i value:%d invalid. Valid range: [0,%d] " % (j1, j2)
                     )
 
-                self._add_ijbarrier(i1, j1, i2, j2)
+                _layer._add_ijbarrier(self, i1, j1, i2, j2)
                 p1 = p2
                 i1, j1 = p1
             else:
                 raise ValueError("Must have i1 == i2 or j1 == j2")
 
     def cell_sum(self):
-        return self._cell_sum()
+        return _layer._cell_sum(self)
 
     def clear_cells(self):
         """
         Will reset all cell and edge values to zero. Barriers will be left
         unchanged.
         """
-        self._clear_cells()
+        _layer._clear_cells(self)
 
     def assign(self, value):
         """
         Will set the cell value to @value in all cells. Barriers will not be changed
         """
-        self._assign(value)
+        _layer._assign(self, value)
 
     def update_connected(self, ij, new_value, org_value=None):
         """
@@ -226,7 +190,7 @@ class Layer(BaseCClass):
             org_value = self[ij]
 
         if self[ij] == org_value:
-            self._update_connected(ij[0], ij[1], org_value, new_value)
+            _layer._update_connected(self, ij[0], ij[1], org_value, new_value)
         else:
             raise ValueError("Cell %s is not equal to %d \n" % (ij, org_value))
 
@@ -236,11 +200,11 @@ class Layer(BaseCClass):
         """
         i_list = IntVector()
         j_list = IntVector()
-        self._cells_equal(value, i_list, j_list)
+        _layer._cells_equal(self, value, i_list, j_list)
         ij_list = []
         for i, j in zip(i_list, j_list):
             ij_list.append((i, j))
         return ij_list
 
     def count_equal(self, value):
-        return self._count_equal(value)
+        return _layer._count_equal(self, value)

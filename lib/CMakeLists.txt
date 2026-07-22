@@ -230,6 +230,11 @@ add_resdata_pybind_module(_geo_region geometry/geo_region_pybind.cpp
                           resdata/geometry)
 add_resdata_pybind_module(_surface geometry/geo_surface_pybind.cpp
                           resdata/geometry)
+add_resdata_pybind_module(_fault_block resdata/fault_block_pybind.cpp
+                          resdata/grid/faults)
+add_resdata_pybind_module(
+  _fault_block_layer resdata/fault_block_layer_pybind.cpp resdata/grid/faults)
+add_resdata_pybind_module(_layer resdata/layer_pybind.cpp resdata/grid/faults)
 
 if(NOT BUILD_TESTS)
   return()

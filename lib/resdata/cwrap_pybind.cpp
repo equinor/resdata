@@ -16,6 +16,9 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_subsidence.hpp>
 #include <resdata/rd_region.hpp>
+#include <resdata/fault_block.hpp>
+#include <resdata/fault_block_layer.hpp>
+#include <resdata/layer.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -336,4 +339,54 @@ template <> geo_surface_type *from_cwrap<geo_surface_type>(py::handle obj) {
                              static_cast<std::string>(py::repr(obj)));
 
     return cast_cwrap<geo_surface_type>(obj);
+}
+
+py::object FaultBlock() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.grid.faults").attr("FaultBlock");
+    }
+    return cls;
+}
+
+template <> fault_block_type *from_cwrap<fault_block_type>(py::handle obj) {
+    if (!py::isinstance(obj, FaultBlock()))
+        throw py::type_error("Expected FaultBlock, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<fault_block_type>(obj);
+}
+
+py::object FaultBlockLayer() {
+    static py::object cls;
+    if (!cls) {
+        cls =
+            py::module_::import("resdata.grid.faults").attr("FaultBlockLayer");
+    }
+    return cls;
+}
+
+template <>
+fault_block_layer_type *from_cwrap<fault_block_layer_type>(py::handle obj) {
+    if (!py::isinstance(obj, FaultBlockLayer()))
+        throw py::type_error("Expected FaultBlockLayer, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<fault_block_layer_type>(obj);
+}
+
+py::object Layer() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.grid.faults").attr("Layer");
+    }
+    return cls;
+}
+
+template <> layer_type *from_cwrap<layer_type>(py::handle obj) {
+    if (!py::isinstance(obj, Layer()))
+        throw py::type_error("Expected Layer, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<layer_type>(obj);
 }
