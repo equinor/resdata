@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include <fmt/format.h>
 #include <pybind11/pybind11.h>
@@ -14,11 +15,6 @@
 namespace py = pybind11;
 
 namespace {
-
-struct FaultBlockCell {
-    int i, j, k;
-    double x, y, z;
-};
 
 py::object make_edge_polygon(FaultBlock &self) {
     py::object polyline = Polyline()();
@@ -64,26 +60,18 @@ PYBIND11_MODULE(fault_block, m) {
             throw py::error_already_set();
         }))
         .def("__getitem__",
-             [m](FaultBlock &self, py::object index) -> py::object {
-                 if (py::isinstance<py::int_>(index)) {
-                     long long idx = index.cast<long long>();
-                     long long len = self.get_size();
-                     if (idx < 0)
-                         idx += len;
+             [](FaultBlock &self, py::int_ index) -> FaultBlockCell {
+                 py::int_ len{self.get_size()};
+                 if (index < py::int_(0))
+                     index += len;
 
-                     if (idx >= 0 && idx < len) {
-                         int i = 0, j = 0, k = 0;
-                         double x = 0, y = 0, z = 0;
-                         self.export_cell(static_cast<int>(idx), &i, &j, &k, &x,
-                                          &y, &z);
-                         return m.attr("FaultBlockCell")(i, j, k, x, y, z);
-                     } else {
-                         throw py::index_error(fmt::format(
-                             "Index:{} out of range: [0,{})", idx, len));
-                     }
+                 if (index >= py::int_(0) && index < len) {
+                     return self.export_cell(index.cast<int>());
                  } else {
-                     throw py::type_error(
-                         "Index:%s wrong type - integer expected");
+                     throw py::index_error(
+                         fmt::format("Index:{} out of range: [0,{})",
+                                     py::str(index).cast<std::string>(),
+                                     py::str(len).cast<std::string>()));
                  }
              })
         .def("__str__",
@@ -105,10 +93,9 @@ PYBIND11_MODULE(fault_block, m) {
                 int inside = 0;
                 int size = self.get_size();
                 for (int idx = 0; idx < size; idx++) {
-                    int i = 0, j = 0, k = 0;
-                    double x = 0, y = 0, z = 0;
-                    self.export_cell(idx, &i, &j, &k, &x, &y, &z);
-                    if (point_in_polygon(py::make_tuple(x, y), polygon)
+                    FaultBlockCell cell = self.export_cell(idx);
+                    if (point_in_polygon(py::make_tuple(cell.x, cell.y),
+                                         polygon)
                             .cast<bool>())
                         inside += 1;
                 }
