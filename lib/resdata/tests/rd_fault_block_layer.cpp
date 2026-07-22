@@ -27,11 +27,11 @@ void test_create(rd_grid_type *grid, rd_kw_type *fault_block_kw) {
         test_assert_int_equal(1, fault_block_layer_get_next_id(layer));
         fault_block_layer_scan_kw(layer, fault_block_kw);
         {
-            fault_block_type *block = fault_block_layer_iget_block(layer, 0);
+            auto block = fault_block_layer_iget_block(layer, 0);
             double x, y, z;
             rd_grid_get_xyz3(grid, 4, 4, k, &x, &y, &z);
-            test_assert_double_equal(x, fault_block_get_xc(block));
-            test_assert_double_equal(y, fault_block_get_yc(block));
+            test_assert_double_equal(x, block->get_xc());
+            test_assert_double_equal(y, block->get_yc());
         }
 
         fault_block_layer_free(layer);
@@ -52,12 +52,12 @@ void test_trace_edge(rd_grid_type *grid) {
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
     double_vector_type *x_list = double_vector_alloc(0, 0);
     double_vector_type *y_list = double_vector_alloc(0, 0);
-    fault_block_type *block = fault_block_layer_safe_get_block(layer, 99);
+    auto block = fault_block_layer_safe_get_block(layer, 99);
     int_vector_type *cell_list = int_vector_alloc(0, 0);
 
-    test_assert_false(fault_block_trace_edge(block, x_list, y_list, cell_list));
-    fault_block_add_cell(block, 0, 0);
-    test_assert_true(fault_block_trace_edge(block, x_list, y_list, cell_list));
+    test_assert_false(block->trace_edge(x_list, y_list, cell_list));
+    block->add_cell(0, 0);
+    test_assert_true(block->trace_edge(x_list, y_list, cell_list));
     test_assert_int_equal(4, double_vector_size(x_list));
     test_assert_int_equal(4, double_vector_size(y_list));
 
@@ -88,12 +88,12 @@ void test_export(rd_grid_type *grid) {
         rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(grid) + 1, RD_INT);
     rd_kw_type *rd_kw3 =
         rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(grid), RD_FLOAT);
-    fault_block_type *block = fault_block_layer_add_block(layer, 10);
+    auto block = fault_block_layer_add_block(layer, 10);
 
-    fault_block_add_cell(block, 0, 0);
-    fault_block_add_cell(block, 1, 0);
-    fault_block_add_cell(block, 1, 1);
-    fault_block_add_cell(block, 0, 1);
+    block->add_cell(0, 0);
+    block->add_cell(1, 0);
+    block->add_cell(1, 1);
+    block->add_cell(0, 1);
 
     test_assert_true(fault_block_layer_export(layer, rd_kw1));
     test_assert_false(fault_block_layer_export(layer, rd_kw2));
@@ -132,17 +132,17 @@ void test_neighbours(rd_grid_type *grid) {
     {
         int_vector_type *neighbours = int_vector_alloc(0, 0);
         {
-            fault_block_type *block = fault_block_layer_get_block(layer, 1);
+            auto block = fault_block_layer_get_block(layer, 1);
 
             test_assert_int_equal(0, int_vector_size(neighbours));
-            fault_block_list_neighbours(block, false, polylines, neighbours);
+            block->list_neighbours(false, polylines, neighbours);
             test_assert_int_equal(0, int_vector_size(neighbours));
         }
 
         {
-            fault_block_type *block = fault_block_layer_get_block(layer, 2);
+            auto block = fault_block_layer_get_block(layer, 2);
 
-            fault_block_list_neighbours(block, false, polylines, neighbours);
+            block->list_neighbours(false, polylines, neighbours);
             test_assert_int_equal(1, int_vector_size(neighbours));
             test_assert_true(int_vector_contains(neighbours, 3));
         }
