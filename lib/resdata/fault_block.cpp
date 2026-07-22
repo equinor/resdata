@@ -1,5 +1,7 @@
 #include <stdexcept>
+#include <memory>
 #include <vector>
+#include <set>
 
 #include <ert/util/int_vector.hpp>
 
@@ -187,37 +189,39 @@ bool FaultBlock::connected_neighbour(
             !neighbour_xpolyline(i1, j1, i2, j2, polylines));
 }
 
-void FaultBlock::list_neighbours(bool connected_only,
-                                 const geo_polygon_collection_type *polylines,
-                                 int_vector_type *neighbour_list) const {
+std::vector<std::shared_ptr<FaultBlock>>
+FaultBlock::get_neighbours(bool connected_only,
+                           const geo_polygon_collection_type *polylines) const {
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot get neighbours of a detached fault block");
-    int_vector_reset(neighbour_list);
+    std::set<int> neighbour_ids;
     layer_type *layer = fault_block_layer_get_layer(parent_layer);
     for (int c = 0; c < int_vector_size(i_list.get()); c++) {
         int i = int_vector_iget(i_list.get(), c);
         int j = int_vector_iget(j_list.get(), c);
 
         if (connected_neighbour(i, j, i - 1, j, connected_only, polylines))
-            int_vector_append(neighbour_list,
-                              layer_iget_cell_value(layer, i - 1, j));
+            neighbour_ids.insert(layer_iget_cell_value(layer, i - 1, j));
 
         if (connected_neighbour(i, j, i + 1, j, connected_only, polylines))
-            int_vector_append(neighbour_list,
-                              layer_iget_cell_value(layer, i + 1, j));
+            neighbour_ids.insert(layer_iget_cell_value(layer, i + 1, j));
 
         if (connected_neighbour(i, j, i, j - 1, connected_only, polylines))
-            int_vector_append(neighbour_list,
-                              layer_iget_cell_value(layer, i, j - 1));
+            neighbour_ids.insert(layer_iget_cell_value(layer, i, j - 1));
 
         if (connected_neighbour(i, j, i, j + 1, connected_only, polylines))
-            int_vector_append(neighbour_list,
-                              layer_iget_cell_value(layer, i, j + 1));
+            neighbour_ids.insert(layer_iget_cell_value(layer, i, j + 1));
     }
-    int_vector_select_unique(neighbour_list);
-    int_vector_del_value(neighbour_list, 0);
-    int_vector_del_value(neighbour_list, block_id);
+    neighbour_ids.erase(0);
+    neighbour_ids.erase(block_id);
+
+    std::vector<std::shared_ptr<FaultBlock>> neighbours;
+    neighbours.reserve(neighbour_ids.size());
+    for (int id : neighbour_ids) {
+        neighbours.push_back(fault_block_layer_get_block(parent_layer, id));
+    }
+    return neighbours;
 }
 
 void FaultBlock::copy_content(const FaultBlock &src_block) {

@@ -687,3 +687,23 @@ def test_that_deleted_fault_block_stays_alive_when_referenced_from_python():
     with pytest.raises(ValueError, match="detached"):
         block.get_edge_polygon()
 
+
+def test_that_get_neighbours_returns_blocks_with_a_working_parent_layer():
+    """FaultBlock instances returned from get_neighbours() are not created
+    through FaultBlockLayer's get_block/iget_block/add_block bindings, so
+    get_parent_layer() must still be wired up correctly for them."""
+    grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+    kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
+    kw.assign(0)
+    kw[grid.get_global_index(ijk=(3, 3, 0))] = 2
+    kw[grid.get_global_index(ijk=(4, 3, 0))] = 3
+
+    layer = FaultBlockLayer(grid, 0)
+    layer.scan_keyword(kw)
+    block = layer.get_block(2)
+
+    neighbours = block.get_neighbours()
+    neighbour_ids = sorted(n.get_block_id() for n in neighbours)
+    assert 3 in neighbour_ids
+    for neighbour in neighbours:
+        assert neighbour.get_parent_layer() is layer
