@@ -1,21 +1,16 @@
-#ifndef ERT_LAYER_H
-#define ERT_LAYER_H
+#pragma once
+
+#include <memory>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
 
-#ifdef __cplusplus
-#include <memory>
-extern "C" {
-#endif
-
 /*
-   The elements in this enum are (ab)used as indexes into a int[] vector;
-   i.e. the must span the values 0..3.
+  The elements in this enum are (ab)used as indexes into a int[] vector;
+  i.e. the must span the values 0..3.
 */
-
 typedef enum {
     RIGHT_EDGE = 0,
     LEFT_EDGE = 1,
@@ -68,8 +63,4 @@ int layer_count_equal(const layer_type *layer, int value);
 UTIL_IS_INSTANCE_HEADER(layer);
 UTIL_SAFE_CAST_HEADER(layer);
 
-#ifdef __cplusplus
-}
-#endif
 std::unique_ptr<layer_type, decltype(&layer_free)> make_layer(int, int);
-#endif

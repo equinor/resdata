@@ -1,5 +1,4 @@
-#ifndef ERT_FAULT_BLOCK_H
-#define ERT_FAULT_BLOCK_H
+#pragma once
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/double_vector.hpp>
@@ -9,10 +8,6 @@
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct fault_block_struct fault_block_type;
 
@@ -43,8 +38,3 @@ void fault_block_list_neighbours(const fault_block_type *block,
                                  int_vector_type *neighbour_list);
 
 UTIL_IS_INSTANCE_HEADER(fault_block);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
