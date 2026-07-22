@@ -21,17 +21,13 @@
 
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id);
-void fault_block_free(fault_block_type *block);
-using block_ptr =
-    std::unique_ptr<fault_block_type, decltype(&fault_block_free)>;
-
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     rd_grid_type *grid;
     std::vector<int> block_map;
     layer_ptr layer{nullptr, &layer_free};
     int k;
-    std::vector<block_ptr> blocks;
+    std::vector<fault_block_ptr> blocks;
 
     [[nodiscard]] int get_block(int index) const {
         if (index >= static_cast<int>(block_map.size()))
@@ -54,7 +50,8 @@ UTIL_IS_INSTANCE_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
 fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {
     if (layer->get_block(block_id) < 0) {
-        block_ptr block(fault_block_alloc(layer, block_id), &fault_block_free);
+        fault_block_ptr block{fault_block_alloc(layer, block_id),
+                              &fault_block_free};
         fault_block_type *block_raw = block.get();
         int storage_index = layer->blocks.size();
 
@@ -184,7 +181,7 @@ fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, int k) {
         layer->grid = grid;
         layer->k = k;
         layer->block_map = std::vector<int>(0);
-        layer->blocks = std::vector<block_ptr>();
+        layer->blocks = std::vector<fault_block_ptr>();
         layer->layer.reset(
             layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid)));
 

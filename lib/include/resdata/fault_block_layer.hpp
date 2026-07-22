@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
@@ -40,3 +41,6 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
                               rd_kw_type *faultblock_kw);
 rd_grid_type *fault_block_layer_get_grid(const fault_block_layer_type *layer);
 layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer);
+
+using fault_block_layer_ptr =
+    std::unique_ptr<fault_block_layer_type, decltype(&fault_block_layer_free)>;
