@@ -179,28 +179,13 @@ fault_block_neighbour_xpolyline(const fault_block_type *block, int i1, int j1,
     rd_grid_get_xyz1(block->grid, g1, &x1, &y1, &z1);
     rd_grid_get_xyz1(block->grid, g2, &x2, &y2, &z2);
 
-    {
-        int polyline_index = 0;
-        bool intersection = false;
-        while (true) {
-            if (polyline_index >= geo_polygon_collection_size(polylines))
-                break;
-
-            {
-                const geo_polygon_type *polyline =
-                    geo_polygon_collection_iget_polygon(polylines,
-                                                        polyline_index);
-                if (geo_polygon_segment_intersects(polyline, x1, y1, x2, y2)) {
-                    intersection = true;
-                    break;
-                }
-            }
-
-            polyline_index++;
-        }
-
-        return intersection;
+    for (int i = 0; i < geo_polygon_collection_size(polylines); i++) {
+        const geo_polygon_type *polyline =
+            geo_polygon_collection_iget_polygon(polylines, i);
+        if (geo_polygon_segment_intersects(polyline, x1, y1, x2, y2))
+            return true;
     }
+    return false;
 }
 
 static bool
