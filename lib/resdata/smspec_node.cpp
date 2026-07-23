@@ -1059,29 +1059,6 @@ const char *smspec_node::get_lgr_name() const {
     return get_cstring(this->lgr_name);
 }
 
-/*
-  Will return -1 for smspec_node variables which are not
-  of type RD_SMSPEC_REGION_2_REGION_VAR.
-*/
-
-int smspec_node::get_R1() const {
-    if (var_type == RD_SMSPEC_REGION_2_REGION_VAR) {
-        int r1, r2;
-        decode_R1R2(&r1, &r2);
-        return r1;
-    } else
-        return -1;
-}
-
-int smspec_node::get_R2() const {
-    if (var_type == RD_SMSPEC_REGION_2_REGION_VAR) {
-        int r1, r2;
-        decode_R1R2(&r1, &r2);
-        return r2;
-    } else
-        return -1;
-}
-
 bool smspec_node::need_nums() const {
     /*
     Check if this node needs the nums field; if at least one of the
@@ -1103,14 +1080,6 @@ bool smspec_node::need_nums() const {
                 return true;
         }
     }
-}
-
-void smspec_node::fprintf__(FILE *stream) const {
-    fprintf(stream, "KEYWORD: %s \n", this->keyword.c_str());
-    fprintf(stream, "WGNAME : %s \n", this->wgname.c_str());
-    fprintf(stream, "UNIT   : %s \n", this->unit.c_str());
-    fprintf(stream, "TYPE   : %d \n", this->var_type);
-    fprintf(stream, "NUM    : %d \n\n", this->num);
 }
 
 namespace {
