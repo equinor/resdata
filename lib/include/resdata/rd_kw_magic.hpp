@@ -516,9 +516,9 @@ values (2e20) are denoted with '*'.
 #define HOSTGRID_KW "HOSTGRID"
 
 /* RFT keywords */
-#define SWAT_KW "SWAT"         /* The kewyord containing SWAT. */
-#define SGAS_KW "SGAS"         /* The kewyord containing SGAS. */
-#define PRESSURE_KW "PRESSURE" /* The kewyord containing PRESSURE. */
+#define SWAT_KW "SWAT"         /* The keyword containing SWAT. */
+#define SGAS_KW "SGAS"         /* The keyword containing SGAS. */
+#define PRESSURE_KW "PRESSURE" /* The keyword containing PRESSURE. */
 #define DEPTH_KW "DEPTH"       /* The depth of the connection. */
 
 /* PLT keywords */

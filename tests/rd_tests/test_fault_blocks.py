@@ -708,6 +708,7 @@ def test_that_get_neighbours_returns_blocks_with_a_working_parent_layer():
     for neighbour in neighbours:
         assert neighbour.get_parent_layer() is layer
 
+
 def test_that_contains_returns_false_out_of_bounds():
     grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
     layer = FaultBlockLayer(grid, 0)
