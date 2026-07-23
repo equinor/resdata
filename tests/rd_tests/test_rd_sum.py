@@ -793,6 +793,128 @@ def test_summary_writer_local_variables():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructs_a_field_var_with_no_wgname_or_num():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("FIELD_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable("FOPT", unit="SM3", default_value=1.0)
+
+    assert node.keyword == "FOPT"
+    assert node.wgname is None
+    assert node.unit == "SM3"
+    assert node.num == 0
+    assert node.default == pytest.approx(1.0)
+    assert node.get_key1() == "FOPT"
+    assert node.get_key2() is None
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_FIELD_VAR
+    assert node.get_num() == 0
+    assert node.is_total()
+    assert not node.is_rate()
+    assert not node.is_historical()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructs_a_well_var_with_wgname():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("WELL_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable("WOPR", unit="SM3/DAY", wgname="OP1", default_value=2.0)
+
+    assert node.keyword == "WOPR"
+    assert node.wgname == "OP1"
+    assert node.unit == "SM3/DAY"
+    assert node.default == pytest.approx(2.0)
+    assert node.get_key1() == "WOPR:OP1"
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_WELL_VAR
+    assert node.is_rate()
+    assert not node.is_total()
+    assert not node.is_historical()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructs_a_group_var_with_wgname():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("GROUP_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable("GOPR", unit="SM3/DAY", wgname="GROUP1")
+
+    assert node.keyword == "GOPR"
+    assert node.wgname == "GROUP1"
+    assert node.get_key1() == "GOPR:GROUP1"
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_GROUP_VAR
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructs_a_region_var_with_num():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("REGION_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable("RPR", unit="BARS", num=3)
+
+    assert node.keyword == "RPR"
+    assert node.wgname is None
+    assert node.num == 3
+    assert node.get_num() == 3
+    assert node.get_key1() == "RPR:3"
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_REGION_VAR
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructs_a_well_completion_var_with_wgname_and_num():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("COMPLETION_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable("CGOR", unit="SM3/SM3", wgname="OP1", num=2)
+
+    assert node.keyword == "CGOR"
+    assert node.wgname == "OP1"
+    assert node.num == 2
+    assert node.get_key1() == "CGOR:OP1:2,1,1"
+    assert node.get_key2() == "CGOR:OP1:2"
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_COMPLETION_VAR
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_local_variable_constructs_a_local_well_var():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("LOCAL_VAR", start_date, 5, 5, 5)
+
+    node = writer.add_variable(
+        "LWOPT", unit="SM3", wgname="OP1", lgr="LGR1", lgr_ijk=(0, 0, 0)
+    )
+
+    assert node.keyword == "LWOPT"
+    assert node.wgname == "OP1"
+    assert node.get_key1() == "LWOPT:LGR1:OP1"
+    assert node.var_type() == SummaryVarType.RD_SMSPEC_LOCAL_WELL_VAR
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_wgname_empty_string_and_none_are_equivalent_in_add_variable():
+    """
+    An empty wgname string is, like None, treated as "no well/group name
+    given" - the resulting node.wgname is None in both cases.
+    """
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("WGNAME_EMPTY", start_date, 5, 5, 5)
+
+    node_empty = writer.add_variable("FOPT", unit="SM3", wgname="")
+    node_none = writer.add_variable("FGPT", unit="SM3", wgname=None)
+
+    assert node_empty.wgname is None
+    assert node_none.wgname is None
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_raises_valueerror_for_well_var_without_wgname():
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("WELL_VAR_NO_WGNAME", start_date, 5, 5, 5)
+
+    with pytest.raises(ValueError):
+        writer.add_variable("WOPR", unit="SM3/DAY", wgname=None)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_from_pandas_roundtrip():
     dates = pd.date_range("2000-01-01", periods=5, freq="D")
     df = pd.DataFrame(
