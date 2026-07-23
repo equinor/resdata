@@ -311,10 +311,10 @@ foreach(
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-add_executable(rd_smspec_node resdata/tests/rd_smspec_node.cpp
-                              util/test_util.cpp)
-target_link_libraries(rd_smspec_node resdata)
-add_test(NAME rd_smspec_node COMMAND rd_smspec_node)
+add_executable(test_smspec_node resdata/tests/test_smspec_node.cpp
+                                util/test_util.cpp)
+target_link_libraries(test_smspec_node resdata)
+add_test(NAME test_smspec_node COMMAND test_smspec_node)
 
 add_executable(ert_util_work_area util/tests/ert_util_work_area.cpp
                                   util/test_util.cpp)
