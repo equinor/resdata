@@ -129,10 +129,6 @@ public:
 
     static rd_smspec_var_type identify_var_type(const char *var);
 
-    static int cmp(const smspec_node *node1, const smspec_node *node2) {
-        return node1->cmp(*node2);
-    }
-
     bool operator==(const smspec_node &other) const {
         return this->cmp(other) == 0;
     }
@@ -143,8 +139,6 @@ public:
         return this->cmp(other) > 0;
     }
 
-    [[nodiscard]] int get_R1() const;
-    [[nodiscard]] int get_R2() const;
     [[nodiscard]] const char *get_gen_key1() const;
     [[nodiscard]] const char *get_gen_key2() const;
     [[nodiscard]] rd_smspec_var_type get_var_type() const { return var_type; };
@@ -156,11 +150,8 @@ public:
     [[nodiscard]] bool is_total() const { return total_variable; };
     [[nodiscard]] bool is_historical() const { return historical; };
     [[nodiscard]] bool need_nums() const;
-    void fprintf__(FILE *stream) const;
     [[nodiscard]] int get_params_index() const { return params_index; };
     [[nodiscard]] float get_default() const { return default_value; };
-    // Will be garbage for smspec_nodes which do not have i,j,k
-    [[nodiscard]] const std::array<int, 3> &get_ijk() const { return ijk; };
     [[nodiscard]] const char *get_lgr_name() const;
     // Will be garbage for smspec_nodes which are not related to an LGR.
     [[nodiscard]] const std::array<int, 3> &get_lgr_ijk() const {
