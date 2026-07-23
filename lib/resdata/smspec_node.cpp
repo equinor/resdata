@@ -525,8 +525,6 @@ bool smspec_node_identify_total(const char *keyword,
 
 namespace rd {
 
-float smspec_node::get_default() const { return this->default_value; }
-
 void smspec_node::set_lgr_ijk(int lgr_i, int lgr_j, int lgr_k) {
     lgr_ijk[0] = lgr_i;
     lgr_ijk[1] = lgr_j;
@@ -1027,12 +1025,6 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
     set_gen_keys(key_join_string_);
 }
 
-int smspec_node::get_params_index() const { return this->params_index; }
-
-// void smspec_node::set_params_index( int params_index_) {
-// this->params_index = params_index_;
-// }
-
 namespace {
 
 const char *get_cstring(const std::string &s) {
@@ -1060,29 +1052,11 @@ const char *smspec_node::get_keyword() const {
     return get_cstring(this->keyword);
 }
 
-rd_smspec_var_type smspec_node::get_var_type() const { return this->var_type; }
-
-int smspec_node::get_num() const { return this->num; }
-
-bool smspec_node::is_rate() const { return this->rate_variable; }
-
-bool smspec_node::is_total() const { return this->total_variable; }
-
-bool smspec_node::is_historical() const { return this->historical; }
-
 const char *smspec_node::get_unit() const { return this->unit.c_str(); }
-
-// Will be garbage for smspec_nodes which do not have i,j,k
-const std::array<int, 3> &smspec_node::get_ijk() const { return this->ijk; }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
 const char *smspec_node::get_lgr_name() const {
     return get_cstring(this->lgr_name);
-}
-
-// Will be garbage for smspec_nodes which are not related to an LGR.
-const std::array<int, 3> &smspec_node::get_lgr_ijk() const {
-    return this->lgr_ijk;
 }
 
 /*
