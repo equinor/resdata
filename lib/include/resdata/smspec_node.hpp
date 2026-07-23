@@ -2,19 +2,15 @@
 #include <cstdio>
 
 #include <string>
+#include <string_view>
 #include <array>
 
 #include <ert/util/type_macros.hpp>
 
-#define DUMMY_WELL ":+:+:+:+"
-#define IS_DUMMY_WELL(well) (strcmp((well), DUMMY_WELL) == 0)
-#define SMSPEC_PARAMS_INDEX_INVALID -77
-
-#define SMSPEC_TIME_KEYWORD "TIME"
-#define SMSPEC_TIME_NUMS_VALUE -32676
-
-#define SMSPEC_YEARS_KEYWORD "YEARS"
-#define SMSPEC_YEARS_NUMS_VALUE -32676
+inline constexpr std::string_view DUMMY_WELL = ":+:+:+:+";
+inline constexpr bool IS_DUMMY_WELL(std::string_view well) noexcept {
+    return well == DUMMY_WELL;
+}
 
 typedef enum {
     RD_SMSPEC_INVALID_VAR = 0,
@@ -34,12 +30,7 @@ typedef enum {
     RD_SMSPEC_MISC_VAR = 14              /* X */
 } rd_smspec_var_type;
 
-#define SMSPEC_NUMS_INVALID -991199
-#define SMSPEC_NUMS_WELL 1
-#define SMSPEC_NUMS_GROUP 2
-#define SMSPEC_NUMS_FIELD 0
-
-#define SMSPEC_TYPE_ID 61550451
+inline constexpr int SMSPEC_NUMS_INVALID = -991199;
 
 bool smspec_node_identify_total(const char *keyword,
                                 rd_smspec_var_type var_type);
