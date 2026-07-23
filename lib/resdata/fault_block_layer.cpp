@@ -234,10 +234,11 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
 
 bool fault_block_layer_has_block(const fault_block_layer_type *layer,
                                  int block_id) {
-    if (layer->get_block(block_id) >= 0)
-        return true;
-    else
+    if (block_id < 0)
         return false;
+    if (static_cast<size_t>(block_id) >= layer->block_map.size())
+        return false;
+    return layer->block_map[block_id] >= 0;
 }
 
 int fault_block_layer_get_max_id(const fault_block_layer_type *layer) {
