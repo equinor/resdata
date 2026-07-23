@@ -388,3 +388,12 @@ py::object Polyline() {
         cls = py::module_::import("resdata.geometry").attr("Polyline");
     return cls;
 }
+
+py::object SummaryVarType() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.summary.rd_sum_var_type")
+                  .attr("SummaryVarType");
+    }
+    return cls;
+}

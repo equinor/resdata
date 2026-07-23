@@ -232,11 +232,10 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def(
         "_get_var_node",
         [](py::handle self, std::string lookup_kw) {
-            return reinterpret_cast<std::uintptr_t>(
-                const_cast<rd::smspec_node *>(rd_sum_get_general_var_node(
-                    from_cwrap<rd_sum_type>(self), lookup_kw.c_str())));
+            return const_cast<rd::smspec_node *>(rd_sum_get_general_var_node(
+                from_cwrap<rd_sum_type>(self), lookup_kw.c_str()));
         },
-        py::return_value_policy::reference);
+        py::return_value_policy::reference, py::keep_alive<0, 1>());
     m.def(
         "_create_well_list",
         [](py::handle self, std::optional<std::string> pattern) {
@@ -286,27 +285,24 @@ PYBIND11_MODULE(_rd_sum, m) {
         [](py::handle self, std::string keyword,
            std::optional<std::string> wgname, int num, std::string unit,
            double default_value) {
-            return reinterpret_cast<std::uintptr_t>(
-                const_cast<rd::smspec_node *>(rd_sum_add_var(
-                    from_cwrap<rd_sum_type>(self), keyword.c_str(),
-                    wgname.has_value() ? wgname->c_str() : nullptr, num,
-                    unit.c_str(), default_value)));
+            return const_cast<rd::smspec_node *>(
+                rd_sum_add_var(from_cwrap<rd_sum_type>(self), keyword.c_str(),
+                               wgname.has_value() ? wgname->c_str() : nullptr,
+                               num, unit.c_str(), default_value));
         },
-        py::return_value_policy::reference);
+        py::return_value_policy::reference, py::keep_alive<0, 1>());
     m.def(
         "_add_local_variable",
         [](py::handle self, std::string keyword,
            std::optional<std::string> wgname, int num, std::string unit,
            std::string lgr, int lgr_i, int lgr_j, int lgr_k,
            double default_value) {
-            return reinterpret_cast<std::uintptr_t>(
-                const_cast<rd::smspec_node *>(rd_sum_add_local_var(
-                    from_cwrap<rd_sum_type>(self), keyword.c_str(),
-                    wgname.has_value() ? wgname->c_str() : nullptr, num,
-                    unit.c_str(), lgr.c_str(), lgr_i, lgr_j, lgr_k,
-                    default_value)));
+            return const_cast<rd::smspec_node *>(rd_sum_add_local_var(
+                from_cwrap<rd_sum_type>(self), keyword.c_str(),
+                wgname.has_value() ? wgname->c_str() : nullptr, num,
+                unit.c_str(), lgr.c_str(), lgr_i, lgr_j, lgr_k, default_value));
         },
-        py::return_value_policy::reference);
+        py::return_value_policy::reference, py::keep_alive<0, 1>());
     m.def(
         "_add_tstep",
         [](py::handle self, int report_step, double sim_seconds) {
