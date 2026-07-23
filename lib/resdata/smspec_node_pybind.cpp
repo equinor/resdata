@@ -1,3 +1,4 @@
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -5,17 +6,6 @@
 #include <resdata/smspec_node.hpp>
 
 namespace py = pybind11;
-
-namespace {
-
-int node_cmp(const rd::smspec_node &self, py::handle other) {
-    if (!py::isinstance<rd::smspec_node>(other))
-        throw py::type_error(
-            "Other argument must be of type ResdataSMSPECNode");
-    return self.cmp(other.cast<const rd::smspec_node &>());
-}
-
-} // namespace
 
 PYBIND11_MODULE(rd_smspec_node, m) {
     m.doc() =
@@ -31,19 +21,9 @@ PYBIND11_MODULE(rd_smspec_node, m) {
                           "Class can not be instantiated directly!");
             throw py::error_already_set();
         }))
-        .def("cmp", &node_cmp, py::arg("other"))
-        .def("__lt__",
-             [](const rd::smspec_node &self, py::handle other) {
-                 return node_cmp(self, other) < 0;
-             })
-        .def("__gt__",
-             [](const rd::smspec_node &self, py::handle other) {
-                 return node_cmp(self, other) > 0;
-             })
-        .def("__eq__",
-             [](const rd::smspec_node &self, py::handle other) {
-                 return node_cmp(self, other) == 0;
-             })
+        .def(py::self == py::self)
+        .def(py::self < py::self)
+        .def(py::self > py::self)
         .def("__hash__",
              [](const rd::smspec_node &self) {
                  return py::hash(py::cast(self.get_gen_key1()));
