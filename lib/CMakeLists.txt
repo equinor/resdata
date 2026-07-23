@@ -142,6 +142,19 @@ set_target_properties(
   resdata PROPERTIES VERSION ${RD_VERSION_MAJOR}.${RD_VERSION_MINOR}
                      SOVERSION ${RD_VERSION_MAJOR})
 
+if(SKBUILD)
+  # Build libresdata straight when built by _skbuild in order to support
+  # editable installs
+  set_target_properties(
+    resdata
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+               ${PROJECT_SOURCE_DIR}/python/resdata/.libs
+               RUNTIME_OUTPUT_DIRECTORY
+               ${PROJECT_SOURCE_DIR}/python/resdata/.bin
+               ARCHIVE_OUTPUT_DIRECTORY
+               ${PROJECT_SOURCE_DIR}/python/resdata/.libs)
+endif()
+
 install(
   TARGETS resdata
   EXPORT resdata-config
