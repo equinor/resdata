@@ -28,3 +28,4 @@ pybind11::object Layer();
 pybind11::object GeometryTools();
 pybind11::object Polyline();
 pybind11::object CPolylineCollection();
+pybind11::object SummaryVarType();

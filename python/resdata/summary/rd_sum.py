@@ -229,13 +229,11 @@ class Summary(BaseCClass):
         lgr_ijk=None,
     ):
         if lgr is not None:
-            ptr = _rd_sum._add_local_variable(
+            return _rd_sum._add_local_variable(
                 self, variable, wgname, num, unit, lgr, *lgr_ijk, default_value
             )
-            return ResdataSMSPECNode.createCReference(ptr, parent=self)
 
-        ptr = _rd_sum._add_variable(self, variable, wgname, num, unit, default_value)
-        return ResdataSMSPECNode.createCReference(ptr, parent=self)
+        return _rd_sum._add_variable(self, variable, wgname, num, unit, default_value)
 
     def add_t_step(self, report_step, sim_days) -> SummaryTStep:
         # report_step int
@@ -912,8 +910,7 @@ class Summary(BaseCClass):
         on.
         """
         if self.has_key(key):
-            ptr = _rd_sum._get_var_node(self, key)
-            return ResdataSMSPECNode.createCReference(ptr, parent=self)
+            return _rd_sum._get_var_node(self, key)
         else:
             raise KeyError("Summary case does not have key:%s" % key)
 
