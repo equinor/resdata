@@ -107,7 +107,7 @@ PYBIND11_MODULE(rd_smspec_node, m) {
         .def("is_rate", &rd::smspec_node::is_rate,
              "Will check if the variable in question is a rate variable.\n"
              "\n"
-             "The conecpt of rate variabel is important (internally) when\n"
+             "The conecpt of rate variabels is important (internally) when\n"
              "interpolation values to arbitrary times.\n")
         .def("is_total", &rd::smspec_node::is_total,
              "Will check if the node corresponds to a total quantity.\n"
