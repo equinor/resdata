@@ -315,7 +315,11 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(1, layer.get_k())
 
         kw = ResdataKW("FAULTBLK", self.grid.get_global_size(), ResDataType.RD_FLOAT)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(
+            ValueError,
+            "The fault block keyword had wrong type/size:"
+            " type:REAL  size:1000  grid_size:1000",
+        ):
             layer.scan_keyword(kw)
 
         layer.scan_keyword(self.kw)
@@ -505,7 +509,9 @@ class FaultBlockTest(ResdataTest):
         layer.load_keyword(kw)
         faulty_kw = ResdataKW("SOIL", 10000, ResDataType.RD_INT)
         with pytest.raises(
-            ValueError, match="The fault block keyword had wrong type/size"
+            ValueError,
+            match="The fault block keyword had wrong type/size:"
+            "  type:INTE  size:10000  grid_size:64",
         ):
             layer.load_keyword(faulty_kw)
         layer.add_fault_barrier(faults["FX"])
