@@ -280,6 +280,50 @@ def test_that_non_matching_dataframe_gives_empty_columns(summary):
     )
 
 
+@given(summaries())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_equal_smspec_nodes_have_equal_hash(summary):
+    """The __hash__/__eq__ contract requires that a == b implies
+    hash(a) == hash(b) for all smspec_nodes of a summary case."""
+    smspec, unsmry = summary
+    assume(len(smspec.keywords) == len(set(smspec.keywords)))
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+    summary = Summary("TEST", lazy_load=False)
+
+    nodes = [summary.smspec_node(key) for key in summary.keys()]
+    for node1, node2 in itertools.product(nodes, repeat=2):
+        if node1 == node2:
+            assert hash(node1) == hash(node2)
+
+
+@given(summaries())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_smspec_node_comparison_with_other_types_is_consistent(summary):
+    """Comparing a smspec_node to an object of another type should never
+    consider them equal, and ordering comparisons should raise TypeError,
+    matching normal Python semantics for unsupported comparisons."""
+    smspec, unsmry = summary
+    assume(len(smspec.keywords) == len(set(smspec.keywords)))
+    assume(len(smspec.keywords) > 0)
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+    summary = Summary("TEST", lazy_load=False)
+
+    node = summary.smspec_node(next(iter(summary.keys())))
+
+    assert node != "a_string"
+    assert not (node == 5)
+    assert node is not None
+    assert node != None  # noqa: E711
+
+    with pytest.raises(TypeError):
+        node < "a_string"
+
+    with pytest.raises(TypeError):
+        node > 5
+
+
 def create_summary(
     summary_keys=("FOPR",),
     time_units="DAYS",

@@ -116,6 +116,16 @@ public:
         return node1->cmp(*node2);
     }
 
+    bool operator==(const smspec_node &other) const {
+        return this->cmp(other) == 0;
+    }
+    bool operator<(const smspec_node &other) const {
+        return this->cmp(other) < 0;
+    }
+    bool operator>(const smspec_node &other) const {
+        return this->cmp(other) > 0;
+    }
+
     int get_R1() const;
     int get_R2() const;
     const char *get_gen_key1() const;
