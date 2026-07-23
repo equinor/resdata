@@ -143,25 +143,29 @@ public:
         return this->cmp(other) > 0;
     }
 
-    int get_R1() const;
-    int get_R2() const;
-    const char *get_gen_key1() const;
-    const char *get_gen_key2() const;
-    rd_smspec_var_type get_var_type() const;
-    int get_num() const;
-    const char *get_wgname() const;
-    const char *get_keyword() const;
-    const char *get_unit() const;
-    bool is_rate() const;
-    bool is_total() const;
-    bool is_historical() const;
-    bool need_nums() const;
+    [[nodiscard]] int get_R1() const;
+    [[nodiscard]] int get_R2() const;
+    [[nodiscard]] const char *get_gen_key1() const;
+    [[nodiscard]] const char *get_gen_key2() const;
+    [[nodiscard]] rd_smspec_var_type get_var_type() const { return var_type; };
+    [[nodiscard]] int get_num() const { return num; };
+    [[nodiscard]] const char *get_wgname() const;
+    [[nodiscard]] const char *get_keyword() const;
+    [[nodiscard]] const char *get_unit() const;
+    [[nodiscard]] bool is_rate() const { return rate_variable; };
+    [[nodiscard]] bool is_total() const { return total_variable; };
+    [[nodiscard]] bool is_historical() const { return historical; };
+    [[nodiscard]] bool need_nums() const;
     void fprintf__(FILE *stream) const;
-    int get_params_index() const;
-    float get_default() const;
-    const std::array<int, 3> &get_ijk() const;
-    const char *get_lgr_name() const;
-    const std::array<int, 3> &get_lgr_ijk() const;
+    [[nodiscard]] int get_params_index() const { return params_index; };
+    [[nodiscard]] float get_default() const { return default_value; };
+    // Will be garbage for smspec_nodes which do not have i,j,k
+    [[nodiscard]] const std::array<int, 3> &get_ijk() const { return ijk; };
+    [[nodiscard]] const char *get_lgr_name() const;
+    // Will be garbage for smspec_nodes which are not related to an LGR.
+    [[nodiscard]] const std::array<int, 3> &get_lgr_ijk() const {
+        return lgr_ijk;
+    };
 };
 
 } // namespace rd
