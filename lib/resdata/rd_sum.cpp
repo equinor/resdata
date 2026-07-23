@@ -679,7 +679,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
     bool time_in_days = false;
     const rd::smspec_node &node =
         rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), 0);
-    if (util_string_equal(smspec_node_get_unit(&node), "DAYS"))
+    if (util_string_equal(node.get_unit(), "DAYS"))
         time_in_days = true;
 
     //create elc_sum_resampled with TIME node only
@@ -692,7 +692,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
     for (int i = 0; i < rd_smspec_num_nodes(rd_sum->smspec.get()); i++) {
         const rd::smspec_node &node =
             rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
-        if (util_string_equal(smspec_node_get_gen_key1(&node), "TIME"))
+        if (util_string_equal(node.get_gen_key1(), "TIME"))
             continue;
 
         rd_sum_add_smspec_node(rd_sum_resampled.get(), &node);
@@ -766,7 +766,7 @@ rd_smspec_var_type rd_sum_identify_var_type(const char *var) {
 
 const char *rd_sum_get_unit(const rd_sum_type *rd_sum, const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return smspec_node_get_unit(node);
+    return node->get_unit();
 }
 
 int rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {
@@ -1127,14 +1127,14 @@ double rd_sum_get_last_value_gen_key(const rd_sum_type *rd_sum,
                                      const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
     return rd_sum_data_iget_last_value(rd_sum->data.get(),
-                                       smspec_node_get_params_index(node));
+                                       node->get_params_index());
 }
 
 double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
                                       const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
     return rd_sum_data_iget_first_value(rd_sum->data.get(),
-                                        smspec_node_get_params_index(node));
+                                        node->get_params_index());
 }
 
 rd_sum_ptr read_summary(const std::string &filename,

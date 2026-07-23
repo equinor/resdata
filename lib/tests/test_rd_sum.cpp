@@ -1575,8 +1575,8 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
                 rd_smspec_iget_node_w_params_index(smspec, 3);
 
             THEN("Smspec metadata is preserved") {
-                REQUIRE(std::string(smspec_node_get_keyword(&bpr)) == "BPR");
-                REQUIRE(std::string(smspec_node_get_unit(&bpr)) == "BARS");
+                REQUIRE(std::string(bpr.get_keyword()) == "BPR");
+                REQUIRE(std::string(bpr.get_unit()) == "BARS");
             }
 
             THEN("Interpolated values match a linear model") {

@@ -496,7 +496,7 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
                                    const rd::smspec_node &node,
                                    double cmp_value, bool rates_clamp_lower) {
     double_vector_type *solution = double_vector_alloc(0, 0);
-    const int param_index = smspec_node_get_params_index(&node);
+    const int param_index = node.get_params_index();
     const int size = rd_sum_data_get_length(data);
 
     if (size <= 1)
@@ -518,7 +518,7 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
         double prev_time = rd_sum_data_iget_sim_seconds(data, prev_index);
         double time = rd_sum_data_iget_sim_seconds(data, index);
 
-        if (smspec_node_is_rate(&node)) {
+        if (node.is_rate()) {
             double_vector_append(solution,
                                  rates_clamp_lower ? prev_time + 1 : time);
         } else {
@@ -773,8 +773,8 @@ void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
 double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
                                      time_t sim_time,
                                      const rd::smspec_node &smspec_node) {
-    int params_index = smspec_node_get_params_index(&smspec_node);
-    if (smspec_node_is_rate(&smspec_node)) {
+    int params_index = smspec_node.get_params_index();
+    if (smspec_node.is_rate()) {
         /*
       In general the mapping from sim_time to index is based on half
       open intervals, which are closed in the upper end:
@@ -995,8 +995,8 @@ double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
     const time_t_vector_type *time_points, double *output_data) {
-    bool is_rate = smspec_node_is_rate(&smspec_node);
-    int params_index = smspec_node_get_params_index(&smspec_node);
+    bool is_rate = smspec_node.is_rate();
+    int params_index = smspec_node.get_params_index();
     time_t start_time = rd_sum_data_get_data_start(data);
     time_t end_time = rd_sum_data_get_sim_end(data);
     double start_value = 0;

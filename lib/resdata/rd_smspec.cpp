@@ -319,7 +319,7 @@ static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
     for (int i = 0; i < rd_smspec_num_nodes(smspec); ++i) {
         const rd::smspec_node &node =
             rd_smspec_iget_node_w_node_index(smspec, i);
-        const char *name = smspec_node_get_wgname(&node);
+        const char *name = node.get_wgname();
         if (name)
             max_len = util_size_t_max(max_len, strlen(name));
     }
@@ -443,14 +443,12 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
             rd_kw_iset_string8(units_kw.get(), i, "????????");
             rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL);
         } else {
-            rd_kw_iset_string8(keywords_kw.get(), i,
-                               smspec_node_get_keyword(&smspec_node));
-            rd_kw_iset_string8(units_kw.get(), i,
-                               smspec_node_get_unit(&smspec_node));
+            rd_kw_iset_string8(keywords_kw.get(), i, smspec_node.get_keyword());
+            rd_kw_iset_string8(units_kw.get(), i, smspec_node.get_unit());
             {
                 const char *wgname = DUMMY_WELL;
-                if (smspec_node_get_wgname(&smspec_node))
-                    wgname = smspec_node_get_wgname(&smspec_node);
+                if (smspec_node.get_wgname())
+                    wgname = smspec_node.get_wgname();
                 rd_kw_iset_string_ptr(wgnames_kw.get(), i, wgname);
             }
         }
@@ -578,11 +576,11 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
       rd_smspec_get_well_var_index( smspec , well_name , var );
   */
 
-    const char *well = smspec_node_get_wgname(&smspec_node);
+    const char *well = smspec_node.get_wgname();
     const char *group = well;
-    const int num = smspec_node_get_num(&smspec_node);
-    const char *keyword = smspec_node_get_keyword(&smspec_node);
-    rd_smspec_var_type var_type = smspec_node_get_var_type(&smspec_node);
+    const int num = smspec_node.get_num();
+    const char *keyword = smspec_node.get_keyword();
+    rd_smspec_var_type var_type = smspec_node.get_var_type();
 
     switch (var_type) {
     case (RD_SMSPEC_COMPLETION_VAR):

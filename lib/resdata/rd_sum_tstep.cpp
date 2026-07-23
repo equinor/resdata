@@ -254,13 +254,13 @@ void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
                                 const rd::smspec_node &smspec_node,
                                 float value) {
-    int data_index = smspec_node_get_params_index(&smspec_node);
+    int data_index = smspec_node.get_params_index();
     rd_sum_tstep_iset(tstep, data_index, value);
 }
 
 double rd_sum_tstep_get_from_node(const rd_sum_tstep_type *tstep,
                                   const rd::smspec_node &smspec_node) {
-    int data_index = smspec_node_get_params_index(&smspec_node);
+    int data_index = smspec_node.get_params_index();
     return rd_sum_tstep_iget(tstep, data_index);
 }
 
