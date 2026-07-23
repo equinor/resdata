@@ -1,6 +1,7 @@
 from cwrap import BaseCClass
 
 import resdata.grid.faults._fault_block_layer as _fault_block_layer
+from resdata.resfile import ResdataKW
 
 from .fault import Fault
 from .fault_block import FaultBlock
@@ -57,7 +58,7 @@ class FaultBlockLayer(BaseCClass):
     def __contains__(self, block_id):
         return _fault_block_layer._has_block(self, block_id)
 
-    def scan_keyword(self, fault_block_kw):
+    def scan_keyword(self, fault_block_kw: ResdataKW) -> None:
         """
         Will reorder the block ids, and ensure single connectedness. Assign block_id to zero blocks.
         """
@@ -66,13 +67,13 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(
                 "The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d"
                 % (
-                    fault_block_kw.type_name,
+                    fault_block_kw.type_name(),
                     len(fault_block_kw),
                     self.grid_ref.get_global_size(),
                 )
             )
 
-    def load_keyword(self, fault_block_kw):
+    def load_keyword(self, fault_block_kw: ResdataKW) -> None:
         """
         Will load directly from keyword - without reorder; ignoring zero.
         """
