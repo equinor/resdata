@@ -806,6 +806,9 @@ rd_smspec_var_type smspec_node::valid_type(const char *keyword,
         if (!wgname)
             return RD_SMSPEC_INVALID_VAR;
 
+        if (strlen(wgname) == 0)
+            return RD_SMSPEC_INVALID_VAR;
+
         if (IS_DUMMY_WELL(wgname))
             return RD_SMSPEC_INVALID_VAR;
 
