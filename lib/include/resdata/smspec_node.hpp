@@ -1,16 +1,10 @@
-#ifndef ERT_SMSPEC_NODE_HPP
-#define ERT_SMSPEC_NODE_HPP
-
+#pragma once
 #include <cstdio>
 
 #include <string>
 #include <array>
 
 #include <ert/util/type_macros.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define DUMMY_WELL ":+:+:+:+"
 #define IS_DUMMY_WELL(well) (strcmp((well), DUMMY_WELL) == 0)
@@ -50,25 +44,6 @@ typedef enum {
 bool smspec_node_identify_total(const char *keyword,
                                 rd_smspec_var_type var_type);
 bool smspec_node_identify_rate(const char *keyword);
-int smspec_node_get_params_index(const void *smspec_node);
-const char *smspec_node_get_gen_key1(const void *smspec_node);
-const char *smspec_node_get_gen_key2(const void *smspec_node);
-rd_smspec_var_type smspec_node_get_var_type(const void *smspec_node);
-int smspec_node_get_num(const void *smspec_node);
-const char *smspec_node_get_wgname(const void *smspec_node);
-const char *smspec_node_get_keyword(const void *smspec_node);
-const char *smspec_node_get_unit(const void *smspec_node);
-bool smspec_node_is_rate(const void *smspec_node);
-bool smspec_node_is_total(const void *smspec_node);
-bool smspec_node_is_historical(const void *smspec_node);
-bool smspec_node_need_nums(const void *smspec_node);
-float smspec_node_get_default(const void *smspec_node);
-
-int smspec_node_cmp(const void *node1, const void *node2);
-
-#ifdef __cplusplus
-}
-#endif
 
 namespace rd {
 
@@ -163,5 +138,3 @@ public:
 };
 
 } // namespace rd
-
-#endif
