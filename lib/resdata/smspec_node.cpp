@@ -782,9 +782,6 @@ rd_smspec_var_type smspec_node::valid_type(const char *keyword,
     if (var_type == RD_SMSPEC_WELL_VAR || var_type == RD_SMSPEC_GROUP_VAR ||
         var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
         var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR) {
-        if (IS_DUMMY_WELL(wgname))
-            return RD_SMSPEC_INVALID_VAR;
-
         /*
       In most cases the dummy well ':+:+:+:+' is used in situations where a
       well/group name does not make sense; however we have also encountered the
@@ -798,11 +795,17 @@ rd_smspec_var_type smspec_node::valid_type(const char *keyword,
         if (strlen(wgname) == 0)
             return RD_SMSPEC_INVALID_VAR;
 
+        if (IS_DUMMY_WELL(wgname))
+            return RD_SMSPEC_INVALID_VAR;
+
         return var_type;
     }
 
     if (var_type == RD_SMSPEC_COMPLETION_VAR ||
         var_type == RD_SMSPEC_SEGMENT_VAR) {
+        if (!wgname)
+            return RD_SMSPEC_INVALID_VAR;
+
         if (IS_DUMMY_WELL(wgname))
             return RD_SMSPEC_INVALID_VAR;
 
