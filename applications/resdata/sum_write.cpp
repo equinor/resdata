@@ -210,13 +210,13 @@ int main(int argc, char **argv) {
           case you must make an assumption of gen_key format at a
           later stage.
 
-       2. You can use the smspec_node_get_gen_key1() or
-          smspec_node_get_params_index() and hold on to the gen_key or
+       2. You can use the get_gen_key1() or
+          get_params_index() and hold on to the gen_key or
           params_index values. You will need these later.
 
        3. You can hold on to the complete smspec_node instance, and
-          then later on call one of the smspec_node_get_params_index()
-          or smspec_node_get_gen_key1() functions.
+          then later on call one of the get_params_index()
+          or get_gen_key1() functions.
 
   */
 
