@@ -32,7 +32,7 @@
 
 /**
    The special_vars list is used to associate keywords with special
-   types, when the kewyord name is in conflict with the default vector
+   types, when the keyword name is in conflict with the default vector
    naming convention; all the variables mentioned in the list below
    are given the type RD_SMSPEC_MISC_VAR.
 

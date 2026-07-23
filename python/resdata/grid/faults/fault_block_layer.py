@@ -136,7 +136,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(msg % (len(kw), self.grid_ref.get_global_size()))
 
         if not kw.data_type.is_int():
-            raise TypeError("The target kewyord must be of integer type")
+            raise TypeError("The target keyword must be of integer type")
 
         _fault_block_layer._export_kw(self, kw)
 

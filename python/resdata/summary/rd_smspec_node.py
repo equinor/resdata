@@ -82,7 +82,7 @@ class ResdataSMSPECNode(BaseCClass):
 
         The KEYWORD property is the main classification property in
         the SMSPEC file. The properties of a variable can be
-        read from the KEWYORD value; see table 3.4 in the ECLIPSE file
+        read from the KEYWORD value; see table 3.4 in the ECLIPSE file
         format reference manual.
         """
         return self._node_keyword()

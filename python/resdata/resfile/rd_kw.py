@@ -894,7 +894,7 @@ class ResdataKW(BaseCClass):
         The function will return a string consisting of a header, and
         then a chunk of data. The data will be formatted in @width
         columns, and a maximum of @max_lines lines. If @max_lines is
-        not sufficient the first elements in the kewyord are
+        not sufficient the first elements in the keyword are
         represented, a .... continuation line and then the last part
         of the keyword. If @max_lines is None all of the vector will
         be printed, irrespective of how long it is.
