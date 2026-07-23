@@ -441,15 +441,15 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {
             rd_kw_iset_string8(keywords_kw.get(), i, "WWCT");
             rd_kw_iset_string8(units_kw.get(), i, "????????");
-            rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL);
+            rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL.data());
         } else {
             rd_kw_iset_string8(keywords_kw.get(), i, smspec_node.get_keyword());
             rd_kw_iset_string8(units_kw.get(), i, smspec_node.get_unit());
             {
-                const char *wgname = DUMMY_WELL;
+                std::string wgname{DUMMY_WELL};
                 if (smspec_node.get_wgname())
                     wgname = smspec_node.get_wgname();
-                rd_kw_iset_string_ptr(wgnames_kw.get(), i, wgname);
+                rd_kw_iset_string_ptr(wgnames_kw.get(), i, wgname.c_str());
             }
         }
 

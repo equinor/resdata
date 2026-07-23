@@ -1,34 +1,33 @@
-#include <cstring>
-#include <stddef.h>
-#include <cstdint>
-#include <cmath>
-#include <ctime>
-
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <cstdint>
+
+#include <algorithm>
 #include <string>
 #include <set>
 #include <array>
 #include <memory>
 #include <limits>
 #include <stdexcept>
-#include <algorithm>
 #include <vector>
+#include <string_view>
 
-#include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
-#include <ert/util/int_vector.hpp>
-#include <ert/util/stringlist.hpp>
-#include <ert/util/type_macros.hpp>
 
-#include <resdata/rd_kw.hpp>
-#include <resdata/rd_util.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
-#include <resdata/rd_file.hpp>
-#include <resdata/rd_kw_magic.hpp>
 
-#include "detail/util/string_util.hpp"
+#include <detail/util/string_util.hpp>
+
+inline constexpr bool IS_TIME_KEYWORD(std::string_view kw) noexcept {
+    return kw == "TIME";
+}
+inline constexpr int SMSPEC_TIME_NUMS_VALUE = -32676;
+inline constexpr bool IS_YEARS_KEYWORD(std::string_view kw) noexcept {
+    return kw == "YEARS";
+}
+inline constexpr int SMSPEC_YEARS_NUMS_VALUE = -32676;
 
 /**
    The special_vars list is used to associate keywords with special
@@ -44,14 +43,14 @@
    rd_smspec_identify_special_var() and rd_smspec_identify_var_type().
 */
 
-static const char *special_vars[] = {
+static constexpr std::string_view special_vars[] = {
     "NAIMFRAC", "NBAKFL",   "NBYTOT",   "NCPRLINS", "NEWTFL",   "NEWTON",
     "NLINEARP", "NLINEARS", "NLINSMAX", "NLINSMIN", "NLRESMAX", "NLRESSUM",
     "NMESSAGE", "NNUMFL",   "NNUMST",   "NTS",      "NTSECL",   "NTSMCL",
     "NTSPCL",   "ELAPSED",  "MAXDPR",   "MAXDSO",   "MAXDSG",   "MAXDSW",
     "STEPTYPE", "WNEWTON"};
 
-static const int nums_unused = 0;
+static constexpr int nums_unused = 0;
 
 /**
    This struct contains meta-information about one element in the smspec
@@ -74,18 +73,9 @@ static const int nums_unused = 0;
 */
 
 rd_smspec_var_type rd::smspec_node::identify_special_var(const char *var) {
-    rd_smspec_var_type var_type = RD_SMSPEC_INVALID_VAR;
-
-    int num_special = sizeof(special_vars) / sizeof(special_vars[0]);
-    int i;
-    for (i = 0; i < num_special; i++) {
-        if (strcmp(var, special_vars[i]) == 0) {
-            var_type = RD_SMSPEC_MISC_VAR;
-            break;
-        }
-    }
-
-    return var_type;
+    auto it = std::find(std::begin(special_vars), std::end(special_vars), var);
+    return it != std::end(special_vars) ? RD_SMSPEC_MISC_VAR
+                                        : RD_SMSPEC_INVALID_VAR;
 }
 
 /*
@@ -975,10 +965,10 @@ smspec_node::smspec_node(int param_index, const char *keyword,
        e.g. S3GRAF.
     */
 
-        if (this->keyword == std::string(SMSPEC_TIME_KEYWORD))
+        if (IS_TIME_KEYWORD(this->keyword))
             set_num(grid_dims, SMSPEC_TIME_NUMS_VALUE);
 
-        if (this->keyword == std::string(SMSPEC_YEARS_KEYWORD))
+        if (IS_YEARS_KEYWORD(this->keyword))
             set_num(grid_dims, SMSPEC_YEARS_NUMS_VALUE);
 
         break;
