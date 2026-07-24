@@ -1,16 +1,11 @@
-#ifndef ERT_RD_REGION_H
-#define ERT_RD_REGION_H
-
+#pragma once
 #include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/layer.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <resdata/rd_kw.hpp>
 
 typedef enum {
     SELECT_ALL = 0,
@@ -201,8 +196,3 @@ float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
 
 UTIL_IS_INSTANCE_HEADER(rd_region);
 UTIL_SAFE_CAST_HEADER(rd_region);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
