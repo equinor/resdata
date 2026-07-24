@@ -1,14 +1,12 @@
-#ifndef ERT_RD_SUM_TSTEP_H
-#define ERT_RD_SUM_TSTEP_H
+#pragma once
+#include <ctime>
 
-#include <ert/util/int_vector.hpp>
+#include <ert/util/type_macros.hpp>
 
+#include <resdata/FortIO.hpp>
+#include <resdata/smspec_node.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_kw.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 
@@ -51,9 +49,3 @@ bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key);
 
 UTIL_SAFE_CAST_HEADER(rd_sum_tstep);
 UTIL_SAFE_CAST_HEADER_CONST(rd_sum_tstep);
-
-#ifdef __cplusplus
-}
-
-#endif
-#endif
