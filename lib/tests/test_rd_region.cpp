@@ -44,9 +44,9 @@ TEST_CASE("rd_region", "[rd_region]") {
 
         SECTION("Set and get name") {
             rd_region_set_name(region, "TestRegion");
-            const char *name = rd_region_get_name(region);
-            REQUIRE(name != NULL);
-            REQUIRE(std::string(name) == "TestRegion");
+            auto name = rd_region_get_name(region);
+            REQUIRE(name.has_value());
+            REQUIRE(*name == "TestRegion");
         }
 
         SECTION("Reset region") {
@@ -344,11 +344,6 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("subtract") {
                 rd_region_subtract(region, region2);
-                REQUIRE(num_selected(region) == 300);
-            }
-
-            SECTION("xor") {
-                rd_region_xor(region, region2);
                 REQUIRE(num_selected(region) == 300);
             }
 

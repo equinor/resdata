@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Module used to select cells based on many different criteria.
 
@@ -11,12 +13,12 @@ When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
 
-import ctypes
 from functools import wraps
 
 from cwrap import BaseCClass
 
-from resdata import ResdataPrototype, ResDataType
+import resdata.grid._rd_region as _rd_region
+from resdata import ResDataType
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
@@ -69,235 +71,33 @@ def select_method(select):
 
 class ResdataRegion(BaseCClass):
     TYPE_NAME = "rd_region"
-    _alloc = ResdataPrototype("void* rd_region_alloc( rd_grid , bool )", bind=False)
-    _alloc_copy = ResdataPrototype("rd_region_obj rd_region_alloc_copy( rd_region )")
 
-    _set_kw_int = ResdataPrototype(
-        "void rd_region_set_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _set_kw_float = ResdataPrototype(
-        "void rd_region_set_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _set_kw_double = ResdataPrototype(
-        "void rd_region_set_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _shift_kw_int = ResdataPrototype(
-        "void rd_region_shift_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _shift_kw_float = ResdataPrototype(
-        "void rd_region_shift_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _shift_kw_double = ResdataPrototype(
-        "void rd_region_shift_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _scale_kw_int = ResdataPrototype(
-        "void rd_region_scale_kw_int( rd_region , rd_kw , int, bool) "
-    )
-    _scale_kw_float = ResdataPrototype(
-        "void rd_region_scale_kw_float( rd_region , rd_kw , float, bool ) "
-    )
-    _scale_kw_double = ResdataPrototype(
-        "void rd_region_scale_kw_double( rd_region , rd_kw , double , bool) "
-    )
-    _sum_kw_int = ResdataPrototype(
-        "int rd_region_sum_kw_int( rd_region , rd_kw , bool) "
-    )
-    _sum_kw_float = ResdataPrototype(
-        "float rd_region_sum_kw_float( rd_region , rd_kw , bool ) "
-    )
-    _sum_kw_double = ResdataPrototype(
-        "double rd_region_sum_kw_double( rd_region , rd_kw , bool) "
-    )
-    _sum_kw_bool = ResdataPrototype(
-        "int rd_region_sum_kw_int( rd_region , rd_kw , bool) "
-    )
+    def _set_kw_int(self, *args):
+        return _rd_region._set_kw_int(self, *args)
 
-    _free = ResdataPrototype("void rd_region_free( rd_region )")
-    _reset = ResdataPrototype("void rd_region_reset( rd_region )")
-    _select_all = ResdataPrototype("void rd_region_select_all( rd_region )")
-    _deselect_all = ResdataPrototype("void rd_region_deselect_all( rd_region )")
-    _select_equal = ResdataPrototype(
-        "void rd_region_select_equal( rd_region , rd_kw , int )"
-    )
-    _deselect_equal = ResdataPrototype(
-        "void rd_region_deselect_equal( rd_region , rd_kw , int)"
-    )
-    _select_less = ResdataPrototype(
-        "void rd_region_select_smaller( rd_region , rd_kw , float )"
-    )
-    _deselect_less = ResdataPrototype(
-        "void rd_region_deselect_smaller( rd_region , rd_kw , float )"
-    )
-    _select_more = ResdataPrototype(
-        "void rd_region_select_larger( rd_region , rd_kw , float )"
-    )
-    _deselect_more = ResdataPrototype(
-        "void rd_region_deselect_larger( rd_region , rd_kw , float )"
-    )
-    _select_in_interval = ResdataPrototype(
-        "void rd_region_select_in_interval( rd_region, rd_kw , float , float )"
-    )
-    _deselect_in_interval = ResdataPrototype(
-        "void rd_region_deselect_in_interval( rd_region, rd_kw, float , float )"
-    )
-    _invert_selection = ResdataPrototype("void rd_region_invert_selection( rd_region )")
+    def _set_kw_float(self, *args):
+        return _rd_region._set_kw_float(self, *args)
 
-    _select_box = ResdataPrototype(
-        "void rd_region_select_from_ijkbox(rd_region , int , int , int , int , int , int)"
-    )
-    _deselect_box = ResdataPrototype(
-        "void rd_region_deselect_from_ijkbox(rd_region , int , int , int , int , int , int)"
-    )
-    _imul_kw = ResdataPrototype(
-        "void  rd_region_kw_imul( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _idiv_kw = ResdataPrototype(
-        "void  rd_region_kw_idiv( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _iadd_kw = ResdataPrototype(
-        "void  rd_region_kw_iadd( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _isub_kw = ResdataPrototype(
-        "void  rd_region_kw_isub( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _copy_kw = ResdataPrototype(
-        "void  rd_region_kw_copy( rd_region , rd_kw , rd_kw , bool)"
-    )
-    _intersect = ResdataPrototype(
-        "void rd_region_intersection( rd_region , rd_region )"
-    )
-    _combine = ResdataPrototype("void rd_region_union( rd_region , rd_region )")
-    _subtract = ResdataPrototype("void rd_region_subtract( rd_region , rd_region )")
-    _xor = ResdataPrototype("void rd_region_xor( rd_region , rd_region )")
-    _get_kw_index_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_kw_index_list( rd_region , rd_kw , bool )"
-    )
-    _get_active_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_active_list( rd_region )"
-    )
-    _get_global_list = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_global_list( rd_region )"
-    )
-    _get_active_global = ResdataPrototype(
-        "rd_int_vector_ref rd_region_get_global_active_list( rd_region )"
-    )
-    _select_cmp_less = ResdataPrototype(
-        "void rd_region_cmp_select_less( rd_region , rd_kw , rd_kw)"
-    )
-    _select_cmp_more = ResdataPrototype(
-        "void rd_region_cmp_select_more( rd_region , rd_kw , rd_kw)"
-    )
-    _deselect_cmp_less = ResdataPrototype(
-        "void rd_region_cmp_deselect_less( rd_region , rd_kw , rd_kw)"
-    )
-    _deselect_cmp_more = ResdataPrototype(
-        "void rd_region_cmp_deselect_more( rd_region , rd_kw , rd_kw)"
-    )
-    _select_islice = ResdataPrototype(
-        "void rd_region_select_i1i2( rd_region , int , int )"
-    )
-    _deselect_islice = ResdataPrototype(
-        "void rd_region_deselect_i1i2( rd_region , int , int )"
-    )
-    _select_jslice = ResdataPrototype(
-        "void rd_region_select_j1j2( rd_region , int , int )"
-    )
-    _deselect_jslice = ResdataPrototype(
-        "void rd_region_deselect_j1j2( rd_region , int , int )"
-    )
-    _select_kslice = ResdataPrototype(
-        "void rd_region_select_k1k2( rd_region , int , int )"
-    )
-    _deselect_kslice = ResdataPrototype(
-        "void rd_region_deselect_k1k2( rd_region , int , int )"
-    )
-    _select_deep_cells = ResdataPrototype(
-        "void rd_region_select_deep_cells( rd_region , double )"
-    )
-    _deselect_deep_cells = ResdataPrototype(
-        "void rd_region_deselect_deep_cells( rd_region , double )"
-    )
-    _select_shallow_cells = ResdataPrototype(
-        "void rd_region_select_shallow_cells( rd_region , double )"
-    )
-    _deselect_shallow_cells = ResdataPrototype(
-        "void rd_region_deselect_shallow_cells( rd_region , double )"
-    )
-    _select_small = ResdataPrototype(
-        "void rd_region_select_small_cells( rd_region , double )"
-    )
-    _deselect_small = ResdataPrototype(
-        "void rd_region_deselect_small_cells( rd_region , double )"
-    )
-    _select_large = ResdataPrototype(
-        "void rd_region_select_large_cells( rd_region , double )"
-    )
-    _deselect_large = ResdataPrototype(
-        "void rd_region_deselect_large_cells( rd_region , double )"
-    )
-    _select_thin = ResdataPrototype(
-        "void rd_region_select_thin_cells( rd_region , double )"
-    )
-    _deselect_thin = ResdataPrototype(
-        "void rd_region_deselect_thin_cells( rd_region , double )"
-    )
-    _select_thick = ResdataPrototype(
-        "void rd_region_select_thick_cells( rd_region , double )"
-    )
-    _deselect_thick = ResdataPrototype(
-        "void rd_region_deselect_thick_cells( rd_region , double )"
-    )
-    _select_active = ResdataPrototype("void rd_region_select_active_cells( rd_region )")
-    _select_inactive = ResdataPrototype(
-        "void rd_region_select_inactive_cells( rd_region )"
-    )
-    _deselect_active = ResdataPrototype(
-        "void rd_region_deselect_active_cells( rd_region )"
-    )
-    _deselect_inactive = ResdataPrototype(
-        "void rd_region_deselect_inactive_cells( rd_region )"
-    )
-    _select_above_plane = ResdataPrototype(
-        "void rd_region_select_above_plane( rd_region  , double* , double* )"
-    )
-    _select_below_plane = ResdataPrototype(
-        "void rd_region_select_below_plane( rd_region  , double* , double* )"
-    )
-    _deselect_above_plane = ResdataPrototype(
-        "void rd_region_deselect_above_plane( rd_region, double* , double* )"
-    )
-    _deselect_below_plane = ResdataPrototype(
-        "void rd_region_deselect_below_plane( rd_region, double* , double* )"
-    )
-    _select_inside_polygon = ResdataPrototype(
-        "void rd_region_select_inside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _select_outside_polygon = ResdataPrototype(
-        "void rd_region_select_outside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _deselect_inside_polygon = ResdataPrototype(
-        "void rd_region_deselect_inside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _deselect_outside_polygon = ResdataPrototype(
-        "void rd_region_deselect_outside_polygon( rd_region , rd_geo_polygon)"
-    )
-    _set_name = ResdataPrototype("void rd_region_set_name( rd_region , char*)")
-    _get_name = ResdataPrototype("char* rd_region_get_name( rd_region )")
-    _contains_ijk = ResdataPrototype(
-        "bool rd_region_contains_ijk( rd_region , int , int , int)"
-    )
-    _contains_global = ResdataPrototype(
-        "bool rd_region_contains_global( rd_region, int )"
-    )
-    _contains_active = ResdataPrototype(
-        "bool rd_region_contains_active( rd_region , int )"
-    )
-    _equal = ResdataPrototype("bool rd_region_equal( rd_region , rd_region )")
-    _select_true = ResdataPrototype("void rd_region_select_true( rd_region , rd_kw)")
-    _select_false = ResdataPrototype("void rd_region_select_false( rd_region , rd_kw)")
-    _select_from_layer = ResdataPrototype(
-        "void rd_region_select_from_layer( rd_region , rd_layer , int , int)"
-    )
+    def _set_kw_double(self, *args):
+        return _rd_region._set_kw_double(self, *args)
+
+    def _shift_kw_int(self, *args):
+        return _rd_region._shift_kw_int(self, *args)
+
+    def _shift_kw_float(self, *args):
+        return _rd_region._shift_kw_float(self, *args)
+
+    def _shift_kw_double(self, *args):
+        return _rd_region._shift_kw_double(self, *args)
+
+    def _scale_kw_int(self, *args):
+        return _rd_region._scale_kw_int(self, *args)
+
+    def _scale_kw_float(self, *args):
+        return _rd_region._scale_kw_float(self, *args)
+
+    def _scale_kw_double(self, *args):
+        return _rd_region._scale_kw_double(self, *args)
 
     def __init__(self, grid, preselect):
         """
@@ -312,14 +112,16 @@ class ResdataRegion(BaseCClass):
 
         self.grid = grid
         self.active_index = False
-        c_ptr = self._alloc(grid, preselect)
+        c_ptr = _rd_region._alloc(grid, preselect)
         super().__init__(c_ptr)
 
     def free(self):
-        self._free()
+        _rd_region._free(self)
 
-    def __eq__(self, other):
-        return self._equal(other)
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ResdataRegion):
+            return NotImplemented
+        return _rd_region._equal(self, other)
 
     def __hash__(self):
         return hash(hash(self.grid) + hash(self.active_index))
@@ -328,7 +130,10 @@ class ResdataRegion(BaseCClass):
         """
         Creates a deep copy of the current region.
         """
-        return self._alloc_copy()
+        region = self.createPythonObject(_rd_region._alloc_copy(self))
+        region.grid = self.grid
+        region.active_index = self.active_index
+        return region
 
     def __nonzero__(self):
         global_list = self.get_global_list()
@@ -350,7 +155,7 @@ class ResdataRegion(BaseCClass):
         will eventually call this method.
         """
         if isinstance(other, ResdataRegion):
-            self._intersect(other)
+            _rd_region._intersect(self, other)
         else:
             raise TypeError(
                 "Resdata region can only intersect with other ResdataRegion instances"
@@ -365,7 +170,7 @@ class ResdataRegion(BaseCClass):
         Bound to reg -= reg2
         """
         if isinstance(other, ResdataRegion):
-            self._subtract(other)
+            _rd_region._subtract(self, other)
         else:
             raise TypeError(
                 "Resdata region can only subtract with other ResdataRegion instances"
@@ -386,7 +191,7 @@ class ResdataRegion(BaseCClass):
         to update reg1 with the selections from reg2.
         """
         if isinstance(other, ResdataRegion):
-            self._combine(other)
+            _rd_region._combine(self, other)
         else:
             raise TypeError(
                 "Resdata region can only be combined with other ResdataRegion instances"
@@ -473,7 +278,7 @@ class ResdataRegion(BaseCClass):
         everything will be selected after calling reset(), otherwise
         no cells will be selected after calling reset().
         """
-        self._reset()
+        _rd_region._reset(self)
 
     ##################################################################
 
@@ -499,7 +304,7 @@ class ResdataRegion(BaseCClass):
            >>> region.select_more( swat_kw , 0.85 )
 
         """
-        self._select_more(rd_kw, limit)
+        _rd_region._select_more(self, rd_kw, limit)
 
     def deselect_more(self, rd_kw, limit):
         """
@@ -507,7 +312,7 @@ class ResdataRegion(BaseCClass):
 
         See select_more() for further documentation.
         """
-        self._deselect_more(rd_kw, limit)
+        _rd_region._deselect_more(self, rd_kw, limit)
 
     @select_method
     def select_less(self, rd_kw, limit, intersect=False):
@@ -516,7 +321,7 @@ class ResdataRegion(BaseCClass):
 
         See select_more() for further documentation.
         """
-        self._select_less(rd_kw, limit)
+        _rd_region._select_less(self, rd_kw, limit)
 
     def deselect_less(self, rd_kw, limit):
         """
@@ -524,7 +329,7 @@ class ResdataRegion(BaseCClass):
 
         See select_more() for further documentation.
         """
-        self._deselect_less(rd_kw, limit)
+        _rd_region._deselect_less(self, rd_kw, limit)
 
     @select_method
     def select_equal(self, rd_kw, value, intersect=False):
@@ -550,7 +355,7 @@ class ResdataRegion(BaseCClass):
                 "The select_equal method must have an integer valued keyword - got:%s"
                 % rd_kw.type_name()
             )
-        self._select_equal(rd_kw, value)
+        _rd_region._select_equal(self, rd_kw, value)
 
     def deselect_equal(self, rd_kw, value):
         """
@@ -563,7 +368,7 @@ class ResdataRegion(BaseCClass):
                 "The select_equal method must have an integer valued keyword - got:%s"
                 % rd_kw.type_name()
             )
-        self._deselect_equal(rd_kw, value)
+        _rd_region._deselect_equal(self, rd_kw, value)
 
     @select_method
     def select_in_range(self, rd_kw, lower_limit, upper_limit, select=False):
@@ -586,7 +391,7 @@ class ResdataRegion(BaseCClass):
            >>> region.select_in_range( poro_kw , 0.15, 0.20 )
 
         """
-        self._select_in_interval(rd_kw, lower_limit, upper_limit)
+        _rd_region._select_in_interval(self, rd_kw, lower_limit, upper_limit)
 
     def deselect_in_range(self, rd_kw, lower_limit, upper_limit):
         """
@@ -594,7 +399,7 @@ class ResdataRegion(BaseCClass):
 
         See select_in_range() for further documentation.
         """
-        self._deselect_in_interval(rd_kw, lower_limit, upper_limit)
+        _rd_region._deselect_in_interval(self, rd_kw, lower_limit, upper_limit)
 
     @select_method
     def select_cmp_less(self, kw1, kw2, intersect=False):
@@ -616,7 +421,7 @@ class ResdataRegion(BaseCClass):
            >>> region.select_cmp_less( pressure2 , pressure1)
 
         """
-        self._select_cmp_less(kw1, kw2)
+        _rd_region._select_cmp_less(self, kw1, kw2)
 
     def deselect_cmp_less(self, kw1, kw2):
         """
@@ -624,7 +429,7 @@ class ResdataRegion(BaseCClass):
 
         See select_cmp_less() for further documentation.
         """
-        self._deselect_cmp_less(kw1, kw2)
+        _rd_region._deselect_cmp_less(self, kw1, kw2)
 
     @select_method
     def select_cmp_more(self, kw1, kw2, intersect=False):
@@ -633,7 +438,7 @@ class ResdataRegion(BaseCClass):
 
         See select_cmp_less() for further documentation.
         """
-        self._select_cmp_more(kw1, kw2)
+        _rd_region._select_cmp_more(self, kw1, kw2)
 
     def deselect_cmp_more(self, kw1, kw2):
         """
@@ -641,45 +446,45 @@ class ResdataRegion(BaseCClass):
 
         See select_cmp_less() for further documentation.
         """
-        self._deselect_cmp_more(kw1, kw2)
+        _rd_region._deselect_cmp_more(self, kw1, kw2)
 
     @select_method
     def select_active(self, intersect=False):
         """
         Will select all the active grid cells.
         """
-        self._select_active()
+        _rd_region._select_active(self)
 
     def deselect_active(self):
         """
         Will deselect all the active grid cells.
         """
-        self._deselect_active()
+        _rd_region._deselect_active(self)
 
     @select_method
     def select_inactive(self, intersect=False):
         """
         Will select all the inactive grid cells.
         """
-        self._select_inactive()
+        _rd_region._select_inactive(self)
 
     def deselect_inactive(self):
         """
         Will deselect all the inactive grid cells.
         """
-        self._deselect_inactive()
+        _rd_region._deselect_inactive(self)
 
     def select_all(self):
         """
         Will select all the cells.
         """
-        self._select_all()
+        _rd_region._select_all(self)
 
     def deselect_all(self):
         """
         Will deselect all the cells.
         """
-        self._deselect_all()
+        _rd_region._deselect_all(self)
 
     def clear(self):
         """
@@ -692,78 +497,78 @@ class ResdataRegion(BaseCClass):
         """
         Will select all cells below @depth.
         """
-        self._select_deep_cells(depth)
+        _rd_region._select_deep_cells(self, depth)
 
     def deselect_deep(self, depth):
         """
         Will deselect all cells below @depth.
         """
-        self._deselect_deep_cells(depth)
+        _rd_region._deselect_deep_cells(self, depth)
 
     @select_method
     def select_shallow(self, depth, intersect=False):
         """
         Will select all cells above @depth.
         """
-        self._select_shallow_cells(depth)
+        _rd_region._select_shallow_cells(self, depth)
 
     def deselect_shallow(self, depth):
         """
         Will deselect all cells above @depth.
         """
-        self._deselect_shallow_cells(depth)
+        _rd_region._deselect_shallow_cells(self, depth)
 
     @select_method
     def select_small(self, size_limit, intersect=False):
         """
         Will select all cells smaller than @size_limit.
         """
-        self._select_small(size_limit)
+        _rd_region._select_small(self, size_limit)
 
     def deselect_small(self, size_limit):
         """
         Will deselect all cells smaller than @size_limit.
         """
-        self._deselect_small(size_limit)
+        _rd_region._deselect_small(self, size_limit)
 
     @select_method
     def select_large(self, size_limit, intersect=False):
         """
         Will select all cells larger than @size_limit.
         """
-        self._select_large(size_limit)
+        _rd_region._select_large(self, size_limit)
 
     def deselect_large(self, size_limit):
         """
         Will deselect all cells larger than @size_limit.
         """
-        self._deselect_large(size_limit)
+        _rd_region._deselect_large(self, size_limit)
 
     @select_method
     def select_thin(self, size_limit, intersect=False):
         """
         Will select all cells thinner than @size_limit.
         """
-        self._select_thin(size_limit)
+        _rd_region._select_thin(self, size_limit)
 
     def deselect_thin(self, size_limit):
         """
         Will deselect all cells thinner than @size_limit.
         """
-        self._deselect_thin(size_limit)
+        _rd_region._deselect_thin(self, size_limit)
 
     @select_method
     def select_thick(self, size_limit, intersect=False):
         """
         Will select all cells thicker than @size_limit.
         """
-        self._select_thick(size_limit)
+        _rd_region._select_thick(self, size_limit)
 
     def deselect_thick(self, size_limit):
         """
         Will deselect all cells thicker than @size_limit.
         """
-        self._deselect_thick(size_limit)
+        _rd_region._deselect_thick(self, size_limit)
 
     @select_method
     def select_box(self, ijk1, ijk2, intersect=False):
@@ -779,7 +584,9 @@ class ResdataRegion(BaseCClass):
 
         will select the box defined by [8,10] x [12,16] x [4,8].
         """
-        self._select_box(ijk1[0], ijk2[0], ijk1[1], ijk2[1], ijk1[2], ijk2[2])
+        _rd_region._select_box(
+            self, ijk1[0], ijk2[0], ijk1[1], ijk2[1], ijk1[2], ijk2[2]
+        )
 
     def deselect_box(self, ijk1, ijk2):
         """
@@ -787,60 +594,59 @@ class ResdataRegion(BaseCClass):
 
         See select_box() for further documentation.
         """
-        self._deselect_box(ijk1[0], ijk2[0], ijk1[1], ijk2[1], ijk1[2], ijk2[2])
+        _rd_region._deselect_box(
+            self, ijk1[0], ijk2[0], ijk1[1], ijk2[1], ijk1[2], ijk2[2]
+        )
 
     @select_method
     def select_islice(self, i1, i2, intersect=False):
         """
         Will select all cells with i in [@i1, @i2]. @i1 and @i2 are zero offset.
         """
-        self._select_islice(i1, i2)
+        _rd_region._select_islice(self, i1, i2)
 
     def deselect_islice(self, i1, i2):
         """
         Will deselect all cells with i in [@i1, @i2]. @i1 and @i2 are zero offset.
         """
-        self._deselect_islice(i1, i2)
+        _rd_region._deselect_islice(self, i1, i2)
 
     @select_method
     def select_jslice(self, j1, j2, intersect=False):
         """
         Will select all cells with j in [@j1, @j2]. @i1 and @i2 are zero offset.
         """
-        self._select_jslice(j1, j2)
+        _rd_region._select_jslice(self, j1, j2)
 
     def deselect_jslice(self, j1, j2):
         """
         Will deselect all cells with j in [@j1, @j2]. @i1 and @i2 are zero offset.
         """
-        self._deselect_jslice(j1, j2)
+        _rd_region._deselect_jslice(self, j1, j2)
 
     @select_method
     def select_kslice(self, k1, k2, intersect=False):
         """
         Will select all cells with k in [@k1, @k2]. @i1 and @i2 are zero offset.
         """
-        self._select_kslice(k1, k2)
+        _rd_region._select_kslice(self, k1, k2)
 
     def deselect_kslice(self, k1, k2):
         """
         Will deselect all cells with k in [@k1, @k2]. @i1 and @i2 are zero offset.
         """
-        self._deselect_kslice(k1, k2)
+        _rd_region._deselect_kslice(self, k1, k2)
 
     def invert(self):
         """
         Will invert the current selection.
         """
-        self._invert_selection()
+        _rd_region._invert_selection(self)
 
     def __init_plane_select(self, n, p):
-        n_vec = ctypes.cast((ctypes.c_double * 3)(), ctypes.POINTER(ctypes.c_double))
-        p_vec = ctypes.cast((ctypes.c_double * 3)(), ctypes.POINTER(ctypes.c_double))
-        for i in range(3):
-            n_vec[i] = n[i]
-            p_vec[i] = p[i]
-        return (n_vec, p_vec)
+        if len(n) != 3 or len(p) != 3:
+            raise ValueError("Plane normal and point must contain exactly 3 values")
+        return (list(n), list(p))
 
     @select_method
     def select_above_plane(self, n, p, intersect=False):
@@ -855,7 +661,7 @@ class ResdataRegion(BaseCClass):
         a negative disatnce to the plane.
         """
         n_vec, p_vec = self.__init_plane_select(n, p)
-        self._select_above_plane(n_vec, p_vec)
+        _rd_region._select_above_plane(self, n_vec, p_vec)
 
     @select_method
     def select_below_plane(self, n, p, interscet=False):
@@ -865,7 +671,7 @@ class ResdataRegion(BaseCClass):
         See method 'select_above_plane' for further documentation.
         """
         n_vec, p_vec = self.__init_plane_select(n, p)
-        self._select_below_plane(n_vec, p_vec)
+        _rd_region._select_below_plane(self, n_vec, p_vec)
 
     def deselect_above_plane(self, n, p):
         """
@@ -874,7 +680,7 @@ class ResdataRegion(BaseCClass):
         See method 'select_above_plane' for further documentation.
         """
         n_vec, p_vec = self.__init_plane_select(n, p)
-        self._deselect_above_plane(n_vec, p_vec)
+        _rd_region._deselect_above_plane(self, n_vec, p_vec)
 
     def deselect_below_plane(self, n, p):
         """
@@ -883,7 +689,7 @@ class ResdataRegion(BaseCClass):
         See method 'select_above_plane' for further documentation.
         """
         n_vec, p_vec = self.__init_plane_select(n, p)
-        self._deselect_below_plane(n_vec, p_vec)
+        _rd_region._deselect_below_plane(self, n_vec, p_vec)
 
     @select_method
     def select_inside_polygon(self, points, intersect=False):
@@ -905,7 +711,7 @@ class ResdataRegion(BaseCClass):
         implies that the selection polygon will effectively be
         translated if the pillars are not vertical.
         """
-        self._select_inside_polygon(CPolyline(init_points=points))
+        _rd_region._select_inside_polygon(self, CPolyline(init_points=points))
 
     @select_method
     def select_outside_polygon(self, points, intersect=False):
@@ -914,7 +720,7 @@ class ResdataRegion(BaseCClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        self._select_outside_polygon(CPolyline(init_points=points))
+        _rd_region._select_outside_polygon(self, CPolyline(init_points=points))
 
     def deselect_inside_polygon(self, points):
         """
@@ -922,7 +728,7 @@ class ResdataRegion(BaseCClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        self._deselect_inside_polygon(CPolyline(init_points=points))
+        _rd_region._deselect_inside_polygon(self, CPolyline(init_points=points))
 
     def deselect_outside_polygon(self, points):
         """
@@ -930,21 +736,21 @@ class ResdataRegion(BaseCClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        self._deselect_outside_polygon(CPolyline(init_points=points))
+        _rd_region._deselect_outside_polygon(self, CPolyline(init_points=points))
 
     @select_method
     def select_true(self, rd_kw, intersect=False):
         """
         Assume that input rd_kw is a boolean mask.
         """
-        self._select_true(rd_kw)
+        _rd_region._select_true(self, rd_kw)
 
     @select_method
     def select_false(self, rd_kw, intersect=False):
         """
         Assume that input rd_kw is a boolean mask.
         """
-        self._select_false(rd_kw)
+        _rd_region._select_false(self, rd_kw)
 
     @select_method
     def select_from_layer(self, layer: Layer, k, value, intersect=False):
@@ -974,7 +780,7 @@ class ResdataRegion(BaseCClass):
                 % (grid.get_ny(), layer.get_ny())
             )
 
-        self._select_from_layer(layer, k, value)
+        _rd_region._select_from_layer(self, layer, k, value)
 
     #################################################################
 
@@ -1002,7 +808,7 @@ class ResdataRegion(BaseCClass):
         """
         if isinstance(delta_kw, ResdataKW):
             if target_kw.assert_binary(delta_kw):
-                self._iadd_kw(target_kw, delta_kw, force_active)
+                _rd_region._iadd_kw(self, target_kw, delta_kw, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:
@@ -1026,7 +832,7 @@ class ResdataRegion(BaseCClass):
     def isub_kw(self, target_kw, delta_kw, force_active=False):
         if isinstance(delta_kw, ResdataKW):
             if target_kw.assert_binary(delta_kw):
-                self._isub_kw(target_kw, delta_kw, force_active)
+                _rd_region._isub_kw(self, target_kw, delta_kw, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:
@@ -1050,7 +856,7 @@ class ResdataRegion(BaseCClass):
     def imul_kw(self, target_kw, other, force_active=False):
         if isinstance(other, ResdataKW):
             if target_kw.assert_binary(other):
-                self._imul_kw(target_kw, other, force_active)
+                _rd_region._imul_kw(self, target_kw, other, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:
@@ -1059,7 +865,7 @@ class ResdataRegion(BaseCClass):
     def idiv_kw(self, target_kw, other, force_active=False):
         if isinstance(other, ResdataKW):
             if target_kw.assert_binary(other):
-                self._idiv_kw(target_kw, other, force_active)
+                _rd_region._idiv_kw(self, target_kw, other, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:
@@ -1074,7 +880,7 @@ class ResdataRegion(BaseCClass):
         See usage documentation on iadd_kw().
         """
         if target_kw.assert_binary(src_kw):
-            self._copy_kw(target_kw, src_kw, force_active)
+            _rd_region._copy_kw(self, target_kw, src_kw, force_active)
         else:
             raise TypeError("Type mismatch")
 
@@ -1096,16 +902,16 @@ class ResdataRegion(BaseCClass):
     def sum_kw(self, kw, force_active=False):
         data_type = kw.data_type
         if data_type == ResDataType.RD_FLOAT:
-            return self._sum_kw_float(kw, force_active)
+            return _rd_region._sum_kw_float(self, kw, force_active)
 
         if data_type == ResDataType.RD_INT:
-            return self._sum_kw_int(kw, force_active)
+            return _rd_region._sum_kw_int(self, kw, force_active)
 
         if data_type == ResDataType.RD_DOUBLE:
-            return self._sum_kw_double(kw, force_active)
+            return _rd_region._sum_kw_double(self, kw, force_active)
 
         if data_type == ResDataType.RD_BOOL:
-            return self._sum_kw_bool(kw, force_active)
+            return _rd_region._sum_kw_bool(self, kw, force_active)
 
         raise ValueError("sum_kw only supported for; INT/FLOAT/DOUBLE/BOOL")
 
@@ -1118,26 +924,22 @@ class ResdataRegion(BaseCClass):
         return True
 
     def active_size(self):
-        return len(self._get_active_list())
+        return len(self.get_active_list())
 
     def global_size(self):
-        return len(self._get_global_list())
+        return len(self.get_global_list())
 
     def get_active_list(self) -> IntVector:
         """
         IntVector instance with active indices in the region.
         """
-        active_list = self._get_active_list()
-        active_list.setParent(self)
-        return active_list
+        return _rd_region._get_active_list(self)
 
     def get_global_list(self):
         """
         IntVector instance with global indices in the region.
         """
-        global_list = self._get_global_list()
-        global_list.setParent(self)
-        return global_list
+        return _rd_region._get_global_list(self)
 
     def get_ijk_list(self):
         """
@@ -1154,29 +956,29 @@ class ResdataRegion(BaseCClass):
         """
         Will check if the cell given by i,j,k is part of the region.
         """
-        return self._contains_ijk(i, j, k)
+        return _rd_region._contains_ijk(self, i, j, k)
 
     def contains_global(self, global_index):
         """
         Will check if the cell given by @global_index is part of the region.
         """
-        return self._contains_global(global_index)
+        return _rd_region._contains_global(self, global_index)
 
     def contains_active(self, active_index):
         """
         Will check if the cell given by @active_index is part of the region.
         """
-        return self._contains_active(active_index)
+        return _rd_region._contains_active(self, active_index)
 
     def kw_index_list(self, rd_kw, force_active) -> IntVector:
-        return self._get_kw_index_list(rd_kw, force_active)
+        return _rd_region._get_kw_index_list(self, rd_kw, force_active)
 
     @property
     def name(self):
-        return self._get_name()
+        return _rd_region._get_name(self)
 
     def get_name(self):
-        return self._get_name()
+        return _rd_region._get_name(self)
 
     def set_name(self, name):
-        self._set_name(name)
+        _rd_region._set_name(self, name)

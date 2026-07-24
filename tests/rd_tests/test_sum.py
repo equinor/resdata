@@ -1,5 +1,6 @@
 import csv
 import datetime
+import gc
 import os
 import os.path
 import shutil
@@ -873,3 +874,25 @@ def test_that_end_time_is_sim_start_when_there_are_no_steps():
     assert summary.end_date == summary.start_date
     # Note that in this situation
     # sum.data_start will raise
+
+
+def test_that_summary_keyword_vector_lifetime_is_longer_than_summary():
+    """A regression test for a bug where SummaryKeyWordVector outlived its Summary"""
+
+    def _create():
+        summary = createSummary(
+            "CASE",
+            [("FOPR", None, 0, "SM3")],
+            sim_length_days=100,
+            num_report_step=0,
+            num_mini_step=0,
+            sim_start=datetime.date(2010, 1, 1),
+            func_table={},
+        )
+        return SummaryKeyWordVector(summary)
+
+    vector = _create()
+    gc.collect()
+    vector.add_keywords("FOPR")
+    assert len(vector) == 1
+    assert vector[0] == "FOPR"
