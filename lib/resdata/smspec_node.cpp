@@ -548,8 +548,16 @@ void smspec_node::set_wgname(const char *wgname) {
         this->var_type == RD_SMSPEC_COMPLETION_VAR ||
         this->var_type == RD_SMSPEC_SEGMENT_VAR ||
         this->var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
+        this->var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR ||
         this->var_type == RD_SMSPEC_NETWORK_VAR)
         this->wgname = wgname;
+}
+
+void smspec_node::set_lgr_name(const char *lgr) {
+    if (!lgr)
+        return;
+
+    this->lgr_name = lgr;
 }
 
 void smspec_node::set_num(const int *grid_dims, int num_) {
@@ -995,7 +1003,7 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
     this->params_index = param_index_;
     this->default_value = default_value_;
     this->keyword = keyword_;
-    this->wgname = wgname_;
+    this->set_wgname(wgname_);
     this->unit = unit_;
     this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
     this->total_variable =
@@ -1004,7 +1012,7 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
                        ((this->var_type == RD_SMSPEC_WELL_VAR) ||
                         (this->var_type == RD_SMSPEC_GROUP_VAR) ||
                         (this->var_type == RD_SMSPEC_FIELD_VAR));
-    this->lgr_name = lgr_;
+    this->set_lgr_name(lgr_);
     this->num = nums_unused;
 
     switch (this->var_type) {
@@ -1097,18 +1105,17 @@ int int_cmp(int v1, int v2) {
 
     return 0;
 }
+} // namespace
 
-int cmp_MISC(const smspec_node &node1, const smspec_node &node2) {
+int smspec_node::cmp_MISC(const smspec_node &node1, const smspec_node &node2) {
     static const std::set<std::string> early_vars = {"TIME",  "DAYS", "DAY",
                                                      "MONTH", "YEAR", "YEARS"};
 
     if (&node1 == &node2)
         return 0;
 
-    bool node1_early =
-        !(early_vars.find(node1.get_keyword()) == early_vars.end());
-    bool node2_early =
-        !(early_vars.find(node2.get_keyword()) == early_vars.end());
+    bool node1_early = !(early_vars.find(node1.keyword) == early_vars.end());
+    bool node2_early = !(early_vars.find(node2.keyword) == early_vars.end());
 
     if (node1_early && !node2_early)
         return -1;
@@ -1116,12 +1123,13 @@ int cmp_MISC(const smspec_node &node1, const smspec_node &node2) {
     if (!node1_early && node2_early)
         return 1;
 
-    return strcmp(node1.get_keyword(), node2.get_keyword());
+    return node1.keyword.compare(node2.keyword);
 }
 
-int cmp_LGRIJK(const smspec_node &node1, const smspec_node &node2) {
-    const auto &ijk1 = node1.get_lgr_ijk();
-    const auto &ijk2 = node2.get_lgr_ijk();
+int smspec_node::cmp_LGRIJK(const smspec_node &node1,
+                            const smspec_node &node2) {
+    const auto &ijk1 = node1.lgr_ijk;
+    const auto &ijk2 = node2.lgr_ijk;
 
     int i_cmp = int_cmp(ijk1[0], ijk2[0]);
     if (i_cmp != 0)
@@ -1134,101 +1142,106 @@ int cmp_LGRIJK(const smspec_node &node1, const smspec_node &node2) {
     return int_cmp(ijk1[2], ijk2[2]);
 }
 
-int cmp_KEYWORD_LGR_LGRIJK(const smspec_node &node1, const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_LGR_LGRIJK(const smspec_node &node1,
+                                        const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    int lgr_cmp = strcmp(node1.get_lgr_name(), node2.get_lgr_name());
+    int lgr_cmp = node1.lgr_name.compare(node2.lgr_name);
     if (lgr_cmp != 0)
         return lgr_cmp;
 
     return cmp_LGRIJK(node1, node2);
 }
 
-int cmp_KEYWORD_WGNAME_NUM(const smspec_node &node1, const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_WGNAME_NUM(const smspec_node &node1,
+                                        const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
+    int wgname_cmp = node1.wgname.compare(node2.wgname);
     if (wgname_cmp != 0)
         return wgname_cmp;
 
-    return int_cmp(node1.get_num(), node2.get_num());
+    return int_cmp(node1.num, node2.num);
 }
 
-int cmp_KEYWORD_WGNAME_LGR(const smspec_node &node1, const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_WGNAME_LGR(const smspec_node &node1,
+                                        const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
+    int wgname_cmp = node1.wgname.compare(node2.wgname);
     if (wgname_cmp != 0)
         return wgname_cmp;
 
-    return strcmp(node1.get_lgr_name(), node2.get_lgr_name());
+    return node1.lgr_name.compare(node2.lgr_name);
 }
 
-int cmp_KEYWORD_WGNAME_LGR_LGRIJK(const smspec_node &node1,
-                                  const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_WGNAME_LGR_LGRIJK(const smspec_node &node1,
+                                               const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
+    int wgname_cmp = node1.wgname.compare(node2.wgname);
     if (wgname_cmp != 0)
         return wgname_cmp;
 
-    int lgr_cmp = strcmp(node1.get_lgr_name(), node2.get_lgr_name());
+    int lgr_cmp = node1.lgr_name.compare(node2.lgr_name);
     if (lgr_cmp != 0)
         return lgr_cmp;
 
     return cmp_LGRIJK(node1, node2);
 }
 
-int cmp_KEYWORD_WGNAME(const smspec_node &node1, const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_WGNAME(const smspec_node &node1,
+                                    const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    if (IS_DUMMY_WELL(node1.get_wgname())) {
-        if (IS_DUMMY_WELL(node2.get_wgname()))
+    if (IS_DUMMY_WELL(node1.wgname)) {
+        if (IS_DUMMY_WELL(node2.wgname))
             return 0;
         else
             return 1;
     }
 
-    if (IS_DUMMY_WELL(node2.get_wgname()))
+    if (IS_DUMMY_WELL(node2.wgname))
         return -1;
 
-    return strcmp(node1.get_wgname(), node2.get_wgname());
+    return node1.wgname.compare(node2.wgname);
 }
 
-int cmp_KEYWORD(const smspec_node &node1, const smspec_node &node2) {
-    return strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD(const smspec_node &node1,
+                             const smspec_node &node2) {
+    return node1.keyword.compare(node2.keyword);
 }
 
-int cmp_KEYWORD_NUM(const smspec_node &node1, const smspec_node &node2) {
-    int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
+int smspec_node::cmp_KEYWORD_NUM(const smspec_node &node1,
+                                 const smspec_node &node2) {
+    int keyword_cmp = node1.keyword.compare(node2.keyword);
     if (keyword_cmp != 0)
         return keyword_cmp;
 
-    return int_cmp(node1.get_num(), node2.get_num());
+    return int_cmp(node1.num, node2.num);
 }
 
-int cmp_key1(const smspec_node &node1, const smspec_node &node2) {
-    if (node1.get_gen_key1() == NULL) {
-        if (node2.get_gen_key1() == NULL)
+int smspec_node::cmp_key1(const smspec_node &node1, const smspec_node &node2) {
+    if (node1.gen_key1.empty()) {
+        if (node2.gen_key1.empty())
             return 0;
         else
             return -1;
-    } else if (node2.get_gen_key1() == NULL)
+    } else if (node2.gen_key1.empty())
         return 1;
 
-    return util_strcmp_int(node1.get_gen_key1(), node2.get_gen_key1());
+    return util_strcmp_int(node1.gen_key1.c_str(), node2.gen_key1.c_str());
 }
-} // namespace
 
 int smspec_node::cmp(const smspec_node &node1, const smspec_node &node2) {
     /* 1: Start with special casing for the MISC variables. */

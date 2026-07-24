@@ -67,20 +67,12 @@ private:
 
     static rd_smspec_var_type identify_special_var(const char *var);
     void set_wgname(const char *wgname);
+    void set_lgr_name(const char *lgr);
     void set_num(const int grid_dims[3], int num_);
     void set_gen_keys(const char *key_join_string_);
     void decode_R1R2(int *r1, int *r2) const;
     void set_lgr_ijk(int lgr_i, int lgr_j, int lgr_k);
 
-    /*
-    The cmp_* helper functions below are private static member functions
-    (rather than free functions operating on get_wgname()/get_lgr_name())
-    so that they can compare the private std::string members (wgname,
-    lgr_name, keyword) directly. The get_*() accessors are allowed to
-    return nullptr for unset values (e.g. an empty wgname), and passing
-    such a nullptr to strcmp()/std::string_view would be undefined
-    behaviour.
-  */
     static int cmp_MISC(const smspec_node &node1, const smspec_node &node2);
     static int cmp_LGRIJK(const smspec_node &node1, const smspec_node &node2);
     static int cmp_KEYWORD_LGR_LGRIJK(const smspec_node &node1,
