@@ -19,6 +19,7 @@
 #include <resdata/fault_block.hpp>
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/layer.hpp>
+#include <resdata/rd_sum_tstep.hpp>
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -396,4 +397,21 @@ py::object SummaryVarType() {
                   .attr("SummaryVarType");
     }
     return cls;
+}
+
+py::object SummaryTStep() {
+    static py::object cls;
+    if (!cls) {
+        cls = py::module_::import("resdata.summary.rd_sum_tstep")
+                  .attr("SummaryTStep");
+    }
+    return cls;
+}
+
+template <> rd_sum_tstep_type *from_cwrap<rd_sum_tstep_type>(py::handle obj) {
+    if (!py::isinstance(obj, SummaryTStep()))
+        throw py::type_error("Expected SummaryTStep, got " +
+                             static_cast<std::string>(py::repr(obj)));
+
+    return cast_cwrap<rd_sum_tstep_type>(obj);
 }

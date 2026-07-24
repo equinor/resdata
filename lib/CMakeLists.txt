@@ -229,6 +229,7 @@ add_resdata_pybind_module(_subsidence resdata/rd_subsidence_pybind.cpp
                           resdata/gravimetry)
 add_resdata_pybind_module(_grav resdata/rd_grav_pybind.cpp resdata/gravimetry)
 add_resdata_pybind_module(_rd_sum resdata/rd_sum_pybind.cpp resdata/summary)
+add_resdata_pybind_module(_rd_sum_tstep resdata/rd_sum_tstep_pybind.cpp resdata/summary)
 add_resdata_pybind_module(rd_smspec_node resdata/smspec_node_pybind.cpp
                           resdata/summary)
 add_resdata_pybind_module(_type resdata/rd_type_pybind.cpp resdata/types)
