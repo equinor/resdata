@@ -1,4 +1,7 @@
 #pragma once
+#include <optional>
+#include <string>
+
 #include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
@@ -182,8 +185,9 @@ const int_vector_type *rd_region_get_kw_index_list(rd_region_type *rd_region,
                                                    const rd_kw_type *rd_kw,
                                                    bool force_active);
 
-void rd_region_set_name(rd_region_type *region, const char *name);
-const char *rd_region_get_name(const rd_region_type *region);
+void rd_region_set_name(rd_region_type *region,
+                        const std::optional<std::string> &name);
+std::optional<std::string> rd_region_get_name(const rd_region_type *region);
 
 double rd_region_sum_kw_double(rd_region_type *rd_region,
                                const rd_kw_type *rd_kw, bool force_active);
