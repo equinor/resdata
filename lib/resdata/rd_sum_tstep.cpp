@@ -1,8 +1,10 @@
+#include <cstdio>
 #include <ctime>
-#include <cmath>
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
@@ -12,6 +14,9 @@
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_util.hpp>
+#include <resdata/smspec_node.hpp>
 
 #define RD_SUM_TSTEP_ID 88631
 
@@ -132,9 +137,8 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
         time_t sim_time = rd_make_date(day, month, year);
         rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
     } else
-        util_abort("%s: Could not extract date/time information from "
-                   "SMSPEC header file. \n",
-                   __func__);
+        throw std::invalid_argument(
+            "Could not extract date/time information from SMSPEC header file.");
 }
 
 /**
@@ -195,9 +199,9 @@ double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
     if ((index >= 0) && (index < (int)ministep->data.size()))
         return ministep->data[index];
     else {
-        util_abort("%s: param index:%d invalid: Valid range: [0,%d) \n",
-                   __func__, index, ministep->data.size());
-        return -1;
+        throw std::out_of_range(
+            fmt::format("param index:{} invalid: Valid range: [0,{})", index,
+                        ministep->data.size()));
     }
 }
 
@@ -247,8 +251,9 @@ void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
     if ((index < static_cast<int>(tstep->data.size())) && (index >= 0))
         tstep->data[index] = value;
     else
-        util_abort("%s: index:%d invalid. Valid range: [0,%d) \n", __func__,
-                   index, tstep->data.size());
+        throw std::out_of_range(
+            fmt::format("index:{} invalid. Valid range: [0,{})", index,
+                        tstep->data.size()));
 }
 
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
