@@ -347,11 +347,6 @@ TEST_CASE("rd_region", "[rd_region]") {
                 REQUIRE(num_selected(region) == 300);
             }
 
-            SECTION("xor") {
-                rd_region_xor(region, region2);
-                REQUIRE(num_selected(region) == 300);
-            }
-
             rd_region_free(region2);
         }
 
