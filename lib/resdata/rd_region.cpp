@@ -68,10 +68,7 @@
 
 */
 
-#define RD_REGION_TYPE_ID 1106377
-
 struct rd_region_struct {
-    UTIL_TYPE_ID_DECLARATION;
     bool *
         active_mask; /* This marks active|inactive in the region, which is unrelated to active in the grid. */
     int_vector_type *
@@ -90,9 +87,6 @@ struct rd_region_struct {
     rd_grid_type *parent_grid;
 };
 
-UTIL_IS_INSTANCE_FUNCTION(rd_region, RD_REGION_TYPE_ID)
-UTIL_SAFE_CAST_FUNCTION(rd_region, RD_REGION_TYPE_ID)
-
 static void rd_region_invalidate_index_list(rd_region_type *region) {
     region->global_index_list_valid = false;
     region->active_index_list_valid = false;
@@ -100,7 +94,6 @@ static void rd_region_invalidate_index_list(rd_region_type *region) {
 
 rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect) {
     rd_region_type *region = (rd_region_type *)util_malloc(sizeof *region);
-    UTIL_TYPE_ID_INIT(region, RD_REGION_TYPE_ID);
     region->parent_grid = rd_grid;
     rd_grid_get_dims(rd_grid, &region->grid_nx, &region->grid_ny,
                      &region->grid_nz, &region->grid_active);

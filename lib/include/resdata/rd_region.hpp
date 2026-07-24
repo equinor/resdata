@@ -193,6 +193,3 @@ int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                          bool force_active);
 float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                              bool force_active);
-
-UTIL_IS_INSTANCE_HEADER(rd_region);
-UTIL_SAFE_CAST_HEADER(rd_region);
