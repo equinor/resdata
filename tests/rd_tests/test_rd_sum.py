@@ -958,6 +958,89 @@ def test_that_add_variable_raises_valueerror_for_well_var_without_wgname():
         writer.add_variable("WOPR", unit="SM3/DAY", wgname=None)
 
 
+@given(
+    keyword=summary_variables(),
+    wgname=st.one_of(
+        st.none(), st.just(""), st.sampled_from(["OP1", "OP2", "GROUP1", "INJ1"])
+    ),
+    num=st.integers(min_value=0, max_value=50),
+    unit=st.sampled_from(["SM3", "SM3/DAY", "BARSA", "SM3/SM3", "FRACTION"]),
+    default_value=st.floats(
+        min_value=-1.0e5,
+        max_value=1.0e5,
+        allow_nan=False,
+        allow_infinity=False,
+        width=32,
+    ),
+    lgr_ijk=st.tuples(
+        st.integers(min_value=0, max_value=4),
+        st.integers(min_value=0, max_value=4),
+        st.integers(min_value=0, max_value=4),
+    ),
+)
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_variable_constructed_nodes_roundtrip_and_compare_to_self(
+    keyword, wgname, num, unit, default_value, lgr_ijk
+):
+    """
+    Any ResdataSMSPECNode constructed via Summary.writer().add_variable()
+    (or add_local_variable() for LB/LC/LW keywords) should expose the same
+    keyword/unit/default value it was constructed with, and it must always
+    be possible to compare the node to itself with ``==``, ``<`` and ``>``
+    without crashing - this is a regression test for potential nullptr
+    dereferences via strcmp()/IS_DUMMY_WELL() in smspec_node::cmp() and
+    smspec_node::set_wgname() for variable types (e.g. NETWORK_VAR and
+    LOCAL_BLOCK_VAR) which do not require a wgname.
+    """
+    start_date = datetime.datetime(2005, 5, 10)
+    writer = Summary.writer("ADD_VAR_PROP", start_date, 5, 5, 5)
+
+    is_local = len(keyword) >= 2 and keyword[0] == "L" and keyword[1] in "BCW"
+
+    try:
+        if is_local:
+            node = writer.add_variable(
+                keyword,
+                unit=unit,
+                wgname=wgname,
+                num=num,
+                default_value=default_value,
+                lgr="LGR1",
+                lgr_ijk=lgr_ijk,
+            )
+        else:
+            node = writer.add_variable(
+                keyword,
+                unit=unit,
+                wgname=wgname,
+                num=num,
+                default_value=default_value,
+            )
+    except (ValueError, RuntimeError):
+        # Rejected as an invalid combination of keyword/wgname/num - this is
+        # not the nullptr dereference this test is looking for, so just
+        # discard the example and let hypothesis draw a new one.
+        assume(False)
+
+    assert node.keyword == keyword
+    assert node.unit == unit
+    assert node.default == pytest.approx(default_value)
+
+    if is_local:
+        # add_local_variable() does not accept a NUMS value.
+        assert node.num == 0
+        assert node.get_num() == 0
+    else:
+        assert node.num == num
+        assert node.get_num() == num
+
+    # Must not crash, regardless of whether wgname/num are set:
+    assert node == node
+    assert not (node < node)
+    assert not (node > node)
+    assert node.get_key1() is not None
+
+
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_from_pandas_roundtrip():
     dates = pd.date_range("2000-01-01", periods=5, freq="D")
