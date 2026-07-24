@@ -233,9 +233,30 @@ def poro(grid):
 
 
 @pytest.fixture
+def poro_global(grid):
+    return grid.create_kw(
+        np.ones((grid.nx, grid.ny, grid.nz), dtype=np.float32), "PORO", False
+    )
+
+
+@pytest.fixture
 def poro_int(grid):
     return grid.create_kw(
         np.ones((grid.nx, grid.ny, grid.nz), dtype=np.int32), "PORO", True
+    )
+
+
+@pytest.fixture
+def poro_double(grid):
+    return grid.create_kw(
+        np.ones((grid.nx, grid.ny, grid.nz), dtype=np.float64), "PORO", True
+    )
+
+
+@pytest.fixture
+def poro_double_global(grid):
+    return grid.create_kw(
+        np.ones((grid.nx, grid.ny, grid.nz), dtype=np.float64), "PORO", False
     )
 
 
@@ -405,6 +426,16 @@ def test_deselect_below_plane(full_region):
     assert above == full_region
 
 
+def test_that_select_below_plane_selects_cells_strictly_on_negative_side(
+    empty_region, grid
+):
+    # The plane x=5 (normal (1,0,0)) splits the 10x10x1 grid so that the
+    # 5x10 slab of cells with i in [0,4] lies strictly below (x<5).
+    region = empty_region.copy()
+    region.select_below_plane((1.0, 0.0, 0.0), (5.0, 0.0, 0.0))
+    assert region.global_size() == 50
+
+
 @pytest.fixture
 def circumference_polygon():
     return [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)]
@@ -443,6 +474,262 @@ def test_select_layer(empty_region, full_region):
     layer = Layer(10, 10)
     empty_region.select_from_layer(layer, 0, 0)
     assert empty_region == full_region
+
+
+def test_that_select_outside_polygon_leaves_only_cells_outside_polygon(
+    circumference_polygon, empty_region, grid
+):
+    # A polygon covering only the [0,5]x[0,5] quadrant so that the
+    # "outside" selection selects the remaining 75 cells (25 are inside).
+    small_polygon = [(0.0, 0.0), (0.0, 5.0), (5.0, 5.0), (5.0, 0.0)]
+    empty_region.select_outside_polygon(small_polygon)
+    assert empty_region.global_size() == 75
+
+
+def test_that_deselect_outside_polygon_only_removes_cells_outside_polygon(
+    circumference_polygon, full_region
+):
+    small_polygon = [(0.0, 0.0), (0.0, 5.0), (5.0, 5.0), (5.0, 0.0)]
+    full_region.deselect_outside_polygon(small_polygon)
+    assert full_region.global_size() == 25
+
+
+def test_that_invert_toggles_selection_of_every_cell(empty_region, full_region):
+    empty_region.invert()
+    assert empty_region == full_region
+    full_region.invert()
+    assert full_region.global_size() == 0
+
+
+@pytest.fixture
+def active_int_kw(grid):
+    kw = ResdataKW("ACTINT", grid.get_num_active(), ResDataType.RD_INT)
+    for i in range(len(kw)):
+        kw[i] = 1
+    return kw
+
+
+def test_that_select_equal_supports_active_sized_int_kw(
+    empty_region, active_region, active_int_kw
+):
+    empty_region.select_equal(active_int_kw, 1)
+    assert empty_region == active_region
+
+
+def test_that_deselect_equal_supports_active_sized_int_kw(
+    full_region, inactive_region, active_int_kw
+):
+    full_region.deselect_equal(active_int_kw, 1)
+    assert full_region == inactive_region
+
+
+@pytest.fixture
+def active_bool_kw(grid):
+    kw = ResdataKW("ACTBOOL", grid.get_num_active(), ResDataType.RD_BOOL)
+    for i in range(len(kw)):
+        kw[i] = True
+    return kw
+
+
+def test_that_select_true_supports_active_sized_bool_kw(
+    empty_region, active_region, active_bool_kw
+):
+    empty_region.select_true(active_bool_kw)
+    assert empty_region == active_region
+
+
+def test_that_select_false_supports_active_sized_bool_kw(empty_region, active_bool_kw):
+    false_region = empty_region.copy()
+    false_region.select_false(active_bool_kw)
+    assert false_region == empty_region
+
+
+def test_that_select_in_range_supports_global_sized_kw(
+    empty_region, full_region, poro_global
+):
+    empty_region.select_in_range(poro_global, 0.9, 1.1)
+    assert empty_region == full_region
+
+
+def test_that_deselect_in_range_supports_global_sized_kw(full_region, poro_global):
+    full_region.deselect_in_range(poro_global, 0.9, 1.1)
+    assert full_region.global_size() == 0
+
+
+def test_that_select_more_supports_active_sized_float_kw(
+    empty_region, active_region, poro
+):
+    empty_region.select_more(poro, 0.5)
+    assert empty_region == active_region
+
+
+def test_that_select_less_supports_active_sized_float_kw(
+    empty_region, active_region, poro
+):
+    below = empty_region.copy()
+    below.select_less(poro, 0.5)
+    assert below.global_size() == 0
+    full = active_region.copy()
+    full.select_less(poro, 1.5)
+    assert full == active_region
+
+
+def test_that_select_more_supports_global_sized_float_kw(
+    empty_region, full_region, poro_global
+):
+    empty_region.select_more(poro_global, 0.5)
+    assert empty_region == full_region
+
+
+def test_that_select_less_supports_global_sized_float_kw(
+    empty_region, full_region, poro_global
+):
+    below = empty_region.copy()
+    below.select_less(poro_global, 0.5)
+    assert below.global_size() == 0
+    above = empty_region.copy()
+    above.select_less(poro_global, 1.5)
+    assert above == full_region
+
+
+def test_that_select_more_supports_active_sized_double_kw(
+    empty_region, active_region, poro_double
+):
+    empty_region.select_more(poro_double, 0.5)
+    assert empty_region == active_region
+
+
+def test_that_select_less_supports_active_sized_double_kw(
+    empty_region, active_region, poro_double
+):
+    below = empty_region.copy()
+    below.select_less(poro_double, 0.5)
+    assert below.global_size() == 0
+    full = active_region.copy()
+    full.select_less(poro_double, 1.5)
+    assert full == active_region
+
+
+def test_that_select_more_supports_global_sized_double_kw(
+    empty_region, full_region, poro_double_global
+):
+    empty_region.select_more(poro_double_global, 0.5)
+    assert empty_region == full_region
+
+
+def test_that_select_less_supports_global_sized_double_kw(
+    empty_region, full_region, poro_double_global
+):
+    below = empty_region.copy()
+    below.select_less(poro_double_global, 0.5)
+    assert below.global_size() == 0
+    above = empty_region.copy()
+    above.select_less(poro_double_global, 1.5)
+    assert above == full_region
+
+
+def test_that_select_more_supports_active_sized_int_kw(
+    empty_region, active_region, poro_int
+):
+    empty_region.select_more(poro_int, 0)
+    assert empty_region == active_region
+
+
+def test_that_select_less_supports_active_sized_int_kw(
+    empty_region, active_region, poro_int
+):
+    below = empty_region.copy()
+    below.select_less(poro_int, 1)
+    assert below.global_size() == 0
+    full = active_region.copy()
+    full.select_less(poro_int, 2)
+    assert full == active_region
+
+
+@pytest.fixture
+def lo_hi_global(grid):
+    lo = ResdataKW("LO", grid.get_global_size(), ResDataType.RD_FLOAT)
+    hi = ResdataKW("HI", grid.get_global_size(), ResDataType.RD_FLOAT)
+    for i in range(len(lo)):
+        lo[i] = 0.0
+        hi[i] = 1.0
+    return lo, hi
+
+
+def test_that_select_cmp_less_supports_global_sized_kw(
+    empty_region, full_region, lo_hi_global
+):
+    lo, hi = lo_hi_global
+    empty_region.select_cmp_less(lo, hi)
+    assert empty_region == full_region
+
+
+def test_that_select_cmp_more_supports_global_sized_kw(
+    empty_region, full_region, lo_hi_global
+):
+    lo, hi = lo_hi_global
+    empty_region.select_cmp_more(hi, lo)
+    assert empty_region == full_region
+
+
+@pytest.fixture
+def lo_hi_active(grid):
+    lo = ResdataKW("LO", grid.get_num_active(), ResDataType.RD_FLOAT)
+    hi = ResdataKW("HI", grid.get_num_active(), ResDataType.RD_FLOAT)
+    for i in range(len(lo)):
+        lo[i] = 0.0
+        hi[i] = 1.0
+    return lo, hi
+
+
+def test_that_select_cmp_less_supports_active_sized_kw(
+    empty_region, active_region, lo_hi_active
+):
+    lo, hi = lo_hi_active
+    empty_region.select_cmp_less(lo, hi)
+    assert empty_region == active_region
+
+
+def test_that_set_kw_sets_every_cell_for_float_kw(full_region, poro, grid):
+    target = grid.create_kw(
+        np.zeros((grid.nx, grid.ny, grid.nz), dtype=np.float32), "PORO", True
+    )
+    full_region.set_kw(target, 3.0)
+    assert list(target) == [3.0] * len(target)
+
+
+def test_that_set_kw_sets_every_cell_for_double_kw(full_region, poro_double, grid):
+    target = grid.create_kw(
+        np.zeros((grid.nx, grid.ny, grid.nz), dtype=np.float64), "PORO", True
+    )
+    full_region.set_kw(target, 3.0)
+    assert list(target) == [3.0] * len(target)
+
+
+def test_that_shift_kw_adds_value_to_every_cell_for_int_kw(full_region, poro_int):
+    poro_int_copy = poro_int.copy()
+    full_region.shift_kw(poro_int, 2)
+    assert list(poro_int) == [v + 2 for v in poro_int_copy]
+
+
+def test_that_shift_kw_adds_value_to_every_cell_for_double_kw(full_region, poro_double):
+    poro_double_copy = poro_double.copy()
+    full_region.shift_kw(poro_double, 2.0)
+    assert list(poro_double) == [v + 2.0 for v in poro_double_copy]
+
+
+def test_that_scale_kw_scales_every_cell_for_double_kw(full_region, poro_double):
+    poro_double_copy = poro_double.copy()
+    full_region.scale_kw(poro_double, 2.0)
+    assert list(poro_double) == [v * 2.0 for v in poro_double_copy]
+
+
+def test_that_isub_kw_with_kw_delta_subtracts_elementwise(full_region, poro):
+    poro_copy = poro.copy()
+    delta = poro.copy()
+    full_region.isub_kw(poro, delta)
+    assert list(poro) == [0.0] * len(poro)
+    assert poro_copy == delta
 
 
 def test_iadd_kw_empty(empty_region, poro):
