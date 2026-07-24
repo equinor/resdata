@@ -6,10 +6,11 @@
 #include <resdata/rd_sum_vector.hpp>
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_smspec.hpp>
+#include <resdata/smspec_node.hpp>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
+#include <ert/util/stringlist.hpp>
 
 #define RD_SUM_VECTOR_TYPE_ID 8768778
 
@@ -40,7 +41,7 @@ static void rd_sum_vector_add_node(rd_sum_vector_type *vector,
 
 rd_sum_vector_type *rd_sum_vector_alloc(const rd_sum_type *rd_sum,
                                         bool add_keywords) {
-    rd_sum_vector_type *rd_sum_vector = new rd_sum_vector_type();
+    auto rd_sum_vector = std::make_unique<rd_sum_vector_type>();
     UTIL_TYPE_ID_INIT(rd_sum_vector, RD_SUM_VECTOR_TYPE_ID);
     rd_sum_vector->rd_sum = rd_sum;
     if (add_keywords) {
@@ -54,10 +55,10 @@ rd_sum_vector_type *rd_sum_vector_alloc(const rd_sum_type *rd_sum,
           to match the same special casing in the key matching function.
         */
             if (!util_string_equal(key, "TIME"))
-                rd_sum_vector_add_node(rd_sum_vector, &node, key);
+                rd_sum_vector_add_node(rd_sum_vector.get(), &node, key);
         }
     }
-    return rd_sum_vector;
+    return rd_sum_vector.release();
 }
 
 static void rd_sum_vector_add_invalid_key(rd_sum_vector_type *vector,
@@ -106,18 +107,17 @@ bool rd_sum_vector_add_key(rd_sum_vector_type *rd_sum_vector, const char *key) {
 
 void rd_sum_vector_add_keys(rd_sum_vector_type *rd_sum_vector,
                             const char *pattern) {
-    stringlist_type *keylist =
-        rd_sum_alloc_matching_general_var_list(rd_sum_vector->rd_sum, pattern);
+    stringlist_ptr keylist = {
+        rd_sum_alloc_matching_general_var_list(rd_sum_vector->rd_sum, pattern),
+        &stringlist_free};
 
-    int num_keywords = stringlist_get_size(keylist);
-    int i;
-    for (i = 0; i < num_keywords; i++) {
-        const char *key = stringlist_iget(keylist, i);
+    int num_keywords = stringlist_get_size(keylist.get());
+    for (int i = 0; i < num_keywords; i++) {
+        const char *key = stringlist_iget(keylist.get(), i);
         const rd::smspec_node *node =
             rd_sum_get_general_var_node(rd_sum_vector->rd_sum, key);
         rd_sum_vector_add_node(rd_sum_vector, node, key);
     }
-    stringlist_free(keylist);
 }
 
 int rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector) {
