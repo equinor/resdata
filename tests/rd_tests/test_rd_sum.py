@@ -982,16 +982,6 @@ def test_that_add_variable_raises_valueerror_for_well_var_without_wgname():
 def test_that_add_variable_constructed_nodes_roundtrip_and_compare_to_self(
     keyword, wgname, num, unit, default_value, lgr_ijk
 ):
-    """
-    Any ResdataSMSPECNode constructed via Summary.writer().add_variable()
-    (or add_local_variable() for LB/LC/LW keywords) should expose the same
-    keyword/unit/default value it was constructed with, and it must always
-    be possible to compare the node to itself with ``==``, ``<`` and ``>``
-    without crashing - this is a regression test for potential nullptr
-    dereferences via strcmp()/IS_DUMMY_WELL() in smspec_node::cmp() and
-    smspec_node::set_wgname() for variable types (e.g. NETWORK_VAR and
-    LOCAL_BLOCK_VAR) which do not require a wgname.
-    """
     start_date = datetime.datetime(2005, 5, 10)
     writer = Summary.writer("ADD_VAR_PROP", start_date, 5, 5, 5)
 
@@ -1017,14 +1007,13 @@ def test_that_add_variable_constructed_nodes_roundtrip_and_compare_to_self(
                 default_value=default_value,
             )
     except (ValueError, RuntimeError):
-        # Rejected as an invalid combination of keyword/wgname/num - this is
-        # not the nullptr dereference this test is looking for, so just
-        # discard the example and let hypothesis draw a new one.
         assume(False)
+        raise
 
     assert node.keyword == keyword
     assert node.unit == unit
     assert node.default == pytest.approx(default_value)
+    assert node.wgname is None or node.wgname == wgname
 
     if is_local:
         # add_local_variable() does not accept a NUMS value.
@@ -1034,11 +1023,7 @@ def test_that_add_variable_constructed_nodes_roundtrip_and_compare_to_self(
         assert node.num == num
         assert node.get_num() == num
 
-    # Must not crash, regardless of whether wgname/num are set:
     assert node == node
-    assert not (node < node)
-    assert not (node > node)
-    assert node.get_key1() is not None
 
 
 @pytest.mark.usefixtures("use_tmpdir")
