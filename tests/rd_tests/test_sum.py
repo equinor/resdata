@@ -7,6 +7,18 @@ import stat
 
 import cwrap
 import pytest
+from resfo_utilities.testing import (
+    Date,
+    Simulator,
+    Smspec,
+    SmspecIntehead,
+    SummaryMiniStep,
+    SummaryStep,
+    Unsmry,
+)
+from resfo_utilities.testing import (
+    UnitSystem as ResfoUnitSystem,
+)
 
 
 def assert_frame_equal(a, b):
@@ -873,3 +885,70 @@ def test_that_end_time_is_sim_start_when_there_are_no_steps():
     assert summary.end_date == summary.start_date
     # Note that in this situation
     # sum.data_start will raise
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_a_summary_with_day_month_year_instead_of_time_is_read_correctly():
+    """
+    SummaryTStep derives the simulated time either from a TIME keyword
+    (given in DAYS/HOURS since simulation start) or, if that is absent,
+    from a set of DAY/MONTH/YEAR keywords
+    """
+    case = "DAY_MONTH_YEAR_CASE"
+    summary_keys = ["FOPT"]
+    start_date = Date(day=1, month=1, year=2010, hour=0, minutes=0, micro_seconds=0)
+
+    smspec = Smspec(
+        nx=2,
+        ny=2,
+        nz=2,
+        restarted_from_step=0,
+        num_keywords=3 + len(summary_keys),
+        restart="        ",
+        keywords=["DAY     ", "MONTH   ", "YEAR    ", *summary_keys],
+        well_names=[
+            ":+:+:+:+",
+            ":+:+:+:+",
+            ":+:+:+:+",
+            *(["A_NAME  "] * len(summary_keys)),
+        ],
+        region_numbers=[-32676, -32676, -32676, *([0] * len(summary_keys))],
+        units=["        ", "        ", "        ", *(["SM3"] * len(summary_keys))],
+        start_date=start_date,
+        intehead=SmspecIntehead(
+            unit=ResfoUnitSystem.METRIC,
+            simulator=Simulator.ECLIPSE_100,
+        ),
+    )
+
+    # Two timesteps, with dates given directly (not as an offset from the
+    # start date) to exercise the DAY/MONTH/YEAR code path in
+    # rd_sum_tstep_set_time_info().
+    expected_dates = [
+        datetime.datetime(2010, 1, 1),
+        datetime.datetime(2010, 3, 15),
+    ]
+    expected_values = [10.0, 20.0]
+    unsmry = Unsmry(
+        steps=[
+            SummaryStep(
+                seqnum=0,
+                ministeps=[
+                    SummaryMiniStep(mini_step=0, params=[1.0, 1.0, 2010.0, 10.0])
+                ],
+            ),
+            SummaryStep(
+                seqnum=1,
+                ministeps=[
+                    SummaryMiniStep(mini_step=1, params=[15.0, 3.0, 2010.0, 20.0])
+                ],
+            ),
+        ]
+    )
+    smspec.to_file(f"{case}.SMSPEC")
+    unsmry.to_file(f"{case}.UNSMRY")
+
+    summary = Summary(case)
+    assert summary.dates == expected_dates
+    assert list(summary["FOPT"].values) == expected_values
+    assert summary.start_date == datetime.date(2010, 1, 1)
