@@ -250,6 +250,7 @@ add_resdata_pybind_module(fault_block resdata/fault_block_pybind.cpp
 add_resdata_pybind_module(
   _fault_block_layer resdata/fault_block_layer_pybind.cpp resdata/grid/faults)
 add_resdata_pybind_module(_layer resdata/layer_pybind.cpp resdata/grid/faults)
+add_resdata_pybind_module(_rd_region resdata/rd_region_pybind.cpp resdata/grid)
 
 if(NOT BUILD_TESTS)
   return()
