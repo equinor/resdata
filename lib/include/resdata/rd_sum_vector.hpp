@@ -1,13 +1,8 @@
-#ifndef ERT_RD_SUM_VECTOR_H
-#define ERT_RD_SUM_VECTOR_H
-
+#pragma once
 #include <ert/util/type_macros.hpp>
+#include <memory>
 
 #include <resdata/rd_sum.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
@@ -34,15 +29,9 @@ rd_sum_vector_alloc_layout_copy(const rd_sum_vector_type *src_vector,
 
 UTIL_IS_INSTANCE_HEADER(rd_sum_vector);
 
-#ifdef __cplusplus
-}
-#include <memory>
-
 using rd_sum_vector_ptr =
     std::unique_ptr<rd_sum_vector_type, decltype(&rd_sum_vector_free)>;
 inline rd_sum_vector_ptr make_sum_vector(const rd_sum_type *rd_sum,
                                          bool add_keywords) {
     return {rd_sum_vector_alloc(rd_sum, add_keywords), &rd_sum_vector_free};
 }
-#endif
-#endif
