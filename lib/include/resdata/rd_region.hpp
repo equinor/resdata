@@ -104,8 +104,6 @@ void rd_region_intersection(rd_region_type *region,
 void rd_region_union(rd_region_type *region, const rd_region_type *new_region);
 void rd_region_subtract(rd_region_type *region,
                         const rd_region_type *new_region);
-void rd_region_xor(rd_region_type *region, const rd_region_type *new_region);
-
 void rd_region_select_smaller(rd_region_type *rd_region,
                               const rd_kw_type *rd_kw, float limit);
 void rd_region_deselect_smaller(rd_region_type *rd_region,

@@ -229,17 +229,20 @@ PYBIND11_MODULE(_rd_region, m) {
               return IntVector().attr("createCReference")(
                   reinterpret_cast<std::uintptr_t>(rd_region_get_kw_index_list(
                       from_cwrap<rd_region_type>(self),
-                      from_cwrap<rd_kw_type>(kw), force_active)));
+                      from_cwrap<rd_kw_type>(kw), force_active)),
+                  self);
           });
     m.def("_get_active_list", [](py::handle self) {
         return IntVector().attr("createCReference")(
             reinterpret_cast<std::uintptr_t>(
-                rd_region_get_active_list(from_cwrap<rd_region_type>(self))));
+                rd_region_get_active_list(from_cwrap<rd_region_type>(self))),
+            self);
     });
     m.def("_get_global_list", [](py::handle self) {
         return IntVector().attr("createCReference")(
             reinterpret_cast<std::uintptr_t>(
-                rd_region_get_global_list(from_cwrap<rd_region_type>(self))));
+                rd_region_get_global_list(from_cwrap<rd_region_type>(self))),
+            self);
     });
     m.def("_select_cmp_less",
           [](py::handle self, py::handle kw1, py::handle kw2) {
