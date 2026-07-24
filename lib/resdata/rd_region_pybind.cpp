@@ -377,15 +377,12 @@ PYBIND11_MODULE(_rd_region, m) {
             from_cwrap<rd_region_type>(self),
             from_cwrap<geo_polygon_type>(polygon));
     });
-    m.def("_set_name", [](py::handle self, std::optional<std::string> name) {
-        rd_region_set_name(from_cwrap<rd_region_type>(self),
-                           name ? name->c_str() : nullptr);
-    });
-    m.def("_get_name", [](py::handle self) -> py::object {
-        const char *name = rd_region_get_name(from_cwrap<rd_region_type>(self));
-        if (!name)
-            return py::none();
-        return py::str(name);
+    m.def("_set_name",
+          [](py::handle self, const std::optional<std::string> &name) {
+              rd_region_set_name(from_cwrap<rd_region_type>(self), name);
+          });
+    m.def("_get_name", [](py::handle self) {
+        return rd_region_get_name(from_cwrap<rd_region_type>(self));
     });
     m.def("_contains_ijk", [](py::handle self, int i, int j, int k) {
         return rd_region_contains_ijk(from_cwrap<rd_region_type>(self), i, j,

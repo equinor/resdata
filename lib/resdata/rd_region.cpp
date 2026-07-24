@@ -1187,15 +1187,13 @@ void rd_region_kw_copy(rd_region_type *rd_region, rd_kw_type *rd_kw,
     rd_kw_copy_indexed(rd_kw, target_index, src_kw);
 }
 
-void rd_region_set_name(rd_region_type *region, const char *name) {
-    if(name)
-        region->name = name;
-    else
-        region->name = std::nullopt;
+void rd_region_set_name(rd_region_type *region,
+                        const std::optional<std::string> &name) {
+    region->name = name;
 }
 
-const char *rd_region_get_name(const rd_region_type *region) {
-    return region->name.has_value() ? region->name->c_str() : nullptr;
+std::optional<std::string> rd_region_get_name(const rd_region_type *region) {
+    return region->name;
 }
 
 bool rd_region_equal(const rd_region_type *region1,
