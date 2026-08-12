@@ -41,15 +41,15 @@
 
 namespace fs = std::filesystem;
 
-const char *rd_get_phase_name(rd_phase_enum phase) {
+const char *rd_get_phase_name(Phase phase) {
     switch (phase) {
-    case (RD_OIL_PHASE):
+    case (Phase::OIL):
         return RD_PHASE_NAME_OIL;
         break;
-    case (RD_WATER_PHASE):
+    case (Phase::WATER):
         return RD_PHASE_NAME_WATER;
         break;
-    case (RD_GAS_PHASE):
+    case (Phase::GAS):
         return RD_PHASE_NAME_GAS;
         break;
     default:

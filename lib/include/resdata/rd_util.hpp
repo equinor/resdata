@@ -66,30 +66,6 @@ typedef enum {
     FRONTSIM = 5
 } rd_version_enum;
 
-/*
-  Observe that the numerical enum VALUES matches those found in item
-  14 in the INTEHEAD keyword in the INIT files; i.e. the
-  distribution of numerical values 1,2,4 can NOT BE CHANGED.
-
-  The function rd_get_phase_name() can be used to lookup a
-  string name from an enum value.
-
-  The phases in a simulation will typically be a sum of these
-  fundamental phases, and represented as an integer.
-*/
-
-typedef enum {
-    RD_OIL_PHASE = 1,
-    RD_GAS_PHASE = 2,
-    RD_WATER_PHASE = 4
-} rd_phase_enum;
-
-#define RD_PHASE_ENUM_DEFS                                                     \
-    {.value = 1, .name = "RD_OIL_PHASE"},                                      \
-        {.value = 2, .name = "RD_GAS_PHASE"},                                  \
-        {.value = 4, .name = "RD_WATER_PHASE"}
-#define RD_PHASE_ENUM_SIZE 3
-
 // For unformatted files:
 #define RD_BOOL_TRUE_INT                                                       \
     -1 // Binary representation: 11111111  11111111  11111111  1111111
@@ -104,6 +80,17 @@ typedef enum {
 #endif
 
 enum class UnitSystem { METRIC = 1, FIELD = 2, LAB = 3, PVT_M = 4 };
+/* Observe that the numerical enum VALUES matches those found in item
+  14 in the INTEHEAD keyword in the INIT files; i.e. the
+  distribution of numerical values 1,2,4 can NOT BE CHANGED.
+
+  The function rd_get_phase_name() can be used to lookup a
+  string name from an enum value.
+
+  The phases in a simulation will typically be a sum of these
+  fundamental phases, and represented as an integer.
+*/
+enum class Phase { OIL = 1, GAS = 2, WATER = 4 };
 
 extern "C" int rd_filename_report_nr(const char *);
 extern "C" FileType rd_get_file_type(const char *filename, bool *fmt_file,
@@ -117,7 +104,7 @@ time_t rd_make_date__(int mday, int month, int year, int *year_offset);
 time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
                         int year);
 
-const char *rd_get_phase_name(rd_phase_enum phase);
+const char *rd_get_phase_name(Phase phase);
 
 int rd_select_filelist(const char *path, const char *base, FileType file_type,
                        bool fmt_file, stringlist_type *filelist);

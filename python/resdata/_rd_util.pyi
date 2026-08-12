@@ -1,6 +1,7 @@
+import enum
 import typing
 
-__all__ = ["FileMode", "FileType"]
+__all__ = ["FileMode", "FileType", "Phase"]
 
 class FileMode:
     CLOSE_STREAM: typing.ClassVar[FileMode]
@@ -77,3 +78,8 @@ class UnitSystem:
     def name(self) -> str: ...
     @property
     def value(self) -> int: ...
+
+class Phase(enum.IntFlag):
+    OIL = 1
+    GAS = 2
+    WATER = 4
