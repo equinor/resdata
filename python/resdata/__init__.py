@@ -107,7 +107,7 @@ from .rd_util import (
     ResdataUtil,
     UnitSystem,
 )
-from .util.util import ResdataVersion, updateAbortSignals
+from .util.util import updateAbortSignals
 
 updateAbortSignals()
 
@@ -117,3 +117,17 @@ def root():
     Will print the filesystem root of the current ert package.
     """
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+
+
+# Lazy load ResdataVersion and Version to not eagerly trigger
+# deprecation warning
+def __getattr__(name):
+    if name == "ResdataVersion":
+        from .util.util import ResdataVersion
+
+        return ResdataVersion
+    if name == "Version":
+        from .util.util import Version
+
+        return Version
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
