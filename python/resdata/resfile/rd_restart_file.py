@@ -1,8 +1,13 @@
+import warnings
+
 from cwrap import BaseCClass
 
 from resdata import FileMode, FileType, ResdataPrototype
 from resdata.resfile import Resdata3DFile, ResdataFile
-from resdata.util.util import CTime, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import CTime, monkey_the_camel
 
 
 class ResdataRestartHead(BaseCClass):

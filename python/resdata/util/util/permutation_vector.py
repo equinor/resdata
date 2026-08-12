@@ -1,8 +1,10 @@
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 
 
+@deprecated("PremutationVector is deprecated and will be removed in version 7.")
 class PermutationVector(BaseCClass):
     TYPE_NAME = "rd_permutation_vector"
     _free = ResdataPrototype("void   perm_vector_free( rd_permutation_vector )")

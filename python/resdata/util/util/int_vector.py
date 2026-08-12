@@ -1,6 +1,6 @@
 from resdata import ResdataPrototype
 
-from .vector_template import VectorTemplate
+from .vector_template import VectorTemplate, vector_deprecation
 
 
 class IntVector(VectorTemplate):
@@ -99,6 +99,7 @@ class IntVector(VectorTemplate):
         super().__init__(default_value, initial_size)
 
     @classmethod
+    @vector_deprecation
     def active_list(cls, range_string):
         """Will create a IntVector instance with the values from @range_string.
 
@@ -120,6 +121,7 @@ class IntVector(VectorTemplate):
         return cls._create_active_list(range_string)
 
     @classmethod
+    @vector_deprecation
     def valueList(cls, range_string):
         """Will create a IntVecter of all the values in the @range_string.
 
@@ -129,5 +131,6 @@ class IntVector(VectorTemplate):
         """
         return cls._create_value_list(range_string)
 
+    @vector_deprecation
     def count(self, value: int) -> int:
         return self._count_equal(value)

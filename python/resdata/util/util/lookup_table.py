@@ -1,8 +1,10 @@
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 
 
+@deprecated("LookupTable is deprecated and will be removed in version 7.")
 class LookupTable(BaseCClass):
     TYPE_NAME = "rd_lookup_table"
     _alloc = ResdataPrototype("void* lookup_table_alloc_empty()", bind=False)

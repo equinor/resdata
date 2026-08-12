@@ -1,8 +1,13 @@
+import warnings
+
 from cwrap import BaseCClass
 from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .fault import Fault
 from .fault_block import FaultBlock

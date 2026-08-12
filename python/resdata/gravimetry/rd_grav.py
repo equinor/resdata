@@ -7,6 +7,7 @@ different surveys. The implementation is a thin wrapper around the
 rd_grav.c implementation in the resdata library.
 """
 
+import warnings
 from typing import Optional
 
 from cwrap import BaseCClass
@@ -14,7 +15,10 @@ from cwrap import BaseCClass
 from resdata import Phase, ResdataPrototype
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 class ResdataGrav(BaseCClass):

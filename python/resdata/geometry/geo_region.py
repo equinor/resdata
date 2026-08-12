@@ -1,9 +1,13 @@
+import warnings
 from ctypes import c_double
 
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import IntVector
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import IntVector
 
 from .cpolyline import CPolyline
 

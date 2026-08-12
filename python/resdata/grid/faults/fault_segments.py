@@ -1,4 +1,8 @@
-from resdata.util.util import monkey_the_camel
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 class FaultSegment:

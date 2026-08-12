@@ -1,7 +1,12 @@
+import warnings
+
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import CTime
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import CTime
 
 from .well_connection import WellConnection
 from .well_segment import WellSegment

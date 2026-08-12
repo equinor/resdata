@@ -1,6 +1,11 @@
 import os
 
+from typing_extensions import deprecated
 
+
+@deprecated(
+    "CWDContext is deprecated and will be removed in version 7. Use contextlib.chdir"
+)
 class CWDContext:
     def __init__(self, path):
         self.cwd = os.getcwd()

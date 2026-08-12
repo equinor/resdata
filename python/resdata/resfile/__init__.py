@@ -17,8 +17,6 @@ format files.
      instances.
 """
 
-import resdata.util.util
-
 from .fortio import FortIO, openFortIO
 from .rd_3d_file import Resdata3DFile
 from .rd_3dkw import Resdata3DKW

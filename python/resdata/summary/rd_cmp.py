@@ -1,4 +1,8 @@
-from resdata.util.util import monkey_the_camel
+import warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .rd_sum import Summary
 

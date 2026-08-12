@@ -32,7 +32,13 @@ from typing_extensions import deprecated
 
 from .permutation_vector import PermutationVector
 
+vector_deprecation = deprecated(
+    "resdata vectors are deprecated and will be removed in version 7. All functions returning vectors "
+    "will be replaced with python lists. Convert the value to list with list() or to numpy.array to silence this warning."
+)
 
+
+@vector_deprecation
 class VectorTemplate(BaseCClass):
     TYPE_NAME = "rd_vector_template"
 
@@ -76,6 +82,7 @@ class VectorTemplate(BaseCClass):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    @vector_deprecation
     def first_eq(self, other, offset=0):
         index = self._first_eq(other, offset)
         if index <= -2:
@@ -83,6 +90,7 @@ class VectorTemplate(BaseCClass):
 
         return index
 
+    @vector_deprecation
     def first_neq(self, other, offset=0):
         index = self._first_neq(other, offset)
         if index <= -2:
@@ -97,12 +105,14 @@ class VectorTemplate(BaseCClass):
         new = self._alloc_copy()
         return new
 
+    @vector_deprecation
     def __irshift__(self, shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
         self._rshift(shift)
         return self
 
+    @vector_deprecation
     def __ilshift__(self, shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
@@ -111,11 +121,13 @@ class VectorTemplate(BaseCClass):
         self._lshift(shift)
         return self
 
+    @vector_deprecation
     def __rshift__(self, shift):
         copy = self.copy()
         copy >>= shift
         return copy
 
+    @vector_deprecation
     def __lshift__(self, shift):
         copy = self.copy()
         copy <<= shift
@@ -136,12 +148,14 @@ class VectorTemplate(BaseCClass):
     def __contains__(self, value):
         return self._contains(value)
 
+    @vector_deprecation
     def pop(self):
         if len(self) > 0:
             return self._pop()
         else:
             raise ValueError("Trying to pop from empty vector")
 
+    @vector_deprecation
     def str_data(self, width, index1, index2, fmt):
         """
         Helper function for str() method.
@@ -158,6 +172,7 @@ class VectorTemplate(BaseCClass):
 
     # The str() method is a verbatim copy of the implementation in
     # rd_kw.py.
+    @vector_deprecation
     def str(self, width=5, max_lines=10, fmt=None):
         """
         Return string representation of vector for pretty printing.
@@ -238,6 +253,7 @@ class VectorTemplate(BaseCClass):
     ##################################################################
     # Mathematical operations:
 
+    @vector_deprecation
     def __IADD(self, delta, add):
         """
         Low-level function implementing inplace add.
@@ -277,21 +293,25 @@ class VectorTemplate(BaseCClass):
 
         return self
 
+    @vector_deprecation
     def __iadd__(self, delta):
         """
         Implements inplace add. @delta can be vector or scalar.
         """
         return self.__IADD(delta, True)
 
+    @vector_deprecation
     def __isub__(self, delta):
         """
         Implements inplace subtract. @delta can be vector or scalar.
         """
         return self.__IADD(delta, False)
 
+    @vector_deprecation
     def __radd__(self, delta):
         return self.__add__(delta)
 
+    @vector_deprecation
     def __add__(self, delta):
         """
         Implements add operation - creating a new copy.
@@ -305,6 +325,7 @@ class VectorTemplate(BaseCClass):
         copy += delta
         return copy
 
+    @vector_deprecation
     def __sub__(self, delta):
         """
         Implements subtraction - creating new copy.
@@ -313,9 +334,11 @@ class VectorTemplate(BaseCClass):
         copy -= delta
         return copy
 
+    @vector_deprecation
     def __rsub__(self, delta):
         return self.__sub__(delta) * -1
 
+    @vector_deprecation
     def __imul__(self, factor):
         """
         Low-level function implementing inplace multiplication.
@@ -347,14 +370,17 @@ class VectorTemplate(BaseCClass):
 
         return self
 
+    @vector_deprecation
     def __mul__(self, factor):
         copy = self._alloc_copy()
         copy *= factor
         return copy
 
+    @vector_deprecation
     def __rmul__(self, factor):
         return self.__mul__(factor)
 
+    @vector_deprecation
     def __div__(self, divisor):
         if isinstance(divisor, int) or isinstance(divisor, float):
             copy = self._alloc_copy()
@@ -363,12 +389,15 @@ class VectorTemplate(BaseCClass):
         else:
             raise TypeError("Divisor has wrong type:%s" % type(divisor))
 
+    @vector_deprecation
     def __truediv__(self, divisor):
         return self.__div__(divisor)
 
+    @vector_deprecation
     def __idiv__(self, divisor):
         return self.__div__(divisor)
 
+    @vector_deprecation
     def __itruediv__(self, divisor):
         return self.__div__(divisor)
 
@@ -376,6 +405,7 @@ class VectorTemplate(BaseCClass):
     #################################################################
 
     # Essentally implements a = b
+    @vector_deprecation
     def assign(self, value):
         """
         Implements assignment of type a = b.
@@ -409,6 +439,7 @@ class VectorTemplate(BaseCClass):
         """
         return self._size()
 
+    @vector_deprecation
     def printf(self, fmt=None, name=None, stream=sys.stdout):
         """
         See also the str() method which returns string representantion
@@ -419,33 +450,39 @@ class VectorTemplate(BaseCClass):
             fmt = self.default_format
         self._fprintf(cfile, name, fmt)
 
+    @vector_deprecation
     def max(self):
         if len(self) > 0:
             return self._get_max()
         else:
             raise IndexError("The vector is empty!")
 
+    @vector_deprecation
     def min(self):
         if len(self) > 0:
             return self._get_min()
         else:
             raise IndexError("The vector is empty!")
 
+    @vector_deprecation
     def minIndex(self, reverse: bool = False) -> int:
         if len(self) > 0:
             return self._get_min_index(reverse)
         else:
             raise IndexError("The vector is empty!")
 
+    @vector_deprecation
     def maxIndex(self, reverse: bool = False) -> int:
         if len(self) > 0:
             return self._get_max_index(reverse)
         else:
             raise IndexError("The vector is empty!")
 
+    @vector_deprecation
     def append(self, value):
         self._append(value)
 
+    @vector_deprecation
     def deleteBlock(self, index, block_size):
         """
         Remove a block of size @block_size starting at @index.
@@ -454,6 +491,7 @@ class VectorTemplate(BaseCClass):
         """
         self._idel_block(index, block_size)
 
+    @vector_deprecation
     def sort(self, reverse: bool = False):
         """
         Sort the vector inplace in increasing numerical order or decreasing order if reverse is True.
@@ -463,21 +501,27 @@ class VectorTemplate(BaseCClass):
         else:
             self._rsort()
 
+    @vector_deprecation
     def clear(self):
         self._reset()
 
+    @vector_deprecation
     def safeGetByIndex(self, index):
         return self._safe_iget(index)
 
+    @vector_deprecation
     def setReadOnly(self, read_only):
         self._set_read_only(read_only)
 
+    @vector_deprecation
     def getReadOnly(self):
         return self._get_read_only()
 
+    @vector_deprecation
     def setDefault(self, value):
         self._set_default(value)
 
+    @vector_deprecation
     def getDefault(self):
         return self._get_default()
 
@@ -487,6 +531,7 @@ class VectorTemplate(BaseCClass):
     def __repr__(self):
         return self._create_repr("size = %d" % len(self))
 
+    @vector_deprecation
     def permute(self, permutation_vector: PermutationVector) -> None:
         """
         Reorders this vector based on the indexes in permutation_vector.
@@ -495,6 +540,7 @@ class VectorTemplate(BaseCClass):
 
         self._permute(permutation_vector)
 
+    @vector_deprecation
     def permutationSort(self, reverse: bool = False) -> PermutationVector | None:
         """
         Returns the permutation vector for sorting of this vector. Vector is not sorted.
@@ -507,6 +553,7 @@ class VectorTemplate(BaseCClass):
 
         return None
 
+    @vector_deprecation
     def asList(self):
         l = [0] * len(self)
         for index, value in enumerate(self):
@@ -514,22 +561,19 @@ class VectorTemplate(BaseCClass):
 
         return l
 
+    @vector_deprecation
     def selectUnique(self):
         self._select_unique()
 
+    @vector_deprecation
     def elementSum(self):
         return self._element_sum()
 
-    @deprecated("getDataPtr is deprecated and will be removed in version 7.")
-    def getDataPtr(self):
-        "Low level function which returns a pointer to underlying storage"
-        # Observe that the get_data_ptr() function is not implemented
-        # for the TimeVector class.
-        return self._get_data_ptr()
-
+    @vector_deprecation
     def countEqual(self, value):
         return self._count_equal(value)
 
+    @vector_deprecation
     def initRange(self, min_value, max_value, delta):
         """
         Will fill the vector with the values from min_value to
@@ -542,6 +586,7 @@ class VectorTemplate(BaseCClass):
             self._init_range(min_value, max_value, delta)
 
     @classmethod
+    @vector_deprecation
     def create_linear(cls, start_value, end_value, num_values):
         vector = cls()
         if not vector._init_linear(start_value, end_value, num_values):
@@ -550,6 +595,7 @@ class VectorTemplate(BaseCClass):
         return vector
 
     @classmethod
+    @vector_deprecation
     def createRange(cls, min_value, max_value, delta):
         """
         Will create new vector and initialize a range.
@@ -558,6 +604,7 @@ class VectorTemplate(BaseCClass):
         vector.initRange(min_value, max_value, delta)
         return vector
 
+    @vector_deprecation
     def _strided_copy(self, *_):
         raise NotImplementedError()
 

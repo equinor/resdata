@@ -1,10 +1,12 @@
 import datetime
 import re
 
+from typing_extensions import deprecated
+
 from resdata import ResdataPrototype
 
 from .ctime import CTime
-from .vector_template import VectorTemplate
+from .vector_template import VectorTemplate, vector_deprecation
 
 
 class TimeVector(VectorTemplate):
@@ -130,6 +132,7 @@ class TimeVector(VectorTemplate):
             super().__init__(default, initial_size)
 
     @classmethod
+    @vector_deprecation
     def parseTimeUnit(cls, deltaString):
         deltaRegexp = re.compile(r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
         matchObj = deltaRegexp.match(deltaString)
@@ -156,12 +159,14 @@ class TimeVector(VectorTemplate):
 
         return str(string_list)
 
+    @vector_deprecation
     def append(self, value):
         self._append(CTime(value))
 
     def __contains__(self, value):
         return self._contains(CTime(value))
 
+    @vector_deprecation
     def nextTime(self, num, timeUnit):
         currentTime = self[-1].datetime()
         hour = currentTime.hour
@@ -187,11 +192,13 @@ class TimeVector(VectorTemplate):
 
         return currentTime
 
+    @vector_deprecation
     def appendTime(self, num, timeUnit):
         next_time = self.nextTime(num, timeUnit)
         self.append(CTime(next_time))
 
     @classmethod
+    @vector_deprecation
     def createRegular(cls, start, end, deltaString):
         """
         The last element in the vector will be <= end; i.e. if the

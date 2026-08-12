@@ -109,7 +109,9 @@ from .rd_util import (
 )
 from .util.util import updateAbortSignals
 
-updateAbortSignals()
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    updateAbortSignals()
 
 
 def root():

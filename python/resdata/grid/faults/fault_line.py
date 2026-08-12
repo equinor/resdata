@@ -1,7 +1,11 @@
 import sys
+import warnings
 
 from resdata.geometry import CPolyline
-from resdata.util.util import DoubleVector, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import DoubleVector, monkey_the_camel
 
 from .fault_segments import FaultSegment
 
@@ -160,8 +164,10 @@ class FaultLine:
         return self.__neighborCells
 
     def center(self):
-        xlist = DoubleVector()
-        ylist = DoubleVector()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            xlist = DoubleVector()
+            ylist = DoubleVector()
         for segment in self:
             C1 = segment.get_c1()
             C2 = segment.get_c2()

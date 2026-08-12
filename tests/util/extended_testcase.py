@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import traceback
+import warnings
 from unittest import TestCase
 
 from resdata.util.util import installAbortSignals
@@ -56,7 +57,9 @@ class ExtendedTestCase(TestCase):
     SOURCE_ROOT = None
 
     def __init__(self, *args, **kwargs):
-        installAbortSignals()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            installAbortSignals()
         super().__init__(*args, **kwargs)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):

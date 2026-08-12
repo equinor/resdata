@@ -32,7 +32,10 @@ from typing_extensions import Self, deprecated
 
 import resdata.resfile._kw as _kw
 from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 def dump_type_deprecation_warning():

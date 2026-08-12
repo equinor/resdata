@@ -2,11 +2,15 @@
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
+import warnings
 
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 class SummaryKeyWordVector(BaseCClass):

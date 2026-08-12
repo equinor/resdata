@@ -12,6 +12,7 @@ import ctypes
 import math
 import os.path
 import sys
+import warnings
 from collections.abc import Sequence
 
 import numpy as np
@@ -24,7 +25,10 @@ import resdata.grid._grid as _grid
 from resdata import ResDataType, ResdataTypeEnum, UnitSystem
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
-from resdata.util.util import IntVector, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Grid(BaseCClass):

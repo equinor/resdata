@@ -24,12 +24,16 @@ implementation from the resdata library.
 import ctypes
 import datetime
 import re
+import warnings
 
 from cwrap import BaseCClass
 from typing_extensions import deprecated
 
 from resdata import FileMode, FileType, ResdataPrototype
-from resdata.util.util import CTime, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import CTime, monkey_the_camel
 
 from .rd_file_view import ResdataFileView
 from .rd_kw import ResdataKW

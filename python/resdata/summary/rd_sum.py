@@ -11,6 +11,7 @@ resdata/src directory.
 import datetime
 import os.path
 import re
+import warnings
 from textwrap import dedent
 from typing import List, Optional, Sequence, Tuple, Union
 
@@ -26,14 +27,17 @@ from typing_extensions import deprecated
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import UnitSystem
-from resdata.util.util import (
-    CTime,
-    DoubleVector,
-    IntVector,
-    StringList,
-    TimeVector,
-    monkey_the_camel,
-)
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import (
+        CTime,
+        DoubleVector,
+        IntVector,
+        StringList,
+        TimeVector,
+        monkey_the_camel,
+    )
 
 from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
@@ -154,7 +158,9 @@ class Summary(BaseCClass):
         if not os.path.isfile(unsmry_file):
             raise OSError("No such file: %s" % unsmry_file)
 
-        data_files = StringList()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            data_files = StringList()
         data_files.append(unsmry_file)
         c_ptr = _rd_sum._fread_alloc(
             smspec_file, data_files, key_join_string, include_restart, False, 0
@@ -315,7 +321,9 @@ class Summary(BaseCClass):
         """
         first_report = self.first_report
         last_report = self.last_report
-        index_list = IntVector()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            index_list = IntVector()
         for report_step in range(first_report, last_report + 1):
             time_index = _rd_sum._get_report_end(self, report_step)
             index_list.append(time_index)
@@ -832,7 +840,9 @@ class Summary(BaseCClass):
 
     def get_interp_row(self, key_list, sim_time, invalid_value=-1):
         ctime = CTime(sim_time)
-        data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
         _rd_sum._get_interp_vector(self, ctime.ctime(), key_list, data)
         return data
 
@@ -921,7 +931,9 @@ class Summary(BaseCClass):
     def blocked_production(self, totalKey, timeRange):
         node = self.smspec_node(totalKey)
         if node.is_total():
-            total = DoubleVector()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                total = DoubleVector()
             for t in timeRange:
                 if t < CTime(self.start_time):
                     total.append(0)
@@ -1485,7 +1497,9 @@ class Summary(BaseCClass):
         If pattern is None you will get all the keys of summary
         object.
         """
-        s = StringList()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            s = StringList()
         _rd_sum._select_matching_keys(self, pattern, s)
         return s
 
@@ -1565,7 +1579,9 @@ class Summary(BaseCClass):
         if keys is None:
             var_list = self.keys()
         else:
-            var_list = StringList()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                var_list = StringList()
             for key in keys:
                 var_list |= self.keys(pattern=key)
         _rd_sum._export_csv(self, filename, var_list, date_format, sep)

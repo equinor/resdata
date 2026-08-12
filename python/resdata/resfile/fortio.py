@@ -23,11 +23,15 @@ more extensive wrapping of the fortio implementation would be easy.
 """
 
 import os
+import warnings
 
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 class FortIO(BaseCClass):
