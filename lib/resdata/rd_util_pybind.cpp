@@ -1,8 +1,12 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
+#include <string>
+#include <tuple>
+
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_util.hpp>
+#include <detail/resdata/cwrap_pybind.hpp>
 
 namespace py = pybind11;
 
@@ -46,6 +50,15 @@ PYBIND11_MODULE(_rd_util, m) {
         auto file_type =
             rd_get_file_type(filename.c_str(), &fmt_file, &report_step);
         return std::make_tuple(file_type, fmt_file, report_step);
+    });
+    m.def("_get_num_cpu", [](std::string filename) {
+        return rd_get_num_cpu(filename.c_str());
+    });
+    m.def("_get_start_date", [](std::string filename) {
+        return rd_get_start_date(filename.c_str());
+    });
+    m.def("_get_report_step", [](std::string filename) {
+        return rd_filename_report_nr(filename.c_str());
     });
 }
 } // namespace
