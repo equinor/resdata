@@ -44,6 +44,11 @@ PYBIND11_MODULE(_rd_util, m) {
         .value("INIT", FileType::INIT)
         .value("RFT", FileType::RFT)
         .value("DATA", FileType::DATA);
+    py::enum_<UnitSystem>(m, "UnitSystem")
+        .value("METRIC", UnitSystem::METRIC)
+        .value("FIELD", UnitSystem::FIELD)
+        .value("LAB", UnitSystem::LAB)
+        .value("PVT_M", UnitSystem::PVT_M);
     m.def("_get_file_type", [](std::string filename) {
         bool fmt_file = false;
         int report_step = -1;

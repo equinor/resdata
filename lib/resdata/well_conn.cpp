@@ -28,8 +28,7 @@ static void well_conn_assert_direction(WellConnDir dir,
 
 WellConnection::WellConnection(int i, int j, int k, double connection_factor,
                                WellConnDir dir, bool open, int segment_id,
-                               bool matrix_connection,
-                               ert_rd_unit_enum unit_system)
+                               bool matrix_connection, UnitSystem unit_system)
     : i(i), j(j), k(k), dir(dir), open(open),
       matrix_connection(matrix_connection),
       connection_factor(connection_factor), oil_rate(0.0), gas_rate(0.0),

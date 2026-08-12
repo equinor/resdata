@@ -1119,7 +1119,7 @@ time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
     return solution.release();
 }
 
-ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
+UnitSystem rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
     return rd_smspec_get_unit_system(rd_sum->smspec.get());
 }
 

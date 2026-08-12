@@ -1,4 +1,5 @@
 #include <optional>
+#include <string>
 #include <tuple>
 #include <algorithm>
 #include <memory>
@@ -10,6 +11,7 @@
 #include <cstdint>
 
 #include <resdata/rd_grid.hpp>
+#include <resdata/rd_util.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
 
@@ -258,21 +260,20 @@ PYBIND11_MODULE(_grid, m) {
         return std::make_tuple(dx, dy, dz);
     });
     m.def("_fprintf_grdecl2",
-          [](py::handle self, py::handle file, int rd_unit) {
+          [](py::handle self, py::handle file, UnitSystem rd_unit) {
               rd_grid_fprintf_grdecl2(from_cwrap<rd_grid_type>(self),
-                                      from_cwrap<FILE>(file),
-                                      static_cast<ert_rd_unit_enum>(rd_unit));
+                                      from_cwrap<FILE>(file), rd_unit);
           });
-    m.def("_fwrite_GRID2", [](py::handle self, std::string filename,
-                              int rd_unit) {
-        rd_grid_fwrite_GRID2(from_cwrap<rd_grid_type>(self), filename.c_str(),
-                             static_cast<ert_rd_unit_enum>(rd_unit));
-    });
-    m.def("_fwrite_EGRID2", [](py::handle self, std::string filename,
-                               int rd_unit) {
-        rd_grid_fwrite_EGRID2(from_cwrap<rd_grid_type>(self), filename.c_str(),
-                              static_cast<ert_rd_unit_enum>(rd_unit));
-    });
+    m.def("_fwrite_GRID2",
+          [](py::handle self, std::string filename, UnitSystem rd_unit) {
+              rd_grid_fwrite_GRID2(from_cwrap<rd_grid_type>(self),
+                                   filename.c_str(), rd_unit);
+          });
+    m.def("_fwrite_EGRID2",
+          [](py::handle self, std::string filename, UnitSystem rd_unit) {
+              rd_grid_fwrite_EGRID2(from_cwrap<rd_grid_type>(self),
+                                    filename.c_str(), rd_unit);
+          });
     m.def("_equal", [](py::handle self, py::handle other, bool include_lgr,
                        bool include_nnc, bool verbose) {
         return rd_grid_compare(from_cwrap<rd_grid_type>(self),

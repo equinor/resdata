@@ -46,7 +46,7 @@ void test_truncated() {
     size_t num_kw{};
     {
         rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
-        rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", RD_METRIC_UNITS);
+        rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", UnitSystem::METRIC);
     }
     {
         auto rd_file = rd::File::open("TEST.EGRID");
@@ -70,7 +70,7 @@ void test_mixed_case() {
     size_t num_kw{};
     {
         rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
-        rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", RD_METRIC_UNITS);
+        rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", UnitSystem::METRIC);
     }
     {
         auto rd_file = rd::File::open("TESTcase.EGRID");

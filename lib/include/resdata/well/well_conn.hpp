@@ -38,14 +38,14 @@ class WellConnection {
     double gas_rate;
     double water_rate;
     double volume_rate;
-    ert_rd_unit_enum unit_system;
+    UnitSystem unit_system;
 
 public:
     WellConnection(int i, int j, int k, double connection_factor,
                    WellConnDir dir, bool open,
                    int segment_id = WELL_CONN_NORMAL_WELL_SEGMENT_ID,
                    bool matrix_connection = true,
-                   ert_rd_unit_enum unit_system = RD_METRIC_UNITS);
+                   UnitSystem unit_system = UnitSystem::METRIC);
 
     [[nodiscard]] bool operator==(const WellConnection &other) const {
         return std::tie(i, j, k, dir, open, segment_id, matrix_connection,

@@ -19,12 +19,12 @@ int main(int argc, char **argv) {
         int outlet_segment_id = 100;
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
         WellSegment ws(segment_id, outlet_segment_id, branch_nr);
-        auto conn1 =
-            std::make_shared<WellConnection>(1, 1, 1, CF, WellConnDir::X, true,
-                                             segment_id, true, RD_METRIC_UNITS);
+        auto conn1 = std::make_shared<WellConnection>(
+            1, 1, 1, CF, WellConnDir::X, true, segment_id, true,
+            UnitSystem::METRIC);
         auto conn2 = std::make_shared<WellConnection>(
             1, 1, 1, CF, WellConnDir::X, true, segment_id + 1, true,
-            RD_METRIC_UNITS);
+            UnitSystem::METRIC);
 
         test_assert_false(ws.has_global_grid_connections());
 

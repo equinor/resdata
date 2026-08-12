@@ -27,22 +27,22 @@ extern "C" {
 #ifdef __cplusplus
 }
 
-constexpr inline double liquid_conversion_factor(ert_rd_unit_enum unit_system) {
-    if (unit_system == RD_METRIC_UNITS)
+constexpr inline double liquid_conversion_factor(UnitSystem unit_system) {
+    if (unit_system == UnitSystem::METRIC)
         return 1.0 / RD_UNITS_TIME_DAY;
-    else if (unit_system == RD_FIELD_UNITS)
+    else if (unit_system == UnitSystem::FIELD)
         return RD_UNITS_VOLUME_BARREL / RD_UNITS_TIME_DAY;
-    else if (unit_system == RD_LAB_UNITS)
+    else if (unit_system == UnitSystem::LAB)
         return RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
     return 1;
 }
 
-constexpr inline double gas_conversion_factor(ert_rd_unit_enum unit_system) {
-    if (unit_system == RD_METRIC_UNITS)
+constexpr inline double gas_conversion_factor(UnitSystem unit_system) {
+    if (unit_system == UnitSystem::METRIC)
         return 1.0 / RD_UNITS_TIME_DAY;
-    else if (unit_system == RD_FIELD_UNITS)
+    else if (unit_system == UnitSystem::FIELD)
         return RD_UNITS_VOLUME_GAS_FIELD / RD_UNITS_TIME_DAY;
-    else if (unit_system == RD_LAB_UNITS)
+    else if (unit_system == UnitSystem::LAB)
         return RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
     return 1;
 }

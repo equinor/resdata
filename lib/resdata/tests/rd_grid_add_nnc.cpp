@@ -41,7 +41,7 @@ void simple_test() {
     verify_simple_nnc(grid0.get());
     {
         rd::util::TestArea ta("simple_nnc");
-        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", RD_METRIC_UNITS);
+        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", UnitSystem::METRIC);
         rd_grid_ptr grid1 = read_grid("TEST.EGRID");
 
         verify_simple_nnc(grid1.get());
@@ -67,7 +67,7 @@ void overwrite_test() {
     verify_simple_nnc(grid0.get());
     {
         rd::util::TestArea ta("overwrite");
-        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", RD_METRIC_UNITS);
+        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", UnitSystem::METRIC);
         rd_grid_ptr grid1 = read_grid("TEST.EGRID");
 
         verify_simple_nnc(grid1.get());
@@ -93,7 +93,7 @@ void list_test() {
     verify_simple_nnc(grid0.get());
     {
         rd::util::TestArea ta("list_test");
-        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", RD_METRIC_UNITS);
+        rd_grid_fwrite_EGRID2(grid0.get(), "TEST.EGRID", UnitSystem::METRIC);
         rd_grid_ptr grid1 = read_grid("TEST.EGRID");
 
         verify_simple_nnc(grid1.get());

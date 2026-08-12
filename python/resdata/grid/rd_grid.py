@@ -997,16 +997,16 @@ class Grid(BaseCClass):
             )
             raise ValueError(err_msg)
 
-    def save_grdecl(self, pyfile, output_unit=UnitSystem.METRIC):
+    def save_grdecl(self, pyfile, output_unit: UnitSystem = UnitSystem.METRIC):
         """
         Will write the the grid content as grdecl formatted keywords.
 
         Will only write the main grid.
         """
         cfile = CFILE(pyfile)
-        _grid._fprintf_grdecl2(self, cfile, int(output_unit))
+        _grid._fprintf_grdecl2(self, cfile, output_unit)
 
-    def save_EGRID(self, filename, output_unit=None):
+    def save_EGRID(self, filename, output_unit: UnitSystem | None = None):
         """Save the grid as an EGRID file.
 
         Uses the given file extension to determine whether to write
@@ -1015,16 +1015,16 @@ class Grid(BaseCClass):
         """
         if output_unit is None:
             output_unit = self.unit_system
-        _grid._fwrite_EGRID2(self, filename, int(output_unit))
+        _grid._fwrite_EGRID2(self, filename, output_unit)
 
-    def save_GRID(self, filename, output_unit=UnitSystem.METRIC):
+    def save_GRID(self, filename, output_unit: UnitSystem = UnitSystem.METRIC):
         """Save the grid as a GRID file.
 
         Uses the given file extension to determine whether to write
         formatted or unformatted. If filename has extension .FGRID
         it writes formatted output, if not it writes unformatted.
         """
-        _grid._fwrite_GRID2(self, filename, int(output_unit))
+        _grid._fwrite_GRID2(self, filename, output_unit)
 
     def write_grdecl(self, rd_kw, pyfile, special_header=None, default_value=0):
         """

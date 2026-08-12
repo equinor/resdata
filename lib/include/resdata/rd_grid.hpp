@@ -153,13 +153,13 @@ bool rd_grid_test_lgr_consistency(const rd_grid_type *rd_grid);
 void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
                           bool metric_output);
 void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
-                           ert_rd_unit_enum output_unit);
+                           UnitSystem output_unit);
 
 void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
-                          ert_rd_unit_enum output_unit);
+                          UnitSystem output_unit);
 
 void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
-                             ert_rd_unit_enum output_unit);
+                             UnitSystem output_unit);
 
 int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c);
 
@@ -189,11 +189,10 @@ void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
 void rd_grid_export_cell_corners1(const rd_grid_type *grid, int global_index,
                                   double *x, double *y, double *z);
 
-ert_rd_unit_enum rd_grid_get_unit_system(const rd_grid_type *grid);
+UnitSystem rd_grid_get_unit_system(const rd_grid_type *grid);
 void rd_grid_export_index(const rd_grid_type *grid, int *global_index,
                           int *index_data, bool active_only);
-float rd_grid_output_scaling(const rd_grid_type *grid,
-                             ert_rd_unit_enum output_unit);
+float rd_grid_output_scaling(const rd_grid_type *grid, UnitSystem output_unit);
 
 UTIL_IS_INSTANCE_HEADER(rd_grid);
 UTIL_SAFE_CAST_HEADER(rd_grid);

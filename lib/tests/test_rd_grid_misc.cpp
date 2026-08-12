@@ -42,13 +42,14 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
 
             auto filename2 = (dirname / "TEST2.EGRID");
             rd_grid_fwrite_EGRID2(grid.get(), filename2.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             REQUIRE(rd_grid_exists(filename2.c_str()));
         }
 
         SECTION("write as GRID") {
             auto filename = (dirname / "TEST.GRID");
-            rd_grid_fwrite_GRID2(grid.get(), filename.c_str(), RD_METRIC_UNITS);
+            rd_grid_fwrite_GRID2(grid.get(), filename.c_str(),
+                                 UnitSystem::METRIC);
 
             auto loaded = read_grid(filename);
             REQUIRE(loaded != nullptr);
@@ -60,14 +61,14 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
             auto filename = (dirname / "TEST.GRDECL");
             FILE *fp = fopen(filename.c_str(), "w");
             REQUIRE(fp != nullptr);
-            rd_grid_fprintf_grdecl2(grid.get(), fp, RD_METRIC_UNITS);
+            rd_grid_fprintf_grdecl2(grid.get(), fp, UnitSystem::METRIC);
             fclose(fp);
         }
 
         SECTION("load_case__") {
             auto filename = (dirname / "TEST3.EGRID");
             rd_grid_fwrite_EGRID2(grid.get(), filename.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
 
             auto loaded = rd_grid_ptr(
                 rd_grid_load_case__(filename.c_str(), true), &rd_grid_free);
@@ -213,7 +214,7 @@ TEST_CASE_METHOD(Tmpdir, "Writing every grid to disk", "[unittest]") {
                     .c_str()) {
             auto filename = dirname / ("WRITE2_" + entry.label + ".EGRID");
             rd_grid_fwrite_EGRID2(entry.grid.get(), filename.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             REQUIRE(fs::exists(filename));
             auto reloaded = read_grid(filename);
             REQUIRE(reloaded != nullptr);
@@ -225,7 +226,7 @@ TEST_CASE_METHOD(Tmpdir, "Writing every grid to disk", "[unittest]") {
             auto filename = dirname / ("WRITE_" + entry.label + ".GRDECL");
             FILE *fp = fopen(filename.c_str(), "w");
             REQUIRE(fp != nullptr);
-            rd_grid_fprintf_grdecl2(entry.grid.get(), fp, RD_METRIC_UNITS);
+            rd_grid_fprintf_grdecl2(entry.grid.get(), fp, UnitSystem::METRIC);
             fclose(fp);
             REQUIRE(fs::exists(filename));
             REQUIRE(fs::file_size(filename) > 0);

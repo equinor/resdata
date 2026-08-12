@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
             rd_grid_ptr rd_grid = read_grid(grid_file);
             if (argc == 1)
                 test_assert_true(rd_grid_get_unit_system(rd_grid.get()) ==
-                                 RD_METRIC_UNITS);
+                                 UnitSystem::METRIC);
             auto rd_file = rd::File::open(grid_file);
 
             export_actnum(rd_grid.get(), rd_file.get());
