@@ -13,7 +13,15 @@ functions from rd_util.c which are not bound to any class type.
 from cwrap import BaseCEnum
 
 from resdata import ResdataPrototype
-from resdata._rd_util import FileMode, FileType, _get_file_type
+from resdata._rd_util import (
+    FileMode,
+    FileType,
+    _get_file_type,
+    _get_num_cpu,
+    _get_report_step,
+    _get_start_date,
+)
+from resdata.util.util import CTime
 
 
 class Phase(BaseCEnum):
@@ -44,10 +52,6 @@ UnitSystem.addEnum("PVT_M", 4)
 
 
 class ResdataUtil:
-    _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
-    _get_start_date = ResdataPrototype("rd_time_t rd_get_start_date(char*)", bind=False)
-    _get_report_step = ResdataPrototype("int rd_filename_report_nr(char*)", bind=False)
-
     @staticmethod
     def get_num_cpu(datafile):
         """
@@ -57,7 +61,7 @@ class ResdataUtil:
         number of CPUs required. Will return one if no PARALLEL keyword
         is found.
         """
-        return ResdataUtil._get_num_cpu(datafile)
+        return _get_num_cpu(datafile)
 
     @staticmethod
     def get_file_type(filename: str) -> FileType:
@@ -67,7 +71,7 @@ class ResdataUtil:
 
     @staticmethod
     def get_start_date(datafile):
-        return ResdataUtil._get_start_date(datafile).datetime()
+        return CTime(_get_start_date(datafile)).datetime()
 
     @staticmethod
     def inspect_extension(filename: str) -> tuple[FileType, bool, int | None]:
