@@ -30,10 +30,6 @@ enum class FileType : int {
     DATA = 512
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
   The resdata library has been built and tested 99.5% with ECLIPSE100
   as context, but in thye gravity code there is some very limited
@@ -62,10 +58,6 @@ typedef enum {
 #define RD_COMMENT_CHAR '-' // Need to consecutive to make an ECLIPSE comment
 #define RD_DATA_TERMINATION "/"
 
-#ifdef __cplusplus
-}
-#endif
-
 enum class UnitSystem { METRIC = 1, FIELD = 2, LAB = 3, PVT_M = 4 };
 /* Observe that the numerical enum VALUES matches those found in item
   14 in the INTEHEAD keyword in the INIT files; i.e. the
@@ -79,11 +71,10 @@ enum class UnitSystem { METRIC = 1, FIELD = 2, LAB = 3, PVT_M = 4 };
 */
 enum class Phase { OIL = 1, GAS = 2, WATER = 4 };
 
-extern "C" int rd_filename_report_nr(const char *);
-extern "C" FileType rd_get_file_type(const char *filename, bool *fmt_file,
-                                     int *report_nr);
-extern "C" time_t rd_get_start_date(const char *);
-extern "C" int rd_get_num_cpu(const char *data_file);
+int rd_filename_report_nr(const char *);
+FileType rd_get_file_type(const char *filename, bool *fmt_file, int *report_nr);
+time_t rd_get_start_date(const char *);
+int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);
 int rd_fname_report_cmp(const void *f1, const void *f2);
 time_t rd_make_date(int mday, int month, int year);
