@@ -35,19 +35,6 @@ extern "C" {
 #endif
 
 /*
-    This enum enumerates the four different ways summary and restart information
-    can be stored.
-  */
-
-typedef enum {
-    RD_INVALID_STORAGE = 0,
-    RD_BINARY_UNIFIED = 1,
-    RD_FORMATTED_UNIFIED = 2,
-    RD_BINARY_NON_UNIFIED = 4,
-    RD_FORMATTED_NON_UNIFIED = 8
-} rd_storage_enum;
-
-/*
   The resdata library has been built and tested 99.5% with ECLIPSE100
   as context, but in thye gravity code there is some very limited
   functionality related to ECLIPSE100 versus ECLIPSE300 functionality.
