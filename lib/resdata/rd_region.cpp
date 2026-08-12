@@ -332,8 +332,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
     rd_region_assert_kw(region, rd_kw, &global_kw);
     if (!rd_type_is_numeric(data_type))
         throw std::invalid_argument(
-            "select by in_interval is only supported for float and integer "
-            "keywords");
+            "select by smaller/larger is only supported for numeric keywords");
 
     if (rd_type_is_float(data_type)) {
         const float *kw_data = rd_kw_get_float_ptr(rd_kw);
@@ -646,7 +645,7 @@ void rd_region_deselect_j1j2(rd_region_type *region, int j1, int j2) {
 static void rd_region_select_k1k2__(rd_region_type *region, int k1, int k2,
                                     bool select) {
     if (k1 > k2)
-        throw std::logic_error("i1 > i2");
+        throw std::logic_error("k1 > k2");
     k1 = util_int_max(0, k1);
     k2 = util_int_min(region->grid_nz - 1, k2);
     for (int k = k1; k <= k2; k++)
