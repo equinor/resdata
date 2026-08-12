@@ -30,7 +30,7 @@ WellState::WellState(std::string well_name, int global_well_nr, bool open,
     : name(well_name), valid_from_time(valid_from),
       valid_from_report(report_nr), global_well_nr(global_well_nr), open(open),
       type(type), is_MSW_well(false), oil_rate(0.0), gas_rate(0.0),
-      water_rate(0.0), volume_rate(0.0), unit_system(RD_METRIC_UNITS) {
+      water_rate(0.0), volume_rate(0.0), unit_system(UnitSystem::METRIC) {
     segments.reset(well_segment_collection_alloc());
     branches.reset(well_branch_collection_alloc());
     /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */

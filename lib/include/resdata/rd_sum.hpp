@@ -62,7 +62,7 @@ double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
                                             double sim_days, const char *var);
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
                                             time_t sim_time, const char *var);
-ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum);
+UnitSystem rd_sum_get_unit_system(const rd_sum_type *rd_sum);
 
 int rd_sum_get_restart_step(const rd_sum_type *rd_sum);
 int rd_sum_get_first_gt(const rd_sum_type *rd_sum, int param_index,

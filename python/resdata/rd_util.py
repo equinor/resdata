@@ -16,6 +16,7 @@ from resdata import ResdataPrototype
 from resdata._rd_util import (
     FileMode,
     FileType,
+    UnitSystem,
     _get_file_type,
     _get_num_cpu,
     _get_report_step,
@@ -34,21 +35,6 @@ class Phase(BaseCEnum):
 Phase.addEnum("OIL", 1)
 Phase.addEnum("GAS", 2)
 Phase.addEnum("WATER", 4)
-
-
-class UnitSystem(BaseCEnum):
-    TYPE_NAME = "rd_unit_enum"
-
-    METRIC = None
-    FIELD = None
-    LAB = None
-    PVT_M = None
-
-
-UnitSystem.addEnum("METRIC", 1)
-UnitSystem.addEnum("FIELD", 2)
-UnitSystem.addEnum("LAB", 3)
-UnitSystem.addEnum("PVT_M", 4)
 
 
 class ResdataUtil:
@@ -87,7 +73,7 @@ class ResdataUtil:
 
     @staticmethod
     def report_step(filename):
-        report_step = ResdataUtil._get_report_step(filename)
+        report_step = _get_report_step(filename)
         if report_step < 0:
             raise ValueError("Could not infer report step from: %s" % filename)
 

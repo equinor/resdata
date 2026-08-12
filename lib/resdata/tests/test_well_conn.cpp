@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         auto dir = WellConnDir::X;
         WellConnection conn(i, j, k, CF, dir, open,
                             WELL_CONN_NORMAL_WELL_SEGMENT_ID, false,
-                            RD_METRIC_UNITS);
+                            UnitSystem::METRIC);
         test_assert_int_equal(i, conn.get_i());
         test_assert_int_equal(j, conn.get_j());
         test_assert_int_equal(k, conn.get_k());
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
         int segment = 16;
         auto dir = WellConnDir::X;
         WellConnection conn(i, j, k, CF, dir, open, segment, true,
-                            RD_METRIC_UNITS);
+                            UnitSystem::METRIC);
         test_assert_int_equal(i, conn.get_i());
         test_assert_int_equal(j, conn.get_j());
         test_assert_int_equal(k, conn.get_k());
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         int segment = 16;
         auto dir = WellConnDir::X;
         WellConnection conn(i, j, k, CF, dir, open, segment, false,
-                            RD_METRIC_UNITS);
+                            UnitSystem::METRIC);
         test_assert_int_equal(i, conn.get_i());
         test_assert_int_equal(j, conn.get_j());
         test_assert_int_equal(k, conn.get_k());

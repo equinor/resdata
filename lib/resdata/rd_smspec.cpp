@@ -140,7 +140,7 @@ struct rd_smspec_struct {
     std::vector<float> params_default;
 
     std::string restart_case;
-    ert_rd_unit_enum unit_system;
+    UnitSystem unit_system;
     int restart_step;
 };
 
@@ -260,7 +260,7 @@ static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
     keyword is optional, and we have for a long time been completely oblivious
     to the possibility of extracting unit system information from the SMSPEC file.
   */
-    rd_smspec->unit_system = RD_METRIC_UNITS;
+    rd_smspec->unit_system = UnitSystem::METRIC;
 
     rd_smspec->restart_step = -1;
     rd_smspec->write_mode = write_mode;
@@ -331,7 +331,7 @@ static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
                                       ERT::FortIO &fortio) {
     rd_kw_ptr intehead = make_rd_kw(INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, RD_INT);
     rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_UNIT_INDEX,
-                   smspec->unit_system);
+                   static_cast<int>(smspec->unit_system));
     /* The simulator type is just hardcoded to ECLIPSE100. */
     rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_IPROG_INDEX,
                    INTEHEAD_ECLIPSE100_VALUE);
@@ -897,8 +897,8 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             if (intehead == NULL)
                 throw std::invalid_argument(
                     "INTEHEAD keyword lookup failed despite keyword presence");
-            rd_smspec->unit_system = (ert_rd_unit_enum)rd_kw_iget_int(
-                intehead, INTEHEAD_SMSPEC_UNIT_INDEX);
+            rd_smspec->unit_system = static_cast<UnitSystem>(
+                rd_kw_iget_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX));
             /*
         The second item in the INTEHEAD vector is an integer designating which
         simulator has been used for the current simulation, that is currently
@@ -1303,6 +1303,6 @@ const int *rd_smspec_get_grid_dims(const rd_smspec_type *smspec) {
     return smspec->grid_dims;
 }
 
-ert_rd_unit_enum rd_smspec_get_unit_system(const rd_smspec_type *smspec) {
+UnitSystem rd_smspec_get_unit_system(const rd_smspec_type *smspec) {
     return smspec->unit_system;
 }

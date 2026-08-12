@@ -674,8 +674,7 @@ struct rd_cell_struct {
     }
 };
 
-static ert_rd_unit_enum
-rd_grid_check_unit_system(const rd_kw_type *gridunit_kw);
+static UnitSystem rd_grid_check_unit_system(const rd_kw_type *gridunit_kw);
 #define RD_GRID_ID 991010
 
 struct rd_grid_struct {
@@ -742,11 +741,11 @@ struct rd_grid_struct {
                                         but in cases with skewed cells this has proved
                                         numerically challenging. */
 
-    ert_rd_unit_enum unit_system;
+    UnitSystem unit_system;
     int eclipse_version;
 };
 
-ert_rd_unit_enum rd_grid_get_unit_system(const rd_grid_type *grid) {
+UnitSystem rd_grid_get_unit_system(const rd_grid_type *grid) {
     return grid->unit_system;
 }
 
@@ -1272,9 +1271,9 @@ static bool rd_grid_alloc_cells(rd_grid_type *grid, bool init_valid) {
    is performed.
 */
 static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
-                                         ert_rd_unit_enum unit_system,
-                                         int dualp_flag, int nx, int ny, int nz,
-                                         int lgr_nr, bool init_valid) {
+                                         UnitSystem unit_system, int dualp_flag,
+                                         int nx, int ny, int nz, int lgr_nr,
+                                         bool init_valid) {
     /* Check for int overflow in a roundabout way */
     long size = static_cast<long>(nx) * static_cast<long>(ny);
     if (nx < 0 || ny < 0 || nz < 0 || size > INT_MAX)
@@ -2092,7 +2091,7 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     const rd_kw_type *corsnum_kw,                              /* Can be NULL */
     const int *actnum) {                                       /* Can be NULL */
     int gtype, nx, ny, nz, lgr_nr;
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
+    UnitSystem unit_system = UnitSystem::METRIC;
     gtype = rd_kw_iget_int(gridhead_kw, GRIDHEAD_TYPE_INDEX);
     nx = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NX_INDEX);
     ny = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NY_INDEX);
@@ -2564,7 +2563,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID(const char *grid_file,
 }
 
 static rd_grid_ptr rd_grid_alloc_GRID_data__(
-    rd_grid_type *global_grid, size_t num_coords, ert_rd_unit_enum unit_system,
+    rd_grid_type *global_grid, size_t num_coords, UnitSystem unit_system,
     int dualp_flag, bool apply_mapaxes, int nx, int ny, int nz, int grid_nr,
     int coords_size, int **coords, float **corners, const float *mapaxes) {
     if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
@@ -2642,7 +2641,7 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
                                         int dualp_flag, bool apply_mapaxes) {
     int nx, ny, nz;
     const float *mapaxes_data = NULL;
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
+    UnitSystem unit_system = UnitSystem::METRIC;
 
     // 1: Fetching header data from the DIMENS keyword.
     {
@@ -2804,7 +2803,7 @@ static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
                                            const double *jvec,
                                            const double *kvec,
                                            const int *actnum) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
+    UnitSystem unit_system = UnitSystem::METRIC;
     auto grid = rd_grid_ptr(rd_grid_alloc_empty(NULL, unit_system,
                                                 FILEHEAD_SINGLE_POROSITY, nx,
                                                 ny, nz, 0, true),
@@ -4486,67 +4485,65 @@ std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
         return std::nullopt;
 }
 
-static rd_kw_type *rd_grid_alloc_mapunits_kw(ert_rd_unit_enum output_unit) {
+static rd_kw_type *rd_grid_alloc_mapunits_kw(UnitSystem output_unit) {
     auto mapunits_kw = make_rd_kw(MAPUNITS_KW, 1, RD_CHAR);
 
-    if (output_unit == RD_FIELD_UNITS)
+    if (output_unit == UnitSystem::FIELD)
         rd_kw_iset_string8(mapunits_kw.get(), 0, "FEET");
 
-    if (output_unit == RD_METRIC_UNITS)
+    if (output_unit == UnitSystem::METRIC)
         rd_kw_iset_string8(mapunits_kw.get(), 0, "METRES");
 
-    if (output_unit == RD_LAB_UNITS)
+    if (output_unit == UnitSystem::LAB)
         rd_kw_iset_string8(mapunits_kw.get(), 0, "CM");
 
     return mapunits_kw.release();
 }
 
-static rd_kw_type *rd_grid_alloc_gridunits_kw(ert_rd_unit_enum output_unit) {
+static rd_kw_type *rd_grid_alloc_gridunits_kw(UnitSystem output_unit) {
     auto gridunits_kw = make_rd_kw(GRIDUNIT_KW, 2, RD_CHAR);
 
-    if (output_unit == RD_FIELD_UNITS)
+    if (output_unit == UnitSystem::FIELD)
         rd_kw_iset_string8(gridunits_kw.get(), 0, "FEET");
 
-    if (output_unit == RD_METRIC_UNITS)
+    if (output_unit == UnitSystem::METRIC)
         rd_kw_iset_string8(gridunits_kw.get(), 0, "METRES");
 
-    if (output_unit == RD_LAB_UNITS)
+    if (output_unit == UnitSystem::LAB)
         rd_kw_iset_string8(gridunits_kw.get(), 0, "CM");
 
     rd_kw_iset_string8(gridunits_kw.get(), 1, "");
     return gridunits_kw.release();
 }
 
-static ert_rd_unit_enum
-rd_grid_check_unit_system(const rd_kw_type *gridunit_kw) {
+static UnitSystem rd_grid_check_unit_system(const rd_kw_type *gridunit_kw) {
     const char *length_unit = rd_kw_iget_char_ptr(gridunit_kw, 0);
 
     if (strncmp(length_unit, "FEET", 4) == 0)
-        return RD_FIELD_UNITS;
+        return UnitSystem::FIELD;
 
     if (strncmp(length_unit, "CM", 2) == 0)
-        return RD_LAB_UNITS;
+        return UnitSystem::LAB;
 
-    return RD_METRIC_UNITS;
+    return UnitSystem::METRIC;
 }
 
-float rd_grid_output_scaling(const rd_grid_type *grid,
-                             ert_rd_unit_enum output_unit) {
+float rd_grid_output_scaling(const rd_grid_type *grid, UnitSystem output_unit) {
     if (grid->unit_system == output_unit)
         return 1.0;
     else {
         double scale_factor = 1;
 
-        if (grid->unit_system == RD_FIELD_UNITS)
+        if (grid->unit_system == UnitSystem::FIELD)
             scale_factor = 1.0 / METER_TO_FEET_SCALE_FACTOR;
 
-        if (grid->unit_system == RD_LAB_UNITS)
+        if (grid->unit_system == UnitSystem::LAB)
             scale_factor = 1.0 / METER_TO_CM_SCALE_FACTOR;
 
-        if (output_unit == RD_FIELD_UNITS)
+        if (output_unit == UnitSystem::FIELD)
             scale_factor *= METER_TO_FEET_SCALE_FACTOR;
 
-        if (output_unit == RD_LAB_UNITS)
+        if (output_unit == UnitSystem::LAB)
             scale_factor *= METER_TO_CM_SCALE_FACTOR;
 
         return scale_factor;
@@ -4560,20 +4557,20 @@ static void rd_grid_fwrite_mapaxes(const rd_grid_type *grid,
 }
 
 static void rd_grid_fwrite_mapunits(ERT::FortIO &fortio,
-                                    ert_rd_unit_enum output_unit) {
+                                    UnitSystem output_unit) {
     rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit), rd_kw_free);
     rd_kw_fwrite(mapunits_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_gridunits(ERT::FortIO &fortio,
-                                     ert_rd_unit_enum output_unit) {
+                                     UnitSystem output_unit) {
     rd_kw_ptr gridunits_kw(rd_grid_alloc_gridunits_kw(output_unit), rd_kw_free);
     rd_kw_fwrite(gridunits_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
                                              ERT::FortIO &fortio,
-                                             ert_rd_unit_enum output_unit) {
+                                             UnitSystem output_unit) {
     rd_grid_fwrite_mapunits(fortio, output_unit);
 
     if (rd_grid->use_mapaxes)
@@ -4583,8 +4580,7 @@ static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
 }
 
 static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
-                                  ERT::FortIO &fortio,
-                                  ert_rd_unit_enum output_unit) {
+                                  ERT::FortIO &fortio, UnitSystem output_unit) {
     if (grid->parent_grid != NULL) {
         auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
         rd_kw_iset_string8(lgr_kw.get(), 0, grid->name.c_str());
@@ -4645,7 +4641,7 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
 }
 
 void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
-                          ert_rd_unit_enum output_unit) {
+                          UnitSystem output_unit) {
     int coords_size = 5;
     bool fmt_file = false;
     {
@@ -4688,7 +4684,7 @@ ENDGRID             0:INTE
 */
 static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
                                              ERT::FortIO &fortio,
-                                             ert_rd_unit_enum output_unit) {
+                                             UnitSystem output_unit) {
     int EGRID_VERSION = 3;
     int RELEASE_YEAR = 2007;
     int COMPAT_VERSION = 0;
@@ -5158,7 +5154,7 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
 }
 
 static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
-                                   ert_rd_unit_enum output_unit) {
+                                   UnitSystem output_unit) {
     bool is_lgr = true;
     if (grid->parent_grid == NULL)
         is_lgr = false;
@@ -5231,7 +5227,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
 }
 
 void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
-                           ert_rd_unit_enum output_unit) {
+                           UnitSystem output_unit) {
     bool fmt_file = false;
     {
         bool is_fmt;
@@ -5254,10 +5250,10 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
 */
 void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
                           bool output_metric) {
-    ert_rd_unit_enum output_unit = RD_METRIC_UNITS;
+    auto output_unit = UnitSystem::METRIC;
 
     if (!output_metric)
-        output_unit = RD_FIELD_UNITS;
+        output_unit = UnitSystem::FIELD;
 
     rd_grid_fwrite_EGRID2(grid, filename, output_unit);
 }
@@ -5267,7 +5263,7 @@ void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
    possible LGRs which are attached.
 */
 void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
-                             ert_rd_unit_enum output_unit) {
+                             UnitSystem output_unit) {
     {
         rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit),
                               rd_kw_free);

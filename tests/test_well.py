@@ -14,7 +14,7 @@ from typing import TypeAlias
 import hypothesis.strategies as st
 import pytest
 from hypothesis import given
-from resdata import ResDataType
+from resdata import ResDataType, UnitSystem
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataKW
 from resdata.resfile.rd_file import ResdataFile
@@ -84,11 +84,6 @@ IWEL_GAS_INJECTOR = 4
 # A connection direction value of 0 in ICON is interpreted as "Z".
 ICON_DIR_DEFAULT = 0
 
-# Unit systems, as stored in INTEHEAD[2] and matching the ert_rd_unit_enum.
-METRIC_UNITS = 1
-FIELD_UNITS = 2
-LAB_UNITS = 3
-
 # Unit conversion constants
 INCH = 0.0254  # meters
 FEET = 12 * INCH
@@ -102,16 +97,16 @@ DAY = 24 * HOUR
 
 # Factor that converts a raw oil/water rate to SI (rm3/s or sm3/s) per unit system.
 LIQUID_RATE_SI_FACTOR = {
-    METRIC_UNITS: 1.0 / DAY,
-    FIELD_UNITS: BARREL / DAY,
-    LAB_UNITS: MILLI_LITER / HOUR,
+    UnitSystem.METRIC: 1.0 / DAY,
+    UnitSystem.FIELD: BARREL / DAY,
+    UnitSystem.LAB: MILLI_LITER / HOUR,
 }
 
 # Gas uses a different reservoir volume unit in field units.
 GAS_RATE_SI_FACTOR = {
-    METRIC_UNITS: 1.0 / DAY,
-    FIELD_UNITS: MMCF / DAY,
-    LAB_UNITS: MILLI_LITER / HOUR,
+    UnitSystem.METRIC: 1.0 / DAY,
+    UnitSystem.FIELD: MMCF / DAY,
+    UnitSystem.LAB: MILLI_LITER / HOUR,
 }
 
 
@@ -205,7 +200,7 @@ def _step_keywords(
     date: Date,
     seqnum: int | None = None,
     include_icon: bool = True,
-    unit_system: int = METRIC_UNITS,
+    unit_system: UnitSystem = UnitSystem.METRIC,
     dualp: bool = False,
 ):
     ncwmax = max(len(w.connections) for w in wells)
@@ -229,7 +224,7 @@ def _step_keywords(
         year,
         month,
         day,
-        unit_system=METRIC_UNITS,
+        unit_system=UnitSystem.METRIC,
     ):
         kw = _int_kw("INTEHEAD", 412)
         kw[2] = unit_system
@@ -384,7 +379,7 @@ def write_restart(
     wells: list[Well],
     date: Date = (2020, 1, 1),
     include_icon: bool = True,
-    unit_system: int = METRIC_UNITS,
+    unit_system: UnitSystem = UnitSystem.METRIC,
     dualp: bool = False,
 ):
     """Write a non-unified restart file (``.X#### ``) with a single report step."""
@@ -1171,7 +1166,9 @@ def test_that_a_well_without_rate_data_reports_zero_rates(producer):
     assert well_state.volumeRateSI() == 0
 
 
-@pytest.mark.parametrize("unit_system", [METRIC_UNITS, FIELD_UNITS, LAB_UNITS])
+@pytest.mark.parametrize(
+    "unit_system", [UnitSystem.METRIC, UnitSystem.FIELD, UnitSystem.LAB]
+)
 def test_that_well_state_si_rates_are_raw_rates_scaled_by_the_unit_factor(
     tmp_path, grid, unit_system
 ):
@@ -1216,7 +1213,7 @@ def test_that_connection_si_rates_are_scaled_by_the_unit_factor(tmp_path, grid):
         ],
     )
     path = str(tmp_path / "CASE.X0000")
-    write_restart(path, [well], unit_system=FIELD_UNITS)
+    write_restart(path, [well], unit_system=UnitSystem.FIELD)
 
     connections = WellInfo(grid, path)["OP1"][0].globalConnections()
 
@@ -1230,16 +1227,16 @@ def test_that_connection_si_rates_are_scaled_by_the_unit_factor(tmp_path, grid):
         assert connection.volumeRate() == resv
 
         assert connection.oilRateSI() == pytest.approx(
-            oil * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+            oil * LIQUID_RATE_SI_FACTOR[UnitSystem.FIELD]
         )
         assert connection.waterRateSI() == pytest.approx(
-            water * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+            water * LIQUID_RATE_SI_FACTOR[UnitSystem.FIELD]
         )
         assert connection.gasRateSI() == pytest.approx(
-            gas * GAS_RATE_SI_FACTOR[FIELD_UNITS]
+            gas * GAS_RATE_SI_FACTOR[UnitSystem.FIELD]
         )
         assert connection.volumeRateSI() == pytest.approx(
-            resv * LIQUID_RATE_SI_FACTOR[FIELD_UNITS]
+            resv * LIQUID_RATE_SI_FACTOR[UnitSystem.FIELD]
         )
 
 

@@ -20,7 +20,7 @@ struct RSTHead {
     int version;   // 100, 300, 500 (Eclipse300-Thermal)
     int phase_sum; // Oil = 1   Gas = 2    Water = 4
 
-    ert_rd_unit_enum unit_system;
+    UnitSystem unit_system;
 
     int nx;
     int ny;
@@ -60,11 +60,11 @@ struct RSTHead {
 
     inline RSTHead(int report_step, int day, int year, int month,
                    time_t sim_time, int version, int phase_sum,
-                   ert_rd_unit_enum unit_system, int nx, int ny, int nz,
-                   int nactive, int nwells, int niwelz, int nzwelz, int nxwelz,
-                   int niconz, int ncwmax, int nsconz, int nxconz, int nisegz,
-                   int nsegmx, int nswlmx, int nlbrmx, int nilbrz, int nrsegz,
-                   bool dualp, double sim_days)
+                   UnitSystem unit_system, int nx, int ny, int nz, int nactive,
+                   int nwells, int niwelz, int nzwelz, int nxwelz, int niconz,
+                   int ncwmax, int nsconz, int nxconz, int nisegz, int nsegmx,
+                   int nswlmx, int nlbrmx, int nilbrz, int nrsegz, bool dualp,
+                   double sim_days)
         : report_step(report_step), day(day), year(year), month(month),
           sim_time(sim_time), version(version), phase_sum(phase_sum),
           unit_system(unit_system), nx(nx), ny(ny), nz(nz), nactive(nactive),
@@ -91,8 +91,7 @@ struct RSTHead {
         this->version = get(INTEHEAD_IPROG_INDEX);
         this->phase_sum = get(INTEHEAD_PHASE_INDEX);
 
-        this->unit_system =
-            static_cast<ert_rd_unit_enum>(get(INTEHEAD_UNIT_INDEX));
+        this->unit_system = static_cast<UnitSystem>(get(INTEHEAD_UNIT_INDEX));
 
         this->nx = get(INTEHEAD_NX_INDEX);
         this->ny = get(INTEHEAD_NY_INDEX);

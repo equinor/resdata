@@ -90,13 +90,6 @@ typedef enum {
         {.value = 4, .name = "RD_WATER_PHASE"}
 #define RD_PHASE_ENUM_SIZE 3
 
-typedef enum {
-    RD_METRIC_UNITS = 1,
-    RD_FIELD_UNITS = 2,
-    RD_LAB_UNITS = 3,
-    RD_PVT_M_UNITS = 4
-} ert_rd_unit_enum;
-
 // For unformatted files:
 #define RD_BOOL_TRUE_INT                                                       \
     -1 // Binary representation: 11111111  11111111  11111111  1111111
@@ -109,6 +102,8 @@ typedef enum {
 #ifdef __cplusplus
 }
 #endif
+
+enum class UnitSystem { METRIC = 1, FIELD = 2, LAB = 3, PVT_M = 4 };
 
 extern "C" int rd_filename_report_nr(const char *);
 extern "C" FileType rd_get_file_type(const char *filename, bool *fmt_file,

@@ -248,7 +248,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                     "BARS");
             REQUIRE(std::string(rd_sum_get_unit(rd_sum.get(), "WWCT:OP-1")) ==
                     "(1)");
-            REQUIRE(rd_sum_get_unit_system(rd_sum.get()) == RD_METRIC_UNITS);
+            REQUIRE(rd_sum_get_unit_system(rd_sum.get()) == UnitSystem::METRIC);
         }
 
         THEN("first and last values agree with the linear model") {

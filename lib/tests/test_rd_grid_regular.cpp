@@ -83,7 +83,7 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
         WHEN("Writing that file as FEGRID") {
             auto filename = (dirname / "CASE.FEGRID");
             rd_grid_fwrite_EGRID2(rd_grid.get(), filename.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             THEN("It is a formatted file") {
                 REQUIRE(util_fmt_bit8(filename.c_str()));
             }
@@ -98,7 +98,7 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
         THEN("Writing that file as a EGRID") {
             auto filename = (dirname / "CASE.EGRID");
             rd_grid_fwrite_EGRID2(rd_grid.get(), filename.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             THEN("It is an unformatted file") {
                 REQUIRE(!util_fmt_bit8((dirname / "CASE.EGRID").c_str()));
             }
@@ -112,7 +112,7 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
             "Writing that file with unknown extension is an unformatted file") {
             rd_grid_fwrite_EGRID2(rd_grid.get(),
                                   (dirname / "CASE.UNKNOWN").c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             REQUIRE(!util_fmt_bit8((dirname / "CASE.UNKNOWN").c_str()));
         }
     }
@@ -144,10 +144,11 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             const char *name = rd_grid_get_name(grid.get());
             REQUIRE(name == nullptr);
 
-            ert_rd_unit_enum unit = rd_grid_get_unit_system(grid.get());
-            REQUIRE(unit == RD_METRIC_UNITS);
+            UnitSystem unit = rd_grid_get_unit_system(grid.get());
+            REQUIRE(unit == UnitSystem::METRIC);
 
-            float scale = rd_grid_output_scaling(grid.get(), RD_METRIC_UNITS);
+            float scale =
+                rd_grid_output_scaling(grid.get(), UnitSystem::METRIC);
             REQUIRE(scale == 1.0f);
         }
 
@@ -641,10 +642,11 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     auto fegrid_path = dirname / "ONLYFEGRID.FEGRID";
 
     rd_grid_fwrite_EGRID2(grid_5x5x5.get(), egrid_path.c_str(),
-                          RD_METRIC_UNITS);
-    rd_grid_fwrite_GRID2(grid_2x2x2.get(), grid_path.c_str(), RD_METRIC_UNITS);
+                          UnitSystem::METRIC);
+    rd_grid_fwrite_GRID2(grid_2x2x2.get(), grid_path.c_str(),
+                         UnitSystem::METRIC);
     rd_grid_fwrite_GRID2(grid_3x3x3.get(), only_grid_path.c_str(),
-                         RD_METRIC_UNITS);
+                         UnitSystem::METRIC);
     write_fegrid_minimal(fegrid_path);
     auto read_fegrid = read_grid(fegrid_path);
 
@@ -744,7 +746,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         // Extensions are accepted case-insensitively by rd_get_file_type.
         auto lower_egrid_path = dirname / "LOWER.egrid";
         rd_grid_fwrite_EGRID2(grid_2x2x2.get(), lower_egrid_path.c_str(),
-                              RD_METRIC_UNITS);
+                              UnitSystem::METRIC);
         THEN("the file is recognized and loaded") {
             load_and_compare(lower_egrid_path, grid_2x2x2.get());
         }
@@ -824,7 +826,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         auto mix_grid = dirname / "MIX.GRID";
         auto mix_fegrid = dirname / "MIX.FEGRID";
         rd_grid_fwrite_GRID2(grid_2x2x2.get(), mix_grid.c_str(),
-                             RD_METRIC_UNITS);
+                             UnitSystem::METRIC);
         write_fegrid_minimal(mix_fegrid);
         THEN("the .GRID is preferred over the .FEGRID") {
             load_and_compare(basename, grid_2x2x2.get());
@@ -834,7 +836,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     GIVEN("A direct path to a file with a double extension") {
         auto double_ext_path = dirname / "CASE.HIST.EGRID";
         rd_grid_fwrite_EGRID2(grid_2x2x2.get(), double_ext_path.c_str(),
-                              RD_METRIC_UNITS);
+                              UnitSystem::METRIC);
         THEN("the file is recognized by its final extension and loaded") {
             load_and_compare(double_ext_path, grid_2x2x2.get());
         }
@@ -842,7 +844,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
             auto basename_with_dot = dirname / "CASE.HIST";
             auto no_ext_egrid = dirname / "CASE.EGRID";
             rd_grid_fwrite_EGRID2(grid_5x5x5.get(), no_ext_egrid.c_str(),
-                                  RD_METRIC_UNITS);
+                                  UnitSystem::METRIC);
             // Load and compare with "CASE.HIST" considers "CASE" the casename
             // and finds the file "CASE.EGRID".
             load_and_compare(basename_with_dot, grid_5x5x5.get());
@@ -854,7 +856,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         fs::create_directory(subdir);
         auto sub_egrid = subdir / "SUB.EGRID";
         rd_grid_fwrite_EGRID2(grid_2x2x2.get(), sub_egrid.c_str(),
-                              RD_METRIC_UNITS);
+                              UnitSystem::METRIC);
 
         THEN("a direct path to the file loads the grid") {
             load_and_compare(sub_egrid, grid_2x2x2.get());
@@ -869,7 +871,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         fs::create_directory(subdir);
         auto sub_egrid = subdir / "INSIDE.EGRID";
         rd_grid_fwrite_EGRID2(grid_3x3x3.get(), sub_egrid.c_str(),
-                              RD_METRIC_UNITS);
+                              UnitSystem::METRIC);
 
         THEN("a direct path to the file loads the grid") {
             load_and_compare(sub_egrid, grid_3x3x3.get());

@@ -111,7 +111,7 @@ class WellState {
     double gas_rate;
     double water_rate;
     double volume_rate;
-    ert_rd_unit_enum unit_system;
+    UnitSystem unit_system;
 
     std::map<std::string, std::vector<std::shared_ptr<WellConnection>>>
         connections;
