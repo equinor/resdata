@@ -1,8 +1,11 @@
 import datetime
 import numbers
 import re
+import warnings
 
-from resdata.util.util import monkey_the_camel
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .rd_sum import Summary
 

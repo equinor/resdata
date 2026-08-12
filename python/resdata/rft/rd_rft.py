@@ -12,7 +12,9 @@ import numpy.typing as npt
 from resfo_utilities import RFTReader
 from typing_extensions import deprecated
 
-from resdata.util.util import monkey_the_camel
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .rd_rft_cell import ResdataPLTCell, ResdataRFTCell
 

@@ -1,8 +1,13 @@
+import warnings
+
 from cwrap import BaseCClass
 from six import string_types
 
 from resdata import ResdataPrototype
-from resdata.util.util import CTime, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import CTime, monkey_the_camel
 
 
 class ResdataFileView(BaseCClass):

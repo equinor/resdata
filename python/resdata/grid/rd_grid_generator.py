@@ -1,4 +1,5 @@
 import itertools
+import warnings
 from collections.abc import Sequence
 from math import sqrt
 
@@ -8,7 +9,10 @@ import resdata.grid._grid as _grid
 from resdata import ResDataType
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 def flatten(l):

@@ -1,8 +1,13 @@
+import warnings
+
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
 from resdata.grid import Grid
-from resdata.util.util import IntVector, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Layer(BaseCClass):
@@ -234,8 +239,10 @@ class Layer(BaseCClass):
         """
         Will return a list [(i1,j1),(i2,j2), ...(in,jn)] of all cells with value @value.
         """
-        i_list = IntVector()
-        j_list = IntVector()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            i_list = IntVector()
+            j_list = IntVector()
         self._cells_equal(value, i_list, j_list)
         ij_list = []
         for i, j in zip(i_list, j_list):

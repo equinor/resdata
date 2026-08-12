@@ -2,7 +2,6 @@ from cwrap import Prototype
 
 import resdata
 import resdata.geometry
-import resdata.util.util
 
 from .well_connection import WellConnection
 from .well_connection_direction_enum import WellConnectionDirection

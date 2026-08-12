@@ -3,7 +3,10 @@ import time
 import traceback
 from threading import Thread
 
+from typing_extensions import deprecated
 
+
+@deprecated("Task is deprecated and will be removed in version 7, use asyncio instead.")
 class Task(Thread):
     def __init__(self, func, *args, **kwargs):
         super().__init__()
@@ -53,6 +56,9 @@ class Task(Thread):
             time.sleep(0.01)
 
 
+@deprecated(
+    "ThreadPool is deprecated and will be removed in version 7, use asyncio instead."
+)
 class ThreadPool:
     def __init__(self, size=None, verbose=False):
         super().__init__()

@@ -1,7 +1,12 @@
+import warnings
+
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .rd_sum_var_type import SummaryVarType
 

@@ -11,11 +11,15 @@ functions from rd_util.c which are not bound to any class type.
 """
 
 import ctypes
+import warnings
 
 from cwrap import BaseCEnum
 
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 
 class FileType(BaseCEnum):

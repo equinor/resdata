@@ -12,6 +12,7 @@ queried for the corresponding list of indices.
 """
 
 import ctypes
+import warnings
 from functools import wraps
 
 from cwrap import BaseCClass
@@ -20,7 +21,10 @@ from resdata import ResdataPrototype, ResDataType
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
-from resdata.util.util import IntVector, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import IntVector, monkey_the_camel
 
 
 def select_method(select):

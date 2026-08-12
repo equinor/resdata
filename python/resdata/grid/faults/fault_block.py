@@ -1,10 +1,14 @@
 import ctypes
+import warnings
 
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
 from resdata.geometry import CPolylineCollection, GeometryTools, Polyline
-from resdata.util.util import DoubleVector, IntVector, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import DoubleVector, IntVector, monkey_the_camel
 
 
 class FaultBlockCell:
@@ -125,9 +129,11 @@ class FaultBlock(BaseCClass):
         return self._get_global_index_list()
 
     def get_edge_polygon(self):
-        x_list = DoubleVector()
-        y_list = DoubleVector()
-        cell_list = IntVector()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            x_list = DoubleVector()
+            y_list = DoubleVector()
+            cell_list = IntVector()
 
         self._trace_edge(x_list, y_list, cell_list)
         p = Polyline()
@@ -152,7 +158,9 @@ class FaultBlock(BaseCClass):
         Will return a list of FaultBlock instances which are in direct
         contact with this block.
         """
-        neighbour_id_list = IntVector()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            neighbour_id_list = IntVector()
         if polylines is None:
             polylines = CPolylineCollection()
 

@@ -1,11 +1,16 @@
 import os.path
 
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 
+@deprecated(
+    "RandomNumberGenerator is deprecated and will be removed in version 7. "
+    "Use the builtin random module instead."
+)
 class RandomNumberGenerator(BaseCClass):
     TYPE_NAME = "rd_rng"
 

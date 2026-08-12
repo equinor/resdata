@@ -1,12 +1,14 @@
 from ctypes import c_void_p
 
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 
 from .stringlist import StringList
 
 
+@deprecated("Hash is deprecated and will be removed in version 7. Use dict instead.")
 class Hash(BaseCClass):
     TYPE_NAME = "rd_hash"
     _alloc = ResdataPrototype("void* hash_alloc()", bind=False)

@@ -1,7 +1,11 @@
 import re
+import warnings
 
 from resdata.grid import Grid
-from resdata.util.util import monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import monkey_the_camel
 
 from .fault import Fault
 

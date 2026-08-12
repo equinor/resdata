@@ -5,7 +5,6 @@ rd_sum/Summary: This will load summary results;
 """
 
 import resdata.geometry
-import resdata.util.util
 
 from .rd_cmp import ResdataCmp
 from .rd_npv import NPVPriceVector, ResdataNPV

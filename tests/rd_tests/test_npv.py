@@ -5,7 +5,10 @@ import os
 import warnings
 
 from resdata.summary import NPVPriceVector, ResdataNPV, Summary
-from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext

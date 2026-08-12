@@ -17,10 +17,18 @@ hardly need to notice that the StringList class is at play.
 """
 
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 
+stringlist_deprecation = deprecated(
+    "The StringList class is deprecated and will be replaced with the builtin python list of strings. "
+    "All functions returning StringList will return python lists in version 7. Convert the value to "
+    "a list with list() to get silence this warning."
+)
 
+
+@stringlist_deprecation
 class StringList(BaseCClass):
     TYPE_NAME = "rd_stringlist"
 
@@ -79,6 +87,7 @@ class StringList(BaseCClass):
             else:
                 raise TypeError('Item is not a string: "%s".' % s)
 
+    @stringlist_deprecation
     def __eq__(self, other):
         if len(self) == len(other):
             if isinstance(other, StringList):
@@ -153,6 +162,7 @@ class StringList(BaseCClass):
         copy += other
         return copy
 
+    @stringlist_deprecation
     def __ior__(self, other):
         if isinstance(other, bytes):
             other.decode("ascii")
@@ -163,11 +173,13 @@ class StringList(BaseCClass):
                 self.append(s)
         return self
 
+    @stringlist_deprecation
     def __or__(self, other):
         copy = StringList(initial=self)
         copy |= other
         return copy
 
+    @stringlist_deprecation
     def contains(self, s):
         """
         Checks if the list contains @s.
@@ -197,13 +209,16 @@ class StringList(BaseCClass):
         buffer += "]"
         return buffer
 
+    @stringlist_deprecation
     def __repr__(self):
         return "StringList(size = %d) %s" % (len(self), self._ad_str())
 
+    @stringlist_deprecation
     def empty(self):
         """Returns true if and only if list is empty."""
         return len(self) == 0
 
+    @stringlist_deprecation
     def pop(self):
         """
         Will remove the last element from the list and return it.
@@ -215,6 +230,7 @@ class StringList(BaseCClass):
         else:
             raise IndexError("List empty.  Cannot call pop().")
 
+    @stringlist_deprecation
     def append(self, s):
         """
         Appends a new string @s to list. If the input argument is not a
@@ -228,6 +244,7 @@ class StringList(BaseCClass):
             self._append(str(s))
 
     @property
+    @stringlist_deprecation
     def strings(self):
         """
         The strings in as a normal Python list of strings.
@@ -241,6 +258,7 @@ class StringList(BaseCClass):
         return slist
 
     @property
+    @stringlist_deprecation
     def last(self):
         """
         Will return the last element in list. Raise IndexError if empty.
@@ -250,6 +268,7 @@ class StringList(BaseCClass):
         else:
             raise IndexError("List empty.  No such element last().")
 
+    @stringlist_deprecation
     def sort(self, cmp_flag=0):
         """
         Will sort the list inplace.
@@ -264,6 +283,7 @@ class StringList(BaseCClass):
         """
         self._sort(cmp_flag)
 
+    @stringlist_deprecation
     def index(self, value: str) -> int:
         if isinstance(value, bytes):
             value.decode("ascii")
@@ -276,12 +296,14 @@ class StringList(BaseCClass):
     def free(self):
         self._free()
 
+    @stringlist_deprecation
     def front(self):
         if not self.empty():
             return self._front()
         else:
             raise IndexError("List empty.  No such element front().")
 
+    @stringlist_deprecation
     def back(self):
         if not self.empty():
             return self._back()

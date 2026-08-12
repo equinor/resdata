@@ -1,7 +1,12 @@
+import warnings
+
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.util.util import CTime, monkey_the_camel
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from resdata.util.util import CTime, monkey_the_camel
 
 
 class SummaryTStep(BaseCClass):
