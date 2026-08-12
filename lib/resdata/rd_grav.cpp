@@ -91,7 +91,7 @@ struct rd_grav_phase_struct {
     double *
         fluid_mass; /* The total fluid in place (mass) of this phase - for each active cell.*/
     double *work; /* Temporary used in the summation over all cells. */
-    rd_phase_enum phase;
+    Phase phase;
 };
 
 static void rd_grav_phase_free(rd_grav_phase_type *grav_phase) {
@@ -109,16 +109,16 @@ static void rd_grav_survey_free(rd_grav_survey_type *grav_survey) {
     delete grav_survey;
 }
 
-static std::string get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
+static std::string get_den_kw(Phase phase, rd_version_enum rd_version) {
     if (rd_version == ECLIPSE100) {
         switch (phase) {
-        case (RD_OIL_PHASE):
+        case (Phase::OIL):
             return ECLIPSE100_OIL_DEN_KW;
             break;
-        case (RD_GAS_PHASE):
+        case (Phase::GAS):
             return ECLIPSE100_GAS_DEN_KW;
             break;
-        case (RD_WATER_PHASE):
+        case (Phase::WATER):
             return ECLIPSE100_WATER_DEN_KW;
             break;
         default:
@@ -129,13 +129,13 @@ static std::string get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
     } else if ((rd_version == ECLIPSE300) ||
                (rd_version == ECLIPSE300_THERMAL)) {
         switch (phase) {
-        case (RD_OIL_PHASE):
+        case (Phase::OIL):
             return ECLIPSE300_OIL_DEN_KW;
             break;
-        case (RD_GAS_PHASE):
+        case (Phase::GAS):
             return ECLIPSE300_GAS_DEN_KW;
             break;
-        case (RD_WATER_PHASE):
+        case (Phase::WATER):
             return ECLIPSE300_WATER_DEN_KW;
             break;
         default:
@@ -228,7 +228,7 @@ static rd_version_enum get_simulator_version(const rd::File *file) {
 
 static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                                                rd_grav_survey_type *survey,
-                                               rd_phase_enum phase,
+                                               Phase phase,
                                                rd::FileView *restart_file,
                                                grav_calc_type calc_type) {
 
@@ -254,9 +254,9 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
 
             rd_kw_type *fip_kw;
 
-            if (phase == RD_OIL_PHASE)
+            if (phase == Phase::OIL)
                 fip_kw = restart_file->get_kw(FIPOIL_KW, 0);
-            else if (phase == RD_GAS_PHASE)
+            else if (phase == Phase::GAS)
                 fip_kw = restart_file->get_kw(FIPGAS_KW, 0);
             else
                 fip_kw = restart_file->get_kw(FIPWAT_KW, 0);
@@ -277,9 +277,9 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
 
             if (calc_type == GRAV_CALC_RFIP) {
                 rd_kw_type *rfip_kw;
-                if (phase == RD_OIL_PHASE)
+                if (phase == Phase::OIL)
                     rfip_kw = restart_file->get_kw(RFIPOIL_KW, 0);
-                else if (phase == RD_GAS_PHASE)
+                else if (phase == Phase::GAS)
                     rfip_kw = restart_file->get_kw(RFIPGAS_KW, 0);
                 else
                     rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
@@ -332,8 +332,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
     }
 }
 
-static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
-                                     rd_phase_enum phase,
+static void rd_grav_survey_add_phase(rd_grav_survey_type *survey, Phase phase,
                                      rd_grav_phase_type *grav_phase) {
     survey->phase_list.push_back(grav_phase);
     survey->phase_map[std::string(rd_get_phase_name(phase))] = grav_phase;
@@ -358,28 +357,28 @@ static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
                                       rd::FileView *restart_file,
                                       grav_calc_type calc_type) {
     int phases = get_phases(rd_grav->init_file);
-    if (phases & RD_OIL_PHASE) {
+    if (phases & static_cast<int>(Phase::OIL)) {
         rd_grav_phase_type *oil_phase = rd_grav_phase_alloc(
-            rd_grav, survey, RD_OIL_PHASE, restart_file, calc_type);
+            rd_grav, survey, Phase::OIL, restart_file, calc_type);
         if (oil_phase == NULL)
             return false;
-        rd_grav_survey_add_phase(survey, RD_OIL_PHASE, oil_phase);
+        rd_grav_survey_add_phase(survey, Phase::OIL, oil_phase);
     }
 
-    if (phases & RD_GAS_PHASE) {
+    if (phases & static_cast<int>(Phase::GAS)) {
         rd_grav_phase_type *gas_phase = rd_grav_phase_alloc(
-            rd_grav, survey, RD_GAS_PHASE, restart_file, calc_type);
+            rd_grav, survey, Phase::GAS, restart_file, calc_type);
         if (gas_phase == NULL)
             return false;
-        rd_grav_survey_add_phase(survey, RD_GAS_PHASE, gas_phase);
+        rd_grav_survey_add_phase(survey, Phase::GAS, gas_phase);
     }
 
-    if (phases & RD_WATER_PHASE) {
+    if (phases & static_cast<int>(Phase::WATER)) {
         rd_grav_phase_type *water_phase = rd_grav_phase_alloc(
-            rd_grav, survey, RD_WATER_PHASE, restart_file, calc_type);
+            rd_grav, survey, Phase::WATER, restart_file, calc_type);
         if (water_phase == NULL)
             return false;
-        rd_grav_survey_add_phase(survey, RD_WATER_PHASE, water_phase);
+        rd_grav_survey_add_phase(survey, Phase::WATER, water_phase);
     }
     return true;
 }
@@ -591,7 +590,7 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
     for (std::size_t phase_nr = 0; phase_nr < base_survey->phase_list.size();
          phase_nr++) {
         rd_grav_phase_type *base_phase = base_survey->phase_list[phase_nr];
-        if (base_phase->phase & phase_mask) {
+        if (static_cast<int>(base_phase->phase) & phase_mask) {
             if (monitor_survey != nullptr) {
                 const rd_grav_phase_type *monitor_phase =
                     monitor_survey->phase_list[phase_nr];
@@ -714,7 +713,7 @@ double rd_grav_eval(const rd_grav_type *grav, const std::string &base,
    a new phase.
 */
 
-void rd_grav_new_std_density(rd_grav_type *grav, rd_phase_enum phase,
+void rd_grav_new_std_density(rd_grav_type *grav, Phase phase,
                              double default_density) {
     const char *phase_key = rd_get_phase_name(phase);
     grav->default_density[std::string(phase_key)] = default_density;
@@ -729,13 +728,13 @@ void rd_grav_new_std_density(rd_grav_type *grav, rd_phase_enum phase,
    density to 0.75, but in PVT regions 2 and 7 the density is
    different:
 
-      rd_grav_new_std_density( grav , RD_GAS_PHASE , 0.75 );
-      rd_grav_add_std_density( grav , RD_GAS_PHASE , 2 , 0.70 );
-      rd_grav_add_std_density( grav , RD_GAS_PHASE , 7 , 0.80 );
+      rd_grav_new_std_density( grav , Phase::GAS , 0.75 );
+      rd_grav_add_std_density( grav , Phase::GAS , 2 , 0.70 );
+      rd_grav_add_std_density( grav , Phase::GAS , 7 , 0.80 );
 */
 
-void rd_grav_add_std_density(rd_grav_type *grav, rd_phase_enum phase,
-                             int pvtnum, double density) {
+void rd_grav_add_std_density(rd_grav_type *grav, Phase phase, int pvtnum,
+                             double density) {
     std::vector<double> &std_density =
         grav->std_density[std::string(rd_get_phase_name(phase))];
     if (std_density.size() <= static_cast<std::size_t>(pvtnum))

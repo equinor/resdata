@@ -8,6 +8,7 @@
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
+#include <resdata/rd_util.hpp>
 
 typedef struct rd_grav_struct rd_grav_type;
 typedef struct rd_grav_survey_struct rd_grav_survey_type;
@@ -37,10 +38,10 @@ double rd_grav_eval(const rd_grav_type *grav, const std::string &base,
                     rd_region_type *region, double utm_x, double utm_y,
                     double depth, int phase_mask);
 
-void rd_grav_new_std_density(rd_grav_type *grav, rd_phase_enum phase,
+void rd_grav_new_std_density(rd_grav_type *grav, Phase phase,
                              double default_density);
 
-void rd_grav_add_std_density(rd_grav_type *grav, rd_phase_enum phase,
-                             int pvtnum, double density);
+void rd_grav_add_std_density(rd_grav_type *grav, Phase phase, int pvtnum,
+                             double density);
 
 #endif

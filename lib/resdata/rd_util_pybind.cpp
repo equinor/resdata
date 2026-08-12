@@ -1,5 +1,6 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/native_enum.h>
 
 #include <string>
 #include <tuple>
@@ -49,6 +50,11 @@ PYBIND11_MODULE(_rd_util, m) {
         .value("FIELD", UnitSystem::FIELD)
         .value("LAB", UnitSystem::LAB)
         .value("PVT_M", UnitSystem::PVT_M);
+    py::native_enum<Phase>(m, "Phase", "enum.IntFlag")
+        .value("OIL", Phase::OIL)
+        .value("GAS", Phase::GAS)
+        .value("WATER", Phase::WATER)
+        .finalize();
     m.def("_get_file_type", [](std::string filename) {
         bool fmt_file = false;
         int report_step = -1;

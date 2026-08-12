@@ -133,7 +133,7 @@ class ResdataGrav(BaseCClass):
         monitor_survey,
         pos: tuple[float, float, float],
         region: ResdataRegion | None = None,
-        phase_mask=Phase.OIL + Phase.GAS + Phase.WATER,  # type: ignore
+        phase_mask: int | Phase = Phase.OIL + Phase.GAS + Phase.WATER,
     ) -> float:
         """
         Calculates the gravity change between two surveys.
@@ -161,6 +161,9 @@ class ResdataGrav(BaseCClass):
         sum of the relevant integer constants 'OIL',
         'GAS' and 'WATER'.
         """
+        if not isinstance(phase_mask, Phase):
+            phase_mask = Phase(phase_mask)
+
         return _grav._eval(
             self,
             base_survey,
@@ -172,13 +175,9 @@ class ResdataGrav(BaseCClass):
             phase_mask,
         )
 
-    def new_std_density(self, phase_enum, default_density):
+    def new_std_density(self, phase_enum: int | Phase, default_density):
         """
         Adds a new phase with a corresponding density.
-
-        @phase_enum is one of the integer constants OIL,
-        GAS or WATER, all available in the
-        rd_util and also ecl modules.
 
         @default_density is the density, at standard conditions, for
         this particular phase. By default @default_density will be
@@ -190,9 +189,12 @@ class ResdataGrav(BaseCClass):
         used before you use the add_survey_FIP() method to add a
         survey based on the FIP keyword.
         """
+        if not isinstance(phase_enum, Phase):
+            phase_enum = Phase(phase_enum)
+
         _grav._new_std_density(self, phase_enum, default_density)
 
-    def add_std_density(self, phase_enum, pvtnum, density):
+    def add_std_density(self, phase_enum: int | Phase, pvtnum, density):
         """
         Add standard conditions density for PVT region @pvtnum.
 
@@ -210,6 +212,9 @@ class ResdataGrav(BaseCClass):
         used before you use the add_survey_FIP() method to add a
         survey based on the FIP keyword.
         """
+        if not isinstance(phase_enum, Phase):
+            phase_enum = Phase(phase_enum)
+
         _grav._add_std_density(self, phase_enum, pvtnum, density)
 
     def free(self):

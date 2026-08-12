@@ -87,17 +87,15 @@ PYBIND11_MODULE(_grav, m) {
           });
 
     m.def("_new_std_density",
-          [](py::handle self, int phase, double default_density) {
+          [](py::handle self, Phase phase, double default_density) {
               auto *grav = from_cwrap<rd_grav_type>(self);
-              rd_grav_new_std_density(grav, static_cast<rd_phase_enum>(phase),
-                                      default_density);
+              rd_grav_new_std_density(grav, phase, default_density);
           });
 
     m.def("_add_std_density",
-          [](py::handle self, int phase, int pvtnum, double density) {
+          [](py::handle self, Phase phase, int pvtnum, double density) {
               auto *grav = from_cwrap<rd_grav_type>(self);
 
-              rd_grav_add_std_density(grav, static_cast<rd_phase_enum>(phase),
-                                      pvtnum, density);
+              rd_grav_add_std_density(grav, phase, pvtnum, density);
           });
 }

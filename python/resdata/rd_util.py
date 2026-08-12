@@ -16,6 +16,7 @@ from resdata import ResdataPrototype
 from resdata._rd_util import (
     FileMode,
     FileType,
+    Phase,
     UnitSystem,
     _get_file_type,
     _get_num_cpu,
@@ -23,18 +24,6 @@ from resdata._rd_util import (
     _get_start_date,
 )
 from resdata.util.util import CTime
-
-
-class Phase(BaseCEnum):
-    TYPE_NAME = "rd_phase_enum"
-    OIL = None
-    GAS = None
-    WATER = None
-
-
-Phase.addEnum("OIL", 1)
-Phase.addEnum("GAS", 2)
-Phase.addEnum("WATER", 4)
 
 
 class ResdataUtil:
