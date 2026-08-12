@@ -16,6 +16,7 @@ import warnings
 from functools import wraps
 
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype, ResDataType
 from resdata.geometry import CPolyline
@@ -1115,6 +1116,7 @@ class ResdataRegion(BaseCClass):
 
     #################################################################
 
+    @deprecated("rd_region_instance is deprecated, use isinstance instead")
     def rd_region_instance(self):
         """
         Helper function (attribute) to support run-time typechecking.
