@@ -83,6 +83,19 @@ time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
 
 const char *rd_get_phase_name(Phase phase);
 
+/** Scans @path (or the current directory if @path == NULL) for the files of
+   type @file_type belonging to the case @base.
+
+   @base is matched literally and may contain shell wildcards; the pattern
+   applied is "@base.<extension>". An empty @base is therefore *not* a
+   wildcard - it selects the extension alone, as in ".EGRID" - so pass "*" to
+   select every case in the directory. FileType::SUMMARY and FileType::RESTART
+   apply the same pattern, but match @base literally, so wildcards in it have
+   no effect for those two.
+
+   The extension is lower cased when @base is written in lower case. Upper
+   case wins a tie, and a base holding no letters at all, such as "" or "*",
+   selects upper case. */
 std::vector<std::string> rd_select_filelist(const char *path,
                                             std::string_view base,
                                             FileType file_type, bool fmt_file);
