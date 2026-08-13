@@ -249,6 +249,72 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
     }
 }
 
+namespace rd {
+int natural_compare(std::string_view a, std::string_view b) {
+    size_t i = 0;
+    size_t j = 0;
+
+    while (i < a.size() && j < b.size()) {
+        unsigned char ca = static_cast<unsigned char>(a[i]);
+        unsigned char cb = static_cast<unsigned char>(b[j]);
+
+        if (std::isdigit(ca) && std::isdigit(cb)) {
+            /* Skip leading zeros. */
+            size_t start_a = a.find_first_not_of('0', i);
+            if (start_a == std::string_view::npos)
+                start_a = a.size();
+            size_t start_b = b.find_first_not_of('0', j);
+            if (start_b == std::string_view::npos)
+                start_b = b.size();
+
+            size_t end_a = start_a;
+            while (end_a < a.size() &&
+                   std::isdigit(static_cast<unsigned char>(a[end_a])))
+                end_a++;
+
+            size_t end_b = start_b;
+            while (end_b < b.size() &&
+                   std::isdigit(static_cast<unsigned char>(b[end_b])))
+                end_b++;
+
+            std::string_view num_a = a.substr(start_a, end_a - start_a);
+            std::string_view num_b = b.substr(start_b, end_b - start_b);
+
+            if (num_a.size() != num_b.size())
+                return num_a.size() < num_b.size() ? -1 : 1;
+
+            int cmp = num_a.compare(num_b);
+            if (cmp != 0)
+                return cmp < 0 ? -1 : 1;
+
+            /* Numbers are equal - continue comparing after end.*/
+            i = end_a;
+            j = end_b;
+            continue;
+        }
+
+        if (ca != cb)
+            return ca < cb ? -1 : 1;
+
+        i++;
+        j++;
+    }
+
+    if (i < a.size())
+        return 1;
+    if (j < b.size())
+        return -1;
+
+    /* Equal under the natural ordering. Fall back to a plain bytewise
+       comparison so that strings differing only in leading zeros (e.g.
+       "S007" and "S7") still get a stable, total order. */
+    int cmp = a.compare(b);
+    if (cmp == 0)
+        return 0;
+    return cmp < 0 ? -1 : 1;
+}
+} // namespace rd
+
 static bool base_has_upper(std::string_view input_base) {
     size_t last_sep = input_base.rfind(UTIL_PATH_SEP_CHAR);
 

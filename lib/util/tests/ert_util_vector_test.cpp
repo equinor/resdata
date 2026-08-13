@@ -1,5 +1,7 @@
 #include <cstdlib>
 
+#include <resdata/rd_util.hpp>
+
 #include <ert/util/int_vector.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/test_util.hpp>
@@ -68,9 +70,12 @@ void test_sort() {
     vector_append_ref(v2, "3");
 
     {
-        int_vector_type *sort_map =
-            vector_alloc_sort_perm(v1, (vector_cmp_ftype *)util_strcmp_int);
-        vector_sort(v2, (vector_cmp_ftype *)util_strcmp_int);
+        vector_cmp_ftype *cmp = [](const void *a, const void *b) -> int {
+            return rd::natural_compare(static_cast<const char *>(a),
+                                       static_cast<const char *>(b));
+        };
+        int_vector_type *sort_map = vector_alloc_sort_perm(v1, cmp);
+        vector_sort(v2, cmp);
 
         test_assert_int_equal(1, int_vector_iget(sort_map, 0));
         test_assert_int_equal(2, int_vector_iget(sort_map, 1));

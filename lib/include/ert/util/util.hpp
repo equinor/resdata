@@ -148,8 +148,6 @@ char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
 char *util_fscanf_alloc_line(FILE *, bool *);
 bool util_sscanf_bool(const char *, bool *);
-int util_strcmp_int(const char *s1, const char *s2);
-int util_strcmp_float(const char *s1, const char *s2);
 bool util_sscanf_int(const char *, int *);
 bool util_sscanf_double(const char *, double *);
 char *util_alloc_filename(const char *, const char *, const char *);

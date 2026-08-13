@@ -21,10 +21,7 @@ int main(int argc, char **argv) {
 
     printf("Searching in:%s \n", case_path);
     test_assert_size_t_equal(4, file_list.size());
-    std::sort(file_list.begin(), file_list.end(),
-              [](const std::string &a, const std::string &b) {
-                  return util_strcmp_int(a.c_str(), b.c_str()) < 0;
-              });
+    std::sort(file_list.begin(), file_list.end(), rd::natural_less);
 
     for (size_t i = 0; i < file_list.size(); i++) {
         char *ext;
