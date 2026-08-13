@@ -122,7 +122,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
 rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
                                     double sim_seconds);
 
-void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
+void rd_sum_export_csv(const rd_sum_type *rd_sum, const std::string &filename,
                        const std::vector<std::string> &var_list,
                        const char *date_format, const char *sep);
 

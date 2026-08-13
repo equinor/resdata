@@ -304,12 +304,13 @@ PYBIND11_MODULE(_rd_sum, m) {
         },
         py::return_value_policy::reference);
 
-    m.def("_export_csv", [](py::handle self, std::string filename,
-                            std::vector<std::string> var_list,
-                            std::string date_format, std::string sep) {
-        rd_sum_export_csv(from_cwrap<rd_sum_type>(self), filename.c_str(),
-                          var_list, date_format.c_str(), sep.c_str());
-    });
+    m.def("_export_csv",
+          [](py::handle self, const std::string &filename,
+             const std::vector<std::string> &var_list,
+             const std::string &date_format, const std::string &sep) {
+              rd_sum_export_csv(from_cwrap<rd_sum_type>(self), filename,
+                                var_list, date_format.c_str(), sep.c_str());
+          });
     m.def("_dump_csv_line", [](py::handle self, std::time_t sim_time,
                                py::handle key_words, py::handle file) {
         rd_sum_fwrite_interp_csv_line(from_cwrap<rd_sum_type>(self), sim_time,

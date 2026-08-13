@@ -1831,8 +1831,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
         std::vector<std::string> vars{"FOPT", "BPR:567"};
 
         const auto csv_path = (dirname / "out.csv").string();
-        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars, "%Y-%m-%d",
-                          ",");
+        rd_sum_export_csv(rd_sum.get(), csv_path, vars, "%Y-%m-%d", ",");
 
         REQUIRE(fs::exists(csv_path));
         std::ifstream in(csv_path, std::ios::binary);
@@ -1883,8 +1882,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
                                       "WWCT:OP-1"};
 
         const auto csv_path = (dirname / "csv-out" / "out.csv").string();
-        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars, "%d/%m/%Y",
-                          ";");
+        rd_sum_export_csv(rd_sum.get(), csv_path, vars, "%d/%m/%Y", ";");
         REQUIRE(fs::exists(csv_path));
 
         std::ifstream in(csv_path, std::ios::binary);

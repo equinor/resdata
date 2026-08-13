@@ -1,18 +1,26 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <ctime>
+
+#include <array>
+#include <fstream>
+#include <ios>
 #include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <filesystem>
+#include <string>
+#include <optional>
+#include <system_error>
+#include <utility>
+#include <vector>
+#include <tuple>
 #include <stdexcept>
 #include <filesystem>
 #include <exception>
 
-#include <cstring>
-#include <ctime>
 #include <locale.h>
-#include <string>
-#include <optional>
-#include <utility>
-#include <vector>
-#include <tuple>
 #include <fmt/format.h>
 
 #include <ert/util/hash.hpp>
@@ -893,58 +901,55 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
 #define FLOAT_DASH          "-----------------"
 */
 
-#define DATE_HEADER "-- Days   dd/mm/yyyy   "
 #define DATE_STRING_LENGTH 128
 
-static void __rd_sum_fprintf_line(const rd_sum_type *rd_sum, FILE *stream,
-                                  int internal_index,
-                                  const bool_vector_type *has_var,
-                                  const int_vector_type *var_index,
-                                  char *date_string, const char *date_format,
-                                  const char *sep) {
-    fprintf(stream, "%7.2f", rd_sum_iget_sim_days(rd_sum, internal_index));
-    fprintf(stream, "%s", sep);
+static void rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
+                              int internal_index,
+                              const bool_vector_type *has_var,
+                              const int_vector_type *var_index,
+                              const char *date_format, const char *sep) {
+    stream << fmt::format("{:7.2f}",
+                          rd_sum_iget_sim_days(rd_sum, internal_index))
+           << sep;
 
     {
+        /* Value initialized so that a failing strftime() leaves an empty
+           string behind rather than indeterminate bytes. */
+        std::array<char, DATE_STRING_LENGTH> date_string{};
         struct tm ts;
         time_t sim_time = rd_sum_iget_sim_time(rd_sum, internal_index);
         util_time_utc(&sim_time, &ts);
-        strftime(date_string, DATE_STRING_LENGTH - 1, date_format, &ts);
-        fprintf(stream, "%s", date_string);
+        strftime(date_string.data(), date_string.size() - 1, date_format, &ts);
+        stream << date_string.data();
     }
 
     for (int ivar = 0; ivar < int_vector_size(var_index); ivar++) {
-        if (bool_vector_iget(has_var, ivar)) {
-            fprintf(stream, "%s", sep);
-            fprintf(stream, "%g",
-                    rd_sum_iget(rd_sum, internal_index,
-                                int_vector_iget(var_index, ivar)));
-        }
+        if (bool_vector_iget(has_var, ivar))
+            stream << sep
+                   << fmt::format("{:g}", rd_sum_iget(rd_sum, internal_index,
+                                                      int_vector_iget(var_index,
+                                                                      ivar)));
     }
 
-    fprintf(stream, "\r\n");
+    stream << "\r\n";
 }
 
-static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
-                                  const std::vector<std::string> &key_list,
-                                  const bool_vector_type *has_var, FILE *stream,
-                                  const char *sep) {
-    fprintf(stream, "DAYS%sDATE", sep);
-    for (int i = 0; static_cast<size_t>(i) < key_list.size(); i++)
-        if (bool_vector_iget(has_var, i)) {
-            fprintf(stream, "%s", sep);
-            fprintf(stream, "%s", key_list[i].c_str());
-        }
-    fprintf(stream, "\r\n");
+static void rd_sum_write_header(const std::vector<std::string> &key_list,
+                                const bool_vector_type *has_var,
+                                std::ostream &stream, const char *sep) {
+    stream << "DAYS" << sep << "DATE";
+    for (size_t i = 0; i < key_list.size(); i++)
+        if (bool_vector_iget(has_var, static_cast<int>(i)))
+            stream << sep << key_list[i];
+    stream << "\r\n";
 }
 
-static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
-                           const std::vector<std::string> &var_list,
-                           const char *date_format, const char *sep) {
+static void rd_sum_write_csv(const rd_sum_type *rd_sum, std::ostream &stream,
+                             const std::vector<std::string> &var_list,
+                             const char *date_format, const char *sep) {
 
     auto has_var = make_bool_vector(static_cast<int>(var_list.size()), false);
     auto var_index = make_int_vector(static_cast<int>(var_list.size()), -1);
-    auto date_string = rd::checked_calloc<char>(DATE_STRING_LENGTH);
 
     for (int ivar = 0; static_cast<size_t>(ivar) < var_list.size(); ivar++) {
         if (rd_sum_has_general_var(rd_sum, var_list[ivar].c_str())) {
@@ -961,22 +966,41 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
         }
     }
 
-    rd_sum_fprintf_header(rd_sum, var_list, has_var.get(), stream, sep);
+    rd_sum_write_header(var_list, has_var.get(), stream, sep);
 
     for (int time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
          time_index++)
-        __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
-                              var_index.get(), date_string.get(), date_format,
-                              sep);
+        rd_sum_write_line(rd_sum, stream, time_index, has_var.get(),
+                          var_index.get(), date_format, sep);
 }
 #undef DATE_STRING_LENGTH
 
-void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
+void rd_sum_export_csv(const rd_sum_type *rd_sum, const std::string &filename,
                        const std::vector<std::string> &var_list,
                        const char *date_format, const char *sep) {
-    FILE *stream = util_mkdir_fopen(filename, "w");
-    rd_sum_fprintf(rd_sum, stream, var_list, date_format, sep);
-    fclose(stream);
+    const fs::path path{filename};
+
+    const fs::path parent = path.parent_path();
+    if (!parent.empty()) {
+        std::error_code ec;
+        /* A failure here is not reported directly; opening the file below
+           gives a better error message for the actual problem. */
+        fs::create_directories(parent, ec);
+    }
+
+    /* Binary mode: the CSV format uses explicit \r\n line endings, and text
+       mode would translate those into \r\r\n on Windows. */
+    std::ofstream stream(path, std::ios::binary);
+    if (!stream)
+        throw std::runtime_error(
+            fmt::format("Failed to open '{}' for writing", filename));
+
+    rd_sum_write_csv(rd_sum, stream, var_list, date_format, sep);
+
+    stream.flush();
+    if (!stream)
+        throw std::runtime_error(
+            fmt::format("Failed writing summary data to '{}'", filename));
 }
 
 const rd_sum_type *rd_sum_get_restart_case(const rd_sum_type *rd_sum) {
