@@ -332,121 +332,71 @@ static bool base_has_upper(std::string_view input_base) {
     return false;
 }
 
-/**
-   This function takes a path, along with a filetype as input and
-   allocates a new string with the filename. If path == NULL, the
-   filename is allocated without a leading path component.
-
-   If the flag 'must_exist' is set to true the function will check
-   with the filesystem if the file actually exists; if the file does
-   not exist NULL is returned.
-*/
-
-static char *rd_alloc_filename_static(const char *path, const char *base,
-                                      FileType file_type, bool fmt_file,
-                                      int report_nr) {
-    char *filename;
-    char *ext;
-    switch (file_type) {
-    case (FileType::RESTART):
-        if (fmt_file)
-            ext = util_alloc_sprintf("F%04d", report_nr);
-        else
-            ext = util_alloc_sprintf("X%04d", report_nr);
-        break;
-
-    case (FileType::UNIFIED_RESTART):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FUNRST");
-        else
-            ext = util_alloc_string_copy("UNRST");
-        break;
-
-    case (FileType::SUMMARY):
-        if (fmt_file)
-            ext = util_alloc_sprintf("A%04d", report_nr);
-        else
-            ext = util_alloc_sprintf("S%04d", report_nr);
-        break;
-
-    case (FileType::UNIFIED_SUMMARY):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FUNSMRY");
-        else
-            ext = util_alloc_string_copy("UNSMRY");
-        break;
-
-    case (FileType::SUMMARY_HEADER):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FSMSPEC");
-        else
-            ext = util_alloc_string_copy("SMSPEC");
-        break;
-
-    case (FileType::GRID):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FGRID");
-        else
-            ext = util_alloc_string_copy("GRID");
-        break;
-
-    case (FileType::EGRID):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FEGRID");
-        else
-            ext = util_alloc_string_copy("EGRID");
-        break;
-
-    case (FileType::INIT):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FINIT");
-        else
-            ext = util_alloc_string_copy("INIT");
-        break;
-
-    case (FileType::RFT):
-        if (fmt_file)
-            ext = util_alloc_string_copy("FRFT");
-        else
-            ext = util_alloc_string_copy("RFT");
-        break;
-
-    case (FileType::DATA):
-        ext = util_alloc_string_copy("DATA");
-        break;
-
-    default:
-        util_abort("%s: Invalid input file_type to rd_alloc_filename - "
-                   "aborting \n",
-                   __func__);
-    }
-
-    if (!base_has_upper(base)) {
-        for (size_t i = 0; i < strlen(ext); i++)
-            ext[i] = tolower(ext[i]);
-    }
-
-    filename = util_alloc_filename(path, base, ext);
-    free(ext);
-
-    return filename;
-}
-
 namespace rd {
 /**
  * Given the path to a case, eg. test-data/local/eclipse/SIMPLE,
  * get path to the file of the given type, e.g for FileType::EGRID
  * you get test-data/local/eclipse/SIMPLE.EGRID.
+ *
+ * @report_nr is only used by the file types which carry a report number in
+ * the extension. The extension is lower cased whenever the base name is, so
+ * that a case named 'simple' gets 'simple.egrid'.
  */
 fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
                   int report_nr) {
-    std::string directory = casepath.parent_path().string();
-    std::string basename = casepath.filename().string();
-    char *tmp = rd_alloc_filename_static(directory.c_str(), basename.c_str(),
-                                         file_type, fmt_file, report_nr);
-    fs::path result = tmp;
-    free(tmp);
-    return result;
+    const std::string base = casepath.filename().string();
+
+    std::string ext;
+    switch (file_type) {
+    case (FileType::RESTART):
+        ext = fmt::format("{}{:04d}", fmt_file ? 'F' : 'X', report_nr);
+        break;
+
+    case (FileType::UNIFIED_RESTART):
+        ext = fmt_file ? "FUNRST" : "UNRST";
+        break;
+
+    case (FileType::SUMMARY):
+        ext = fmt::format("{}{:04d}", fmt_file ? 'A' : 'S', report_nr);
+        break;
+
+    case (FileType::UNIFIED_SUMMARY):
+        ext = fmt_file ? "FUNSMRY" : "UNSMRY";
+        break;
+
+    case (FileType::SUMMARY_HEADER):
+        ext = fmt_file ? "FSMSPEC" : "SMSPEC";
+        break;
+
+    case (FileType::GRID):
+        ext = fmt_file ? "FGRID" : "GRID";
+        break;
+
+    case (FileType::EGRID):
+        ext = fmt_file ? "FEGRID" : "EGRID";
+        break;
+
+    case (FileType::INIT):
+        ext = fmt_file ? "FINIT" : "INIT";
+        break;
+
+    case (FileType::RFT):
+        ext = fmt_file ? "FRFT" : "RFT";
+        break;
+
+    case (FileType::DATA):
+        ext = "DATA";
+        break;
+
+    default:
+        throw std::invalid_argument("Invalid input file_type to filename");
+    }
+
+    if (!base_has_upper(base))
+        for (char &c : ext)
+            c = tolower(static_cast<unsigned char>(c));
+
+    return casepath.parent_path() / (base + "." + ext);
 }
 }; // namespace rd
 
