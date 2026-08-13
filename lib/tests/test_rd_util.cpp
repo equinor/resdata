@@ -7,6 +7,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <new>
@@ -303,32 +304,330 @@ TEST_CASE("sorting the adversarial corpus yields a totally ordered sequence",
     }
 }
 
-TEST_CASE_METHOD(Tmpdir, "rd_select_filelist selects DATA decks",
+namespace {
+
+void touch(const fs::path &file) {
+    std::ofstream stream(file);
+    if (!stream)
+        throw std::runtime_error("Failed to create " + file.string());
+}
+
+/** The file names of @files, without the leading path, sorted so that the
+   expectations do not depend on the order the directory is listed in. */
+std::vector<std::string> filenames_of(const std::vector<std::string> &files) {
+    std::vector<std::string> names;
+    for (const auto &file : files)
+        names.push_back(fs::path(file).filename().string());
+
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
+} // namespace
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist finds the extension of each type",
                  "[unittest]") {
-    SECTION("an upper case deck is found for both format flags") {
-        std::ofstream(dirname / "CASE.DATA") << "RUNSPEC\n";
-        std::ofstream(dirname / "CASE.UNSMRY") << "";
+    const auto [file_type, fmt_file, extension] =
+        GENERATE(table<FileType, bool, std::string>({
+            {FileType::UNIFIED_RESTART, true, "FUNRST"},
+            {FileType::UNIFIED_RESTART, false, "UNRST"},
+            {FileType::UNIFIED_SUMMARY, true, "FUNSMRY"},
+            {FileType::UNIFIED_SUMMARY, false, "UNSMRY"},
+            {FileType::GRID, true, "FGRID"},
+            {FileType::GRID, false, "GRID"},
+            {FileType::EGRID, true, "FEGRID"},
+            {FileType::EGRID, false, "EGRID"},
+            {FileType::INIT, true, "FINIT"},
+            {FileType::INIT, false, "INIT"},
+            {FileType::RFT, true, "FRFT"},
+            {FileType::RFT, false, "RFT"},
+            {FileType::DATA, true, "DATA"},
+            {FileType::DATA, false, "DATA"},
+        }));
+    CAPTURE(static_cast<int>(file_type), fmt_file, extension);
 
-        const bool fmt_file = GENERATE(false, true);
-        CAPTURE(fmt_file);
+    /* Every extension of every type, so that each selection has to pick its
+       own out of all the others. */
+    for (const auto *candidate :
+         {"FUNRST", "UNRST", "FUNSMRY", "UNSMRY", "FGRID", "GRID", "FEGRID",
+          "EGRID", "FINIT", "INIT", "FRFT", "RFT", "DATA"})
+        touch(dirname / ("CASE." + std::string(candidate)));
 
-        auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
-                                        FileType::DATA, fmt_file);
+    auto files = rd_select_filelist(dirname.string().c_str(), "CASE", file_type,
+                                    fmt_file);
 
-        REQUIRE(files.size() == 1);
-        REQUIRE(fs::path(files[0]).filename() == "CASE.DATA");
+    REQUIRE(filenames_of(files) ==
+            std::vector<std::string>{"CASE." + extension});
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist selects every file for OTHER",
+                 "[unittest]") {
+    touch(dirname / "CASE.EGRID");
+    touch(dirname / "CASE.UNSMRY");
+    touch(dirname / "CASE.txt");
+    touch(dirname / "OTHER.EGRID");
+
+    const bool fmt_file = GENERATE(false, true);
+    CAPTURE(fmt_file);
+
+    auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
+                                    FileType::OTHER, fmt_file);
+
+    REQUIRE(filenames_of(files) ==
+            std::vector<std::string>{"CASE.EGRID", "CASE.UNSMRY", "CASE.txt"});
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist follows the case of the base",
+                 "[unittest]") {
+    if (is_case_insensitive(dirname))
+        SKIP("On a case-insensitive filesystem");
+
+    const auto [base, expected] = GENERATE(table<std::string, std::string>({
+        {"CASE", "CASE.EGRID"},
+        {"case", "case.egrid"},
+        {"CaseMiXed", "CaseMiXed.EGRID"},
+        {"", ".EGRID"},
+        {"123", "123.EGRID"},
+    }));
+    CAPTURE(base, expected);
+
+    for (const auto &name : {"CASE", "case", "CaseMiXed", "", "123"}) {
+        touch(dirname / (std::string(name) + ".EGRID"));
+        touch(dirname / (std::string(name) + ".egrid"));
     }
 
-    SECTION("a lower case deck is found for both format flags") {
-        std::ofstream(dirname / "case.data") << "RUNSPEC\n";
+    auto files = rd_select_filelist(dirname.string().c_str(), base,
+                                    FileType::EGRID, false);
 
-        const bool fmt_file = GENERATE(false, true);
-        CAPTURE(fmt_file);
+    REQUIRE(filenames_of(files) == std::vector<std::string>{expected});
+}
 
-        auto files = rd_select_filelist(dirname.string().c_str(), "case",
-                                        FileType::DATA, fmt_file);
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist treats the base as a pattern",
+                 "[unittest]") {
+    touch(dirname / "CASE.EGRID");
+    touch(dirname / "CASE1.EGRID");
+    touch(dirname / "OTHER.EGRID");
+    touch(dirname / ".EGRID");
 
-        REQUIRE(files.size() == 1);
-        REQUIRE(fs::path(files[0]).filename() == "case.data");
+    const std::string path = dirname.string();
+
+    SECTION("a base is matched in full") {
+        auto files =
+            rd_select_filelist(path.c_str(), "CASE", FileType::EGRID, false);
+
+        REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.EGRID"});
+    }
+
+    SECTION("an empty base selects the extension alone, not every case") {
+        auto files =
+            rd_select_filelist(path.c_str(), "", FileType::EGRID, false);
+
+        REQUIRE(filenames_of(files) == std::vector<std::string>{".EGRID"});
+    }
+
+    SECTION("a wildcard base selects every case") {
+        auto files =
+            rd_select_filelist(path.c_str(), "*", FileType::EGRID, false);
+
+        REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.EGRID",
+                                                                "CASE1.EGRID",
+                                                                "OTHER.EGRID"});
+    }
+
+    SECTION("a wildcard matches part of the base") {
+        auto files =
+            rd_select_filelist(path.c_str(), "CASE*", FileType::EGRID, false);
+
+        REQUIRE(filenames_of(files) ==
+                std::vector<std::string>{"CASE.EGRID", "CASE1.EGRID"});
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist selects numbered report files",
+                 "[unittest]") {
+    const auto [file_type, fmt_file, leading_char] =
+        GENERATE(table<FileType, bool, char>({
+            {FileType::SUMMARY, true, 'A'},
+            {FileType::SUMMARY, false, 'S'},
+            {FileType::RESTART, true, 'F'},
+            {FileType::RESTART, false, 'X'},
+        }));
+    CAPTURE(static_cast<int>(file_type), fmt_file, leading_char);
+
+    for (const char candidate : {'A', 'S', 'F', 'X'})
+        for (int report = 0; report < 3; report++)
+            touch(dirname / ("CASE." + std::string(1, candidate) + "000" +
+                             std::to_string(report)));
+
+    auto files = rd_select_filelist(dirname.string().c_str(), "CASE", file_type,
+                                    fmt_file);
+
+    const std::string ext = "CASE." + std::string(1, leading_char) + "000";
+    REQUIRE(filenames_of(files) ==
+            std::vector<std::string>{ext + "0", ext + "1", ext + "2"});
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist matches the report base in full",
+                 "[unittest]") {
+    for (int report = 0; report < 3; report++) {
+        const std::string ext = ".S000" + std::to_string(report);
+        touch(dirname / ("CASE" + ext));
+        touch(dirname / ("CASE10" + ext));
+    }
+    touch(dirname / ".S0000");
+
+    const std::string path = dirname.string();
+
+    SECTION("a base is not treated as a prefix of a longer case name") {
+        auto files =
+            rd_select_filelist(path.c_str(), "CASE", FileType::SUMMARY, false);
+
+        REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.S0000",
+                                                                "CASE.S0001",
+                                                                "CASE.S0002"});
+    }
+
+    SECTION("an empty base selects the extension alone, not every case") {
+        auto files =
+            rd_select_filelist(path.c_str(), "", FileType::SUMMARY, false);
+
+        REQUIRE(filenames_of(files) == std::vector<std::string>{".S0000"});
+    }
+
+    SECTION("a wildcard is not expanded for numbered report files") {
+        auto files =
+            rd_select_filelist(path.c_str(), "*", FileType::SUMMARY, false);
+
+        REQUIRE(files.empty());
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist rejects malformed report numbers",
+                 "[unittest]") {
+    touch(dirname / "CASE.S0000");
+    touch(dirname / "CASE.S000");     /* Too short */
+    touch(dirname / "CASE.S00000");   /* Too long */
+    touch(dirname / "CASE.S000x");    /* Not a number */
+    touch(dirname / "CASE.s0000");    /* Wrong case */
+    touch(dirname / "CASE.X0000");    /* Another file type */
+    touch(dirname / "CASE.0000");     /* No leading character */
+    touch(dirname / "CASEX.S0000");   /* Another case */
+    touch(dirname / "CASE.S0000.gz"); /* Not the last extension */
+
+    auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
+                                    FileType::SUMMARY, false);
+
+    REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.S0000"});
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist sorts report files by number",
+                 "[unittest]") {
+    /* Created out of order, and spanning a digit count so that a bytewise sort
+       would put S9 after S10. */
+    for (const int report : {10, 2, 9, 0, 100})
+        touch(dirname /
+              ("CASE.S" + std::string(4 - std::to_string(report).size(), '0') +
+               std::to_string(report)));
+
+    auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
+                                    FileType::SUMMARY, false);
+
+    std::vector<std::string> names;
+    for (const auto &file : files)
+        names.push_back(fs::path(file).filename().string());
+
+    REQUIRE(names == std::vector<std::string>{"CASE.S0000", "CASE.S0002",
+                                              "CASE.S0009", "CASE.S0010",
+                                              "CASE.S0100"});
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist prefixes the results with a path",
+                 "[unittest]") {
+    touch(dirname / "CASE.EGRID");
+    touch(dirname / "CASE.S0000");
+
+    SECTION("the path is prepended when it is passed separately") {
+        auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
+                                        FileType::EGRID, false);
+
+        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.EGRID")});
+    }
+
+    SECTION("the path may be carried by the base instead") {
+        const std::string base = (dirname / "CASE").string();
+
+        auto files = rd_select_filelist(nullptr, base, FileType::EGRID, false);
+
+        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.EGRID")});
+    }
+
+    SECTION("a base carrying the path also works for report files") {
+        const std::string base = (dirname / "CASE").string();
+
+        auto files =
+            rd_select_filelist(nullptr, base, FileType::SUMMARY, false);
+
+        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.S0000")});
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist selects nothing", "[unittest]") {
+    const std::string missing = (dirname / "no_such_directory").string();
+
+    SECTION("a missing directory yields no files") {
+        REQUIRE(
+            rd_select_filelist(missing.c_str(), "CASE", FileType::EGRID, false)
+                .empty());
+        REQUIRE(rd_select_filelist(missing.c_str(), "CASE", FileType::SUMMARY,
+                                   false)
+                    .empty());
+    }
+
+    SECTION("an empty directory yields no files") {
+        REQUIRE(rd_select_filelist(dirname.string().c_str(), "CASE",
+                                   FileType::EGRID, false)
+                    .empty());
+        REQUIRE(rd_select_filelist(dirname.string().c_str(), "CASE",
+                                   FileType::SUMMARY, false)
+                    .empty());
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "select_matching_files expands a glob pattern",
+                 "[unittest]") {
+    touch(dirname / "CASE.EGRID");
+    touch(dirname / "CASE.UNSMRY");
+    touch(dirname / "OTHER.EGRID");
+    fs::create_directory(dirname / "subdir");
+
+    const std::string path = dirname.string();
+
+    SECTION("a pattern without wildcards selects a single file") {
+        REQUIRE(filenames_of(select_matching_files(path, "CASE.EGRID")) ==
+                std::vector<std::string>{"CASE.EGRID"});
+    }
+
+    SECTION("a wildcard selects every match") {
+        REQUIRE(filenames_of(select_matching_files(path, "*.EGRID")) ==
+                std::vector<std::string>{"CASE.EGRID", "OTHER.EGRID"});
+    }
+
+    SECTION("a single character wildcard matches one character") {
+        REQUIRE(filenames_of(select_matching_files(path, "CASE.?GRID")) ==
+                std::vector<std::string>{"CASE.EGRID"});
+    }
+
+    SECTION("a pattern without matches yields no files") {
+        REQUIRE(select_matching_files(path, "*.INIT").empty());
+    }
+
+    SECTION("a missing directory yields no files") {
+        REQUIRE(
+            select_matching_files((dirname / "missing").string(), "*").empty());
+    }
+
+    SECTION("the results are prefixed with the path") {
+        REQUIRE(select_matching_files(path, "CASE.EGRID") ==
+                std::vector<std::string>{(dirname / "CASE.EGRID")});
     }
 }

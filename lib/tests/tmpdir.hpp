@@ -1,6 +1,7 @@
 #pragma once
 #include <catch2/catch_message.hpp>
 #include <cstdlib>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 
@@ -65,3 +66,24 @@ struct Tmpdir {
         }
     }
 };
+
+/** True if @dir is on a case insensitive filesystem. */
+inline bool is_case_insensitive(const fs::path &dir) {
+    const fs::path lower = dir / "rd_case_probe";
+    const fs::path upper = dir / "RD_CASE_PROBE";
+
+    std::ofstream probe(lower);
+    if (!probe)
+        throw std::runtime_error("Failed to create case probe in " +
+                                 dir.string());
+    probe.close();
+
+    std::error_code ec;
+    const bool insensitive = fs::exists(upper, ec);
+
+    if (!fs::remove(lower, ec) || ec)
+        throw std::runtime_error("Failed to remove case probe " +
+                                 lower.string());
+
+    return insensitive;
+}

@@ -316,20 +316,24 @@ int natural_compare(std::string_view a, std::string_view b) {
 }
 } // namespace rd
 
-static bool base_has_upper(std::string_view input_base) {
+/** True if the file name part of @input_base is written in lower case, that
+   is: it holds at least one lower case letter and no upper case letter. */
+static bool base_is_lower_case(std::string_view input_base) {
     size_t last_sep = input_base.rfind(UTIL_PATH_SEP_CHAR);
 
     std::string_view base = (last_sep != std::string_view::npos)
                                 ? input_base.substr(last_sep + 1)
                                 : input_base;
 
+    bool has_lower = false;
     for (char c : base) {
-        if (std::isupper(static_cast<unsigned char>(c))) {
-            return true;
-        }
+        if (std::isupper(static_cast<unsigned char>(c)))
+            return false;
+        if (std::islower(static_cast<unsigned char>(c)))
+            has_lower = true;
     }
 
-    return false;
+    return has_lower;
 }
 
 namespace rd {
@@ -392,7 +396,7 @@ fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
         throw std::invalid_argument("Invalid input file_type to filename");
     }
 
-    if (!base_has_upper(base))
+    if (base_is_lower_case(base))
         for (char &c : ext)
             c = tolower(static_cast<unsigned char>(c));
 
@@ -425,23 +429,28 @@ int rd_fname_report_cmp(const void *f1, const void *f2) {
         return 0;
 }
 
+/** True if @filename is exactly "@base.<leading_char>NNNN", where NNNN is the
+   four digit report number.*/
 static bool numeric_extension_predicate(const char *filename, const char *base,
                                         const char leading_char) {
-    if (strncmp(filename, base, strlen(base)) != 0)
+    const size_t base_length = strlen(base);
+
+    /* The extension is a '.', the leading character and four digits. */
+    if (strlen(filename) != base_length + 6)
         return false;
 
-    const char *ext_start = strrchr(filename, '.');
-    if (!ext_start)
+    if (strncmp(filename, base, base_length) != 0)
         return false;
 
-    if (strlen(ext_start) != 6)
+    const char *ext_start = filename + base_length;
+    if (ext_start[0] != '.')
         return false;
 
     if (ext_start[1] != leading_char)
         return false;
 
     for (int i = 0; i < 4; i++)
-        if (!isdigit(ext_start[i + 2]))
+        if (!isdigit(static_cast<unsigned char>(ext_start[i + 2])))
             return false;
 
     return true;
@@ -657,24 +666,37 @@ rd_select_predicate_filelist(const char *path, std::string_view base,
     return filelist;
 }
 
-/** This function will scan the directory @path (or cwd if @path == NULL)
-   for all files of type @file_type. If file_type == FileType::OTHER
-   it will use '*' as pattern for the extension (as a consequence files which do
-   not originate from the simulator will also be included). */
+/** Scans the directory @path (or the current directory if @path == NULL) for
+   the files of type @file_type belonging to the case @base.
+
+   The @base is matched literally and may contain shell wildcards, so the
+   pattern applied is simply "@base.<extension>":
+
+     base = "CASE"  file_type = FileType::EGRID  ->  "CASE.EGRID"
+     base = "*"     file_type = FileType::EGRID  ->  "*.EGRID"
+     base = ""      file_type = FileType::EGRID  ->  ".EGRID"
+
+   FileType::OTHER uses '*' as its extension, so base = "CASE" gives "CASE.*"
+   and files which do not originate from the simulator are then included too.
+
+   FileType::SUMMARY and FileType::RESTART are matched without a glob, since
+   their extension is the report number rather than a fixed string. The
+   pattern is the same, but @base is then matched literally and wildcards in
+   it are matched exactly against the filename.*/
 std::vector<std::string> rd_select_filelist(const char *path,
                                             std::string_view base,
                                             FileType file_type, bool fmt_file) {
 
-    bool upper_case = base_has_upper(base);
+    bool lower_case = base_is_lower_case(base);
     if (file_type == FileType::SUMMARY || file_type == FileType::RESTART)
         return rd_select_predicate_filelist(path, base, file_type, fmt_file,
-                                            upper_case);
+                                            !lower_case);
 
     std::string ext_pattern{rd_get_file_pattern(file_type, fmt_file)};
-    if (!upper_case) {
-        for (size_t i = 0; i < ext_pattern.size(); i++)
-            ext_pattern[i] = tolower(ext_pattern[i]);
-    }
+    if (lower_case)
+        for (char &c : ext_pattern)
+            c = tolower(static_cast<unsigned char>(c));
+
     std::string pattern = std::string(base) + "." + ext_pattern;
 
     return select_matching_files(path ? path : "", pattern);
