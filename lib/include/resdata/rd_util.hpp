@@ -154,6 +154,18 @@ inline std::string strip_spaces(std::string_view s) {
     auto last = s.find_last_not_of(' ');
     return std::string(s.substr(first, last - first + 1));
 }
+
+/** Compares two strings in "natural" order: maximal runs of digits are
+   compared by numeric value, so that "S9" sorts before "S10", while all
+   other characters are compared bytewise.
+
+   Returns a negative value if a < b, 0 if a == b and a positive value if
+   a > b */
+int natural_compare(std::string_view a, std::string_view b);
+
+inline bool natural_less(std::string_view a, std::string_view b) {
+    return natural_compare(a, b) < 0;
+}
 } // namespace rd
 std::vector<std::string> select_matching_files(const std::string &path,
                                                const std::string &file_pattern);

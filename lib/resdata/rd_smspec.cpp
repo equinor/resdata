@@ -1218,10 +1218,7 @@ rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
             keys.push_back(key);
         }
     }
-    std::sort(keys.begin(), keys.end(),
-              [](const std::string &a, const std::string &b) {
-                  return util_strcmp_int(a.c_str(), b.c_str()) < 0;
-              });
+    std::sort(keys.begin(), keys.end(), rd::natural_less);
     return keys;
 }
 
@@ -1244,10 +1241,7 @@ rd_smspec_alloc_map_list(const std::map<std::string, node_map> &mp,
         else if (util_fnmatch(pattern, map_name) == 0)
             map_list.emplace_back(map_name);
     }
-    std::sort(map_list.begin(), map_list.end(),
-              [](const std::string &a, const std::string &b) {
-                  return util_strcmp_int(a.c_str(), b.c_str()) < 0;
-              });
+    std::sort(map_list.begin(), map_list.end(), rd::natural_less);
     return map_list;
 }
 

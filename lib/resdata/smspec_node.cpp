@@ -17,6 +17,7 @@
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
+#include <resdata/rd_util.hpp>
 
 #include <detail/util/string_util.hpp>
 
@@ -1240,7 +1241,7 @@ int smspec_node::cmp_key1(const smspec_node &node1, const smspec_node &node2) {
     } else if (node2.gen_key1.empty())
         return 1;
 
-    return util_strcmp_int(node1.gen_key1.c_str(), node2.gen_key1.c_str());
+    return rd::natural_compare(node1.gen_key1, node2.gen_key1);
 }
 
 int smspec_node::cmp(const smspec_node &node1, const smspec_node &node2) {
