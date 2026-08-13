@@ -4,7 +4,9 @@
 #include <cctype>
 #include <ctime>
 #include <filesystem>
+#include <fmt/core.h>
 #include <fstream>
+#include <new>
 #include <system_error>
 #include <stdexcept>
 #include <memory>
@@ -23,6 +25,8 @@
 #else
 #include <Windows.h>
 #endif
+
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
@@ -597,59 +601,101 @@ static std::vector<std::string> select_files(const char *path,
     return result;
 }
 
-/*
-  This function uses the stdlib function glob() to select file/path
-  names matching a pattern. The stringlist is cleared when the
-  function starts.
-*/
-
 #ifdef ERT_HAVE_GLOB
+namespace {
+/* Calls globfree() on scope exit.*/
+class GlobGuard {
+public:
+    explicit GlobGuard(glob_t &glob_result) : m_glob(glob_result) {}
+    ~GlobGuard() { globfree(&m_glob); }
+
+    GlobGuard(const GlobGuard &) = delete;
+    GlobGuard &operator=(const GlobGuard &) = delete;
+
+private:
+    glob_t &m_glob;
+};
+} // namespace
+
+/** Select file/path names matching a pattern. */
 static std::vector<std::string> select_matching(const char *pattern) {
+    glob_t glob_result{};
+    GlobGuard guard(glob_result);
+
+    int glob_status = glob(pattern, 0, NULL, &glob_result);
+
+    /* No match is a normal outcome and yields an empty result. */
+    if (glob_status == GLOB_NOMATCH)
+        return {};
+
+    if (glob_status == GLOB_NOSPACE)
+        throw std::bad_alloc{};
+
+    if (glob_status != 0)
+        throw std::runtime_error(
+            fmt::format("glob() failed with status {} for pattern '{}'",
+                        glob_status, pattern));
+
     std::vector<std::string> names;
-    {
-        size_t i;
-        glob_t *pglob = (glob_t *)util_malloc(sizeof *pglob);
-        int glob_flags = 0;
-        glob(pattern, glob_flags, NULL, pglob);
-        for (i = 0; i < pglob->gl_pathc; i++)
-            names.emplace_back(pglob->gl_pathv[i]);
-        globfree(
-            pglob); /* Only frees the _internal_ data structures of the pglob object. */
-        free(pglob);
-    }
+    names.reserve(glob_result.gl_pathc);
+    for (size_t i = 0; i < glob_result.gl_pathc; i++)
+        names.emplace_back(glob_result.gl_pathv[i]);
+
     return names;
 }
+#else
+namespace {
+/* Calls FindClose() on scope exit. */
+class FindHandleGuard {
+public:
+    explicit FindHandleGuard(HANDLE handle) : m_handle(handle) {}
+    ~FindHandleGuard() { FindClose(m_handle); }
+
+    FindHandleGuard(const FindHandleGuard &) = delete;
+    FindHandleGuard &operator=(const FindHandleGuard &) = delete;
+
+private:
+    HANDLE m_handle;
+};
+} // namespace
 #endif
 
 std::vector<std::string>
 select_matching_files(const std::string &path,
                       const std::string &file_pattern) {
+    const fs::path dir{path};
+
 #ifdef ERT_HAVE_GLOB
-    std::string pattern = (fs::path(path) / file_pattern).string();
-    auto result = select_matching(pattern.c_str());
-    return result;
+    return select_matching((dir / file_pattern).string().c_str());
 #else
-    {
-        WIN32_FIND_DATA file_data;
-        HANDLE file_handle;
-        std::vector<std::string> names;
-        char *pattern =
-            util_alloc_filename(path.c_str(), file_pattern.c_str(), NULL);
+    WIN32_FIND_DATA file_data;
+    HANDLE file_handle =
+        FindFirstFile((dir / file_pattern).string().c_str(), &file_data);
 
-        file_handle = FindFirstFile(pattern, &file_data);
-        if (file_handle != INVALID_HANDLE_VALUE) {
-            do {
-                char *full_path = util_alloc_filename(
-                    path.c_str(), file_data.cFileName, NULL);
-                names.emplace_back(full_path);
-                free(full_path);
-            } while (FindNextFile(file_handle, &file_data) != 0);
-        }
-        FindClose(file_handle);
-        free(pattern);
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        DWORD error = GetLastError();
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+            return {};
 
-        return names;
+        throw std::runtime_error(
+            fmt::format("FindFirstFile() failed with error {} for pattern '{}'",
+                        error, (dir / file_pattern).string()));
     }
+
+    FindHandleGuard guard(file_handle);
+
+    std::vector<std::string> names;
+    do {
+        names.push_back((dir / file_data.cFileName).string());
+    } while (FindNextFile(file_handle, &file_data) != 0);
+
+    DWORD error = GetLastError();
+    if (error != ERROR_NO_MORE_FILES)
+        throw std::runtime_error(fmt::format(
+            "FindNextFile() failed with error {} while listing '{}'", error,
+            dir.string()));
+
+    return names;
 #endif
 }
 
