@@ -7,6 +7,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <new>
 #include <string>
@@ -14,6 +15,8 @@
 #include <vector>
 
 #include <resdata/rd_util.hpp>
+
+#include "tmpdir.hpp"
 
 TEST_CASE("Test file type format check", "[unittest]") {
     bool is_fmt = false;
@@ -297,5 +300,35 @@ TEST_CASE("sorting the adversarial corpus yields a totally ordered sequence",
         INFO(
             "adjacent entries are not strictly increasing: " << counterexample);
         REQUIRE(counterexample.empty());
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_select_filelist selects DATA decks",
+                 "[unittest]") {
+    SECTION("an upper case deck is found for both format flags") {
+        std::ofstream(dirname / "CASE.DATA") << "RUNSPEC\n";
+        std::ofstream(dirname / "CASE.UNSMRY") << "";
+
+        const bool fmt_file = GENERATE(false, true);
+        CAPTURE(fmt_file);
+
+        auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
+                                        FileType::DATA, fmt_file);
+
+        REQUIRE(files.size() == 1);
+        REQUIRE(fs::path(files[0]).filename() == "CASE.DATA");
+    }
+
+    SECTION("a lower case deck is found for both format flags") {
+        std::ofstream(dirname / "case.data") << "RUNSPEC\n";
+
+        const bool fmt_file = GENERATE(false, true);
+        CAPTURE(fmt_file);
+
+        auto files = rd_select_filelist(dirname.string().c_str(), "case",
+                                        FileType::DATA, fmt_file);
+
+        REQUIRE(files.size() == 1);
+        REQUIRE(fs::path(files[0]).filename() == "case.data");
     }
 }

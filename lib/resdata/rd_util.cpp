@@ -244,6 +244,9 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
         case (FileType::RFT):
             return RD_RFT_UFMT_PATTERN;
             break;
+        case (FileType::DATA):
+            return RD_DATA_PATTERN;
+            break;
         default:
             util_abort("%s: No pattern defined for til_type:%d \n", __func__,
                        file_type);
