@@ -6,7 +6,6 @@
 
 #include <ert/util/test_work_area.hpp>
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
@@ -39,7 +38,6 @@ void test_filename_case() {
 
 void test_file_list() {
     rd::util::TestArea ta("file_list");
-    stringlist_type *s = stringlist_alloc_new();
 
     for (int i = 0; i < 10; i += 2) {
         std::string fname = rd::filename("case", FileType::RESTART, true, i);
@@ -61,16 +59,16 @@ void test_file_list() {
         free(fname);
     }
 
-    rd_select_filelist(NULL, "case", FileType::RESTART, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 5);
+    auto s = rd_select_filelist(NULL, "case", FileType::RESTART, true);
+    test_assert_size_t_equal(s.size(), 5);
     for (int i = 0; i < 5; i++) {
         std::string fname =
             rd::filename("case", FileType::RESTART, true, 2 * i);
-        test_assert_string_equal(fname.c_str(), stringlist_iget(s, i));
+        test_assert_string_equal(fname.c_str(), s[i].c_str());
     }
 
-    rd_select_filelist(NULL, "CaseMiXed", FileType::RESTART, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 5);
+    s = rd_select_filelist(NULL, "CaseMiXed", FileType::RESTART, true);
+    test_assert_size_t_equal(s.size(), 5);
 
     util_make_path("path");
     for (int i = 0; i < 10; i++) {
@@ -91,25 +89,23 @@ void test_file_list() {
         fclose(f3);
     }
     printf("---------------------------------------------------------------\n");
-    rd_select_filelist(NULL, "path/CASE1", FileType::SUMMARY, false, s);
-    test_assert_int_equal(stringlist_get_size(s), 10);
+    s = rd_select_filelist(NULL, "path/CASE1", FileType::SUMMARY, false);
+    test_assert_size_t_equal(s.size(), 10);
 
-    rd_select_filelist(NULL, "path/CASE1", FileType::SUMMARY, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 0);
+    s = rd_select_filelist(NULL, "path/CASE1", FileType::SUMMARY, true);
+    test_assert_size_t_equal(s.size(), 0);
 
-    rd_select_filelist(NULL, "path/CASE2", FileType::SUMMARY, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 10);
+    s = rd_select_filelist(NULL, "path/CASE2", FileType::SUMMARY, true);
+    test_assert_size_t_equal(s.size(), 10);
 
-    rd_select_filelist("path", "CASE1", FileType::SUMMARY, false, s);
-    test_assert_int_equal(stringlist_get_size(s), 10);
+    s = rd_select_filelist("path", "CASE1", FileType::SUMMARY, false);
+    test_assert_size_t_equal(s.size(), 10);
 
-    rd_select_filelist("path", "CASE1", FileType::SUMMARY, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 0);
+    s = rd_select_filelist("path", "CASE1", FileType::SUMMARY, true);
+    test_assert_size_t_equal(s.size(), 0);
 
-    rd_select_filelist("path", "CASE2", FileType::SUMMARY, true, s);
-    test_assert_int_equal(stringlist_get_size(s), 10);
-
-    stringlist_free(s);
+    s = rd_select_filelist("path", "CASE2", FileType::SUMMARY, true);
+    test_assert_size_t_equal(s.size(), 10);
 }
 
 int main(int argc, char **argv) {

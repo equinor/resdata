@@ -5,7 +5,6 @@
 
 #include <string>
 #include <vector>
-#include <set>
 #include <map>
 #include <algorithm>
 #include <memory>
@@ -15,7 +14,6 @@
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/float_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include "detail/util/path.hpp"
 
 #include <fmt/format.h>
@@ -1194,108 +1192,73 @@ int rd_smspec_get_date_year_index(const rd_smspec_type *smspec) {
     return smspec->year_index;
 }
 
-/**
-   Fills a stringlist instance with all the gen_key string matching
-   the supplied pattern. I.e.
+/** Returns all the gen_key string matching the supplied pattern. I.e.
 
-     rd_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
+     rd_smspec_select_matching_general_var_list( smspec , "WGOR:*");
 
    will give a list of WGOR for ALL the wells. The function is
    unfortunately not as useful as one might think because ECLIPSE
    will for instance happily give you the WOPR for a
-   water injector or WWIR for an oil producer.
+   water injector or WWIR for an oil producer. */
+std::vector<std::string>
+rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
+                                           const char *pattern) {
+    std::vector<std::string> keys;
+    for (const auto &pair : smspec->gen_var_index) {
+        auto key = pair.first;
 
-   The function can be called several times with different patterns,
-   the stringlist is not cleared on startup; the keys in the list are
-   unique - keys are not added multiple times. If pattern == NULL all
-   keys will match.
-*/
+        /* The TIME is typically special cased by output and will not
+            match the 'all keys' wildcard. */
+        if (util_string_equal(key.c_str(), "TIME")) {
+            if ((pattern == NULL) || (util_string_equal(pattern, "*")))
+                continue;
+        }
 
-void rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
-                                                const char *pattern,
-                                                stringlist_type *keys) {
-    std::set<std::string> ex_keys;
-    for (int i = 0; i < stringlist_get_size(keys); i++)
-        ex_keys.insert(stringlist_iget(keys, i));
-
-    {
-        for (const auto &pair : smspec->gen_var_index) {
-            const char *key = pair.first.c_str();
-
-            /*
-         The TIME is typically special cased by output and will not
-         match the 'all keys' wildcard.
-      */
-            if (util_string_equal(key, "TIME")) {
-                if ((pattern == NULL) || (util_string_equal(pattern, "*")))
-                    continue;
-            }
-
-            if ((pattern == NULL) || (util_fnmatch(pattern, key) == 0)) {
-                if (ex_keys.find(key) == ex_keys.end())
-                    stringlist_append_copy(keys, key);
-            }
+        if ((pattern == NULL) || (util_fnmatch(pattern, key.c_str()) == 0)) {
+            keys.push_back(key);
         }
     }
-
-    stringlist_sort(keys, (string_cmp_ftype *)util_strcmp_int);
-}
-
-/**
-   Allocates a new stringlist and initializes it with the
-   rd_smspec_select_matching_general_var_list() function.
-*/
-
-stringlist_type *
-rd_smspec_alloc_matching_general_var_list(const rd_smspec_type *smspec,
-                                          const char *pattern) {
-    stringlist_type *keys = stringlist_alloc_new();
-    rd_smspec_select_matching_general_var_list(smspec, pattern, keys);
+    std::sort(keys.begin(), keys.end(),
+              [](const std::string &a, const std::string &b) {
+                  return util_strcmp_int(a.c_str(), b.c_str()) < 0;
+              });
     return keys;
 }
 
-/**
-    Returns a stringlist instance with all the (valid) well names. It
-    is the responsability of the calling scope to free the stringlist
-    with stringlist_free();
-
+/** Returns all the (valid) well names.
 
     If @pattern is different from NULL only wells which 'match' the
     pattern is included; if @pattern == NULL all wells are
     included. The match is done with function fnmatch() -
-    i.e. standard shell wildcards.
-*/
-
-static stringlist_type *
+    i.e. standard shell wildcards. */
+static std::vector<std::string>
 rd_smspec_alloc_map_list(const std::map<std::string, node_map> &mp,
                          const char *pattern) {
-    stringlist_type *map_list = stringlist_alloc_new();
+    std::vector<std::string> map_list{};
 
     for (const auto &pair : mp) {
         const char *map_name = pair.first.c_str();
 
         if (pattern == NULL)
-            stringlist_append_copy(map_list, map_name);
+            map_list.emplace_back(map_name);
         else if (util_fnmatch(pattern, map_name) == 0)
-            stringlist_append_copy(map_list, map_name);
+            map_list.emplace_back(map_name);
     }
-    stringlist_sort(map_list, (string_cmp_ftype *)util_strcmp_int);
+    std::sort(map_list.begin(), map_list.end(),
+              [](const std::string &a, const std::string &b) {
+                  return util_strcmp_int(a.c_str(), b.c_str()) < 0;
+              });
     return map_list;
 }
 
-stringlist_type *rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
-                                           const char *pattern) {
+std::vector<std::string> rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
+                                                   const char *pattern) {
     return rd_smspec_alloc_map_list(smspec->well_var_index, pattern);
 }
 
-/**
-    Returns a stringlist instance with all the (valid) group names. It
-    is the responsability of the calling scope to free the stringlist
-    with stringlist_free();
-*/
-
-stringlist_type *rd_smspec_alloc_group_list(const rd_smspec_type *smspec,
-                                            const char *pattern) {
+/** all (valid) group names matching pattern */
+std::vector<std::string>
+rd_smspec_alloc_group_list(const rd_smspec_type *smspec, const char *pattern) {
     return rd_smspec_alloc_map_list(smspec->group_var_index, pattern);
 }
 

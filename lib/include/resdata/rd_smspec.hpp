@@ -7,7 +7,6 @@
 #include <string>
 
 #include <ert/util/float_vector.hpp>
-#include <ert/util/stringlist.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/smspec_node.hpp>
@@ -65,22 +64,19 @@ int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
                                            const char *lookup_kw);
 bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
                                const char *lookup_kw);
-void rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
-                                                const char *pattern,
-                                                stringlist_type *keys);
-stringlist_type *
-rd_smspec_alloc_matching_general_var_list(const rd_smspec_type *smspec,
-                                          const char *pattern);
+std::vector<std::string>
+rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
+                                           const char *pattern);
 
 int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec);
 int rd_smspec_get_time_index(const rd_smspec_type *rd_smspec);
 time_t rd_smspec_get_start_time(const rd_smspec_type *);
 bool rd_smspec_get_formatted(const rd_smspec_type *rd_smspec);
 const char *rd_smspec_get_header_file(const rd_smspec_type *rd_smspec);
-stringlist_type *rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
-                                           const char *pattern);
-stringlist_type *rd_smspec_alloc_group_list(const rd_smspec_type *smspec,
-                                            const char *pattern);
+std::vector<std::string> rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
+                                                   const char *pattern);
+std::vector<std::string>
+rd_smspec_alloc_group_list(const rd_smspec_type *smspec, const char *pattern);
 int rd_smspec_get_first_step(const rd_smspec_type *rd_smspec);
 int rd_smspec_get_restart_step(const rd_smspec_type *rd_smspec);
 const char *rd_smspec_get_restart_case(const rd_smspec_type *rd_smspec);

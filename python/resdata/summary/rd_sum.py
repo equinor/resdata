@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Module for loading and querying summary data.
 
@@ -7,6 +5,8 @@ The low-level organisation of summary data is extensively documented
 in the C source files rd_sum.c, rd_smspec.c and rd_sum_data in the
 resdata/src directory.
 """
+
+from __future__ import annotations
 
 import datetime
 import os.path
@@ -28,7 +28,6 @@ from resdata.util.util import (
     CTime,
     DoubleVector,
     IntVector,
-    StringList,
     TimeVector,
 )
 
@@ -107,11 +106,9 @@ class Summary(BaseCClass):
         if not os.path.isfile(unsmry_file):
             raise OSError("No such file: %s" % unsmry_file)
 
-        data_files = StringList()
-        data_files.append(unsmry_file)
         c_ptr = _rd_sum._fread_alloc(
             smspec_file,
-            data_files,
+            [unsmry_file],
             key_join_string,
             include_restart,
             False,
@@ -268,7 +265,7 @@ class Summary(BaseCClass):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        return StringList.createPythonObject(_rd_sum._create_well_list(self, pattern))
+        return _rd_sum._create_well_list(self, pattern)
 
     def groups(self, pattern=None):
         """
@@ -278,7 +275,7 @@ class Summary(BaseCClass):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        return StringList.createPythonObject(_rd_sum._create_group_list(self, pattern))
+        return _rd_sum._create_group_list(self, pattern)
 
     def _make_time_vector(
         self, time_index: Sequence[CTime | datetime.datetime | int | datetime.date]
@@ -1314,9 +1311,9 @@ class Summary(BaseCClass):
             _rd_sum._solve_days(self, key, value, rates_clamp_lower)
         )
 
-    def keys(self, pattern=None):
+    def keys(self, pattern=None) -> list[str]:
         """
-        Return a StringList of summary keys matching @pattern.
+        Return a list of summary keys matching @pattern.
 
         The matching algorithm is ultimately based on the fnmatch()
         function, i.e. normal shell-character syntax is used. With
@@ -1326,9 +1323,7 @@ class Summary(BaseCClass):
         If pattern is None you will get all the keys of summary
         object.
         """
-        s = StringList()
-        _rd_sum._select_matching_keys(self, pattern, s)
-        return s
+        return _rd_sum._select_matching_keys(self, pattern)
 
     def can_write(self):
         return _rd_sum._can_write(self)
@@ -1407,9 +1402,13 @@ class Summary(BaseCClass):
         if keys is None:
             var_list = self.keys()
         else:
-            var_list = StringList()
+            var_list = []
+            var_set = set()
             for key in keys:
-                var_list |= self.keys(pattern=key)
+                for k in self.keys(pattern=key):
+                    if k not in var_set:
+                        var_list.append(k)
+                        var_set.add(k)
         _rd_sum._export_csv(self, filename, var_list, date_format, sep)
 
     def resample(

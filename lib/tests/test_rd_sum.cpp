@@ -18,7 +18,6 @@
 #include <system_error>
 #include <vector>
 
-#include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.hpp>
 
@@ -34,7 +33,6 @@
 #include "ert/util/double_vector.hpp"
 #include "detail/resdata/rd_unsmry_loader.hpp"
 #include "resdata/FortIO.hpp"
-#include "resdata/rd_file_view.hpp"
 #include "resdata/smspec_node.hpp"
 #include "tmpdir.hpp"
 
@@ -348,34 +346,23 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("matching general var list collects keys") {
-            auto list = stringlist_ptr(
-                rd_sum_alloc_matching_general_var_list(rd_sum.get(), "F*"),
-                &stringlist_free);
-            REQUIRE(stringlist_get_size(list.get()) == 1);
-            REQUIRE(std::string(stringlist_iget(list.get(), 0)) == "FOPT");
+            auto list =
+                rd_sum_select_matching_general_var_list(rd_sum.get(), "F*");
+            REQUIRE(list == std::vector<std::string>{"FOPT"});
         }
 
         THEN("select_matching_general_var_list appends new matches") {
-            auto keys = make_stringlist();
+            auto keys =
+                rd_sum_select_matching_general_var_list(rd_sum.get(), "F*");
+            REQUIRE(keys == std::vector<std::string>{"FOPT"});
 
-            rd_sum_select_matching_general_var_list(rd_sum.get(), "F*",
-                                                    keys.get());
-            REQUIRE(stringlist_get_size(keys.get()) == 1);
-            REQUIRE(std::string(stringlist_iget(keys.get(), 0)) == "FOPT");
-
-            rd_sum_select_matching_general_var_list(rd_sum.get(), "W*",
-                                                    keys.get());
-            REQUIRE(stringlist_get_size(keys.get()) == 2);
-            REQUIRE(stringlist_contains(keys.get(), "FOPT"));
-            REQUIRE(stringlist_contains(keys.get(), "WWCT:OP-1"));
+            keys = rd_sum_select_matching_general_var_list(rd_sum.get(), "W*");
+            REQUIRE(keys == std::vector<std::string>{"WWCT:OP-1"});
         }
 
         THEN("well list returns the producer") {
-            auto wells =
-                stringlist_ptr(rd_sum_alloc_well_list(rd_sum.get(), nullptr),
-                               &stringlist_free);
-            REQUIRE(stringlist_get_size(wells.get()) == 1);
-            REQUIRE(std::string(stringlist_iget(wells.get(), 0)) == "OP-1");
+            auto wells = rd_sum_alloc_well_list(rd_sum.get(), nullptr);
+            REQUIRE(wells == std::vector<std::string>{"OP-1"});
         }
 
         THEN("sim_time at the end of the first report step maps to step 1") {
@@ -679,43 +666,28 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_alloc_group_list returns group names") {
     auto rd_sum = read_summary(case_path);
 
     SECTION("null pattern enumerates all unique groups") {
-        auto groups = stringlist_ptr(
-            rd_sum_alloc_group_list(rd_sum.get(), nullptr), &stringlist_free);
-        REQUIRE(stringlist_get_size(groups.get()) == 3);
-        REQUIRE(stringlist_contains(groups.get(), "G1"));
-        REQUIRE(stringlist_contains(groups.get(), "G2"));
-        REQUIRE(stringlist_contains(groups.get(), "NORTH"));
+        auto groups = rd_sum_alloc_group_list(rd_sum.get(), nullptr);
+        REQUIRE(groups == std::vector<std::string>{"G1", "G2", "NORTH"});
     }
 
     SECTION("exact pattern matches a single group") {
-        auto groups = stringlist_ptr(
-            rd_sum_alloc_group_list(rd_sum.get(), "G1"), &stringlist_free);
-        REQUIRE(stringlist_get_size(groups.get()) == 1);
-        REQUIRE(std::string(stringlist_iget(groups.get(), 0)) == "G1");
+        auto groups = rd_sum_alloc_group_list(rd_sum.get(), "G1");
+        REQUIRE(groups == std::vector<std::string>{"G1"});
     }
 
     SECTION("glob pattern matches a subset of groups") {
-        auto groups = stringlist_ptr(
-            rd_sum_alloc_group_list(rd_sum.get(), "G*"), &stringlist_free);
-        REQUIRE(stringlist_get_size(groups.get()) == 2);
-        REQUIRE(stringlist_contains(groups.get(), "G1"));
-        REQUIRE(stringlist_contains(groups.get(), "G2"));
-        REQUIRE_FALSE(stringlist_contains(groups.get(), "NORTH"));
+        auto groups = rd_sum_alloc_group_list(rd_sum.get(), "G*");
+        REQUIRE(groups == std::vector<std::string>{"G1", "G2"});
     }
 
     SECTION("non-matching pattern returns an empty list") {
-        auto groups = stringlist_ptr(
-            rd_sum_alloc_group_list(rd_sum.get(), "DOES_NOT_EXIST"),
-            &stringlist_free);
-        REQUIRE(groups.get() != nullptr);
-        REQUIRE(stringlist_get_size(groups.get()) == 0);
+        auto groups = rd_sum_alloc_group_list(rd_sum.get(), "DOES_NOT_EXIST");
+        REQUIRE(groups.empty());
     }
 
-    SECTION("wildcard pattern returns only group names, never well names") {
-        auto groups = stringlist_ptr(rd_sum_alloc_group_list(rd_sum.get(), "*"),
-                                     &stringlist_free);
-        REQUIRE(stringlist_get_size(groups.get()) == 3);
-        REQUIRE_FALSE(stringlist_contains(groups.get(), "OP-1"));
+    SECTION("wildcard pattern matches all groups") {
+        auto groups = rd_sum_alloc_group_list(rd_sum.get(), "*");
+        REQUIRE(groups == std::vector<std::string>{"G1", "G2", "NORTH"});
     }
 }
 
@@ -1769,14 +1741,12 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                 "loading the same files explicitly via rd_sum_fread_alloc") {
                 const std::string header_file =
                     (subdir / (base + ".SMSPEC")).string();
-                auto data_files = make_stringlist();
-                stringlist_append_copy(
-                    data_files.get(),
-                    (subdir / (base + ".UNSMRY")).string().c_str());
+                std::vector<std::string> data_files{
+                    (subdir / (base + ".UNSMRY")).string()};
 
                 auto explicit_sum = rd_sum_ptr(
-                    rd_sum_fread_alloc(header_file.c_str(), data_files.get(),
-                                       ":", /*include_restart=*/true,
+                    rd_sum_fread_alloc(header_file.c_str(), data_files, ":",
+                                       /*include_restart=*/true,
                                        /*lazy_load=*/true),
                     &rd_sum_free);
                 REQUIRE(explicit_sum.get() != nullptr);
@@ -1815,12 +1785,8 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                                      WithinAbs(expected, 1e-3));
                     }
 
-                    auto wells = stringlist_ptr(
-                        rd_sum_alloc_well_list(guessed.get(), nullptr),
-                        &stringlist_free);
-                    REQUIRE(stringlist_get_size(wells.get()) == 1);
-                    REQUIRE(std::string(stringlist_iget(wells.get(), 0)) ==
-                            unique_well);
+                    auto wells = rd_sum_alloc_well_list(guessed.get(), nullptr);
+                    REQUIRE(wells == std::vector<std::string>{unique_well});
                 }
 
                 THEN("rd_sum_get_base returns nullptr for the guessed case") {
@@ -1862,13 +1828,11 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
     const int n = rd_sum_get_data_length(rd_sum.get());
 
     SECTION("subset of keys with comma separator and ISO date") {
-        auto vars = make_stringlist();
-        stringlist_append_copy(vars.get(), "FOPT");
-        stringlist_append_copy(vars.get(), "BPR:567");
+        std::vector<std::string> vars{"FOPT", "BPR:567"};
 
         const auto csv_path = (dirname / "out.csv").string();
-        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars.get(),
-                          "%Y-%m-%d", ",");
+        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars, "%Y-%m-%d",
+                          ",");
 
         REQUIRE(fs::exists(csv_path));
         std::ifstream in(csv_path, std::ios::binary);
@@ -1915,14 +1879,12 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
     }
 
     SECTION("missing keys are skipped and parent dirs are created") {
-        auto vars = make_stringlist();
-        stringlist_append_copy(vars.get(), "FOPT");
-        stringlist_append_copy(vars.get(), "NOPE:DOES_NOT_EXIST");
-        stringlist_append_copy(vars.get(), "WWCT:OP-1");
+        std::vector<std::string> vars{"FOPT", "NOPE:DOES_NOT_EXIST",
+                                      "WWCT:OP-1"};
 
         const auto csv_path = (dirname / "csv-out" / "out.csv").string();
-        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars.get(),
-                          "%d/%m/%Y", ";");
+        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars, "%d/%m/%Y",
+                          ";");
         REQUIRE(fs::exists(csv_path));
 
         std::ifstream in(csv_path, std::ios::binary);

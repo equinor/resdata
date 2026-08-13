@@ -6,8 +6,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
-#include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include "ert/util/type_macros.hpp"
@@ -38,7 +38,8 @@ const char *rd_sum_get_unit(const rd_sum_type *sum, const char *gen_key);
 double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index);
 int rd_sum_get_data_length(const rd_sum_type *rd_sum);
 
-rd_sum_type *rd_sum_fread_alloc(const char *, const stringlist_type *data_files,
+rd_sum_type *rd_sum_fread_alloc(const char *,
+                                const std::vector<std::string> &data_files,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
                                 FileMode file_options = FileMode::DEFAULT);
@@ -93,16 +94,13 @@ const char *rd_sum_get_case(const rd_sum_type *);
 double rd_sum_get_sim_length(const rd_sum_type *rd_sum);
 double rd_sum_get_first_day(const rd_sum_type *rd_sum);
 
-stringlist_type *rd_sum_alloc_well_list(const rd_sum_type *rd_sum,
+std::vector<std::string> rd_sum_alloc_well_list(const rd_sum_type *rd_sum,
+                                                const char *pattern);
+std::vector<std::string> rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
+                                                 const char *pattern);
+std::vector<std::string>
+rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
                                         const char *pattern);
-stringlist_type *rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
-                                         const char *pattern);
-stringlist_type *
-rd_sum_alloc_matching_general_var_list(const rd_sum_type *rd_sum,
-                                       const char *pattern);
-void rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
-                                             const char *pattern,
-                                             stringlist_type *keys);
 rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum);
 rd_smspec_var_type rd_sum_identify_var_type(const char *var);
 
@@ -125,8 +123,8 @@ rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
                                     double sim_seconds);
 
 void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
-                       const stringlist_type *var_list, const char *date_format,
-                       const char *sep);
+                       const std::vector<std::string> &var_list,
+                       const char *date_format, const char *sep);
 
 double_vector_type *rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,

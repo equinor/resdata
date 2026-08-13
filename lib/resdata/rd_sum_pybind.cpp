@@ -3,6 +3,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -10,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/double_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 
 #include <resdata/rd_sum.hpp>
@@ -40,13 +40,12 @@ PYBIND11_MODULE(_rd_sum, m) {
         py::return_value_policy::reference);
     m.def(
         "_fread_alloc",
-        [](std::string header_file, py::handle data_files,
+        [](std::string header_file, std::vector<std::string> data_files,
            std::string key_join_string, bool include_restart, bool lazy_load,
            FileMode file_options) {
             return reinterpret_cast<std::uintptr_t>(rd_sum_fread_alloc(
-                header_file.c_str(), from_cwrap<stringlist_type>(data_files),
-                key_join_string.c_str(), include_restart, lazy_load,
-                file_options));
+                header_file.c_str(), data_files, key_join_string.c_str(),
+                include_restart, lazy_load, file_options));
         },
         py::return_value_policy::reference);
     m.def(
@@ -236,29 +235,23 @@ PYBIND11_MODULE(_rd_sum, m) {
                 from_cwrap<rd_sum_type>(self), lookup_kw.c_str()));
         },
         py::return_value_policy::reference, py::keep_alive<0, 1>());
-    m.def(
-        "_create_well_list",
-        [](py::handle self, std::optional<std::string> pattern) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_well_list(
-                from_cwrap<rd_sum_type>(self),
-                pattern.has_value() ? pattern->c_str() : nullptr));
-        },
-        py::return_value_policy::reference);
-    m.def(
-        "_create_group_list",
-        [](py::handle self, std::optional<std::string> pattern) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_group_list(
-                from_cwrap<rd_sum_type>(self),
-                pattern.has_value() ? pattern->c_str() : nullptr));
-        },
-        py::return_value_policy::reference);
-    m.def("_select_matching_keys",
-          [](py::handle self, std::optional<std::string> pattern,
-             py::handle keys) {
-              rd_sum_select_matching_general_var_list(
+    m.def("_create_well_list",
+          [](py::handle self, std::optional<std::string> pattern) {
+              return rd_sum_alloc_well_list(
                   from_cwrap<rd_sum_type>(self),
-                  pattern.has_value() ? pattern->c_str() : nullptr,
-                  from_cwrap<stringlist_type>(keys));
+                  pattern.has_value() ? pattern->c_str() : nullptr);
+          });
+    m.def("_create_group_list",
+          [](py::handle self, std::optional<std::string> pattern) {
+              return rd_sum_alloc_group_list(
+                  from_cwrap<rd_sum_type>(self),
+                  pattern.has_value() ? pattern->c_str() : nullptr);
+          });
+    m.def("_select_matching_keys",
+          [](py::handle self, std::optional<std::string> pattern) {
+              return rd_sum_select_matching_general_var_list(
+                  from_cwrap<rd_sum_type>(self),
+                  pattern.has_value() ? pattern->c_str() : nullptr);
           });
 
     m.def(
@@ -311,13 +304,12 @@ PYBIND11_MODULE(_rd_sum, m) {
         },
         py::return_value_policy::reference);
 
-    m.def("_export_csv",
-          [](py::handle self, std::string filename, py::handle var_list,
-             std::string date_format, std::string sep) {
-              rd_sum_export_csv(from_cwrap<rd_sum_type>(self), filename.c_str(),
-                                from_cwrap<stringlist_type>(var_list),
-                                date_format.c_str(), sep.c_str());
-          });
+    m.def("_export_csv", [](py::handle self, std::string filename,
+                            std::vector<std::string> var_list,
+                            std::string date_format, std::string sep) {
+        rd_sum_export_csv(from_cwrap<rd_sum_type>(self), filename.c_str(),
+                          var_list, date_format.c_str(), sep.c_str());
+    });
     m.def("_dump_csv_line", [](py::handle self, std::time_t sim_time,
                                py::handle key_words, py::handle file) {
         rd_sum_fwrite_interp_csv_line(from_cwrap<rd_sum_type>(self), sim_time,

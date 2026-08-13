@@ -1,14 +1,14 @@
 #pragma once
 #include <cstdio>
-#include <cstdlib>
-#include <cstdint>
 #include <ctime>
+
+#include <memory>
+#include <vector>
+#include <string>
 
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
-#include <ert/util/stringlist.hpp>
 
-#include <memory>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
@@ -22,8 +22,9 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
 void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
                         bool fmt_case, bool unified);
 bool rd_sum_data_can_write(const rd_sum_data_type *data);
-bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
-                       bool lazy_load, FileMode file_options);
+bool rd_sum_data_fread(rd_sum_data_type *data,
+                       const std::vector<std::string> &filelist, bool lazy_load,
+                       FileMode file_options);
 rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec);
 rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec);
 double rd_sum_data_time2days(const rd_sum_data_type *data, time_t sim_time);

@@ -1,5 +1,4 @@
 #include <cstring>
-#include <cstdio>
 #include <cstdlib>
 
 #include <ert/util/ert_api_config.hpp>
@@ -7,8 +6,6 @@
 #include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/vector.hpp>
-
-#define STRINGLIST_TYPE_ID 671855
 
 /**
    This file implements a very thin wrapper around a list (vector) of
@@ -19,12 +16,7 @@
    stateless functions in util.cpp
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct stringlist_struct {
-    UTIL_TYPE_ID_DECLARATION;
     vector_type *strings;
 };
 
@@ -46,7 +38,6 @@ void stringlist_iset_copy(stringlist_type *stringlist, int index,
 static stringlist_type *stringlist_alloc_empty(bool alloc_vector) {
     stringlist_type *stringlist =
         (stringlist_type *)util_malloc(sizeof *stringlist);
-    UTIL_TYPE_ID_INIT(stringlist, STRINGLIST_TYPE_ID);
 
     if (alloc_vector)
         stringlist->strings = vector_alloc_new();
@@ -57,15 +48,6 @@ static stringlist_type *stringlist_alloc_empty(bool alloc_vector) {
 }
 
 stringlist_type *stringlist_alloc_new() { return stringlist_alloc_empty(true); }
-
-stringlist_type *stringlist_alloc_argv_copy(const char **argv, int argc) {
-    int iarg;
-    stringlist_type *stringlist = stringlist_alloc_empty(true);
-    for (iarg = 0; iarg < argc; iarg++)
-        stringlist_append_copy(stringlist, argv[iarg]);
-
-    return stringlist;
-}
 
 /**
     Frees all the memory contained by the stringlist.
@@ -78,12 +60,6 @@ void stringlist_free(stringlist_type *stringlist) {
     stringlist_clear(stringlist);
     vector_free(stringlist->strings);
     free(stringlist);
-}
-
-UTIL_IS_INSTANCE_FUNCTION(stringlist, STRINGLIST_TYPE_ID)
-
-char *stringlist_pop(stringlist_type *stringlist) {
-    return (char *)vector_pop_back(stringlist->strings);
 }
 
 const char *stringlist_iget(const stringlist_type *stringlist, int index) {
@@ -99,137 +75,6 @@ const char *stringlist_back(const stringlist_type *stringlist) {
                                      vector_get_size(stringlist->strings) - 1);
 }
 
-double stringlist_iget_as_double(const stringlist_type *stringlist, int index,
-                                 bool *valid) {
-    const char *string_value = stringlist_iget(stringlist, index);
-    double value = -1.0;
-
-    if (valid != NULL)
-        *valid = false;
-
-    if (util_sscanf_double(string_value, &value))
-        if (valid != NULL)
-            *valid = true;
-
-    return value;
-}
-
-const char *stringlist_get_last(const stringlist_type *stringlist) {
-    return (const char *)vector_get_last(stringlist->strings);
-}
-
-char *stringlist_iget_copy(const stringlist_type *stringlist, int index) {
-    return util_alloc_string_copy(stringlist_iget(stringlist, index));
-}
-
 int stringlist_get_size(const stringlist_type *stringlist) {
     return vector_get_size(stringlist->strings);
 }
-
-/**
-    Scans the stringlist (linear scan) to see if it contains (at
-    least) one occurence of 's'. Will never return true if the input
-    string @s equals NULL, altough the stringlist itself can contain
-    NULL elements.
-*/
-
-bool stringlist_contains(const stringlist_type *stringlist, const char *s) {
-    int size = stringlist_get_size(stringlist);
-    int index = 0;
-    bool contains = false;
-
-    while ((index < size) && (!contains)) {
-        const char *istring = stringlist_iget(stringlist, index);
-        if (istring != NULL)
-            if (strcmp(istring, s) == 0)
-                contains = true;
-        index++;
-    }
-
-    return contains;
-}
-
-/**
-  Find the index of the first index matching 's'.
-  Returns -1 if 's' cannot be found.
-*/
-int stringlist_find_first(const stringlist_type *stringlist, const char *s) {
-    bool found = false;
-    int size = stringlist_get_size(stringlist);
-    int index = 0;
-
-    while (index < size && !found) {
-        const char *istring = stringlist_iget(stringlist, index);
-        if (istring != NULL)
-            if (strcmp(istring, s) == 0) {
-                found = true;
-                break;
-            }
-        index++;
-    }
-
-    if (found)
-        return index;
-    else
-        return -1;
-}
-
-bool stringlist_equal(const stringlist_type *s1, const stringlist_type *s2) {
-    int size1 = stringlist_get_size(s1);
-    int size2 = stringlist_get_size(s2);
-    if (size1 == size2) {
-        bool equal = true;
-        int i;
-        for (i = 0; i < size1; i++) {
-            if (strcmp(stringlist_iget(s1, i), stringlist_iget(s2, i)) != 0) {
-                equal = false;
-                break;
-            }
-        }
-        return equal;
-    } else
-        return false;
-}
-
-static int strcmp__(const void *__s1, const void *__s2) {
-    const char *s1 = (const char *)__s1;
-    const char *s2 = (const char *)__s2;
-    return strcmp(s1, s2);
-}
-
-/**
-   Will sort the stringlist inplace. The prototype of the comparison
-   function is
-
-     int (cmp) (const void * , const void *);
-
-   i.e. ths strings are implemented as (void *). If string_cmp == NULL
-   the sort function will use the ordinary strcmp() function for
-   comparison.
-*/
-
-void stringlist_sort(stringlist_type *s, string_cmp_ftype *string_cmp) {
-    if (string_cmp == NULL)
-        vector_sort(s->strings, strcmp__);
-    else
-        vector_sort(s->strings, string_cmp);
-}
-
-void stringlist_python_sort(stringlist_type *s, int cmp_flag) {
-    if (cmp_flag == 0)
-        stringlist_sort(s, NULL);
-    else if (cmp_flag == 1)
-        stringlist_sort(s, (string_cmp_ftype *)util_strcmp_int);
-    else if (cmp_flag == 2)
-        stringlist_sort(s, (string_cmp_ftype *)util_strcmp_float);
-    else
-        util_abort("%s: unrecognized cmp_flag:%d \n", __func__, cmp_flag);
-}
-
-void stringlist_reverse(stringlist_type *s) {
-    vector_inplace_reverse(s->strings);
-}
-
-#ifdef __cplusplus
-}
-#endif

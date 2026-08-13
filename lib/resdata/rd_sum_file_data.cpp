@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 
@@ -576,29 +575,27 @@ void rd_sum_file_data::add_rd_file(int report_step,
     }
 }
 
-bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
-                             FileMode file_options) {
-    if (stringlist_get_size(filelist) == 0)
+bool rd_sum_file_data::fread(const std::vector<std::string> &filelist,
+                             bool lazy_load, FileMode file_options) {
+    if (filelist.empty())
         return false;
 
-    FileType file_type =
-        rd_get_file_type(stringlist_iget(filelist, 0), NULL, NULL);
-    if ((stringlist_get_size(filelist) > 1) && (file_type != FileType::SUMMARY))
-        util_abort("%s: internal error - when calling with more than one file "
-                   "- you can not supply a unified file - come on?! \n",
-                   __func__);
+    std::string first_file = filelist[0];
+    FileType file_type = rd_get_file_type(first_file.c_str(), NULL, NULL);
+    if ((filelist.size() > 1) && (file_type != FileType::SUMMARY))
+        throw std::invalid_argument("when calling with more than one file you "
+                                    "can not supply a unified file");
 
     if (file_type == FileType::SUMMARY) {
 
         /* Not unified. */
-        for (int filenr = 0; filenr < stringlist_get_size(filelist); filenr++) {
-            const char *data_file = stringlist_iget(filelist, filenr);
+        for (auto &data_file : filelist) {
             FileType file_type;
             int report_step;
-            file_type = rd_get_file_type(data_file, NULL, &report_step);
+            file_type = rd_get_file_type(data_file.c_str(), NULL, &report_step);
             if (file_type != FileType::SUMMARY)
-                util_abort("%s: file:%s has wrong type \n", __func__,
-                           data_file);
+                throw std::invalid_argument("file " + data_file +
+                                            " has wrong type");
             {
                 std::unique_ptr<rd::File> rd_file = rd::File::open(data_file);
                 if (rd_file && check_file(rd_file.get())) {
@@ -611,8 +608,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
         if (lazy_load) {
             try {
                 this->loader.reset(new unsmry_loader(
-                    this->rd_smspec, stringlist_iget(filelist, 0),
-                    file_options));
+                    this->rd_smspec, filelist[0], file_options));
             } catch (const std::bad_alloc &e) {
                 return false;
             }
@@ -620,8 +616,7 @@ bool rd_sum_file_data::fread(const stringlist_type *filelist, bool lazy_load,
 
             // Is this correct for a restarted chain of UNSMRY files? Looks like the
             // report step sequence will be restarted?
-            std::unique_ptr<rd::File> rd_file =
-                rd::File::open(stringlist_iget(filelist, 0));
+            std::unique_ptr<rd::File> rd_file = rd::File::open(first_file);
             if (rd_file && check_file(rd_file.get())) {
                 int first_report_step =
                     rd_smspec_get_first_step(this->rd_smspec);

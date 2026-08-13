@@ -21,7 +21,7 @@ from resdata.summary import (
     SummaryVarType,
 )
 from resdata.summary._date2num import date2num
-from resdata.util.util import DoubleVector, StringList, TimeVector
+from resdata.util.util import DoubleVector, TimeVector
 from resfo_utilities.testing import (
     Date,
     Simulator,
@@ -91,7 +91,7 @@ def test_dump_csv_line():
     assert os.path.getsize(out_path) > 0
 
 
-@pytest.mark.parametrize("bad_keywords", [5, None, StringList()])
+@pytest.mark.parametrize("bad_keywords", [5, None])
 def test_dump_csv_line_with_wrong_type_keywords_raises_type_error(bad_keywords):
     case = createSummary(
         "CASE2",
@@ -462,7 +462,7 @@ def test_summary_keys_filtering():
     create_summary(summary_keys=("FOPR", "FOPT", "FWCT", "FGPR", "FGPT"))
 
     summary = Summary("TEST")
-    assert list(summary.keys()) == ["FGPR", "FGPT", "FOPR", "FOPT", "FWCT"]
+    assert summary.keys() == ["FGPR", "FGPT", "FOPR", "FOPT", "FWCT"]
 
     f_keys = summary.keys(pattern="F*")
     assert len(f_keys) >= 5
@@ -1323,8 +1323,7 @@ def test_summary_wells():
 
     summary = Summary("TEST")
     wells = summary.wells()
-    assert isinstance(wells, StringList)
-    assert list(wells) == ["WELL1", "WELL2"]
+    assert wells == ["WELL1", "WELL2"]
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1333,8 +1332,7 @@ def test_summary_groups():
 
     summary = Summary("TEST")
     groups = summary.groups()
-    assert isinstance(groups, StringList)
-    assert list(groups) == []
+    assert groups == []
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1589,7 +1587,7 @@ def test_summary_fwrite():
 
     summary = Summary("FWRITE_TEST")
     assert len(summary) == 1
-    assert list(summary.keys()) == ["FOPT"]
+    assert summary.keys() == ["FOPT"]
     assert summary.days == [1.0]
     kw = summary["FOPT"]
     assert kw.values.tolist() == [1000.0]

@@ -6,7 +6,7 @@ from unittest import skipIf, skipUnless
 from resdata import UnitSystem
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
-from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
+from resdata.util.util import CTime, DoubleVector, TimeVector
 
 from tests import ResdataTest, equinor_test
 
@@ -289,7 +289,6 @@ class SumTest(ResdataTest):
             [well for well in wells],
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
         )
-        self.assertIsInstance(wells, StringList)
 
     def test_stringlist_setitem(self):
         summary = Summary(self.case)
