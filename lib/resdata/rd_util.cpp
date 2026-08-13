@@ -15,10 +15,6 @@
 #include <vector>
 #include <algorithm>
 #include <ert/util/ert_api_config.hpp>
-#ifdef ERT_HAVE_OPENDIR
-#include <sys/types.h>
-#include <dirent.h>
-#endif
 
 #ifdef ERT_HAVE_GLOB
 #include <glob.h>
@@ -533,72 +529,33 @@ static bool restart_lowercase_BINARY(const char *filename, const void *base) {
     return numeric_extension_predicate(filename, (const char *)base, 'x');
 }
 
-static std::vector<std::string> select_files(const char *path,
+/** Lists the entries of @path (or the current directory if @path is empty)
+   for which @predicate holds.
+
+   The returned names are prefixed with @path, so an empty @path yields bare
+   file names relative to the current directory.
+
+   A @path which does not exist, or is not a directory, yields an empty
+   result. Any other error - a permission or I/O failure - raises
+   fs::filesystem_error. */
+static std::vector<std::string> select_files(const fs::path &path,
                                              file_pred_ftype *predicate,
                                              const void *pred_arg) {
-    char *path_arg = path ? util_alloc_string_copy(path) : util_alloc_cwd();
+    const fs::path scan_dir = path.empty() ? fs::current_path() : path;
+
+    std::error_code ec;
+    if (!fs::is_directory(scan_dir, ec))
+        return {};
+
     std::vector<std::string> result;
-
-#ifdef ERT_HAVE_OPENDIR
-    DIR *dir = opendir(path_arg);
-    if (!dir) {
-        free(path_arg);
-        return result;
-    }
-
-    while (true) {
-        struct dirent *entry = readdir(dir);
-        if (!entry)
-            break;
-
-        if (util_string_equal(entry->d_name, "."))
+    for (const auto &entry : fs::directory_iterator(scan_dir)) {
+        const std::string name = entry.path().filename().string();
+        if (predicate && !predicate(name.c_str(), pred_arg))
             continue;
 
-        if (util_string_equal(entry->d_name, ".."))
-            continue;
-
-        if (predicate && !predicate(entry->d_name, pred_arg))
-            continue;
-
-        {
-            char *fname = util_alloc_filename(path, entry->d_name, NULL);
-            result.emplace_back(fname);
-            free(fname);
-        }
+        result.push_back((path / name).string());
     }
 
-    closedir(dir);
-
-#else
-
-    WIN32_FIND_DATA file_data;
-    HANDLE file_handle;
-    char *pattern = util_alloc_filename(path_arg, "*", NULL);
-
-    file_handle = FindFirstFile(pattern, &file_data);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-        do {
-            if (util_string_equal(file_data.cFileName, "."))
-                continue;
-
-            if (util_string_equal(file_data.cFileName, ".."))
-                continue;
-
-            if (predicate && !predicate(file_data.cFileName, pred_arg))
-                continue;
-            {
-                char *tmp_fname =
-                    util_alloc_filename(path, file_data.cFileName, NULL);
-                result.emplace_back(tmp_fname);
-                free(tmp_fname);
-            }
-        } while (FindNextFile(file_handle, &file_data) != 0);
-        FindClose(file_handle);
-    }
-    free(pattern);
-
-#endif
-    free(path_arg);
     return result;
 }
 
@@ -712,7 +669,7 @@ rd_select_predicate_filelist(const char *path, std::string_view base,
         tmp = base;
 
     std::string pure_base = tmp.stem().string();
-    std::string full_path = tmp.parent_path().string();
+    fs::path full_path = tmp.parent_path();
 
     if (file_type == FileType::SUMMARY) {
         if (fmt_file) {
@@ -742,9 +699,7 @@ rd_select_predicate_filelist(const char *path, std::string_view base,
         throw std::invalid_argument(
             "select_predicate_filelist called with wrong file type");
 
-    auto filelist =
-        select_files(full_path.empty() ? nullptr : full_path.c_str(), predicate,
-                     pure_base.c_str());
+    auto filelist = select_files(full_path, predicate, pure_base.c_str());
     std::sort(filelist.begin(), filelist.end(),
               [](const std::string &a, const std::string &b) {
                   return rd_fname_report_cmp(a.c_str(), b.c_str()) < 0;
