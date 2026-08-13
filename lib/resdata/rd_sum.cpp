@@ -3,14 +3,16 @@
 #include <memory>
 #include <stdexcept>
 #include <filesystem>
+#include <exception>
 
 #include <cstring>
-#include <cmath>
 #include <ctime>
 #include <locale.h>
 #include <string>
 #include <optional>
 #include <utility>
+#include <vector>
+#include <tuple>
 #include <fmt/format.h>
 
 #include <ert/util/hash.hpp>
@@ -19,7 +21,6 @@
 #include <ert/util/int_vector.hpp>
 #include <ert/util/bool_vector.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
@@ -148,8 +149,8 @@ static rd_sum_ptr rd_sum_alloc__(std::string input_arg,
 */
 
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
-                              const stringlist_type *data_files, bool lazy_load,
-                              FileMode file_options) {
+                              const std::vector<std::string> &data_files,
+                              bool lazy_load, FileMode file_options) {
     rd_sum->data.reset(rd_sum_data_alloc(rd_sum->smspec.get()));
     return rd_sum_data_fread(rd_sum->data.get(), data_files, lazy_load,
                              file_options);
@@ -175,7 +176,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
 }
 
 static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
-                         const stringlist_type *data_files,
+                         const std::vector<std::string> &data_files,
                          bool include_restart, bool lazy_load,
                          FileMode file_options) {
     rd_sum->smspec =
@@ -189,7 +190,7 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
 
     if (rd_sum_fread_data(rd_sum, data_files, lazy_load, file_options)) {
         FileType file_type =
-            rd_get_file_type(stringlist_iget(data_files, 0), NULL, NULL);
+            rd_get_file_type(data_files.at(0).c_str(), NULL, NULL);
 
         if (file_type == FileType::SUMMARY)
             rd_sum->unified = false;
@@ -209,40 +210,37 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
 }
 
 static std::optional<fs::path> base_guess(std::string path) {
-    stringlist_ptr data_files = make_stringlist();
-    stringlist_ptr DATA_files = make_stringlist();
-    stringlist_select_matching_files(data_files.get(), path.c_str(), "*.data");
-    stringlist_select_matching_files(DATA_files.get(), path.c_str(), "*.DATA");
+    try {
+        auto data_files = select_matching_files(path, "*.data");
+        auto DATA_files = select_matching_files(path, "*.DATA");
 
-    if ((stringlist_get_size(data_files.get()) +
-         stringlist_get_size(DATA_files.get())) == 1) {
-        const char *path_name{};
+        if (data_files.size() + DATA_files.size() == 1) {
+            std::string path_name{};
 
-        if (stringlist_get_size(data_files.get()) == 1)
-            path_name = stringlist_iget(data_files.get(), 0);
-        else
-            path_name = stringlist_iget(DATA_files.get(), 0);
+            if (data_files.size() == 1)
+                path_name = data_files[0];
+            else
+                path_name = DATA_files[0];
 
-        return fs::path(path_name).stem();
-    } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
-    return std::nullopt;
+            return fs::path(path_name).stem();
+        } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
+        return std::nullopt;
+    } catch (const std::exception &e) {
+        return std::nullopt;
+    }
 }
 
-/**
-  The stringlist will be cleared before the actual matching process
-  starts. Observe that in addition to the @path input parameter the
-  @base input can contain an embedded path component.
-*/
-static void rd_alloc_summary_data_files(const fs::path &path,
-                                        const fs::path &base, bool fmt_file,
-                                        stringlist_type *filelist) {
+static std::vector<std::string>
+rd_alloc_summary_data_files(const fs::path &path, const fs::path &base,
+                            bool fmt_file) {
     std::string unif_data_file =
         rd::filename(path / base, FileType::UNIFIED_SUMMARY, fmt_file, -1)
             .string();
     std::string pstr = path.string();
     std::string bstr = base.string();
-    int files = rd_select_filelist(pstr.c_str(), bstr.c_str(),
-                                   FileType::SUMMARY, fmt_file, filelist);
+    auto filelist =
+        rd_select_filelist(pstr.c_str(), bstr, FileType::SUMMARY, fmt_file);
+    size_t files = filelist.size();
 
     if ((files > 0) && fs::exists(unif_data_file)) {
         /*
@@ -251,30 +249,29 @@ static void rd_alloc_summary_data_files(const fs::path &path,
          load accordingly.
         */
         bool unified_newest = true;
-        int file_nr = 0;
+        size_t file_nr = 0;
         while (unified_newest && (file_nr < files)) {
-            if (util_file_difftime(stringlist_iget(filelist, file_nr),
+            if (util_file_difftime(filelist[file_nr].c_str(),
                                    unif_data_file.c_str()) > 0)
                 unified_newest = false;
             file_nr++;
         }
 
         if (unified_newest) {
-            stringlist_clear(
-                filelist); /* Clear out all the BASE.Snnnn selections. */
-            stringlist_append_copy(filelist, unif_data_file.c_str());
+            filelist.clear(); /* Clear out all the BASE.Snnnn selections. */
+            filelist.push_back(unif_data_file);
         }
     } else if (fs::exists(unif_data_file)) {
         /* Found a unified summary file :  Clear out all the BASE.Snnnn selections. */
-        stringlist_clear(
-            filelist); /* Clear out all the BASE.Snnnn selections. */
-        stringlist_append_copy(filelist, unif_data_file.c_str());
+        filelist.clear(); /* Clear out all the BASE.Snnnn selections. */
+        filelist.push_back(unif_data_file);
     }
+    return filelist;
 }
 
 /**
    This routine allocates summary header and data files from a
-   directory, and return them by reference; path and base are
+   directory; path and base are
    input. If the function can not find BOTH a summary header file and
    summary data it will return false and not update the reference
    variables.
@@ -304,9 +301,8 @@ static void rd_alloc_summary_data_files(const fs::path &path,
 
    This algorithm should work in most practical cases, but not all.
 */
-static std::optional<fs::path>
-rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
-                       stringlist_type *filelist) {
+static std::tuple<std::optional<fs::path>, std::vector<std::string>>
+rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext) {
     bool fmt_input = false;
     bool fmt_set = false;
     bool fmt_file = true;
@@ -322,10 +318,11 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
      in which case we learn nothing.
   */
 
+    std::vector<std::string> filelist{};
     if (_base.empty()) {
         auto maybe_base = base_guess(path.string());
         if (!maybe_base)
-            return std::nullopt;
+            return {std::nullopt, filelist};
         base = *maybe_base;
     } else
         base = _base;
@@ -370,7 +367,7 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
 
     /* Neither file exists */
     if (!rd::try_exists(fsmspec_file) && !rd::try_exists(smspec_file))
-        return std::nullopt;
+        return {std::nullopt, filelist};
 
     if (fmt_set) /* The question of formatted|unformatted has already been settled based on the input filename. */
         fmt_file = fmt_input;
@@ -398,7 +395,7 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
     /* If you insist on e.g. unformatted and only fsmspec exists
      * no results for you. */
     if (!fs::exists(header_file))
-        return std::nullopt;
+        return {std::nullopt, filelist};
 
     /*
      3: OK - we have found a SMSPEC / FMSPEC file - continue to look for
@@ -412,33 +409,29 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
             fs::path unif_data_file = rd::filename(
                 path / base, FileType::UNIFIED_SUMMARY, fmt_file, -1);
             if (fs::exists(unif_data_file)) {
-                stringlist_append_copy(filelist,
-                                       unif_data_file.string().c_str());
+                filelist.push_back(unif_data_file.string());
             }
         } else {
             std::string pstr = path.string();
             std::string bstr = base.string();
-            rd_select_filelist(pstr.c_str(), bstr.c_str(), FileType::SUMMARY,
-                               fmt_file, filelist);
+            filelist = rd_select_filelist(pstr.c_str(), bstr, FileType::SUMMARY,
+                                          fmt_file);
         }
     } else
-        rd_alloc_summary_data_files(path, base, fmt_file, filelist);
+        filelist = rd_alloc_summary_data_files(path, base, fmt_file);
 
-    return header_file;
+    return {header_file, filelist};
 }
 
 static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
                               bool lazy_load, FileMode file_options) {
-    stringlist_ptr summary_file_list = make_stringlist();
-
     bool caseOK = false;
 
-    auto header_file = rd_alloc_summary_files(
-        rd_sum->path, rd_sum->base, rd_sum->ext, summary_file_list.get());
-    if (header_file && (stringlist_get_size(summary_file_list.get()) > 0)) {
-        caseOK =
-            rd_sum_fread(rd_sum, header_file->string(), summary_file_list.get(),
-                         include_restart, lazy_load, file_options);
+    auto [header_file, summary_file_list] =
+        rd_alloc_summary_files(rd_sum->path, rd_sum->base, rd_sum->ext);
+    if (header_file && (summary_file_list.size() > 0)) {
+        caseOK = rd_sum_fread(rd_sum, header_file->string(), summary_file_list,
+                              include_restart, lazy_load, file_options);
     }
 
     return caseOK;
@@ -455,7 +448,7 @@ static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
 */
 
 rd_sum_type *rd_sum_fread_alloc(const char *header_file,
-                                const stringlist_type *data_files,
+                                const std::vector<std::string> &data_files,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
                                 FileMode file_options) {
@@ -933,36 +926,37 @@ static void __rd_sum_fprintf_line(const rd_sum_type *rd_sum, FILE *stream,
 }
 
 static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
-                                  const stringlist_type *key_list,
+                                  const std::vector<std::string> &key_list,
                                   const bool_vector_type *has_var, FILE *stream,
                                   const char *sep) {
     fprintf(stream, "DAYS%sDATE", sep);
-    for (int i = 0; i < stringlist_get_size(key_list); i++)
+    for (int i = 0; static_cast<size_t>(i) < key_list.size(); i++)
         if (bool_vector_iget(has_var, i)) {
             fprintf(stream, "%s", sep);
-            fprintf(stream, "%s", stringlist_iget(key_list, i));
+            fprintf(stream, "%s", key_list[i].c_str());
         }
     fprintf(stream, "\r\n");
 }
 
 static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
-                           const stringlist_type *var_list,
+                           const std::vector<std::string> &var_list,
                            const char *date_format, const char *sep) {
-    auto has_var = make_bool_vector(stringlist_get_size(var_list), false);
-    auto var_index = make_int_vector(stringlist_get_size(var_list), -1);
+
+    auto has_var = make_bool_vector(static_cast<int>(var_list.size()), false);
+    auto var_index = make_int_vector(static_cast<int>(var_list.size()), -1);
     auto date_string = rd::checked_calloc<char>(DATE_STRING_LENGTH);
 
-    for (int ivar = 0; ivar < stringlist_get_size(var_list); ivar++) {
-        if (rd_sum_has_general_var(rd_sum, stringlist_iget(var_list, ivar))) {
+    for (int ivar = 0; static_cast<size_t>(ivar) < var_list.size(); ivar++) {
+        if (rd_sum_has_general_var(rd_sum, var_list[ivar].c_str())) {
             bool_vector_iset(has_var.get(), ivar, true);
             int_vector_iset(var_index.get(), ivar,
                             rd_sum_get_general_var_params_index(
-                                rd_sum, stringlist_iget(var_list, ivar)));
+                                rd_sum, var_list[ivar].c_str()));
         } else {
             fprintf(stderr,
                     "** Warning: could not find variable: \'%s\' in "
                     "summary file \n",
-                    stringlist_iget(var_list, ivar));
+                    var_list[ivar].c_str());
             bool_vector_iset(has_var.get(), ivar, false);
         }
     }
@@ -978,8 +972,8 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
 #undef DATE_STRING_LENGTH
 
 void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
-                       const stringlist_type *var_list, const char *date_format,
-                       const char *sep) {
+                       const std::vector<std::string> &var_list,
+                       const char *date_format, const char *sep) {
     FILE *stream = util_mkdir_fopen(filename, "w");
     rd_sum_fprintf(rd_sum, stream, var_list, date_format, sep);
     fclose(stream);
@@ -1015,27 +1009,20 @@ const char *rd_sum_get_base(const rd_sum_type *rd_sum) {
     return rd_sum->base.c_str();
 }
 
-stringlist_type *
-rd_sum_alloc_matching_general_var_list(const rd_sum_type *rd_sum,
-                                       const char *pattern) {
-    return rd_smspec_alloc_matching_general_var_list(rd_sum->smspec.get(),
-                                                     pattern);
-}
-
-void rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
-                                             const char *pattern,
-                                             stringlist_type *keys) {
-    rd_smspec_select_matching_general_var_list(rd_sum->smspec.get(), pattern,
-                                               keys);
-}
-
-stringlist_type *rd_sum_alloc_well_list(const rd_sum_type *rd_sum,
+std::vector<std::string>
+rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
                                         const char *pattern) {
+    return rd_smspec_select_matching_general_var_list(rd_sum->smspec.get(),
+                                                      pattern);
+}
+
+std::vector<std::string> rd_sum_alloc_well_list(const rd_sum_type *rd_sum,
+                                                const char *pattern) {
     return rd_smspec_alloc_well_list(rd_sum->smspec.get(), pattern);
 }
 
-stringlist_type *rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
-                                         const char *pattern) {
+std::vector<std::string> rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
+                                                 const char *pattern) {
     return rd_smspec_alloc_group_list(rd_sum->smspec.get(), pattern);
 }
 

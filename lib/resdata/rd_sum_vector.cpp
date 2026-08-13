@@ -1,5 +1,4 @@
-#include <cstdlib>
-
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -10,7 +9,6 @@
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/stringlist.hpp>
 
 #define RD_SUM_VECTOR_TYPE_ID 8768778
 
@@ -85,12 +83,11 @@ rd_sum_vector_type *
 rd_sum_vector_alloc_layout_copy(const rd_sum_vector_type *src_vector,
                                 const rd_sum_type *rd_sum) {
     rd_sum_vector_type *new_vector = rd_sum_vector_alloc(rd_sum, false);
-    for (size_t i = 0; i < src_vector->key_list.size(); i++) {
-        const char *key = src_vector->key_list[i].c_str();
-        if (rd_sum_has_general_var(rd_sum, key))
-            rd_sum_vector_add_key(new_vector, key);
+    for (const auto &key : src_vector->key_list) {
+        if (rd_sum_has_general_var(rd_sum, key.c_str()))
+            rd_sum_vector_add_key(new_vector, key.c_str());
         else
-            rd_sum_vector_add_invalid_key(new_vector, key);
+            rd_sum_vector_add_invalid_key(new_vector, key.c_str());
     }
     return new_vector;
 }
@@ -107,16 +104,13 @@ bool rd_sum_vector_add_key(rd_sum_vector_type *rd_sum_vector, const char *key) {
 
 void rd_sum_vector_add_keys(rd_sum_vector_type *rd_sum_vector,
                             const char *pattern) {
-    stringlist_ptr keylist = {
-        rd_sum_alloc_matching_general_var_list(rd_sum_vector->rd_sum, pattern),
-        &stringlist_free};
+    auto keylist =
+        rd_sum_select_matching_general_var_list(rd_sum_vector->rd_sum, pattern);
 
-    int num_keywords = stringlist_get_size(keylist.get());
-    for (int i = 0; i < num_keywords; i++) {
-        const char *key = stringlist_iget(keylist.get(), i);
+    for (const auto &key : keylist) {
         const rd::smspec_node *node =
-            rd_sum_get_general_var_node(rd_sum_vector->rd_sum, key);
-        rd_sum_vector_add_node(rd_sum_vector, node, key);
+            rd_sum_get_general_var_node(rd_sum_vector->rd_sum, key.c_str());
+        rd_sum_vector_add_node(rd_sum_vector, node, key.c_str());
     }
 }
 

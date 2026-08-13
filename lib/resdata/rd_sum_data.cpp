@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstring>
-#include <cmath>
 #include <ctime>
 
 #include <algorithm>
@@ -16,7 +15,6 @@
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/double_vector.hpp>
 
 #include <fmt/format.h>
@@ -604,8 +602,9 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
   call to rd_sum_data_build_index().
 */
 
-bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
-                       bool lazy_load, FileMode file_options) {
+bool rd_sum_data_fread(rd_sum_data_type *data,
+                       const std::vector<std::string> &filelist, bool lazy_load,
+                       FileMode file_options) {
     auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
     if (file_data->fread(filelist, lazy_load, file_options)) {
         data->data_files.push_back(file_data);

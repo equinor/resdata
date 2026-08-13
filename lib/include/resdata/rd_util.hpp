@@ -9,9 +9,8 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
-#include <ert/util/stringlist.hpp>
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/parser.hpp>
 
 #include <resdata/rd_type.hpp>
@@ -84,8 +83,9 @@ time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
 
 const char *rd_get_phase_name(Phase phase);
 
-int rd_select_filelist(const char *path, const char *base, FileType file_type,
-                       bool fmt_file, stringlist_type *filelist);
+std::vector<std::string> rd_select_filelist(const char *path,
+                                            std::string_view base,
+                                            FileType file_type, bool fmt_file);
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);
@@ -155,3 +155,5 @@ inline std::string strip_spaces(std::string_view s) {
     return std::string(s.substr(first, last - first + 1));
 }
 } // namespace rd
+std::vector<std::string> select_matching_files(const std::string &path,
+                                               const std::string &file_pattern);

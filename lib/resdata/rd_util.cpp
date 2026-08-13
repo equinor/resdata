@@ -2,13 +2,17 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <system_error>
 #include <stdexcept>
+#include <memory>
 #include <string>
-
+#include <string_view>
+#include <vector>
+#include <algorithm>
 #include <ert/util/ert_api_config.hpp>
-
 #ifdef ERT_HAVE_OPENDIR
 #include <sys/types.h>
 #include <dirent.h>
@@ -21,7 +25,6 @@
 #endif
 
 #include <ert/util/util.hpp>
-#include <ert/util/hash.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/parser.hpp>
 
@@ -246,14 +249,17 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
     }
 }
 
-static bool base_has_upper(const char *input_base) {
-    const char *base = strrchr(input_base, UTIL_PATH_SEP_CHAR);
-    if (base == NULL)
-        base = input_base;
+static bool base_has_upper(std::string_view input_base) {
+    size_t last_sep = input_base.rfind(UTIL_PATH_SEP_CHAR);
 
-    for (size_t i = 0; i < strlen(base); i++) {
-        if (isupper(base[i]))
+    std::string_view base = (last_sep != std::string_view::npos)
+                                ? input_base.substr(last_sep + 1)
+                                : input_base;
+
+    for (char c : base) {
+        if (std::isupper(static_cast<unsigned char>(c))) {
             return true;
+        }
     }
 
     return false;
@@ -456,16 +462,17 @@ static bool restart_lowercase_BINARY(const char *filename, const void *base) {
     return numeric_extension_predicate(filename, (const char *)base, 'x');
 }
 
-int stringlist_select_files(stringlist_type *names, const char *path,
-                            file_pred_ftype *predicate, const void *pred_arg) {
-    stringlist_clear(names);
+static std::vector<std::string> select_files(const char *path,
+                                             file_pred_ftype *predicate,
+                                             const void *pred_arg) {
     char *path_arg = path ? util_alloc_string_copy(path) : util_alloc_cwd();
+    std::vector<std::string> result;
 
 #ifdef ERT_HAVE_OPENDIR
     DIR *dir = opendir(path_arg);
     if (!dir) {
         free(path_arg);
-        return 0;
+        return result;
     }
 
     while (true) {
@@ -484,7 +491,7 @@ int stringlist_select_files(stringlist_type *names, const char *path,
 
         {
             char *fname = util_alloc_filename(path, entry->d_name, NULL);
-            stringlist_append_copy(names, fname);
+            result.emplace_back(fname);
             free(fname);
         }
     }
@@ -511,7 +518,7 @@ int stringlist_select_files(stringlist_type *names, const char *path,
             {
                 char *tmp_fname =
                     util_alloc_filename(path, file_data.cFileName, NULL);
-                stringlist_append_copy(names, tmp_fname);
+                result.emplace_back(tmp_fname);
                 free(tmp_fname);
             }
         } while (FindNextFile(file_handle, &file_data) != 0);
@@ -520,9 +527,8 @@ int stringlist_select_files(stringlist_type *names, const char *path,
     free(pattern);
 
 #endif
-
     free(path_arg);
-    return stringlist_get_size(names);
+    return result;
 }
 
 /*
@@ -532,70 +538,68 @@ int stringlist_select_files(stringlist_type *names, const char *path,
 */
 
 #ifdef ERT_HAVE_GLOB
-static int stringlist_select_matching(stringlist_type *names,
-                                      const char *pattern) {
-    int match_count = 0;
-    stringlist_clear(names);
-
+static std::vector<std::string> select_matching(const char *pattern) {
+    std::vector<std::string> names;
     {
         size_t i;
         glob_t *pglob = (glob_t *)util_malloc(sizeof *pglob);
         int glob_flags = 0;
         glob(pattern, glob_flags, NULL, pglob);
-        match_count = pglob->gl_pathc;
         for (i = 0; i < pglob->gl_pathc; i++)
-            stringlist_append_copy(names, pglob->gl_pathv[i]);
+            names.emplace_back(pglob->gl_pathv[i]);
         globfree(
             pglob); /* Only frees the _internal_ data structures of the pglob object. */
         free(pglob);
     }
-    return match_count;
+    return names;
 }
 #endif
 
-int stringlist_select_matching_files(stringlist_type *names, const char *path,
-                                     const char *file_pattern) {
+std::vector<std::string>
+select_matching_files(const std::string &path,
+                      const std::string &file_pattern) {
 #ifdef ERT_HAVE_GLOB
-    char *pattern = util_alloc_filename(path, file_pattern, NULL);
-    int match_count = stringlist_select_matching(names, pattern);
-    free(pattern);
-    return match_count;
+    std::string pattern = (fs::path(path) / file_pattern).string();
+    auto result = select_matching(pattern.c_str());
+    return result;
 #else
     {
         WIN32_FIND_DATA file_data;
         HANDLE file_handle;
-        char *pattern = util_alloc_filename(path, file_pattern, NULL);
+        std::vector<std::string> names;
+        char *pattern =
+            util_alloc_filename(path.c_str(), file_pattern.c_str(), NULL);
 
-        stringlist_clear(names);
         file_handle = FindFirstFile(pattern, &file_data);
         if (file_handle != INVALID_HANDLE_VALUE) {
             do {
-                char *full_path =
-                    util_alloc_filename(path, file_data.cFileName, NULL);
-                stringlist_append_copy(names, full_path);
+                char *full_path = util_alloc_filename(
+                    path.c_str(), file_data.cFileName, NULL);
+                names.emplace_back(full_path);
                 free(full_path);
             } while (FindNextFile(file_handle, &file_data) != 0);
         }
         FindClose(file_handle);
         free(pattern);
 
-        return stringlist_get_size(names);
+        return names;
     }
 #endif
 }
 
-static int rd_select_predicate_filelist(const char *path, const char *base,
-                                        FileType file_type, bool fmt_file,
-                                        bool upper_case,
-                                        stringlist_type *filelist) {
+static std::vector<std::string>
+rd_select_predicate_filelist(const char *path, std::string_view base,
+                             FileType file_type, bool fmt_file,
+                             bool upper_case) {
     file_pred_ftype *predicate = NULL;
-    char *full_path = NULL;
-    char *pure_base = NULL;
-    {
-        char *tmp = util_alloc_filename(path, base, NULL);
-        util_alloc_file_components(tmp, &full_path, &pure_base, NULL);
-        free(tmp);
-    }
+    fs::path tmp;
+    if (path && strlen(path))
+        tmp = std::string(path) + UTIL_PATH_SEP_STRING + std::string(base);
+    else
+        tmp = base;
+
+    std::string pure_base = tmp.stem().string();
+    std::string full_path = tmp.parent_path().string();
 
     if (file_type == FileType::SUMMARY) {
         if (fmt_file) {
@@ -622,53 +626,40 @@ static int rd_select_predicate_filelist(const char *path, const char *base,
                 predicate = restart_lowercase_BINARY;
         }
     } else
-        util_abort(
-            "%s: internal error - method called with wrong file type: %d\n",
-            __func__, file_type);
+        throw std::invalid_argument(
+            "select_predicate_filelist called with wrong file type");
 
-    stringlist_select_files(filelist, full_path, predicate, pure_base);
-    stringlist_sort(filelist, rd_fname_report_cmp);
-    free(pure_base);
-    free(full_path);
-    return stringlist_get_size(filelist);
+    auto filelist =
+        select_files(full_path.empty() ? nullptr : full_path.c_str(), predicate,
+                     pure_base.c_str());
+    std::sort(filelist.begin(), filelist.end(),
+              [](const std::string &a, const std::string &b) {
+                  return rd_fname_report_cmp(a.c_str(), b.c_str()) < 0;
+              });
+    return filelist;
 }
 
 /** This function will scan the directory @path (or cwd if @path == NULL)
-    for all files of type @file_type. If base == NULL it will use
-    '*' as pattern for basename. If file_type == FileType::OTHER it will
-    use '*' as pattern for the extension (as a consequence files which do
-    not originate from the simulator will also be included).
-
-    The stringlist will be cleared before the actual matching process
-    starts. */
-int rd_select_filelist(const char *path, const char *base, FileType file_type,
-                       bool fmt_file, stringlist_type *filelist) {
-    stringlist_clear(filelist);
+   for all files of type @file_type. If file_type == FileType::OTHER
+   it will use '*' as pattern for the extension (as a consequence files which do
+   not originate from the simulator will also be included). */
+std::vector<std::string> rd_select_filelist(const char *path,
+                                            std::string_view base,
+                                            FileType file_type, bool fmt_file) {
 
     bool upper_case = base_has_upper(base);
     if (file_type == FileType::SUMMARY || file_type == FileType::RESTART)
         return rd_select_predicate_filelist(path, base, file_type, fmt_file,
-                                            upper_case, filelist);
+                                            upper_case);
 
-    char *ext_pattern =
-        util_alloc_string_copy(rd_get_file_pattern(file_type, fmt_file));
-
+    std::string ext_pattern{rd_get_file_pattern(file_type, fmt_file)};
     if (!upper_case) {
-        for (size_t i = 0; i < strlen(ext_pattern); i++)
+        for (size_t i = 0; i < ext_pattern.size(); i++)
             ext_pattern[i] = tolower(ext_pattern[i]);
     }
+    std::string pattern = std::string(base) + "." + ext_pattern;
 
-    char *file_pattern;
-    if (base)
-        file_pattern = util_alloc_filename(NULL, base, ext_pattern);
-    else
-        file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
-
-    stringlist_select_matching_files(filelist, path, file_pattern);
-    free(file_pattern);
-    free(ext_pattern);
-
-    return stringlist_get_size(filelist);
+    return select_matching_files(path ? path : "", pattern);
 }
 
 bool rd_fmt_file(const char *filename, bool *__fmt_file) {

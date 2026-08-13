@@ -8,7 +8,6 @@
 #include <stdexcept>
 
 #include <ert/util/vector.hpp>
-#include <ert/util/stringlist.hpp>
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
@@ -138,7 +137,7 @@ public:
     bool can_write() const;
     void fwrite_unified(ERT::FortIO &fortio) const;
     void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
-    bool fread(const stringlist_type *filelist, bool lazy_load,
+    bool fread(const std::vector<std::string> &filelist, bool lazy_load,
                FileMode file_options = FileMode::DEFAULT);
 
 private:

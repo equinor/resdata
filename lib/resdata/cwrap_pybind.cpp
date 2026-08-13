@@ -22,7 +22,6 @@
 #include <resdata/rd_sum_tstep.hpp>
 
 #include <ert/util/double_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>
 
@@ -95,21 +94,6 @@ template <> rd_sum_type *from_cwrap<rd_sum_type>(py::handle obj) {
         throw py::type_error("Expected Summary, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<rd_sum_type>(obj);
-}
-
-py::object StringList() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.util.util").attr("StringList");
-    }
-    return cls;
-}
-
-template <> stringlist_type *from_cwrap<stringlist_type>(py::handle obj) {
-    if (!py::isinstance(obj, StringList()))
-        throw py::type_error("Expected StringList, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<stringlist_type>(obj);
 }
 
 py::object TimeVector() {

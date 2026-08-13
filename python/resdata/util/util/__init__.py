@@ -32,13 +32,11 @@ from .bool_vector import BoolVector
 from .ctime import CTime
 from .cwd_context import CWDContext
 from .double_vector import DoubleVector
-from .hash import DoubleHash, Hash, IntegerHash, StringHash
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector
 from .lookup_table import LookupTable
 from .permutation_vector import PermutationVector
 from .rng import RandomNumberGenerator
-from .stringlist import StringList
 from .thread_pool import ThreadPool
 from .time_vector import TimeVector
 from .vector_template import VectorTemplate
