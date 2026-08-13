@@ -220,7 +220,6 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
         default:
             util_abort("%s: No pattern defined for til_type:%d \n", __func__,
                        file_type);
-            return NULL;
         }
     } else {
         switch (file_type) {
@@ -248,7 +247,6 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
         default:
             util_abort("%s: No pattern defined for til_type:%d \n", __func__,
                        file_type);
-            return NULL;
         }
     }
 }
