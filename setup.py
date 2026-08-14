@@ -128,7 +128,6 @@ skbuild.setup(
     name="resdata",
     author="Equinor ASA",
     author_email="fg_sib-scout@equinor.com",
-    description="Package for reading and writing the fortran result files from reservoir simulators",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/equinor/resdata",
