@@ -4,7 +4,6 @@ from unittest import TestCase
 
 import six
 from resdata.util.util import (
-    BoolVector,
     CTime,
     DoubleVector,
     IntVector,
@@ -37,18 +36,10 @@ class UtilTest(TestCase):
         for i in range(10):
             iv[i] = i**3
         self.dotest_slicing(iv)
-        bv = BoolVector(initial_size=10)
-        for i in range(0, 10, 3):
-            bv[i] = True
-        self.dotest_slicing(bv)
         tv = TimeVector(initial_size=10)
         for i in range(10):
             tv[i] = CTime(datetime.datetime(2016, 12, i + 3, 0, 0, 0))
         self.dotest_slicing(tv)
-
-    def test_to_from_list(self):
-        v = BoolVector.createFromList(2, [0])
-        self.assertEqual(list(v), [True, False])
 
     def test_double_vector(self):
         v = DoubleVector()
@@ -127,41 +118,6 @@ class UtilTest(TestCase):
         with self.assertRaises(TypeError):
             iv1 *= dv1
 
-    def test_setitem_getitem(self):
-        primes = [2, 3, 5, 7, 11, 13, 17, 19]
-        primep = [i in primes for i in range(20)]
-        b = BoolVector(initial_size=20)
-        b[2] = True
-        b[3:8:2] = True
-        b[11::2] = True
-        self.assertTrue(b[15])
-        self.assertTrue(b[-5])
-        self.assertTrue(b[17])
-        self.assertTrue(b[19])
-        b[-5] = False
-        self.assertEqual(list(b), primep)
-
-    def test_repr(self):
-        primes = [2, 3, 5, 7, 11, 13, 17, 19]
-        b = BoolVector()
-        for i in primes:
-            b[i] = True
-        pfx = 'BoolVector(size = 20, content = "00110101000101000101")'
-        self.assertEqual(pfx, repr(b)[: len(pfx)])
-        b[30] = True
-        pfx = 'BoolVector(size = 31, content = "001101010...00000001")'
-        self.assertEqual(pfx, repr(b)[: len(pfx)])
-
-    def test_bool_vector(self):
-        b = BoolVector()
-        b.setDefault(True)
-
-        b[4] = False
-
-        self.assertEqual(list(b), [True, True, True, True, False])
-        self.assertEqual(b.count(True), 4)
-        self.assertEqual(b.count(False), 1)
-
     def test_activeList(self):
         active_list = IntVector.active_list("1,10,100-105")
         self.assertTrue(len(active_list) == 8)
@@ -194,50 +150,6 @@ class UtilTest(TestCase):
         self.assertTrue(10 in iv)
         self.assertTrue(88 not in iv)
         self.assertTrue(99 not in iv)
-
-    def test_activeMask(self):
-        active_list = BoolVector.createActiveMask("1 , 4 - 7 , 10")
-        self.assertTrue(len(active_list) == 11)
-        self.assertTrue(active_list[1])
-        self.assertTrue(active_list[4])
-        self.assertTrue(active_list[10])
-        self.assertFalse(active_list[9])
-        self.assertFalse(active_list[8])
-
-        self.assertEqual(6, active_list.count(True))
-
-        active_list = BoolVector.createActiveMask("1,4-7,10X")
-        self.assertFalse(active_list)
-
-    def test_update_active_mask(self):
-        vec = BoolVector(False, 10)
-
-        self.assertTrue(vec.updateActiveMask("1-2,5"))
-        self.assertTrue(vec[1])
-        self.assertTrue(vec[2])
-        self.assertTrue(vec[5])
-        self.assertFalse(vec[4])
-
-        vec = BoolVector(False, 10)
-
-        self.assertTrue(vec.updateActiveMask("1-5,2,3"))
-        self.assertTrue(vec[1])
-        self.assertTrue(vec[2])
-        self.assertTrue(vec[3])
-        self.assertTrue(vec[4])
-        self.assertTrue(vec[5])
-        self.assertFalse(vec[0])
-        self.assertFalse(vec[6])
-
-        vec = BoolVector(False, 10)
-
-        self.assertTrue(vec.updateActiveMask("5,6,7,15"))
-        self.assertTrue(vec[5])
-        self.assertTrue(vec[6])
-        self.assertTrue(vec[7])
-        self.assertFalse(vec[4])
-        self.assertFalse(vec[8])
-        self.assertEqual(len(vec), 16)
 
     def test_pop(self):
         a = IntVector()
@@ -575,15 +487,3 @@ class UtilTest(TestCase):
         self.assertNotEqual(v1, v2)
         v2[3] = 99
         self.assertEqual(v1, v2)
-
-    def test_create_active_list(self):
-        vec = BoolVector(False, 10)
-        vec[0] = True
-        vec[3] = True
-        vec[7] = True
-
-        idxs = vec.createActiveList()
-        self.assertTrue(len(idxs) == 3, "Should get 3 indices")
-        self.assertEqual(idxs[0], 0)
-        self.assertEqual(idxs[1], 3)
-        self.assertEqual(idxs[2], 7)
