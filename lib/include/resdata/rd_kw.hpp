@@ -7,6 +7,8 @@
 #include <string>
 
 #include <ert/util/type_macros.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
