@@ -10,31 +10,6 @@
 #include <ert/util/type_vector_functions.hpp>
 #include <ert/util/stringlist.hpp>
 
-/*
-   This functions parses an input string 'range_string' of the type:
-
-     "0,1,8, 10 - 20 , 15,17-21"
-
-   I.e. integers separated by "," and "-". The integer values are
-   parsed out.
-*/
-
-//#include <stringlist.h>
-//#include <tokenizer.h>
-//static int * util_sscanf_active_range__NEW(const char * range_string , int max_value , bool * active , int * _list_length) {
-//  tokenizer_type * tokenizer = tokenizer_alloc( NULL  , /* No ordinary split characters. */
-//                                                NULL  , /* No quoters. */
-//                                                ",-"  , /* Special split on ',' and '-' */
-//                                                " \t" , /* Removing ' ' and '\t' */
-//                                                NULL  , /* No comment */
-//                                                NULL  );
-//  stringlist_type * tokens;
-//  tokens = tokenize_buffer( tokenizer , range_string , true);
-//
-//  stringlist_free( tokens );
-//  tokenizer_free( tokenizer );
-//}
-
 static bool valid_characters(const char *range_string) {
     bool valid = false;
     if (range_string) {
