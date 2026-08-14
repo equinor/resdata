@@ -14,6 +14,7 @@ import re
 from typing import Iterable, Sequence
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 # Observe that there is some convention conflict with the C code
@@ -796,7 +797,7 @@ class Summary(BaseCClass):
         self,
         totalKey: str,
         timeRange: Iterable[CTime | int | datetime.datetime | datetime.date],
-    ) -> DoubleVector:
+    ) -> npt.NDArray[np.float64]:
         """The forward difference of the given total.
 
         For a key describing a total quantity (such as FOPT) this
@@ -814,22 +815,25 @@ class Summary(BaseCClass):
         Raises TypeError if totalKey does not refer to a TOTAL key.
         """
         node = self.smspec_node(totalKey)
-        if node.is_total():
-            total = DoubleVector()
-            for t in timeRange:
-                if t < CTime(self.start_time):
-                    total.append(0)
-                elif t >= CTime(self.end_time):
-                    total.append(self.last_value(totalKey))
-                else:
-                    total.append(self.get_interp(totalKey, date=t))
-            tmp = total << 1
-            total.pop()
-            return tmp - total
-        else:
+        if not node.is_total():
             raise TypeError(
                 "The blocked_production method must be called with one of the TOTAL keys like e.g. FOPT or GWIT"
             )
+
+        start_time = CTime(self.start_time)
+        end_time = CTime(self.end_time)
+        last_value = self.last_value(totalKey)
+
+        def total_at(t: CTime) -> float:
+            if t < start_time:
+                return 0.0
+            elif t >= end_time:
+                return last_value
+            else:
+                return self.get_interp(totalKey, date=t)
+
+        total = np.fromiter((total_at(CTime(t)) for t in timeRange), dtype=np.float64)
+        return np.diff(total)
 
     def get_report(self, date=None, days=None):
         """
