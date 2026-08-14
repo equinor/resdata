@@ -7,7 +7,6 @@
 
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_coarse_cell.hpp>

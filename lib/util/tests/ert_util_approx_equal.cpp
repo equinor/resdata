@@ -2,7 +2,6 @@
 #include <cmath>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
 
 int main(int argc, char **argv) {
 

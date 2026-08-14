@@ -1,8 +1,9 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <memory>
+
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
