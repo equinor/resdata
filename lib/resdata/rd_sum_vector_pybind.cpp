@@ -38,9 +38,8 @@ PYBIND11_MODULE(_rd_sum_keyword_vector, m) {
         return rd_sum_vector_add_key(from_cwrap<rd_sum_vector_type>(self),
                                      key.c_str());
     });
-    m.def("_add_multiple", [](py::handle self, const std::string &pattern) {
-        rd_sum_vector_add_keys(from_cwrap<rd_sum_vector_type>(self),
-                               pattern.c_str());
+    m.def("_add_multiple", [](py::handle self, const char *pattern) {
+        rd_sum_vector_add_keys(from_cwrap<rd_sum_vector_type>(self), pattern);
     });
     m.def("_get_size", [](py::handle self) {
         return rd_sum_vector_get_size(from_cwrap<rd_sum_vector_type>(self));

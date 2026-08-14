@@ -2299,3 +2299,18 @@ def test_unsmry_params_non_float_raises():
 
     with pytest.raises((IOError, ValueError)):
         Summary("TEST")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_add_keywords_with_none_pattern_matches_all_keywords():
+    case = createSummary(
+        "CASE_NONE_PATTERN",
+        [("FOPT", None, 0, "SM3"), ("WOPT", "OP1", 0, "SM3")],
+    )
+    case.fwrite()
+
+    rd_sum = Summary("CASE_NONE_PATTERN")
+    kw_vector = SummaryKeyWordVector(rd_sum)
+    kw_vector.add_keywords(None)
+
+    assert sorted(kw_vector) == sorted(rd_sum.keys())
