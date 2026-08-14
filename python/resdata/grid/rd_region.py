@@ -917,12 +917,6 @@ class ResdataRegion(BaseCClass):
 
     #################################################################
 
-    def rd_region_instance(self):
-        """
-        Helper function (attribute) to support run-time typechecking.
-        """
-        return True
-
     def active_size(self):
         return len(self.get_active_list())
 
