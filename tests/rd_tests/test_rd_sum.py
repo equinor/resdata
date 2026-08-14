@@ -1406,8 +1406,7 @@ def test_summary_time_range_with_end():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_summary_blocked_production():
-    """Test blocked_production method"""
+def test_that_blocked_production_is_the_forward_difference_of_total():
     create_summary(
         summary_keys=("FOPT",),
         times=(0.0, 10.0, 20.0, 30.0),
@@ -1423,8 +1422,107 @@ def test_summary_blocked_production():
     ]
 
     blocked = summary.blocked_production("FOPT", time_range)
-    assert isinstance(blocked, DoubleVector)
+    # Forward difference: [FOPT(1/11) - FOPT(1/1), FOPT(1/21) - FOPT(1/11)]
     assert list(blocked) == pytest.approx([1000.0, 1500.0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_blocked_production_returns_one_fewer_value_than_time_range():
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 10.0, 20.0, 30.0),
+        values=[[0.0], [1000.0], [2500.0], [4000.0]],
+    )
+
+    summary = Summary("TEST")
+
+    time_range = [
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2000, 1, 11),
+        datetime.datetime(2000, 1, 21),
+        datetime.datetime(2000, 1, 31),
+    ]
+
+    blocked = summary.blocked_production("FOPT", time_range)
+    assert len(blocked) == len(time_range) - 1
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_blocked_production_interpolates_between_report_steps():
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 10.0, 20.0),
+        values=[[0.0], [1000.0], [2000.0]],
+    )
+
+    summary = Summary("TEST")
+
+    # 2000-01-06 and 2000-01-16 are half way between report steps,
+    # so FOPT should interpolate to 500.0 and 1500.0 respectively.
+    time_range = [
+        datetime.datetime(2000, 1, 6),
+        datetime.datetime(2000, 1, 16),
+    ]
+
+    blocked = summary.blocked_production("FOPT", time_range)
+    assert list(blocked) == pytest.approx([1000.0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_blocked_production_is_zero_before_start_time():
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 10.0, 20.0),
+        values=[[0.0], [1000.0], [2500.0]],
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+
+    time_range = [
+        datetime.datetime(1999, 12, 20),
+        datetime.datetime(2000, 1, 1),
+    ]
+
+    blocked = summary.blocked_production("FOPT", time_range)
+    assert list(blocked) == pytest.approx([0.0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_blocked_production_uses_last_value_after_end_time():
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 10.0, 20.0),
+        values=[[0.0], [1000.0], [2500.0]],
+    )
+
+    summary = Summary("TEST")
+
+    time_range = [
+        datetime.datetime(2000, 1, 25),
+        datetime.datetime(2000, 2, 1),
+    ]
+
+    blocked = summary.blocked_production("FOPT", time_range)
+    assert list(blocked) == pytest.approx([0.0])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_blocked_production_raises_type_error_for_non_total_key():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 20.0),
+    )
+
+    summary = Summary("TEST")
+
+    time_range = [
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2000, 1, 11),
+    ]
+
+    with pytest.raises(TypeError, match="TOTAL keys"):
+        summary.blocked_production("FOPR", time_range)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
