@@ -1,8 +1,6 @@
 #ifndef ERT_HASH_H
 #define ERT_HASH_H
 
-#include <cstdlib>
-
 #include <ert/util/stringlist.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/node_data.hpp>

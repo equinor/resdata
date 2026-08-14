@@ -1,13 +1,13 @@
 #include <cstdlib>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_const.hpp>

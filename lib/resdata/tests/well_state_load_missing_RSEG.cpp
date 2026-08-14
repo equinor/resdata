@@ -2,7 +2,6 @@
 
 #include <ctime>
 #include <ert/util/test_util.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_file_view.hpp>

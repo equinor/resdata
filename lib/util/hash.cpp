@@ -1,5 +1,5 @@
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <cstdint>
 #include <cerrno>
@@ -10,6 +10,7 @@
 #include <ert/util/node_data.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
+#include <ert/util/type_macros.hpp>
 
 #ifdef __cplusplus
 extern "C" {
