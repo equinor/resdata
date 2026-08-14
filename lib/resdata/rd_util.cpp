@@ -402,17 +402,6 @@ int rd_fname_report_cmp(const void *f1, const void *f2) {
         return 0;
 }
 
-/**
-   This function will scan the directory @path (or cwd if @path == NULL)
-   for all files of type @file_type. If base == NULL it will use
-   '*' as pattern for basename. If file_type == FileType::OTHER it will
-   use '*' as pattern for the extension (as a consequence files which do
-   not originate from the simulator will also be included).
-
-   The stringlist will be cleared before the actual matching process
-   starts.
-*/
-
 static bool numeric_extension_predicate(const char *filename, const char *base,
                                         const char leading_char) {
     if (strncmp(filename, base, strlen(base)) != 0)
@@ -644,6 +633,14 @@ static int rd_select_predicate_filelist(const char *path, const char *base,
     return stringlist_get_size(filelist);
 }
 
+/** This function will scan the directory @path (or cwd if @path == NULL)
+    for all files of type @file_type. If base == NULL it will use
+    '*' as pattern for basename. If file_type == FileType::OTHER it will
+    use '*' as pattern for the extension (as a consequence files which do
+    not originate from the simulator will also be included).
+
+    The stringlist will be cleared before the actual matching process
+    starts. */
 int rd_select_filelist(const char *path, const char *base, FileType file_type,
                        bool fmt_file, stringlist_type *filelist) {
     stringlist_clear(filelist);
