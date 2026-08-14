@@ -160,8 +160,8 @@ class FaultLine:
         return self.__neighborCells
 
     def center(self):
-        xlist = DoubleVector()
-        ylist = DoubleVector()
+        xlist = []
+        ylist = []
         for segment in self:
             C1 = segment.get_c1()
             C2 = segment.get_c2()
@@ -178,7 +178,7 @@ class FaultLine:
             ylist.append(y2)
 
         N = len(xlist)
-        return (xlist.elementSum() / N, ylist.elementSum() / N)
+        return (sum(xlist) / N, sum(ylist) / N)
 
     def reverse(self):
         reverse_list = reversed(self.__segment_list)
