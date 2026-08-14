@@ -28,7 +28,6 @@ from cwrap import Prototype
 import resdata
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
-from .bool_vector import BoolVector
 from .ctime import CTime
 from .cwd_context import CWDContext
 from .double_vector import DoubleVector
