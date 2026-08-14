@@ -1,8 +1,9 @@
+from typing import SupportsInt
+
 from cwrap import BaseCClass
 
 import resdata.grid.faults._layer as _layer
 from resdata.grid import Grid
-from resdata.util.util import IntVector
 
 
 class Layer(BaseCClass):
@@ -196,17 +197,9 @@ class Layer(BaseCClass):
         else:
             raise ValueError("Cell %s is not equal to %d \n" % (ij, org_value))
 
-    def cells_equal(self, value):
-        """
-        Will return a list [(i1,j1),(i2,j2), ...(in,jn)] of all cells with value @value.
-        """
-        i_list = IntVector()
-        j_list = IntVector()
-        _layer._cells_equal(self, value, i_list, j_list)
-        ij_list = []
-        for i, j in zip(i_list, j_list):
-            ij_list.append((i, j))
-        return ij_list
+    def cells_equal(self, value: SupportsInt) -> list[tuple[int, int]]:
+        """List of all cell indices with the given value."""
+        return _layer._cells_equal(self, value)
 
     def count_equal(self, value):
         return _layer._count_equal(self, value)

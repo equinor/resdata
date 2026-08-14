@@ -286,14 +286,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             layer_iset_cell_value(layer.get(), 3, 3, 7);
 
             AND_WHEN("Finding cells equal to value 7") {
-                auto i_list = make_int_vector(0, 0);
-                auto j_list = make_int_vector(0, 0);
-                layer_cells_equal(layer.get(), 7, i_list.get(), j_list.get());
+                auto cells = layer_cells_equal(layer.get(), 7);
 
-                THEN("Three cells are found") {
-                    REQUIRE(int_vector_size(i_list.get()) == 3);
-                    REQUIRE(int_vector_size(j_list.get()) == 3);
-                }
+                THEN("Three cells are found") { REQUIRE(cells.size() == 3); }
             }
 
             THEN("The count of cells equal to 7 is three") {

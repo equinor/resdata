@@ -939,21 +939,13 @@ void rd_region_deselect_outside_polygon(rd_region_type *region,
 static void rd_region_select_from_layer__(rd_region_type *region,
                                           const layer_type *layer, int k,
                                           int layer_value, bool select) {
-    int_vector_ptr i_list = make_int_vector(0, 0);
-    int_vector_ptr j_list = make_int_vector(0, 0);
-
-    layer_cells_equal(layer, layer_value, i_list.get(), j_list.get());
-    {
-        const int *i = int_vector_get_ptr(i_list.get());
-        const int *j = int_vector_get_ptr(j_list.get());
-
-        for (int index = 0; index < int_vector_size(i_list.get()); index++) {
-            int global_index = rd_grid_get_global_index3(region->parent_grid,
-                                                         i[index], j[index], k);
-            region->active_mask[global_index] = select;
-        }
+    auto cells = layer_cells_equal(layer, layer_value);
+    for (const auto &[i, j] : cells) {
+        int global_index =
+            rd_grid_get_global_index3(region->parent_grid, i, j, k);
+        region->active_mask[global_index] = select;
     }
-    if (int_vector_size(i_list.get()) > 0)
+    if (!cells.empty())
         rd_region_invalidate_index_list(region);
 }
 

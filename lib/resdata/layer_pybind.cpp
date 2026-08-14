@@ -4,8 +4,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <ert/util/int_vector.hpp>
-
 #include <resdata/layer.hpp>
 #include <resdata/rd_grid.hpp>
 
@@ -71,12 +69,9 @@ PYBIND11_MODULE(_layer, m) {
               layer_update_connected_cells(from_cwrap<layer_type>(self), i, j,
                                            org_value, new_value);
           });
-    m.def("_cells_equal",
-          [](py::handle self, int value, py::handle i_list, py::handle j_list) {
-              layer_cells_equal(from_cwrap<layer_type>(self), value,
-                                from_cwrap<int_vector_type>(i_list),
-                                from_cwrap<int_vector_type>(j_list));
-          });
+    m.def("_cells_equal", [](py::handle self, int value) {
+        return layer_cells_equal(from_cwrap<layer_type>(self), value);
+    });
     m.def("_count_equal", [](py::handle self, int value) {
         return layer_count_equal(from_cwrap<layer_type>(self), value);
     });
