@@ -1,10 +1,12 @@
 #include <cassert>
+#include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
 
 #include <ert/util/util.hpp>
 #include <ert/util/parser.hpp>
+#include <ert/util/stringlist.hpp>
 
 #define PARSER_ESCAPE_CHAR '\\'
 
