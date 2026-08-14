@@ -15,7 +15,7 @@ requires = [
 name = "resdata"
 description = "Package for reading and writing the fortran result files from reservoir simulators"
 authors = [{ name = "Equinor ASA", email = "fg_sib-scout@equinor.com" }]
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 dynamic = ["version", "readme", "dependencies", "scripts", "classifiers"]
 requires-python = ">=3.11"
 
