@@ -35,7 +35,6 @@ configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 add_library(
   resdata
   util/rng.cpp
-  util/lookup_table.cpp
   util/mzran.cpp
   util/hash_node.cpp
   util/hash_sll.cpp

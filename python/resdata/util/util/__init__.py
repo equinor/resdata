@@ -34,7 +34,6 @@ from .cwd_context import CWDContext
 from .double_vector import DoubleVector
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector
-from .lookup_table import LookupTable
 from .permutation_vector import PermutationVector
 from .rng import RandomNumberGenerator
 from .thread_pool import ThreadPool
