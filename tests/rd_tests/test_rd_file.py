@@ -12,9 +12,9 @@ from hypothesis import given
 from resdata import FileMode, FileType, ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, open_rd_file, openFortIO
-from resdata.util.util import CWDContext
 
 from tests import ResdataTest, source_root
+from tests.util import CWDContext
 
 from .create_restart import create_restart
 
