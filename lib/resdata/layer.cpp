@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 #include <algorithm>
 #include <array>
@@ -621,17 +622,18 @@ void layer_update_connected_cells(layer_type *layer, int i, int j,
     }
 }
 
-void layer_cells_equal(const layer_type *layer, int value,
-                       int_vector_type *i_list, int_vector_type *j_list) {
+std::vector<std::tuple<int, int>> layer_cells_equal(const layer_type *layer,
+                                                    int value) {
+    std::vector<std::tuple<int, int>> cells;
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
             const Cell &cell = layer->interior_cell(i, j);
             if (cell.value == value) {
-                int_vector_append(i_list, i);
-                int_vector_append(j_list, j);
+                cells.emplace_back(i, j);
             }
         }
     }
+    return cells;
 }
 
 int layer_count_equal(const layer_type *layer, int value) {

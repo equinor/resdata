@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
+#include <vector>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
@@ -54,8 +56,8 @@ void layer_update_connected_cells(layer_type *layer, int i, int j,
                                   int org_value, int new_value);
 void layer_assign(layer_type *layer, int value);
 
-void layer_cells_equal(const layer_type *layer, int value,
-                       int_vector_type *i_list, int_vector_type *j_list);
+std::vector<std::tuple<int, int>> layer_cells_equal(const layer_type *layer,
+                                                    int value);
 int layer_count_equal(const layer_type *layer, int value);
 
 using layer_ptr = std::unique_ptr<layer_type, decltype(&layer_free)>;
