@@ -9,6 +9,17 @@
 
 #include <ert/util/ert_api_config.hpp>
 
+#ifdef ERT_HAVE_OPENDIR
+#include <sys/types.h>
+#include <dirent.h>
+#endif
+
+#ifdef ERT_HAVE_GLOB
+#include <glob.h>
+#else
+#include <Windows.h>
+#endif
+
 #include <ert/util/util.hpp>
 #include <ert/util/hash.hpp>
 #include <ert/util/stringlist.hpp>
@@ -454,6 +465,134 @@ static bool restart_lowercase_ASCII(const char *filename, const void *base) {
 
 static bool restart_lowercase_BINARY(const char *filename, const void *base) {
     return numeric_extension_predicate(filename, (const char *)base, 'x');
+}
+
+int stringlist_select_files(stringlist_type *names, const char *path,
+                            file_pred_ftype *predicate, const void *pred_arg) {
+    stringlist_clear(names);
+    char *path_arg = path ? util_alloc_string_copy(path) : util_alloc_cwd();
+
+#ifdef ERT_HAVE_OPENDIR
+    DIR *dir = opendir(path_arg);
+    if (!dir) {
+        free(path_arg);
+        return 0;
+    }
+
+    while (true) {
+        struct dirent *entry = readdir(dir);
+        if (!entry)
+            break;
+
+        if (util_string_equal(entry->d_name, "."))
+            continue;
+
+        if (util_string_equal(entry->d_name, ".."))
+            continue;
+
+        if (predicate && !predicate(entry->d_name, pred_arg))
+            continue;
+
+        {
+            char *fname = util_alloc_filename(path, entry->d_name, NULL);
+            stringlist_append_copy(names, fname);
+            free(fname);
+        }
+    }
+
+    closedir(dir);
+
+#else
+
+    WIN32_FIND_DATA file_data;
+    HANDLE file_handle;
+    char *pattern = util_alloc_filename(path_arg, "*", NULL);
+
+    file_handle = FindFirstFile(pattern, &file_data);
+    if (file_handle != INVALID_HANDLE_VALUE) {
+        do {
+            if (util_string_equal(file_data.cFileName, "."))
+                continue;
+
+            if (util_string_equal(file_data.cFileName, ".."))
+                continue;
+
+            if (predicate && !predicate(file_data.cFileName, pred_arg))
+                continue;
+            {
+                char *tmp_fname =
+                    util_alloc_filename(path, file_data.cFileName, NULL);
+                stringlist_append_copy(names, tmp_fname);
+                free(tmp_fname);
+            }
+        } while (FindNextFile(file_handle, &file_data) != 0);
+        FindClose(file_handle);
+    }
+    free(pattern);
+
+#endif
+
+    free(path_arg);
+    return stringlist_get_size(names);
+}
+
+/*
+  This function uses the stdlib function glob() to select file/path
+  names matching a pattern. The stringlist is cleared when the
+  function starts.
+*/
+
+#ifdef ERT_HAVE_GLOB
+static int stringlist_select_matching(stringlist_type *names,
+                                      const char *pattern) {
+    int match_count = 0;
+    stringlist_clear(names);
+
+    {
+        size_t i;
+        glob_t *pglob = (glob_t *)util_malloc(sizeof *pglob);
+        int glob_flags = 0;
+        glob(pattern, glob_flags, NULL, pglob);
+        match_count = pglob->gl_pathc;
+        for (i = 0; i < pglob->gl_pathc; i++)
+            stringlist_append_copy(names, pglob->gl_pathv[i]);
+        globfree(
+            pglob); /* Only frees the _internal_ data structures of the pglob object. */
+        free(pglob);
+    }
+    return match_count;
+}
+#endif
+
+int stringlist_select_matching_files(stringlist_type *names, const char *path,
+                                     const char *file_pattern) {
+#ifdef ERT_HAVE_GLOB
+    char *pattern = util_alloc_filename(path, file_pattern, NULL);
+    int match_count = stringlist_select_matching(names, pattern);
+    free(pattern);
+    return match_count;
+#else
+    {
+        WIN32_FIND_DATA file_data;
+        HANDLE file_handle;
+        char *pattern = util_alloc_filename(path, file_pattern, NULL);
+
+        stringlist_clear(names);
+        file_handle = FindFirstFile(pattern, &file_data);
+        if (file_handle != INVALID_HANDLE_VALUE) {
+            do {
+                char *full_path =
+                    util_alloc_filename(path, file_data.cFileName, NULL);
+                stringlist_append_copy(names, full_path);
+                free(full_path);
+            } while (FindNextFile(file_handle, &file_data) != 0);
+        }
+        FindClose(file_handle);
+        free(pattern);
+
+        return stringlist_get_size(names);
+    }
+#endif
 }
 
 static int rd_select_predicate_filelist(const char *path, const char *base,
