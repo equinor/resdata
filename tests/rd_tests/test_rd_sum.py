@@ -1606,6 +1606,60 @@ def test_summary_report_step_property():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_report_index_list_gives_the_last_time_index_of_each_report_step():
+    """Each report step can consist of several ministeps; verify that
+    report_index_list() returns, for every report step, the index of
+    the last ministep belonging to that report step
+    """
+    unsmry = Unsmry(
+        steps=[
+            SummaryStep(
+                seqnum=0,
+                ministeps=[
+                    SummaryMiniStep(mini_step=0, params=[0.0, 100.0]),
+                    SummaryMiniStep(mini_step=1, params=[5.0, 150.0]),
+                ],
+            ),
+            SummaryStep(
+                seqnum=1,
+                ministeps=[
+                    SummaryMiniStep(mini_step=0, params=[10.0, 200.0]),
+                    SummaryMiniStep(mini_step=1, params=[15.0, 250.0]),
+                ],
+            ),
+        ]
+    )
+    smspec = Smspec(
+        nx=10,
+        ny=10,
+        nz=10,
+        restarted_from_step=0,
+        num_keywords=2,
+        restart="        ",
+        keywords=["TIME    ", "FOPR    "],
+        well_names=[":+:+:+:+", ":+:+:+:+"],
+        region_numbers=[-32676, 0],
+        units=["DAYS    ", "SM3     "],
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+        intehead=SmspecIntehead(
+            unit=UnitSystem.METRIC,
+            simulator=Simulator.ECLIPSE_100,
+        ),
+    )
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+
+    summary = Summary("TEST")
+
+    assert summary.first_report == 1
+    assert summary.last_report == 2
+    # There are 4 ministeps in total (indices 0-3); report 1 spans
+    # indices 0-1, and report 2 spans indices 2-3.
+    assert [summary.iget_report(i) for i in range(len(summary))] == [1, 1, 2, 2]
+    assert summary.report_index_list() == [1, 3]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_end_date():
     create_summary(
         summary_keys=("FOPR",),

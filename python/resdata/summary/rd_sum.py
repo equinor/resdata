@@ -246,13 +246,11 @@ class Summary(BaseCClass):
         ptr = _rd_sum._add_tstep(self, report_step, sim_seconds)
         return SummaryTStep.createCReference(ptr, parent=self)
 
-    def report_index_list(self):
-        """
-        Internal function for working with report_steps.
-        """
+    def report_index_list(self) -> list[int]:
+        """List of indices of the report steps."""
         first_report = self.first_report
         last_report = self.last_report
-        index_list = IntVector()
+        index_list = []
         for report_step in range(first_report, last_report + 1):
             time_index = _rd_sum._get_report_end(self, report_step)
             index_list.append(time_index)
