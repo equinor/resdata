@@ -126,8 +126,6 @@ def utility_wrappers():
 
 skbuild.setup(
     name="resdata",
-    author="Equinor ASA",
-    author_email="fg_sib-scout@equinor.com",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/equinor/resdata",
@@ -137,7 +135,6 @@ skbuild.setup(
     ),
     package_dir={"": "python"},
     package_data={"resdata": ["py.typed", "well/*.pyi", "resfile/*.pyi"]},
-    license="GPL-3.0",
     platforms="any",
     install_requires=[
         "cwrap",
@@ -164,7 +161,6 @@ skbuild.setup(
         "Environment :: Other Environment",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.11",
