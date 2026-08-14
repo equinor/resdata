@@ -26,7 +26,6 @@ import warnings
 from cwrap import Prototype
 
 import resdata
-from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 from .ctime import CTime
 from .cwd_context import CWDContext
@@ -34,7 +33,6 @@ from .double_vector import DoubleVector
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector
 from .permutation_vector import PermutationVector
-from .rng import RandomNumberGenerator
 from .thread_pool import ThreadPool
 from .time_vector import TimeVector
 from .vector_template import VectorTemplate

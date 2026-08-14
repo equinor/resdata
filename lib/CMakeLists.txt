@@ -34,8 +34,6 @@ configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
 add_library(
   resdata
-  util/rng.cpp
-  util/mzran.cpp
   util/hash_node.cpp
   util/hash_sll.cpp
   util/path.cpp
@@ -301,7 +299,6 @@ foreach(
   ert_util_parent_path
   ert_util_realpath
   ert_util_relpath_test
-  ert_util_rng
   ert_util_strcat_test
   ert_util_stringlist_test
   ert_util_string_util
