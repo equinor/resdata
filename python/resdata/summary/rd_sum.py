@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime
 import os.path
 import re
-from typing import Sequence
+from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -792,7 +792,27 @@ class Summary(BaseCClass):
 
         return trange
 
-    def blocked_production(self, totalKey, timeRange):
+    def blocked_production(
+        self,
+        totalKey: str,
+        timeRange: Iterable[CTime | int | datetime.datetime | datetime.date],
+    ) -> DoubleVector:
+        """The forward difference of the given total.
+
+        For a key describing a total quantity (such as FOPT) this
+        computes the discrete forward difference between consecutive
+        entries in timeRange, giving interval production/injection
+        equivalent to a rate key (e.g. FOPR). Timestamps not aligned
+        with report steps are interpolated. The returned vector has
+        one fewer element than timeRange (values are the change in
+        total between timesteps).
+
+        Totals before start_time are assigned 0.0 and after end_time
+        are given the last value in the summary. Therefore the rate
+        before start and after end becomes 0.0.
+
+        Raises TypeError if totalKey does not refer to a TOTAL key.
+        """
         node = self.smspec_node(totalKey)
         if node.is_total():
             total = DoubleVector()
