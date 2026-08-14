@@ -36,7 +36,11 @@ class SummaryKeyWordVector(BaseCClass):
         if not success:
             raise KeyError("Failed to add keyword to vector")
 
-    def add_keywords(self, keyword_pattern):
+    def add_keywords(self, keyword_pattern: str | None):
+        """Adds all keywords from rd_sum matching keyword_pattern.
+
+        If keyword_pattern is None then all keywords in rd_sum are added.
+        """
         _rd_sum_keyword_vector._add_multiple(self, keyword_pattern)
 
     def __repr__(self):
