@@ -8,6 +8,7 @@
 #include <ert/util/bool_vector.hpp>
 #include <ert/util/string_util.hpp>
 #include <ert/util/type_vector_functions.hpp>
+#include <ert/util/stringlist.hpp>
 
 /*
    This functions parses an input string 'range_string' of the type:
