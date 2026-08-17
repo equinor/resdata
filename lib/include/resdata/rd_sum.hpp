@@ -47,7 +47,7 @@ rd_sum_type *rd_sum_fread_alloc_case(const char *, const char *key_join_string,
                                      bool include_restart, bool lazy_load,
                                      FileMode file_options = FileMode::DEFAULT);
 rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
-                                 const time_t_vector_type *times,
+                                 const std::vector<time_t> &times,
                                  bool lower_extrapolation,
                                  bool upper_extrapolation);
 

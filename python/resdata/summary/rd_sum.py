@@ -1428,14 +1428,22 @@ class Summary(BaseCClass):
     def resample(
         self,
         new_case_name,
-        time_points,
+        time_points: Iterable[CTime, int, datetime.datetime, datetime.date],
         lower_extrapolation=False,
         upper_extrapolation=False,
     ):
+        try:
+            time_values = [CTime(t).value() for t in time_points]
+        except (TypeError, NotImplementedError) as err:
+            raise TypeError(
+                f"Expected a sequence of time-like values, got {time_points!r}"
+            ) from err
+        if not time_values:
+            raise ValueError("time_points must contain at least one time point")
         ptr = _rd_sum._resample(
             self,
             new_case_name,
-            time_points,
+            time_values,
             lower_extrapolation,
             upper_extrapolation,
         )
