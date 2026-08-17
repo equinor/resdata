@@ -1711,6 +1711,102 @@ def test_summary_solve_dates():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_dates_raises_key_error_for_unrecognized_key():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 1.0, 2.0),
+        values=[[100.0], [150.0], [200.0]],
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(KeyError, match="Unrecognized key:NOPE"):
+        summary.solve_dates("NOPE", 175.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_dates_raises_value_error_when_fewer_than_two_elements():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0,),
+        values=[[100.0]],
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(
+        ValueError, match="Must have at least two elements to start solving"
+    ):
+        summary.solve_dates("FOPR", 100.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_dates_returns_naive_datetime_objects_without_timezone():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 1.0, 2.0, 3.0),
+        values=[[100.0], [150.0], [200.0], [250.0]],
+    )
+
+    summary = Summary("TEST")
+    solutions = summary.solve_dates("FOPR", 175.0)
+
+    assert isinstance(solutions, list)
+    assert len(solutions) > 0
+    for solution in solutions:
+        assert type(solution) is datetime.datetime
+        assert solution.tzinfo is None
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_dates_returns_empty_list_when_value_never_reached():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 1.0, 2.0, 3.0),
+        values=[[100.0], [150.0], [200.0], [250.0]],
+    )
+
+    summary = Summary("TEST")
+    assert summary.solve_dates("FOPR", 1000.0) == []
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize(
+    "start_date, values, solve_value, expected_datetime",
+    [
+        (
+            Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+            [[0.0], [7.0]],
+            1.0,
+            datetime.datetime(2000, 1, 1, 3, 25, 42),
+        ),
+        (
+            Date(day=1, month=1, year=1970, hour=0, minutes=0, micro_seconds=0),
+            [[0.0], [3.0]],
+            2.9999999999999996,
+            datetime.datetime(1970, 1, 1, 23, 59, 59),
+        ),
+        (
+            Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+            [[0.0], [3.0]],
+            2.9999999999999996,
+            datetime.datetime(2000, 1, 2, 0, 0, 0),
+        ),
+    ],
+)
+def test_solve_dates_rounding_to_datetime(
+    start_date, values, solve_value, expected_datetime
+):
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 1.0),
+        values=values,
+        start_date=start_date,
+    )
+
+    summary = Summary("TEST")
+    assert summary.solve_dates("FOPT", solve_value) == [expected_datetime]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_solve_days():
     """Test solve_days method"""
     create_summary(
