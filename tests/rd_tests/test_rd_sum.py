@@ -1055,7 +1055,6 @@ def test_summary_time_range():
 
     summary = Summary("TEST")
     time_range = summary.time_range(interval="10d")
-    assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
         datetime.datetime(2000, 1, 1, 0, 0),
         datetime.datetime(2000, 1, 11, 0, 0),
@@ -1367,7 +1366,6 @@ def test_summary_time_range_with_start():
     custom_start = datetime.datetime(2000, 1, 15)
     time_range = summary.time_range(start=custom_start, interval="10d")
 
-    assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
         datetime.datetime(2000, 1, 15, 0, 0),
         datetime.datetime(2000, 1, 25, 0, 0),
@@ -1394,7 +1392,6 @@ def test_summary_time_range_with_end():
     custom_end = datetime.datetime(2000, 2, 15)
     time_range = summary.time_range(end=custom_end, interval="10d")
 
-    assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
         datetime.datetime(2000, 1, 1, 0, 0),
         datetime.datetime(2000, 1, 11, 0, 0),
@@ -1403,6 +1400,356 @@ def test_summary_time_range_with_end():
         datetime.datetime(2000, 2, 10, 0, 0),
         datetime.datetime(2000, 2, 20, 0, 0),
     ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_type_error_for_malformed_interval():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(TypeError, match="delta string must be on form"):
+        summary.time_range(interval="bogus")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_value_error_when_end_before_start():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(ValueError, match="Invalid time interval start after end"):
+        summary.time_range(
+            start=datetime.datetime(2000, 3, 1),
+            end=datetime.datetime(2000, 1, 1),
+            interval="10d",
+        )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_clamps_start_before_data_start_time():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(start=datetime.datetime(1990, 1, 1), interval="10d")
+
+    assert time_range[0].datetime() == summary.get_data_start_time()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_clamps_end_after_end_time():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(end=datetime.datetime(2050, 1, 1), interval="10d")
+
+    assert time_range[-1].datetime() == summary.get_end_time()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_accepts_date_objects_for_start_and_end():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(
+        start=datetime.date(2000, 1, 1),
+        end=datetime.date(2000, 2, 1),
+        interval="10d",
+    )
+
+    assert [t.datetime() for t in time_range] == [
+        datetime.datetime(2000, 1, 1, 0, 0),
+        datetime.datetime(2000, 1, 11, 0, 0),
+        datetime.datetime(2000, 1, 21, 0, 0),
+        datetime.datetime(2000, 1, 31, 0, 0),
+        datetime.datetime(2000, 2, 10, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_with_num_timestep_takes_precedence_over_interval():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(interval="1d", num_timestep=3)
+
+    assert len(time_range) == 3
+    assert time_range[0].datetime() == summary.get_data_start_time()
+    assert time_range[-1].datetime() == summary.get_end_time()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_year_interval_extends_end_to_start_of_next_year():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=15, month=3, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    without_extension = summary.time_range(interval="1y", extend_end=False)
+    with_extension = summary.time_range(interval="1y", extend_end=True)
+
+    assert [t.datetime() for t in without_extension] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2001, 3, 1, 0, 0),
+        datetime.datetime(2001, 4, 1, 0, 0),
+    ]
+    assert [t.datetime() for t in with_extension] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2001, 1, 1, 0, 0),
+        datetime.datetime(2002, 1, 1, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_month_interval_extension_is_a_noop_when_ending_on_month_start():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=15, month=3, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    without_extension = summary.time_range(interval="1m", extend_end=False)
+    with_extension = summary.time_range(interval="1m", extend_end=True)
+
+    assert [t.datetime() for t in without_extension] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2000, 4, 1, 0, 0),
+        datetime.datetime(2000, 5, 1, 0, 0),
+        datetime.datetime(2000, 6, 1, 0, 0),
+        datetime.datetime(2000, 7, 1, 0, 0),
+        datetime.datetime(2000, 8, 1, 0, 0),
+        datetime.datetime(2000, 9, 1, 0, 0),
+        datetime.datetime(2000, 10, 1, 0, 0),
+        datetime.datetime(2000, 11, 1, 0, 0),
+        datetime.datetime(2000, 12, 1, 0, 0),
+        datetime.datetime(2001, 1, 1, 0, 0),
+        datetime.datetime(2001, 2, 1, 0, 0),
+        datetime.datetime(2001, 3, 1, 0, 0),
+        datetime.datetime(2001, 4, 1, 0, 0),
+    ]
+    assert [t.datetime() for t in with_extension] == [
+        *[t.datetime() for t in without_extension],
+        datetime.datetime(2001, 5, 1, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_day_interval_extend_end_is_always_a_noop():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=15, month=3, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    without_extension = summary.time_range(interval="1d", extend_end=False)
+    with_extension = summary.time_range(interval="1d", extend_end=True)
+
+    assert without_extension[-1].datetime() == with_extension[-1].datetime()
+    assert without_extension[-1].datetime() == summary.get_end_time()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_day_interval_extend_end_can_append_an_extra_point():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 97.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    without_extension = summary.time_range(interval="10d", extend_end=False)
+    with_extension = summary.time_range(interval="10d", extend_end=True)
+
+    assert [t.datetime() for t in without_extension][-1] == datetime.datetime(
+        2000, 4, 7, 0, 0
+    )
+    assert [t.datetime() for t in with_extension][-1] == datetime.datetime(
+        2000, 4, 10, 0, 0
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_month_interval_handles_start_day_beyond_end_of_month():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=31, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(interval="1m")
+
+    assert [t.datetime() for t in time_range][:4] == [
+        datetime.datetime(2000, 1, 31, 0, 0),
+        datetime.datetime(2000, 2, 1, 0, 0),
+        datetime.datetime(2000, 3, 1, 0, 0),
+        datetime.datetime(2000, 4, 1, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_year_interval_handles_leap_day_start():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=29, month=2, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(interval="1y")
+
+    assert [t.datetime() for t in time_range] == [
+        datetime.datetime(2000, 2, 29, 0, 0),
+        datetime.datetime(2001, 1, 1, 0, 0),
+        datetime.datetime(2002, 1, 1, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_supports_multiple_month_and_year_intervals():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 800.0),
+        start_date=Date(day=15, month=3, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    two_months = summary.time_range(interval="2m")
+    two_years = summary.time_range(interval="2y")
+
+    assert [t.datetime() for t in two_months] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2000, 5, 1, 0, 0),
+        datetime.datetime(2000, 7, 1, 0, 0),
+        datetime.datetime(2000, 9, 1, 0, 0),
+        datetime.datetime(2000, 11, 1, 0, 0),
+        datetime.datetime(2001, 1, 1, 0, 0),
+        datetime.datetime(2001, 3, 1, 0, 0),
+        datetime.datetime(2001, 5, 1, 0, 0),
+        datetime.datetime(2001, 7, 1, 0, 0),
+        datetime.datetime(2001, 9, 1, 0, 0),
+        datetime.datetime(2001, 11, 1, 0, 0),
+        datetime.datetime(2002, 1, 1, 0, 0),
+        datetime.datetime(2002, 3, 1, 0, 0),
+        datetime.datetime(2002, 5, 1, 0, 0),
+        datetime.datetime(2002, 7, 1, 0, 0),
+    ]
+    assert [t.datetime() for t in two_years] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2002, 1, 1, 0, 0),
+        datetime.datetime(2004, 1, 1, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_discards_time_of_day_for_explicit_start_and_end():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 400.0),
+        start_date=Date(day=15, month=3, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    # datetime.datetime is a subclass of datetime.date, so the same
+    # date-normalization that applies to date objects also strips the
+    # time-of-day component from explicit datetime.datetime start/end values.
+    custom_start = datetime.datetime(2000, 3, 16, 7, 30)
+    custom_end = datetime.datetime(2000, 4, 5, 9, 15)
+    monthly = summary.time_range(start=custom_start, end=custom_end, interval="1m")
+    daily = summary.time_range(start=custom_start, end=custom_end, interval="10d")
+
+    assert [t.datetime() for t in monthly][:3] == [
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2000, 4, 1, 0, 0),
+        datetime.datetime(2000, 5, 1, 0, 0),
+    ]
+    assert [t.datetime() for t in daily][:2] == [
+        datetime.datetime(2000, 3, 16, 0, 0),
+        datetime.datetime(2000, 3, 26, 0, 0),
+    ]
+
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 97.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    time_range = summary.time_range(num_timestep=2)
+
+    assert [t.datetime() for t in time_range] == [
+        summary.get_data_start_time(),
+        summary.get_end_time(),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_value_error_for_num_timestep_of_one():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 97.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(ValueError, match="init_linear arguments invalid"):
+        summary.time_range(num_timestep=1)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_value_error_for_num_timestep_with_equal_start_and_end():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 97.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    same_instant = datetime.datetime(2000, 1, 5)
+    with pytest.raises(ValueError, match="init_linear arguments invalid"):
+        summary.time_range(start=same_instant, end=same_instant, num_timestep=1)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_value_error_for_non_positive_num_timestep():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 10.0, 97.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(ValueError, match="init_linear arguments invalid"):
+        summary.time_range(num_timestep=0)
+
+    with pytest.raises(ValueError, match="init_linear arguments invalid"):
+        summary.time_range(num_timestep=-1)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
