@@ -443,7 +443,6 @@ endif()
 
 add_subdirectory(lib)
 add_subdirectory(applications)
-add_subdirectory(bin)
 
 if(RST_DOC)
   add_subdirectory(python/docs)
