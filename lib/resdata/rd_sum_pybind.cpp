@@ -357,13 +357,13 @@ PYBIND11_MODULE(_rd_sum, m) {
               }
           });
     m.def("_init_pandas_frame_interp",
-          [](py::handle self, py::handle keywords, py::handle time_points,
+          [](py::handle self, py::handle keywords,
+             const std::vector<time_t> &time_points,
              py::array_t<double, py::array::c_style | py::array::forcecast>
                  data) {
               rd_sum_init_double_frame_interp(
                   from_cwrap<rd_sum_type>(self),
-                  from_cwrap<rd_sum_vector_type>(keywords),
-                  from_cwrap<time_t_vector_type>(time_points),
+                  from_cwrap<rd_sum_vector_type>(keywords), time_points,
                   data.mutable_data());
           });
     m.def("_identify_var_type", [](std::string var) {
@@ -392,13 +392,13 @@ PYBIND11_MODULE(_rd_sum, m) {
                                         gen_key.c_str(), data.mutable_data());
           });
     m.def("_init_numpy_vector_interp",
-          [](py::handle self, std::string gen_key, py::handle time_points,
+          [](py::handle self, std::string gen_key,
+             const std::vector<time_t> &time_points,
              py::array_t<double, py::array::c_style | py::array::forcecast>
                  data) {
-              rd_sum_init_double_vector_interp(
-                  from_cwrap<rd_sum_type>(self), gen_key.c_str(),
-                  from_cwrap<time_t_vector_type>(time_points),
-                  data.mutable_data());
+              rd_sum_init_double_vector_interp(from_cwrap<rd_sum_type>(self),
+                                               gen_key.c_str(), time_points,
+                                               data.mutable_data());
           });
     m.def(
         "_init_numpy_datetime64",

@@ -799,7 +799,7 @@ void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
 
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       const char *gen_key,
-                                      const time_t_vector_type *time_points,
+                                      const std::vector<time_t> &time_points,
                                       double *data) {
     const rd::smspec_node &node =
         rd_smspec_get_general_var_node(rd_sum->smspec.get(), gen_key);
@@ -809,7 +809,7 @@ void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
 
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
-                                     const time_t_vector_type *time_points,
+                                     const std::vector<time_t> &time_points,
                                      double *data) {
     rd_sum_data_init_double_frame_interp(rd_sum->data.get(), keywords,
                                          time_points, data);

@@ -985,7 +985,7 @@ double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
 
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
-    const time_t_vector_type *time_points, double *output_data) {
+    const std::vector<time_t> &time_points, double *output_data) {
     bool is_rate = smspec_node.is_rate();
     int params_index = smspec_node.get_params_index();
     time_t start_time = rd_sum_data_get_data_start(data);
@@ -998,9 +998,8 @@ void rd_sum_data_init_double_vector_interp(
         end_value = rd_sum_data_iget_last_value(data, params_index);
     }
 
-    for (int time_index = 0; time_index < time_t_vector_size(time_points);
-         time_index++) {
-        time_t sim_time = time_t_vector_iget(time_points, time_index);
+    for (size_t time_index = 0; time_index < time_points.size(); time_index++) {
+        time_t sim_time = time_points[time_index];
         double value;
         if (sim_time < start_time)
             value = start_value;
@@ -1022,19 +1021,17 @@ void rd_sum_data_init_double_vector_interp(
     }
 }
 
-void rd_sum_data_init_double_frame_interp(const rd_sum_data_type *data,
-                                          const rd_sum_vector_type *keywords,
-                                          const time_t_vector_type *time_points,
-                                          double *output_data) {
+void rd_sum_data_init_double_frame_interp(
+    const rd_sum_data_type *data, const rd_sum_vector_type *keywords,
+    const std::vector<time_t> &time_points, double *output_data) {
     int num_keywords = rd_sum_vector_get_size(keywords);
     int time_stride = num_keywords;
     int key_stride = 1;
     time_t start_time = rd_sum_data_get_data_start(data);
     time_t end_time = rd_sum_data_get_sim_end(data);
 
-    for (int time_index = 0; time_index < time_t_vector_size(time_points);
-         time_index++) {
-        time_t sim_time = time_t_vector_iget(time_points, time_index);
+    for (size_t time_index = 0; time_index < time_points.size(); time_index++) {
+        time_t sim_time = time_points[time_index];
         if (sim_time < start_time) {
             for (int key_index = 0; key_index < num_keywords; key_index++) {
                 int param_index =
