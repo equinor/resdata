@@ -1428,7 +1428,7 @@ class Summary(BaseCClass):
     def resample(
         self,
         new_case_name,
-        time_points: Iterable[CTime, int, datetime.datetime, datetime.date],
+        time_points: Iterable[CTime | int | datetime.datetime | datetime.date],
         lower_extrapolation=False,
         upper_extrapolation=False,
     ):

@@ -37,7 +37,7 @@ from contextlib import contextmanager
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.summary import Summary, SummaryKeyWordVector, SummaryVarType
-from resdata.util.util import CTime, TimeVector
+from resdata.util.util import CTime
 
 from tests import ResdataTest
 from tests.util.mock import createSummary
@@ -474,10 +474,7 @@ class SumTest(ResdataTest):
     def test_resample(self):
         case = create_case()
         time_vector = case.alloc_time_vector(False)
-        time_points = TimeVector()
-        for t in time_vector.tolist():
-            time_points.append(t)
-        case2 = case.resample("RS", time_points)
+        case2 = case.resample("RS", time_vector.tolist())
         time_vector_resample = case2.alloc_time_vector(False)
         self.assertEqual(list(time_vector_resample), list(time_vector))
 
@@ -730,8 +727,6 @@ class SumTest(ResdataTest):
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
         """
 
-        time_points = TimeVector()
-
         path = os.path.join(
             self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3"
         )
@@ -742,12 +737,11 @@ class SumTest(ResdataTest):
         delta = end_time - start_time
 
         N = 25
-        time_points.initRange(
-            CTime(start_time),
-            CTime(end_time),
-            CTime(int(delta.total_seconds() / (N - 1))),
-        )
-        time_points.append(CTime(end_time))
+        step_len = delta.total_seconds() / (N - 1)
+        time_points = [
+            start_time + datetime.timedelta(seconds=i * step_len) for i in range(N - 1)
+        ]
+        time_points.append(end_time)
         resampled = rd_sum.resample(
             "OUTPUT_CASE",
             time_points,
@@ -794,14 +788,7 @@ class SumTest(ResdataTest):
                 )
 
 
-def create_time_vector(lst):
-    vec = TimeVector()
-    for l in lst:
-        vec.append(l)
-    return vec
-
-
-@pytest.mark.parametrize("time_index_type", [list, create_time_vector, tuple])
+@pytest.mark.parametrize("time_index_type", [list, tuple])
 def test_summary_to_pandas_frame(time_index_type):
     case = create_case()
     dates = time_index_type(
