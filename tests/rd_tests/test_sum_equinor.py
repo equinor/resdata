@@ -7,7 +7,8 @@ import numpy as np
 from resdata import UnitSystem
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
-from resdata.util.util import CTime, DoubleVector, TimeVector
+from resdata.summary.rd_sum import _next_time
+from resdata.util.util import CTime, DoubleVector
 
 from tests import ResdataTest, equinor_test
 
@@ -31,12 +32,12 @@ def createRegular(start, end):
     timeUnit = "m"
     num = 1
 
-    timeVector = TimeVector()
-    currentTime = start
+    timeVector = []
+    currentTime = start.datetime()
     while currentTime <= end:
         ct = CTime(currentTime)
         timeVector.append(ct)
-        currentTime = timeVector.nextTime(num, timeUnit)
+        currentTime = _next_time(currentTime, num, timeUnit)
 
     return timeVector
 
@@ -553,17 +554,15 @@ class SumTest(ResdataTest):
         self.assertTrue("WMCTL:Q21BH1" in list(troll_summary.keys()))
 
     def test_resample(self):
-        time_points = TimeVector()
         start_time = self.rd_sum.get_data_start_time()
         end_time = self.rd_sum.get_end_time()
         delta = end_time - start_time
         N = 25
-        time_points.initRange(
-            CTime(start_time),
-            CTime(end_time),
-            CTime(int(delta.total_seconds() / (N - 1))),
-        )
-        time_points.append(CTime(end_time))
+        step_len = delta.total_seconds() / (N - 1)
+        time_points = [
+            start_time + datetime.timedelta(seconds=i * step_len) for i in range(N - 1)
+        ]
+        time_points.append(end_time)
         resampled = self.rd_sum.resample("OUTPUT_CASE", time_points)
 
         for key in self.rd_sum.keys():

@@ -8,7 +8,6 @@ from resdata.util.util import (
     DoubleVector,
     IntVector,
     PermutationVector,
-    TimeVector,
 )
 
 
@@ -36,10 +35,6 @@ class UtilTest(TestCase):
         for i in range(10):
             iv[i] = i**3
         self.dotest_slicing(iv)
-        tv = TimeVector(initial_size=10)
-        for i in range(10):
-            tv[i] = CTime(datetime.datetime(2016, 12, i + 3, 0, 0, 0))
-        self.dotest_slicing(tv)
 
     def test_double_vector(self):
         v = DoubleVector()
@@ -257,27 +252,6 @@ class UtilTest(TestCase):
         iv[0] = 1
         self.assertTrue(iv)
 
-    def test_time_vector(self):
-        time_vector = TimeVector()
-
-        time1 = CTime(datetime.datetime(2013, 8, 13, 0, 0, 0))
-        time2 = CTime(datetime.datetime(2013, 8, 13, 1, 0, 0))
-
-        time_vector.setDefault(time2)
-
-        time_vector.append(time1)
-        time_vector[2] = time2
-
-        self.assertEqual(time_vector[0], time1)
-        self.assertEqual(time_vector[1], time2)
-        self.assertEqual(time_vector[2], time2)
-
-        tv1 = TimeVector(default_value=datetime.date(2000, 1, 1), initial_size=2)
-        self.assertEqual(tv1[0], datetime.date(2000, 1, 1))
-
-        tv2 = TimeVector()
-        tv2.append(time2)
-
     def test_permutation_vector(self):
         vector = DoubleVector()
 
@@ -295,19 +269,6 @@ class UtilTest(TestCase):
 
         for index, value in enumerate(range(1, 6)):
             self.assertEqual(vector[index], value)
-
-    def test_contains_time(self):
-        start = datetime.datetime(2010, 1, 1, 0, 0, 0)
-        end = datetime.datetime(2010, 2, 1, 0, 0, 0)
-        other = datetime.datetime(2010, 1, 15, 0, 0, 0)
-
-        tv = TimeVector()
-        tv.append(start)
-        tv.append(end)
-
-        self.assertTrue(start in tv)
-        self.assertTrue(end in tv)
-        self.assertTrue(other not in tv)
 
     def test_unique(self):
         iv = IntVector()
