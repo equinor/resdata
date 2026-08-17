@@ -1822,6 +1822,68 @@ def test_summary_solve_days():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_days_raises_key_error_for_unrecognized_key():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 1.0, 2.0),
+        values=[[100.0], [150.0], [200.0]],
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(KeyError, match="Unrecognized key:NOPE"):
+        summary.solve_days("NOPE", 175.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_days_raises_value_error_when_fewer_than_two_elements():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0,),
+        values=[[100.0]],
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(
+        ValueError, match="Must have at least two elements to start solving"
+    ):
+        summary.solve_days("FOPR", 100.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_solve_days_returns_empty_vector_when_value_never_reached():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 1.0, 2.0, 3.0),
+        values=[[100.0], [150.0], [200.0], [250.0]],
+    )
+
+    summary = Summary("TEST")
+    assert list(summary.solve_days("FOPR", 1000.0)) == []
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize(
+    "start_date",
+    [
+        Date(day=1, month=1, year=1970, hour=0, minutes=0, micro_seconds=0),
+        Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    ],
+)
+def test_that_solve_days_precision_is_unaffected_by_start_date(start_date):
+    create_summary(
+        summary_keys=("FOPT",),
+        times=(0.0, 1.0),
+        values=[[0.0], [3.0]],
+        start_date=start_date,
+    )
+
+    summary = Summary("TEST")
+    assert list(summary.solve_days("FOPT", 2.9999999999999996)) == pytest.approx(
+        [0.9999999999999998], abs=0
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_fwrite():
     start_date = datetime.datetime(2000, 1, 1)
     writer = Summary.writer("FWRITE_TEST", start_date, 5, 5, 5)
