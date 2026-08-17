@@ -21,7 +21,7 @@ from resdata.summary import (
     SummaryVarType,
 )
 from resdata.summary._date2num import date2num
-from resdata.util.util import DoubleVector, TimeVector
+from resdata.util.util import DoubleVector
 from resfo_utilities.testing import (
     Date,
     Simulator,
@@ -2743,21 +2743,20 @@ def test_summary_resample():
 
     summary = Summary("TEST")
 
-    time_points = TimeVector()
-    time_points.append(datetime.datetime(2000, 1, 1))
-    time_points.append(datetime.datetime(2000, 1, 6))
-    time_points.append(datetime.datetime(2000, 1, 11))
+    time_points = [
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2000, 1, 6),
+        datetime.datetime(2000, 1, 11),
+    ]
 
     resampled = summary.resample("RESAMPLED", time_points)
 
-    assert resampled.alloc_time_vector(False).tolist() == [
-        t.datetime() for t in time_points
-    ]
+    assert resampled.alloc_time_vector(False).tolist() == time_points
     assert resampled["FOPR"].values.tolist() == pytest.approx([100.0, 150.0, 200.0])
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-@pytest.mark.parametrize("bad_time_points", [5, None, DoubleVector()])
+@pytest.mark.parametrize("bad_time_points", [5, None])
 def test_summary_resample_with_wrong_type_time_points_raises_type_error(
     bad_time_points,
 ):
@@ -2767,8 +2766,40 @@ def test_summary_resample_with_wrong_type_time_points_raises_type_error(
         values=[[100.0], [150.0], [200.0]],
     )
     summary = Summary("TEST")
-    with pytest.raises(TypeError, match="Expected TimeVector"):
+    with pytest.raises(TypeError):
         summary.resample("RESAMPLED", bad_time_points)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_resample_with_empty_time_points_raises_value_error():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 5.0, 10.0),
+        values=[[100.0], [150.0], [200.0]],
+    )
+    summary = Summary("TEST")
+    with pytest.raises(ValueError, match="time_points must contain at least one"):
+        summary.resample("RESAMPLED", DoubleVector())
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_summary_resample_with_unsorted_time_points_raises_value_error():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 5.0, 10.0, 15.0),
+        values=[[100.0], [150.0], [200.0], [250.0]],
+    )
+
+    summary = Summary("TEST")
+
+    time_points = [
+        datetime.datetime(2000, 1, 6),
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2000, 1, 11),
+    ]
+
+    with pytest.raises(ValueError, match="Failed to create new resampled case"):
+        summary.resample("RESAMPLED", time_points)
 
 
 def test_that_reading_non_existent_summary_raises_oserror(tmp_path):

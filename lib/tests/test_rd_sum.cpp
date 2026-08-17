@@ -1507,13 +1507,12 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
 
         WHEN("Resampling to days 2, 4, 6 (interpolation only)") {
             std::vector<int> days{2, 4, 6};
-            auto times = make_time_t_vector(0, 0);
+            std::vector<time_t> times;
             for (auto &d : days)
-                time_t_vector_append(times.get(),
-                                     util_make_date_utc(d, 1, 2010));
+                times.push_back(util_make_date_utc(d, 1, 2010));
 
-            auto resampled = rd_sum_alloc_resample(rd_sum.get(), "kk",
-                                                   times.get(), false, false);
+            auto resampled =
+                rd_sum_alloc_resample(rd_sum.get(), "kk", times, false, false);
             REQUIRE(resampled);
 
             THEN("Report times line up with the requested vector") {
@@ -1556,13 +1555,12 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
 
         WHEN("Resampling to days outside range (upper and lower "
              "extrapolation)") {
-            auto times = make_time_t_vector(0, 0);
-            time_t_vector_append(times.get(), util_make_date_utc(1, 1, 2009));
-            time_t_vector_append(times.get(), util_make_date_utc(4, 1, 2010));
-            time_t_vector_append(times.get(), util_make_date_utc(12, 1, 2010));
+            std::vector<time_t> times{util_make_date_utc(1, 1, 2009),
+                                      util_make_date_utc(4, 1, 2010),
+                                      util_make_date_utc(12, 1, 2010)};
 
             auto resampled =
-                rd_sum_alloc_resample(rd_sum.get(), "kk", times.get(),
+                rd_sum_alloc_resample(rd_sum.get(), "kk", times,
                                       /*lower_extrapolation=*/true,
                                       /*upper_extrapolation=*/true);
             REQUIRE(resampled);
@@ -1605,14 +1603,13 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
         }
 
         WHEN("Resampling against an unsorted time vector") {
-            auto times = make_time_t_vector(0, 0);
-            time_t_vector_append(times.get(), util_make_date_utc(1, 1, 2010));
-            time_t_vector_append(times.get(), util_make_date_utc(3, 1, 2010));
-            time_t_vector_append(times.get(), util_make_date_utc(2, 1, 2010));
+            std::vector<time_t> times{util_make_date_utc(1, 1, 2010),
+                                      util_make_date_utc(3, 1, 2010),
+                                      util_make_date_utc(2, 1, 2010)};
 
             THEN("rd_sum_alloc_resample returns null") {
-                REQUIRE_FALSE(rd_sum_alloc_resample(rd_sum.get(), "kk",
-                                                    times.get(), false, false));
+                REQUIRE_FALSE(rd_sum_alloc_resample(rd_sum.get(), "kk", times,
+                                                    false, false));
             }
         }
     }
@@ -1630,13 +1627,12 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
 
         WHEN("Resampling to days 2, 4, 6, 8 (upper_extrapolation only)") {
             std::vector<int> days{2, 4, 6, 8};
-            auto times = make_time_t_vector(0, 0);
+            std::vector<time_t> times;
             for (auto &d : days)
-                time_t_vector_append(times.get(),
-                                     util_make_date_utc(d, 1, 2010));
+                times.push_back(util_make_date_utc(d, 1, 2010));
 
-            auto resampled = rd_sum_alloc_resample(rd_sum.get(), "kk",
-                                                   times.get(), false, true);
+            auto resampled =
+                rd_sum_alloc_resample(rd_sum.get(), "kk", times, false, true);
             REQUIRE(resampled);
 
             THEN("Report times line up with the requested vector") {

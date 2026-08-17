@@ -63,12 +63,12 @@ PYBIND11_MODULE(_rd_sum, m) {
         py::return_value_policy::reference);
     m.def(
         "_resample",
-        [](py::handle self, std::string new_case, py::handle times,
-           bool lower_extrapolation, bool upper_extrapolation) {
+        [](py::handle self, std::string new_case,
+           const std::vector<time_t> &times, bool lower_extrapolation,
+           bool upper_extrapolation) {
             return reinterpret_cast<std::uintptr_t>(
                 rd_sum_alloc_resample(from_cwrap<rd_sum_type>(self),
-                                      new_case.c_str(),
-                                      from_cwrap<time_t_vector_type>(times),
+                                      new_case.c_str(), times,
                                       lower_extrapolation, upper_extrapolation)
                     .release());
         },

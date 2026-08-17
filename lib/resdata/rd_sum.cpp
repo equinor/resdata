@@ -6,6 +6,7 @@
 #include <array>
 #include <fstream>
 #include <ios>
+#include <iterator>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -655,7 +656,7 @@ double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
 }
 
 rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
-                                 const time_t_vector_type *times,
+                                 const std::vector<time_t> &times,
                                  bool lower_extrapolation,
                                  bool upper_extrapolation) {
     /*
@@ -665,15 +666,20 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
 
     time_t start_time = rd_sum_get_data_start(rd_sum);
     time_t end_time = rd_sum_get_end_time(rd_sum);
-    time_t input_start = time_t_vector_get_first(times);
-    time_t input_end = time_t_vector_get_last(times);
+    auto times_begin = times.cbegin();
+    auto times_end = times.cend();
+    if (times_begin == times_end)
+        return {nullptr, &rd_sum_free};
+    time_t input_start = *times_begin;
+    time_t input_end = *std::prev(times_end);
 
     if (!lower_extrapolation && input_start < start_time)
         return {nullptr, &rd_sum_free};
     if (!upper_extrapolation && input_end > end_time)
         return {nullptr, &rd_sum_free};
-    if (!time_t_vector_is_sorted(times, false))
-        return {nullptr, &rd_sum_free};
+    for (auto it = times_begin; std::next(it) != times_end; ++it)
+        if (*it > *std::next(it))
+            return {nullptr, &rd_sum_free};
 
     const int *grid_dims = rd_smspec_get_grid_dims(rd_sum->smspec.get());
 
@@ -708,9 +714,9 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
     auto data =
         make_double_vector(rd_sum_vector_get_size(rd_sum_vector.get()), 0);
 
-    for (int report_step = 0; report_step < time_t_vector_size(times);
-         report_step++) {
-        time_t input_t = time_t_vector_iget(times, report_step);
+    int report_step = 0;
+    for (auto it = times_begin; it != times_end; ++it, ++report_step) {
+        time_t input_t = *it;
         if (input_t < start_time) {
             //clamping to the first value for t < start_time or if it is a rate than derivative is 0
             for (int i = 1; i < rd_smspec_num_nodes(rd_sum->smspec.get());
