@@ -1091,7 +1091,7 @@ rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum) {
    know how to create the various composite keys.
 */
 
-static double_vector_type *
+static std::vector<double>
 rd_sum_alloc_seconds_solution(const rd_sum_type *rd_sum, const char *gen_key,
                               double cmp_value, bool rates_clamp_lower) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
@@ -1099,35 +1099,32 @@ rd_sum_alloc_seconds_solution(const rd_sum_type *rd_sum, const char *gen_key,
                                               cmp_value, rates_clamp_lower);
 }
 
-double_vector_type *rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
+std::vector<double> rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,
                                                double cmp_value,
                                                bool rates_clamp_lower) {
-    double_vector_type *solution = rd_sum_alloc_seconds_solution(
+    std::vector<double> solution = rd_sum_alloc_seconds_solution(
         rd_sum, gen_key, cmp_value, rates_clamp_lower);
-    double_vector_scale(solution, 1.0 / 86400);
+    for (double &seconds : solution)
+        seconds /= 86400;
     return solution;
 }
 
-time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
+std::vector<time_t> rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,
                                                double cmp_value,
                                                bool rates_clamp_lower) {
-    auto solution = make_time_t_vector(0, 0);
-    {
-        double_vector_ptr seconds{
-            rd_sum_alloc_seconds_solution(rd_sum, gen_key, cmp_value,
-                                          rates_clamp_lower),
-            &double_vector_free};
-        time_t start_time = rd_sum_get_start_time(rd_sum);
-        for (int i = 0; i < double_vector_size(seconds.get()); i++) {
-            time_t t = start_time;
-            util_inplace_forward_seconds_utc(
-                &t, double_vector_iget(seconds.get(), i));
-            time_t_vector_append(solution.get(), t);
-        }
+    std::vector<double> seconds = rd_sum_alloc_seconds_solution(
+        rd_sum, gen_key, cmp_value, rates_clamp_lower);
+    std::vector<time_t> solution;
+    solution.reserve(seconds.size());
+    time_t start_time = rd_sum_get_start_time(rd_sum);
+    for (double s : seconds) {
+        time_t t = start_time;
+        util_inplace_forward_seconds_utc(&t, s);
+        solution.push_back(t);
     }
-    return solution.release();
+    return solution;
 }
 
 UnitSystem rd_sum_get_unit_system(const rd_sum_type *rd_sum) {

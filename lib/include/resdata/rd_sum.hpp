@@ -126,11 +126,11 @@ void rd_sum_export_csv(const rd_sum_type *rd_sum, const std::string &filename,
                        const std::vector<std::string> &var_list,
                        const char *date_format, const char *sep);
 
-double_vector_type *rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
+std::vector<double> rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,
                                                double cmp_value,
                                                bool rates_clamp_lower);
-time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
+std::vector<time_t> rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,
                                                double cmp_value,
                                                bool rates_clamp_lower);

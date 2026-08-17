@@ -489,11 +489,11 @@ static void rd_sum_data_init_interp_from_sim_time(const rd_sum_data_type *data,
     *weight2 = time_dist1 / time_diff;
 }
 
-double_vector_type *
+std::vector<double>
 rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
                                    const rd::smspec_node &node,
                                    double cmp_value, bool rates_clamp_lower) {
-    double_vector_type *solution = double_vector_alloc(0, 0);
+    std::vector<double> solution;
     const int param_index = node.get_params_index();
     const int size = rd_sum_data_get_length(data);
 
@@ -517,12 +517,11 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
         double time = rd_sum_data_iget_sim_seconds(data, index);
 
         if (node.is_rate()) {
-            double_vector_append(solution,
-                                 rates_clamp_lower ? prev_time + 1 : time);
+            solution.push_back(rates_clamp_lower ? prev_time + 1 : time);
         } else {
             double slope = (value - prev_value) / (time - prev_time);
             double seconds = (cmp_value - prev_value) / slope + prev_time;
-            double_vector_append(solution, seconds);
+            solution.push_back(seconds);
         }
     }
     return solution;

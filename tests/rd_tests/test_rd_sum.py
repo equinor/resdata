@@ -1817,8 +1817,7 @@ def test_summary_solve_days():
 
     summary = Summary("TEST")
     days = summary.solve_days("FOPR", 175.0)
-    assert isinstance(days, DoubleVector)
-    assert list(days) == pytest.approx([1.000011])
+    assert days == pytest.approx([1.000011])
 
 
 @pytest.mark.usefixtures("use_tmpdir")
