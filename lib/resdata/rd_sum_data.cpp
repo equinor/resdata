@@ -14,7 +14,6 @@
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
 
 #include <fmt/format.h>

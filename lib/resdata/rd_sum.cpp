@@ -29,7 +29,6 @@
 #include <ert/util/vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/bool_vector.hpp>
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/type_macros.hpp>
 

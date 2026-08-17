@@ -22,7 +22,6 @@
 #include <resdata/rd_sum_tstep.hpp>
 
 #include <ert/util/double_vector.hpp>
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
@@ -94,21 +93,6 @@ template <> rd_sum_type *from_cwrap<rd_sum_type>(py::handle obj) {
         throw py::type_error("Expected Summary, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<rd_sum_type>(obj);
-}
-
-py::object TimeVector() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.util.util").attr("TimeVector");
-    }
-    return cls;
-}
-
-template <> time_t_vector_type *from_cwrap<time_t_vector_type>(py::handle obj) {
-    if (!py::isinstance(obj, TimeVector()))
-        throw py::type_error("Expected TimeVector, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<time_t_vector_type>(obj);
 }
 
 py::object SummaryKeyWordVector() {

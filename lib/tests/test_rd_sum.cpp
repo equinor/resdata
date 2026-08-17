@@ -18,7 +18,6 @@
 #include <system_error>
 #include <vector>
 
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_endian_flip.hpp>
