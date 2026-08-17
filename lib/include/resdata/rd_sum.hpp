@@ -79,7 +79,7 @@ int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index);
 
 double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              int data_index, bool report_only);
-time_t_vector_type *rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
+std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only);
 time_t rd_sum_get_data_start(const rd_sum_type *rd_sum);
 time_t rd_sum_get_end_time(const rd_sum_type *rd_sum);

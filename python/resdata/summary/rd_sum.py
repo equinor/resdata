@@ -1364,10 +1364,8 @@ class Summary(BaseCClass):
 
         _rd_sum._fwrite_sum(self)
 
-    def alloc_time_vector(self, report_only):
-        return TimeVector.createPythonObject(
-            _rd_sum._alloc_time_vector(self, report_only)
-        )
+    def alloc_time_vector(self, report_only: bool) -> npt.NDArray[np.datetime64]:
+        return _rd_sum._alloc_time_vector(self, report_only)
 
     def alloc_data_vector(self, data_index, report_only):
         return DoubleVector.createPythonObject(

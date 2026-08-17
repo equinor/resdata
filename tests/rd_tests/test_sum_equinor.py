@@ -3,6 +3,7 @@ import datetime
 import os
 from unittest import skipIf, skipUnless
 
+import numpy as np
 from resdata import UnitSystem
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
@@ -330,7 +331,9 @@ class SumTest(ResdataTest):
             self.assertTrue(nr >= 0)
 
     def test_return_types(self):
-        self.assertIsInstance(self.rd_sum.alloc_time_vector(True), TimeVector)
+        time_vec = self.rd_sum.alloc_time_vector(True)
+        self.assertIsInstance(time_vec, np.ndarray)
+        self.assertEqual(time_vec.dtype, np.dtype("datetime64[s]"))
         key_index = self.rd_sum.get_general_var_index("FOPT")
         self.assertIsInstance(
             self.rd_sum.alloc_data_vector(key_index, True), DoubleVector

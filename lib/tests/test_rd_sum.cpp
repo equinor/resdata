@@ -408,12 +408,10 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         SECTION("Allocated time and data vectors") {
-            time_t_vector_ptr times(
-                rd_sum_alloc_time_vector(rd_sum.get(), false),
-                &time_t_vector_free);
-            REQUIRE(time_t_vector_size(times.get()) ==
-                    rd_sum_get_data_length(rd_sum.get()));
-            REQUIRE(time_t_vector_iget(times.get(), 0) == spec.start_time);
+            auto times = rd_sum_alloc_time_vector(rd_sum.get(), false);
+            REQUIRE(times.size() ==
+                    (size_t)rd_sum_get_data_length(rd_sum.get()));
+            REQUIRE(times[0] == spec.start_time);
 
             const int param_index =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");

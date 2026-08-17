@@ -214,13 +214,18 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def("_set_case", [](py::handle self, std::string input_arg) {
         rd_sum_set_case(from_cwrap<rd_sum_type>(self), input_arg);
     });
-    m.def(
-        "_alloc_time_vector",
-        [](py::handle self, bool report_only) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_time_vector(
-                from_cwrap<rd_sum_type>(self), report_only));
-        },
-        py::return_value_policy::reference);
+    m.def("_alloc_time_vector", [](py::handle self, bool report_only) {
+        std::vector<time_t> times = rd_sum_alloc_time_vector(
+            from_cwrap<rd_sum_type>(self), report_only);
+
+        py::dtype dt("datetime64[s]");
+        py::array result(dt, std::vector<py::ssize_t>{
+                                 static_cast<py::ssize_t>(times.size())});
+        auto *data = static_cast<int64_t *>(result.mutable_data());
+        for (size_t i = 0; i < times.size(); i++)
+            data[i] = static_cast<int64_t>(times[i]);
+        return result;
+    });
     m.def(
         "_alloc_data_vector",
         [](py::handle self, int data_index, bool report_only) {
