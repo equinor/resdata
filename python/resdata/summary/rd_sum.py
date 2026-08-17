@@ -710,7 +710,12 @@ class Summary(BaseCClass):
         return data
 
     def time_range(
-        self, start=None, end=None, interval="1Y", num_timestep=None, extend_end=True
+        self,
+        start=None,
+        end=None,
+        interval: str = "1Y",
+        num_timestep=None,
+        extend_end=True,
     ):
         """Will create a vector of timepoints based on the current case.
 
@@ -719,7 +724,8 @@ class Summary(BaseCClass):
         of timesteps can be specified, if the @num_timestep option is specified
         that will take precedence.
         """
-        num, timeUnit = TimeVector.parseTimeUnit(interval)
+
+        num, timeUnit = _parse_time_unit(interval)
 
         if start is None:
             start = self.get_data_start_time()
@@ -772,7 +778,17 @@ class Summary(BaseCClass):
             range_start = datetime.date(year1, month1, day1)
             range_end = datetime.date(year2, month2, day2)
 
-        trange = TimeVector.createRegular(range_start, range_end, interval)
+        start = CTime(range_start)
+        end = CTime(range_end)
+        if start > end:
+            raise ValueError("The time interval is invalid start is after end")
+
+        trange = TimeVector()
+        currentTime = start
+        while currentTime <= end:
+            ct = CTime(currentTime)
+            trange.append(ct)
+            currentTime = trange.nextTime(num, timeUnit)
 
         # If the simulation does not start at the first of the month
         # the start value will be before the simulation start; we
@@ -1455,3 +1471,24 @@ class Summary(BaseCClass):
 
 
 import resdata.summary.rd_sum_keyword_vector  # noqa
+
+
+def _parse_time_unit(
+    delta_str: str,
+    delta_regex: re.Pattern[str] = re.compile(
+        r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE
+    ),
+) -> tuple[int, str]:
+    match = delta_regex.match(delta_str)
+    if match:
+        try:
+            num = int(match.group("num"))
+        except:
+            num = 1
+
+        time_unit = match.group("unit").lower()
+        return num, time_unit
+    else:
+        raise TypeError(
+            "The delta string must be on form '1d', '2m', 'Y' for one day, two months or one year respectively"
+        )

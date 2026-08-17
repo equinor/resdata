@@ -21,6 +21,25 @@ def sum_get(*args):
     vec = summary[key]
 
 
+def createRegular(start, end):
+    start = CTime(start)
+    end = CTime(end)
+    if start > end:
+        raise ValueError("The time interval is invalid start is after end")
+
+    timeUnit = "m"
+    num = 1
+
+    timeVector = TimeVector()
+    currentTime = start
+    while currentTime <= end:
+        ct = CTime(currentTime)
+        timeVector.append(ct)
+        currentTime = timeVector.nextTime(num, timeUnit)
+
+    return timeVector
+
+
 @equinor_test()
 class SumTest(ResdataTest):
     def setUp(self):
@@ -380,15 +399,11 @@ class SumTest(ResdataTest):
     def test_regularProduction(self):
         summary = Summary(self.case)
         with self.assertRaises(TypeError):
-            trange = TimeVector.createRegular(
-                summary.start_time, summary.end_time, "1M"
-            )
+            trange = createRegular(summary.start_time, summary.end_time)
             prod = summary.blocked_production("FOPR", trange)
 
         with self.assertRaises(KeyError):
-            trange = TimeVector.createRegular(
-                summary.start_time, summary.end_time, "1M"
-            )
+            trange = createRegular(summary.start_time, summary.end_time)
             prod = summary.blocked_production("NoNotThis", trange)
 
         trange = summary.time_range(interval="2Y")
