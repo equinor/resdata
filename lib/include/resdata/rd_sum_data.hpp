@@ -83,7 +83,7 @@ double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
                                     int param_index);
 void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
                                     int params_index, double *output_data);
-double_vector_type *
+std::vector<double>
 rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
                                    const rd::smspec_node &node, double value,
                                    bool rates_clamp_lower);

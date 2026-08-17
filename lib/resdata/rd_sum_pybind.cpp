@@ -254,24 +254,31 @@ PYBIND11_MODULE(_rd_sum, m) {
                   pattern.has_value() ? pattern->c_str() : nullptr);
           });
 
-    m.def(
-        "_solve_days",
-        [](py::handle self, std::string gen_key, double cmp_value,
-           bool rates_clamp_lower) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_days_solution(
-                from_cwrap<rd_sum_type>(self), gen_key.c_str(), cmp_value,
-                rates_clamp_lower));
-        },
-        py::return_value_policy::reference);
-    m.def(
-        "_solve_dates",
-        [](py::handle self, std::string gen_key, double cmp_value,
-           bool rates_clamp_lower) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_time_solution(
-                from_cwrap<rd_sum_type>(self), gen_key.c_str(), cmp_value,
-                rates_clamp_lower));
-        },
-        py::return_value_policy::reference);
+    m.def("_solve_days", [](py::handle self, std::string gen_key,
+                            double cmp_value, bool rates_clamp_lower) {
+        return rd_sum_alloc_days_solution(from_cwrap<rd_sum_type>(self),
+                                          gen_key.c_str(), cmp_value,
+                                          rates_clamp_lower);
+    });
+    m.def("_solve_dates", [](py::handle self, std::string gen_key,
+                             double cmp_value, bool rates_clamp_lower) {
+        std::vector<time_t> solution = rd_sum_alloc_time_solution(
+            from_cwrap<rd_sum_type>(self), gen_key.c_str(), cmp_value,
+            rates_clamp_lower);
+        py::object gmtime = py::module_::import("time").attr("gmtime");
+        py::object datetime_cls =
+            py::module_::import("datetime").attr("datetime");
+
+        std::vector<py::object> result;
+        result.reserve(solution.size());
+        for (time_t t : solution) {
+            py::object tm = gmtime(py::int_(t));
+            result.push_back(datetime_cls(
+                tm.attr("tm_year"), tm.attr("tm_mon"), tm.attr("tm_mday"),
+                tm.attr("tm_hour"), tm.attr("tm_min"), tm.attr("tm_sec")));
+        }
+        return result;
+    });
 
     m.def(
         "_add_variable",

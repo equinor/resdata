@@ -438,68 +438,57 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         WHEN("calling rd_sum_alloc_time_solution") {
             auto solve = [&](const char *key, double cmp,
                              bool clamp_lower = false) {
-                return time_t_vector_ptr(
-                    rd_sum_alloc_time_solution(rd_sum.get(), key, cmp,
-                                               clamp_lower),
-                    &time_t_vector_free);
+                return rd_sum_alloc_time_solution(rd_sum.get(), key, cmp,
+                                                  clamp_lower);
             };
 
             const double day = spec.ministep_length;
 
             THEN("Solving for monotonic gives single crossing") {
-                auto sol = solve("FOPT", 1.5 * day);
-                REQUIRE(time_t_vector_size(sol.get()) == 1);
                 time_t expected = spec.start_time;
                 util_inplace_forward_seconds_utc(&expected, 1.5 * day);
-                REQUIRE(time_t_vector_iget(sol.get(), 0) == expected);
+                REQUIRE(solve("FOPT", 1.5 * day) ==
+                        std::vector<time_t>{expected});
             }
 
             THEN("Solving for exact sample returns that value") {
-                auto sol = solve("FOPT", 2.0 * day);
-                REQUIRE(time_t_vector_size(sol.get()) == 1);
-                REQUIRE(time_t_vector_iget(sol.get(), 0) ==
-                        rd_sum_iget_sim_time(rd_sum.get(), 2));
+                REQUIRE(
+                    solve("FOPT", 2.0 * day) ==
+                    std::vector<time_t>{rd_sum_iget_sim_time(rd_sum.get(), 2)});
             }
 
             THEN("value below the series range yields empty") {
-                auto sol = solve("FOPT", -1.0);
-                REQUIRE(sol.get() != nullptr);
-                REQUIRE(time_t_vector_size(sol.get()) == 0);
+                REQUIRE(solve("FOPT", -1.0) == std::vector<time_t>{});
             }
 
             THEN("value above the series range yields empty") {
                 const double last =
                     (spec.num_report_steps * spec.num_ministep - 1) * day;
-                auto sol = solve("FOPT", 10.0 * last);
-                REQUIRE(sol.get() != nullptr);
-                REQUIRE(time_t_vector_size(sol.get()) == 0);
+                REQUIRE(solve("FOPT", 10.0 * last) == std::vector<time_t>{});
             }
 
             THEN("resolution uses the requested key") {
                 auto fopt_sol = solve("FOPT", 1.5 * day);
                 auto bpr_sol = solve("BPR:567", 10.0 * 1.5 * day);
-                REQUIRE(time_t_vector_size(bpr_sol.get()) == 1);
-                REQUIRE(time_t_vector_iget(bpr_sol.get(), 0) ==
-                        time_t_vector_iget(fopt_sol.get(), 0));
+                REQUIRE(bpr_sol.size() == 1);
+                REQUIRE(bpr_sol == fopt_sol);
             }
 
             THEN("rate variable with rates_clamp_lower=true picks the lower "
                  "edge") {
                 auto sol = solve("WWCT:OP-1", 100.0 * 1.5 * day,
                                  /*clamp_lower=*/true);
-                REQUIRE(time_t_vector_size(sol.get()) == 1);
                 time_t expected = spec.start_time;
                 util_inplace_forward_seconds_utc(&expected, day + 1);
-                REQUIRE(time_t_vector_iget(sol.get(), 0) == expected);
+                REQUIRE(sol == std::vector<time_t>{expected});
             }
 
             THEN("rate variable with rates_clamp_lower=false picks the upper "
                  "edge") {
                 auto sol = solve("WWCT:OP-1", 100.0 * 1.5 * day,
                                  /*clamp_lower=*/false);
-                REQUIRE(time_t_vector_size(sol.get()) == 1);
-                REQUIRE(time_t_vector_iget(sol.get(), 0) ==
-                        rd_sum_iget_sim_time(rd_sum.get(), 2));
+                REQUIRE(sol == std::vector<time_t>{
+                                   rd_sum_iget_sim_time(rd_sum.get(), 2)});
             }
 
             THEN("unknown key throws std::out_of_range") {
@@ -549,22 +538,19 @@ TEST_CASE_METHOD(Tmpdir,
 
     auto rd_sum = read_summary(case_path);
 
-    time_t_vector_ptr sol(
-        rd_sum_alloc_time_solution(rd_sum.get(), "BPR:567", 1.5,
-                                   /*rates_clamp_lower=*/false),
-        &time_t_vector_free);
+    std::vector<time_t> sol = rd_sum_alloc_time_solution(
+        rd_sum.get(), "BPR:567", 1.5, /*rates_clamp_lower=*/false);
 
-    REQUIRE(time_t_vector_size(sol.get()) == 2);
+    REQUIRE(sol.size() == 2);
 
     time_t rising = start_time;
     util_inplace_forward_seconds_utc(&rising, 1.5 * dt);
     time_t falling = start_time;
     util_inplace_forward_seconds_utc(&falling, 4.5 * dt);
 
-    REQUIRE(time_t_vector_iget(sol.get(), 0) == rising);
-    REQUIRE(time_t_vector_iget(sol.get(), 1) == falling);
-    REQUIRE(time_t_vector_iget(sol.get(), 0) <
-            time_t_vector_iget(sol.get(), 1));
+    REQUIRE(sol[0] == rising);
+    REQUIRE(sol[1] == falling);
+    REQUIRE(sol[0] < sol[1]);
 }
 
 TEST_CASE_METHOD(Tmpdir, "rd_sum_add_local_var registers LGR smspec nodes") {

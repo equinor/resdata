@@ -1249,12 +1249,7 @@ class Summary(BaseCClass):
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
 
-        return [
-            x.datetime()
-            for x in TimeVector.createPythonObject(
-                _rd_sum._solve_dates(self, key, value, rates_clamp_lower)
-            )
-        ]
+        return _rd_sum._solve_dates(self, key, value, rates_clamp_lower)
 
     def solve_days(self, key, value, rates_clamp_lower=True):
         """Will solve the equation vector[@key] == value.
@@ -1345,9 +1340,7 @@ class Summary(BaseCClass):
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
 
-        return DoubleVector.createPythonObject(
-            _rd_sum._solve_days(self, key, value, rates_clamp_lower)
-        )
+        return _rd_sum._solve_days(self, key, value, rates_clamp_lower)
 
     def keys(self, pattern=None) -> list[str]:
         """
