@@ -8,9 +8,6 @@ function(target_link_resdata target)
 endfunction()
 
 if(BUILD_APPLICATIONS)
-  add_executable(sum_write resdata/sum_write.cpp)
-  target_link_resdata(sum_write)
-
   foreach(app rd_pack rd_unpack)
     add_executable(${app} resdata/${app}.cpp)
     target_link_resdata(${app})
