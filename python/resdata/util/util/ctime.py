@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import ctypes
 import datetime
 import time
+from typing import TypeAlias
 
+import numpy as np
 from cwrap import BaseCValue
 
 from resdata import ResdataPrototype
@@ -15,7 +19,7 @@ class CTime(BaseCValue):
         "long util_make_datetime_utc(int, int, int, int, int, int)", bind=False
     )
 
-    def __init__(self, value):
+    def __init__(self, value: TimeLike):
         if isinstance(value, int):
             value = value
         elif isinstance(value, CTime):
@@ -31,6 +35,16 @@ class CTime(BaseCValue):
             )
         elif isinstance(value, datetime.date):
             value = CTime._timegm(0, 0, 0, value.day, value.month, value.year)
+        elif isinstance(value, np.datetime64):
+            d = value.astype("datetime64[s]").item()
+            value = CTime._timegm(
+                d.second,
+                d.minute,
+                d.hour,
+                d.day,
+                d.month,
+                d.year,
+            )
         else:
             raise NotImplementedError(
                 "Can not convert class %s to CTime" % value.__class__
@@ -45,11 +59,11 @@ class CTime(BaseCValue):
         """Return this time_t as a time.gmtime() object"""
         return time.gmtime(self.value())
 
-    def date(self):
+    def date(self) -> datetime.date:
         """Return this time_t as a datetime.date([year, month, day])"""
         return datetime.date(*self.time()[0:3])
 
-    def datetime(self):
+    def datetime(self) -> datetime.datetime:
         return datetime.datetime(*self.time()[0:6])
 
     def __str__(self):
@@ -64,7 +78,7 @@ class CTime(BaseCValue):
     def __gt__(self, other):
         if isinstance(other, CTime):
             return self.value() > other.value()
-        elif isinstance(other, (int, datetime.datetime, datetime.date)):
+        elif isinstance(other, (int, datetime.datetime, datetime.date, np.datetime64)):
             return self > CTime(other)
         else:
             raise TypeError("CTime does not support type: %s" % other.__class__)
@@ -72,7 +86,7 @@ class CTime(BaseCValue):
     def __lt__(self, other):
         if isinstance(other, CTime):
             return self.value() < other.value()
-        elif isinstance(other, (int, datetime.datetime, datetime.date)):
+        elif isinstance(other, (int, datetime.datetime, datetime.date, np.datetime64)):
             return self < CTime(other)
         else:
             raise TypeError("CTime does not support type: %s" % other.__class__)
@@ -83,7 +97,7 @@ class CTime(BaseCValue):
     def __eq__(self, other):
         if isinstance(other, CTime):
             return self.value() == other.value()
-        elif isinstance(other, (int, datetime.datetime, datetime.date)):
+        elif isinstance(other, (int, datetime.datetime, datetime.date, np.datetime64)):
             return self == CTime(other)
         elif other is None:
             return False
@@ -139,3 +153,6 @@ class CTime(BaseCValue):
         Returns the current timezone "in" C
         """
         return CTime._timezone()
+
+
+TimeLike: TypeAlias = int | CTime | datetime.datetime | datetime.date | np.datetime64

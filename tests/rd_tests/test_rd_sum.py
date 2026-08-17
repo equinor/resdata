@@ -1380,6 +1380,32 @@ def test_summary_time_range_with_start():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_summary_time_range_with_numpy_datetime64_start():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+
+    custom_start = np.datetime64("2000-01-15")
+    time_range = summary.time_range(start=custom_start, interval="10d")
+
+    assert [t.datetime() for t in time_range] == [
+        datetime.datetime(2000, 1, 15, 0, 0),
+        datetime.datetime(2000, 1, 25, 0, 0),
+        datetime.datetime(2000, 2, 4, 0, 0),
+        datetime.datetime(2000, 2, 14, 0, 0),
+        datetime.datetime(2000, 2, 24, 0, 0),
+        datetime.datetime(2000, 3, 5, 0, 0),
+        datetime.datetime(2000, 3, 15, 0, 0),
+        datetime.datetime(2000, 3, 25, 0, 0),
+        datetime.datetime(2000, 4, 4, 0, 0),
+    ]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_time_range_with_end():
     create_summary(
         summary_keys=("FOPR",),
@@ -1668,7 +1694,7 @@ def test_that_time_range_supports_multiple_month_and_year_intervals():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_time_range_discards_time_of_day_for_explicit_start_and_end():
+def test_that_time_range_preserves_time_of_day_for_datetimes():
     create_summary(
         summary_keys=("FOPR",),
         times=(0.0, 10.0, 400.0),
@@ -1676,9 +1702,6 @@ def test_that_time_range_discards_time_of_day_for_explicit_start_and_end():
     )
 
     summary = Summary("TEST")
-    # datetime.datetime is a subclass of datetime.date, so the same
-    # date-normalization that applies to date objects also strips the
-    # time-of-day component from explicit datetime.datetime start/end values.
     custom_start = datetime.datetime(2000, 3, 16, 7, 30)
     custom_end = datetime.datetime(2000, 4, 5, 9, 15)
     monthly = summary.time_range(start=custom_start, end=custom_end, interval="1m")
@@ -1690,8 +1713,8 @@ def test_that_time_range_discards_time_of_day_for_explicit_start_and_end():
         datetime.datetime(2000, 5, 1, 0, 0),
     ]
     assert [t.datetime() for t in daily][:2] == [
-        datetime.datetime(2000, 3, 16, 0, 0),
-        datetime.datetime(2000, 3, 26, 0, 0),
+        datetime.datetime(2000, 3, 16, 7, 30),
+        datetime.datetime(2000, 3, 26, 7, 30),
     ]
 
     create_summary(
