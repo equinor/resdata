@@ -1,7 +1,7 @@
 #include <cstdlib>
+#include <ctime>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>

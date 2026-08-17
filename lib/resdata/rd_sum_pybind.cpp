@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/double_vector.hpp>
-#include <ert/util/time_t_vector.hpp>
 
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_sum_tstep.hpp>

@@ -32,5 +32,4 @@ from .double_vector import DoubleVector
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector
 from .permutation_vector import PermutationVector
-from .time_vector import TimeVector
 from .vector_template import VectorTemplate

@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include "ert/util/type_macros.hpp"
 
