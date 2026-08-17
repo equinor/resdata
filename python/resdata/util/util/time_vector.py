@@ -129,23 +129,6 @@ class TimeVector(VectorTemplate):
 
             super().__init__(default, initial_size)
 
-    @classmethod
-    def parseTimeUnit(cls, deltaString):
-        deltaRegexp = re.compile(r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
-        matchObj = deltaRegexp.match(deltaString)
-        if matchObj:
-            try:
-                num = int(matchObj.group("num"))
-            except:
-                num = 1
-
-            timeUnit = matchObj.group("unit").lower()
-            return num, timeUnit
-        else:
-            raise TypeError(
-                "The delta string must be on form '1d', '2m', 'Y' for one day, two months or one year respectively"
-            )
-
     def __str__(self):
         """
         Returns string representantion of vector.
@@ -190,30 +173,3 @@ class TimeVector(VectorTemplate):
     def appendTime(self, num, timeUnit):
         next_time = self.nextTime(num, timeUnit)
         self.append(CTime(next_time))
-
-    @classmethod
-    def createRegular(cls, start, end, deltaString):
-        """
-        The last element in the vector will be <= end; i.e. if the
-        question of whether the range is closed in the upper end
-        depends on the commensurability of the [start,end] interval
-        and the delta:
-
-        createRegular(0 , 10 , delta=3) => [0,3,6,9]
-        createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
-        """
-        start = CTime(start)
-        end = CTime(end)
-        if start > end:
-            raise ValueError("The time interval is invalid start is after end")
-
-        num, timeUnit = cls.parseTimeUnit(deltaString)
-
-        timeVector = TimeVector()
-        currentTime = start
-        while currentTime <= end:
-            ct = CTime(currentTime)
-            timeVector.append(ct)
-            currentTime = timeVector.nextTime(num, timeUnit)
-
-        return timeVector
