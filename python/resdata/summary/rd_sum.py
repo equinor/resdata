@@ -715,8 +715,8 @@ class Summary(BaseCClass):
         end=None,
         interval: str = "1Y",
         num_timestep=None,
-        extend_end=True,
-    ):
+        extend_end: bool = True,
+    ) -> list[CTime]:
         """Will create a vector of timepoints based on the current case.
 
         By default the timepoints will be regularly sampled based on the
@@ -749,7 +749,7 @@ class Summary(BaseCClass):
             raise ValueError("Invalid time interval start after end")
 
         if num_timestep is not None:
-            return TimeVector.create_linear(CTime(start), CTime(end), num_timestep)
+            return _create_linear_time_range(start, end, num_timestep)
 
         range_start = start
         range_end = end
@@ -775,37 +775,31 @@ class Summary(BaseCClass):
             day1 = 1
             day2 = 1
 
-            range_start = datetime.date(year1, month1, day1)
-            range_end = datetime.date(year2, month2, day2)
+            range_start = datetime.datetime(year1, month1, day1)
+            range_end = datetime.datetime(year2, month2, day2)
 
-        start = CTime(range_start)
-        end = CTime(range_end)
+        start = range_start
+        end = range_end
         if start > end:
             raise ValueError("The time interval is invalid start is after end")
 
-        trange = TimeVector()
+        trange = []
         currentTime = start
         while currentTime <= end:
-            ct = CTime(currentTime)
-            trange.append(ct)
-            currentTime = trange.nextTime(num, timeUnit)
-
-        # If the simulation does not start at the first of the month
-        # the start value will be before the simulation start; we
-        # manually shift the first element in the trange to the start
-        # value; the same for the end of list.
+            trange.append(currentTime)
+            currentTime = _next_time(currentTime, num, timeUnit)
 
         if trange[-1] < end:
             if extend_end:
-                trange.appendTime(num, timeUnit)
+                trange.append(_next_time(trange[-1], num, timeUnit))
             else:
                 trange.append(end)
 
         data_start = self.get_data_start_time()
         if trange[0] < data_start:
-            trange[0] = CTime(data_start)
+            trange[0] = data_start
 
-        return trange
+        return [CTime(t) for t in trange]
 
     def blocked_production(
         self,
@@ -1485,3 +1479,49 @@ def _parse_time_unit(
         raise TypeError(
             "The delta string must be on form '1d', '2m', 'Y' for one day, two months or one year respectively"
         )
+
+
+def _next_time(
+    current_time: datetime.datetime, num: int, time_unit: str
+) -> datetime.datetime:
+    """Advance current_time by num units of time_unit ("d", "m" or "y")."""
+    if time_unit == "d":
+        return current_time + datetime.timedelta(days=num)
+
+    day = current_time.day
+    month = current_time.month
+    year = current_time.year
+    hour = current_time.hour
+    minute = current_time.minute
+    second = current_time.second
+
+    if time_unit == "y":
+        year += num
+    else:
+        month += num - 1
+        delta_year, new_month = divmod(month, 12)
+        month = new_month + 1
+        year += delta_year
+
+    return datetime.datetime(year, month, day, hour, minute, second)
+
+
+def _create_linear_time_range(
+    start: datetime.datetime, end: datetime.datetime, num_values: int
+) -> list[CTime]:
+    """Create a list of num_values CTime instances linearly spaced between
+    start and end (both inclusive).
+    """
+    if num_values < 2:
+        raise ValueError("init_linear arguments invalid")
+
+    start_value = CTime(start).value()
+    end_value = CTime(end).value()
+
+    slope = (end_value - start_value) / (num_values - 1)
+    values = [start_value]
+    for i in range(1, num_values - 1):
+        values.append(int(start_value + slope * i))
+    values.append(end_value)
+
+    return [CTime(v) for v in values]
