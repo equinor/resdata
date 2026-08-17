@@ -2,6 +2,7 @@ import time
 from datetime import date, datetime
 from unittest import TestCase
 
+import numpy as np
 from resdata.util.util import CTime
 
 
@@ -17,6 +18,25 @@ class CTimeTest(TestCase):
 
         with self.assertRaises(NotImplementedError):
             CTime("string")
+
+    def test_creation_from_numpy_datetime64(self):
+        t0 = CTime(0)
+
+        # second precision
+        self.assertEqual(t0, CTime(np.datetime64("1970-01-01T00:00:00")))
+
+        # day precision
+        self.assertEqual(t0, CTime(np.datetime64("1970-01-01")))
+
+        # month precision
+        self.assertEqual(t0, CTime(np.datetime64("1970-01")))
+
+        # sub-second precision is truncated to whole seconds
+        t1 = CTime(datetime(1970, 1, 1, 0, 0, 1))
+        self.assertEqual(t1, CTime(np.datetime64("1970-01-01T00:00:01.999999")))
+
+        # dates before the epoch are supported
+        self.assertEqual(CTime(date(1965, 1, 1)), CTime(np.datetime64("1965-01-01")))
 
     def test_c_time(self):
         delta = 0
@@ -83,6 +103,15 @@ class CTimeTest(TestCase):
 
         t5 = CTime(t4)
         self.assertTrue(t4 == t5)
+
+    def test_comparison_with_numpy_datetime64(self):
+        t0 = CTime(0)
+        t1 = CTime(1)
+
+        self.assertTrue(t0 == np.datetime64("1970-01-01T00:00:00"))
+        self.assertTrue(t0 < np.datetime64("1970-01-01T00:00:01"))
+        self.assertTrue(t1 > np.datetime64("1970-01-01T00:00:00"))
+        self.assertFalse(t0 > np.datetime64("1970-01-01T00:00:01"))
 
     def test_range(self):
         d1 = date(2000, 1, 1)

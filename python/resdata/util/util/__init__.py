@@ -27,7 +27,7 @@ from cwrap import Prototype
 
 import resdata
 
-from .ctime import CTime
+from .ctime import CTime, TimeLike
 from .double_vector import DoubleVector
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector

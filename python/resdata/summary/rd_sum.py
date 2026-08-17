@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime
 import os.path
 import re
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, SupportsFloat
 
 import numpy as np
 import numpy.typing as npt
@@ -29,6 +29,7 @@ from resdata.util.util import (
     CTime,
     DoubleVector,
     IntVector,
+    TimeLike,
 )
 
 from .rd_smspec_node import ResdataSMSPECNode
@@ -146,7 +147,7 @@ class Summary(BaseCClass):
     @staticmethod
     def writer(
         case,
-        start_time,
+        start_time: TimeLike,
         nx,
         ny,
         nz,
@@ -183,7 +184,7 @@ class Summary(BaseCClass):
         case,
         restart_case,
         restart_step,
-        start_time,
+        start_time: TimeLike,
         nx,
         ny,
         nz,
@@ -275,15 +276,16 @@ class Summary(BaseCClass):
         """
         return _rd_sum._create_group_list(self, pattern)
 
-    def numpy_vector(self, key, time_index=None, report_only=False):
+    def numpy_vector(
+        self, key, time_index: Iterable[TimeLike] | None = None, report_only=False
+    ):
         """Will return numpy vector of all the values corresponding to @key.
 
         The optional argument @time_index can be used to limit the time points
-        where you want evaluation. The time_index argument should be a list of
-        datetime instances. The values will be interpolated to the time points
-        given in the time_index vector. If the time points in the time_inedx
-        vector are outside of the simulated range you will get an extrapolated
-        value:
+        where you want evaluation. The values will be interpolated to the time
+        points given in the time_index vector. If the time points in the
+        time_index vector are outside of the simulated range you will get an
+        extrapolated value:
 
              Rates    -> 0
              Not rate -> first or last simulated value.
@@ -335,7 +337,7 @@ class Summary(BaseCClass):
         return np_dates.tolist()
 
     @property
-    def report_dates(self):
+    def report_dates(self) -> list[datetime.date]:
         dates = []
         if len(self):
             for report in range(self.first_report, self.last_report + 1):
@@ -646,7 +648,7 @@ class Summary(BaseCClass):
         self.assert_key_valid(key)
         return SummaryVector(self, key)
 
-    def check_sim_time(self, date):
+    def check_sim_time(self, date: TimeLike):
         """
         Will check if the input date is in the time span [sim_start, sim_end].
         """
@@ -654,12 +656,12 @@ class Summary(BaseCClass):
             date = CTime(date)
         return _rd_sum._check_sim_time(self, date.ctime())
 
-    def get_interp_direct(self, key, date):
+    def get_interp_direct(self, key: str, date: TimeLike) -> float:
         if not isinstance(date, CTime):
             date = CTime(date)
         return _rd_sum._get_general_var_from_sim_time(self, date.ctime(), key)
 
-    def get_interp(self, key, days=None, date=None):
+    def get_interp(self, key, days=None, date: TimeLike | None = None) -> float:
         """
         Will lookup vector @key at time given by @days or @date.
 
@@ -678,12 +680,14 @@ class Summary(BaseCClass):
             raise ValueError("Must supply either days or date")
 
         if days is None:
+            assert date is not None
             t = CTime(date)
             if self.check_sim_time(t):
                 return _rd_sum._get_general_var_from_sim_time(self, t.ctime(), key)
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
         elif date is None:
+            assert days is not None
             if _rd_sum._check_sim_days(self, days):
                 return _rd_sum._get_general_var_from_sim_days(self, days, key)
             else:
@@ -694,7 +698,7 @@ class Summary(BaseCClass):
         else:
             raise ValueError("Must supply either days or date")
 
-    def get_interp_row(self, key_list, sim_time, invalid_value=-1):
+    def get_interp_row(self, key_list, sim_time: TimeLike, invalid_value=-1):
         ctime = CTime(sim_time)
         data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
         _rd_sum._get_interp_vector(self, ctime.ctime(), key_list, data)
@@ -702,8 +706,8 @@ class Summary(BaseCClass):
 
     def time_range(
         self,
-        start=None,
-        end=None,
+        start: TimeLike | None = None,
+        end: TimeLike | None = None,
         interval: str = "1Y",
         num_timestep=None,
         extend_end: bool = True,
@@ -718,39 +722,37 @@ class Summary(BaseCClass):
 
         num, timeUnit = _parse_time_unit(interval)
 
+        data_start = self.get_data_start_time()
         if start is None:
-            start = self.get_data_start_time()
+            _start = data_start
         else:
-            if isinstance(start, datetime.date):
-                start = datetime.datetime(start.year, start.month, start.day, 0, 0, 0)
+            _start = CTime(start).datetime()
+            if _start < data_start:
+                _start = data_start
 
-            if start < self.get_data_start_time():
-                start = self.get_data_start_time()
-
+        end_time = self.get_end_time()
         if end is None:
-            end = self.get_end_time()
+            _end = end_time
         else:
-            if isinstance(end, datetime.date):
-                end = datetime.datetime(end.year, end.month, end.day, 0, 0, 0)
+            _end = CTime(end).datetime()
+            if _end > end_time:
+                _end = end_time
 
-            if end > self.get_end_time():
-                end = self.get_end_time()
-
-        if end < start:
+        if _end < _start:
             raise ValueError("Invalid time interval start after end")
 
         if num_timestep is not None:
-            return _create_linear_time_range(start, end, num_timestep)
+            return _create_linear_time_range(_start, _end, num_timestep)
 
-        range_start = start
-        range_end = end
+        range_start = _start
+        range_end = _end
         if not timeUnit == "d":
-            year1 = start.year
-            year2 = end.year
-            month1 = start.month
-            month2 = end.month
-            day1 = start.day
-            day2 = end.day
+            year1 = _start.year
+            year2 = _end.year
+            month1 = _start.month
+            month2 = _end.month
+            day1 = _start.day
+            day2 = _end.day
             if extend_end:
                 if timeUnit == "m":
                     if day2 > 1:
@@ -769,22 +771,22 @@ class Summary(BaseCClass):
             range_start = datetime.datetime(year1, month1, day1)
             range_end = datetime.datetime(year2, month2, day2)
 
-        start = range_start
-        end = range_end
-        if start > end:
+        _start = range_start
+        _end = range_end
+        if _start > _end:
             raise ValueError("The time interval is invalid start is after end")
 
         trange = []
-        currentTime = start
-        while currentTime <= end:
+        currentTime = _start
+        while currentTime <= _end:
             trange.append(currentTime)
             currentTime = _next_time(currentTime, num, timeUnit)
 
-        if trange[-1] < end:
+        if trange[-1] < _end:
             if extend_end:
                 trange.append(_next_time(trange[-1], num, timeUnit))
             else:
-                trange.append(end)
+                trange.append(_end)
 
         data_start = self.get_data_start_time()
         if trange[0] < data_start:
@@ -793,9 +795,7 @@ class Summary(BaseCClass):
         return [CTime(t) for t in trange]
 
     def blocked_production(
-        self,
-        totalKey: str,
-        timeRange: Iterable[CTime | int | datetime.datetime | datetime.date],
+        self, totalKey: str, timeRange: Iterable[TimeLike]
     ) -> npt.NDArray[np.float64]:
         """The forward difference of the given total.
 
@@ -834,7 +834,9 @@ class Summary(BaseCClass):
         total = np.fromiter((total_at(CTime(t)) for t in timeRange), dtype=np.float64)
         return np.diff(total)
 
-    def get_report(self, date=None, days=None):
+    def get_report(
+        self, date: TimeLike | None = None, days: SupportsFloat | None = None
+    ) -> int:
         """
         Will return the report step corresponding to input @date or @days.
 
@@ -851,13 +853,18 @@ class Summary(BaseCClass):
 
         return step
 
-    def get_report_time(self, report):
+    def get_report_time(self, report) -> datetime.date:
         """
         Will return the datetime corresponding to the report_step @report.
         """
         return CTime(_rd_sum._get_report_time(self, report)).date()
 
-    def get_interp_vector(self, key, days_list=None, date_list=None):
+    def get_interp_vector(
+        self,
+        key: str,
+        days_list: Sequence[SupportsFloat] | None = None,
+        date_list: Sequence[TimeLike] | None = None,
+    ) -> npt.NDArray[np.float64]:
         """
         Will return numpy vector with interpolated values.
 
@@ -1126,7 +1133,7 @@ class Summary(BaseCClass):
         return CTime(ct).date()
 
     @property
-    def end_date(self):
+    def end_date(self) -> datetime.date:
         """
         The date of the last (loaded) time step.
         """
@@ -1147,7 +1154,7 @@ class Summary(BaseCClass):
     def start_time(self):
         return self.get_start_time()
 
-    def get_data_start_time(self):
+    def get_data_start_time(self) -> datetime.datetime:
         """The first date we have data for.
 
         This will usually equal get_start_time(), but for restarts where the
@@ -1156,18 +1163,11 @@ class Summary(BaseCClass):
         """
         return CTime(_rd_sum._get_data_start(self)).datetime()
 
-    def get_start_time(self):
-        """
-        A Python datetime instance with the start time.
-
-        See start_date() for further details.
-        """
+    def get_start_time(self) -> datetime.datetime:
         return CTime(_rd_sum._get_start_date(self)).datetime()
 
-    def get_end_time(self):
-        """
-        A Python datetime instance with the last loaded time.
-        """
+    def get_end_time(self) -> datetime.datetime:
+        """The last loaded time."""
         return CTime(_rd_sum._get_end_date(self)).datetime()
 
     def getSimulationLength(self):
@@ -1389,7 +1389,7 @@ class Summary(BaseCClass):
         content = 'name="%s", time=[%s, %s], keys=%d' % (name, s_time, e_time, num_keys)
         return self._create_repr(content)
 
-    def dump_csv_line(self, time, keywords, pfile):
+    def dump_csv_line(self, time: TimeLike, keywords, pfile):
         """
         Will dump a csv formatted line of the keywords in keywords, evaluated
         at the interpolated time. pfile should point to an open Python
@@ -1428,7 +1428,7 @@ class Summary(BaseCClass):
     def resample(
         self,
         new_case_name,
-        time_points: Iterable[CTime | int | datetime.datetime | datetime.date],
+        time_points: Iterable[TimeLike],
         lower_extrapolation=False,
         upper_extrapolation=False,
     ):
@@ -1504,7 +1504,7 @@ def _next_time(
 
 
 def _create_linear_time_range(
-    start: datetime.datetime, end: datetime.datetime, num_values: int
+    start: TimeLike, end: TimeLike, num_values: int
 ) -> list[CTime]:
     """Create a list of num_values CTime instances linearly spaced between
     start and end (both inclusive).
