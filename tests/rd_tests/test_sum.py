@@ -474,10 +474,12 @@ class SumTest(ResdataTest):
     def test_resample(self):
         case = create_case()
         time_vector = case.alloc_time_vector(False)
-        case2 = case.resample("RS", time_vector)
+        time_points = TimeVector()
+        for t in time_vector.tolist():
+            time_points.append(t)
+        case2 = case.resample("RS", time_points)
         time_vector_resample = case2.alloc_time_vector(False)
-        first_diff = time_vector_resample.first_neq(time_vector)
-        self.assertEqual(time_vector_resample, time_vector)
+        self.assertEqual(list(time_vector_resample), list(time_vector))
 
     # The purpose of this test is to reproduce a slightly contrived error situation.
     #

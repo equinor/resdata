@@ -2255,8 +2255,9 @@ def test_summary_alloc_time_vector():
 
     summary = Summary("TEST")
     time_vec = summary.alloc_time_vector(False)
-    assert isinstance(time_vec, TimeVector)
-    assert [t.datetime() for t in time_vec] == [
+    assert isinstance(time_vec, np.ndarray)
+    assert time_vec.dtype == np.dtype("datetime64[s]")
+    assert time_vec.tolist() == [
         datetime.datetime(2000, 1, 1, 0, 0),
         datetime.datetime(2000, 1, 2, 0, 0),
         datetime.datetime(2000, 1, 3, 0, 0),
@@ -2280,8 +2281,9 @@ def test_summary_alloc_time_vector_report_only():
 
     summary = Summary("TEST")
     time_vec = summary.alloc_time_vector(True)
-    assert isinstance(time_vec, TimeVector)
-    assert [t.datetime() for t in time_vec] == [
+    assert isinstance(time_vec, np.ndarray)
+    assert time_vec.dtype == np.dtype("datetime64[s]")
+    assert time_vec.tolist() == [
         datetime.datetime(2000, 1, 1, 0, 0),
         datetime.datetime(2000, 1, 2, 0, 0),
         datetime.datetime(2000, 1, 3, 0, 0),
@@ -2748,7 +2750,9 @@ def test_summary_resample():
 
     resampled = summary.resample("RESAMPLED", time_points)
 
-    assert resampled.alloc_time_vector(False) == time_points
+    assert resampled.alloc_time_vector(False).tolist() == [
+        t.datetime() for t in time_points
+    ]
     assert resampled["FOPR"].values.tolist() == pytest.approx([100.0, 150.0, 200.0])
 
 

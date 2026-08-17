@@ -37,7 +37,7 @@ bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days);
 double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
                                                   int data_index,
                                                   bool report_only);
-time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
+std::vector<time_t> rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
                                                   bool report_only);
 time_t rd_sum_data_get_data_start(const rd_sum_data_type *data);
 time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,

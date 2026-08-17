@@ -905,7 +905,7 @@ static void rd_sum_data_init_time_vector__(const rd_sum_data_type *data,
     }
 }
 
-time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
+std::vector<time_t> rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
                                                   bool report_only) {
     std::vector<time_t> output_data;
     if (report_only)
@@ -915,14 +915,7 @@ time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
         output_data.resize(rd_sum_data_get_length(data));
 
     rd_sum_data_init_time_vector__(data, output_data.data(), report_only);
-    time_t_vector_type *time_vector =
-        time_t_vector_alloc(output_data.size(), 0);
-    {
-        time_t *tmp_data = time_t_vector_get_ptr(time_vector);
-        memcpy(tmp_data, output_data.data(),
-               output_data.size() * sizeof(time_t));
-    }
-    return time_vector;
+    return output_data;
 }
 
 static void rd_sum_data_init_double_vector__(const rd_sum_data_type *data,

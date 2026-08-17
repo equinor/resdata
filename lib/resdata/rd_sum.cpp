@@ -786,7 +786,7 @@ int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index) {
     return rd_sum_data_iget_report_step(rd_sum->data.get(), internal_index);
 }
 
-time_t_vector_type *rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
+std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only) {
     return rd_sum_data_alloc_time_vector(rd_sum->data.get(), report_only);
 }
