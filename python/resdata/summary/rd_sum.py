@@ -29,7 +29,6 @@ from resdata.util.util import (
     CTime,
     DoubleVector,
     IntVector,
-    TimeVector,
 )
 
 from .rd_smspec_node import ResdataSMSPECNode
@@ -276,14 +275,6 @@ class Summary(BaseCClass):
         """
         return _rd_sum._create_group_list(self, pattern)
 
-    def _make_time_vector(
-        self, time_index: Sequence[CTime | datetime.datetime | int | datetime.date]
-    ) -> TimeVector:
-        time_points = TimeVector()
-        for t in time_index:
-            time_points.append(t)
-        return time_points
-
     def numpy_vector(self, key, time_index=None, report_only=False):
         """Will return numpy vector of all the values corresponding to @key.
 
@@ -321,9 +312,9 @@ class Summary(BaseCClass):
             _rd_sum._init_numpy_vector(self, key, np_vector)
             return np_vector
         else:
-            time_vector = self._make_time_vector(time_index)
-            np_vector = np.zeros(len(time_vector))
-            _rd_sum._init_numpy_vector_interp(self, key, time_vector, np_vector)
+            time_points = [CTime(t).value() for t in time_index]
+            np_vector = np.zeros(len(time_points))
+            _rd_sum._init_numpy_vector_interp(self, key, time_points, np_vector)
             return np_vector
 
     @property
@@ -401,7 +392,7 @@ class Summary(BaseCClass):
             data = np.zeros([len(time_index), len(keywords)])
             _rd_sum._init_pandas_frame(self, keywords, data)
         else:
-            time_points = self._make_time_vector(time_index)
+            time_points = [CTime(t).value() for t in time_index]
             data = np.zeros([len(time_points), len(keywords)])
             _rd_sum._init_pandas_frame_interp(self, keywords, time_points, data)
 

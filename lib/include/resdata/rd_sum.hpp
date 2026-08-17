@@ -141,13 +141,13 @@ double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
                                       const char *gen_key);
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       const char *gen_key,
-                                      const time_t_vector_type *time_points,
+                                      const std::vector<time_t> &time_points,
                                       double *data);
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
                                double *data);
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
-                                     const time_t_vector_type *time_points,
+                                     const std::vector<time_t> &time_points,
                                      double *data);
 void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
                                    const rd_sum_vector_type *keywords,
