@@ -718,6 +718,22 @@ class Summary(BaseCClass):
         interval given by the @interval string. Alternatively the total number
         of timesteps can be specified, if the @num_timestep option is specified
         that will take precedence.
+
+        Note that for month ("m") and year ("y") intervals, the start and end
+        days are truncated to the first of the month, so that the timepoints
+        fall on the first of a month. For year intervals with @extend_end set
+        to True, the start is truncated to the first of January. This also
+        applies to the last timepoint when @extend_end is False, meaning the
+        range may end early, e.g. an interval of "1m" for a case ending
+        2001-04-19 gives 2001-04-01 as the last timepoint. With @extend_end set
+        to True, the end is instead extended to the first of the following
+        month/year, 2001-05-01 in the example above. Day ("d") intervals use
+        the start and end days as they are.
+
+        The given start and end are clamped to the data start and end times of
+        the case, so that the first timepoint is never before the start time of
+        the data. The last timepoint may still be after the end time of the
+        data when @extend_end is True.
         """
 
         num, timeUnit = _parse_time_unit(interval)
