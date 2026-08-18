@@ -1,6 +1,8 @@
 #pragma once
+#include <cstddef>
 #include <memory>
 #include <tuple>
+#include <set>
 #include <vector>
 
 #include <ert/util/int_vector.hpp>
@@ -25,8 +27,6 @@ struct FaultBlockCell {
     to be one connected unit.*/
 class FaultBlock {
     void assert_center();
-    [[nodiscard]] int iget_i(int index) const;
-    [[nodiscard]] int iget_j(int index) const;
     [[nodiscard]] bool
     neighbour_xpolyline(int i1, int j1, int i2, int j2,
                         const geo_polygon_collection_type *polylines) const;
@@ -36,10 +36,8 @@ class FaultBlock {
 
     rd_grid_type *grid;
     fault_block_layer_type *parent_layer; // nullptr if detached
-    int_vector_ptr i_list = make_int_vector(0, 0);
-    int_vector_ptr j_list = make_int_vector(0, 0);
-    int_vector_ptr global_index_list = make_int_vector(0, 0);
-    int_vector_ptr region_list = make_int_vector(0, 0);
+    std::vector<std::tuple<int, int>> index_list;
+    std::set<int> regions;
     int block_id;
     int k;
     double xc = 0, yc = 0;
@@ -54,16 +52,16 @@ public:
     FaultBlock(fault_block_layer_type *parent_layer, int block_id);
 
     [[nodiscard]] bool is_detached() const { return parent_layer == nullptr; };
-    [[nodiscard]] int get_size() const;
+    [[nodiscard]] size_t get_size() const { return index_list.size(); }
     [[nodiscard]] int get_id() const;
     double get_xc();
     double get_yc();
-    [[nodiscard]] FaultBlockCell export_cell(int index) const;
+    [[nodiscard]] FaultBlockCell export_cell(size_t index) const;
     void assign_to_region(int region_id);
-    [[nodiscard]] const int_vector_type *get_region_list() const;
+    [[nodiscard]] const std::set<int> &get_regions() const { return regions; };
     /** add_cell cannot be called on a detached FaultBlock */
     void add_cell(int i, int j);
-    [[nodiscard]] const int_vector_type *get_global_index_list() const;
+    [[nodiscard]] const std::vector<int> get_global_index_list() const;
     void copy_content(const FaultBlock &src_block);
 
     /** Traces the outer edge of this block and returns the list of

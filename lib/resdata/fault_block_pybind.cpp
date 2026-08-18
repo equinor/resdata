@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <string>
+#include <vector>
 
 #include <fmt/format.h>
 #include <pybind11/pybind11.h>
@@ -107,22 +109,13 @@ PYBIND11_MODULE(fault_block, m) {
         .def("assign_to_region", &FaultBlock::assign_to_region,
              py::arg("region_id"))
         .def("get_region_list",
-             [](py::object self) {
-                 FaultBlock &blk = self.cast<FaultBlock &>();
-                 const int_vector_type *regions = blk.get_region_list();
-                 py::object region_list = IntVector().attr("createCReference")(
-                     reinterpret_cast<std::uintptr_t>(regions), self);
-                 return region_list.attr("copy")();
+             [](FaultBlock &self) {
+                 const std::set<int> &regions = self.get_regions();
+                 return std::vector<int>(regions.cbegin(), regions.cend());
              })
         .def("add_cell", &FaultBlock::add_cell, py::arg("i"), py::arg("j"))
         .def("get_global_index_list",
-             [](py::object self) {
-                 FaultBlock &blk = self.cast<FaultBlock &>();
-                 const int_vector_type *global_indices =
-                     blk.get_global_index_list();
-                 return IntVector().attr("createCReference")(
-                     reinterpret_cast<std::uintptr_t>(global_indices), self);
-             })
+             [](FaultBlock &self) { return self.get_global_index_list(); })
         .def("get_edge_polygon",
              [](FaultBlock &self) { return make_edge_polygon(self); })
         .def(
