@@ -762,7 +762,7 @@ class Summary(BaseCClass):
                             month2 = 1
                 elif timeUnit == "y":
                     month1 = 1
-                    if year2 > 1 or day2 > 1:
+                    if month2 > 1 or day2 > 1:
                         year2 += 1
                         month2 = 1
             day1 = 1
