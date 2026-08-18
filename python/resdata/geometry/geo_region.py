@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 import resdata.geometry._geo_region as _geo_region
-from resdata.util.util import IntVector
 
 from .cpolyline import CPolyline
 
@@ -23,8 +22,8 @@ class GeoRegion(BaseCClass):
                 "Could not construct GeoRegion from pointset %s." % pointset
             )
 
-    def getActiveList(self) -> IntVector:
-        return IntVector.createCReference(_geo_region._get_index_list(self), self)
+    def getActiveList(self) -> list[int]:
+        return _geo_region._get_index_list(self)
 
     def _assert_polygon(self, polygon):
         if not isinstance(polygon, CPolyline):
@@ -78,7 +77,7 @@ class GeoRegion(BaseCClass):
     def __len__(self):
         """Returns the size of the active list, not the size of the
         underlying pointset"""
-        return len(self.getActiveList())
+        return _geo_region._len(self)
 
     def __repr__(self):
         ls = len(self)

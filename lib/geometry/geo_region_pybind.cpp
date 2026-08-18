@@ -41,13 +41,12 @@ PYBIND11_MODULE(_geo_region, m) {
     m.def("_reset", [](py::handle self) {
         geo_region_reset(from_cwrap<geo_region_type>(self));
     });
-    m.def(
-        "_get_index_list",
-        [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
-                geo_region_get_index_list(from_cwrap<geo_region_type>(self)));
-        },
-        py::return_value_policy::reference);
+    m.def("_len", [](py::handle self) {
+        return geo_region_num_selected(from_cwrap<geo_region_type>(self));
+    });
+    m.def("_get_index_list", [](py::handle self) {
+        return geo_region_get_index_list(from_cwrap<geo_region_type>(self));
+    });
 
     m.def("_select_inside_polygon", [](py::handle self, py::handle polygon) {
         geo_region_select_inside_polygon(from_cwrap<geo_region_type>(self),

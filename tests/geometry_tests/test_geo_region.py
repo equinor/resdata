@@ -1,4 +1,6 @@
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 from resdata.geometry import CPolyline, GeoPointset, GeoRegion, Surface
 
 from tests import ResdataTest
@@ -129,3 +131,59 @@ def test_that_preselected_region_starts_with_all_points_active():
 
     assert len(region) == 6
     assert "preselected" in repr(region)
+
+
+dimensions = st.integers(min_value=1, max_value=10)
+finites = st.floats(min_value=-1e10, max_value=1e10, allow_nan=False)
+lines = st.builds(
+    CPolyline, init_points=st.lists(st.tuples(finites, finites), min_size=2, max_size=2)
+)
+polygons = st.builds(CPolyline, init_points=st.lists(st.tuples(finites, finites)))
+surfaces = st.builds(
+    Surface,
+    nx=dimensions,
+    ny=dimensions,
+    xinc=finites,
+    yinc=finites,
+    xstart=finites,
+    ystart=finites,
+    angle=finites,
+)
+
+polygon_selectors = st.sampled_from(
+    [
+        lambda r: r.select_inside,
+        lambda r: r.deselect_inside,
+        lambda r: r.select_outside,
+        lambda r: r.deselect_outside,
+    ]
+)
+
+line_selectors = st.sampled_from(
+    [
+        lambda r: r.select_above,
+        lambda r: r.deselect_above,
+        lambda r: r.select_below,
+        lambda r: r.deselect_below,
+    ]
+)
+
+
+@st.composite
+def geo_regions(draw):
+    surface = draw(surfaces)
+    surface.assign(draw(finites))
+    pointset = surface.getPointset()
+    region = GeoRegion(pointset, preselect=draw(st.booleans()))
+    for line in draw(st.lists(lines)):
+        selector = draw(line_selectors)
+        selector(region)(line)
+    for polygon in draw(st.lists(polygons)):
+        selector = draw(polygon_selectors)
+        selector(region)(polygon)
+    return region
+
+
+@given(geo_regions())
+def test_that_len_and_active_list_agree(region):
+    assert len(region) == len(region.getActiveList())

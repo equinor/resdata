@@ -310,21 +310,19 @@ TEST_CASE("geo_region index list management", "[geometry]") {
 
         WHEN("Creating a region with preselect=true") {
             auto region = make_geo_region(pointset, true);
-            const int_vector_type *index_list =
-                geo_region_get_index_list(region.get());
+            auto index_list = geo_region_get_index_list(region.get());
 
             THEN("All points are initially selected") {
-                REQUIRE(int_vector_size(index_list) == 5);
+                REQUIRE(index_list.size() == 5);
             }
         }
 
         WHEN("Creating a region with preselect=false and resetting") {
             auto region = make_geo_region(pointset, false);
-            const int_vector_type *index_list =
-                geo_region_get_index_list(region.get());
+            auto index_list = geo_region_get_index_list(region.get());
 
             THEN("No points are selected after reset") {
-                REQUIRE(int_vector_size(index_list) == 0);
+                REQUIRE(index_list.empty());
             }
         }
     }
@@ -348,11 +346,10 @@ TEST_CASE("geo_region polygon selection", "[geometry]") {
         WHEN("Selecting inside polygon") {
             auto region = make_geo_region(pointset, false);
             geo_region_select_inside_polygon(region.get(), polygon.get());
-            const int_vector_type *index_list =
-                geo_region_get_index_list(region.get());
+            auto index_list = geo_region_get_index_list(region.get());
 
             THEN("Only inside points are selected") {
-                REQUIRE(int_vector_size(index_list) == 2);
+                REQUIRE(index_list.size() == 2);
             }
         }
     }
