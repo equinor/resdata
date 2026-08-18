@@ -5,7 +5,6 @@ from unittest import TestCase
 import six
 from resdata.util.util import (
     CTime,
-    DoubleVector,
     IntVector,
     PermutationVector,
 )
@@ -27,60 +26,10 @@ class UtilTest(TestCase):
             self.assertEqual(vec[2 * i + 1], odds[i])
 
     def test_slicing(self):
-        dv = DoubleVector(initial_size=10)
-        for i in range(10):
-            dv[i] = 1.0 / (1 + i)
-        self.dotest_slicing(dv)
         iv = IntVector(initial_size=10)
         for i in range(10):
             iv[i] = i**3
         self.dotest_slicing(iv)
-
-    def test_double_vector(self):
-        v = DoubleVector()
-
-        v[0] = 77.25
-        v[1] = 123.25
-        v[2] = 66.25
-        v[3] = 56.25
-        v[4] = 111.25
-        v[5] = 99.25
-        v[12] = 12
-
-        self.assertEqual(len(v), 13)
-        self.assertEqual(
-            list(v),
-            [v[0], v[1], v[2], v[3], v[4], v[5], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v[12]],
-        )
-
-        v.clear()
-        self.assertEqual(len(v), 0)
-
-        v.clear()
-
-        v[0] = 0.1
-        v[1] = 0.2
-        v[2] = 0.4
-        v[3] = 0.8
-
-        v2 = v * 2
-
-        self.assertEqual(list(v2), [v[0] * 2, v[1] * 2, v[2] * 2, v[3] * 2])
-
-        v2 += v
-        self.assertEqual(list(v2), [v[0] * 3, v[1] * 3, v[2] * 3, v[3] * 3])
-
-        v2.assign(0.66)
-        self.assertEqual(list(v2), [0.66, 0.66, 0.66, 0.66])
-
-        v.assign(v2)
-        self.assertEqual(list(v), [0.66, 0.66, 0.66, 0.66])
-
-        v.clear()
-        v.setDefault(0.75)
-        self.assertEqual(v.getDefault(), 0.75)
-        v[2] = 0.0
-        self.assertEqual(v[1], 0.75)
 
     def test_vector_operations_with_exceptions(self):
         iv1 = IntVector()
@@ -92,11 +41,6 @@ class UtilTest(TestCase):
         iv2.append(4)
         iv2.append(5)
 
-        dv1 = DoubleVector()
-        dv1.append(0.5)
-        dv1.append(0.75)
-        dv1.append(0.25)
-
         # Size mismatch
         with self.assertRaises(ValueError):
             iv3 = iv1 + iv2
@@ -104,14 +48,6 @@ class UtilTest(TestCase):
         # Size mismatch
         with self.assertRaises(ValueError):
             iv3 = iv1 * iv2
-
-        # Type mismatch
-        with self.assertRaises(TypeError):
-            iv1 += dv1
-
-        # Type mismatch
-        with self.assertRaises(TypeError):
-            iv1 *= dv1
 
     def test_activeList(self):
         active_list = IntVector.active_list("1,10,100-105")
@@ -252,24 +188,6 @@ class UtilTest(TestCase):
         iv[0] = 1
         self.assertTrue(iv)
 
-    def test_permutation_vector(self):
-        vector = DoubleVector()
-
-        for i in range(5, 0, -1):
-            vector.append(i)
-
-        permutation_vector = vector.permutationSort()
-        perm_list = list(permutation_vector)
-        self.assertEqual(perm_list[::-1], list(vector.permutationSort(reverse=True)))
-
-        for index, value in enumerate(range(5, 0, -1)):
-            self.assertEqual(vector[index], value)
-
-        vector.permute(permutation_vector)
-
-        for index, value in enumerate(range(1, 6)):
-            self.assertEqual(vector[index], value)
-
     def test_unique(self):
         iv = IntVector()
         iv.append(1)
@@ -293,13 +211,10 @@ class UtilTest(TestCase):
         self.assertEqual(list(iv), [0, 2, 4, 6])
 
     def test_element_sum(self):
-        dv = DoubleVector()
         iv = IntVector()
         for i in range(10):
-            dv.append(i + 1)
             iv.append(i + 1)
 
-        self.assertEqual(dv.elementSum(), 55)
         self.assertEqual(iv.elementSum(), 55)
 
     def test_asList(self):
@@ -317,19 +232,8 @@ class UtilTest(TestCase):
         v[10] = 77
         self.assertTrue(v)
 
-        v = DoubleVector(default_value=77)
-        self.assertFalse(v)
-        v[10] = 77
-        self.assertTrue(v)
-
     def test_count_equal(self):
         v = IntVector(default_value=77)
-        v[0] = 1
-        v[10] = 1
-        v[20] = 1
-        self.assertEqual(v.countEqual(1), 3)
-
-        v = DoubleVector(default_value=77)
         v[0] = 1
         v[10] = 1
         v[20] = 1
@@ -384,10 +288,6 @@ class UtilTest(TestCase):
         v = IntVector.create_linear(10, 0, 11)
         for i in range(len(v)):
             self.assertEqual(v[i], 10 - i)
-
-        d = DoubleVector.create_linear(0, 1, 11)
-        for i in range(len(d)):
-            self.assertEqual(d[i], i * 0.10)
 
     def test_equal(self):
         v1 = IntVector()
