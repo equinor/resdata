@@ -1,8 +1,8 @@
 #include <cstdlib>
+#include <cassert>
 #include <vector>
 
 #include <ert/util/util.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_pointset.hpp>
@@ -11,10 +11,9 @@
 
 struct geo_region_struct {
     bool preselect;
-    bool index_valid;
     std::vector<bool> active_mask;
-    int_vector_ptr index_list{nullptr, int_vector_free};
     const geo_pointset_type *pointset;
+    size_t num_selected;
 
     [[nodiscard]] size_t size() const { return active_mask.size(); }
 };
@@ -25,33 +24,19 @@ geo_region_type *geo_region_alloc(const geo_pointset_type *pointset,
 
     region->pointset = pointset;
     region->preselect = preselect;
-    region->index_list.reset(int_vector_alloc(0, 0));
     region->active_mask.resize(geo_pointset_get_size(pointset));
     geo_region_reset(region);
 
     return region;
 }
 
-static void geo_region_invalidate_index_list(geo_region_type *region) {
-    region->index_valid = false;
-}
-
-static void geo_region_assert_index_list(geo_region_type *region) {
-    if (!region->index_valid) {
-        int_vector_reset(region->index_list.get());
-        for (size_t i = 0; i < region->size(); i++)
-            if (region->active_mask[i])
-                int_vector_append(region->index_list.get(),
-                                  static_cast<int>(i));
-
-        region->index_valid = true;
-    }
-}
-
 void geo_region_reset(geo_region_type *region) {
+    if (region->preselect)
+        region->num_selected = region->size();
+    else
+        region->num_selected = 0;
     for (size_t i = 0; i < region->size(); i++)
         region->active_mask[i] = region->preselect;
-    geo_region_invalidate_index_list(region);
 }
 
 void geo_region_free(geo_region_type *region) { delete region; }
@@ -59,17 +44,20 @@ void geo_region_free(geo_region_type *region) { delete region; }
 static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
-
     for (size_t i = 0; i < region->size(); i++) {
         double x, y;
         bool is_inside;
         geo_pointset_iget_xy(region->pointset, i, &x, &y);
 
         is_inside = geo_polygon_contains_point(polygon, x, y);
-        if (is_inside == select_inside)
+        if (is_inside == select_inside) {
+            if (region->active_mask[i] && !select)
+                region->num_selected -= 1;
+            else if (!region->active_mask[i] && select)
+                region->num_selected += 1;
             region->active_mask[i] = select;
+        }
     }
-    geo_region_invalidate_index_list(region);
 }
 
 void geo_region_select_inside_polygon(geo_region_type *region,
@@ -118,10 +106,14 @@ static void geo_region_select_line__(geo_region_type *region,
                 above = false;
         }
 
-        if (above == select_above)
+        if (above == select_above) {
+            if (region->active_mask[i] && !select)
+                region->num_selected -= 1;
+            else if (!region->active_mask[i] && select)
+                region->num_selected += 1;
             region->active_mask[i] = select;
+        }
     }
-    geo_region_invalidate_index_list(region);
 }
 
 /*
@@ -160,9 +152,18 @@ void geo_region_deselect_below_line(geo_region_type *region,
     geo_region_select_line__(region, xcoords, ycoords, false, false);
 }
 
-const int_vector_type *geo_region_get_index_list(geo_region_type *region) {
-    geo_region_assert_index_list(region);
-    return region->index_list.get();
+size_t geo_region_num_selected(geo_region_type *region) {
+    return region->num_selected;
+}
+
+const std::vector<int> geo_region_get_index_list(geo_region_type *region) {
+    std::vector<int> index_list;
+    index_list.reserve(region->size());
+    for (size_t i = 0; i < region->size(); i++)
+        if (region->active_mask[i])
+            index_list.push_back(static_cast<int>(i));
+    assert(index_list.size() == region->num_selected);
+    return index_list;
 }
 
 /** Note that the geo_region is borrowing the pointset and
