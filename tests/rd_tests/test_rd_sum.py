@@ -1442,6 +1442,21 @@ def test_that_time_range_raises_type_error_for_malformed_interval():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("interval", ["0d", "0m", "0y", "-1d", "-2m", "-3y"])
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_time_range_raises_value_error_for_non_positive_interval(interval):
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 30.0, 60.0, 90.0),
+        start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST")
+    with pytest.raises(ValueError, match="must give a positive number of time units"):
+        summary.time_range(interval=interval)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_that_time_range_raises_value_error_when_end_before_start():
     create_summary(
         summary_keys=("FOPR",),

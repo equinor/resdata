@@ -1476,15 +1476,17 @@ import resdata.summary.rd_sum_keyword_vector  # noqa
 def _parse_time_unit(
     delta_str: str,
     delta_regex: re.Pattern[str] = re.compile(
-        r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE
+        r"(?P<num>-?\d+)?(?P<unit>[dmy])", re.IGNORECASE
     ),
 ) -> tuple[int, str]:
     match = delta_regex.match(delta_str)
     if match:
-        try:
-            num = int(match.group("num"))
-        except:
-            num = 1
+        num_str = match.group("num")
+        num = 1 if num_str is None else int(num_str)
+        if num <= 0:
+            raise ValueError(
+                f"The delta string must give a positive number of time units, got: {delta_str}"
+            )
 
         time_unit = match.group("unit").lower()
         return num, time_unit
