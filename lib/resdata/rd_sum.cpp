@@ -29,7 +29,6 @@
 #include <ert/util/vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/bool_vector.hpp>
-#include <ert/util/double_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_util.hpp>
@@ -821,7 +820,7 @@ void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                          time_points, data);
 }
 
-double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
+std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              int data_index, bool report_only) {
     return rd_sum_data_alloc_data_vector(rd_sum->data.get(), data_index,
                                          report_only);

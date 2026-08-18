@@ -414,13 +414,11 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
 
             const int param_index =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
-            auto data = double_vector_ptr(
-                rd_sum_alloc_data_vector(rd_sum.get(), param_index, false),
-                &double_vector_free);
-            REQUIRE(double_vector_size(data.get()) ==
-                    rd_sum_get_data_length(rd_sum.get()));
-            REQUIRE_THAT(double_vector_iget(data.get(), 0),
-                         WithinAbs(0.0, 1e-6));
+            auto data =
+                rd_sum_alloc_data_vector(rd_sum.get(), param_index, false);
+            REQUIRE(data.size() ==
+                    static_cast<size_t>(rd_sum_get_data_length(rd_sum.get())));
+            REQUIRE_THAT(data[0], WithinAbs(0.0, 1e-6));
 
             REQUIRE_THROWS_AS(
                 rd_sum_alloc_data_vector(rd_sum.get(), 9999, false),
@@ -1287,14 +1285,10 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                                const std::vector<double> &expected) {
             const int idx =
                 rd_sum_get_general_var_params_index(sum, key.c_str());
-            double_vector_ptr data(rd_sum_alloc_data_vector(sum, idx, false),
-                                   &double_vector_free);
-            REQUIRE(static_cast<size_t>(double_vector_size(data.get())) ==
-                    expected.size());
+            auto data = rd_sum_alloc_data_vector(sum, idx, false);
+            REQUIRE(data.size() == expected.size());
             for (size_t j = 0; j < expected.size(); ++j)
-                REQUIRE_THAT(
-                    double_vector_iget(data.get(), static_cast<int>(j)),
-                    WithinAbs(expected[j], 1e-6));
+                REQUIRE_THAT(data[j], WithinAbs(expected[j], 1e-6));
         };
 
         WHEN("All parent SMSPEC files are present") {

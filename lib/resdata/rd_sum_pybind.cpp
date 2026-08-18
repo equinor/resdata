@@ -10,8 +10,6 @@
 #include <pybind11/numpy.h>
 #include <fmt/format.h>
 
-#include <ert/util/double_vector.hpp>
-
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
@@ -225,13 +223,11 @@ PYBIND11_MODULE(_rd_sum, m) {
             data[i] = static_cast<int64_t>(times[i]);
         return result;
     });
-    m.def(
-        "_alloc_data_vector",
-        [](py::handle self, int data_index, bool report_only) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_data_vector(
-                from_cwrap<rd_sum_type>(self), data_index, report_only));
-        },
-        py::return_value_policy::reference);
+    m.def("_alloc_data_vector",
+          [](py::handle self, int data_index, bool report_only) {
+              return rd_sum_alloc_data_vector(from_cwrap<rd_sum_type>(self),
+                                              data_index, report_only);
+          });
     m.def(
         "_get_var_node",
         [](py::handle self, std::string lookup_kw) {
