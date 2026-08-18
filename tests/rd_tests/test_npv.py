@@ -5,7 +5,7 @@ import os
 import warnings
 
 from resdata.summary import NPVPriceVector, ResdataNPV, Summary
-from resdata.util.util import CTime, DoubleVector
+from resdata.util.util import CTime
 
 from tests import ResdataTest, equinor_test
 from tests.util.mock import createSummary

@@ -2310,7 +2310,6 @@ def test_summary_alloc_data_vector():
     summary = Summary("TEST")
     key_index = summary.get_key_index("FOPR")
     data_vec = summary.alloc_data_vector(key_index, False)
-    assert isinstance(data_vec, DoubleVector)
     assert list(data_vec) == [100.0, 110.0, 120.0]
 
 
@@ -2336,7 +2335,6 @@ def test_summary_alloc_data_vector_report_only():
     summary = Summary("TEST")
     key_index = summary.get_key_index("FOPR")
     data_vec = summary.alloc_data_vector(key_index, True)
-    assert isinstance(data_vec, DoubleVector)
     assert list(data_vec) == [100.0, 110.0, 120.0]
 
 
@@ -2818,7 +2816,7 @@ def test_summary_resample_with_empty_time_points_raises_value_error():
     )
     summary = Summary("TEST")
     with pytest.raises(ValueError, match="time_points must contain at least one"):
-        summary.resample("RESAMPLED", DoubleVector())
+        summary.resample("RESAMPLED", [])
 
 
 @pytest.mark.usefixtures("use_tmpdir")
