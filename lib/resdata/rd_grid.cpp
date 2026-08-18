@@ -19,7 +19,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/vector.hpp>
 

@@ -13,7 +13,7 @@ endif()
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
 
-foreach(type int double long float)
+foreach(type int long float)
   set(TYPE ${type})
   set(SIGNED_TYPE true)
   configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)

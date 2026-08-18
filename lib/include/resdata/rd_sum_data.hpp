@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include <ert/util/double_vector.hpp>
-
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>

@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <ert/util/int_vector.hpp>
-#include <ert/util/double_vector.hpp>
 
 #include <ert/geometry/geo_polygon_collection.hpp>
 

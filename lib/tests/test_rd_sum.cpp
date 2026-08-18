@@ -29,7 +29,6 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
 
-#include "ert/util/double_vector.hpp"
 #include "detail/resdata/rd_unsmry_loader.hpp"
 #include "resdata/FortIO.hpp"
 #include "resdata/smspec_node.hpp"
