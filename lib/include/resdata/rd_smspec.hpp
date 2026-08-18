@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include <ert/util/float_vector.hpp>
-
 #include <resdata/rd_util.hpp>
 #include <resdata/smspec_node.hpp>
 
