@@ -1,7 +1,6 @@
 import sys
 
 from resdata.geometry import CPolyline
-from resdata.util.util import DoubleVector
 
 from .fault_segments import FaultSegment
 

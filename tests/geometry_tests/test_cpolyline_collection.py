@@ -3,7 +3,6 @@ import gc
 import pytest
 from resdata.geometry import CPolyline, CPolylineCollection
 from resdata.geometry.xyz_io import XYZIo
-from resdata.util.util import DoubleVector
 
 from tests import ResdataTest
 
@@ -74,7 +73,6 @@ class CPolylineCollectionTest(ResdataTest):
         # safely accessed, even after the polyline objects p1 and p2
         # from create_collection() have gone out of scope.
         c = self.create_collection()
-        v = DoubleVector(initial_size=10000)
 
         p1 = c[0]
         tail = p1[-1]

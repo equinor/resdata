@@ -8,7 +8,7 @@ from resdata import UnitSystem
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
 from resdata.summary.rd_sum import _next_time
-from resdata.util.util import CTime, DoubleVector
+from resdata.util.util import CTime
 
 from tests import ResdataTest, equinor_test
 
@@ -336,9 +336,6 @@ class SumTest(ResdataTest):
         self.assertIsInstance(time_vec, np.ndarray)
         self.assertEqual(time_vec.dtype, np.dtype("datetime64[s]"))
         key_index = self.rd_sum.get_general_var_index("FOPT")
-        self.assertIsInstance(
-            self.rd_sum.alloc_data_vector(key_index, True), DoubleVector
-        )
 
     def test_time_range(self):
         summary = Summary(self.case)

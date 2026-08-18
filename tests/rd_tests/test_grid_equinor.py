@@ -6,7 +6,7 @@ from cwrap import open as copen
 from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator
 from resdata.resfile import ResdataKW, open_rd_file
-from resdata.util.util import DoubleVector, IntVector
+from resdata.util.util import IntVector
 
 from tests import ResdataTest, equinor_test
 
@@ -258,11 +258,6 @@ class GridTest(ResdataTest):
     )
     def test_num_active_large_memory(self):
         case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
-        vecList = []
-        for i in range(12500):
-            vec = DoubleVector()
-            vec[81920] = 0
-            vecList.append(vec)
 
         grid1 = Grid(case)
         grid2 = Grid(case)
