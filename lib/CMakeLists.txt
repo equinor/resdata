@@ -13,7 +13,7 @@ endif()
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
 
-foreach(type int long float)
+foreach(type int)
   set(TYPE ${type})
   set(SIGNED_TYPE true)
   configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
@@ -21,7 +21,7 @@ foreach(type int long float)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach()
 
-foreach(type bool size_t)
+foreach(type bool)
   set(TYPE ${type})
   set(SIGNED_TYPE false)
   configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)

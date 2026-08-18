@@ -13,7 +13,6 @@
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
-#include <ert/util/float_vector.hpp>
 #include "detail/util/path.hpp"
 
 #include <fmt/format.h>
