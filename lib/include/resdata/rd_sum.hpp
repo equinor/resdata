@@ -76,7 +76,7 @@ time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, int index);
 double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int time_index);
 int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index);
 
-double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
+std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              int data_index, bool report_only);
 std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only);

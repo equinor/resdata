@@ -14,7 +14,6 @@
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
-#include <ert/util/double_vector.hpp>
 
 #include <fmt/format.h>
 
@@ -950,7 +949,7 @@ void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
     rd_sum_data_init_double_vector__(data, params_index, output_data, false);
 }
 
-double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
+std::vector<double> rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
                                                   int params_index,
                                                   bool report_only) {
     std::vector<double> output_data;
@@ -965,14 +964,7 @@ double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
 
     rd_sum_data_init_double_vector__(data, params_index, output_data.data(),
                                      report_only);
-    double_vector_type *data_vector =
-        double_vector_alloc(output_data.size(), 0);
-    {
-        double *tmp_data = double_vector_get_ptr(data_vector);
-        memcpy(tmp_data, output_data.data(),
-               output_data.size() * sizeof(double));
-    }
-    return data_vector;
+    return output_data;
 }
 
 void rd_sum_data_init_double_vector_interp(

@@ -26,12 +26,7 @@ from dateutil.relativedelta import relativedelta
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import FileMode, UnitSystem
-from resdata.util.util import (
-    CTime,
-    DoubleVector,
-    IntVector,
-    TimeLike,
-)
+from resdata.util.util import CTime, IntVector, TimeLike
 
 from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
@@ -1376,9 +1371,7 @@ class Summary(BaseCClass):
         return _rd_sum._alloc_time_vector(self, report_only)
 
     def alloc_data_vector(self, data_index, report_only):
-        return DoubleVector.createPythonObject(
-            _rd_sum._alloc_data_vector(self, data_index, report_only)
-        )
+        return _rd_sum._alloc_data_vector(self, data_index, report_only)
 
     def get_general_var_index(self, key):
         return _rd_sum._get_general_var_index(self, key)
