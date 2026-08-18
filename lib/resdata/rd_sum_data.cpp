@@ -734,27 +734,19 @@ void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
     }
 }
 
-/*
-  If the keylist contains invalid indices the corresponding element in the
-  results vector will *not* be updated; i.e. it is smart to initialize the
-  results vector with an invalid-value marker before calling this function:
-
-  double_vector_type * results = double_vector_alloc( rd_sum_vector_get_size(keys), NAN);
-  rd_sum_data_get_interp_vector( data, sim_time, keys, results);
-
-*/
-
-void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
-                                   time_t sim_time,
-                                   const rd_sum_vector_type *keylist,
-                                   double_vector_type *results) {
+/** If the keylist contains invalid indices the corresponding element in the
+  results vector will be set to missing_value. */
+std::vector<double>
+rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
+                              const rd_sum_vector_type *keylist,
+                              double missing_value) {
     int num_keywords = rd_sum_vector_get_size(keylist);
     double weight1, weight2;
     int time_index1, time_index2;
 
     rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
                                           &time_index2, &weight1, &weight2);
-    double_vector_reset(results);
+    std::vector<double> results(num_keywords, missing_value);
     for (int i = 0; i < num_keywords; i++) {
         if (rd_sum_vector_iget_valid(keylist, i)) {
             int params_index = rd_sum_vector_iget_param_index(keylist, i);
@@ -762,9 +754,10 @@ void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
             double value = rd_sum_data_vector_iget(
                 data, sim_time, params_index, is_rate, time_index1, time_index2,
                 weight1, weight2);
-            double_vector_iset(results, i, value);
+            results[i] = value;
         }
     }
+    return results;
 }
 
 double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
