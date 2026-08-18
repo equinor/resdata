@@ -9,7 +9,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cstddef>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -18,7 +21,6 @@
 #include <resdata/rd_kw_magic.hpp>
 #include <vector>
 
-#include "ert/util/double_vector.hpp"
 #include "ert/util/util.hpp"
 #include "grid_fixtures.hpp"
 #include "resdata/nnc_info.hpp"
@@ -592,10 +594,10 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         }
 
         GIVEN("A grid keyword") {
-            auto kw =
-                make_rd_kw("PORO", rd_grid_get_nactive(grid.get()), RD_FLOAT);
+            int nactive = rd_grid_get_nactive(grid.get());
+            auto kw = make_rd_kw("PORO", nactive, RD_FLOAT);
 
-            for (int i = 0; i < rd_grid_get_nactive(grid.get()); i++) {
+            for (int i = 0; i < nactive; i++) {
                 rd_kw_iset_float(kw.get(), i, 0.2f + i * 0.01f);
             }
 
@@ -604,10 +606,12 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
                     rd_grid_get_property(grid.get(), kw.get(), 0, 0, 0);
                 REQUIRE(prop >= 0.0);
 
-                auto column = make_double_vector(0, 0.0);
-                rd_grid_get_column_property(grid.get(), kw.get(), 0, 0,
-                                            column.get());
-                REQUIRE(double_vector_size(column.get()) > 0);
+                auto actual =
+                    rd_grid_get_column_property(grid.get(), kw.get(), 0, 0);
+                REQUIRE(actual.size() == 2);
+                REQUIRE_THAT(actual[0],
+                             Catch::Matchers::WithinAbs(0.2, 0.0001));
+                REQUIRE(std::isnan(actual[1]));
             }
 
             SECTION("Keyword copy") {

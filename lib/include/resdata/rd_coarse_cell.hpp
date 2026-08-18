@@ -1,6 +1,8 @@
 #ifndef ERT_RD_COARSE_CELL_H
 #define ERT_RD_COARSE_CELL_H
 
+#include <ert/util/int_vector.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

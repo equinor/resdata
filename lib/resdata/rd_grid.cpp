@@ -4298,19 +4298,17 @@ double rd_grid_get_property(const rd_grid_type *rd_grid,
 }
 
 /**
-   Will fill the double_vector instance @column with values from
-   rd_kw from the column given by (i,j). If @rd_kw has size nactive
-   the inactive k values will not be set, i.e. you should make sure
-   that the default value of the @column instance has been properly
-   set beforehand.
+   Returns a vector with values from rd_kw from the column given by (i,j).
+   If @rd_kw has size nactive the inactive k values will not be set and the
+   value be nan.
 
    The column vector will be filled with double values, the content of
    rd_kw will be converted to double in the case INTE, REAL and DOUB
    types, otherwise it raises std::invalid_argument.
 */
-void rd_grid_get_column_property(const rd_grid_type *rd_grid,
-                                 const rd_kw_type *rd_kw, int i, int j,
-                                 double_vector_type *column) {
+std::vector<double> rd_grid_get_column_property(const rd_grid_type *rd_grid,
+                                                const rd_kw_type *rd_kw, int i,
+                                                int j) {
     rd_data_type data_type = rd_kw_get_data_type(rd_kw);
     if (rd_type_is_numeric(data_type)) {
         int kw_size = rd_kw_get_size(rd_kw);
@@ -4326,19 +4324,18 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
                 "kw_size = {}",
                 rd_grid->size, rd_grid->total_active, rd_kw_get_size(rd_kw)));
 
-        double_vector_reset(column);
+        std::vector<double> column(rd_grid->nz, std::nan(""));
         for (int k = 0; k < rd_grid->nz; k++) {
             if (use_global_index) {
                 int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-                double_vector_iset(column, k,
-                                   rd_kw_iget_as_double(rd_kw, global_index));
+                column[k] = rd_kw_iget_as_double(rd_kw, global_index);
             } else {
                 int active_index = rd_grid_get_active_index3(rd_grid, i, j, k);
                 if (active_index >= 0)
-                    double_vector_iset(
-                        column, k, rd_kw_iget_as_double(rd_kw, active_index));
+                    column[k] = rd_kw_iget_as_double(rd_kw, active_index);
             }
         }
+        return column;
     } else {
         std::string type_name = rd_type_name(data_type);
         throw std::invalid_argument(fmt::format(

@@ -5,14 +5,13 @@
 #include <filesystem>
 #include <optional>
 
-#include <ert/util/double_vector.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/nnc_info.hpp>
 #include <resdata/rd_util.hpp>
+#include <vector>
 
 #define RD_GRID_COORD_SIZE(nx, ny) (((nx) + 1) * ((ny) + 1) * 6)
 #define RD_GRID_ZCORN_SIZE(nx, ny, nz) (((nx) * (ny) * (nz) * 8))
@@ -20,7 +19,6 @@
 #define RD_GRID_GLOBAL_GRID "Global" // used as key in hash tables over grids.
 #define RD_GRID_MAINGRID_LGR_NR 0
 
-typedef double(block_function_ftype)(const double_vector_type *);
 typedef struct rd_grid_struct rd_grid_type;
 
 bool rd_grid_have_coarse_cells(const rd_grid_type *main_grid);
@@ -29,9 +27,9 @@ bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
 int rd_grid_get_num_coarse_groups(const rd_grid_type *main_grid);
 rd_coarse_cell_type *rd_grid_iget_coarse_group(const rd_grid_type *rd_grid,
                                                int coarse_nr);
-void rd_grid_get_column_property(const rd_grid_type *rd_grid,
-                                 const rd_kw_type *rd_kw, int i, int j,
-                                 double_vector_type *column);
+std::vector<double> rd_grid_get_column_property(const rd_grid_type *rd_grid,
+                                                const rd_kw_type *rd_kw, int i,
+                                                int j);
 void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, int global_index,
                                   int corner_nr, double *xpos, double *ypos,
                                   double *zpos);
