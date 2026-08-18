@@ -226,12 +226,10 @@ PYBIND11_MODULE(_grid, m) {
                                       from_cwrap<rd_kw_type>(kw), nullptr,
                                       from_cwrap<FILE>(file), default_value);
     });
-    m.def("_load_column",
-          [](py::handle self, py::handle kw, int i, int j, py::handle column) {
-              return rd_grid_get_column_property(
-                  from_cwrap<rd_grid_type>(self), from_cwrap<rd_kw_type>(kw), i,
-                  j, from_cwrap<double_vector_type>(column));
-          });
+    m.def("_load_column", [](py::handle self, py::handle kw, int i, int j) {
+        return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
+                                           from_cwrap<rd_kw_type>(kw), i, j);
+    });
     m.def("_get_top", [](py::handle self, int i, int j) {
         return rd_grid_get_top2(from_cwrap<rd_grid_type>(self), i, j);
     });

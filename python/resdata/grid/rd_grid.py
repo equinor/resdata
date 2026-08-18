@@ -12,6 +12,7 @@ import ctypes
 import math
 import os.path
 import sys
+from typing import SupportsInt
 
 import numpy as np
 import pandas as pd
@@ -867,7 +868,7 @@ class Grid(BaseCClass):
         """
         return _grid._grid_value(self, kw, i, j, k)
 
-    def load_column(self, kw, i, j, column):
+    def load_column(self, kw, i: SupportsInt, j: SupportsInt) -> list[float]:
         """
         Load the values of @kw from the column specified by (@i,@j).
 
@@ -875,13 +876,10 @@ class Grid(BaseCClass):
         @kw for fixed values of i and j. The size of @kw must be
         either nactive or nx*ny*nz.
 
-        The input argument @column should be a DoubleVector instance,
-        observe that if size of @kw == nactive k values corresponding
-        to inactive cells will not be modified in the @column
-        instance; in that case it is important that @column is
-        initialized with a suitable default value.
+        If size of @kw == nactive k then inactive indices will be filled
+        with nan.
         """
-        _grid._load_column(self, kw, i, j, column)
+        return _grid._load_column(self, kw, i, j)
 
     def create_kw(self, array, kw_name, pack):
         """

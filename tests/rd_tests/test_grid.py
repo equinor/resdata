@@ -15,7 +15,7 @@ from resdata import ResDataType, UnitSystem
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
 from resdata.resfile import ResdataFile, ResdataKW
-from resdata.util.util import DoubleVector, IntVector
+from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
@@ -279,12 +279,11 @@ class GridTest(ResdataTest):
             grid.get_active_index(global_index=7000)
 
     def test_load_column(self):
-        column = DoubleVector(2 * 3 * 4)
         grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
         kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_DOUBLE)
         kw[0] = 1.0
-        grid.load_column(kw, 0, 0, column)
-        assert list(column) == [1.0, 0.0, 0.0, 0.0]
+        column = grid.load_column(kw, 0, 0)
+        assert column == [1.0, 0.0, 0.0, 0.0]
 
     def test_create(self):
         with self.assertRaises(ValueError):
