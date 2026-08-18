@@ -27,8 +27,6 @@
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
-#include <ert/util/int_vector.hpp>
-#include <ert/util/bool_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_util.hpp>
@@ -910,8 +908,8 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
 
 static void rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
                               int internal_index,
-                              const bool_vector_type *has_var,
-                              const int_vector_type *var_index,
+                              const std::vector<bool> &has_var,
+                              const std::vector<int> &var_index,
                               const char *date_format, const char *sep) {
     stream << fmt::format("{:7.2f}",
                           rd_sum_iget_sim_days(rd_sum, internal_index))
@@ -928,23 +926,22 @@ static void rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
         stream << date_string.data();
     }
 
-    for (int ivar = 0; ivar < int_vector_size(var_index); ivar++) {
-        if (bool_vector_iget(has_var, ivar))
+    for (size_t ivar = 0; ivar < var_index.size(); ivar++) {
+        if (has_var.at(ivar))
             stream << sep
                    << fmt::format("{:g}", rd_sum_iget(rd_sum, internal_index,
-                                                      int_vector_iget(var_index,
-                                                                      ivar)));
+                                                      var_index[ivar]));
     }
 
     stream << "\r\n";
 }
 
 static void rd_sum_write_header(const std::vector<std::string> &key_list,
-                                const bool_vector_type *has_var,
+                                const std::vector<bool> &has_var,
                                 std::ostream &stream, const char *sep) {
     stream << "DAYS" << sep << "DATE";
     for (size_t i = 0; i < key_list.size(); i++)
-        if (bool_vector_iget(has_var, static_cast<int>(i)))
+        if (has_var.at(i))
             stream << sep << key_list[i];
     stream << "\r\n";
 }
@@ -953,30 +950,29 @@ static void rd_sum_write_csv(const rd_sum_type *rd_sum, std::ostream &stream,
                              const std::vector<std::string> &var_list,
                              const char *date_format, const char *sep) {
 
-    auto has_var = make_bool_vector(static_cast<int>(var_list.size()), false);
-    auto var_index = make_int_vector(static_cast<int>(var_list.size()), -1);
+    std::vector<bool> has_var(var_list.size(), false);
+    std::vector<int> var_index(var_list.size(), -1);
 
     for (int ivar = 0; static_cast<size_t>(ivar) < var_list.size(); ivar++) {
         if (rd_sum_has_general_var(rd_sum, var_list[ivar].c_str())) {
-            bool_vector_iset(has_var.get(), ivar, true);
-            int_vector_iset(var_index.get(), ivar,
-                            rd_sum_get_general_var_params_index(
-                                rd_sum, var_list[ivar].c_str()));
+            has_var[ivar] = true;
+            var_index[ivar] = rd_sum_get_general_var_params_index(
+                rd_sum, var_list[ivar].c_str());
         } else {
             fprintf(stderr,
                     "** Warning: could not find variable: \'%s\' in "
                     "summary file \n",
                     var_list[ivar].c_str());
-            bool_vector_iset(has_var.get(), ivar, false);
+            has_var[ivar] = false;
         }
     }
 
-    rd_sum_write_header(var_list, has_var.get(), stream, sep);
+    rd_sum_write_header(var_list, has_var, stream, sep);
 
     for (int time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
          time_index++)
-        rd_sum_write_line(rd_sum, stream, time_index, has_var.get(),
-                          var_index.get(), date_format, sep);
+        rd_sum_write_line(rd_sum, stream, time_index, has_var, var_index,
+                          date_format, sep);
 }
 #undef DATE_STRING_LENGTH
 
