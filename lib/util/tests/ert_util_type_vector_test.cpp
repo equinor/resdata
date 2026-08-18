@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <ert/util/int_vector.hpp>
-#include <ert/util/double_vector.hpp>
 #include <ert/util/test_util.hpp>
 #include <vector>
 
@@ -46,30 +45,7 @@ void test_range_fill_int() {
     int_vector_free(int_vector);
 }
 
-void test_range_fill_double() {
-    double_vector_type *double_vector = double_vector_alloc(0, 0);
-    double_vector_range_fill(double_vector, 1, 2, 10); /* 1 , 3 , 5 , 7 , 9 */
-
-    test_assert_double_equal(double_vector_size(double_vector), 5);
-    test_assert_double_equal(double_vector_iget(double_vector, 0), 1);
-    test_assert_double_equal(double_vector_iget(double_vector, 1), 3);
-    test_assert_double_equal(double_vector_iget(double_vector, 2), 5);
-    test_assert_double_equal(double_vector_iget(double_vector, 3), 7);
-    test_assert_double_equal(double_vector_iget(double_vector, 4), 9);
-
-    double_vector_range_fill(double_vector, 3, 3, 9); /* 3,6,9 */
-    test_assert_double_equal(double_vector_size(double_vector), 3);
-    test_assert_double_equal(double_vector_iget(double_vector, 0), 3);
-    test_assert_double_equal(double_vector_iget(double_vector, 1), 6);
-    test_assert_double_equal(double_vector_iget(double_vector, 2), 9);
-
-    double_vector_free(double_vector);
-}
-
-void test_range_fill() {
-    test_range_fill_int();
-    test_range_fill_double();
-}
+void test_range_fill() { test_range_fill_int(); }
 
 void test_contains() {
     int_vector_type *int_vector = int_vector_alloc(0, 100);
@@ -363,17 +339,6 @@ void test_del() {
     int_vector_free(vec);
 }
 
-void test_insert_double() {
-    double_vector_type *vec = double_vector_alloc(0, 0);
-    double_vector_append(vec, 1);
-    double_vector_insert(vec, 0, 0);
-
-    test_assert_double_equal(0, double_vector_iget(vec, 0));
-    test_assert_double_equal(1, double_vector_iget(vec, 1));
-
-    double_vector_free(vec);
-}
-
 void test_empty() {
     int_vector_type *vec = int_vector_alloc(0, 0);
     int_vector_sort(vec);
@@ -427,7 +392,6 @@ void misc_int_vector_test() {
     test_assert_int_equal(-1, int_vector_index_sorted(int_vector, 100));
 
     test_assert_true(int_vector_is_instance(int_vector));
-    test_assert_false(double_vector_is_instance(int_vector));
     int_vector_resize(int_vector, 3, 99);
     int_vector_iset(int_vector, 2, 0);
     int_vector_insert(int_vector, 2, 77);
@@ -516,7 +480,6 @@ int main(int argc, char **argv) {
     test_iset_block();
     test_resize();
     test_empty();
-    test_insert_double();
     test_equal_index();
     exit(0);
 }

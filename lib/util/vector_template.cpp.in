@@ -1183,7 +1183,6 @@ void @TYPE@_vector_rsort(@TYPE@_vector_type * vector) {
 
    int_vector_type    * v1;
    bool_vector_type   * v2;
-   double_vector_type * v2;
    .....
    .....
 
@@ -1191,7 +1190,6 @@ void @TYPE@_vector_rsort(@TYPE@_vector_type * vector) {
       int * sort_perm = int_vector_alloc_sort_perm( v1 );
       int_vector_permute( v1 , sort_perm );
       bool_vector_permute( v2 , sort_perm );
-      double_vector_permute( v3 , sort_perm );
       free(sort_perm);
    }
 
