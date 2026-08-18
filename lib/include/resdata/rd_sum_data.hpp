@@ -49,10 +49,10 @@ double rd_sum_data_iget(const rd_sum_data_type *data, int internal_index,
 
 double rd_sum_data_iget_sim_days(const rd_sum_data_type *, int);
 time_t rd_sum_data_iget_sim_time(const rd_sum_data_type *, int);
-void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
-                                   time_t sim_time,
-                                   const rd_sum_vector_type *keylist,
-                                   double_vector_type *results);
+std::vector<double>
+rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
+                              const rd_sum_vector_type *keylist,
+                              double missing_value);
 
 void rd_sum_data_free(rd_sum_data_type *);
 int rd_sum_data_get_last_report_step(const rd_sum_data_type *data);

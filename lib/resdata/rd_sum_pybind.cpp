@@ -329,10 +329,10 @@ PYBIND11_MODULE(_rd_sum, m) {
                                       from_cwrap<FILE>(file));
     });
     m.def("_get_interp_vector", [](py::handle self, std::time_t sim_time,
-                                   py::handle key_words, py::handle data) {
-        rd_sum_get_interp_vector(from_cwrap<rd_sum_type>(self), sim_time,
-                                 from_cwrap<rd_sum_vector_type>(key_words),
-                                 from_cwrap<double_vector_type>(data));
+                                   py::handle key_words, double missing_value) {
+        return rd_sum_get_interp_vector(
+            from_cwrap<rd_sum_type>(self), sim_time,
+            from_cwrap<rd_sum_vector_type>(key_words), missing_value);
     });
     m.def("_init_pandas_frame",
           [](py::handle self, py::handle keywords,

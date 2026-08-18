@@ -699,11 +699,11 @@ class Summary(BaseCClass):
         else:
             raise ValueError("Must supply either days or date")
 
-    def get_interp_row(self, key_list, sim_time: TimeLike, invalid_value=-1):
+    def get_interp_row(
+        self, key_list, sim_time: TimeLike, invalid_value: SupportsFloat = -1
+    ) -> list[float]:
         ctime = CTime(sim_time)
-        data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
-        _rd_sum._get_interp_vector(self, ctime.ctime(), key_list, data)
-        return data
+        return _rd_sum._get_interp_vector(self, ctime.ctime(), key_list, invalid_value)
 
     def time_range(
         self,

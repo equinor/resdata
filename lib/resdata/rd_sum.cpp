@@ -628,11 +628,12 @@ double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
     return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
 }
 
-void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
-                              const rd_sum_vector_type *key_words,
-                              double_vector_type *data) {
-    rd_sum_data_get_interp_vector(rd_sum->data.get(), sim_time, key_words,
-                                  data);
+std::vector<double>
+rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
+                         const rd_sum_vector_type *key_words,
+                         double missing_value) {
+    return rd_sum_data_get_interp_vector(rd_sum->data.get(), sim_time,
+                                         key_words, missing_value);
 }
 
 void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
@@ -710,40 +711,40 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
 
   */
     rd_sum_vector_ptr rd_sum_vector = make_sum_vector(rd_sum, true);
-    auto data =
-        make_double_vector(rd_sum_vector_get_size(rd_sum_vector.get()), 0);
+    int num_nodes = rd_smspec_num_nodes(rd_sum->smspec.get());
+    std::vector<double> data{};
 
     int report_step = 0;
     for (auto it = times_begin; it != times_end; ++it, ++report_step) {
         time_t input_t = *it;
         if (input_t < start_time) {
+            data.resize(num_nodes, 0.0);
             //clamping to the first value for t < start_time or if it is a rate than derivative is 0
-            for (int i = 1; i < rd_smspec_num_nodes(rd_sum->smspec.get());
-                 i++) {
+            for (int i = 1; i < num_nodes; i++) {
                 double value = 0;
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
                     value = rd_sum_data_iget_first_value(
                         rd_sum->data.get(), node.get_params_index());
-                double_vector_iset(data.get(), i - 1, value);
+                data[i - 1] = value;
             }
         } else if (input_t > end_time) {
             //clamping to the last value for t > end_time or if it is a rate than derivative is 0
-            for (int i = 1; i < rd_smspec_num_nodes(rd_sum->smspec.get());
-                 i++) {
+            data.resize(num_nodes, 0.0);
+            for (int i = 1; i < num_nodes; i++) {
                 double value = 0;
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
                     value = rd_sum_data_iget_last_value(
                         rd_sum->data.get(), node.get_params_index());
-                double_vector_iset(data.get(), i - 1, value);
+                data[i - 1] = value;
             }
         } else {
             /* Look up interpolated data in the original case. */
-            rd_sum_get_interp_vector(rd_sum, input_t, rd_sum_vector.get(),
-                                     data.get());
+            data = rd_sum_get_interp_vector(rd_sum, input_t,
+                                            rd_sum_vector.get(), 0.0);
         }
 
         /* Add timestep corresponding to the interpolated data in the resampled case. */
@@ -752,7 +753,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
         for (int data_index = 0;
              data_index < rd_sum_vector_get_size(rd_sum_vector.get());
              data_index++) {
-            double value = double_vector_iget(data.get(), data_index);
+            double value = data.at(data_index);
             int params_index =
                 data_index +
                 1; // The +1 shift is because the first element in the tstep is time value.
