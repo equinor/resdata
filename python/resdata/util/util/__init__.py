@@ -8,17 +8,6 @@ use and interaction with various ert classes, in a pure python context
 you are probably better served by using a plain python solution;
 either based on built in python objects or well established third
 party packages.
-
-The modules included in the util package are:
-
-  tvector.py: This module implements the classes IntVector,
-     DoubleVector and BoolVector. This is a quite normal
-     implementation of a typed growable vector; but with a special
-     twist regarding default values.
-
-  util_func.py: This module wraps a couple of stateless (i.e. there is
-     no class involved) functions from the util.c file.
-
 """
 
 import warnings
@@ -28,7 +17,6 @@ from cwrap import Prototype
 import resdata
 
 from .ctime import CTime, TimeLike
-from .double_vector import DoubleVector
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .int_vector import IntVector
 from .permutation_vector import PermutationVector

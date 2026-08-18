@@ -1,6 +1,4 @@
 """
-Typed vectors IntVector, DoubleVector and BoolVector.
-
 This module implements a quite simple typed vector which will grow
 transparently as needed. The vector is created with a default value,
 which will be used for not explicitly set indices.
@@ -18,8 +16,7 @@ the default value (i.e. 66 in this case). So the statement
 
 will give '66'. The main part of the implementation is in terms of an
 "abstract base class" TVector. The TVector class should be not
-instantiated directly, instead the child classes IntVector,
-DoubleVector or BoolVector should be used.
+instantiated directly, instead the child class IntVector should be used.
 
 The C-level has implementations for several fundamental types like
 float and size_t not currently implemented in the Python version.
@@ -295,8 +292,8 @@ class VectorTemplate(BaseCClass):
         """
         Implements add operation - creating a new copy.
 
-           b = DoubleVector()
-           c = DoubleVector()  // Or alternatively scalar
+           b = IntVector()
+           c = IntVector()  // Or alternatively scalar
            ....
            a = b + c
         """
