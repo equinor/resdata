@@ -471,6 +471,44 @@ class SumTest(ResdataTest):
         self.assertEqual(clamped[0], data_start)
         self.assertEqual(clamped[-1], data_end)
 
+    def test_time_range_yearly_does_not_extend_when_end_is_at_year_start(self):
+        case = createSummary(
+            "CSV",
+            [("FOPT", None, 0, "SM3")],
+            sim_start=datetime.date(2010, 1, 1),
+            sim_length_days=3 * 365,
+            num_report_step=10,
+            num_mini_step=10,
+        )
+
+        # The end date is already at the start of a year, so there is
+        # nothing to extend.
+        trange = case.time_range(
+            end=datetime.datetime(2012, 1, 1), interval="1Y", extend_end=True
+        )
+        self.assertEqual(
+            [t.datetime() for t in trange],
+            [
+                datetime.datetime(2010, 1, 1),
+                datetime.datetime(2011, 1, 1),
+                datetime.datetime(2012, 1, 1),
+            ],
+        )
+
+        # An end date within a year is extended to the start of the next year.
+        trange = case.time_range(
+            end=datetime.datetime(2012, 6, 1), interval="1Y", extend_end=True
+        )
+        self.assertEqual(
+            [t.datetime() for t in trange],
+            [
+                datetime.datetime(2010, 1, 1),
+                datetime.datetime(2011, 1, 1),
+                datetime.datetime(2012, 1, 1),
+                datetime.datetime(2013, 1, 1),
+            ],
+        )
+
     def test_resample(self):
         case = create_case()
         time_vector = case.alloc_time_vector(False)
