@@ -14,6 +14,7 @@
 #include <resdata/rd_util.hpp>
 
 #include <detail/resdata/cwrap_pybind.hpp>
+#include <vector>
 
 namespace py = pybind11;
 using fmt::format;
@@ -281,17 +282,20 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_dual_grid", [](py::handle self) {
         return rd_grid_dual_grid(from_cwrap<rd_grid_type>(self));
     });
-    m.def(
-        "_init_actnum",
-        [](py::handle self) {
-            auto rd_grid = from_cwrap<rd_grid_type>(self);
-            int size = rd_grid_get_global_size(rd_grid);
-            int_vector_ptr actnum = make_int_vector(size, 0);
-            rd_grid_init_actnum_data(rd_grid, int_vector_get_ptr(actnum.get()));
+    m.def("_init_actnum", [](py::handle self) {
+        auto rd_grid = from_cwrap<rd_grid_type>(self);
+        py::ssize_t size =
+            static_cast<py::ssize_t>(rd_grid_get_global_size(rd_grid));
+        std::vector<py::ssize_t> shape = {size};
+        py::array_t<int> data(shape);
+        auto data_buffer = data.request();
+        auto data_ptr = static_cast<int *>(data_buffer.ptr);
+        std::fill(data_ptr, data_ptr + data_buffer.size, 0);
 
-            return reinterpret_cast<std::uintptr_t>(actnum.release());
-        },
-        py::return_value_policy::reference);
+        rd_grid_init_actnum_data(rd_grid, data_ptr);
+
+        return data;
+    });
     m.def(
         "_init_actnum_kw",
         [](py::handle self) {
