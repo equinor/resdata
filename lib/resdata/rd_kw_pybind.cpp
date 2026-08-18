@@ -8,6 +8,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include <fmt/format.h>
 
 #include <resdata/rd_kw.hpp>
@@ -266,12 +267,23 @@ PYBIND11_MODULE(_kw, m) {
         rd_kw_max_min_double(from_cwrap<rd_kw_type>(self), &max, &min);
         return std::make_tuple(max, min);
     });
-    m.def("_fix_uninitialized",
-          [](py::handle self, int nx, int ny, int nz, py::handle actnum) {
-              rd_kw_fix_uninitialized(
-                  from_cwrap<rd_kw_type>(self), nx, ny, nz,
-                  int_vector_get_ptr(from_cwrap<int_vector_type>(actnum)));
-          });
+    m.def(
+        "_fix_uninitialized",
+        [](py::handle self, int nx, int ny, int nz,
+           py::array_t<int, py::array::c_style | py::array::forcecast> actnum) {
+            if (nx < 0 || ny < 0 || nz < 0)
+                throw std::invalid_argument(
+                    "nx, ny and nz must be non-negative");
+
+            auto required_size = static_cast<py::ssize_t>(nx) * ny * nz;
+            if (actnum.size() < required_size)
+                throw std::invalid_argument(fmt::format(
+                    "actnum has {} elements, but nx*ny*nz={} were expected",
+                    actnum.size(), required_size));
+
+            rd_kw_fix_uninitialized(from_cwrap<rd_kw_type>(self), nx, ny, nz,
+                                    actnum.data());
+        });
     m.def(
         "_create_actnum",
         [](py::handle self, float porv_limit) {

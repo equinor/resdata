@@ -15,6 +15,7 @@ import sys
 from typing import SupportsInt
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from cwrap import CFILE, BaseCClass
 from cwrap import open as copen
@@ -23,7 +24,6 @@ import resdata.grid._grid as _grid
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
-from resdata.util.util import IntVector
 
 
 class Grid(BaseCClass):
@@ -1061,8 +1061,8 @@ class Grid(BaseCClass):
                 )
             )
 
-    def exportACTNUM(self) -> IntVector | None:
-        return IntVector.createPythonObject(_grid._init_actnum(self))
+    def exportACTNUM(self) -> npt.NDArray[np.intc]:
+        return _grid._init_actnum(self)
 
     def compressed_kw_copy(self, kw):
         if len(kw) == self.get_num_active():
