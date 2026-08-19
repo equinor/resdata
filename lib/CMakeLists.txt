@@ -6,10 +6,6 @@ if(ERT_HAVE_OPENDIR)
   list(APPEND opt_srcs util/util_opendir.cpp)
 endif()
 
-if(ERT_HAVE_UNISTD)
-  list(APPEND opt_srcs util/path_stack.cpp)
-endif()
-
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
 
@@ -324,13 +320,6 @@ add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp
 target_link_libraries(ert_util_copy_file resdata)
 add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
                                          $<TARGET_FILE:ert_util_copy_file>)
-
-add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp
-                                        util/test_util.cpp)
-target_link_libraries(ert_util_path_stack_test resdata)
-add_test(NAME ert_util_path_stack_test
-         COMMAND ert_util_path_stack_test ${CMAKE_CURRENT_BINARY_DIR}
-                 ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp
                                         util/test_util.cpp)
