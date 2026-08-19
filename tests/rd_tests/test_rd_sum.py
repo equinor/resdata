@@ -21,6 +21,7 @@ from resdata.summary import (
     SummaryVarType,
 )
 from resdata.summary._date2num import date2num
+from resdata.summary.rd_sum import _next_time
 from resdata.util.util import DoubleVector
 from resfo_utilities.testing import (
     Date,
@@ -3041,3 +3042,15 @@ def test_that_add_keywords_with_none_pattern_matches_all_keywords():
     kw_vector.add_keywords(None)
 
     assert sorted(kw_vector) == sorted(rd_sum.keys())
+
+
+def test_that_next_time_handles_months_with_fewer_days_than_the_start_day():
+    assert _next_time(datetime.datetime(2023, 1, 31), 1, "m") == datetime.datetime(
+        2023, 2, 28
+    )
+
+
+def test_that_next_time_advances_a_leap_year_by_incrementing_only_the_year():
+    assert _next_time(datetime.datetime(2024, 6, 15), 1, "y") == datetime.datetime(
+        2025, 6, 15
+    )

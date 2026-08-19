@@ -22,6 +22,7 @@ import pandas as pd
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 from cwrap import CFILE, BaseCClass
+from dateutil.relativedelta import relativedelta
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import FileMode, UnitSystem
@@ -1500,25 +1501,16 @@ def _next_time(
     current_time: datetime.datetime, num: int, time_unit: str
 ) -> datetime.datetime:
     """Advance current_time by num units of time_unit ("d", "m" or "y")."""
-    if time_unit == "d":
-        return current_time + datetime.timedelta(days=num)
-
-    day = current_time.day
-    month = current_time.month
-    year = current_time.year
-    hour = current_time.hour
-    minute = current_time.minute
-    second = current_time.second
-
-    if time_unit == "y":
-        year += num
-    else:
-        month += num - 1
-        delta_year, new_month = divmod(month, 12)
-        month = new_month + 1
-        year += delta_year
-
-    return datetime.datetime(year, month, day, hour, minute, second)
+    match time_unit:
+        case "d":
+            delta = relativedelta(days=num)
+        case "m":
+            delta = relativedelta(months=num)
+        case "y":
+            delta = relativedelta(years=num)
+        case _:
+            raise ValueError(f"Unknown time unit '{time_unit}'")
+    return current_time + delta
 
 
 def _create_linear_time_range(
