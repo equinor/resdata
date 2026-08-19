@@ -22,7 +22,6 @@ from resdata.summary import (
 )
 from resdata.summary._date2num import date2num
 from resdata.summary.rd_sum import _next_time
-from resdata.util.util import DoubleVector
 from resfo_utilities.testing import (
     Date,
     Simulator,
