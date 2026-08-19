@@ -18,6 +18,3 @@ import resdata
 
 from .ctime import CTime, TimeLike
 from .install_abort_signals import installAbortSignals, updateAbortSignals
-from .int_vector import IntVector
-from .permutation_vector import PermutationVector
-from .vector_template import VectorTemplate
