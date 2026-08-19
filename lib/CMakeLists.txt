@@ -26,10 +26,7 @@ configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
 add_library(
   resdata
-  util/hash_node.cpp
-  util/hash_sll.cpp
   util/path.cpp
-  util/hash.cpp
   util/node_data.cpp
   util/util.cpp
   util/util_abort.cpp
