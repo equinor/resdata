@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include <filesystem>
 
-#include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
 #include "detail/util/path.hpp"
 

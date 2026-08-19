@@ -21,7 +21,6 @@
 #include <resdata/rd_file_view.hpp>
 
 #include <ert/util/type_macros.hpp>
-#include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 
