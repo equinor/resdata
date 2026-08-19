@@ -158,7 +158,7 @@ size_t geo_region_num_selected(geo_region_type *region) {
 
 const std::vector<int> geo_region_get_index_list(geo_region_type *region) {
     std::vector<int> index_list;
-    index_list.reserve(region->size());
+    index_list.reserve(region->num_selected);
     for (size_t i = 0; i < region->size(); i++)
         if (region->active_mask[i])
             index_list.push_back(static_cast<int>(i));

@@ -1,4 +1,3 @@
-#include "ert/util/int_vector.hpp"
 #include "resdata/rd_type.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
@@ -10,7 +9,7 @@
 #include <string>
 
 int num_selected(rd_region_type *region) {
-    return int_vector_size(rd_region_get_global_list(region));
+    return rd_region_get_global_list(region).size();
 }
 
 TEST_CASE("rd_region", "[rd_region]") {
@@ -73,19 +72,15 @@ TEST_CASE("rd_region", "[rd_region]") {
         }
 
         SECTION("Get global list") {
-            const int_vector_type *global_list =
-                rd_region_get_global_list(region);
-            REQUIRE(int_vector_size(global_list) == 0);
+            REQUIRE(rd_region_get_global_list(region).empty());
         }
 
         SECTION("Get active list") {
-            REQUIRE(int_vector_size(rd_region_get_active_list(region)) == 0);
+            REQUIRE(rd_region_get_active_list(region).empty());
         }
 
         SECTION("Get global active list") {
-            const int_vector_type *list =
-                rd_region_get_global_active_list(region);
-            REQUIRE(int_vector_size(list) == 0);
+            REQUIRE(rd_region_get_global_active_list(region).empty());
         }
 
         SECTION("contains functions") {
@@ -383,18 +378,16 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Set keyword int") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_INT);
                 rd_region_set_kw_int(region, kw, 42, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_int(kw, idx) == 42);
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE(rd_kw_iget_int(kw, list.at(0)) == 42);
                 rd_kw_free(kw);
             }
 
             SECTION("Set keyword float") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_FLOAT);
                 rd_region_set_kw_float(region, kw, 3.14f, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw, list.at(0)),
                              Catch::Matchers::WithinAbs(3.14f, 0.01f));
                 rd_kw_free(kw);
             }
@@ -402,9 +395,8 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Set keyword double") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_DOUBLE);
                 rd_region_set_kw_double(region, kw, 2.71, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_double(kw, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_double(kw, list.at(0)),
                              Catch::Matchers::WithinAbs(2.71, 0.01));
                 rd_kw_free(kw);
             }
@@ -414,9 +406,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 for (int i = 0; i < 1000; i++)
                     rd_kw_iset_int(kw, i, 10);
                 rd_region_shift_kw_int(region, kw, 5, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_int(kw, idx) == 15);
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE(rd_kw_iget_int(kw, list.at(0)) == 15);
                 rd_kw_free(kw);
             }
 
@@ -425,9 +416,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 for (int i = 0; i < 1000; i++)
                     rd_kw_iset_float(kw, i, 10.0f);
                 rd_region_scale_kw_float(region, kw, 2.0f, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw, list.at(0)),
                              Catch::Matchers::WithinAbs(20.0f, 0.01f));
                 rd_kw_free(kw);
             }
@@ -438,9 +428,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 for (int i = 0; i < 1000; i++)
                     rd_kw_iset_int(kw_src, i, 99);
                 rd_region_kw_copy(region, kw_dst, kw_src, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_int(kw_dst, idx) == 99);
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE(rd_kw_iget_int(kw_dst, list.at(0)) == 99);
                 rd_kw_free(kw_src);
                 rd_kw_free(kw_dst);
             }
@@ -453,9 +442,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                     rd_kw_iset_float(kw2, i, 5.0f);
                 }
                 rd_region_kw_iadd(region, kw1, kw2, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw1, list.at(0)),
                              Catch::Matchers::WithinAbs(15.0f, 0.01));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
@@ -469,9 +457,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                     rd_kw_iset_float(kw2, i, 3.0f);
                 }
                 rd_region_kw_isub(region, kw1, kw2, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw1, list.at(0)),
                              Catch::Matchers::WithinAbs(7.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
@@ -485,9 +472,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                     rd_kw_iset_float(kw2, i, 2.0f);
                 }
                 rd_region_kw_imul(region, kw1, kw2, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw1, list.at(0)),
                              Catch::Matchers::WithinAbs(20.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
@@ -501,9 +487,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                     rd_kw_iset_float(kw2, i, 4.0f);
                 }
                 rd_region_kw_idiv(region, kw1, kw2, false);
-                const int_vector_type *list = rd_region_get_global_list(region);
-                int idx = int_vector_iget(list, 0);
-                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                const auto list = rd_region_get_global_list(region);
+                REQUIRE_THAT(rd_kw_iget_float(kw1, list.at(0)),
                              Catch::Matchers::WithinAbs(5.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);

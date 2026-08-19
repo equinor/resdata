@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
@@ -108,7 +109,7 @@ int rd_kw_element_sum_int(const rd_kw_type *rd_kw);
 double rd_kw_element_sum_float(const rd_kw_type *rd_kw);
 void rd_kw_element_sum(const rd_kw_type *, void *);
 void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
-                               const int_vector_type *index_list, void *_sum);
+                               const std::vector<int> &index_list, void *_sum);
 void rd_kw_max_min(const rd_kw_type *, void *, void *);
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw);
 
@@ -135,18 +136,19 @@ void rd_kw_inplace_mul(rd_kw_type *target_kw, const rd_kw_type *mul_kw);
 void rd_kw_inplace_abs(rd_kw_type *kw);
 
 void rd_kw_inplace_add_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *add_kw);
 void rd_kw_inplace_sub_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *sub_kw);
 void rd_kw_inplace_mul_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *mul_kw);
 void rd_kw_inplace_div_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *div_kw);
-void rd_kw_copy_indexed(rd_kw_type *target_kw, const int_vector_type *index_set,
+void rd_kw_copy_indexed(rd_kw_type *target_kw,
+                        const std::vector<int> &index_set,
                         const rd_kw_type *src_kw);
 
 bool rd_kw_assert_binary_numeric(const rd_kw_type *kw1, const rd_kw_type *kw2);
@@ -203,7 +205,7 @@ RD_KW_GET_TYPED_PTR_HEADER(bool);
 
 #define RD_KW_SET_INDEXED_HEADER(ctype)                                        \
     void rd_kw_set_indexed_##ctype(                                            \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype value)
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype value)
 RD_KW_SET_INDEXED_HEADER(double);
 RD_KW_SET_INDEXED_HEADER(float);
 RD_KW_SET_INDEXED_HEADER(int);
@@ -211,7 +213,7 @@ RD_KW_SET_INDEXED_HEADER(int);
 
 #define RD_KW_SHIFT_INDEXED_HEADER(ctype)                                      \
     void rd_kw_shift_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype shift)
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype shift)
 RD_KW_SHIFT_INDEXED_HEADER(int);
 RD_KW_SHIFT_INDEXED_HEADER(float);
 RD_KW_SHIFT_INDEXED_HEADER(double);
@@ -219,7 +221,7 @@ RD_KW_SHIFT_INDEXED_HEADER(double);
 
 #define RD_KW_SCALE_INDEXED_HEADER(ctype)                                      \
     void rd_kw_scale_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype scale)
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype scale)
 RD_KW_SCALE_INDEXED_HEADER(int);
 RD_KW_SCALE_INDEXED_HEADER(float);
 RD_KW_SCALE_INDEXED_HEADER(double);

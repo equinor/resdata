@@ -22,7 +22,6 @@ from resdata import ResDataType
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
-from resdata.util.util import IntVector
 
 
 def select_method(select):
@@ -136,8 +135,7 @@ class ResdataRegion(BaseCClass):
         return region
 
     def __nonzero__(self):
-        global_list = self.get_global_list()
-        return len(global_list) > 0
+        return _rd_region._get_global_size(self) > 0
 
     def __bool__(self):
         return self.__nonzero__()
@@ -918,21 +916,15 @@ class ResdataRegion(BaseCClass):
     #################################################################
 
     def active_size(self):
-        return len(self.get_active_list())
+        return _rd_region._get_active_size(self)
 
     def global_size(self):
-        return len(self.get_global_list())
+        return _rd_region._get_global_size(self)
 
-    def get_active_list(self) -> IntVector:
-        """
-        IntVector instance with active indices in the region.
-        """
+    def get_active_list(self) -> list[int]:
         return _rd_region._get_active_list(self)
 
-    def get_global_list(self):
-        """
-        IntVector instance with global indices in the region.
-        """
+    def get_global_list(self) -> list[int]:
         return _rd_region._get_global_list(self)
 
     def get_ijk_list(self):
@@ -964,7 +956,7 @@ class ResdataRegion(BaseCClass):
         """
         return _rd_region._contains_active(self, active_index)
 
-    def kw_index_list(self, rd_kw, force_active) -> IntVector:
+    def kw_index_list(self, rd_kw, force_active) -> list[int]:
         return _rd_region._get_kw_index_list(self, rd_kw, force_active)
 
     @property

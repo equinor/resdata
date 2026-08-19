@@ -10,12 +10,11 @@
 #include <stdexcept>
 #include <string>
 
-#include <ert/util/int_vector.hpp>
-
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
+#include <vector>
 
 #include "tmpdir.hpp"
 
@@ -233,8 +232,7 @@ TEST_CASE("inplace unary ops validate type", "[rd_kw]") {
 }
 
 TEST_CASE("indexed inplace/copy ops validate size and type", "[rd_kw]") {
-    int_vector_type *index_set = int_vector_alloc(0, 0);
-    int_vector_append(index_set, 0);
+    std::vector<int> index_set{0};
 
     auto a = make_int_kw("A", 3);
     auto b = make_int_kw("B", 4);
@@ -249,8 +247,6 @@ TEST_CASE("indexed inplace/copy ops validate size and type", "[rd_kw]") {
                         ContainsSubstring("type/size"));
     REQUIRE_THROWS_WITH(rd_kw_inplace_div_indexed(a.get(), index_set, b.get()),
                         ContainsSubstring("type/size"));
-
-    int_vector_free(index_set);
 }
 
 TEST_CASE("rd_kw_max_min validates type", "[rd_kw]") {
@@ -271,12 +267,10 @@ TEST_CASE("element sum validates type", "[rd_kw]") {
     REQUIRE_THROWS_WITH(rd_kw_element_sum_float(int_kw.get()),
                         ContainsSubstring("invalid type"));
 
-    int_vector_type *index_set = int_vector_alloc(0, 0);
-    int_vector_append(index_set, 0);
+    std::vector<int> index_set{0};
     REQUIRE_THROWS_WITH(
         rd_kw_element_sum_indexed(char_kw.get(), index_set, sum),
         ContainsSubstring("invalid type for element sum"));
-    int_vector_free(index_set);
 }
 
 TEST_CASE("rd_kw_first_different validates offset and size", "[rd_kw]") {

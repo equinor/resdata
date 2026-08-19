@@ -5,7 +5,6 @@
 #include <set>
 #include <vector>
 
-#include <ert/util/int_vector.hpp>
 
 #include <ert/geometry/geo_polygon_collection.hpp>
 

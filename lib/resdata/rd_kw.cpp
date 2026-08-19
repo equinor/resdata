@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -945,17 +946,14 @@ RD_KW_ISET_TYPED(bool, RD_BOOL_TYPE);
 
 #define RD_KW_SET_INDEXED(ctype, RD_TYPE)                                      \
     void rd_kw_set_indexed_##ctype(                                            \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype value) {   \
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype value) {  \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw->data;                                \
-            int size = int_vector_size(index_list);                            \
-            const int *index_ptr = int_vector_get_const_ptr(index_list);       \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
-                data[index_ptr[i]] = value;                                    \
+            for (const auto i : index_list)                                    \
+                data[i] = value;                                               \
         }                                                                      \
     }
 
@@ -966,17 +964,14 @@ RD_KW_SET_INDEXED(int, RD_INT_TYPE);
 
 #define RD_KW_SHIFT_INDEXED(ctype, RD_TYPE)                                    \
     void rd_kw_shift_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype shift) {   \
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype shift) {  \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw->data;                                \
-            int size = int_vector_size(index_list);                            \
-            const int *index_ptr = int_vector_get_const_ptr(index_list);       \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
-                data[index_ptr[i]] += shift;                                   \
+            for (const auto i : index_list)                                    \
+                data[i] += shift;                                              \
         }                                                                      \
     }
 
@@ -987,17 +982,14 @@ RD_KW_SHIFT_INDEXED(int, RD_INT_TYPE);
 
 #define RD_KW_SCALE_INDEXED(ctype, RD_TYPE)                                    \
     void rd_kw_scale_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const int_vector_type *index_list, ctype scale) {   \
+        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype scale) {  \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw->data;                                \
-            int size = int_vector_size(index_list);                            \
-            const int *index_ptr = int_vector_get_const_ptr(index_list);       \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
-                data[index_ptr[i]] *= scale;                                   \
+            for (const auto i : index_list)                                    \
+                data[i] *= scale;                                              \
         }                                                                      \
     }
 
@@ -1868,42 +1860,29 @@ RD_KW_ASSERT_TYPED_BINARY_OP(float, RD_FLOAT_TYPE)
 RD_KW_ASSERT_TYPED_BINARY_OP(double, RD_DOUBLE_TYPE)
 #undef RD_KW_ASSERT_TYPED_BINARY_OP
 
-void rd_kw_copy_indexed(rd_kw_type *target_kw, const int_vector_type *index_set,
+void rd_kw_copy_indexed(rd_kw_type *target_kw,
+                        const std::vector<int> &index_set,
                         const rd_kw_type *src_kw) {
     if (!rd_kw_size_and_type_equal(target_kw, src_kw))
         throw std::invalid_argument("type/size  mismatch");
-    {
-        char *target_data = (char *)rd_kw_get_data_ref(target_kw);
-        const char *src_data = (const char *)rd_kw_get_data_ref(src_kw);
-        int sizeof_ctype = rd_type_get_sizeof_ctype(target_kw->data_type);
-        int set_size = int_vector_size(index_set);
-        const int *index_data = int_vector_get_const_ptr(index_set);
-        int i;
-        for (i = 0; i < set_size; i++) {
-            int index = index_data[i];
-            memcpy(&target_data[index * sizeof_ctype],
-                   &src_data[index * sizeof_ctype], sizeof_ctype);
-        }
-    }
+    char *target_data = (char *)rd_kw_get_data_ref(target_kw);
+    const char *src_data = (const char *)rd_kw_get_data_ref(src_kw);
+    int sizeof_ctype = rd_type_get_sizeof_ctype(target_kw->data_type);
+    for (const auto index : index_set)
+        memcpy(&target_data[index * sizeof_ctype],
+               &src_data[index * sizeof_ctype], sizeof_ctype);
 }
 
 #define RD_KW_TYPED_INPLACE_ADD_INDEXED(ctype)                                 \
     static void rd_kw_inplace_add_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const int_vector_type *index_set,               \
+        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
         const rd_kw_type *add_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, add_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw); \
-            int set_size = int_vector_size(index_set);                         \
-            const int *index_data = int_vector_get_const_ptr(index_set);       \
-            int i;                                                             \
-            for (i = 0; i < set_size; i++) {                                   \
-                int index = index_data[i];                                     \
-                target_data[index] += add_data[index];                         \
-            }                                                                  \
-        }                                                                      \
+        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
+        const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw);     \
+        for (const auto index : index_set)                                     \
+            target_data[index] += add_data[index];                             \
     }
 
 RD_KW_TYPED_INPLACE_ADD_INDEXED(int)
@@ -1912,7 +1891,7 @@ RD_KW_TYPED_INPLACE_ADD_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_ADD
 
 void rd_kw_inplace_add_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *add_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2048,21 +2027,14 @@ void rd_kw_inplace_sub(rd_kw_type *target_kw, const rd_kw_type *sub_kw) {
 
 #define RD_KW_TYPED_INPLACE_SUB_INDEXED(ctype)                                 \
     static void rd_kw_inplace_sub_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const int_vector_type *index_set,               \
+        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
         const rd_kw_type *sub_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, sub_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *sub_data = (const ctype *)rd_kw_get_data_ref(sub_kw); \
-            int set_size = int_vector_size(index_set);                         \
-            const int *index_data = int_vector_get_const_ptr(index_set);       \
-            int i;                                                             \
-            for (i = 0; i < set_size; i++) {                                   \
-                int index = index_data[i];                                     \
-                target_data[index] -= sub_data[index];                         \
-            }                                                                  \
-        }                                                                      \
+        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
+        const ctype *sub_data = (const ctype *)rd_kw_get_data_ref(sub_kw);     \
+        for (const auto index : index_set)                                     \
+            target_data[index] -= sub_data[index];                             \
     }
 
 RD_KW_TYPED_INPLACE_SUB_INDEXED(int)
@@ -2071,7 +2043,7 @@ RD_KW_TYPED_INPLACE_SUB_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_SUB
 
 void rd_kw_inplace_sub_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *sub_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2196,21 +2168,14 @@ void rd_kw_inplace_mul(rd_kw_type *target_kw, const rd_kw_type *mul_kw) {
 
 #define RD_KW_TYPED_INPLACE_MUL_INDEXED(ctype)                                 \
     static void rd_kw_inplace_mul_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const int_vector_type *index_set,               \
+        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
         const rd_kw_type *mul_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, mul_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *mul_data = (const ctype *)rd_kw_get_data_ref(mul_kw); \
-            int set_size = int_vector_size(index_set);                         \
-            const int *index_data = int_vector_get_const_ptr(index_set);       \
-            int i;                                                             \
-            for (i = 0; i < set_size; i++) {                                   \
-                int index = index_data[i];                                     \
-                target_data[index] *= mul_data[index];                         \
-            }                                                                  \
-        }                                                                      \
+        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
+        const ctype *mul_data = (const ctype *)rd_kw_get_data_ref(mul_kw);     \
+        for (const auto index : index_set)                                     \
+            target_data[index] *= mul_data[index];                             \
     }
 
 RD_KW_TYPED_INPLACE_MUL_INDEXED(int)
@@ -2219,7 +2184,7 @@ RD_KW_TYPED_INPLACE_MUL_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_MUL
 
 void rd_kw_inplace_mul_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *mul_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2278,21 +2243,14 @@ void rd_kw_inplace_div(rd_kw_type *target_kw, const rd_kw_type *div_kw) {
 
 #define RD_KW_TYPED_INPLACE_DIV_INDEXED(ctype)                                 \
     static void rd_kw_inplace_div_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const int_vector_type *index_set,               \
+        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
         const rd_kw_type *div_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, div_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *div_data = (const ctype *)rd_kw_get_data_ref(div_kw); \
-            int set_size = int_vector_size(index_set);                         \
-            const int *index_data = int_vector_get_const_ptr(index_set);       \
-            int i;                                                             \
-            for (i = 0; i < set_size; i++) {                                   \
-                int index = index_data[i];                                     \
-                target_data[index] /= div_data[index];                         \
-            }                                                                  \
-        }                                                                      \
+        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
+        const ctype *div_data = (const ctype *)rd_kw_get_data_ref(div_kw);     \
+        for (const auto index : index_set)                                     \
+            target_data[index] /= div_data[index];                             \
     }
 
 RD_KW_TYPED_INPLACE_DIV_INDEXED(int)
@@ -2301,7 +2259,7 @@ RD_KW_TYPED_INPLACE_DIV_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_DIV
 
 void rd_kw_inplace_div_indexed(rd_kw_type *target_kw,
-                               const int_vector_type *index_set,
+                               const std::vector<int> &index_set,
                                const rd_kw_type *div_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2410,15 +2368,13 @@ RD_KW_MIN(double)
     {                                                                          \
         const type *data = (const type *)rd_kw_get_data_ref(rd_kw);            \
         type sum = 0;                                                          \
-        int size = int_vector_size(index_list);                                \
-        const int *index_ptr = int_vector_get_const_ptr(index_list);           \
-        for (int i = 0; i < size; i++)                                         \
-            sum += data[index_ptr[i]];                                         \
+        for (auto const i : index_list)                                        \
+            sum += data[i];                                                    \
         memcpy(_sum, &sum, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
     }
 
 void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
-                               const int_vector_type *index_list, void *_sum) {
+                               const std::vector<int> &index_list, void *_sum) {
     switch (rd_kw_get_type(rd_kw)) {
     case (RD_FLOAT_TYPE):
         KW_SUM_INDEXED(float);
@@ -2431,11 +2387,9 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
         break;
     case (RD_BOOL_TYPE): {
         const bool *data = (const bool *)rd_kw_get_data_ref(rd_kw);
-        const int *index_ptr = int_vector_get_const_ptr(index_list);
-        const int size = int_vector_size(index_list);
         int sum = 0;
-        for (int i = 0; i < size; i++)
-            sum += (data[index_ptr[i]]);
+        for (const auto i : index_list)
+            sum += (data[i]);
 
         memcpy(_sum, &sum, sizeof sum);
     } break;
