@@ -47,7 +47,6 @@ add_library(
   util/vector.cpp
   util/parser.cpp
   util/stringlist.cpp
-  util/string_util.cpp
   util/type_vector_functions.cpp
   util/perm_vector.cpp
   util/cxx_string_util.cpp
@@ -301,7 +300,6 @@ foreach(
   ert_util_relpath_test
   ert_util_strcat_test
   ert_util_stringlist_test
-  ert_util_string_util
   ert_util_type_vector_functions
   ert_util_vector_test
   ert_util_normal_path
