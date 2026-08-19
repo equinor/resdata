@@ -920,55 +920,6 @@ bool util_string_equal(const char *s1, const char *s2) {
 }
 
 /**
-    Successfully parses:
-
-      1 , T (not 't') , True (with any case) => true
-      0 , F (not 'f') , False(with any case) => false
-
-    Otherwise, set _value to false and return false.
-*/
-bool util_sscanf_bool(const char *buffer, bool *_value) {
-    if (!buffer) {
-        if (_value)
-            *_value = false;
-        return false;
-    }
-
-    bool parse_OK = false;
-    bool value = false;
-
-    if (strcmp(buffer, "1") == 0) {
-        parse_OK = true;
-        value = true;
-    } else if (strcmp(buffer, "0") == 0) {
-        parse_OK = true;
-        value = false;
-    } else if (strcmp(buffer, "T") == 0) {
-        parse_OK = true;
-        value = true;
-    } else if (strcmp(buffer, "F") == 0) {
-        parse_OK = true;
-        value = false;
-    } else {
-        char *local_buffer = util_alloc_string_copy(buffer);
-        util_strupr(local_buffer);
-
-        if (strcmp(local_buffer, "TRUE") == 0) {
-            parse_OK = true;
-            value = true;
-        } else if (strcmp(local_buffer, "FALSE") == 0) {
-            parse_OK = true;
-            value = false;
-        }
-
-        free(local_buffer);
-    }
-    if (_value != NULL)
-        *_value = value;
-    return parse_OK;
-}
-
-/**
     buffer_size is _only_ for a return (by reference) of the size of
     the allocation. Can pass in NULL if that size is not interesting.
 */
