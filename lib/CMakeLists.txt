@@ -21,14 +21,6 @@ foreach(type int)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach()
 
-foreach(type bool)
-  set(TYPE ${type})
-  set(SIGNED_TYPE false)
-  configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
-  configure_file(util/vector_template.cpp.in ${type}_vector.cpp)
-  list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
-endforeach()
-
 configure_file(build_config.hpp.in include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
@@ -47,7 +39,6 @@ add_library(
   util/vector.cpp
   util/parser.cpp
   util/stringlist.cpp
-  util/type_vector_functions.cpp
   util/perm_vector.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}
@@ -300,7 +291,6 @@ foreach(
   ert_util_relpath_test
   ert_util_strcat_test
   ert_util_stringlist_test
-  ert_util_type_vector_functions
   ert_util_vector_test
   ert_util_normal_path
   test_area)
@@ -349,11 +339,6 @@ add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp
                                         util/test_util.cpp)
 target_link_libraries(ert_util_abort_gnu_tests resdata)
 add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
-
-add_executable(ert_util_type_vector_test
-               util/tests/ert_util_type_vector_test.cpp util/test_util.cpp)
-target_link_libraries(ert_util_type_vector_test resdata)
-add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
 
 foreach(
   name
