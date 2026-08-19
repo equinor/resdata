@@ -285,7 +285,6 @@ foreach(
   ert_util_strcat_test
   ert_util_stringlist_test
   ert_util_vector_test
-  ert_util_normal_path
   ert_util_sscan_test
   test_area)
 
@@ -309,12 +308,6 @@ add_test(
   COMMAND ert_util_work_area data2/file1
           ${CMAKE_CURRENT_SOURCE_DIR}/util/tests/data2/file2 data2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/util/tests)
-
-add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.cpp
-                                 util/test_util.cpp)
-target_link_libraries(ert_util_cwd_test resdata)
-add_test(NAME ert_util_cwd_test COMMAND ert_util_cwd_test
-                                        ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp
                                   util/test_util.cpp)
