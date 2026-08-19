@@ -66,12 +66,8 @@ double rd_grav_common_eval_biot_savart(const rd::rd_grid_cache &grid_cache,
             }
         }
     } else {
-        const int_vector_type *index_vector = rd_region_get_active_list(region);
-        const int size = int_vector_size(index_vector);
-        const int *index_list = int_vector_get_const_ptr(index_vector);
-        int i, index;
-        for (i = 0; i < size; i++) {
-            index = index_list[i];
+        const auto &index_vector = rd_region_get_active_list(region);
+        for (const auto index : index_vector) {
             if (!aquifer[index]) {
                 double dist_x = (xpos[index] - utm_x);
                 double dist_y = (ypos[index] - utm_y);
@@ -140,12 +136,8 @@ double rd_grav_common_eval_geertsma(const rd::rd_grid_cache &grid_cache,
             }
         }
     } else {
-        const int_vector_type *index_vector = rd_region_get_active_list(region);
-        const int size = int_vector_size(index_vector);
-        const int *index_list = int_vector_get_const_ptr(index_vector);
-        int i, index;
-        for (i = 0; i < size; i++) {
-            index = index_list[i];
+        const auto &index_vector = rd_region_get_active_list(region);
+        for (const auto index : index_vector) {
             if (!aquifer[index]) {
                 double displacement = rd_grav_common_eval_geertsma_kernel(
                     index, xpos.data(), ypos.data(), zpos.data(), utm_x, utm_y,

@@ -6,18 +6,20 @@
 #include <resdata/rd_region.hpp>
 
 void test_list(int volume, int nactive, rd_region_type *region) {
-    const int_vector_type *active_list;
-    const int_vector_type *global_list;
-    active_list = rd_region_get_active_list(region);
-    global_list = rd_region_get_global_list(region);
-    test_assert_int_equal(nactive, int_vector_size(active_list));
-    test_assert_int_equal(volume, int_vector_size(global_list));
+    {
+        auto &active_list = rd_region_get_active_list(region);
+        auto &global_list = rd_region_get_global_list(region);
+        test_assert_int_equal(nactive, active_list.size());
+        test_assert_int_equal(volume, global_list.size());
+    }
 
-    rd_region_deselect_all(region);
-    active_list = rd_region_get_active_list(region);
-    global_list = rd_region_get_global_list(region);
-    test_assert_int_equal(0, int_vector_size(active_list));
-    test_assert_int_equal(0, int_vector_size(global_list));
+    {
+        rd_region_deselect_all(region);
+        auto &active_list = rd_region_get_active_list(region);
+        auto &global_list = rd_region_get_global_list(region);
+        test_assert_int_equal(0, active_list.size());
+        test_assert_int_equal(0, global_list.size());
+    }
 }
 
 void test_slice(rd_grid_type *grid) {

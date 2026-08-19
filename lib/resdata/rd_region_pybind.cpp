@@ -8,7 +8,6 @@
 #include <pybind11/stl.h>
 
 #include <ert/geometry/geo_polygon.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/layer.hpp>
 #include <resdata/rd_grid.hpp>
@@ -224,25 +223,25 @@ PYBIND11_MODULE(_rd_region, m) {
         rd_region_subtract(from_cwrap<rd_region_type>(self),
                            from_cwrap<rd_region_type>(other));
     });
-    m.def("_get_kw_index_list",
-          [](py::handle self, py::handle kw, bool force_active) {
-              return IntVector().attr("createCReference")(
-                  reinterpret_cast<std::uintptr_t>(rd_region_get_kw_index_list(
-                      from_cwrap<rd_region_type>(self),
-                      from_cwrap<rd_kw_type>(kw), force_active)),
-                  self);
-          });
+    m.def("_get_kw_index_list", [](py::handle self, py::handle kw,
+                                   bool force_active) {
+        return rd_region_get_kw_index_list(from_cwrap<rd_region_type>(self),
+                                           from_cwrap<rd_kw_type>(kw),
+                                           force_active);
+    });
+    m.def("_get_active_size", [](py::handle self) {
+        return rd_region_get_active_list(from_cwrap<rd_region_type>(self))
+            .size();
+    });
     m.def("_get_active_list", [](py::handle self) {
-        return IntVector().attr("createCReference")(
-            reinterpret_cast<std::uintptr_t>(
-                rd_region_get_active_list(from_cwrap<rd_region_type>(self))),
-            self);
+        return rd_region_get_active_list(from_cwrap<rd_region_type>(self));
+    });
+    m.def("_get_global_size", [](py::handle self) {
+        return rd_region_get_global_list(from_cwrap<rd_region_type>(self))
+            .size();
     });
     m.def("_get_global_list", [](py::handle self) {
-        return IntVector().attr("createCReference")(
-            reinterpret_cast<std::uintptr_t>(
-                rd_region_get_global_list(from_cwrap<rd_region_type>(self))),
-            self);
+        return rd_region_get_global_list(from_cwrap<rd_region_type>(self));
     });
     m.def("_select_cmp_less",
           [](py::handle self, py::handle kw1, py::handle kw2) {

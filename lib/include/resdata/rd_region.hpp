@@ -1,8 +1,7 @@
 #pragma once
 #include <optional>
 #include <string>
-
-#include <ert/util/int_vector.hpp>
+#include <vector>
 
 #include <ert/geometry/geo_polygon.hpp>
 
@@ -35,9 +34,10 @@ rd_region_type *rd_region_alloc_copy(const rd_region_type *rd_region);
 rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect);
 void rd_region_free(rd_region_type *region);
 
-const int_vector_type *rd_region_get_active_list(rd_region_type *region);
-const int_vector_type *rd_region_get_global_list(rd_region_type *region);
-const int_vector_type *rd_region_get_global_active_list(rd_region_type *region);
+const std::vector<int> &rd_region_get_active_list(rd_region_type *region);
+const std::vector<int> &rd_region_get_global_list(rd_region_type *region);
+const std::vector<int> &
+rd_region_get_global_active_list(rd_region_type *region);
 
 bool rd_region_contains_ijk(const rd_region_type *rd_region, int i, int j,
                             int k);
@@ -181,9 +181,9 @@ void rd_region_shift_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
 void rd_region_shift_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
                               float value, bool force_active);
 
-const int_vector_type *rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                   const rd_kw_type *rd_kw,
-                                                   bool force_active);
+const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
+                                                    const rd_kw_type *rd_kw,
+                                                    bool force_active);
 
 void rd_region_set_name(rd_region_type *region,
                         const std::optional<std::string> &name);

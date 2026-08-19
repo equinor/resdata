@@ -16,8 +16,6 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/FortIO.hpp>
 
-#include <ert/util/int_vector.hpp>
-
 #include <detail/resdata/cwrap_pybind.hpp>
 
 namespace py = pybind11;

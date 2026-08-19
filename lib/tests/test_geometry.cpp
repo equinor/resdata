@@ -1,4 +1,3 @@
-#include "ert/util/int_vector.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <ert/geometry/geo_surface.hpp>
 #include <ert/geometry/geo_region.hpp>

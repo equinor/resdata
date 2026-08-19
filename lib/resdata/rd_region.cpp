@@ -10,7 +10,6 @@
 #include <optional>
 #include <fmt/format.h>
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 
@@ -40,7 +39,7 @@
    exist in a xxx_select() and an opposite xxx_deselect() version.
 
    When you are finished with selecting you can query the rd_region
-   instance for the number of active cells, and get a (const int *) to
+   instance for the number of active cells, and get a const std::vector<int>& to
    the indices. You can also get the results in term of global
    indices. (Refer to rd_grid for the difference between active and
    global indices).
@@ -61,12 +60,12 @@
    // Load grid, soil and regions somehow.
 
    rd_region = rd_region_alloc( rd_grid , false );                       // Start with nothing selected
-   rd_region_select_in_interval( rd_region , soil , 0.50, 1.00);          // Select all cells with soil > 0.50
-   rd_region_select_equal( rd_region , regions , 3 );                     // Only consider region 3.
-   rd_region_select_k1k2( rd_region , 5 , 8);                             // Select layers 5,6,7,8
+   rd_region_select_in_interval( rd_region , soil , 0.50, 1.00);         // Select all cells with soil > 0.50
+   rd_region_select_equal( rd_region , regions , 3 );                    // Only consider region 3.
+   rd_region_select_k1k2( rd_region , 5 , 8);                            // Select layers 5,6,7,8
    {
-      int num_cells         = rd_region_get_global_size( rd_region );     // How many cells are active
-      const int * cell_list = rd_region_get_global_list( rd_region );     // Get a list of indices
+      int num_cells         = rd_region_get_global_size( rd_region );    // How many cells are active
+      const auto &cell_list = rd_region_get_global_list( rd_region );    // Get a list of indices
       int i;
       printf("%d cells satisfy your selection. The cells are: \n");
 
@@ -75,21 +74,16 @@
    }
 
    rd_region_free( rd_region );
-
 */
-
 struct rd_region_struct {
     std::vector<bool>
         active_mask; /* This marks active|inactive in the region, which is unrelated to active in the grid. */
-    int_vector_ptr global_index_list = make_int_vector(
-        0,
-        0); /* This is a list of the cells in the region - irrespective of whether they are active in the grid or not. */
-    int_vector_ptr active_index_list = make_int_vector(
-        0,
-        0); /* This means cells in the region which are also active in the grid */
-    int_vector_ptr global_active_list = make_int_vector(
-        0,
-        0); /* This is a list of (maximum) nactive elements, where the values are in the [0,..nx*ny*nz) range. */
+    std::vector<int>
+        global_index_list; /* This is a list of the cells in the region - irrespective of whether they are active in the grid or not. */
+    std::vector<int>
+        active_index_list; /* This means cells in the region which are also active in the grid */
+    std::vector<int>
+        global_active_list; /* This is a list of (maximum) nactive elements, where the values are in the [0,..nx*ny*nz) range. */
     bool global_index_list_valid;
     bool active_index_list_valid;
 
@@ -131,12 +125,11 @@ void rd_region_free(rd_region_type *region) { delete region; }
 
 static void rd_region_assert_global_index_list(rd_region_type *region) {
     if (!region->global_index_list_valid) {
-        int_vector_reset(region->global_index_list.get());
+        region->global_index_list.clear();
         for (int global_index = 0; global_index < region->grid_vol;
              global_index++)
             if (region->active_mask[global_index])
-                int_vector_append(region->global_index_list.get(),
-                                  global_index);
+                region->global_index_list.push_back(global_index);
 
         region->global_index_list_valid = true;
     }
@@ -144,18 +137,16 @@ static void rd_region_assert_global_index_list(rd_region_type *region) {
 
 static void rd_region_assert_active_index_list(rd_region_type *region) {
     if (!region->active_index_list_valid) {
-        int_vector_reset(region->active_index_list.get());
-        int_vector_reset(region->global_active_list.get());
+        region->active_index_list.clear();
+        region->global_active_list.clear();
         for (int global_index = 0; global_index < region->grid_vol;
              global_index++) {
             if (region->active_mask[global_index]) {
                 int active_index = rd_grid_get_active_index1(
                     region->parent_grid, global_index);
                 if (active_index >= 0) {
-                    int_vector_append(region->active_index_list.get(),
-                                      active_index);
-                    int_vector_append(region->global_active_list.get(),
-                                      global_index);
+                    region->active_index_list.push_back(active_index);
+                    region->global_active_list.push_back(global_index);
                 }
             }
         }
@@ -163,20 +154,20 @@ static void rd_region_assert_active_index_list(rd_region_type *region) {
     }
 }
 
-const int_vector_type *rd_region_get_active_list(rd_region_type *region) {
+const std::vector<int> &rd_region_get_active_list(rd_region_type *region) {
     rd_region_assert_active_index_list(region);
-    return region->active_index_list.get();
+    return region->active_index_list;
 }
 
-const int_vector_type *
+const std::vector<int> &
 rd_region_get_global_active_list(rd_region_type *region) {
     rd_region_assert_active_index_list(region);
-    return region->global_active_list.get();
+    return region->global_active_list;
 }
 
-const int_vector_type *rd_region_get_global_list(rd_region_type *region) {
+const std::vector<int> &rd_region_get_global_list(rd_region_type *region) {
     rd_region_assert_global_index_list(region);
-    return region->global_index_list.get();
+    return region->global_index_list;
 }
 
 static void rd_region_assert_kw(const rd_region_type *region,
@@ -1058,123 +1049,120 @@ void rd_region_subtract(rd_region_type *region,
         throw std::invalid_argument("The two regions do not share grid");
 }
 
-const int_vector_type *rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                   const rd_kw_type *rd_kw,
-                                                   bool force_active) {
-    const int_vector_type *index_set = NULL;
+const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
+                                                    const rd_kw_type *rd_kw,
+                                                    bool force_active) {
     int kw_size = rd_kw_get_size(rd_kw);
     int grid_active = rd_grid_get_active_size(rd_region->parent_grid);
     int grid_global = rd_grid_get_global_size(rd_region->parent_grid);
 
     if (kw_size == grid_active)
-        index_set = rd_region_get_active_list(rd_region);
+        return rd_region_get_active_list(rd_region);
     else if (kw_size == grid_global) {
         if (force_active)
-            index_set = rd_region_get_global_active_list(rd_region);
+            return rd_region_get_global_active_list(rd_region);
         else
-            index_set = rd_region_get_global_list(rd_region);
+            return rd_region_get_global_list(rd_region);
     } else
         throw std::invalid_argument(fmt::format(
             "size mismatch: grid_active:{}   grid_global:{}  kw_size:{}",
             grid_active, grid_global, kw_size));
-
-    return index_set;
 }
 
 void rd_region_set_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
                           int value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_set_indexed_int(rd_kw, index_set, value);
 }
 
 void rd_region_set_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
                             float value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_set_indexed_float(rd_kw, index_set, value);
 }
 
 void rd_region_set_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
                              double value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_set_indexed_double(rd_kw, index_set, value);
 }
 
 void rd_region_shift_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
                             int value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_shift_indexed_int(rd_kw, index_set, value);
 }
 
 void rd_region_shift_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
                               float value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_shift_indexed_float(rd_kw, index_set, value);
 }
 
 void rd_region_shift_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
                                double value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_shift_indexed_double(rd_kw, index_set, value);
 }
 
 void rd_region_scale_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
                             int value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_scale_indexed_int(rd_kw, index_set, value);
 }
 
 void rd_region_scale_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
                               float value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_scale_indexed_float(rd_kw, index_set, value);
 }
 
 void rd_region_scale_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
                                double value, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_scale_indexed_double(rd_kw, index_set, value);
 }
 
 void rd_region_kw_iadd(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *delta_kw, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_inplace_add_indexed(rd_kw, index_set, delta_kw);
 }
 
 void rd_region_kw_idiv(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *div_kw, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_inplace_div_indexed(rd_kw, index_set, div_kw);
 }
 
 void rd_region_kw_imul(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *mul_kw, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_inplace_mul_indexed(rd_kw, index_set, mul_kw);
 }
 
 void rd_region_kw_isub(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *delta_kw, bool force_active) {
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_inplace_sub_indexed(rd_kw, index_set, delta_kw);
 }
 
 void rd_region_kw_copy(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *src_kw, bool force_active) {
-    const int_vector_type *target_index =
+    const std::vector<int> &target_index =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_copy_indexed(rd_kw, target_index, src_kw);
 }
@@ -1200,7 +1188,7 @@ bool rd_region_equal(const rd_region_type *region1,
 int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                          bool force_active) {
     int sum;
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
     return sum;
@@ -1209,7 +1197,7 @@ int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
 float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                              bool force_active) {
     float sum;
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
     return sum;
@@ -1218,7 +1206,7 @@ float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
 double rd_region_sum_kw_double(rd_region_type *rd_region,
                                const rd_kw_type *rd_kw, bool force_active) {
     double sum;
-    const int_vector_type *index_set =
+    const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
     return sum;
