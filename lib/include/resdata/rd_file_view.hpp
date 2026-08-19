@@ -11,8 +11,6 @@
 #include <map>
 #include <optional>
 
-#include <ert/util/int_vector.hpp>
-
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/FortIO.hpp>

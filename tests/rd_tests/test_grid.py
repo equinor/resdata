@@ -15,7 +15,6 @@ from resdata import ResDataType, UnitSystem
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
 from resdata.resfile import ResdataFile, ResdataKW
-from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
@@ -292,14 +291,12 @@ class GridTest(ResdataTest):
             )
 
         with self.assertRaises(ValueError):
-            grid = GridGen.create_rectangular(
-                (10, 20, 30), (1, 1, 1), actnum=IntVector(initial_size=10)
-            )
+            grid = GridGen.create_rectangular((10, 20, 30), (1, 1, 1), actnum=[0] * 10)
         grid = GridGen.create_rectangular(
             (10, 20, 30), (1, 1, 1)
         )  # actnum=None -> all active
         self.assertEqual(grid.get_num_active(), 30 * 20 * 10)
-        actnum = IntVector(default_value=1, initial_size=6000)
+        actnum = [1] * 6000
         actnum[0] = 0
         actnum[1] = 0
         grid = GridGen.create_rectangular((10, 20, 30), (1, 1, 1), actnum=actnum)
@@ -1121,7 +1118,7 @@ def test_grid_create(specgrid, zcorn, coord, actnum, mapaxes):
         Grid.create(specgrid, zcorn, coord, actnum, mapaxes)
 
 
-@pytest.mark.parametrize("bad", [5, None, IntVector(initial_size=1)])
+@pytest.mark.parametrize("bad", [5, None])
 def test_that_grid_create_with_wrong_type_zcorn_raises_type_error(bad):
     dims = (2, 2, 2)
     coord = GridGen.create_coord(dims, (1, 1, 1))
@@ -1129,7 +1126,7 @@ def test_that_grid_create_with_wrong_type_zcorn_raises_type_error(bad):
         Grid.create(dims, bad, coord, None)
 
 
-@pytest.mark.parametrize("bad", [5, None, IntVector(initial_size=1)])
+@pytest.mark.parametrize("bad", [5, None])
 def test_that_grid_create_with_wrong_type_coord_raises_type_error(bad):
     dims = (2, 2, 2)
     zcorn = GridGen.create_zcorn(dims, (1, 1, 1), offset=0)
@@ -1137,7 +1134,7 @@ def test_that_grid_create_with_wrong_type_coord_raises_type_error(bad):
         Grid.create(dims, zcorn, bad, None)
 
 
-@pytest.mark.parametrize("bad", [5, IntVector(initial_size=1)])
+@pytest.mark.parametrize("bad", [5, ""])
 def test_that_grid_create_with_wrong_type_actnum_or_mapaxes_raises_type_error(bad):
     dims = (2, 2, 2)
     coord = GridGen.create_coord(dims, (1, 1, 1))

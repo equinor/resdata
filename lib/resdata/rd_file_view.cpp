@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>

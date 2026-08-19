@@ -5,7 +5,6 @@ from unittest import skipIf
 from resdata.geometry import CPolyline
 from resdata.grid import GridGenerator
 from resdata.grid.faults import FaultCollection, Layer
-from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
@@ -289,7 +288,7 @@ class LayerTest(ResdataTest):
         with self.assertRaises(ValueError):
             layer.update_active(grid, 10)
 
-        actnum = IntVector(initial_size=d * d * 1, default_value=1)
+        actnum = [1] * (d * d * 1)
         actnum[0] = 0
         grid = GridGenerator.create_rectangular((d, d, 1), (1, 1, 1), actnum=actnum)
         layer.update_active(grid, 0)

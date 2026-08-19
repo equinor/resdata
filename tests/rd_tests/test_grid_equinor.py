@@ -6,7 +6,6 @@ from cwrap import open as copen
 from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator
 from resdata.resfile import ResdataKW, open_rd_file
-from resdata.util.util import IntVector
 
 from tests import ResdataTest, equinor_test
 
@@ -162,12 +161,12 @@ class GridTest(ResdataTest):
             with self.assertRaises(ValueError):
                 grid = Grid.load_from_grdecl("grid.grdecl")
 
-            actnum = IntVector(default_value=1, initial_size=1000)
+            actnum = [1] * 1000
             actnum[0] = 0
             g1 = GridGenerator.create_rectangular(
                 (10, 10, 10), (1, 1, 1), actnum=actnum
             )
-            self.assertEqual(g1.get_num_active(), actnum.elementSum())
+            self.assertEqual(g1.get_num_active(), sum(actnum))
             g1.save_EGRID("G.EGRID")
 
             with open("grid.grdecl", "w") as f2:

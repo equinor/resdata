@@ -22,7 +22,6 @@ pybind11::object CTime();
 pybind11::object ResdataKW();
 pybind11::object CPolyline();
 pybind11::object GeoPointset();
-pybind11::object IntVector();
 pybind11::object FaultBlockLayer();
 pybind11::object Layer();
 pybind11::object GeometryTools();

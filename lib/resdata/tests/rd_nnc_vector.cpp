@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/nnc_vector.hpp>
 

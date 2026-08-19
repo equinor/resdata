@@ -2,7 +2,6 @@
 
 #include <resdata/rd_util.hpp>
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/test_util.hpp>
 

@@ -1,6 +1,5 @@
 #include <cstddef>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <fmt/core.h>

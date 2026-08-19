@@ -1,7 +1,6 @@
 #ifndef ERT_NNC_INFO_H
 #define ERT_NNC_INFO_H
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/nnc_vector.hpp>

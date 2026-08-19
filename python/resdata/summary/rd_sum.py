@@ -26,7 +26,7 @@ from dateutil.relativedelta import relativedelta
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import FileMode, UnitSystem
-from resdata.util.util import CTime, IntVector, TimeLike
+from resdata.util.util import CTime, TimeLike
 
 from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
