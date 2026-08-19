@@ -5,7 +5,6 @@
 #include <set>
 #include <vector>
 
-
 #include <ert/geometry/geo_polygon_collection.hpp>
 
 #include <resdata/rd_grid.hpp>

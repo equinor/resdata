@@ -7,7 +7,6 @@
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/nnc_info.hpp>

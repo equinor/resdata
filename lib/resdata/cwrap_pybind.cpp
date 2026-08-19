@@ -21,8 +21,6 @@
 #include <resdata/layer.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 
-#include <ert/util/int_vector.hpp>
-
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_polygon_collection.hpp>
 #include <ert/geometry/geo_pointset.hpp>
@@ -138,21 +136,6 @@ template <>::rd_data_type *from_cwrap<::rd_data_type>(py::handle obj) {
         throw py::type_error("Expected ResDataType, got " +
                              static_cast<std::string>(py::repr(obj)));
     return cast_cwrap<::rd_data_type>(obj);
-}
-
-py::object IntVector() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.util.util").attr("IntVector");
-    }
-    return cls;
-}
-
-template <> int_vector_type *from_cwrap<int_vector_type>(py::handle obj) {
-    if (!py::isinstance(obj, IntVector()))
-        throw py::type_error("Expected IntVector, got " +
-                             static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<int_vector_type>(obj);
 }
 
 py::object ResdataSubsidence() {

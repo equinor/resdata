@@ -5,7 +5,6 @@ import random
 from resdata import ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import Resdata3DKW, ResdataKW
-from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
@@ -15,7 +14,7 @@ class KWFunctionTest(ResdataTest):
         nx = 10
         ny = 10
         nz = 1
-        actnum = IntVector(initial_size=nx * ny * nz, default_value=1)
+        actnum = [1] * (nx * ny * nz)
         actnum[nx * ny - 1] = 0
 
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1), actnum=actnum)

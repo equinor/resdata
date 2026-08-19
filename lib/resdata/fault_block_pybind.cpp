@@ -9,7 +9,6 @@
 #include <pybind11/stl.h>
 
 #include <ert/geometry/geo_polygon_collection.hpp>
-#include <ert/util/int_vector.hpp>
 #include <resdata/fault_block.hpp>
 #include <detail/resdata/cwrap_pybind.hpp>
 

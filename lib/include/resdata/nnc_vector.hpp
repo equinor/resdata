@@ -1,7 +1,6 @@
 #ifndef ERT_NNC_VECTOR_H
 #define ERT_NNC_VECTOR_H
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 typedef struct nnc_vector_struct nnc_vector_type;

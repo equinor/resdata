@@ -4,7 +4,6 @@ from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator, ResdataRegion
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
-from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
@@ -64,8 +63,7 @@ class RegionTest(ResdataTest):
 
 @pytest.fixture
 def actnum():
-    actnum = IntVector(initial_size=100, default_value=0)
-    actnum[0:50] = 1
+    actnum = [1] * 50 + [0] * 50
     return actnum
 
 

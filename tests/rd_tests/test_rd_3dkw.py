@@ -6,14 +6,13 @@ import cwrap
 from resdata import FileMode, ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, Resdata3DKW, ResdataFile, ResdataKW
-from resdata.util.util import IntVector
 
 from tests import ResdataTest
 
 
 class Resdata3DKWTest(ResdataTest):
     def test_create(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(100):
             actnum[i] = 0
 
@@ -24,7 +23,7 @@ class Resdata3DKWTest(ResdataTest):
         self.assertEqual((10, 10, 10), kw.dims())
 
     def test_create_global_size(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(100):
             actnum[i] = 0
 
@@ -56,7 +55,7 @@ class Resdata3DKWTest(ResdataTest):
         self.assertEqual(3 * nx * ny * nz, sum(kw))
 
     def test_getitem(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(100):
             actnum[i] = 0
 
@@ -81,7 +80,7 @@ class Resdata3DKWTest(ResdataTest):
         self.assertEqual(kw[0, 0, 1], 99)
 
     def test_setitem(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(100):
             actnum[i] = 0
 
@@ -111,7 +110,7 @@ class Resdata3DKWTest(ResdataTest):
         self.assertEqual(kw[0, 0, 1], 100)
 
     def test_cast(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(100):
             actnum[i] = 0
 
@@ -140,7 +139,7 @@ class Resdata3DKWTest(ResdataTest):
         self.assertTrue(55, kw.get_default())
 
     def test_compressed_copy(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(500):
             actnum[2 * i + 1] = 0
 
@@ -157,7 +156,7 @@ class Resdata3DKWTest(ResdataTest):
             self.assertEqual(kw_copy[i], 2 * i)
 
     def test_global_copy(self):
-        actnum = IntVector(default_value=1, initial_size=1000)
+        actnum = [1] * 1000
         for i in range(500):
             actnum[2 * i + 1] = 0
 

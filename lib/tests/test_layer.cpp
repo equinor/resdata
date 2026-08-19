@@ -6,7 +6,6 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
-#include <ert/util/int_vector.hpp>
 #include "detail/resdata/layer_cxx.hpp"
 #include "resdata/rd_type.hpp"
 
