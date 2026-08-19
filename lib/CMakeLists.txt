@@ -286,6 +286,7 @@ foreach(
   ert_util_stringlist_test
   ert_util_vector_test
   ert_util_normal_path
+  ert_util_sscan_test
   test_area)
 
   add_executable(${name} util/tests/${name}.cpp util/test_util.cpp)

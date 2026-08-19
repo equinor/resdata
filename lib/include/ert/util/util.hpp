@@ -98,7 +98,6 @@ double util_difftime_seconds(time_t start_time, time_t end_time);
 
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);
 char *util_alloc_sprintf(const char *, ...);
-bool util_sscanf_isodate(const char *, time_t *);
 bool util_entry_exists(const char *entry);
 bool util_file_exists(const char *);
 bool util_is_abs_path(const char *);
@@ -147,9 +146,7 @@ bool util_fopen_test(const char *, const char *);
 char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
 char *util_fscanf_alloc_line(FILE *, bool *);
-bool util_sscanf_bool(const char *, bool *);
 bool util_sscanf_int(const char *, int *);
-bool util_sscanf_double(const char *, double *);
 char *util_alloc_filename(const char *, const char *, const char *);
 char *util_alloc_strip_copy(const char *);
 char *util_strcat_realloc(char *, const char *);
