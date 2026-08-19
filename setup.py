@@ -140,6 +140,7 @@ skbuild.setup(
         "cwrap",
         "numpy",
         "pandas",
+        "python-dateutil",
         "natsort",
         "typing_extensions",
         "resfo-utilities>=0.4.0",
