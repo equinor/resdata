@@ -200,27 +200,6 @@ static bool EOL_CHAR(char c) {
         return false;
 }
 
-/*
-  The difference between /dev/random and /dev/urandom is that the
-  former will block if the entropy pool is close to empty:
-
-    util_fread_dev_random() : The 'best' quality random numbers, but
-       runtime can be quite long.
-
-    util_fread_dev_urandom(): Potentially lower quality random
-       numbers, but deterministic runtime.
-*/
-
-void util_fread_dev_random(int buffer_size_, char *buffer) {
-    size_t buffer_size = buffer_size_;
-    FILE *stream = util_fopen("/dev/random", "r");
-    if (fread(buffer, 1, buffer_size, stream) != buffer_size)
-        util_abort("%s: failed to read:%d bytes from /dev/random \n", __func__,
-                   buffer_size);
-
-    fclose(stream);
-}
-
 void util_fread_dev_urandom(int buffer_size_, char *buffer) {
     size_t buffer_size = buffer_size_;
     FILE *stream = util_fopen("/dev/urandom", "r");
@@ -229,26 +208,6 @@ void util_fread_dev_urandom(int buffer_size_, char *buffer) {
                    buffer_size);
 
     fclose(stream);
-}
-
-unsigned int util_clock_seed() {
-    int sec, min, hour;
-    int mday, year, month;
-    time_t now = time(NULL);
-
-    util_set_datetime_values_utc(now, &sec, &min, &hour, &mday, &month, &year);
-    {
-        unsigned int seed = clock();
-        int i, j, k;
-        for (i = 0; i < 2 * min + 2; i++) {
-            for (j = 0; j < 13 * mday + 17; j++) {
-                for (k = 0; k < (hour + year + 17) * month + 13; k++) {
-                    seed *= (sec + min + mday);
-                }
-            }
-        }
-        return seed;
-    }
 }
 
 /**
@@ -514,34 +473,6 @@ char *util_alloc_cwd(void) {
     }
 }
 
-bool util_is_cwd(const char *path) {
-    bool is_cwd = false;
-    stat_type path_stat;
-
-    if (util_stat(path, &path_stat) == 0) {
-        if (S_ISDIR(path_stat.st_mode)) {
-            char *cwd = util_alloc_cwd();
-#ifdef ERT_WINDOWS
-            /*
-        The windows stat structure has the inode element, but it is
-        not set. Actually - this is a property of the filesystem, and
-        not the operating system - the whole check is probably broken?
-      */
-            util_abort("%s: Internal error - function not properly implmented "
-                       "on Windows \n",
-                       __func__);
-#else
-            stat_type cwd_stat;
-            util_stat(cwd, &cwd_stat);
-            if (cwd_stat.st_ino == path_stat.st_ino)
-                is_cwd = true;
-#endif
-            free(cwd);
-        }
-    }
-    return is_cwd;
-}
-
 /*
    Homemade realpath() for not existing path or platforms without
    realpath().
@@ -783,23 +714,6 @@ char *util_alloc_rel_path(const char *__root_path, const char *path) {
         free(root_path);
         return util_alloc_string_copy(path);
     }
-}
-
-/*
-  This function will return a new string where all "../" and "./"
-  occurences have been normalized away. The function is based on pure
-  string scanning, and will not consider the filesystem at
-  all.
-*/
-
-char *util_alloc_normal_path(const char *input_path) {
-    if (util_is_abs_path(input_path))
-        return util_alloc_realpath__(input_path);
-
-    char *realpath = util_alloc_realpath__(input_path);
-    char *rel_path = util_alloc_rel_path(NULL, realpath);
-    free(realpath);
-    return rel_path;
 }
 
 void util_fskip_lines(FILE *stream, int lines) {
@@ -1495,10 +1409,6 @@ void util_set_datetime_values_utc(time_t t, int *sec, int *min, int *hour,
     __util_set_timevalues_utc(t, sec, min, hour, mday, month, year);
 }
 
-void util_set_date_values_utc(time_t t, int *mday, int *month, int *year) {
-    __util_set_timevalues_utc(t, NULL, NULL, NULL, mday, month, year);
-}
-
 /*
    The date format is HARD assumed to be
 
@@ -1920,13 +1830,7 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
     return util_string_replace_inplace__(_buffer, expr, subs);
 }
 
-void util_fwrite_offset(offset_type value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
 void util_fwrite_int(int value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
-void util_fwrite_size_t(size_t value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
 int util_fread_int(FILE *stream) {
@@ -1977,38 +1881,6 @@ FILE *util_fopen(const char *filename, const char *mode) {
                    __func__, filename, mode, strerror(errno), errno);
 
     return stream;
-}
-
-/**
-   This function will open 'filename' with mode 'mode'. If the mode is
-   for write or append (w|a) and the open fails with ENOENT we will
-   try to make the path compponent.
-
-   So - the whole point about this function is that for writing it
-   should be possible to safely call:
-
-     util_mkdir_fopen("/some/path/to/file.txt" , "w");
-
-   without first enusring that /some/path/to exists.
-*/
-
-FILE *util_mkdir_fopen(const char *filename, const char *mode) {
-    FILE *stream = fopen(filename, mode);
-    if (stream == NULL) {
-        if (errno == ENOENT) {
-            if (mode[0] == 'w' || mode[0] == 'a') {
-                char *path;
-                util_alloc_file_components(filename, &path, NULL, NULL);
-                if (path != NULL) {
-                    util_make_path(path);
-                    free(path);
-                }
-            }
-        }
-        /* Let the eventual util_abort() come in the main util_fopen function. */
-        return util_fopen(filename, mode);
-    } else
-        return stream;
 }
 
 void util_fwrite(const void *ptr, size_t element_size, size_t items,
@@ -2100,25 +1972,6 @@ void *util_alloc_copy(const void *src, size_t byte_size) {
         memcpy(next, src, byte_size);
         return next;
     }
-}
-
-void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size) {
-    if (byte_size == 0 && src == NULL)
-        return util_realloc(org_ptr, 0);
-
-    /* Realloc can either (1) reuse or (2) allocate new memory (and free the
-   * original memory block)
-   * If org_ptr and src are the same, we have issues in both cases:
-   * - in case (1), memcpy receives overlapping memory areas, which
-   *   breaks one of memcpy preconditions
-   * - in case (2), the area src points to is freed, so memcpy can end up
-   *   copying garbage.
-   */
-    assert(org_ptr != src);
-
-    void *next = util_realloc(org_ptr, byte_size);
-    memcpy(next, src, byte_size);
-    return next;
 }
 
 /**

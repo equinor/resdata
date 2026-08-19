@@ -116,8 +116,6 @@ bool util_copy_file(const char *, const char *);
 bool util_copy_file__(const char *src_file, const char *target_file,
                       size_t buffer_size, void *buffer, bool abort_on_error);
 char *util_alloc_cwd(void);
-bool util_is_cwd(const char *path);
-char *util_alloc_normal_path(const char *input_path);
 char *util_alloc_realpath(const char *);
 char *util_alloc_realpath__(const char *input_path);
 bool util_ftruncate(FILE *stream, long size);
@@ -136,13 +134,7 @@ void util_copy_directory_content(const char *src_path, const char *target_path);
 void util_copy_directory(const char *, const char *);
 #endif
 
-int util_forward_line(FILE *, bool *);
-void util_rewind_line(FILE *);
-
-FILE *util_mkdir_fopen(const char *filename, const char *mode);
 FILE *util_fopen(const char *, const char *);
-FILE *util_fopen__(const char *filename, const char *mode);
-bool util_fopen_test(const char *, const char *);
 char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
 char *util_fscanf_alloc_line(FILE *, bool *);
@@ -163,9 +155,6 @@ bool util_is_directory(const char *);
 bool util_is_file(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
-void util_set_date_values_utc(time_t, int *, int *, int *);
-unsigned int util_clock_seed(void);
-void util_fread_dev_random(int, char *);
 void util_fread_dev_urandom(int, char *);
 void util_abort_test_set_intercept_function(const char *);
 void util_exit(const char *fmt, ...);
@@ -175,7 +164,6 @@ void util_update_signals(void);
 void *util_realloc(void *, size_t);
 void *util_malloc(size_t);
 void *util_calloc(size_t elements, size_t element_size);
-void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size);
 void *util_alloc_copy(const void *, size_t);
 char *util_fread_alloc_file_content(const char *, int *);
 void util_endian_flip_vector(void *data, int element_size, int elements);
@@ -197,8 +185,6 @@ bool util_same_file(const char *, const char *);
 void util_fread(void *, size_t, size_t, FILE *, const char *);
 void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
 int util_fread_int(FILE *);
-void util_fwrite_offset(offset_type, FILE *);
-void util_fwrite_size_t(size_t, FILE *);
 void util_fwrite_int(int, FILE *);
 int util_get_current_linenr(FILE *stream);
 bool util_fseek_string(FILE *stream, const char *string, bool skip_string,
