@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -1096,7 +1098,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
             int index = 0;
             int ib, ir;
             for (ib = 0; ib < blocks; ib++) {
-                int read_elm = util_int_min((ib + 1) * blocksize, rd_kw->size) -
+                int read_elm = std::min((ib + 1) * blocksize, rd_kw->size) -
                                ib * blocksize;
                 for (ir = 0; ir < read_elm; ir++) {
                     switch (rd_kw_get_type(rd_kw)) {
@@ -1465,7 +1467,7 @@ static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
 
         for (block_nr = 0; block_nr < num_blocks; block_nr++) {
             int this_blocksize =
-                util_int_min((block_nr + 1) * blocksize, rd_kw->size) -
+                std::min((block_nr + 1) * blocksize, rd_kw->size) -
                 block_nr * blocksize;
             int record_size =
                 this_blocksize *
@@ -1527,14 +1529,14 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
 
         for (block_nr = 0; block_nr < num_blocks; block_nr++) {
             int this_blocksize =
-                util_int_min((block_nr + 1) * blocksize, rd_kw->size) -
+                std::min((block_nr + 1) * blocksize, rd_kw->size) -
                 block_nr * blocksize;
             int num_lines = this_blocksize / columns +
                             (this_blocksize % columns == 0 ? 0 : 1);
             int line_nr;
             for (line_nr = 0; line_nr < num_lines; line_nr++) {
                 int num_columns =
-                    util_int_min((line_nr + 1) * columns, this_blocksize) -
+                    std::min((line_nr + 1) * columns, this_blocksize) -
                     columns * line_nr;
                 int col_nr;
                 for (col_nr = 0; col_nr < num_columns; col_nr++) {

@@ -10,6 +10,7 @@
 #include <resdata/layer.hpp>
 #include <resdata/rd_type.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -140,7 +141,7 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
 
                 if (block_id > 0) {
                     layer_iset_cell_value(work_layer.get(), i, j, block_id);
-                    max_block_id = util_int_max(block_id, max_block_id);
+                    max_block_id = std::max(block_id, max_block_id);
                 }
             }
         }

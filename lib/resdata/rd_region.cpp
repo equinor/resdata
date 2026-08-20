@@ -570,8 +570,8 @@ static void rd_region_select_i1i2__(rd_region_type *region, int i1, int i2,
                                     bool select) {
     if (i1 > i2)
         throw std::logic_error("i1 > i2");
-    i1 = util_int_max(0, i1);
-    i2 = util_int_min(region->grid_nx - 1, i2);
+    i1 = std::max(0, i1);
+    i2 = std::min(region->grid_nx - 1, i2);
     for (int k = 0; k < region->grid_nz; k++)
         for (int j = 0; j < region->grid_ny; j++)
             for (int i = i1; i <= i2; i++) {
@@ -604,8 +604,8 @@ static void rd_region_select_j1j2__(rd_region_type *region, int j1, int j2,
     if (j1 > j2)
         throw std::logic_error("j1 > j2");
 
-    j1 = util_int_max(0, j1);
-    j2 = util_int_min(region->grid_ny - 1, j2);
+    j1 = std::max(0, j1);
+    j2 = std::min(region->grid_ny - 1, j2);
     for (int k = 0; k < region->grid_nz; k++)
         for (int j = j1; j <= j2; j++)
             for (int i = 0; i < region->grid_nx; i++) {
@@ -637,8 +637,8 @@ static void rd_region_select_k1k2__(rd_region_type *region, int k1, int k2,
                                     bool select) {
     if (k1 > k2)
         throw std::logic_error("k1 > k2");
-    k1 = util_int_max(0, k1);
-    k2 = util_int_min(region->grid_nz - 1, k2);
+    k1 = std::max(0, k1);
+    k2 = std::min(region->grid_nz - 1, k2);
     for (int k = k1; k <= k2; k++)
         for (int j = 0; j < region->grid_ny; j++)
             for (int i = 0; i < region->grid_nx; i++) {

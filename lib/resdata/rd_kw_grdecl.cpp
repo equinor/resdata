@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cctype>
 
+#include <algorithm>
 #include <optional>
 #include <memory>
 #include <stdexcept>
@@ -269,7 +270,7 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
                     size_t min_size = data_index + multiplier;
                     if (min_size >= data_size) {
                         if (min_size <= RD_KW_MAX_SIZE) {
-                            data_size = util_size_t_min(
+                            data_size = std::min<size_t>(
                                 RD_KW_MAX_SIZE, 2 * (data_index + multiplier));
                             rd::checked_realloc<T>(data, data_size);
                         } else {

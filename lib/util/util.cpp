@@ -8,6 +8,7 @@
   manipulation functions which explicitly use the PATH_SEP variable.
 */
 
+#include <algorithm>
 #include <stdexcept>
 
 #include <cassert>
@@ -34,6 +35,9 @@
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #else
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>
 #include <Shlwapi.h>
 #endif
@@ -673,8 +677,7 @@ char *util_alloc_rel_path(const char *__root_path, const char *path) {
                 else
                     break;
 
-                if (common_length ==
-                    util_int_min(root_path_length, path_length))
+                if (common_length == std::min(root_path_length, path_length))
                     break;
             }
 
@@ -928,7 +931,7 @@ bool util_copy_file__(const char *src_file, const char *target_file,
 bool util_copy_file(const char *src_file, const char *target_file) {
     const bool abort_on_error = true;
     void *buffer = NULL;
-    size_t buffer_size = util_size_t_max(
+    size_t buffer_size = std::max<size_t>(
         32,
         util_file_size(
             src_file)); /* The copy stream function will hang if buffer size == 0 */
@@ -1839,36 +1842,20 @@ int util_fread_int(FILE *stream) {
     return file_value;
 }
 
-size_t util_size_t_min(size_t a, size_t b) { return (a < b) ? a : b; }
-
-size_t util_size_t_max(size_t a, size_t b) { return (a > b) ? a : b; }
-
-int util_int_min(int a, int b) { return (a < b) ? a : b; }
-
-double util_double_min(double a, double b) { return (a < b) ? a : b; }
-
-float util_float_min(float a, float b) { return (a < b) ? a : b; }
-
-int util_int_max(int a, int b) { return (a > b) ? a : b; }
-
-double util_double_max(double a, double b) { return (a > b) ? a : b; }
-
-void util_update_int_max_min(int value, int *max, int *min) {
-    *min = util_int_min(value, *min);
-    *max = util_int_max(value, *max);
+void util_update_int_max_min(int value, int *mx, int *mn) {
+    *mn = std::min(value, *mn);
+    *mx = std::max(value, *mx);
 }
 
-void util_update_float_max_min(float value, float *max, float *min) {
-    *min = util_float_min(value, *min);
-    *max = util_float_max(value, *max);
+void util_update_float_max_min(float value, float *mx, float *mn) {
+    *mn = std::min(value, *mn);
+    *mx = std::max(value, *mx);
 }
 
-void util_update_double_max_min(double value, double *max, double *min) {
-    *min = util_double_min(value, *min);
-    *max = util_double_max(value, *max);
+void util_update_double_max_min(double value, double *mx, double *mn) {
+    *mn = std::min(value, *mn);
+    *mx = std::max(value, *mx);
 }
-
-float util_float_max(float a, float b) { return (a > b) ? a : b; }
 
 FILE *util_fopen__(const char *filename, const char *mode) {
     return fopen(filename, mode);
