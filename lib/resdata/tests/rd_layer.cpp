@@ -175,39 +175,16 @@ void test_content1() {
             layer_iset_cell_value(layer, i, j, 1);
 
     test_assert_int_equal(16, layer_get_cell_sum(layer));
-    {
-        int_vector_type *i_list = int_vector_alloc(0, 0);
-        int_vector_type *j_list = int_vector_alloc(0, 0);
+    test_assert_true(layer_trace_block_content(layer, false, 4, 4, 10).empty());
+    test_assert_size_t_equal(
+        16, layer_trace_block_content(layer, false, 4, 4, 1).size());
 
-        test_assert_false(
-            layer_trace_block_content(layer, false, 4, 4, 10, i_list, j_list));
-        test_assert_true(
-            layer_trace_block_content(layer, false, 4, 4, 1, i_list, j_list));
-        test_assert_int_equal(16, int_vector_size(i_list));
+    test_assert_size_t_equal(
+        16, layer_trace_block_content(layer, false, 4, 4, 0).size());
 
-        int_vector_sort(i_list);
-        int_vector_sort(j_list);
-
-        for (j = 0; j < 4; j++)
-            for (i = 0; i < 4; i++) {
-                test_assert_int_equal(int_vector_iget(i_list, i + j * 4),
-                                      j + 4);
-                test_assert_int_equal(int_vector_iget(j_list, i + j * 4),
-                                      j + 4);
-            }
-
-        test_assert_true(
-            layer_trace_block_content(layer, false, 4, 4, 0, i_list, j_list));
-        test_assert_int_equal(16, int_vector_size(i_list));
-
-        test_assert_true(
-            layer_trace_block_content(layer, true, 4, 4, 0, i_list, j_list));
-        test_assert_int_equal(16, int_vector_size(i_list));
-        test_assert_int_equal(0, layer_get_cell_sum(layer));
-
-        int_vector_free(i_list);
-        int_vector_free(j_list);
-    }
+    test_assert_size_t_equal(
+        16, layer_trace_block_content(layer, true, 4, 4, 0).size());
+    test_assert_int_equal(0, layer_get_cell_sum(layer));
 
     layer_free(layer);
 }
@@ -223,8 +200,6 @@ void test_content2() {
 
     test_assert_int_equal(9, layer_get_cell_sum(layer));
     {
-        int_vector_type *i_list = int_vector_alloc(0, 0);
-        int_vector_type *j_list = int_vector_alloc(0, 0);
         std::vector<int> cell_list;
         std::vector<int_point2d_type> corner_list;
 
@@ -235,14 +210,12 @@ void test_content2() {
                 if (cell_value != 0) {
                     test_assert_true(layer_trace_block_edge(
                         layer, i, j, cell_value, corner_list, cell_list));
-                    test_assert_true(layer_trace_block_content(
-                        layer, true, i, j, cell_value, i_list, j_list));
+                    test_assert_true(
+                        layer_trace_block_content(layer, true, i, j, cell_value)
+                            .size() > 0);
                 }
             }
         }
-
-        int_vector_free(i_list);
-        int_vector_free(j_list);
     }
     test_assert_int_equal(0, layer_get_cell_sum(layer));
 

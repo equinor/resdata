@@ -41,9 +41,9 @@ int layer_iget_edge_value(const layer_type *layer, int i, int j,
                           edge_dir_enum dir);
 bool layer_cell_on_edge(const layer_type *layer, int i, int j);
 int layer_get_cell_sum(const layer_type *layer);
-bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
-                               int start_j, int value, int_vector_type *i_list,
-                               int_vector_type *j_list);
+std::vector<std::tuple<int, int>>
+layer_trace_block_content(layer_type *layer, bool erase, int start_i,
+                          int start_j, int value);
 bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
                         int j2);
 void layer_add_interp_barrier(layer_type *layer, int c1, int c2);

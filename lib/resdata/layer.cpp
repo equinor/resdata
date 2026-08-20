@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include <array>
@@ -386,17 +387,14 @@ class BlockTracer {
     bool erase;
     int value;
     std::vector<bool> visited;
-    int_vector_type *i_list;
-    int_vector_type *j_list;
 
 public:
-    BlockTracer(layer_type *layer, bool erase, int value,
-                int_vector_type *i_list, int_vector_type *j_list)
+    std::vector<std::tuple<int, int>> indices;
+    BlockTracer(layer_type *layer, bool erase, int value)
         : layer(layer), erase(erase), value(value),
           visited((static_cast<size_t>(layer->nx) + 1) *
                       (static_cast<size_t>(layer->ny) + 1),
-                  false),
-          i_list(i_list), j_list(j_list) {}
+                  false) {}
 
     void operator()(int i, int j) {
         int g = layer->interior_index(i, j);
@@ -407,8 +405,7 @@ public:
         if (erase)
             layer_iset_cell_value(layer, i, j, 0);
 
-        int_vector_append(i_list, i);
-        int_vector_append(j_list, j);
+        indices.emplace_back(i, j);
 
         if (i > 0)
             (*this)(i - 1, j);
@@ -424,25 +421,20 @@ public:
     }
 };
 
-bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
-                               int start_j, int value, int_vector_type *i_list,
-                               int_vector_type *j_list) {
-    bool start_tracing = false;
+std::vector<std::tuple<int, int>>
+layer_trace_block_content(layer_type *layer, bool erase, int start_i,
+                          int start_j, int value) {
     const Cell &cell = layer->interior_cell(start_i, start_j);
 
-    if ((value == 0) && (cell.value != 0))
-        start_tracing = true;
-    else if ((cell.value == value) && (cell.value != 0))
-        start_tracing = true;
+    bool start_tracing = ((value == 0) && (cell.value != 0)) ||
+                         ((cell.value == value) && (cell.value != 0));
+    if (!start_tracing)
+        return {};
 
-    if (start_tracing) {
-        value = cell.value;
-        int_vector_reset(i_list);
-        int_vector_reset(j_list);
-        BlockTracer{layer, erase, value, i_list, j_list}(start_i, start_j);
-        return true;
-    } else
-        return false;
+    value = cell.value;
+    BlockTracer bt{layer, erase, value};
+    bt(start_i, start_j);
+    return std::move(bt.indices);
 }
 
 int layer_replace_cell_values(layer_type *layer, int old_value, int new_value) {
