@@ -86,8 +86,8 @@ bool nnc_info_equal(const nnc_info_type *nnc_info1,
         if ((int_vector_size(nnc_info1->lgr_index_map) > 0) &&
             (int_vector_size(nnc_info2->lgr_index_map) > 0)) {
             int max_lgr_nr =
-                util_int_max(int_vector_size(nnc_info1->lgr_index_map),
-                             int_vector_size(nnc_info2->lgr_index_map));
+                std::max(int_vector_size(nnc_info1->lgr_index_map),
+                         int_vector_size(nnc_info2->lgr_index_map));
             int lgr_nr = 0;
 
             while (true) {

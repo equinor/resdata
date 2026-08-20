@@ -1182,14 +1182,14 @@ static bool triangle_contains3d(const point_type *p0, const point_type *p1,
     // p0, p1, p2 represents a line segment and
     // p lies on the line this segment represents
     if (vt < epsilon && fabs(v1 + v2 + v3) < epsilon) {
-        double x_min = util_double_min(p0->x, util_double_min(p1->x, p2->x));
-        double x_max = util_double_max(p0->x, util_double_max(p1->x, p2->x));
+        double x_min = std::min({p0->x, p1->x, p2->x});
+        double x_max = std::max({p0->x, p1->x, p2->x});
 
-        double y_min = util_double_min(p0->y, util_double_min(p1->y, p2->y));
-        double y_max = util_double_max(p0->y, util_double_max(p1->y, p2->y));
+        double y_min = std::min({p0->y, p1->y, p2->y});
+        double y_max = std::max({p0->y, p1->y, p2->y});
 
-        double z_min = util_double_min(p0->z, util_double_min(p1->z, p2->z));
-        double z_max = util_double_max(p0->z, util_double_max(p1->z, p2->z));
+        double z_min = std::min({p0->z, p1->z, p2->z});
+        double z_max = std::max({p0->z, p1->z, p2->z});
 
         return (x_min - epsilon <= p->x && p->x <= x_max + epsilon &&
                 y_min - epsilon <= p->y && p->y <= y_max + epsilon &&
@@ -3442,13 +3442,13 @@ static int rd_grid_get_global_index_from_xyz_around_box(rd_grid_type *grid,
     rd_grid_get_dims(grid, &nx, &ny, &nz, NULL);
     rd_grid_get_ijk1(grid, start_index, &i, &j, &k);
 
-    i1 = util_int_max(0, i - bx);
-    j1 = util_int_max(0, j - bx);
-    k1 = util_int_max(0, k - bx);
+    i1 = std::max(0, i - bx);
+    j1 = std::max(0, j - bx);
+    k1 = std::max(0, k - bx);
 
-    i2 = util_int_min(nx, i + bx);
-    j2 = util_int_min(ny, j + bx);
-    k2 = util_int_min(nz, k + bx);
+    i2 = std::min(nx, i + bx);
+    j2 = std::min(ny, j + bx);
+    k2 = std::min(nz, k + bx);
 
     int global_index =
         rd_grid_box_contains_xyz(grid, i1, i2, j1, j2, k1, k2, p);

@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <algorithm>
+
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
@@ -181,13 +183,13 @@ bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
 
 void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, int i, int j,
                            int k, int global_index) {
-    coarse_cell->ijk[0] = util_int_min(coarse_cell->ijk[0], i);
-    coarse_cell->ijk[2] = util_int_min(coarse_cell->ijk[2], j);
-    coarse_cell->ijk[4] = util_int_min(coarse_cell->ijk[4], k);
+    coarse_cell->ijk[0] = std::min(coarse_cell->ijk[0], i);
+    coarse_cell->ijk[2] = std::min(coarse_cell->ijk[2], j);
+    coarse_cell->ijk[4] = std::min(coarse_cell->ijk[4], k);
 
-    coarse_cell->ijk[1] = util_int_max(coarse_cell->ijk[1], i);
-    coarse_cell->ijk[3] = util_int_max(coarse_cell->ijk[3], j);
-    coarse_cell->ijk[5] = util_int_max(coarse_cell->ijk[5], k);
+    coarse_cell->ijk[1] = std::max(coarse_cell->ijk[1], i);
+    coarse_cell->ijk[3] = std::max(coarse_cell->ijk[3], j);
+    coarse_cell->ijk[5] = std::max(coarse_cell->ijk[5], k);
 
     int_vector_append(coarse_cell->cell_list, global_index);
 }

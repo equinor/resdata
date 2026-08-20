@@ -499,14 +499,14 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
         return solution;
 
     for (int index = 0; index < size; ++index) {
-        int prev_index = util_int_max(0, index - 1);
+        int prev_index = std::max(0, index - 1);
         double value = rd_sum_data_iget(data, index, param_index);
         double prev_value = rd_sum_data_iget(data, prev_index, param_index);
 
         // cmp_value in interval value (closed) and prev_value (open)
         bool contained = (value == cmp_value);
-        contained |= (util_double_min(prev_value, value) < cmp_value) &&
-                     (cmp_value < util_double_max(prev_value, value));
+        contained |= (std::min(prev_value, value) < cmp_value) &&
+                     (cmp_value < std::max(prev_value, value));
 
         if (!contained)
             continue;

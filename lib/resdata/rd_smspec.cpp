@@ -317,7 +317,7 @@ static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
             rd_smspec_iget_node_w_node_index(smspec, i);
         const char *name = node.get_wgname();
         if (name)
-            max_len = util_size_t_max(max_len, strlen(name));
+            max_len = std::max(max_len, strlen(name));
     }
 
     return max_len <= RD_STRING8_LENGTH ? RD_CHAR : RD_STRING(max_len);
@@ -590,7 +590,7 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
         break;
     case (RD_SMSPEC_REGION_VAR):
         rd_smspec->region_var_index[num][keyword] = &smspec_node;
-        rd_smspec->num_regions = util_int_max(rd_smspec->num_regions, num);
+        rd_smspec->num_regions = std::max(rd_smspec->num_regions, num);
         break;
     case (RD_SMSPEC_WELL_VAR):
         rd_smspec->well_var_index[well][keyword] = &smspec_node;

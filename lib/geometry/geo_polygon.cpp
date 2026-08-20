@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <ios>
@@ -67,10 +68,10 @@ void geo_polygon_close(geo_polygon_type *polygon) {
 
 static bool on_edge(double x1, double y1, double x2, double y2, double x0,
                     double y0) {
-    double xmin = util_double_min(x1, x2);
-    double xmax = util_double_max(x1, x2);
-    double ymin = util_double_min(y1, y2);
-    double ymax = util_double_max(y1, y2);
+    double xmin = std::min(x1, x2);
+    double xmax = std::max(x1, x2);
+    double ymin = std::min(y1, y2);
+    double ymax = std::max(y1, y2);
 
     /* Vertical line */
     if (x1 == x2)
@@ -108,9 +109,9 @@ bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x0,
         double x2 = polygon->xcoord[next_point];
         double y2 = polygon->ycoord[next_point];
 
-        double ymin = util_double_min(y1, y2);
-        double ymax = util_double_max(y1, y2);
-        double xmax = util_double_max(x1, x2);
+        double ymin = std::min(y1, y2);
+        double ymax = std::max(y1, y2);
+        double xmax = std::max(x1, x2);
 
         if (force_edge_inside) {
             if (on_edge(x1, y1, x2, y2, x0, y0)) {

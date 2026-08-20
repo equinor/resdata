@@ -166,7 +166,7 @@ static void @TYPE@_vector_memmove(@TYPE@_vector_type * vector , int offset , int
     util_abort("%s: offset:%d  left_shift:%d - invalid \n",__func__ , offset , -shift);
 
   if ((shift + vector->size > vector->alloc_size))
-    @TYPE@_vector_realloc_data__( vector , util_int_min( 2*vector->alloc_size , shift + vector->size ), vector->default_value);
+    @TYPE@_vector_realloc_data__( vector , std::min( 2*vector->alloc_size , shift + vector->size ), vector->default_value);
 
   {
     size_t move_size   = (vector->size - offset) * sizeof(@TYPE@);
