@@ -12,6 +12,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <set>
 
 using namespace Catch;
 using namespace Matchers;
@@ -359,10 +360,10 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
             AND_WHEN("Tracing edges") {
                 std::vector<int_point2d_type> corner_list;
-                auto cell_list = make_int_vector(0, 0);
+                std::vector<int> cell_list;
                 THEN("The 3x3 block is traced when value is 42") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 2, 2, 42, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 2, 2, 42,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{2, 2},
                                                           {3, 2},
@@ -386,18 +387,19 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                     //           i
 
                     AND_THEN("The outside cells are traced") {
-                        REQUIRE(int_vector_size(cell_list.get()) == 8);
+                        REQUIRE(std::set(cell_list.begin(), cell_list.end())
+                                    .size() == 8);
                     }
                 }
 
                 THEN("Tracing non-existent value returns false") {
                     REQUIRE_FALSE(layer_trace_block_edge(
-                        layer.get(), 2, 2, 99, corner_list, cell_list.get()));
+                        layer.get(), 2, 2, 99, corner_list, cell_list));
                 }
 
                 THEN("Tracing from cell with value 0 returns false") {
                     REQUIRE_FALSE(layer_trace_block_edge(
-                        layer.get(), 0, 0, 42, corner_list, cell_list.get()));
+                        layer.get(), 0, 0, 42, corner_list, cell_list));
                 }
                 THEN("Tracing from any cell traces the shape") {
                     for (int i = 2; i < 5; i++) {
@@ -405,8 +407,10 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                             if (i != 3 || j != 3) {
                                 REQUIRE(layer_trace_block_edge(
                                     layer.get(), i, j, 42, corner_list,
-                                    cell_list.get()));
-                                REQUIRE(int_vector_size(cell_list.get()) == 8);
+                                    cell_list));
+                                REQUIRE(
+                                    std::set(cell_list.begin(), cell_list.end())
+                                        .size() == 8);
                             }
                         }
                     }
@@ -416,16 +420,18 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
         WHEN("Tracing edges") {
             std::vector<int_point2d_type> corner_list;
-            auto cell_list = make_int_vector(0, 0);
+            std::vector<int> cell_list;
 
             GIVEN("A single non-zero cell block") {
                 layer_iset_cell_value(layer.get(), 5, 5, 7);
                 THEN("single cell block is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 5, 5, 7, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 5, 5, 7,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list == std::vector<int_point2d_type>{
                                                {5, 5}, {6, 5}, {6, 6}, {5, 6}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 1);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        1);
                 }
             }
             AND_GIVEN("A 3x3 block starting at (0,0)") {
@@ -436,8 +442,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 }
 
                 THEN("Starting from (0,0) traces the block") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 0, 0, 10, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 0, 0, 10,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{0, 0},
                                                           {1, 0},
@@ -451,7 +457,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                                           {0, 3},
                                                           {0, 2},
                                                           {0, 1}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 8);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        8);
                 }
             }
 
@@ -464,8 +472,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
                 THEN("Starting from (nx-1,ny-1) traces the block") {
                     REQUIRE(layer_trace_block_edge(layer.get(), nx - 1, ny - 1,
-                                                   20, corner_list,
-                                                   cell_list.get()));
+                                                   20, corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{10, 7},
                                                           {10, 8},
@@ -479,7 +486,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                                           {9, 5},
                                                           {10, 5},
                                                           {10, 6}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 8);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        8);
                 }
             }
             AND_GIVEN("An L-shaped block") {
@@ -490,9 +499,11 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 layer_iset_cell_value(layer.get(), 3, 5, 15);
 
                 THEN("the L-shaped edge is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 3, 3, 15, corner_list, cell_list.get()));
-                    REQUIRE(int_vector_size(cell_list.get()) == 5);
+                    REQUIRE(layer_trace_block_edge(layer.get(), 3, 3, 15,
+                                                   corner_list, cell_list));
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        5);
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{3, 3},
                                                           {4, 3},
@@ -517,8 +528,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
                 THEN("Tracing from a starting point not on edge traces the "
                      "pattern") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 6, 6, 50, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 6, 6, 50,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{8, 6},
                                                           {8, 7},
@@ -532,7 +543,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                                           {6, 5},
                                                           {7, 5},
                                                           {8, 5}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 8);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        8);
                 }
             }
             AND_GIVEN("Block with concave shape") {
@@ -545,8 +558,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 }
 
                 THEN("The shape is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 0, 0, 60, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 0, 0, 60,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{
                                 {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0},
@@ -554,7 +567,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                 {5, 1}, {4, 1}, {3, 1}, {2, 1}, {1, 1}, {1, 2},
                                 {1, 3}, {1, 4}, {1, 5}, {1, 6}, {0, 6}, {0, 5},
                                 {0, 4}, {0, 3}, {0, 2}, {0, 1}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 13);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        13);
                 }
             }
             AND_GIVEN("A block with stair-step pattern") {
@@ -565,8 +580,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 layer_iset_cell_value(layer.get(), 2, 2, 70);
 
                 THEN("The stair-step shape is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 0, 0, 70, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 0, 0, 70,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{0, 0},
                                                           {1, 0},
@@ -580,7 +595,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                                           {1, 2},
                                                           {1, 1},
                                                           {0, 1}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 5);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        5);
                 }
             }
             AND_GIVEN("A block with zigzag pattern") {
@@ -592,8 +609,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 layer_iset_cell_value(layer.get(), 1, 2, 80);
 
                 THEN("The zigzag shape is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 0, 0, 80, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 0, 0, 80,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list ==
                             std::vector<int_point2d_type>{{0, 0},
                                                           {1, 0},
@@ -605,7 +622,9 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                                                           {0, 3},
                                                           {0, 2},
                                                           {0, 1}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 6);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        6);
                 }
             }
             GIVEN("A block with T-shaped pattern") {
@@ -617,15 +636,17 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 }
 
                 THEN("The shape is traced") {
-                    REQUIRE(layer_trace_block_edge(
-                        layer.get(), 2, 2, 90, corner_list, cell_list.get()));
+                    REQUIRE(layer_trace_block_edge(layer.get(), 2, 2, 90,
+                                                   corner_list, cell_list));
                     REQUIRE(corner_list == std::vector<int_point2d_type>{
                                                {2, 2}, {3, 2}, {4, 2}, {5, 2},
                                                {5, 3}, {4, 3}, {3, 3}, {3, 4},
                                                {3, 5}, {3, 6}, {3, 7}, {2, 7},
                                                {2, 6}, {2, 5}, {2, 4}, {2, 3},
                                                {1, 3}, {0, 3}, {0, 2}, {1, 2}});
-                    REQUIRE(int_vector_size(cell_list.get()) == 9);
+                    REQUIRE(
+                        std::set(cell_list.begin(), cell_list.end()).size() ==
+                        9);
                 }
             }
         }
