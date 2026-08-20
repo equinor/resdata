@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <vector>
+#include <set>
 
 #include <ert/util/test_util.hpp>
 
@@ -112,7 +113,7 @@ void test_edge() {
 void test_walk() {
     layer_type *layer = layer_alloc(10, 10);
     std::vector<int_point2d_type> corner_list;
-    int_vector_type *cell_list = int_vector_alloc(0, 0);
+    std::vector<int> cell_list;
 
     test_assert_false(
         layer_trace_block_edge(layer, 4, 4, 100, corner_list, cell_list));
@@ -123,7 +124,8 @@ void test_walk() {
     test_assert_true(
         layer_trace_block_edge(layer, 4, 4, 100, corner_list, cell_list));
     test_assert_int_equal(corner_list.size(), 4);
-    test_assert_int_equal(int_vector_size(cell_list), 1);
+    test_assert_size_t_equal(
+        std::set(cell_list.begin(), cell_list.end()).size(), 1);
     {
         test_assert_int_equal(4, corner_list[0].i);
         test_assert_int_equal(4, corner_list[0].j);
@@ -140,35 +142,28 @@ void test_walk() {
 
     {
         int i, j;
-        int_vector_type *true_cell_list = int_vector_alloc(0, 0);
+        std::set<int> true_cell_set;
         for (j = 3; j < 7; j++) {
             for (i = 3; i < 7; i++) {
                 layer_iset_cell_value(layer, i, j, 100);
 
                 if (i == 3 || j == 3)
-                    int_vector_append(true_cell_list,
-                                      i + j * layer_get_nx(layer));
+                    true_cell_set.insert(i + j * layer_get_nx(layer));
 
                 if (i == 6 || j == 6)
-                    int_vector_append(true_cell_list,
-                                      i + j * layer_get_nx(layer));
+                    true_cell_set.insert(i + j * layer_get_nx(layer));
             }
         }
-        int_vector_select_unique(true_cell_list);
 
         test_assert_true(
             layer_trace_block_edge(layer, 3, 3, 100, corner_list, cell_list));
         test_assert_int_equal(16, corner_list.size());
-        test_assert_int_equal(12, int_vector_size(cell_list));
+        std::set<int> cell_set(cell_list.begin(), cell_list.end());
+        test_assert_size_t_equal(12, cell_set.size());
 
-        int_vector_fprintf(cell_list, stdout, "     cell_list", "%3d");
-        int_vector_fprintf(true_cell_list, stdout, "true_cell_list", "%3d");
-
-        test_assert_true(int_vector_equal(cell_list, true_cell_list));
-        int_vector_free(true_cell_list);
+        test_assert_true(cell_set == true_cell_set);
     }
 
-    int_vector_free(cell_list);
     layer_free(layer);
 }
 
@@ -230,7 +225,7 @@ void test_content2() {
     {
         int_vector_type *i_list = int_vector_alloc(0, 0);
         int_vector_type *j_list = int_vector_alloc(0, 0);
-        int_vector_type *cell_list = int_vector_alloc(0, 0);
+        std::vector<int> cell_list;
         std::vector<int_point2d_type> corner_list;
 
         for (j = 0; j < 5; j++) {
@@ -248,7 +243,6 @@ void test_content2() {
 
         int_vector_free(i_list);
         int_vector_free(j_list);
-        int_vector_free(cell_list);
     }
     test_assert_int_equal(0, layer_get_cell_sum(layer));
 

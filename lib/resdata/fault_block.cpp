@@ -92,12 +92,11 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
         return edge;
 
     std::vector<int_point2d_type> corner_list;
-    auto cell_list = make_int_vector(0, 0);
+    std::vector<int> cell_list;
     const auto &[start_i, start_j] = index_list.at(0);
 
     layer_trace_block_edge(fault_block_layer_get_layer(parent_layer), start_i,
-                           start_j, block_id, corner_list, cell_list.get(),
-                           /*dedup_cells=*/false);
+                           start_j, block_id, corner_list, cell_list);
 
     edge.reserve(corner_list.size());
     for (std::size_t idx = 0; idx < corner_list.size(); idx++) {
@@ -105,8 +104,7 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
         double x, y, z;
 
         rd_grid_get_corner_xyz(grid, p.i, p.j, k, &x, &y, &z);
-        edge.emplace_back(
-            x, y, int_vector_iget(cell_list.get(), static_cast<int>(idx)));
+        edge.emplace_back(x, y, cell_list.at(idx));
     }
     return edge;
 }

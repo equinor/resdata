@@ -229,7 +229,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
                                      int_point2d_type start_point, int i, int j,
                                      int value, edge_dir_enum dir,
                                      std::vector<int_point2d_type> &corner_list,
-                                     int_vector_type *cell_list) {
+                                     std::vector<int> &cell_list) {
     int_point2d_type current_point;
     int_point2d_type next_point;
     current_point.i = i;
@@ -250,7 +250,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
     corner_list.push_back(current_point);
     {
         int cell_index = i + j * layer->nx;
-        int_vector_append(cell_list, cell_index);
+        cell_list.push_back(cell_index);
     }
 
     if (!point_equal(&start_point, &next_point)) {
@@ -340,7 +340,7 @@ static bool layer_find_edge(const layer_type *layer, int *i, int *j,
 bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
-                            int_vector_type *cell_list, bool dedup_cells) {
+                            std::vector<int> &cell_list) {
     const Cell &cell = layer->interior_cell(start_i, start_j);
     if (cell.value == value) {
         int i = start_i;
@@ -354,7 +354,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
             start_corner.i = i;
             start_corner.j = j;
             corner_list.clear();
-            int_vector_reset(cell_list);
+            cell_list.clear();
 
             if (next_cell.edges[BOTTOM_EDGE] == value) {
                 point_shift(&start_corner, 0, 0);
@@ -374,9 +374,6 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                                          LEFT_EDGE, corner_list, cell_list);
             } else
                 throw std::logic_error("Internal error");
-
-            if (dedup_cells)
-                int_vector_select_unique(cell_list);
             return true;
         }
     }
