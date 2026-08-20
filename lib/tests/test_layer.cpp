@@ -307,29 +307,21 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             }
 
             AND_WHEN("Tracing block content") {
-                auto i_list = make_int_vector(0, 0);
-                auto j_list = make_int_vector(0, 0);
-
                 AND_WHEN("Tracing block content without erasing") {
-                    bool traced =
-                        layer_trace_block_content(layer.get(), false, 3, 3, 42,
-                                                  i_list.get(), j_list.get());
+                    auto indices =
+                        layer_trace_block_content(layer.get(), false, 3, 3, 42);
 
                     THEN("All 9 cells are found") {
-                        REQUIRE(traced);
-                        REQUIRE(int_vector_size(i_list.get()) == 9);
-                        REQUIRE(int_vector_size(j_list.get()) == 9);
+                        REQUIRE(indices.size() == 9);
                     }
                 }
 
                 AND_WHEN("Tracing and erasing block content") {
-                    bool traced =
-                        layer_trace_block_content(layer.get(), true, 3, 3, 42,
-                                                  i_list.get(), j_list.get());
+                    auto indices =
+                        layer_trace_block_content(layer.get(), true, 3, 3, 42);
 
                     THEN("Cells are found and erased") {
-                        REQUIRE(traced);
-                        REQUIRE(int_vector_size(i_list.get()) == 9);
+                        REQUIRE(indices.size() == 9);
 
                         for (int i = 2; i < 5; i++) {
                             for (int j = 2; j < 5; j++) {
@@ -341,20 +333,18 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 }
 
                 THEN("Tracing with value 0 from nonz-zero cell value traces") {
-                    REQUIRE(layer_trace_block_content(layer.get(), false, 3, 3,
-                                                      0, i_list.get(),
-                                                      j_list.get()));
-                    REQUIRE(int_vector_size(i_list.get()) == 9);
-                    REQUIRE(int_vector_size(j_list.get()) == 9);
+                    auto indices =
+                        layer_trace_block_content(layer.get(), false, 3, 3, 0);
+                    REQUIRE(indices.size() == 9);
                 }
 
                 THEN("Tracing from a cell with non-matching value fails") {
-                    REQUIRE_FALSE(
-                        layer_trace_block_content(layer.get(), false, 6, 6, 0,
-                                                  i_list.get(), j_list.get()));
-                    REQUIRE_FALSE(
-                        layer_trace_block_content(layer.get(), false, 5, 5, 99,
-                                                  i_list.get(), j_list.get()));
+                    REQUIRE(
+                        layer_trace_block_content(layer.get(), false, 6, 6, 0)
+                            .empty());
+                    REQUIRE(
+                        layer_trace_block_content(layer.get(), false, 5, 5, 99)
+                            .empty());
                 }
             }
 
