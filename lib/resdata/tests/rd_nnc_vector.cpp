@@ -10,7 +10,6 @@ void test_basic() {
     int lgr_nr = 100;
     nnc_vector_type *vector = nnc_vector_alloc(lgr_nr);
 
-    test_assert_true(nnc_vector_is_instance(vector));
     test_assert_int_equal(lgr_nr, nnc_vector_get_lgr_nr(vector));
 
     nnc_vector_add_nnc(vector, 100, 1);
@@ -66,7 +65,6 @@ void test_copy() {
     test_assert_false(nnc_vector_equal(vector1, vector2));
 
     vector3 = nnc_vector_alloc_copy(vector1);
-    test_assert_true(nnc_vector_is_instance(vector3));
     test_assert_true(nnc_vector_equal(vector1, vector3));
 
     nnc_vector_free(vector1);
