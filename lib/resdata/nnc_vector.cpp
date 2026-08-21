@@ -5,32 +5,23 @@
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
-#include <ert/util/type_macros.hpp>
 
 #include <resdata/nnc_vector.hpp>
 
-#define NNC_VECTOR_TYPE_ID 875615078
-
 struct nnc_vector_struct {
-    UTIL_TYPE_ID_DECLARATION;
     int lgr_nr;
     std::vector<int> grid_index_list;
     std::vector<int> nnc_index_list;
 };
 
-UTIL_IS_INSTANCE_FUNCTION(nnc_vector, NNC_VECTOR_TYPE_ID)
-static UTIL_SAFE_CAST_FUNCTION(nnc_vector, NNC_VECTOR_TYPE_ID)
-
-    nnc_vector_type *nnc_vector_alloc(int lgr_nr) {
+nnc_vector_type *nnc_vector_alloc(int lgr_nr) {
     nnc_vector_type *nnc_vector = new nnc_vector_type();
-    UTIL_TYPE_ID_INIT(nnc_vector, NNC_VECTOR_TYPE_ID);
     nnc_vector->lgr_nr = lgr_nr;
     return nnc_vector;
 }
 
 nnc_vector_type *nnc_vector_alloc_copy(const nnc_vector_type *src_vector) {
     nnc_vector_type *copy_vector = new nnc_vector_type();
-    UTIL_TYPE_ID_INIT(copy_vector, NNC_VECTOR_TYPE_ID);
 
     copy_vector->lgr_nr = src_vector->lgr_nr;
     copy_vector->grid_index_list = src_vector->grid_index_list;
@@ -61,11 +52,6 @@ bool nnc_vector_equal(const nnc_vector_type *nnc_vector1,
 }
 
 void nnc_vector_free(nnc_vector_type *nnc_vector) { delete nnc_vector; }
-
-void nnc_vector_free__(void *arg) {
-    nnc_vector_type *nnc_vector = nnc_vector_safe_cast(arg);
-    nnc_vector_free(nnc_vector);
-}
 
 void nnc_vector_add_nnc(nnc_vector_type *nnc_vector, int global_cell_number,
                         int nnc_index) {

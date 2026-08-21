@@ -59,7 +59,6 @@ void basic_test() {
 
     test_assert_int_equal(0, nnc_info_get_total_size(nnc_info));
     test_assert_int_equal(lgr_nr, nnc_info_get_lgr_nr(nnc_info));
-    test_assert_true(nnc_info_is_instance(nnc_info));
     test_assert_not_NULL(nnc_info);
 
     nnc_info_add_nnc(nnc_info, lgr_nr, 110, 0);
