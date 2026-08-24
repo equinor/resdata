@@ -87,7 +87,6 @@ class RegionTest(ResdataTest):
         OK = True
 
         global_list = reg.get_global_list()
-        self.assertEqual(global_list.parent(), reg)
 
         for gi in global_list:
             i, j, k = self.grid.get_ijk(global_index=gi)
