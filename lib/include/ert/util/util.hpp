@@ -155,7 +155,6 @@ bool util_is_directory(const char *);
 bool util_is_file(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
-void util_fread_dev_urandom(int, char *);
 void util_abort_test_set_intercept_function(const char *);
 void util_exit(const char *fmt, ...);
 void util_install_signals(void);
