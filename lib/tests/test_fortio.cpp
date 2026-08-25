@@ -197,8 +197,8 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
     }
     GIVEN("An externally managed FILE*") {
         write_records(filename, {{"", 0}});
-        std::unique_ptr<FILE, decltype(&fclose)> stream(
-            fopen(filename.c_str(), "r"), fclose);
+        std::unique_ptr<FILE, void (*)(FILE *)> stream{
+            fopen(filename.c_str(), "rb"), [](FILE *f) { fclose(f); }};
         REQUIRE(stream);
         WHEN("Constructing a FortIO from the FILE*") {
             ERT::FortIO fortio(filename, false, false, stream.get(), false);
