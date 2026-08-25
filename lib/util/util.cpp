@@ -204,16 +204,6 @@ static bool EOL_CHAR(char c) {
         return false;
 }
 
-void util_fread_dev_urandom(int buffer_size_, char *buffer) {
-    size_t buffer_size = buffer_size_;
-    FILE *stream = util_fopen("/dev/urandom", "r");
-    if (fread(buffer, 1, buffer_size, stream) != buffer_size)
-        util_abort("%s: failed to read:%d bytes from /dev/random \n", __func__,
-                   buffer_size);
-
-    fclose(stream);
-}
-
 /**
    Kahan summation is a technique to retain numerical precision when
    summing a long vector of values. See:
