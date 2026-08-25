@@ -1,6 +1,8 @@
 #pragma once
 #include <ctime>
 
+#include <memory>
+
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/FortIO.hpp>
@@ -11,7 +13,6 @@
 typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep);
-void rd_sum_tstep_free__(void *__ministep);
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 int ministep_nr,
                                                 const rd_kw_type *params_kw,
@@ -46,6 +47,9 @@ void rd_sum_tstep_set_from_key(rd_sum_tstep_type *tstep, const char *gen_key,
 double rd_sum_tstep_get_from_key(const rd_sum_tstep_type *tstep,
                                  const char *gen_key);
 bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key);
+
+using rd_sum_tstep_ptr =
+    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>;
 
 UTIL_SAFE_CAST_HEADER(rd_sum_tstep);
 UTIL_SAFE_CAST_HEADER_CONST(rd_sum_tstep);
