@@ -12,7 +12,7 @@ class WellInfo:
     def __init__(
         self,
         grid: Grid,
-        rst_file: None | list[str | ResdataFile] | str | ResdataFile = None,
+        rst_file: list[str | ResdataFile] | str | ResdataFile | None = None,
         load_segment_information: bool = True,
     ) -> None: ...
     def __iter__(self) -> typing.Iterator[WellTimeLine]: ...
