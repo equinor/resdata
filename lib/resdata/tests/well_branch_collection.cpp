@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     const double diameter = 10;
 
     test_assert_true(well_branch_collection_is_instance(branches));
-    test_assert_int_equal(well_branch_collection_get_size(branches), 0);
+    test_assert_size_t_equal(well_branch_collection_get_size(branches), 0);
     test_assert_NULL(
         well_branch_collection_get_start_segment(branches, 0).get());
     test_assert_false(well_branch_collection_has_branch(branches, 0));
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         test_assert_true(
             well_branch_collection_add_start_segment(branches, segment2));
 
-        test_assert_int_equal(well_branch_collection_get_size(branches), 1);
+        test_assert_size_t_equal(well_branch_collection_get_size(branches), 1);
         test_assert_true(well_branch_collection_has_branch(branches, 78));
     }
     well_branch_collection_free(branches);

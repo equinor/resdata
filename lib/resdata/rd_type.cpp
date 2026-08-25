@@ -31,7 +31,8 @@ static size_t get_rd_string_length(const char *type_name) {
                         __func__, type_name == nullptr ? "<null>" : type_name));
     }
 
-    return atoi(type_name + 1);
+    /* is_rd_string_name() guarantees three digits, so this is in [0,999]. */
+    return static_cast<size_t>(atoi(type_name + 1));
 }
 
 rd_data_type rd_type_create(const rd_type_enum type,
@@ -144,7 +145,7 @@ rd_data_type rd_type_create_from_name(const char *type_name) {
     }
 }
 
-int rd_type_get_sizeof_ctype(const rd_data_type rd_type) {
+size_t rd_type_get_sizeof_ctype(const rd_data_type rd_type) {
     return rd_type.element_size;
 }
 

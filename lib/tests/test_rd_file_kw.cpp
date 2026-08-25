@@ -228,8 +228,8 @@ SCENARIO_METHOD(Tmpdir, "A FileKW lazily loads its keyword from file") {
         auto filename = (dirname / "DATA").string();
 
         auto kw = make_rd_kw("MYKW", 4, RD_INT);
-        for (int i = 0; i < 4; i++)
-            rd_kw_iset_int(kw.get(), i, i * 10);
+        for (size_t i = 0; i < 4; i++)
+            rd_kw_iset_int(kw.get(), i, static_cast<int>(i) * 10);
 
         offset_type offset;
         {
@@ -252,8 +252,9 @@ SCENARIO_METHOD(Tmpdir, "A FileKW lazily loads its keyword from file") {
                 REQUIRE(loaded != nullptr);
                 REQUIRE(file_kw.get_kw_ptr() == loaded);
                 REQUIRE(rd_kw_get_size(loaded) == 4);
-                for (int i = 0; i < 4; i++)
-                    REQUIRE(rd_kw_iget_int(loaded, i) == i * 10);
+                for (size_t i = 0; i < 4; i++)
+                    REQUIRE(rd_kw_iget_int(loaded, i) ==
+                            static_cast<int>(i) * 10);
             }
 
             AND_WHEN("clear is called") {

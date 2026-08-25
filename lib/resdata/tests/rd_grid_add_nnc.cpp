@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -76,19 +77,11 @@ void overwrite_test() {
 
 void list_test() {
     rd_grid_ptr grid0 = make_rectangular_grid(10, 10, 10, 1, 1, 1, NULL);
-    auto g1 = make_int_vector(0, 0);
-    auto g2 = make_int_vector(0, 0);
+    const std::vector<size_t> g1 = {5, 5, 8};
+    const std::vector<size_t> g2 = {6, 7, 9};
 
-    int_vector_append(g1.get(), 5);
-    int_vector_append(g2.get(), 6);
-    int_vector_append(g1.get(), 5);
-    int_vector_append(g2.get(), 7);
-    int_vector_append(g1.get(), 8);
-    int_vector_append(g2.get(), 9);
-
-    for (int i = 0; i < int_vector_size(g1.get()); i++)
-        rd_grid_add_self_nnc(grid0.get(), int_vector_iget(g1.get(), i),
-                             int_vector_iget(g2.get(), i), i);
+    for (size_t i = 0; i < g1.size(); i++)
+        rd_grid_add_self_nnc(grid0.get(), g1[i], g2[i], i);
 
     verify_simple_nnc(grid0.get());
     {

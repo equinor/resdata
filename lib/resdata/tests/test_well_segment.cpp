@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     const double total_length = 200;
     const double diameter = 10;
     {
-        int segment_id = 78;
+        size_t segment_id = 78;
         int outlet_segment_id = 100;
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
         WellSegment ws(segment_id, outlet_segment_id, branch_nr, depth, length,
@@ -25,7 +25,8 @@ int main(int argc, char **argv) {
         test_assert_NULL(ws.get_outlet());
         test_assert_int_equal(ws.get_outlet_id(), outlet_segment_id);
         test_assert_int_equal(ws.get_branch_id(), branch_nr);
-        test_assert_int_equal(ws.get_id(), segment_id);
+        test_assert_int_equal(static_cast<int>(ws.get_id()),
+                              static_cast<int>(segment_id));
 
         test_assert_false(ws.is_nearest_wellhead());
         test_assert_true(ws.is_active());
@@ -58,11 +59,11 @@ int main(int argc, char **argv) {
 
     {
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
-        int outlet_id = 0;
+        size_t outlet_id = 0;
         WellSegment outlet(outlet_id, WELL_SEGMENT_OUTLET_END_VALUE, branch_nr,
                            depth, length, total_length, diameter);
-        WellSegment ws(100, outlet_id, branch_nr, depth, length, total_length,
-                       diameter);
+        WellSegment ws(100, static_cast<int>(outlet_id), branch_nr, depth,
+                       length, total_length, diameter);
 
         test_assert_true(ws.link(&outlet));
         test_assert_ptr_equal(ws.get_outlet(), &outlet);
@@ -72,11 +73,11 @@ int main(int argc, char **argv) {
 
     {
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
-        int outlet_id = 0;
+        size_t outlet_id = 0;
         WellSegment outlet(outlet_id, WELL_SEGMENT_OUTLET_END_VALUE, branch_nr,
                            depth, length, total_length, diameter);
-        WellSegment ws(100, outlet_id + 1, branch_nr, depth, length,
-                       total_length, diameter);
+        WellSegment ws(100, static_cast<int>(outlet_id) + 1, branch_nr, depth,
+                       length, total_length, diameter);
 
         test_assert_false(ws.link(&outlet));
         test_assert_NULL(ws.get_outlet());

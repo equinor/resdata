@@ -129,12 +129,12 @@ rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit) {
     if (!util_string_equal(PORV_KW, rd_kw_get_header(porv_kw)))
         return NULL;
 
-    const int size = rd_kw_get_size(porv_kw);
-    auto actnum_kw = make_rd_kw(ACTNUM_KW, size, RD_INT);
+    const size_t size = rd_kw_get_size(porv_kw);
+    auto actnum_kw = make_rd_kw(ACTNUM_KW, static_cast<int>(size), RD_INT);
     const float *porv_values = rd_kw_get_float_ptr(porv_kw);
     int *actnum_values = rd_kw_get_int_ptr(actnum_kw.get());
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (porv_values[i] > porv_limit)
             actnum_values[i] = 1;
         else

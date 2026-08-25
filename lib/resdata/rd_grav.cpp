@@ -173,12 +173,11 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
        every cell.
     */
         {
-            int index;
             if (monitor_phase == NULL) {
-                for (index = 0; index < grid_cache.size(); index++)
+                for (size_t index = 0; index < grid_cache.size(); index++)
                     mass_diff[index] = -base_phase->fluid_mass[index];
             } else {
-                for (index = 0; index < grid_cache.size(); index++)
+                for (size_t index = 0; index < grid_cache.size(); index++)
                     mass_diff[index] = monitor_phase->fluid_mass[index] -
                                        base_phase->fluid_mass[index];
             }
@@ -238,7 +237,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
     const char *sat_kw_name = rd_get_phase_name(phase);
     {
         rd_grav_phase_type *grav_phase = new rd_grav_phase_type();
-        const int size = grid_cache->size();
+        const size_t size = grid_cache->size();
 
         UTIL_TYPE_ID_INIT(grav_phase, RD_GRAV_PHASE_TYPE_ID);
         grav_phase->grid_cache = grid_cache;
@@ -262,14 +261,16 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
             else
                 fip_kw = restart_file->get_kw(FIPWAT_KW, 0);
 
-            for (int iactive = 0; iactive < size; iactive++) {
+            for (size_t iactive = 0; iactive < size; iactive++) {
                 double fip = rd_kw_iget_as_double(fip_kw, iactive);
                 int pvtnum = rd_kw_iget_int(pvtnum_kw, iactive);
-                if (std_density.size() <= pvtnum) {
+                if (pvtnum < 0 ||
+                    std_density.size() <= static_cast<size_t>(pvtnum)) {
                     rd_grav_phase_free(grav_phase);
                     return NULL;
                 }
-                grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
+                grav_phase->fluid_mass[iactive] =
+                    fip * std_density[static_cast<size_t>(pvtnum)];
             }
         } else {
             rd_version_enum rd_version = get_simulator_version(init_file);
@@ -286,8 +287,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                     rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
 
                 {
-                    int iactive;
-                    for (iactive = 0; iactive < size; iactive++) {
+                    for (size_t iactive = 0; iactive < size; iactive++) {
                         double rho = rd_kw_iget_as_double(den_kw, iactive);
                         double rfip = rd_kw_iget_as_double(rfip_kw, iactive);
                         grav_phase->fluid_mass[iactive] = rho * rfip;
@@ -315,8 +315,7 @@ static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
                 }
 
                 {
-                    int iactive;
-                    for (iactive = 0; iactive < size; iactive++) {
+                    for (size_t iactive = 0; iactive < size; iactive++) {
                         double rho = rd_kw_iget_as_double(den_kw, iactive);
                         double sat = rd_kw_iget_as_double(sat_kw, iactive);
                         grav_phase->fluid_mass[iactive] =
@@ -415,10 +414,10 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
     const rd_kw_type *init_porv_kw = init_file->get_kw(PORV_KW, 0);
     int check_points = std::min(100, active_size);
     int check_nr = 0;
-    const std::vector<int> &global_index = grid_cache.global_index();
+    const std::vector<size_t> &global_index = grid_cache.global_index();
 
     while (check_nr < check_points) {
-        int active_index = rand() % active_size;
+        size_t active_index = static_cast<size_t>(rand() % active_size);
 
         double init_porv = rd_kw_iget_as_double(
             init_porv_kw,
@@ -496,8 +495,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
 
     if (restart_file->has_kw(RPORV_KW)) {
         rd_kw_type *rporv_kw = restart_file->get_kw(RPORV_KW, 0);
-        int iactive;
-        for (iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
+        for (size_t iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
             survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
     } else
         throw std::runtime_error(std::string(__func__) +
@@ -527,11 +525,10 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
         rd_grav->init_file->get_kw(PORV_KW, 0); /* Global indexing */
     rd_kw_type *pormod_kw =
         restart_file->get_kw(PORMOD_KW, 0); /* Active indexing */
-    const int size = grid_cache.size();
+    const size_t size = grid_cache.size();
     const auto &global_index = grid_cache.global_index();
-    int active_index;
 
-    for (active_index = 0; active_index < size; active_index++)
+    for (size_t active_index = 0; active_index < size; active_index++)
         survey->porv[active_index] =
             static_cast<double>(rd_kw_iget_float(pormod_kw, active_index)) *
             rd_kw_iget_float(init_porv_kw, global_index[active_index]);
@@ -736,13 +733,18 @@ void rd_grav_new_std_density(rd_grav_type *grav, Phase phase,
 
 void rd_grav_add_std_density(rd_grav_type *grav, Phase phase, int pvtnum,
                              double density) {
+    if (pvtnum < 0)
+        throw std::invalid_argument(
+            fmt::format("pvtnum must be non-negative, got {}", pvtnum));
+
+    const std::size_t index = static_cast<std::size_t>(pvtnum);
     std::vector<double> &std_density =
         grav->std_density[std::string(rd_get_phase_name(phase))];
-    if (std_density.size() <= static_cast<std::size_t>(pvtnum))
+    if (std_density.size() <= index)
         std_density.resize(
-            pvtnum + 1,
+            index + 1,
             grav->default_density[std::string(rd_get_phase_name(phase))]);
-    std_density[pvtnum] = density;
+    std_density[index] = density;
 }
 
 void rd_grav_free(rd_grav_type *rd_grav) {

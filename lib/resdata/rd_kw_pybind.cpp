@@ -117,24 +117,25 @@ PYBIND11_MODULE(_kw, m) {
     m.def("_get_type", [](py::handle self) {
         return static_cast<int>(rd_kw_get_type(from_cwrap<rd_kw_type>(self)));
     });
-    m.def("_iget_char_ptr", [](py::handle self, int index) {
+    m.def("_iget_char_ptr", [](py::handle self, size_t index) {
         return rd_kw_iget_char_ptr(from_cwrap<rd_kw_type>(self), index);
     });
-    m.def("_iset_char_ptr", [](py::handle self, int index, std::string value) {
+    m.def("_iset_char_ptr", [](py::handle self, size_t index,
+                               std::string value) {
         rd_kw_iset_char_ptr(from_cwrap<rd_kw_type>(self), index, value.c_str());
     });
-    m.def("_iget_string_ptr", [](py::handle self, int index) {
+    m.def("_iget_string_ptr", [](py::handle self, size_t index) {
         return rd_kw_iget_string_ptr(from_cwrap<rd_kw_type>(self), index);
     });
     m.def("_iset_string_ptr",
-          [](py::handle self, int index, std::string value) {
+          [](py::handle self, size_t index, std::string value) {
               rd_kw_iset_string_ptr(from_cwrap<rd_kw_type>(self), index,
                                     value.c_str());
           });
-    m.def("_iget_bool", [](py::handle self, int index) {
+    m.def("_iget_bool", [](py::handle self, size_t index) {
         return rd_kw_iget_bool(from_cwrap<rd_kw_type>(self), index);
     });
-    m.def("_iset_bool", [](py::handle self, int index, bool value) {
+    m.def("_iset_bool", [](py::handle self, size_t index, bool value) {
         rd_kw_iset_bool(from_cwrap<rd_kw_type>(self), index, value);
     });
     m.def(

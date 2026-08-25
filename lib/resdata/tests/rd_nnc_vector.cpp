@@ -7,11 +7,11 @@
 #include <resdata/nnc_vector.hpp>
 
 void test_basic() {
-    int lgr_nr = 100;
+    size_t lgr_nr = 100;
     nnc_vector_type *vector = nnc_vector_alloc(lgr_nr);
 
     test_assert_true(nnc_vector_is_instance(vector));
-    test_assert_int_equal(lgr_nr, nnc_vector_get_lgr_nr(vector));
+    test_assert_size_t_equal(lgr_nr, nnc_vector_get_lgr_nr(vector));
 
     nnc_vector_add_nnc(vector, 100, 1);
     nnc_vector_add_nnc(vector, 200, 2);
@@ -24,9 +24,9 @@ void test_basic() {
     test_assert_int_equal(6, nnc_vector_get_size(vector));
 
     {
-        const std::vector<int> &grid_index_list =
+        const std::vector<size_t> &grid_index_list =
             nnc_vector_get_grid_index_list(vector);
-        const std::vector<int> &nnc_index_list =
+        const std::vector<size_t> &nnc_index_list =
             nnc_vector_get_nnc_index_list(vector);
 
         test_assert_int_equal(6, nnc_index_list.size());
@@ -43,7 +43,7 @@ void test_basic() {
 }
 
 void test_copy() {
-    int lgr_nr = 100;
+    size_t lgr_nr = 100;
     nnc_vector_type *vector1 = nnc_vector_alloc(lgr_nr);
     nnc_vector_type *vector2 = nnc_vector_alloc(lgr_nr);
     nnc_vector_type *vector3 = NULL;

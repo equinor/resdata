@@ -8,7 +8,7 @@
 #include <sys/types.h>
 
 static void util_copy_directory__(const char *src_path, const char *target_path,
-                                  int buffer_size, void *buffer) {
+                                  size_t buffer_size, void *buffer) {
     if (!util_is_directory(src_path))
         util_abort("%s: %s is not a directory \n", __func__, src_path);
 
@@ -53,7 +53,7 @@ static void util_copy_directory__(const char *src_path, const char *target_path,
 /*  Does not handle symlinks. */
 void util_copy_directory_content(const char *src_path,
                                  const char *target_path) {
-    int buffer_size = 16 * 1024 * 1024; /* 16 MB */
+    size_t buffer_size = 16 * 1024 * 1024; /* 16 MB */
     void *buffer = util_malloc(buffer_size);
 
     util_copy_directory__(src_path, target_path, buffer_size, buffer);

@@ -10,10 +10,10 @@ typedef struct {
     double y;
     double z;
 
-    int g;
-    int i;
-    int j;
-    int k;
+    size_t g;
+    size_t i;
+    size_t j;
+    size_t k;
 
     bool skip;
 } point_type;
@@ -33,9 +33,9 @@ vector_type *load_expected(const rd_grid_type *grid, const char *filename) {
             p->y = y;
             p->z = z;
 
-            p->i = i - 1;
-            p->j = j - 1;
-            p->k = k - 1;
+            p->i = static_cast<size_t>(i - 1);
+            p->j = static_cast<size_t>(j - 1);
+            p->k = static_cast<size_t>(k - 1);
             p->skip = skip;
             p->g = rd_grid_get_global_index3(grid, p->i, p->j, p->k);
             vector_append_owned_ref(expected, p, free);
@@ -49,27 +49,26 @@ vector_type *load_expected(const rd_grid_type *grid, const char *filename) {
 }
 
 void test_well_point(rd_grid_type *grid, const point_type *expected) {
-    int g = rd_grid_get_global_index_from_xyz(grid, expected->x, expected->y,
-                                              expected->z, 0);
-    if (g != rd_grid_get_global_index3(grid, expected->i, expected->j,
-                                       expected->k)) {
-        int i, j, k;
+    auto g_opt = rd_grid_get_global_index_from_xyz(grid, expected->x,
+                                                   expected->y, expected->z, 0);
+    size_t g = g_opt.value_or(static_cast<size_t>(-1));
+    const size_t expected_g =
+        rd_grid_get_global_index3(grid, expected->i, expected->j, expected->k);
+    if (g != expected_g) {
+        size_t i, j, k;
         rd_grid_get_ijk1(grid, g, &i, &j, &k);
         bool g_contains_xyz = rd_grid_cell_contains_xyz1(
             grid, expected->g, expected->x, expected->y, expected->z);
         fprintf(stderr,
-                "(%g,%g,%g) differs:  Grid: %d:(%d,%d,%d)   Expected: "
-                "%d:(%d,%d,%d)  contains:%d\n",
+                "(%g,%g,%g) differs:  Grid: %zu:(%zu,%zu,%zu)   Expected: "
+                "%zu:(%zu,%zu,%zu)  contains:%d\n",
                 expected->x, expected->y, expected->z, g, i, j, k, expected->g,
                 expected->i, expected->j, expected->k, g_contains_xyz);
     }
     if (!expected->skip)
-        test_assert_int_equal(g, rd_grid_get_global_index3(grid, expected->i,
-                                                           expected->j,
-                                                           expected->k));
+        test_assert_size_t_equal(g, expected_g);
     else {
-        if (g != rd_grid_get_global_index3(grid, expected->i, expected->j,
-                                           expected->k))
+        if (g != expected_g)
             fprintf(stderr, " ** Skipping failed test for point: %g %g %g \n",
                     expected->x, expected->y, expected->z);
     }

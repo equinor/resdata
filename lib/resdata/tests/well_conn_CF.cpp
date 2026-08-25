@@ -14,7 +14,7 @@
 
 void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,
                        const rd_kw_type *scon_kw, const rd_kw_type *xcon_kw,
-                       const RSTHead &rst_head, int iwell, int iconn,
+                       const RSTHead &rst_head, size_t iwell, size_t iconn,
                        double CF) {
     auto conn = WellConnection::from_keywords(icon_kw, scon_kw, xcon_kw,
                                               rst_head, iwell, iconn);

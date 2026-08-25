@@ -55,7 +55,7 @@ node_data_type *node_data_alloc_ptr(const void *data, copyc_ftype *copyc,
 node_data_type *
 node_data_alloc_buffer(const void *data,
                        int buffer_size) { /* The buffer is copied on insert. */
-    void *data_copy = util_alloc_copy(data, buffer_size);
+    void *data_copy = util_alloc_copy(data, static_cast<size_t>(buffer_size));
     return node_data_alloc__(data_copy, CTYPE_VOID_POINTER, buffer_size, NULL,
                              free);
 }
@@ -77,7 +77,8 @@ static node_data_type *node_data_copyc(const node_data_type *src,
             next = node_data_alloc__(
                 util_alloc_copy(
                     src->data,
-                    src->buffer_size) /* A next copy is allocated prior to insert. */
+                    static_cast<size_t>(
+                        src->buffer_size)) /* A next copy is allocated prior to insert. */
                 ,
                 src->ctype, src->buffer_size, NULL, free);
         else

@@ -30,7 +30,7 @@ void write_int_kw(ERT::FortIO &fortio, const char *name,
                   const std::vector<int> &data) {
     auto kw = make_rd_kw(name, static_cast<int>(data.size()), RD_INT);
     for (size_t i = 0; i < data.size(); ++i)
-        rd_kw_iset_int(kw.get(), static_cast<int>(i), data[i]);
+        rd_kw_iset_int(kw.get(), i, data[i]);
     rd_kw_fwrite(kw.get(), fortio);
 }
 
@@ -38,7 +38,7 @@ void write_double_kw(ERT::FortIO &fortio, const char *name,
                      const std::vector<double> &data) {
     auto kw = make_rd_kw(name, static_cast<int>(data.size()), RD_DOUBLE);
     for (size_t i = 0; i < data.size(); ++i)
-        rd_kw_iset_double(kw.get(), static_cast<int>(i), data[i]);
+        rd_kw_iset_double(kw.get(), i, data[i]);
     rd_kw_fwrite(kw.get(), fortio);
 }
 
@@ -49,9 +49,9 @@ struct RestartLayout {
     int nx = 3;
     int ny = 3;
     int nz = 3;
-    int nwells = 1;
-    int niwelz = 8;
-    int nzwelz = 3;
+    size_t nwells = 1;
+    size_t niwelz = 8;
+    size_t nzwelz = 3;
     int report_nr = 0;
 };
 
@@ -66,22 +66,21 @@ void write_restart_file(const std::string &path, const RestartLayout &layout) {
     intehead[INTEHEAD_NY_INDEX] = layout.ny;
     intehead[INTEHEAD_NZ_INDEX] = layout.nz;
     intehead[INTEHEAD_NACTIVE_INDEX] = layout.nx * layout.ny * layout.nz;
-    intehead[INTEHEAD_NWELLS_INDEX] = layout.nwells;
+    intehead[INTEHEAD_NWELLS_INDEX] = static_cast<int>(layout.nwells);
     intehead[INTEHEAD_NCWMAX_INDEX] = 1;
-    intehead[INTEHEAD_NIWELZ_INDEX] = layout.niwelz;
-    intehead[INTEHEAD_NZWELZ_INDEX] = layout.nzwelz;
+    intehead[INTEHEAD_NIWELZ_INDEX] = static_cast<int>(layout.niwelz);
+    intehead[INTEHEAD_NZWELZ_INDEX] = static_cast<int>(layout.nzwelz);
     write_int_kw(fortio, INTEHEAD_KW, intehead);
 
     write_double_kw(fortio, DOUBHEAD_KW, {0.0});
 
     if (layout.with_iwel)
-        write_int_kw(
-            fortio, IWEL_KW,
-            std::vector<int>(static_cast<size_t>(layout.niwelz) * layout.nwells,
-                             0));
+        write_int_kw(fortio, IWEL_KW,
+                     std::vector<int>(layout.niwelz * layout.nwells, 0));
 
     if (layout.with_zwel) {
-        auto zwel = make_rd_kw(ZWEL_KW, layout.nzwelz * layout.nwells, RD_CHAR);
+        auto zwel = make_rd_kw(
+            ZWEL_KW, static_cast<int>(layout.nzwelz * layout.nwells), RD_CHAR);
         rd_kw_iset_string_ptr(zwel.get(), 0, "WELL-1");
         rd_kw_fwrite(zwel.get(), fortio);
     }

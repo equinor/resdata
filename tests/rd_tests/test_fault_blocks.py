@@ -305,7 +305,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(block.get_centroid(), (2.0, 2.0))
 
     def test_fault_block_layer(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             layer = FaultBlockLayer(self.grid, -1)
 
         with self.assertRaises(ValueError):

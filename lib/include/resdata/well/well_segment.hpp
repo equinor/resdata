@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <map>
@@ -14,6 +15,9 @@
 
 class WellSegment {
     int link_count = 0;
+    /* segment_id, branch_id and outlet_segment_id are all signed values read
+       from the ISEG keyword, and use negative sentinels such as
+       WELL_SEGMENT_OUTLET_END_VALUE. */
     int segment_id;
     int branch_id;
     int outlet_segment_id; // This is in the global index space given by the ISEG keyword.
@@ -34,8 +38,8 @@ public:
           outlet_segment_id(outlet_segment_id), depth(depth), length(length),
           total_length(total_length), diameter(diameter) {};
     static std::shared_ptr<WellSegment>
-    from_kw(const rd_kw_type *iseg_kw, const well_rseg_loader_type *rseg_loader,
-            const RSTHead &header, int well_nr, int segment_index,
+    from_kw(const rd_kw_type *iseg_kw, well_rseg_loader_type *rseg_loader,
+            const RSTHead &header, size_t well_nr, size_t segment_index,
             int segment_id);
     [[nodiscard]] bool is_active() const {
         return branch_id != WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
@@ -79,5 +83,5 @@ public:
     }
 };
 
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
+bool well_segment_well_is_MSW(size_t well_nr, const rd_kw_type *iwel_kw,
                               const RSTHead &rst_head);

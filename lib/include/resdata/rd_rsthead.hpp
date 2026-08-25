@@ -1,5 +1,7 @@
 #pragma once
 #include <ctime>
+#include <stdexcept>
+#include <string>
 
 #include <ert/util/util.hpp>
 
@@ -78,10 +80,10 @@ struct RSTHead {
         : report_step(report_step),
           sim_days(rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX)) {
 
-        int nihead = rd_kw_get_size(intehead_kw);
+        size_t nihead = rd_kw_get_size(intehead_kw);
         const int *data = (const int *)rd_kw_get_void_ptr(intehead_kw);
 
-        auto get = [data, nihead](int index) {
+        auto get = [data, nihead](size_t index) {
             return index < nihead ? data[index] : 0;
         };
 
@@ -120,6 +122,69 @@ struct RSTHead {
             this->dualp = rd_kw_iget_bool(logihead_kw, LOGIHEAD_DUALP_INDEX);
         else
             this->dualp = false;
+    }
+
+    inline static size_t checked_dim(const char *name, int value) {
+        if (value < 0)
+            throw std::invalid_argument(
+                std::string("Invalid INTEHEAD in restart file: ") + name +
+                " was negative: " + std::to_string(value));
+        return static_cast<size_t>(value);
+    }
+
+    [[nodiscard]] inline size_t get_nx() const {
+        return checked_dim("NX", this->nx);
+    }
+    [[nodiscard]] inline size_t get_ny() const {
+        return checked_dim("NY", this->ny);
+    }
+    [[nodiscard]] inline size_t get_nz() const {
+        return checked_dim("NZ", this->nz);
+    }
+    [[nodiscard]] inline size_t get_nactive() const {
+        return checked_dim("NACTIVE", this->nactive);
+    }
+    [[nodiscard]] inline size_t get_nwells() const {
+        return checked_dim("NWELLS", this->nwells);
+    }
+    [[nodiscard]] inline size_t get_niwelz() const {
+        return checked_dim("NIWELZ", this->niwelz);
+    }
+    [[nodiscard]] inline size_t get_nzwelz() const {
+        return checked_dim("NZWELZ", this->nzwelz);
+    }
+    [[nodiscard]] inline size_t get_nxwelz() const {
+        return checked_dim("NXWELZ", this->nxwelz);
+    }
+    [[nodiscard]] inline size_t get_niconz() const {
+        return checked_dim("NICONZ", this->niconz);
+    }
+    [[nodiscard]] inline size_t get_ncwmax() const {
+        return checked_dim("NCWMAX", this->ncwmax);
+    }
+    [[nodiscard]] inline size_t get_nsconz() const {
+        return checked_dim("NSCONZ", this->nsconz);
+    }
+    [[nodiscard]] inline size_t get_nxconz() const {
+        return checked_dim("NXCONZ", this->nxconz);
+    }
+    [[nodiscard]] inline size_t get_nisegz() const {
+        return checked_dim("NISEGZ", this->nisegz);
+    }
+    [[nodiscard]] inline size_t get_nsegmx() const {
+        return checked_dim("NSEGMX", this->nsegmx);
+    }
+    [[nodiscard]] inline size_t get_nswlmx() const {
+        return checked_dim("NSWLMX", this->nswlmx);
+    }
+    [[nodiscard]] inline size_t get_nlbrmx() const {
+        return checked_dim("NLBRMX", this->nlbrmx);
+    }
+    [[nodiscard]] inline size_t get_nilbrz() const {
+        return checked_dim("NILBRZ", this->nilbrz);
+    }
+    [[nodiscard]] inline size_t get_nrsegz() const {
+        return checked_dim("NRSEGZ", this->nrsegz);
     }
 
     inline static RSTHead read(rd::FileView *rst_view, int report_step) {

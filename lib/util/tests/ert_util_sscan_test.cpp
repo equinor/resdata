@@ -45,6 +45,19 @@ void test_sscanf_int() {
     test_assert_true(util_sscanf_int(buffer, &value));
     test_assert_int_equal(value, INT_MIN);
 
+    // Values which do not fit in an int are not a valid parse result
+    value = 1;
+    snprintf(buffer, 30, "%ld", static_cast<long>(INT_MAX) + 1);
+    test_assert_false(util_sscanf_int(buffer, &value));
+    test_assert_int_equal(value, 1);
+
+    snprintf(buffer, 30, "%ld", static_cast<long>(INT_MIN) - 1);
+    test_assert_false(util_sscanf_int(buffer, &value));
+    test_assert_int_equal(value, 1);
+
+    test_assert_false(util_sscanf_int("99999999999999999999", &value));
+    test_assert_int_equal(value, 1);
+
     // NULL buffer
     value = 9;
     test_assert_false(util_sscanf_int(NULL, &value));

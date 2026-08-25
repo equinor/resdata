@@ -74,14 +74,10 @@ rd_kw_type *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
     return rd_kw;
 }
 
-void FileView::index_fload_kw(const std::string &kw, int index,
-                              const int_vector_type *index_map,
+void FileView::index_fload_kw(const std::string &kw, size_t index,
+                              const std::vector<size_t> &index_map,
                               char *io_buffer) {
-    if (index < 0)
-        throw std::invalid_argument(
-            fmt::format("Got negative index in index_fload_kw: {}", index));
-
-    auto file_kw = get_file_kw(kw, static_cast<size_t>(index));
+    auto file_kw = get_file_kw(kw, index);
 
     if (!file_kw)
         throw std::invalid_argument(std::string("Keyword '") + kw + "' index " +
@@ -90,7 +86,7 @@ void FileView::index_fload_kw(const std::string &kw, int index,
     if (context->fortio.assert_stream_open()) {
         offset_type offset = file_kw->get_offset();
         rd_data_type data_type = file_kw->get_data_type();
-        int element_count = file_kw->get_size();
+        size_t element_count = file_kw->get_size();
 
         rd_kw_fread_indexed_data(context->fortio, offset, data_type,
                                  element_count, index_map, io_buffer);
@@ -363,7 +359,7 @@ FileView::restart_view_from_sim_days(double sim_days) {
     return restart_view_from_seqnum_index(block.value());
 }
 
-std::shared_ptr<FileView> FileView::summary_view(int report_step) {
+std::shared_ptr<FileView> FileView::summary_view(size_t report_step) {
     return blockview(SEQHDR_KW, SEQHDR_KW, report_step);
 }
 

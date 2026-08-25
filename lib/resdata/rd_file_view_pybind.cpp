@@ -131,7 +131,7 @@ PYBIND11_MODULE(rd_file_view, m) {
                             }
 
                             std::vector<py::object> result;
-                            result.reserve(slicelength);
+                            result.reserve(static_cast<size_t>(slicelength));
                             for (py::ssize_t i = 0; i < slicelength; ++i) {
                                 py::ssize_t idx = start + i * step;
                                 if (idx < 0)

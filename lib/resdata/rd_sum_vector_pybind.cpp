@@ -44,7 +44,7 @@ PYBIND11_MODULE(_rd_sum_keyword_vector, m) {
     m.def("_get_size", [](py::handle self) {
         return rd_sum_vector_get_size(from_cwrap<rd_sum_vector_type>(self));
     });
-    m.def("_iget_key", [](py::handle self, int index) {
+    m.def("_iget_key", [](py::handle self, size_t index) {
         return std::string(rd_sum_vector_iget_key(
             from_cwrap<rd_sum_vector_type>(self), index));
     });

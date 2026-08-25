@@ -14,12 +14,12 @@ public:
     const std::vector<double> &xpos() const { return this->xp; }
     const std::vector<double> &ypos() const { return this->yp; }
     const std::vector<double> &zpos() const { return this->zp; }
-    const std::vector<int> &global_index() const { return this->gi; }
-    int size() const { return this->xp.size(); }
+    const std::vector<size_t> &global_index() const { return this->gi; }
+    size_t size() const { return this->xp.size(); }
 
 private:
     rd_grid_type *grid;
-    std::vector<int> gi;
+    std::vector<size_t> gi;
     std::vector<double> xp;
     std::vector<double> yp;
     std::vector<double> zp;

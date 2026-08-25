@@ -1,5 +1,6 @@
 #include "resdata/rd_type.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/fault_block.hpp>
 #include <resdata/rd_grid.hpp>
@@ -7,6 +8,7 @@
 #include <resdata/layer.hpp>
 
 #include <memory>
+#include <optional>
 
 static rd_grid_ptr make_grid(int nx, int ny, int nz) {
     return make_rectangular_grid(nx, ny, nz, 1, 1, 1, nullptr);
@@ -14,7 +16,7 @@ static rd_grid_ptr make_grid(int nx, int ny, int nz) {
 
 static std::unique_ptr<fault_block_layer_type,
                        decltype(&fault_block_layer_free)>
-make_fb_layer(rd_grid_type *grid, int k) {
+make_fb_layer(rd_grid_type *grid, size_t k) {
     return {fault_block_layer_alloc(grid, k), fault_block_layer_free};
 }
 
@@ -22,10 +24,6 @@ TEST_CASE("fault_block_layer alloc errors", "[fault_block_layer]") {
     GIVEN("A 5x5x3 grid") {
         auto grid = make_grid(5, 5, 3);
         WHEN("Allocating with k out of range") {
-            THEN("Returns NULL for negative k") {
-                REQUIRE(fault_block_layer_alloc(grid.get(), -1) == nullptr);
-            }
-
             THEN("Returns NULL for k >= nz") {
                 REQUIRE(fault_block_layer_alloc(grid.get(), 3) == nullptr);
             }
@@ -37,7 +35,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
     GIVEN("A fault_block_layer") {
         int nx = 5, ny = 5, nz = 3;
         auto grid = make_grid(nx, ny, nz);
-        auto idx = [&](int i, int j) {
+        auto idx = [&](size_t i, size_t j) -> size_t {
             return rd_grid_get_global_index3(grid.get(), i, j, 0);
         };
         auto layer = make_fb_layer(grid.get(), 0);
@@ -55,8 +53,8 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
         THEN("get_next_id returns 1 when empty") {
             REQUIRE(fault_block_layer_get_next_id(layer.get()) == 1);
         }
-        THEN("get_max_id returns -1 when empty") {
-            REQUIRE(fault_block_layer_get_max_id(layer.get()) == -1);
+        THEN("get_max_id returns nullopt when empty") {
+            REQUIRE(fault_block_layer_get_max_id(layer.get()) == std::nullopt);
         }
         THEN("get_layer returns a non-null layer") {
             REQUIRE(fault_block_layer_get_layer(layer.get()) != nullptr);
@@ -66,7 +64,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             fault_block_layer_add_block(layer.get(), 4);
 
             THEN("get_max_id returns 4") {
-                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 4);
+                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 4u);
             }
 
             THEN("get_next_id returns 5") {
@@ -172,8 +170,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             rd_kw_iset_int(kw.get(), idx(0, 0), 1);
             rd_kw_iset_int(kw.get(), idx(1, 0), 1);
             rd_kw_iset_int(kw.get(), idx(1, 1), 2);
-            rd_kw_iset_int(kw.get(),
-                           rd_grid_get_global_index3(grid.get(), 2, 1, 0), 2);
+            rd_kw_iset_int(kw.get(), idx(2, 1), 2);
 
             WHEN("scan_kw is called") {
                 bool ok = fault_block_layer_scan_kw(layer.get(), kw.get());
@@ -326,7 +323,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
 
             THEN("get_max_id is 10") {
-                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 10);
+                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 10u);
             }
         }
         AND_GIVEN("three blocks at ids 1, 2, 3") {

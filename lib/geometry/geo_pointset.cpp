@@ -56,7 +56,7 @@ void geo_pointset_add_xyz(geo_pointset_type *pointset, double x, double y,
 
 void geo_pointset_free(geo_pointset_type *pointset) { delete pointset; }
 
-int geo_pointset_get_size(const geo_pointset_type *pointset) {
+size_t geo_pointset_get_size(const geo_pointset_type *pointset) {
     return pointset->xcoord.size();
 }
 
@@ -75,17 +75,6 @@ static void geo_pointset_assert_index(const geo_pointset_type *pointset,
             ", size: " + std::to_string(pointset->xcoord.size()));
 }
 
-static void geo_pointset_assert_zindex(const geo_pointset_type *pointset,
-                                       int index) {
-    if ((index < 0) || (static_cast<size_t>(index) >= pointset->xcoord.size()))
-        throw std::out_of_range(
-            "invalid pointset index " + std::to_string(index) +
-            ", size: " + std::to_string(pointset->xcoord.size()));
-
-    if (!pointset->zcoord)
-        throw std::runtime_error("z coordinate not set");
-}
-
 void geo_pointset_iget_xy(const geo_pointset_type *pointset, size_t index,
                           double *x, double *y) {
     geo_pointset_assert_index(pointset, index);
@@ -93,13 +82,14 @@ void geo_pointset_iget_xy(const geo_pointset_type *pointset, size_t index,
     *y = pointset->ycoord[index];
 }
 
-double geo_pointset_iget_z(const geo_pointset_type *pointset, int index) {
-    geo_pointset_assert_zindex(pointset, index);
+double geo_pointset_iget_z(const geo_pointset_type *pointset, size_t index) {
+    geo_pointset_assert_index(pointset, index);
     return (*pointset->zcoord)[index];
 }
 
-void geo_pointset_iset_z(geo_pointset_type *pointset, int index, double value) {
-    geo_pointset_assert_zindex(pointset, index);
+void geo_pointset_iset_z(geo_pointset_type *pointset, size_t index,
+                         double value) {
+    geo_pointset_assert_index(pointset, index);
     auto &zs = pointset->zcoord.value();
     zs[index] = value;
 }

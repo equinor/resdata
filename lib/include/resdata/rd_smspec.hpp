@@ -15,17 +15,15 @@ typedef struct rd_smspec_struct rd_smspec_type;
 
 namespace rd {
 
-/** A summary which stores elapsed time in a TIME vector. */
 struct TimeParamsIndex {
-    int params_index;
+    size_t params_index;
     int seconds_per_unit;
 };
 
-/** A summary which stores the time of each step as a whole date. */
 struct DateParamsIndex {
-    int day;
-    int month;
-    int year;
+    size_t day;
+    size_t month;
+    size_t year;
 };
 
 using TimeInfo = std::variant<TimeParamsIndex, DateParamsIndex>;
@@ -42,10 +40,11 @@ const rd::smspec_node &
 rd_smspec_get_general_var_node(const rd_smspec_type *smspec,
                                const char *lookup_kw);
 const rd::smspec_node &
-rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec, int node_index);
+rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec,
+                                 size_t node_index);
 const rd::smspec_node &
 rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
-                                   int params_index);
+                                   size_t params_index);
 /**
    These are the different variable types, see table 3.4 in the
    ECLIPSE file format docuemntation for naming conventions.
@@ -56,9 +55,11 @@ rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
    rd_smspec_install_gen_key() must be updated.
 */
 
-std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
-                                         const rd_smspec_type *other);
-const int *rd_smspec_get_index_map(const rd_smspec_type *smspec);
+std::vector<std::optional<size_t>>
+rd_smspec_alloc_mapping(const rd_smspec_type *self,
+                        const rd_smspec_type *other);
+const std::vector<size_t> &
+rd_smspec_get_index_map(const rd_smspec_type *smspec);
 rd_smspec_var_type rd_smspec_identify_var_type(const char *var);
 rd_smspec_type *rd_smspec_alloc_restart_writer(
     const char *key_join_string, const char *restart_case, int restart_step,
@@ -75,16 +76,18 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
                                       bool include_restart);
 void rd_smspec_free(rd_smspec_type *);
 
-int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
-                                           const char *lookup_kw);
+const rd::TimeInfo &rd_smspec_get_time_info(const rd_smspec_type *smspec);
+
+size_t rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
+                                              const char *lookup_kw);
 bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
                                const char *lookup_kw);
 std::vector<std::string>
 rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
                                            const char *pattern);
 
-/** Throws std::logic_error if the smspec has no time information. */
-const rd::TimeInfo &rd_smspec_get_time_info(const rd_smspec_type *smspec);
+/** The number of seconds in one unit of the summary's own time scale. This is
+ *  the unit of the TIME vector when there is one, and days otherwise. */
 int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec);
 time_t rd_smspec_get_start_time(const rd_smspec_type *);
 bool rd_smspec_get_formatted(const rd_smspec_type *rd_smspec);
@@ -93,12 +96,12 @@ std::vector<std::string> rd_smspec_alloc_well_list(const rd_smspec_type *smspec,
                                                    const char *pattern);
 std::vector<std::string>
 rd_smspec_alloc_group_list(const rd_smspec_type *smspec, const char *pattern);
-int rd_smspec_get_first_step(const rd_smspec_type *rd_smspec);
+size_t rd_smspec_get_first_step(const rd_smspec_type *rd_smspec);
 int rd_smspec_get_restart_step(const rd_smspec_type *rd_smspec);
 const char *rd_smspec_get_restart_case(const rd_smspec_type *rd_smspec);
 const int *rd_smspec_get_grid_dims(const rd_smspec_type *smspec);
-int rd_smspec_get_params_size(const rd_smspec_type *smspec);
-int rd_smspec_num_nodes(const rd_smspec_type *smspec);
+size_t rd_smspec_get_params_size(const rd_smspec_type *smspec);
+size_t rd_smspec_num_nodes(const rd_smspec_type *smspec);
 bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other);
 UnitSystem rd_smspec_get_unit_system(const rd_smspec_type *smspec);
 
@@ -125,18 +128,16 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *unit,
                                           float default_value);
 
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          int params_index, const char *keyword,
-                                          const char *wgname, int num,
-                                          const char *unit,
-                                          float default_value);
+const rd::smspec_node *
+rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
+                   const char *keyword, const char *wgname, int num,
+                   const char *unit, float default_value);
 
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          int params_index, const char *keyword,
-                                          const char *wgname, int num,
-                                          const char *unit, const char *lgr,
-                                          int lgr_i, int lgr_j, int lgr_k,
-                                          float default_value);
+const rd::smspec_node *
+rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
+                   const char *keyword, const char *wgname, int num,
+                   const char *unit, const char *lgr, int lgr_i, int lgr_j,
+                   int lgr_k, float default_value);
 
 using rd_smspec_ptr =
     std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>;

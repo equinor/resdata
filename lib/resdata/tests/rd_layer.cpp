@@ -141,17 +141,19 @@ void test_walk() {
     }
 
     {
-        int i, j;
+        size_t i, j;
         std::set<int> true_cell_set;
         for (j = 3; j < 7; j++) {
             for (i = 3; i < 7; i++) {
                 layer_iset_cell_value(layer, i, j, 100);
 
                 if (i == 3 || j == 3)
-                    true_cell_set.insert(i + j * layer_get_nx(layer));
+                    true_cell_set.insert(
+                        static_cast<int>(i + j * layer_get_nx(layer)));
 
                 if (i == 6 || j == 6)
-                    true_cell_set.insert(i + j * layer_get_nx(layer));
+                    true_cell_set.insert(
+                        static_cast<int>(i + j * layer_get_nx(layer)));
             }
         }
 
@@ -169,7 +171,7 @@ void test_walk() {
 
 void test_content1() {
     layer_type *layer = layer_alloc(10, 10);
-    int i, j;
+    size_t i, j;
     for (j = 4; j < 8; j++)
         for (i = 4; i < 8; i++)
             layer_iset_cell_value(layer, i, j, 1);
@@ -191,7 +193,7 @@ void test_content1() {
 
 void test_content2() {
     layer_type *layer = layer_alloc(5, 5);
-    int i, j;
+    size_t i, j;
     for (j = 0; j < 5; j++)
         layer_iset_cell_value(layer, 2, j, 1);
 
@@ -224,7 +226,7 @@ void test_content2() {
 
 void test_replace() {
     layer_type *layer = layer_alloc(10, 10);
-    int i, j;
+    size_t i, j;
     for (j = 0; j < 5; j++)
         for (i = 0; i < 5; i++)
             layer_iset_cell_value(layer, i, j, 1);

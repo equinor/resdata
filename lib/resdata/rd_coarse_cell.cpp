@@ -1,11 +1,15 @@
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 #include <algorithm>
+#include <array>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_coarse_cell.hpp>
@@ -89,55 +93,49 @@ following content:
 
 struct rd_coarse_cell_struct {
     UTIL_TYPE_ID_DECLARATION;
-    int ijk[6]; // {i1, i2 , j1 , j2 , k1 , k2}
-    int active_index;
-    int active_fracture_index;
+    std::array<size_t, 6> ijk; // {i1, i2 , j1 , j2 , k1 , k2}
+    bool box_initialized;
+    std::optional<size_t> active_index;
+    std::optional<size_t> active_fracture_index;
 
     bool __cell_list_sorted;
-    int_vector_type *cell_list;
-    int_vector_type *active_cells;
-    int_vector_type *active_values;
+    std::vector<size_t> cell_list;
+    std::vector<size_t> active_cells;
+    std::vector<int> active_values;
 };
 
 static UTIL_SAFE_CAST_FUNCTION(rd_coarse_cell, RD_COARSE_CELL_TYPE_ID);
 
 rd_coarse_cell_type *rd_coarse_cell_alloc() {
-    const int LARGE = 1 << 30;
-    rd_coarse_cell_type *coarse_cell =
-        (rd_coarse_cell_type *)util_malloc(sizeof *coarse_cell);
+    rd_coarse_cell_type *coarse_cell = new rd_coarse_cell_struct();
     UTIL_TYPE_ID_INIT(coarse_cell, RD_COARSE_CELL_TYPE_ID);
 
-    coarse_cell->ijk[0] = LARGE;
-    coarse_cell->ijk[2] = LARGE;
-    coarse_cell->ijk[4] = LARGE;
-
-    coarse_cell->ijk[1] = -LARGE;
-    coarse_cell->ijk[3] = -LARGE;
-    coarse_cell->ijk[5] = -LARGE;
-
-    coarse_cell->active_index = -1;
-    coarse_cell->active_fracture_index = -1;
+    /* The box is grown by min/max in rd_coarse_cell_update(); rather than
+       seeding it with sentinels the first update assigns it outright. */
+    coarse_cell->ijk = {0, 0, 0, 0, 0, 0};
+    coarse_cell->box_initialized = false;
+    coarse_cell->active_index = std::nullopt;
+    coarse_cell->active_fracture_index = std::nullopt;
     coarse_cell->__cell_list_sorted = false;
-    coarse_cell->cell_list = int_vector_alloc(0, 0);
-    coarse_cell->active_cells = int_vector_alloc(0, 0);
-    coarse_cell->active_values = int_vector_alloc(0, 0);
     return coarse_cell;
 }
 
 static void rd_coarse_cell_fprintf(const rd_coarse_cell_type *coarse_cell,
                                    FILE *stream) {
     fprintf(stream, "Coarse box: \n");
-    fprintf(stream, "   i             : %3d - %3d\n", coarse_cell->ijk[0],
+    fprintf(stream, "   i             : %3zu - %3zu\n", coarse_cell->ijk[0],
             coarse_cell->ijk[1]);
-    fprintf(stream, "   j             : %3d - %3d\n", coarse_cell->ijk[2],
+    fprintf(stream, "   j             : %3zu - %3zu\n", coarse_cell->ijk[2],
             coarse_cell->ijk[3]);
-    fprintf(stream, "   k             : %3d - %3d\n", coarse_cell->ijk[4],
+    fprintf(stream, "   k             : %3zu - %3zu\n", coarse_cell->ijk[4],
             coarse_cell->ijk[5]);
     fprintf(stream, "   active_cells  : ");
-    int_vector_fprintf(coarse_cell->active_cells, stream, "", "%5d ");
-    fprintf(stream, "   active_values : ");
-    int_vector_fprintf(coarse_cell->active_values, stream, "", "%5d ");
-    //fprintf(stream,"   Cells         : " ); int_vector_fprintf( coarse_cell->cell_list , stream , "" , "%5d ");
+    for (size_t cell : coarse_cell->active_cells)
+        fprintf(stream, "%5zu ", cell);
+    fprintf(stream, "\n   active_values : ");
+    for (int value : coarse_cell->active_values)
+        fprintf(stream, "%5d ", value);
+    fprintf(stream, "\n");
 }
 
 bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
@@ -150,23 +148,17 @@ bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
         coarse_cell2->active_fracture_index)
         equal = false;
 
-    if (equal) {
-        if (memcmp(coarse_cell1->ijk, coarse_cell2->ijk,
-                   6 * sizeof *coarse_cell1->ijk) != 0)
-            equal = false;
-    }
+    if (equal)
+        equal = coarse_cell1->ijk == coarse_cell2->ijk;
 
     if (equal)
-        equal = int_vector_equal(coarse_cell1->active_cells,
-                                 coarse_cell2->active_cells);
+        equal = coarse_cell1->active_cells == coarse_cell2->active_cells;
 
     if (equal)
-        equal = int_vector_equal(coarse_cell1->active_values,
-                                 coarse_cell2->active_values);
+        equal = coarse_cell1->active_values == coarse_cell2->active_values;
 
     if (equal)
-        equal =
-            int_vector_equal(coarse_cell1->cell_list, coarse_cell2->cell_list);
+        equal = coarse_cell1->cell_list == coarse_cell2->cell_list;
 
     if (!equal) {
         rd_coarse_cell_fprintf(coarse_cell1, stdout);
@@ -181,24 +173,27 @@ bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
   not checked.
 */
 
-void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, int i, int j,
-                           int k, int global_index) {
-    coarse_cell->ijk[0] = std::min(coarse_cell->ijk[0], i);
-    coarse_cell->ijk[2] = std::min(coarse_cell->ijk[2], j);
-    coarse_cell->ijk[4] = std::min(coarse_cell->ijk[4], k);
+void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, size_t i, size_t j,
+                           size_t k, size_t global_index) {
+    if (coarse_cell->box_initialized) {
+        coarse_cell->ijk[0] = std::min(coarse_cell->ijk[0], i);
+        coarse_cell->ijk[2] = std::min(coarse_cell->ijk[2], j);
+        coarse_cell->ijk[4] = std::min(coarse_cell->ijk[4], k);
 
-    coarse_cell->ijk[1] = std::max(coarse_cell->ijk[1], i);
-    coarse_cell->ijk[3] = std::max(coarse_cell->ijk[3], j);
-    coarse_cell->ijk[5] = std::max(coarse_cell->ijk[5], k);
+        coarse_cell->ijk[1] = std::max(coarse_cell->ijk[1], i);
+        coarse_cell->ijk[3] = std::max(coarse_cell->ijk[3], j);
+        coarse_cell->ijk[5] = std::max(coarse_cell->ijk[5], k);
+    } else {
+        coarse_cell->ijk = {i, i, j, j, k, k};
+        coarse_cell->box_initialized = true;
+    }
 
-    int_vector_append(coarse_cell->cell_list, global_index);
+    coarse_cell->cell_list.push_back(global_index);
+    coarse_cell->__cell_list_sorted = false;
 }
 
 void rd_coarse_cell_free(rd_coarse_cell_type *coarse_cell) {
-    int_vector_free(coarse_cell->cell_list);
-    int_vector_free(coarse_cell->active_cells);
-    int_vector_free(coarse_cell->active_values);
-    free(coarse_cell);
+    delete coarse_cell;
 }
 
 void rd_coarse_cell_free__(void *arg) {
@@ -208,58 +203,57 @@ void rd_coarse_cell_free__(void *arg) {
 
 static void rd_coarse_cell_sort(rd_coarse_cell_type *coarse_cell) {
     if (!coarse_cell->__cell_list_sorted) {
-        int_vector_sort(coarse_cell->cell_list);
+        std::sort(coarse_cell->cell_list.begin(), coarse_cell->cell_list.end());
         coarse_cell->__cell_list_sorted = true;
     }
 }
 
-int rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell) {
-    return int_vector_size(coarse_cell->cell_list);
+size_t rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell) {
+    return coarse_cell->cell_list.size();
 }
 
-const int *rd_coarse_cell_get_index_ptr(rd_coarse_cell_type *coarse_cell) {
-    rd_coarse_cell_sort(coarse_cell);
-    return int_vector_get_const_ptr(coarse_cell->cell_list);
-}
-
-const int_vector_type *
+const std::vector<size_t> &
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell) {
     rd_coarse_cell_sort(coarse_cell);
     return coarse_cell->cell_list;
 }
 
-const int *rd_coarse_cell_get_box_ptr(const rd_coarse_cell_type *coarse_cell) {
+const std::array<size_t, 6> &
+rd_coarse_cell_get_box(const rd_coarse_cell_type *coarse_cell) {
+    if (!coarse_cell->box_initialized)
+        throw std::logic_error(
+            "rd_coarse_cell_get_box: the coarse cell is empty");
     return coarse_cell->ijk;
 }
 
 void rd_coarse_cell_reset_active_index(rd_coarse_cell_type *coarse_cell) {
-    coarse_cell->active_index = -1;
-    coarse_cell->active_fracture_index = -1;
+    coarse_cell->active_index = std::nullopt;
+    coarse_cell->active_fracture_index = std::nullopt;
 }
 
 void rd_coarse_cell_update_index(rd_coarse_cell_type *coarse_cell,
-                                 int global_index, int *active_index,
-                                 int *active_fracture_index, int active_value) {
+                                 size_t global_index, size_t *active_index,
+                                 size_t *active_fracture_index,
+                                 int active_value) {
     if (active_value & CELL_ACTIVE_MATRIX) {
-        if (coarse_cell->active_index == -1) {
+        if (!coarse_cell->active_index) {
             coarse_cell->active_index = *active_index;
             (*active_index) += 1;
         }
     }
 
     if (active_value & CELL_ACTIVE_FRACTURE) {
-        if (coarse_cell->active_fracture_index == -1) {
+        if (!coarse_cell->active_fracture_index) {
             coarse_cell->active_fracture_index = *active_fracture_index;
             (*active_fracture_index) += 1;
         }
     }
 
-    int_vector_append(coarse_cell->active_cells, global_index);
-    int_vector_append(coarse_cell->active_values, active_value);
+    coarse_cell->active_cells.push_back(global_index);
+    coarse_cell->active_values.push_back(active_value);
 
-    if (int_vector_size(coarse_cell->active_values) > 1) {
-        if (int_vector_reverse_iget(coarse_cell->active_values, -2) !=
-            active_value)
+    if (coarse_cell->active_values.size() > 1) {
+        if (coarse_cell->active_values.rbegin()[1] != active_value)
             util_abort(
                 "%s: Sorry - current coarse cell implementation requires that "
                 "all active cells have the same active value\n",
@@ -267,11 +261,12 @@ void rd_coarse_cell_update_index(rd_coarse_cell_type *coarse_cell,
     }
 }
 
-int rd_coarse_cell_get_active_index(const rd_coarse_cell_type *coarse_cell) {
+std::optional<size_t>
+rd_coarse_cell_get_active_index(const rd_coarse_cell_type *coarse_cell) {
     return coarse_cell->active_index;
 }
 
-int rd_coarse_cell_get_active_fracture_index(
+std::optional<size_t> rd_coarse_cell_get_active_fracture_index(
     const rd_coarse_cell_type *coarse_cell) {
     return coarse_cell->active_fracture_index;
 }
@@ -280,16 +275,17 @@ int rd_coarse_cell_get_active_fracture_index(
    Will return the global index of the 'ith active cell in the coarse
    cell.
 */
-int rd_coarse_cell_iget_active_cell_index(
-    const rd_coarse_cell_type *coarse_cell, int index) {
-    return int_vector_iget(coarse_cell->active_cells, index);
+size_t
+rd_coarse_cell_iget_active_cell_index(const rd_coarse_cell_type *coarse_cell,
+                                      size_t index) {
+    return coarse_cell->active_cells.at(index);
 }
 
 int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
-                                     int index) {
-    return int_vector_iget(coarse_cell->active_values, index);
+                                     size_t index) {
+    return coarse_cell->active_values.at(index);
 }
 
-int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell) {
-    return int_vector_size(coarse_cell->active_cells);
+size_t rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell) {
+    return coarse_cell->active_cells.size();
 }

@@ -49,9 +49,9 @@ std::shared_ptr<WellConnection>
 WellConnection::from_keywords(const rd_kw_type *icon_kw,
                               const rd_kw_type *scon_kw,
                               const rd_kw_type *xcon_kw, const RSTHead &header,
-                              int well_nr, int conn_nr) {
-
-    const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
+                              size_t well_nr, size_t conn_nr) {
+    const size_t connection_nr = header.get_ncwmax() * well_nr + conn_nr;
+    const size_t icon_offset = header.get_niconz() * connection_nr;
     int IC = rd_kw_iget_int(icon_kw, icon_offset + ICON_IC_INDEX);
     if (IC <= 0)
         throw InvalidConnection("IC <= 0: Connection not in current LGR");
@@ -109,8 +109,7 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
     }
 
     if (scon_kw) {
-        const int scon_offset =
-            header.nsconz * (header.ncwmax * well_nr + conn_nr);
+        const size_t scon_offset = header.get_nsconz() * connection_nr;
         connection_factor =
             rd_kw_iget_as_double(scon_kw, scon_offset + SCON_CF_INDEX);
     }
@@ -124,8 +123,7 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
             matrix_connection, header.unit_system);
 
         if (xcon_kw) {
-            const int xcon_offset =
-                header.nxconz * (header.ncwmax * well_nr + conn_nr);
+            const size_t xcon_offset = header.get_nxconz() * connection_nr;
 
             conn->water_rate =
                 rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_WRAT_INDEX);
@@ -150,8 +148,8 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
 
 std::shared_ptr<WellConnection>
 WellConnection::read_wellhead(const rd_kw_type *iwel_kw, const RSTHead &header,
-                              int well_nr) {
-    const int iwel_offset = header.niwelz * well_nr;
+                              size_t well_nr) {
+    const size_t iwel_offset = header.get_niwelz() * well_nr;
     int conn_i = rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADI_INDEX) - 1;
 
     if (conn_i >= 0) {

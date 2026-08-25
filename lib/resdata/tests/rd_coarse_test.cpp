@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <optional>
 
 #include <ert/util/test_util.hpp>
 
@@ -11,37 +12,36 @@
 namespace fs = std::filesystem;
 
 void test_coarse_cell(const rd_grid_type *grid, rd_coarse_cell_type *cell) {
-    const int_vector_type *global_index_list =
-        rd_coarse_cell_get_index_vector(cell);
-    const int *ijk = rd_coarse_cell_get_box_ptr(cell);
-    int prev_active = 0;
+    const auto &ijk = rd_coarse_cell_get_box(cell);
+    std::optional<size_t> prev_active;
 
-    for (int c = 0; c < rd_coarse_cell_get_size(cell); c++) {
-        int gi = int_vector_iget(global_index_list, c);
-        int i, j, k;
+    bool first = true;
+    for (size_t gi : rd_coarse_cell_get_index_vector(cell)) {
+        size_t i, j, k;
 
         /* The coordinates are right */
         rd_grid_get_ijk1(grid, gi, &i, &j, &k);
         if ((i < ijk[0]) || (i > ijk[1]))
-            test_error_exit("i:%d not inside range [%d,%d] \n", i, ijk[0],
+            test_error_exit("i:%zu not inside range [%zu,%zu] \n", i, ijk[0],
                             ijk[1]);
 
         if ((j < ijk[2]) || (j > ijk[3]))
-            test_error_exit("j:%d not inside range [%d,%d] \n", j, ijk[2],
+            test_error_exit("j:%zu not inside range [%zu,%zu] \n", j, ijk[2],
                             ijk[3]);
 
         if ((k < ijk[4]) || (k > ijk[5]))
-            test_error_exit("k:%d not inside range [%d,%d] \n", k, ijk[4],
-                            ijk[4]);
+            test_error_exit("k:%zu not inside range [%zu,%zu] \n", k, ijk[4],
+                            ijk[5]);
 
-        if (c == 0)
+        if (first)
             prev_active = rd_grid_get_active_index1(grid, gi);
         else {
             /* All the cells have the same active value */
-            int this_active = rd_grid_get_active_index1(grid, gi);
-            test_assert_int_equal(prev_active, this_active);
+            auto this_active = rd_grid_get_active_index1(grid, gi);
+            test_assert_true(prev_active == this_active);
             prev_active = this_active;
         }
+        first = false;
     }
 }
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
                               rd_grid_get_global_size(GRID.get()));
     }
 
-    for (int ic = 0; ic < rd_grid_get_num_coarse_groups(GRID.get()); ic++) {
+    for (size_t ic = 0; ic < rd_grid_get_num_coarse_groups(GRID.get()); ic++) {
         rd_coarse_cell_type *coarse_cell =
             rd_grid_iget_coarse_group(GRID.get(), ic);
         test_coarse_cell(GRID.get(), coarse_cell);

@@ -1,4 +1,5 @@
 
+#include <cstddef>
 #include <memory>
 #include <unordered_map>
 
@@ -31,8 +32,8 @@ void well_branch_collection_free(well_branch_collection_type *branches) {
     delete branches;
 }
 
-int well_branch_collection_get_size(
-    const well_branch_collection_type *branches) {
+size_t
+well_branch_collection_get_size(const well_branch_collection_type *branches) {
     return branches->start_segments.size();
 }
 

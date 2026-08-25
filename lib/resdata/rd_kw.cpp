@@ -205,9 +205,10 @@ static int get_columns(const rd_data_type data_type) {
     }
 }
 
-static void rd_kw_assert_index(const rd_kw_type *rd_kw, int index,
+/** Indices are size_t, so only the upper bound needs checking. */
+static void rd_kw_assert_index(const rd_kw_type *rd_kw, size_t index,
                                const char *caller) {
-    if (index < 0 || index >= rd_kw->size)
+    if (index >= rd_kw_get_size(rd_kw))
         throw std::invalid_argument(
             fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
                         rd_kw->header, index, rd_kw->size));
@@ -215,27 +216,27 @@ static void rd_kw_assert_index(const rd_kw_type *rd_kw, int index,
 
 static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
-    size_t buffer_size = rd_kw->size * sizeof_iotype;
+    size_t buffer_size = rd_kw_get_size(rd_kw) * sizeof_iotype;
     char *buffer = (char *)util_malloc(buffer_size);
 
     if (rd_type_is_bool(rd_kw->data_type)) {
         int *int_data = (int *)buffer;
         bool *bool_data = (bool *)rd_kw->data;
 
-        for (int i = 0; i < rd_kw->size; i++)
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++)
             if (bool_data[i])
                 int_data[i] = RD_BOOL_TRUE_INT;
             else
                 int_data[i] = RD_BOOL_FALSE_INT;
 
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw_get_size(rd_kw));
         return buffer;
     }
 
     if (rd_type_is_char(rd_kw->data_type) ||
         rd_type_is_string(rd_kw->data_type)) {
         size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++) {
             size_t buffer_offset = i * sizeof_iotype;
             size_t data_offset = i * sizeof_ctype;
             size_t string_length = strlen(&rd_kw->data[data_offset]);
@@ -256,19 +257,15 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
 
     if (rd_kw->data && buffer_size > 0) {
         memcpy(buffer, rd_kw->data, buffer_size);
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw_get_size(rd_kw));
     }
 
     return buffer;
 }
 
 static char *rd_kw_alloc_input_buffer(const rd_kw_type *rd_kw) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw->size was negative: {}", rd_kw->size));
-
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
-    size_t count = static_cast<size_t>(rd_kw->size);
+    size_t count = rd_kw_get_size(rd_kw);
     if (sizeof_iotype != 0 &&
         count > std::numeric_limits<size_t>::max() / sizeof_iotype)
         throw std::invalid_argument(
@@ -283,11 +280,12 @@ static char *rd_kw_alloc_input_buffer(const rd_kw_type *rd_kw) {
 static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
     size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    size_t buffer_size = rd_kw->size * sizeof_iotype;
+    size_t buffer_size = rd_kw_get_size(rd_kw) * sizeof_iotype;
     if (RD_ENDIAN_FLIP) {
         if (rd_type_is_numeric(rd_kw->data_type) ||
             rd_type_is_bool(rd_kw->data_type))
-            util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+            util_endian_flip_vector(buffer, sizeof_iotype,
+                                    rd_kw_get_size(rd_kw));
     }
 
     /*
@@ -297,7 +295,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
         int *int_data = (int *)buffer;
         bool *bool_data = (bool *)rd_kw->data;
 
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++) {
             if (int_data[i] == RD_BOOL_TRUE_INT)
                 bool_data[i] = true;
             else
@@ -314,7 +312,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     if (rd_type_is_char(rd_kw->data_type) ||
         rd_type_is_string(rd_kw->data_type)) {
         const char null_char = '\0';
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++) {
             size_t buffer_offset = i * sizeof_iotype;
             size_t data_offset = i * sizeof_ctype;
             memcpy(&rd_kw->data[data_offset], &buffer[buffer_offset],
@@ -343,21 +341,14 @@ static const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
 const char *rd_kw_get_header(const rd_kw_type *rd_kw) { return rd_kw->header; }
 
 void rd_kw_get_memcpy_data(const rd_kw_type *rd_kw, void *target) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", rd_kw->size));
     memcpy(target, rd_kw->data,
-           static_cast<size_t>(rd_kw->size) *
-               rd_type_get_sizeof_ctype(rd_kw->data_type));
+           rd_kw_get_size(rd_kw) * rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", rd_kw->size));
     if (src != NULL)
         memcpy(rd_kw->data, src,
-               static_cast<size_t>(rd_kw->size) *
+               rd_kw_get_size(rd_kw) *
                    rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
@@ -498,23 +489,22 @@ static void rd_kw_set_shared_ref(rd_kw_type *rd_kw, void *data_ptr) {
 
 static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, int size,
                              rd_data_type data_type) {
+    if (size < 0)
+        throw std::invalid_argument(fmt::format(
+            "rd_kw size was negative: {} for keyword {}", size, header));
     rd_kw_set_data_type(rd_kw, data_type);
     rd_kw_set_header_name(rd_kw, header);
     rd_kw->size = size;
 }
 
 static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw->size was negative: {}", rd_kw->size));
-
     const int blocksize = get_blocksize(rd_kw->data_type);
     const int num_blocks =
         rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
 
     return static_cast<size_t>(num_blocks) *
                (4 + 4) + // Fortran fluff for each block
-           static_cast<size_t>(rd_kw->size) *
+           rd_kw_get_size(rd_kw) *
                rd_type_get_sizeof_iotype(rd_kw->data_type); // Actual data
 }
 
@@ -541,11 +531,8 @@ static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
 
     {
 
-        if (rd_kw->size < 0)
-            throw std::invalid_argument(
-                fmt::format("rd_kw size was negative: {}", rd_kw->size));
-        size_t byte_size = static_cast<size_t>(rd_kw->size) *
-                           rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t byte_size =
+            rd_kw_get_size(rd_kw) * rd_type_get_sizeof_ctype(rd_kw->data_type);
         rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
         if (rd_kw->data) {
             memset(rd_kw->data, 0, byte_size);
@@ -615,13 +602,10 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
         throw std::invalid_argument("type/size mismatch");
 
-    if (target->size < 0)
-        throw std::invalid_argument(
-            fmt::format("target size was negative: {}", target->size));
     if (target->size == 0)
         return;
     memcpy(target->data, src->data,
-           static_cast<size_t>(target->size) *
+           rd_kw_get_size(target) *
                rd_type_get_sizeof_ctype(target->data_type));
 }
 
@@ -668,32 +652,32 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
             fmt::format("stride:{} completely broken ...", stride));
 
     rd_kw_ptr new_kw(nullptr, rd_kw_free);
-    int src_index = index1;
+    /* index1 is clamped to [0, size) and index2 to (-inf, size] above, so an
+       empty slice is the only way index2 can still be negative. */
+    const size_t begin = static_cast<size_t>(index1);
+    const size_t end = index2 < index1 ? begin : static_cast<size_t>(index2);
+    const size_t step = static_cast<size_t>(stride);
+
     /* 1: Determine size of the sliced copy. */
     int new_size = 0;
-    while (src_index < index2) {
+    for (size_t src_index = begin; src_index < end; src_index += step)
         new_size++;
-        src_index += stride;
-    }
+
     if (new_size > 0) {
         new_kw.reset(rd_kw_alloc_empty());
         rd_kw_initialize(new_kw.get(), src->header, new_size, src->data_type);
         rd_kw_alloc_data(new_kw.get());
 
         /* 2: Copy over the elements. */
-        src_index = index1;
-        {
-            int target_index = 0;
-            const char *src_ptr = src->data;
-            char *new_ptr = new_kw->data;
-            int sizeof_ctype = rd_type_get_sizeof_ctype(new_kw->data_type);
+        const char *src_ptr = src->data;
+        char *new_ptr = new_kw->data;
+        const size_t sizeof_ctype = rd_type_get_sizeof_ctype(new_kw->data_type);
 
-            while (src_index < index2) {
-                memcpy(&new_ptr[target_index * sizeof_ctype],
-                       &src_ptr[src_index * sizeof_ctype], sizeof_ctype);
-                src_index += stride;
-                target_index += 1;
-            }
+        size_t target_index = 0;
+        for (size_t src_index = begin; src_index < end; src_index += step) {
+            memcpy(&new_ptr[target_index * sizeof_ctype],
+                   &src_ptr[src_index * sizeof_ctype], sizeof_ctype);
+            target_index += 1;
         }
     }
     return new_kw.release();
@@ -706,14 +690,11 @@ void rd_kw_resize(rd_kw_type *rd_kw, int new_size) {
             "with shared storage");
 
     if (new_size != rd_kw->size) {
-        if (rd_kw->size < 0)
-            throw std::invalid_argument(
-                fmt::format("rd_kw size was negative: {}", rd_kw->size));
         if (new_size < 0)
             throw std::invalid_argument(
                 fmt::format("new_size was negative: {}", new_size));
-        size_t old_byte_size = static_cast<size_t>(rd_kw->size) *
-                               rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t old_byte_size =
+            rd_kw_get_size(rd_kw) * rd_type_get_sizeof_ctype(rd_kw->data_type);
         size_t new_byte_size = static_cast<size_t>(new_size) *
                                rd_type_get_sizeof_ctype(rd_kw->data_type);
 
@@ -750,28 +731,28 @@ rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
             fmt::format("invalid count value: {}", count));
 
     {
-        void *src_data = rd_kw_iget_ptr(src, offset);
+        void *src_data = rd_kw_iget_ptr(src, static_cast<size_t>(offset));
         return rd_kw_alloc_new(new_kw, count, src->data_type, src_data);
     }
 }
 
-static void *rd_kw_iget_ptr_static(const rd_kw_type *rd_kw, int i) {
+static void *rd_kw_iget_ptr_static(const rd_kw_type *rd_kw, size_t i) {
     rd_kw_assert_index(rd_kw, i, __func__);
     return &rd_kw->data[i * rd_type_get_sizeof_ctype(rd_kw->data_type)];
 }
 
-static void rd_kw_iget_static(const rd_kw_type *rd_kw, int i, void *iptr) {
+static void rd_kw_iget_static(const rd_kw_type *rd_kw, size_t i, void *iptr) {
     memcpy(iptr, rd_kw_iget_ptr_static(rd_kw, i),
            rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
-static void rd_kw_iset_static(rd_kw_type *rd_kw, int i, const void *iptr) {
+static void rd_kw_iset_static(rd_kw_type *rd_kw, size_t i, const void *iptr) {
     size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
     rd_kw_assert_index(rd_kw, i, __func__);
     memcpy(&rd_kw->data[i * sizeof_ctype], iptr, sizeof_ctype);
 }
 
-void rd_kw_iget(const rd_kw_type *rd_kw, int i, void *iptr) {
+void rd_kw_iget(const rd_kw_type *rd_kw, size_t i, void *iptr) {
     rd_kw_iget_static(rd_kw, i, iptr);
 }
 
@@ -779,7 +760,7 @@ void rd_kw_iget(const rd_kw_type *rd_kw, int i, void *iptr) {
    Will return a double value for underlying data types of double,
    float and int.
 */
-double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int index) {
+double rd_kw_iget_as_double(const rd_kw_type *rd_kw, size_t index) {
     if (rd_type_is_float(rd_kw->data_type))
         return rd_kw_iget_float(
             rd_kw,
@@ -796,7 +777,7 @@ double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int index) {
 }
 
 #define RD_KW_IGET_TYPED(ctype, RD_TYPE)                                       \
-    ctype rd_kw_iget_##ctype(const rd_kw_type *rd_kw, int i) {                 \
+    ctype rd_kw_iget_##ctype(const rd_kw_type *rd_kw, size_t i) {              \
         ctype value;                                                           \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
@@ -811,14 +792,14 @@ RD_KW_IGET_TYPED(int, RD_INT_TYPE);
 RD_KW_IGET_TYPED(bool, RD_BOOL_TYPE);
 #undef RD_KW_IGET_TYPED
 
-const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, int i) {
+const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, size_t i) {
     if (rd_kw_get_type(rd_kw) != RD_CHAR_TYPE)
         throw std::invalid_argument(
             fmt::format("Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));
     return (const char *)rd_kw_iget_ptr(rd_kw, i);
 }
 
-const char *rd_kw_iget_string_ptr(const rd_kw_type *rd_kw, int i) {
+const char *rd_kw_iget_string_ptr(const rd_kw_type *rd_kw, size_t i) {
     if (rd_kw_get_type(rd_kw) != RD_STRING_TYPE)
         throw std::invalid_argument(
             fmt::format("Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));
@@ -831,7 +812,7 @@ const char *rd_kw_iget_string_ptr(const rd_kw_type *rd_kw, int i) {
    be padded, if s8 is longer than 8 characters the characters from 9
    and out will be ignored.
 */
-void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8) {
+void rd_kw_iset_string8(rd_kw_type *rd_kw, size_t index, const char *s8) {
     char *rd_string = (char *)rd_kw_iget_ptr(rd_kw, index);
     if (strlen(s8) >= RD_STRING8_LENGTH) {
         /* The whole string goes in - possibly loosing content at the end. */
@@ -864,16 +845,13 @@ void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8) {
    length greater than 8 - maybe the overwriting of consecutive
    elements is not what you want?
 */
-void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s) {
-    int strings = strlen(s) / RD_STRING8_LENGTH;
+void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, size_t index, const char *s) {
+    size_t strings = strlen(s) / RD_STRING8_LENGTH;
     if ((strlen(s) % RD_STRING8_LENGTH) != 0)
         strings++;
-    {
-        int sub_index;
-        for (sub_index = 0; sub_index < strings; sub_index++)
-            rd_kw_iset_string8(rd_kw, index + sub_index,
-                               &s[sub_index * RD_STRING8_LENGTH]);
-    }
+    for (size_t sub_index = 0; sub_index < strings; sub_index++)
+        rd_kw_iset_string8(rd_kw, index + sub_index,
+                           &s[sub_index * RD_STRING8_LENGTH]);
 }
 
 /**
@@ -883,7 +861,7 @@ void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s) {
  @index. If the input string is shorter than the type length the
  string will be padded with trailing spaces.
  */
-void rd_kw_iset_string_ptr(rd_kw_type *rd_kw, int index, const char *s) {
+void rd_kw_iset_string_ptr(rd_kw_type *rd_kw, size_t index, const char *s) {
     if (!rd_type_is_alpha(rd_kw_get_data_type(rd_kw))) {
         throw std::invalid_argument(
             fmt::format("Expected alphabetic data type (CHAR, CXXX or MESS), "
@@ -920,7 +898,7 @@ void rd_kw_iset_string_ptr(rd_kw_type *rd_kw, int index, const char *s) {
    comparison. If the strings are considered equal true is returned.
 */
 
-bool rd_kw_icmp_string(const rd_kw_type *rd_kw, int index,
+bool rd_kw_icmp_string(const rd_kw_type *rd_kw, size_t index,
                        const char *other_string) {
     const char *kw_string = (const char *)rd_kw_iget_char_ptr(rd_kw, index);
     if (strlen(other_string)) {
@@ -933,7 +911,7 @@ bool rd_kw_icmp_string(const rd_kw_type *rd_kw, int index,
 }
 
 #define RD_KW_ISET_TYPED(ctype, RD_TYPE)                                       \
-    void rd_kw_iset_##ctype(rd_kw_type *rd_kw, int i, ctype value) {           \
+    void rd_kw_iset_##ctype(rd_kw_type *rd_kw, size_t i, ctype value) {        \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
@@ -947,8 +925,9 @@ RD_KW_ISET_TYPED(bool, RD_BOOL_TYPE);
 #undef RD_KW_ISET_TYPED
 
 #define RD_KW_SET_INDEXED(ctype, RD_TYPE)                                      \
-    void rd_kw_set_indexed_##ctype(                                            \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype value) {  \
+    void rd_kw_set_indexed_##ctype(rd_kw_type *rd_kw,                          \
+                                   const std::vector<size_t> &index_list,      \
+                                   ctype value) {                              \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
@@ -965,8 +944,9 @@ RD_KW_SET_INDEXED(int, RD_INT_TYPE);
 #undef RD_KW_SET_INDEXED
 
 #define RD_KW_SHIFT_INDEXED(ctype, RD_TYPE)                                    \
-    void rd_kw_shift_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype shift) {  \
+    void rd_kw_shift_indexed_##ctype(rd_kw_type *rd_kw,                        \
+                                     const std::vector<size_t> &index_list,    \
+                                     ctype shift) {                            \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
@@ -983,8 +963,9 @@ RD_KW_SHIFT_INDEXED(int, RD_INT_TYPE);
 #undef RD_KW_SHIFT_INDEXED
 
 #define RD_KW_SCALE_INDEXED(ctype, RD_TYPE)                                    \
-    void rd_kw_scale_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype scale) {  \
+    void rd_kw_scale_indexed_##ctype(rd_kw_type *rd_kw,                        \
+                                     const std::vector<size_t> &index_list,    \
+                                     ctype scale) {                            \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
             throw std::invalid_argument(fmt::format(                           \
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
@@ -1016,11 +997,11 @@ RD_KW_GET_TYPED_PTR(bool, RD_BOOL_TYPE);
 
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw) { return rd_kw->data; }
 
-void *rd_kw_iget_ptr(const rd_kw_type *rd_kw, int i) {
+void *rd_kw_iget_ptr(const rd_kw_type *rd_kw, size_t i) {
     return rd_kw_iget_ptr_static(rd_kw, i);
 }
 
-void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr) {
+void rd_kw_iset(rd_kw_type *rd_kw, size_t i, const void *iptr) {
     rd_kw_iset_static(rd_kw, i, iptr);
 }
 
@@ -1030,7 +1011,7 @@ static bool rd_kw_qskip(FILE *stream) {
     const char newline = '\n';
     const char tab = '\t';
     bool OK = true;
-    char c;
+    int c;
     bool cont = true;
     while (cont) {
         c = fgetc(stream);
@@ -1094,8 +1075,8 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                                (rd_kw->size % blocksize == 0 ? 0 : 1);
             const std::string read_format = read_fmt(rd_kw->data_type);
             FILE *stream = fortio.get_FILE();
-            int offset = 0;
-            int index = 0;
+            size_t offset = 0;
+            size_t index = 0;
             int ib, ir;
             for (ib = 0; ib < blocks; ib++) {
                 int read_elm = std::min((ib + 1) * blocksize, rd_kw->size) -
@@ -1177,10 +1158,10 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
             return true;
         } else {
             char *buffer = rd_kw_alloc_input_buffer(rd_kw);
-            const int sizeof_iotype =
+            const size_t sizeof_iotype =
                 rd_type_get_sizeof_iotype(rd_kw->data_type);
-            bool read_ok =
-                fortio.fread_buffer(buffer, rd_kw->size * sizeof_iotype);
+            bool read_ok = fortio.fread_buffer(buffer, rd_kw_get_size(rd_kw) *
+                                                           sizeof_iotype);
 
             if (read_ok)
                 rd_kw_load_from_input_buffer(rd_kw, buffer);
@@ -1200,10 +1181,10 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
    as stored by rd_file_kw.
 */
 void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
-                              rd_data_type data_type, int element_count,
-                              const int_vector_type *index_map,
+                              rd_data_type data_type, size_t element_count,
+                              const std::vector<size_t> &index_map,
                               char *io_buffer) {
-    int sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
+    size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
     // For unformatted (binary) files the individual elements have a fixed
     // on-disk size, so we can seek directly to each requested element. For
@@ -1217,33 +1198,26 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
             throw std::runtime_error(fmt::format(
                 "failed to load keyword at offset:{}", (long)kw_offset));
 
-        for (int index = 0; index < int_vector_size(index_map); index++) {
-            int element_index = int_vector_iget(index_map, index);
+        for (size_t index = 0; index < index_map.size(); index++) {
+            size_t element_index = index_map[index];
             memcpy(&io_buffer[index * sizeof_iotype],
                    rd_kw_iget_ptr(rd_kw.get(), element_index), sizeof_iotype);
         }
     } else {
-        const int block_size = get_blocksize(data_type);
         FILE *stream = fortio.get_FILE();
         offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
-        for (int index = 0; index < int_vector_size(index_map); index++) {
-            int element_index = int_vector_iget(index_map, index);
-
-            if (element_index < 0 || element_index >= element_count)
-                throw std::invalid_argument(
-                    fmt::format("Element index is out of range 0 <= {} < {}",
-                                element_index, element_count));
-
-            fortio.data_fseek(data_offset, element_index, sizeof_iotype,
-                              element_count, block_size);
+        for (size_t index = 0; index < index_map.size(); index++) {
+            // data_fseek validates element_index against element_count.
+            fortio.data_fseek(data_offset, index_map[index], sizeof_iotype,
+                              element_count,
+                              static_cast<size_t>(get_blocksize(data_type)));
             util_fread(&io_buffer[index * sizeof_iotype], sizeof_iotype, 1,
                        stream, __func__);
         }
 
         if (RD_ENDIAN_FLIP)
-            util_endian_flip_vector(io_buffer, sizeof_iotype,
-                                    int_vector_size(index_map));
+            util_endian_flip_vector(io_buffer, sizeof_iotype, index_map.size());
     }
 }
 
@@ -1275,7 +1249,7 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
         const int blocksize = get_blocksize(data_type);
         const int block_count =
             element_count / blocksize + (element_count % blocksize != 0);
-        int element_size = rd_type_get_sizeof_iotype(data_type);
+        size_t element_size = rd_type_get_sizeof_iotype(data_type);
 
         if (!fortio.data_fskip(element_size, element_count, block_count))
             return false;
@@ -1540,8 +1514,8 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
                     columns * line_nr;
                 int col_nr;
                 for (col_nr = 0; col_nr < num_columns; col_nr++) {
-                    int data_index =
-                        block_nr * blocksize + line_nr * columns + col_nr;
+                    size_t data_index = static_cast<size_t>(
+                        block_nr * blocksize + line_nr * columns + col_nr);
                     void *data_ptr = rd_kw_iget_ptr_static(rd_kw, data_index);
                     switch (rd_kw_get_type(rd_kw)) {
                     case (RD_CHAR_TYPE):
@@ -1635,7 +1609,9 @@ void *rd_kw_get_ptr(const rd_kw_type *rd_kw) {
     return rd_kw_get_data_ref(rd_kw);
 }
 
-int rd_kw_get_size(const rd_kw_type *rd_kw) { return rd_kw->size; }
+size_t rd_kw_get_size(const rd_kw_type *rd_kw) {
+    return static_cast<size_t>(rd_kw->size);
+}
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *rd_kw) {
     return rd_type_get_type(rd_kw->data_type);
@@ -1649,9 +1625,8 @@ rd_data_type rd_kw_get_data_type(const rd_kw_type *rd_kw) {
   Untyped - low level alternative.
 */
 static void rd_kw_scalar_set__(rd_kw_type *rd_kw, const void *value) {
-    int sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    int i;
-    for (i = 0; i < rd_kw->size; i++)
+    const size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
+    for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++)
         memcpy(&rd_kw->data[i * sizeof_ctype], value, sizeof_ctype);
 }
 
@@ -1670,7 +1645,8 @@ static void rd_kw_scalar_set__(rd_kw_type *rd_kw, const void *value) {
 */
 
 rd_kw_type *rd_kw_alloc_scatter_copy(const rd_kw_type *src_kw, int target_size,
-                                     const int *mapping, void *def_value) {
+                                     const std::vector<size_t> &mapping,
+                                     void *def_value) {
     int default_int = 0;
     double default_double = 0;
     float default_float = 0;
@@ -1706,10 +1682,13 @@ rd_kw_type *rd_kw_alloc_scatter_copy(const rd_kw_type *src_kw, int target_size,
     }
 
     {
-        int sizeof_ctype = rd_type_get_sizeof_ctype(src_kw->data_type);
-        int i;
-        for (i = 0; i < src_kw->size; i++) {
-            int target_index = mapping[i];
+        const size_t sizeof_ctype = rd_type_get_sizeof_ctype(src_kw->data_type);
+        for (size_t i = 0; i < rd_kw_get_size(src_kw); i++) {
+            const size_t target_index = mapping.at(i);
+            if (target_index >= static_cast<size_t>(target_size))
+                throw std::invalid_argument(fmt::format(
+                    "scatter mapping[{}]={} is out of range 0 <= index < {}", i,
+                    target_index, target_size));
             memcpy(&new_kw->data[target_index * sizeof_ctype],
                    &src_kw->data[i * sizeof_ctype], sizeof_ctype);
         }
@@ -1723,13 +1702,14 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
     if (rd_kw_get_type(actnum) != RD_INT_TYPE)
         return NULL;
 
-    const int global_size = rd_kw_get_size(actnum);
-    rd_kw_ptr global_copy =
-        make_rd_kw(rd_kw_get_header(src), global_size, src->data_type);
+    const size_t global_size = rd_kw_get_size(actnum);
+    rd_kw_ptr global_copy = make_rd_kw(
+        rd_kw_get_header(src), static_cast<int>(global_size), src->data_type);
     const int *mapping = rd_kw_get_int_ptr(actnum);
-    const int src_size = rd_kw_get_size(src);
-    int src_index = 0;
-    for (int global_index = 0; global_index < global_size; global_index++) {
+    const size_t src_size = rd_kw_get_size(src);
+    size_t src_index = 0;
+    for (size_t global_index = 0; global_index < rd_kw_get_size(actnum);
+         global_index++) {
         if (mapping[global_index]) {
             /* We ran through and beyond the size of the src keyword. */
             if (src_index >= src_size) {
@@ -1752,8 +1732,8 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
 
 void rd_kw_summarize(const rd_kw_type *rd_kw) {
     std::string type_name = rd_type_name(rd_kw->data_type);
-    printf("%8s   %10d:%4s \n", rd_kw_get_header8(rd_kw), rd_kw_get_size(rd_kw),
-           type_name.c_str());
+    printf("%8s   %10zu:%4s \n", rd_kw_get_header8(rd_kw),
+           rd_kw_get_size(rd_kw), type_name.c_str());
 }
 
 #define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \
@@ -1790,9 +1770,8 @@ void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value) {
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            int size = rd_kw_get_size(rd_kw);                                  \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
+            size_t size = rd_kw_get_size(rd_kw);                               \
+            for (size_t i = 0; i < size; i++)                                  \
                 data[i] *= scale_factor;                                       \
         }                                                                      \
     }
@@ -1819,9 +1798,8 @@ void rd_kw_scale_float_or_double(rd_kw_type *rd_kw, double scale_factor) {
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            int size = rd_kw_get_size(rd_kw);                                  \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
+            size_t size = rd_kw_get_size(rd_kw);                               \
+            for (size_t i = 0; i < size; i++)                                  \
                 data[i] += shift_value;                                        \
         }                                                                      \
     }
@@ -1863,21 +1841,26 @@ RD_KW_ASSERT_TYPED_BINARY_OP(double, RD_DOUBLE_TYPE)
 #undef RD_KW_ASSERT_TYPED_BINARY_OP
 
 void rd_kw_copy_indexed(rd_kw_type *target_kw,
-                        const std::vector<int> &index_set,
+                        const std::vector<size_t> &index_set,
                         const rd_kw_type *src_kw) {
     if (!rd_kw_size_and_type_equal(target_kw, src_kw))
         throw std::invalid_argument("type/size  mismatch");
     char *target_data = (char *)rd_kw_get_data_ref(target_kw);
     const char *src_data = (const char *)rd_kw_get_data_ref(src_kw);
-    int sizeof_ctype = rd_type_get_sizeof_ctype(target_kw->data_type);
-    for (const auto index : index_set)
-        memcpy(&target_data[index * sizeof_ctype],
-               &src_data[index * sizeof_ctype], sizeof_ctype);
+    const size_t sizeof_ctype = rd_type_get_sizeof_ctype(target_kw->data_type);
+    for (const auto element_index : index_set) {
+        if (element_index >= rd_kw_get_size(target_kw))
+            throw std::invalid_argument(
+                fmt::format("index {} is out of range 0 <= index < {}",
+                            element_index, target_kw->size));
+        memcpy(&target_data[element_index * sizeof_ctype],
+               &src_data[element_index * sizeof_ctype], sizeof_ctype);
+    }
 }
 
 #define RD_KW_TYPED_INPLACE_ADD_INDEXED(ctype)                                 \
     static void rd_kw_inplace_add_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
+        rd_kw_type *target_kw, const std::vector<size_t> &index_set,           \
         const rd_kw_type *add_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, add_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
@@ -1893,7 +1876,7 @@ RD_KW_TYPED_INPLACE_ADD_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_ADD
 
 void rd_kw_inplace_add_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
+                               const std::vector<size_t> &index_set,
                                const rd_kw_type *add_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2029,7 +2012,7 @@ void rd_kw_inplace_sub(rd_kw_type *target_kw, const rd_kw_type *sub_kw) {
 
 #define RD_KW_TYPED_INPLACE_SUB_INDEXED(ctype)                                 \
     static void rd_kw_inplace_sub_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
+        rd_kw_type *target_kw, const std::vector<size_t> &index_set,           \
         const rd_kw_type *sub_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, sub_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
@@ -2045,7 +2028,7 @@ RD_KW_TYPED_INPLACE_SUB_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_SUB
 
 void rd_kw_inplace_sub_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
+                               const std::vector<size_t> &index_set,
                                const rd_kw_type *sub_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2170,7 +2153,7 @@ void rd_kw_inplace_mul(rd_kw_type *target_kw, const rd_kw_type *mul_kw) {
 
 #define RD_KW_TYPED_INPLACE_MUL_INDEXED(ctype)                                 \
     static void rd_kw_inplace_mul_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
+        rd_kw_type *target_kw, const std::vector<size_t> &index_set,           \
         const rd_kw_type *mul_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, mul_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
@@ -2186,7 +2169,7 @@ RD_KW_TYPED_INPLACE_MUL_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_MUL
 
 void rd_kw_inplace_mul_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
+                               const std::vector<size_t> &index_set,
                                const rd_kw_type *mul_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2245,7 +2228,7 @@ void rd_kw_inplace_div(rd_kw_type *target_kw, const rd_kw_type *div_kw) {
 
 #define RD_KW_TYPED_INPLACE_DIV_INDEXED(ctype)                                 \
     static void rd_kw_inplace_div_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
+        rd_kw_type *target_kw, const std::vector<size_t> &index_set,           \
         const rd_kw_type *div_kw) {                                            \
         if (!rd_kw_assert_binary_##ctype(target_kw, div_kw))                   \
             throw std::invalid_argument("type/size  mismatch");                \
@@ -2261,7 +2244,7 @@ RD_KW_TYPED_INPLACE_DIV_INDEXED(float)
 #undef RD_KW_TYPED_INPLACE_DIV
 
 void rd_kw_inplace_div_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
+                               const std::vector<size_t> &index_set,
                                const rd_kw_type *div_kw) {
     rd_type_enum type = rd_kw_get_type(target_kw);
     switch (type) {
@@ -2303,8 +2286,7 @@ bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
         type *data = (type *)rd_kw_get_data_ref(rd_kw);                        \
         type max = data[0];                                                    \
         type min = data[0];                                                    \
-        int i;                                                                 \
-        for (i = 1; i < rd_kw_get_size(rd_kw); i++)                            \
+        for (size_t i = 1; i < rd_kw_get_size(rd_kw); i++)                     \
             util_update_##type##_max_min(data[i], &max, &min);                 \
         memcpy(_max, &max, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
         memcpy(_min, &min, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
@@ -2376,7 +2358,8 @@ RD_KW_MIN(double)
     }
 
 void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
-                               const std::vector<int> &index_list, void *_sum) {
+                               const std::vector<size_t> &index_list,
+                               void *_sum) {
     switch (rd_kw_get_type(rd_kw)) {
     case (RD_FLOAT_TYPE):
         KW_SUM_INDEXED(float);
@@ -2405,7 +2388,7 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
     {                                                                          \
         const type *data = (const type *)rd_kw_get_data_ref(rd_kw);            \
         type sum = 0;                                                          \
-        for (int i = 0; i < rd_kw_get_size(rd_kw); i++)                        \
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++)                     \
             sum += data[i];                                                    \
         memcpy(_sum, &sum, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
     }
@@ -2473,8 +2456,7 @@ RD_KW_FPRINTF_DATA(bool)
 
 static void rd_kw_fprintf_data_string(const rd_kw_type *rd_kw, const char *fmt,
                                       FILE *stream) {
-    int i;
-    for (i = 0; i < rd_kw->size; i++)
+    for (size_t i = 0; i < rd_kw_get_size(rd_kw); i++)
         fprintf(stream, fmt,
                 &rd_kw->data[i * rd_type_get_sizeof_ctype(rd_kw->data_type)]);
 }
@@ -2495,7 +2477,7 @@ void rd_kw_fprintf_data(const rd_kw_type *rd_kw, const char *fmt,
 }
 
 static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
-                                      const rd_kw_type *rd_kw2, int offset,
+                                      const rd_kw_type *rd_kw2, size_t offset,
                                       double abs_epsilon, double rel_epsilon) {
     double v1 = rd_kw_iget_as_double(rd_kw1, offset);
     double v2 = rd_kw_iget_as_double(rd_kw2, offset);
@@ -2503,12 +2485,8 @@ static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
 }
 
 static bool rd_kw_elm_equal__(const rd_kw_type *rd_kw1,
-                              const rd_kw_type *rd_kw2, int offset) {
-    if (offset < 0)
-        throw std::invalid_argument(
-            fmt::format("offset was negative: {}", offset));
-    size_t data_offset = static_cast<size_t>(offset) *
-                         rd_type_get_sizeof_ctype(rd_kw1->data_type);
+                              const rd_kw_type *rd_kw2, size_t offset) {
+    size_t data_offset = offset * rd_type_get_sizeof_ctype(rd_kw1->data_type);
     int cmp = memcmp(&rd_kw1->data[data_offset], &rd_kw2->data[data_offset],
                      rd_type_get_sizeof_ctype(rd_kw1->data_type));
     if (cmp == 0)
@@ -2522,7 +2500,7 @@ int rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
     if (!rd_kw_size_and_type_equal(rd_kw1, rd_kw2))
         throw std::invalid_argument("sorry invalid comparison");
 
-    if (offset >= rd_kw_get_size(rd_kw1))
+    if (offset < 0 || static_cast<size_t>(offset) >= rd_kw_get_size(rd_kw1))
         throw std::invalid_argument("sorry - invalid offset value");
 
     {
@@ -2533,7 +2511,7 @@ int rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
              (rd_kw_get_type(rd_kw1) == RD_DOUBLE_TYPE)))
             numeric_compare = true;
         {
-            int index = offset;
+            size_t index = static_cast<size_t>(offset);
 
             while (true) {
                 bool equal =
@@ -2549,7 +2527,7 @@ int rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
                     break;
             }
 
-            return index;
+            return static_cast<int>(index);
         }
     }
 }

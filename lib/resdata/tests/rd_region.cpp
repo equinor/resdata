@@ -26,7 +26,7 @@ void test_slice(rd_grid_type *grid) {
     int nx = rd_grid_get_nx(grid);
     int ny = rd_grid_get_ny(grid);
     int nz = rd_grid_get_nz(grid);
-    int nactive = rd_grid_get_nactive(grid);
+    size_t nactive = rd_grid_get_nactive(grid);
     rd_region_type *region = rd_region_alloc(grid, false);
 
     rd_region_select_i1i2(region, 0, nx - 1);

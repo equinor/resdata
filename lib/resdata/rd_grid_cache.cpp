@@ -19,10 +19,11 @@
 
 namespace rd {
 rd_grid_cache::rd_grid_cache(rd_grid_type *grid) : grid(grid) {
-    for (int active_index = 0;
-         active_index < rd_grid_get_active_size(this->grid); active_index++) {
+    size_t active_size = rd_grid_get_active_size(this->grid);
+    for (size_t active_index = 0; active_index < active_size; active_index++) {
         double x, y, z;
-        int global_index = rd_grid_get_global_index1A(this->grid, active_index);
+        size_t global_index =
+            rd_grid_get_global_index1A(this->grid, active_index);
         rd_grid_get_xyz1(this->grid, global_index, &x, &y, &z);
 
         this->gi.push_back(global_index);
@@ -34,7 +35,8 @@ rd_grid_cache::rd_grid_cache(rd_grid_type *grid) : grid(grid) {
 
 const std::vector<double> &rd_grid_cache::volume() const {
     if (this->v.empty()) {
-        for (int active_index = 0; active_index < this->size(); active_index++)
+        for (size_t active_index = 0; active_index < this->size();
+             active_index++)
             this->v.push_back(
                 rd_grid_get_cell_volume1A(this->grid, active_index));
     }

@@ -8,10 +8,10 @@
 int main(int argc, char **argv) {
     rd_kw_type *rd_kw1 = rd_kw_alloc("KW", 10, RD_INT);
     int data[10];
-    int i;
+    size_t i;
     for (i = 0; i < 10; i++) {
-        rd_kw_iset_int(rd_kw1, i, i);
-        data[i] = i;
+        rd_kw_iset_int(rd_kw1, i, static_cast<int>(i));
+        data[i] = static_cast<int>(i);
     }
 
     {

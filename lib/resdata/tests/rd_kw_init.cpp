@@ -8,9 +8,9 @@
 
 void test_int() {
     int N = 1000;
-    int i;
+    size_t i;
     rd_kw_type *kw = rd_kw_alloc("KW", N, RD_INT);
-    for (i = 0; i < N; i++)
+    for (i = 0; i < static_cast<size_t>(N); i++)
         test_assert_int_equal(0, rd_kw_iget_int(kw, i));
 
     rd_kw_free(kw);
@@ -28,19 +28,19 @@ void test_double() {
 
 void test_float() {
     int N = 1000;
-    int i;
+    size_t i;
     rd_kw_type *kw = rd_kw_alloc("KW", N, RD_FLOAT);
-    for (i = 0; i < N; i++)
+    for (i = 0; i < static_cast<size_t>(N); i++)
         test_assert_int_equal(0, rd_kw_iget_float(kw, i));
 
     rd_kw_free(kw);
 }
 
 void test_bool() {
-    int N = 100;
+    const size_t N = 100;
     bool *data = (bool *)util_malloc(N * sizeof *data);
-    rd_kw_type *kw = rd_kw_alloc("BOOL", N, RD_BOOL);
-    for (int i = 0; i < N / 2; i++) {
+    rd_kw_type *kw = rd_kw_alloc("BOOL", static_cast<int>(N), RD_BOOL);
+    for (size_t i = 0; i < N / 2; i++) {
         rd_kw_iset_bool(kw, 2 * i, true);
         rd_kw_iset_bool(kw, 2 * i + 1, false);
 

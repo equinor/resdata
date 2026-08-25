@@ -21,14 +21,15 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
     bool *aquifer_cell =
         (bool *)util_calloc(grid_cache.size(), sizeof *aquifer_cell);
 
-    for (int active_index = 0; active_index < grid_cache.size(); active_index++)
+    for (size_t active_index = 0; active_index < grid_cache.size();
+         active_index++)
         aquifer_cell[active_index] = false;
 
     if (init_file->has_kw(AQUIFER_KW)) {
         rd_kw_type *aquifer_kw = init_file->get_kw(AQUIFER_KW, 0);
         const int *aquifer_data = rd_kw_get_int_ptr(aquifer_kw);
 
-        for (int active_index = 0; active_index < grid_cache.size();
+        for (size_t active_index = 0; active_index < grid_cache.size();
              active_index++) {
             if (aquifer_data[active_index] < 0)
                 aquifer_cell[active_index] = true;
@@ -48,9 +49,8 @@ double rd_grav_common_eval_biot_savart(const rd::rd_grid_cache &grid_cache,
     const auto &zpos = grid_cache.zpos();
     double sum = 0;
     if (region == NULL) {
-        const int size = grid_cache.size();
-        int index;
-        for (index = 0; index < size; index++) {
+        const size_t size = grid_cache.size();
+        for (size_t index = 0; index < size; index++) {
             if (!aquifer[index]) {
                 double dist_x = (xpos[index] - utm_x);
                 double dist_y = (ypos[index] - utm_y);
@@ -68,6 +68,8 @@ double rd_grav_common_eval_biot_savart(const rd::rd_grid_cache &grid_cache,
     } else {
         const auto &index_vector = rd_region_get_active_list(region);
         for (const auto index : index_vector) {
+            // The region active list is built from grid active indices and
+            // is therefore always non-negative.
             if (!aquifer[index]) {
                 double dist_x = (xpos[index] - utm_x);
                 double dist_y = (ypos[index] - utm_y);
@@ -119,9 +121,8 @@ double rd_grav_common_eval_geertsma(const rd::rd_grid_cache &grid_cache,
     const auto &zpos = grid_cache.zpos();
     double sum = 0;
     if (region == NULL) {
-        const int size = grid_cache.size();
-        int index;
-        for (index = 0; index < size; index++) {
+        const size_t size = grid_cache.size();
+        for (size_t index = 0; index < size; index++) {
             if (!aquifer[index]) {
 
                 double displacement = rd_grav_common_eval_geertsma_kernel(
@@ -138,6 +139,8 @@ double rd_grav_common_eval_geertsma(const rd::rd_grid_cache &grid_cache,
     } else {
         const auto &index_vector = rd_region_get_active_list(region);
         for (const auto index : index_vector) {
+            // The region active list is built from grid active indices and
+            // is therefore always non-negative.
             if (!aquifer[index]) {
                 double displacement = rd_grav_common_eval_geertsma_kernel(
                     index, xpos.data(), ypos.data(), zpos.data(), utm_x, utm_y,

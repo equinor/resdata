@@ -65,7 +65,7 @@ public:
                                             size_t occurence) {
         return global_view->blockview(kw, kw, occurence);
     }
-    std::shared_ptr<rd::FileView> summary_view(int report_step) {
+    std::shared_ptr<rd::FileView> summary_view(size_t report_step) {
         return global_view->summary_view(report_step);
     }
 

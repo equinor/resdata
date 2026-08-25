@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <stdexcept>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
@@ -189,8 +190,8 @@ size_t geo_polygon_get_size(const geo_polygon_type *polygon) {
     return polygon->xcoord.size();
 }
 
-void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
-                         double *y) {
+void geo_polygon_iget_xy(const geo_polygon_type *polygon, size_t index,
+                         double *x, double *y) {
     *x = polygon->xcoord.at(index);
     *y = polygon->ycoord.at(index);
 }

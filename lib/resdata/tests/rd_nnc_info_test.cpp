@@ -12,7 +12,7 @@
 
 void test_equal() {
 
-    int lgr_nr = 1;
+    size_t lgr_nr = 1;
     nnc_info_type *nnc_info1 = nnc_info_alloc(lgr_nr);
     nnc_info_type *nnc_info2 = nnc_info_alloc(lgr_nr);
 
@@ -39,7 +39,7 @@ void test_equal() {
 }
 
 void test_copy() {
-    int lgr_nr = 1;
+    size_t lgr_nr = 1;
     nnc_info_type *nnc_info1 = nnc_info_alloc(lgr_nr);
     nnc_info_add_nnc(nnc_info1, lgr_nr + 1, 11, 11);
     nnc_info_add_nnc(nnc_info1, lgr_nr + 2, 11, 11);
@@ -54,11 +54,11 @@ void test_copy() {
 }
 
 void basic_test() {
-    int lgr_nr = 77;
+    size_t lgr_nr = 77;
     nnc_info_type *nnc_info = nnc_info_alloc(lgr_nr);
 
     test_assert_int_equal(0, nnc_info_get_total_size(nnc_info));
-    test_assert_int_equal(lgr_nr, nnc_info_get_lgr_nr(nnc_info));
+    test_assert_size_t_equal(lgr_nr, nnc_info_get_lgr_nr(nnc_info));
     test_assert_not_NULL(nnc_info);
 
     nnc_info_add_nnc(nnc_info, lgr_nr, 110, 0);
@@ -69,7 +69,7 @@ void basic_test() {
     test_assert_int_equal(3, nnc_info_get_total_size(nnc_info));
 
     nnc_vector_type *nnc_vector = nnc_info_get_vector(nnc_info, 1);
-    const std::vector<int> &nnc_cells =
+    const std::vector<size_t> &nnc_cells =
         nnc_info_get_grid_index_list(nnc_info, 1);
     test_assert_int_equal(nnc_cells.size(), 2);
     test_assert_ptr_equal(nnc_cells.data(),
@@ -84,9 +84,9 @@ void basic_test() {
         nnc_info_get_vector(nnc_info, lgr_nr);
     test_assert_ptr_equal(nnc_vector_77, nnc_vector_self);
 
-    const std::vector<int> &nnc_cells_77 =
+    const std::vector<size_t> &nnc_cells_77 =
         nnc_info_get_grid_index_list(nnc_info, lgr_nr);
-    const std::vector<int> &nnc_cells_self =
+    const std::vector<size_t> &nnc_cells_self =
         nnc_info_get_self_grid_index_list(nnc_info);
     test_assert_ptr_equal(nnc_cells_77.data(), nnc_cells_self.data());
 

@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <set>
@@ -39,7 +40,7 @@ py::object fault_block_reference(std::shared_ptr<FaultBlock> block,
 PYBIND11_MODULE(fault_block, m) {
     register_exceptions(m);
     py::class_<FaultBlockCell>(m, "FaultBlockCell")
-        .def(py::init<int, int, int, double, double, double>(), py::arg("i"),
+        .def(py::init<size_t, size_t, size_t, double, double, double>(), py::arg("i"),
              py::arg("j"), py::arg("k"), py::arg("x"), py::arg("y"),
              py::arg("z"))
         .def_readwrite("i", &FaultBlockCell::i)
@@ -66,7 +67,7 @@ PYBIND11_MODULE(fault_block, m) {
                      index += len;
 
                  if (index >= py::int_(0) && index < len) {
-                     return self.export_cell(index.cast<int>());
+                     return self.export_cell(index.cast<size_t>());
                  } else {
                      throw py::index_error(
                          fmt::format("Index:{} out of range: [0,{})",
@@ -91,8 +92,8 @@ PYBIND11_MODULE(fault_block, m) {
                 py::object point_in_polygon =
                     GeometryTools().attr("pointInPolygon");
                 int inside = 0;
-                int size = self.get_size();
-                for (int idx = 0; idx < size; idx++) {
+                size_t size = self.get_size();
+                for (size_t idx = 0; idx < size; idx++) {
                     FaultBlockCell cell = self.export_cell(idx);
                     if (point_in_polygon(py::make_tuple(cell.x, cell.y),
                                          polygon)

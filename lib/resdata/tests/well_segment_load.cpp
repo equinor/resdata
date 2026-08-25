@@ -26,8 +26,8 @@ int main(int argc, char **argv) {
     test_install_SIGNALS();
     test_assert_not_NULL(rst_file.get());
 
-    for (int well_nr = 0; well_nr < rst_head.nwells; well_nr++) {
-        int iwel_offset = rst_head.niwelz * well_nr;
+    for (size_t well_nr = 0; well_nr < rst_head.get_nwells(); well_nr++) {
+        size_t iwel_offset = rst_head.get_niwelz() * well_nr;
         well_segment_collection_type *segments =
             well_segment_collection_alloc();
         int seg_well_nr =
@@ -35,14 +35,15 @@ int main(int argc, char **argv) {
                            iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) -
             1; // -1: Ordinary well.
         if (seg_well_nr >= 0) {
-            int segment_count = 0;
+            size_t segment_count = 0;
 
-            for (int segment_index = 0; segment_index < rst_head.nsegmx;
-                 segment_index++) {
-                int segment_id = segment_index + WELL_SEGMENT_OFFSET;
-                auto segment = WellSegment::from_kw(iseg_kw, rseg_loader,
-                                                    rst_head, seg_well_nr,
-                                                    segment_index, segment_id);
+            for (size_t segment_index = 0;
+                 segment_index < rst_head.get_nsegmx(); segment_index++) {
+                size_t segment_id = segment_index + WELL_SEGMENT_OFFSET;
+                auto segment =
+                    WellSegment::from_kw(iseg_kw, rseg_loader, rst_head,
+                                         static_cast<size_t>(seg_well_nr),
+                                         segment_index, segment_id);
 
                 if (segment->is_active()) {
                     well_segment_collection_add(segments, segment);

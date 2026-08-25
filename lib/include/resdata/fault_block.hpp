@@ -16,7 +16,7 @@ typedef struct fault_block_layer_struct fault_block_layer_type;
 /** A single (i,j,k) cell of a FaultBlock, together with its (x,y,z)
     cell-center coordinates. */
 struct FaultBlockCell {
-    int i, j, k;
+    size_t i, j, k;
     double x, y, z;
 };
 
@@ -26,18 +26,19 @@ struct FaultBlockCell {
 class FaultBlock {
     void assert_center();
     [[nodiscard]] bool
-    neighbour_xpolyline(int i1, int j1, int i2, int j2,
+    neighbour_xpolyline(size_t i1, size_t j1, size_t i2, size_t j2,
                         const geo_polygon_collection_type *polylines) const;
     [[nodiscard]] bool
-    connected_neighbour(int i1, int j1, int i2, int j2, bool connected_only,
+    connected_neighbour(size_t i1, size_t j1, size_t i2, size_t j2,
+                        bool connected_only,
                         const geo_polygon_collection_type *polylines) const;
 
     rd_grid_type *grid;
     fault_block_layer_type *parent_layer; // nullptr if detached
-    std::vector<std::tuple<int, int>> index_list;
+    std::vector<std::tuple<size_t, size_t>> index_list;
     std::set<int> regions;
-    int block_id;
-    int k;
+    size_t block_id;
+    size_t k;
     double xc = 0, yc = 0;
     bool valid_center = false;
 
@@ -47,18 +48,18 @@ class FaultBlock {
     friend fault_block_layer_struct;
 
 public:
-    FaultBlock(fault_block_layer_type *parent_layer, int block_id);
+    FaultBlock(fault_block_layer_type *parent_layer, size_t block_id);
 
     [[nodiscard]] bool is_detached() const { return parent_layer == nullptr; };
     [[nodiscard]] size_t get_size() const { return index_list.size(); }
-    [[nodiscard]] int get_id() const;
+    [[nodiscard]] size_t get_id() const;
     double get_xc();
     double get_yc();
     [[nodiscard]] FaultBlockCell export_cell(size_t index) const;
     void assign_to_region(int region_id);
     [[nodiscard]] const std::set<int> &get_regions() const { return regions; };
     /** add_cell cannot be called on a detached FaultBlock */
-    void add_cell(int i, int j);
+    void add_cell(size_t i, size_t j);
     [[nodiscard]] const std::vector<int> get_global_index_list() const;
     void copy_content(const FaultBlock &src_block);
 

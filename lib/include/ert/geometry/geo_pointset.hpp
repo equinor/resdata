@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -8,7 +9,7 @@ geo_pointset_type *geo_pointset_alloc(bool external_z);
 void geo_pointset_free(geo_pointset_type *pointset);
 void geo_pointset_add_xyz(geo_pointset_type *pointset, double x, double y,
                           double z);
-int geo_pointset_get_size(const geo_pointset_type *pointset);
+size_t geo_pointset_get_size(const geo_pointset_type *pointset);
 void geo_pointset_iget_xy(const geo_pointset_type *pointset, size_t index,
                           double *x, double *y);
 const std::vector<double> &
@@ -16,8 +17,9 @@ geo_pointset_get_zcoord(const geo_pointset_type *pointset);
 
 bool geo_pointset_equal(const geo_pointset_type *pointset1,
                         const geo_pointset_type *pointset2);
-double geo_pointset_iget_z(const geo_pointset_type *pointset, int index);
-void geo_pointset_iset_z(geo_pointset_type *pointset, int index, double value);
+double geo_pointset_iget_z(const geo_pointset_type *pointset, size_t index);
+void geo_pointset_iset_z(geo_pointset_type *pointset, size_t index,
+                         double value);
 void geo_pointset_memcpy(const geo_pointset_type *src,
                          geo_pointset_type *target, bool copy_zdata);
 void geo_pointset_shift_z(geo_pointset_type *pointset, double value);

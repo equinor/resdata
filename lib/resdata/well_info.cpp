@@ -55,7 +55,7 @@ void WellInfo::add_wells(rd::FileView *rst_view, int report_nr,
                          bool load_segment_information) {
     close_guard close_stream_guard(rst_view);
     auto global_header = RSTHead::read(rst_view, report_nr);
-    for (int well_nr = 0; well_nr < global_header.nwells; well_nr++) {
+    for (size_t well_nr = 0; well_nr < global_header.get_nwells(); well_nr++) {
         auto well_state = WellState::read_wells_in_restart(
             rst_view, grid, report_nr, well_nr, load_segment_information);
         if (well_state) {

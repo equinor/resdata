@@ -73,7 +73,7 @@ static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
     // applies even though the tokens leading up this are not comments.
     {
         while (true) {
-            char c;
+            int c;
             if (util_ftell(stream) == 0)
                 // We are at the very beginning of the file. Can just jump out
                 // of the loop.
@@ -185,10 +185,18 @@ template <> constexpr const char *multiplier_format<double>() {
 
 template <typename T>
 std::optional<T> scan_data(std::unique_ptr<char[], void (*)(void *)> &buffer,
-                           int &multiplier) {
+                           size_t &multiplier) {
     T value;
-    if (sscanf(buffer.get(), multiplier_format<T>(), &multiplier, &value) == 2)
+    int repeat_count;
+    if (sscanf(buffer.get(), multiplier_format<T>(), &repeat_count, &value) ==
+        2) {
+        /* A non-positive repeat count is malformed; report it as such rather
+           than letting it underflow the unsigned element counters below. */
+        if (repeat_count < 1)
+            return std::nullopt;
+        multiplier = static_cast<size_t>(repeat_count);
         return value;
+    }
     multiplier = 1;
     if (sscanf(buffer.get(), value_format<T>(), &value) == 1)
         return value;
@@ -240,7 +248,7 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
         if (fscanf(stream, "%32s", buffer.get()) == 1) {
             if (strcmp(buffer.get(), RD_COMMENT_STRING) == 0) {
                 // We have read a comment marker - just read up to the end of line.
-                char c;
+                int c;
                 while (true) {
                     c = fgetc(stream);
                     if (c == newline)
@@ -256,7 +264,7 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
                 // We have read a valid input string; scan numerical input values from it.
                 // The multiplier algorithm will fail hard if there are spaces on either side
                 // of the '*'.
-                int multiplier = 1;
+                size_t multiplier = 1;
                 auto value = scan_data<T>(buffer, multiplier);
                 if (!value && strict)
                     throw std::invalid_argument(fmt::format(

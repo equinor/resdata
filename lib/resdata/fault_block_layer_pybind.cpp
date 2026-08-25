@@ -1,5 +1,7 @@
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include <pybind11/pybind11.h>
@@ -16,6 +18,16 @@
 namespace py = pybind11;
 
 namespace {
+/* Block ids and storage indices are size_t internally; validate here at the
+   binding edge so that negative python values do not wrap around. */
+size_t index_to_size_t(int index, const char *name) {
+    if (index < 0)
+        throw std::out_of_range(std::string(name) +
+                                " must be non-negative, got " +
+                                std::to_string(index));
+    return static_cast<size_t>(index);
+}
+
 /* Attaches a "_parent_layer_ref" attribute to the FaultBlock
    so that FaultBlock.get_parent_layer() can get implemented correctly.
    This causes a cycle from parent->blocks (std::shared_ptr<FaultBlock>)->
@@ -38,7 +50,7 @@ PYBIND11_MODULE(_fault_block_layer, m) {
 
     m.def(
         "_alloc",
-        [](py::handle grid, int k) {
+        [](py::handle grid, size_t k) {
             return reinterpret_cast<std::uintptr_t>(
                 fault_block_layer_alloc(from_cwrap<rd_grid_type>(grid), k));
         },
@@ -53,28 +65,36 @@ PYBIND11_MODULE(_fault_block_layer, m) {
     m.def("_iget_block", [](py::handle self, int storage_index) {
         return fault_block_reference(
             fault_block_layer_iget_block(
-                from_cwrap<fault_block_layer_type>(self), storage_index),
+                from_cwrap<fault_block_layer_type>(self),
+                index_to_size_t(storage_index, "storage_index")),
             self);
     });
     m.def("_add_block", [](py::handle self, int block_id) {
         return fault_block_reference(
             fault_block_layer_add_block(
-                from_cwrap<fault_block_layer_type>(self), block_id),
+                from_cwrap<fault_block_layer_type>(self),
+                index_to_size_t(block_id, "block_id")),
             self);
     });
     m.def("_get_block", [](py::handle self, int block_id) {
         return fault_block_reference(
             fault_block_layer_get_block(
-                from_cwrap<fault_block_layer_type>(self), block_id),
+                from_cwrap<fault_block_layer_type>(self),
+                index_to_size_t(block_id, "block_id")),
             self);
     });
     m.def("_del_block", [](py::handle self, int block_id) {
         fault_block_layer_del_block(from_cwrap<fault_block_layer_type>(self),
-                                    block_id);
+                                    index_to_size_t(block_id, "block_id"));
     });
+    /* A negative block id can never be present; __contains__ must answer
+       false rather than raise. */
     m.def("_has_block", [](py::handle self, int block_id) {
+        if (block_id < 0)
+            return false;
         return fault_block_layer_has_block(
-            from_cwrap<fault_block_layer_type>(self), block_id);
+            from_cwrap<fault_block_layer_type>(self),
+            static_cast<size_t>(block_id));
     });
     m.def("_scan_keyword", [](py::handle self, py::handle fault_block_kw) {
         return fault_block_layer_scan_kw(

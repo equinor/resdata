@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <tuple>
@@ -25,7 +26,7 @@ PYBIND11_MODULE(_surface, m) {
         py::return_value_policy::reference);
     m.def(
         "_new",
-        [](int nx, int ny, double xinc, double yinc, double xstart,
+        [](size_t nx, size_t ny, double xinc, double yinc, double xstart,
            double ystart, double angle) {
             return reinterpret_cast<std::uintptr_t>(geo_surface_alloc_new(
                 nx, ny, xinc, yinc, xstart, ystart, angle));
@@ -40,11 +41,11 @@ PYBIND11_MODULE(_surface, m) {
     m.def("_get_ny", [](py::handle self) {
         return geo_surface_get_ny(from_cwrap<geo_surface_type>(self));
     });
-    m.def("_iget_zvalue", [](py::handle self, int index) {
+    m.def("_iget_zvalue", [](py::handle self, size_t index) {
         return geo_surface_iget_zvalue(from_cwrap<geo_surface_type>(self),
                                        index);
     });
-    m.def("_iset_zvalue", [](py::handle self, int index, double value) {
+    m.def("_iset_zvalue", [](py::handle self, size_t index, double value) {
         geo_surface_iset_zvalue(from_cwrap<geo_surface_type>(self), index,
                                 value);
     });
@@ -90,7 +91,7 @@ PYBIND11_MODULE(_surface, m) {
     m.def("_isqrt", [](py::handle self) {
         geo_surface_isqrt(from_cwrap<geo_surface_type>(self));
     });
-    m.def("_iget_xy", [](py::handle self, int index) {
+    m.def("_iget_xy", [](py::handle self, size_t index) {
         double x = 0;
         double y = 0;
         geo_surface_iget_xy(from_cwrap<geo_surface_type>(self), index, &x, &y);

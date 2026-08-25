@@ -171,16 +171,16 @@ PYBIND11_MODULE(_rd_region, m) {
         rd_region_invert_selection(from_cwrap<rd_region_type>(self));
     });
 
-    m.def("_select_box",
-          [](py::handle self, int i1, int i2, int j1, int j2, int k1, int k2) {
-              rd_region_select_from_ijkbox(from_cwrap<rd_region_type>(self), i1,
-                                           i2, j1, j2, k1, k2);
-          });
-    m.def("_deselect_box",
-          [](py::handle self, int i1, int i2, int j1, int j2, int k1, int k2) {
-              rd_region_deselect_from_ijkbox(from_cwrap<rd_region_type>(self),
-                                             i1, i2, j1, j2, k1, k2);
-          });
+    m.def("_select_box", [](py::handle self, size_t i1, size_t i2, size_t j1,
+                            size_t j2, size_t k1, size_t k2) {
+        rd_region_select_from_ijkbox(from_cwrap<rd_region_type>(self), i1, i2,
+                                     j1, j2, k1, k2);
+    });
+    m.def("_deselect_box", [](py::handle self, size_t i1, size_t i2, size_t j1,
+                              size_t j2, size_t k1, size_t k2) {
+        rd_region_deselect_from_ijkbox(from_cwrap<rd_region_type>(self), i1, i2,
+                                       j1, j2, k1, k2);
+    });
     m.def("_imul_kw", [](py::handle self, py::handle kw, py::handle other,
                          bool force_active) {
         rd_region_kw_imul(from_cwrap<rd_region_type>(self),
@@ -383,15 +383,15 @@ PYBIND11_MODULE(_rd_region, m) {
     m.def("_get_name", [](py::handle self) {
         return rd_region_get_name(from_cwrap<rd_region_type>(self));
     });
-    m.def("_contains_ijk", [](py::handle self, int i, int j, int k) {
+    m.def("_contains_ijk", [](py::handle self, size_t i, size_t j, size_t k) {
         return rd_region_contains_ijk(from_cwrap<rd_region_type>(self), i, j,
                                       k);
     });
-    m.def("_contains_global", [](py::handle self, int global_index) {
+    m.def("_contains_global", [](py::handle self, size_t global_index) {
         return rd_region_contains_global(from_cwrap<rd_region_type>(self),
                                          global_index);
     });
-    m.def("_contains_active", [](py::handle self, int active_index) {
+    m.def("_contains_active", [](py::handle self, size_t active_index) {
         return rd_region_contains_active(from_cwrap<rd_region_type>(self),
                                          active_index);
     });
@@ -407,7 +407,7 @@ PYBIND11_MODULE(_rd_region, m) {
         rd_region_select_false(from_cwrap<rd_region_type>(self),
                                from_cwrap<rd_kw_type>(kw));
     });
-    m.def("_select_from_layer", [](py::handle self, py::handle layer, int k,
+    m.def("_select_from_layer", [](py::handle self, py::handle layer, size_t k,
                                    int value) {
         rd_region_select_from_layer(from_cwrap<rd_region_type>(self),
                                     from_cwrap<layer_type>(layer), k, value);

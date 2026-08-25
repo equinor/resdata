@@ -195,7 +195,7 @@ void FortIO::open(const std::string &filename, std::ios_base::openmode mode,
     m_read_size = 0;
     m_stream = stream;
     m_fopen_mode = cmode;
-    m_read_size = util_fd_size(fileno(m_stream));
+    m_read_size = static_cast<offset_type>(util_fd_size(fileno(m_stream)));
 }
 
 void FortIO::close() {
@@ -294,7 +294,8 @@ int FortIO::init_read() {
         return -1;
 }
 
-bool FortIO::data_fskip(int element_size, int element_count, int block_count) {
+bool FortIO::data_fskip(size_t element_size, int element_count,
+                        int block_count) {
     offset_type headers = static_cast<offset_type>(block_count) * 4;
     offset_type trailers = static_cast<offset_type>(block_count) * 4;
     offset_type bytes_to_skip =
@@ -305,18 +306,22 @@ bool FortIO::data_fskip(int element_size, int element_count, int block_count) {
 }
 
 void FortIO::data_fseek(offset_type data_offset, size_t data_element,
-                        int element_size, int element_count, int block_size) {
-    if (element_count < 0 || data_element >= static_cast<size_t>(element_count))
+                        size_t element_size, size_t element_count,
+                        size_t block_size) {
+    if (data_element >= element_count)
         throw std::invalid_argument(
             fmt::format("Element index is out of range: 0 <= {} < {}",
                         data_element, element_count));
-
     {
-        offset_type block_index = data_element / block_size;
+        /* data_element < element_count <= INT_MAX, so this fits. */
+        const offset_type element = static_cast<offset_type>(data_element);
+        offset_type block_index =
+            element / static_cast<offset_type>(block_size);
         offset_type headers = (block_index + 1) * 4;
         offset_type trailers = block_index * 4;
         offset_type bytes_to_skip =
-            data_offset + headers + trailers + (data_element * element_size);
+            data_offset + headers + trailers +
+            (element * static_cast<offset_type>(element_size));
 
         fseek(bytes_to_skip, SEEK_SET);
     }
@@ -369,7 +374,8 @@ bool FortIO::fread_buffer(char *buffer, int buffer_size) {
             return false;
         size_t items_read = 0;
         if (record_size > 0)
-            items_read = fread(itr, 1, record_size, m_stream);
+            items_read =
+                fread(itr, 1, static_cast<size_t>(record_size), m_stream);
         if (items_read != static_cast<size_t>(record_size) ||
             !complete_read(record_size))
             return false;
@@ -403,8 +409,12 @@ void FortIO::complete_write(int record_size) {
 }
 
 void FortIO::fwrite_record(const char *buffer, int record_size) {
+    if (record_size < 0)
+        throw std::invalid_argument(
+            fmt::format("record_size was negative: {}", record_size));
     init_write(record_size);
-    util_fwrite(buffer, 1, record_size, m_stream, __func__);
+    util_fwrite(buffer, 1, static_cast<size_t>(record_size), m_stream,
+                __func__);
     complete_write(record_size);
 }
 

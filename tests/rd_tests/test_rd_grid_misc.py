@@ -152,10 +152,10 @@ def test_that_get_global_index3_with_out_of_range_ijk_raises_index_error(
         _grid._get_global_index3(rectangular_grid, 99, 0, 0)
 
 
-def test_that_get_corner_xyz_with_out_of_range_i_raises_index_error(
+def test_that_get_corner_xyz_with_negative_i_raises_type_error(
     rectangular_grid,
 ):
-    with pytest.raises(IndexError, match="invalid i value"):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
         _grid._get_corner_xyz(rectangular_grid, -1, 0, 0)
 
 
@@ -170,7 +170,7 @@ def test_that_get_corner_xyz_with_out_of_range_k_raises_index_error(
     rectangular_grid,
 ):
     with pytest.raises(IndexError, match="invalid k value"):
-        _grid._get_corner_xyz(rectangular_grid, 0, 0, -1)
+        _grid._get_corner_xyz(rectangular_grid, 0, 0, 100)
 
 
 def test_that_fetching_lgr_through_an_lgr_subgrid_raises_value_error(tmp_path):

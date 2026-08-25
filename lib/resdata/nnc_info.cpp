@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -18,15 +19,15 @@
 
 struct nnc_info_struct {
     std::vector<nnc_vector_ptr> lgr_list; /*List of nnc_vectors for LGRs*/
-    std::vector<int>
+    std::vector<std::optional<size_t>>
         lgr_index_map; /* A vector that maps LGR-nr to index into the LGR_list.*/
-    int lgr_nr; /* The lgr_nr of the cell holding this nnc_info structure. */
+    size_t lgr_nr; /* The lgr_nr of the cell holding this nnc_info structure. */
 };
 
 static void nnc_info_add_vector(nnc_info_type *nnc_info,
                                 nnc_vector_type *nnc_vector);
 
-nnc_info_type *nnc_info_alloc(int lgr_nr) {
+nnc_info_type *nnc_info_alloc(size_t lgr_nr) {
     auto nnc_info = std::make_unique<nnc_info_type>();
     nnc_info->lgr_nr = lgr_nr;
     return nnc_info.release();
@@ -63,9 +64,9 @@ bool nnc_info_equal(const nnc_info_type *nnc_info1,
 
             while (true) {
                 const nnc_vector_type *vector1 =
-                    nnc_info_get_vector(nnc_info1, static_cast<int>(lgr_nr));
+                    nnc_info_get_vector(nnc_info1, lgr_nr);
                 const nnc_vector_type *vector2 =
-                    nnc_info_get_vector(nnc_info2, static_cast<int>(lgr_nr));
+                    nnc_info_get_vector(nnc_info2, lgr_nr);
 
                 if (!nnc_vector_equal(vector1, vector2))
                     return false;
@@ -87,20 +88,18 @@ bool nnc_info_equal(const nnc_info_type *nnc_info1,
 void nnc_info_free(nnc_info_type *nnc_info) { delete nnc_info; }
 
 nnc_vector_type *nnc_info_get_vector(const nnc_info_type *nnc_info,
-                                     int lgr_nr) {
-    if (lgr_nr < 0 ||
-        static_cast<size_t>(lgr_nr) >= nnc_info->lgr_index_map.size())
+                                     size_t lgr_nr) {
+    if (lgr_nr >= nnc_info->lgr_index_map.size())
         return NULL;
 
-    int lgr_index = nnc_info->lgr_index_map[lgr_nr];
-    if (-1 == lgr_index)
+    const auto &lgr_index = nnc_info->lgr_index_map[lgr_nr];
+    if (!lgr_index)
         return NULL;
-    else
-        return nnc_info->lgr_list[lgr_index].get();
+    return nnc_info->lgr_list[lgr_index.value()].get();
 }
 
 nnc_vector_type *nnc_info_iget_vector(const nnc_info_type *nnc_info,
-                                      int lgr_index) {
+                                      size_t lgr_index) {
     return nnc_info->lgr_list.at(lgr_index).get();
 }
 
@@ -111,17 +110,13 @@ nnc_vector_type *nnc_info_get_self_vector(const nnc_info_type *nnc_info) {
 static void nnc_info_add_vector(nnc_info_type *nnc_info,
                                 nnc_vector_type *nnc_vector) {
     nnc_info->lgr_list.emplace_back(nnc_vector, nnc_vector_free);
-    int lgr_nr = nnc_vector_get_lgr_nr(nnc_vector);
-    if (lgr_nr < 0)
-        throw std::logic_error("lgr_nr was negative");
-    size_t lgr_index = static_cast<size_t>(lgr_nr);
+    size_t lgr_index = nnc_vector_get_lgr_nr(nnc_vector);
     if (lgr_index >= nnc_info->lgr_index_map.size())
-        nnc_info->lgr_index_map.resize(lgr_index + 1, -1);
-    nnc_info->lgr_index_map.at(lgr_index) =
-        static_cast<int>(nnc_info->lgr_list.size()) - 1;
+        nnc_info->lgr_index_map.resize(lgr_index + 1, std::nullopt);
+    nnc_info->lgr_index_map.at(lgr_index) = nnc_info->lgr_list.size() - 1;
 }
 
-static void nnc_info_assert_vector(nnc_info_type *nnc_info, int lgr_nr) {
+static void nnc_info_assert_vector(nnc_info_type *nnc_info, size_t lgr_nr) {
     nnc_vector_type *nnc_vector = nnc_info_get_vector(nnc_info, lgr_nr);
     if (!nnc_vector) {
         nnc_vector = nnc_vector_alloc(lgr_nr);
@@ -129,8 +124,8 @@ static void nnc_info_assert_vector(nnc_info_type *nnc_info, int lgr_nr) {
     }
 }
 
-void nnc_info_add_nnc(nnc_info_type *nnc_info, int lgr_nr,
-                      int global_cell_number, int nnc_index) {
+void nnc_info_add_nnc(nnc_info_type *nnc_info, size_t lgr_nr,
+                      size_t global_cell_number, size_t nnc_index) {
     nnc_info_assert_vector(nnc_info, lgr_nr);
     {
         nnc_vector_type *nnc_vector = nnc_info_get_vector(nnc_info, lgr_nr);
@@ -138,24 +133,25 @@ void nnc_info_add_nnc(nnc_info_type *nnc_info, int lgr_nr,
     }
 }
 
-bool nnc_info_has_grid_index_list(const nnc_info_type *nnc_info, int lgr_nr) {
+bool nnc_info_has_grid_index_list(const nnc_info_type *nnc_info,
+                                  size_t lgr_nr) {
     return nnc_info_get_vector(nnc_info, lgr_nr);
 }
 
-const std::vector<int> &
-nnc_info_get_grid_index_list(const nnc_info_type *nnc_info, int lgr_nr) {
+const std::vector<size_t> &
+nnc_info_get_grid_index_list(const nnc_info_type *nnc_info, size_t lgr_nr) {
     nnc_vector_type *nnc_vector = nnc_info_get_vector(nnc_info, lgr_nr);
     if (!nnc_vector)
         throw std::invalid_argument(std::string(__func__));
     return nnc_vector_get_grid_index_list(nnc_vector);
 }
 
-const std::vector<int> &
+const std::vector<size_t> &
 nnc_info_get_self_grid_index_list(const nnc_info_type *nnc_info) {
     return nnc_info_get_grid_index_list(nnc_info, nnc_info->lgr_nr);
 }
 
-int nnc_info_get_lgr_nr(const nnc_info_type *nnc_info) {
+size_t nnc_info_get_lgr_nr(const nnc_info_type *nnc_info) {
     return nnc_info->lgr_nr;
 }
 
@@ -163,8 +159,8 @@ size_t nnc_info_get_size(const nnc_info_type *nnc_info) {
     return nnc_info->lgr_list.size();
 }
 
-int nnc_info_get_total_size(const nnc_info_type *nnc_info) {
-    int num_nnc = 0;
+size_t nnc_info_get_total_size(const nnc_info_type *nnc_info) {
+    size_t num_nnc = 0;
     for (const auto &nnc_vector : nnc_info->lgr_list) {
         num_nnc += nnc_vector_get_size(nnc_vector.get());
     }

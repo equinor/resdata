@@ -8,11 +8,11 @@
 #include <resdata/rd_kw_grdecl.hpp>
 
 int main(int argc, char **argv) {
-    int i;
+    size_t i;
     rd_kw_type *rd_kw = rd_kw_alloc("HEAD", 10, RD_INT);
 
     for (i = 0; i < 10; i++)
-        rd_kw_iset_int(rd_kw, i, i);
+        rd_kw_iset_int(rd_kw, i, static_cast<int>(i));
 
     {
         rd::util::TestArea ta("kw_grdecl");

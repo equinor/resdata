@@ -30,9 +30,9 @@ void test_fread_alloc() {
     rd::util::TestArea ta("fread_alloc");
     {
         rd_kw_type *kw1 = rd_kw_alloc("INT", 100, RD_INT);
-        int i;
+        size_t i;
         for (i = 0; i < 100; i++)
-            rd_kw_iset_int(kw1, i, i);
+            rd_kw_iset_int(kw1, i, static_cast<int>(i));
         {
             ERT::FortIO fortio("INT", std::ios_base::out, false, true);
             rd_kw_fwrite(kw1, fortio);
@@ -46,7 +46,8 @@ void test_fread_alloc() {
         }
 
         {
-            offset_type file_size = util_file_size("INT");
+            offset_type file_size =
+                static_cast<offset_type>(util_file_size("INT"));
             test_truncated("INT", file_size - 4);
             test_truncated("INT", file_size - 25);
             test_truncated("INT", 5);
@@ -63,9 +64,9 @@ void test_kw_io_charlength() {
         const char *KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
         rd_kw_type *rd_kw_out0 = rd_kw_alloc(KW0, 5, RD_FLOAT);
         rd_kw_type *rd_kw_out1 = rd_kw_alloc(KW1, 5, RD_FLOAT);
-        for (int i = 0; i < rd_kw_get_size(rd_kw_out1); i++) {
-            rd_kw_iset_float(rd_kw_out0, i, i * 1.5);
-            rd_kw_iset_float(rd_kw_out1, i, i * 1.5);
+        for (size_t i = 0; i < rd_kw_get_size(rd_kw_out1); i++) {
+            rd_kw_iset_float(rd_kw_out0, i, static_cast<float>(i) * 1.5f);
+            rd_kw_iset_float(rd_kw_out1, i, static_cast<float>(i) * 1.5f);
         }
 
         {

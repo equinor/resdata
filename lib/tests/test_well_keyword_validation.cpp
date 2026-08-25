@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cstddef>
+#include <exception>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -75,7 +77,7 @@ rd_kw_ptr build_intehead(const Dims &d) {
 
 rd_kw_ptr build_logihead() {
     auto kw = make_rd_kw(LOGIHEAD_KW, LOGIHEAD_RESTART_SIZE, RD_BOOL);
-    for (int i = 0; i < LOGIHEAD_RESTART_SIZE; ++i)
+    for (size_t i = 0; i < LOGIHEAD_RESTART_SIZE; ++i)
         rd_kw_iset_bool(kw.get(), i, false);
     return kw;
 }
@@ -206,7 +208,7 @@ void mutate(std::vector<NamedKw> &kws, const std::string &name, Mode mode) {
     auto it = std::find_if(kws.begin(), kws.end(),
                            [&](const NamedKw &nk) { return nk.name == name; });
     REQUIRE(it != kws.end());
-    int size = rd_kw_get_size(it->kw.get());
+    int size = static_cast<int>(rd_kw_get_size(it->kw.get()));
     const Spec &spec = kw_specs().at(name);
     switch (mode) {
     case Mode::MISSING:
@@ -242,7 +244,7 @@ struct Case {
     const char *kw;
     Mode mode;
     bool throws;
-    int wells;
+    size_t wells;
 };
 
 std::vector<Case> all_cases() {

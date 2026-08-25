@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <cstddef>
 #include <ios>
 #include <memory>
 #include <filesystem>
@@ -52,17 +53,16 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
 
             AND_THEN("The main grid is single-porosity, so fracture queries "
                      "returns -1") {
-                REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), 0) ==
-                        -1);
-                REQUIRE(rd_grid_get_global_index1F(grid.get(), 0) == -1);
+                REQUIRE(!rd_grid_get_active_fracture_index1(grid.get(), 0));
+                REQUIRE(!rd_grid_get_global_index1F(grid.get(), 0));
             }
 
             AND_THEN("rd_grid_init_actnum_data writes one entry per main-grid "
                      "cell matching the per-cell active status") {
-                const int size = rd_grid_get_global_size(grid.get());
+                const size_t size = rd_grid_get_global_size(grid.get());
                 std::vector<int> actnum(size);
                 rd_grid_init_actnum_data(grid.get(), actnum.data());
-                for (int i = 0; i < size; i++)
+                for (size_t i = 0; i < size; i++)
                     REQUIRE(actnum[i] ==
                             (rd_grid_cell_active1(grid.get(), i) ? 1 : 0));
             }
@@ -105,6 +105,36 @@ TEST_CASE_METHOD(Tmpdir,
         THEN("The grid has the lgr") {
             REQUIRE(grid != nullptr);
             REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1"));
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "A negative lgr_nr in the file is rejected",
+                 "[unittest]") {
+    // lgr_nr is a signed 32 bit field in the file format, but is used as an
+    // index into the lgr map, so a negative value must be rejected on read.
+    const std::vector<int> nncg = {1};
+    const std::vector<int> nncl = {1};
+
+    GIVEN("An EGRID where the NNCHEAD lgr_nr is negative") {
+        auto filename = dirname / "NEGATIVE_NNC_LGR.EGRID";
+        write_egrid_with_single_lgr(filename, 3, 3, 3, 2, 2, 2, 1, 1, 1, "LGR1",
+                                    nullptr, nncg, nncl, std::nullopt,
+                                    /*lgr_grid_nr=*/1, /*nnc_lgr_nr=*/-1);
+
+        THEN("Loading the grid throws") {
+            REQUIRE_THROWS_AS(read_grid(filename), std::invalid_argument);
+        }
+    }
+
+    GIVEN("An EGRID where the LGR GRIDHEAD lgr_nr is negative") {
+        auto filename = dirname / "NEGATIVE_GRIDHEAD_LGR.EGRID";
+        write_egrid_with_single_lgr(filename, 3, 3, 3, 2, 2, 2, 1, 1, 1, "LGR1",
+                                    nullptr, {}, {}, std::nullopt,
+                                    /*lgr_grid_nr=*/-1);
+
+        THEN("Loading the grid throws") {
+            REQUIRE_THROWS_AS(read_grid(filename), std::invalid_argument);
         }
     }
 }
@@ -195,8 +225,8 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
             std::string main_name = rd_grid_get_lgr_name(grid.get(), 0);
             REQUIRE(main_name == filename.string());
 
-            int outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            int inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
+            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
             REQUIRE(outer_nr != 0);
             REQUIRE(inner_nr != 0);
             REQUIRE(outer_nr != inner_nr);
@@ -215,17 +245,18 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
 
         THEN("rd_grid_has_lgr_nr returns true for each LGR's lgr_nr and "
              "false for an lgr_nr past the end of the map") {
-            int outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            int inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
+            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
             REQUIRE(rd_grid_has_lgr_nr(grid.get(), outer_nr));
             REQUIRE(rd_grid_has_lgr_nr(grid.get(), inner_nr));
-            int past_end = std::max(outer_nr, inner_nr) + 1;
+            size_t past_end = std::max(outer_nr, inner_nr) + 1;
             REQUIRE(!rd_grid_has_lgr_nr(grid.get(), past_end));
         }
 
         THEN("rd_grid_iget_lgr returns the same LGR pointer as the hash "
              "lookup rd_grid_get_lgr, at every valid index") {
-            for (int i = 0; i < rd_grid_get_num_lgr(grid.get()); ++i) {
+            const size_t num_lgr = rd_grid_get_num_lgr(grid.get());
+            for (size_t i = 0; i < num_lgr; ++i) {
                 const char *lgr_name = rd_grid_iget_lgr_name(grid.get(), i);
                 REQUIRE(lgr_name != nullptr);
                 rd_grid_type *by_index = rd_grid_iget_lgr(grid.get(), i);
@@ -237,8 +268,8 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
 
         THEN("rd_grid_get_lgr_from_lgr_nr resolves each LGR's lgr_nr back to "
              "the same pointer as rd_grid_get_lgr") {
-            int outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            int inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
+            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
             REQUIRE(rd_grid_get_lgr_from_lgr_nr(grid.get(), outer_nr) ==
                     rd_grid_get_lgr(grid.get(), "OUTER"));
             REQUIRE(rd_grid_get_lgr_from_lgr_nr(grid.get(), inner_nr) ==
@@ -289,7 +320,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
             const int nx = rd_grid_get_nx(grid.get());
             const int ny = rd_grid_get_ny(grid.get());
             REQUIRE(rd_kw_get_size(coord_kw.get()) ==
-                    RD_GRID_COORD_SIZE(nx, ny));
+                    static_cast<size_t>(RD_GRID_COORD_SIZE(nx, ny)));
             const float *data = rd_kw_get_float_ptr(coord_kw.get());
             // Fixture main grid: 3x3x3 unit cells, so pillar (i,j) has
             // local top (i,j,0) and bottom (i,j,3). MAPAXES would offset
@@ -471,7 +502,7 @@ TEST_CASE_METHOD(Tmpdir, "Fracture-index queries on a dual-porosity grid",
     // the grid maintains a second active-index for fracture-active
     // cells in addition to the matrix-active one.
     const int nx = 2, ny = 2, nz = 2;
-    const int size = nx * ny * nz;
+    const size_t size = nx * ny * nz;
 
     // Mark every cell as both matrix- and fracture-active, except cell 0
     // which is only matrix-active.
@@ -481,7 +512,7 @@ TEST_CASE_METHOD(Tmpdir, "Fracture-index queries on a dual-porosity grid",
     auto filename = dirname / "DUALP_FRAC.EGRID";
     auto grid = load_egrid_dual_porosity(filename, nx, ny, nz, actnum.data());
 
-    const int nactive_fracture = rd_grid_get_nactive_fracture(grid.get());
+    const size_t nactive_fracture = rd_grid_get_nactive_fracture(grid.get());
 
     THEN("The count of fracture-active cells matches the ACTNUM encoding") {
         REQUIRE(nactive_fracture == size - 1);
@@ -489,16 +520,16 @@ TEST_CASE_METHOD(Tmpdir, "Fracture-index queries on a dual-porosity grid",
 
     THEN("Each fracture-active cell maps to a fracture index") {
         std::vector<bool> seen(nactive_fracture, false);
-        for (int g = 0; g < size; ++g) {
-            int f = rd_grid_get_active_fracture_index1(grid.get(), g);
+        for (size_t g = 0; g < size; ++g) {
+            auto f = rd_grid_get_active_fracture_index1(grid.get(), g);
             if (actnum[g] & CELL_ACTIVE_FRACTURE) {
-                REQUIRE(f >= 0);
-                REQUIRE(f < nactive_fracture);
-                REQUIRE_FALSE(seen[f]);
-                seen[f] = true;
-                REQUIRE(rd_grid_get_global_index1F(grid.get(), f) == g);
+                REQUIRE(f.has_value());
+                REQUIRE(*f < nactive_fracture);
+                REQUIRE_FALSE(seen[*f]);
+                seen[*f] = true;
+                REQUIRE(rd_grid_get_global_index1F(grid.get(), *f) == g);
             } else {
-                REQUIRE(f == -1);
+                REQUIRE(!f);
             }
         }
         for (bool s : seen)
@@ -506,7 +537,7 @@ TEST_CASE_METHOD(Tmpdir, "Fracture-index queries on a dual-porosity grid",
     }
 
     THEN("A fracture index past the last active returns -1") {
-        REQUIRE(rd_grid_get_global_index1F(grid.get(), nactive_fracture) == -1);
+        REQUIRE(!rd_grid_get_global_index1F(grid.get(), nactive_fracture));
     }
 }
 
@@ -531,8 +562,8 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with amalgamated NNCs between two LGRs",
 }
 
 bool is_hosted_by(const rd_grid_type *parent, const rd_grid_type *child) {
-    const int n = rd_grid_get_global_size(parent);
-    for (int i = 0; i < n; ++i)
+    const size_t n = rd_grid_get_global_size(parent);
+    for (size_t i = 0; i < n; ++i)
         if (rd_grid_get_cell_lgr1(parent, i) == child)
             return true;
     return false;

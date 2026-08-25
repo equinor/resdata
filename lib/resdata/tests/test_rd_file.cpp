@@ -54,9 +54,10 @@ void test_truncated() {
     }
 
     {
-        offset_type file_size = util_file_size("TEST.EGRID");
+        offset_type file_size =
+            static_cast<offset_type>(util_file_size("TEST.EGRID"));
         FILE *stream = util_fopen("TEST.EGRID", "r+");
-        util_ftruncate(stream, file_size / 2);
+        util_ftruncate(stream, static_cast<long>(file_size / 2));
         fclose(stream);
     }
     {
@@ -78,9 +79,10 @@ void test_mixed_case() {
     }
 
     {
-        offset_type file_size = util_file_size("TESTcase.EGRID");
+        offset_type file_size =
+            static_cast<offset_type>(util_file_size("TESTcase.EGRID"));
         FILE *stream = util_fopen("TESTcase.EGRID", "r+");
-        util_ftruncate(stream, file_size / 2);
+        util_ftruncate(stream, static_cast<long>(file_size / 2));
         fclose(stream);
     }
     {

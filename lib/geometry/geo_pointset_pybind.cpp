@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <string>
 
@@ -31,7 +32,7 @@ PYBIND11_MODULE(_geo_pointset, m) {
         return geo_pointset_equal(from_cwrap<geo_pointset_type>(self),
                                   from_cwrap<geo_pointset_type>(other));
     });
-    m.def("_iget_z", [](py::handle self, int index) {
+    m.def("_iget_z", [](py::handle self, size_t index) {
         return geo_pointset_iget_z(from_cwrap<geo_pointset_type>(self), index);
     });
 }

@@ -42,7 +42,8 @@ public:
         It is the users responsibility that the @offset argument comes
         from the same fortio instance as used when calling get_kw().*/
     FileKW(const rd_kw_type *rd_kw, offset_type offset)
-        : FileKW(offset, rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
+        : FileKW(offset, rd_kw_get_data_type(rd_kw),
+                 static_cast<int>(rd_kw_get_size(rd_kw)),
                  rd_kw_get_header(rd_kw)) {}
     [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
@@ -57,7 +58,9 @@ public:
         return header == other.header;
     }
     [[nodiscard]] const std::string &get_header() const { return header; };
-    [[nodiscard]] int get_size() const { return kw_size; };
+    [[nodiscard]] size_t get_size() const {
+        return static_cast<size_t>(kw_size);
+    };
     [[nodiscard]] offset_type get_offset() const { return file_offset; };
     [[nodiscard]] rd_data_type get_data_type() const { return data_type; };
 

@@ -15,7 +15,7 @@ typedef struct well_segment_collection_struct well_segment_collection_type;
 well_segment_collection_type *well_segment_collection_alloc();
 void well_segment_collection_free(
     well_segment_collection_type *segment_collection);
-int well_segment_collection_get_size(
+size_t well_segment_collection_get_size(
     const well_segment_collection_type *segment_collection);
 void well_segment_collection_add(
     well_segment_collection_type *segment_collection,
@@ -25,7 +25,7 @@ bool well_segment_collection_has_segment(
 std::shared_ptr<WellSegment> well_segment_collection_get(
     const well_segment_collection_type *segment_collection, int segment_id);
 std::shared_ptr<WellSegment> well_segment_collection_iget(
-    const well_segment_collection_type *segment_collection, int index);
+    const well_segment_collection_type *segment_collection, size_t index);
 void well_segment_collection_link(
     const well_segment_collection_type *segment_collection);
 void well_segment_collection_add_branches(
@@ -33,9 +33,9 @@ void well_segment_collection_add_branches(
     well_branch_collection_type *branches);
 
 int well_segment_collection_load_from_kw(
-    well_segment_collection_type *segment_collection, int well_nr,
+    well_segment_collection_type *segment_collection, size_t well_nr,
     const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
-    const well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
+    well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segment_information, bool *is_MSW_well);
 void well_segment_collection_add_connections(
     well_segment_collection_type *segment_collection, const char *grid_name,

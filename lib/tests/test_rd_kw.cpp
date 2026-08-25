@@ -26,8 +26,8 @@ namespace {
    assertion outcome. */
 rd_kw_ptr make_int_kw(const char *name, int size) {
     auto kw = make_rd_kw(name, size, RD_INT);
-    for (int i = 0; i < size; i++)
-        rd_kw_iset_int(kw.get(), i, i);
+    for (size_t i = 0; i < static_cast<size_t>(size); i++)
+        rd_kw_iset_int(kw.get(), i, static_cast<int>(i));
     return kw;
 }
 
@@ -57,8 +57,9 @@ TEST_CASE("typed accessors validate the index", "[rd_kw]") {
                             ContainsSubstring("Invalid index lookup"));
     }
     SECTION("negative index") {
-        REQUIRE_THROWS_WITH(rd_kw_iset_int(kw.get(), -1, 0),
-                            ContainsSubstring("Invalid index lookup"));
+        REQUIRE_THROWS_WITH(
+            rd_kw_iset_int(kw.get(), static_cast<size_t>(-1), 0),
+            ContainsSubstring("Invalid index lookup"));
     }
 }
 
@@ -186,10 +187,44 @@ TEST_CASE("rd_kw_alloc_sub_copy validates offset and count", "[rd_kw]") {
 
 TEST_CASE("rd_kw_alloc_scatter_copy rejects unsupported type", "[rd_kw]") {
     auto src = make_rd_kw("KW", 1, RD_MESS);
-    int mapping[1] = {0};
+    std::vector<size_t> mapping{0};
     REQUIRE_THROWS_WITH(
         rd_kw_alloc_scatter_copy(src.get(), 1, mapping, nullptr),
         ContainsSubstring("unsupported type"));
+}
+
+TEST_CASE("rd_kw_alloc_scatter_copy rejects out of range mapping", "[rd_kw]") {
+    auto src = make_int_kw("KW", 2);
+
+    SECTION("target index beyond target size") {
+        std::vector<size_t> mapping{0, 4};
+        REQUIRE_THROWS_WITH(
+            rd_kw_alloc_scatter_copy(src.get(), 4, mapping, nullptr),
+            ContainsSubstring("out of range"));
+    }
+
+    SECTION("mapping shorter than source") {
+        std::vector<size_t> mapping{0};
+        REQUIRE_THROWS_AS(
+            rd_kw_alloc_scatter_copy(src.get(), 4, mapping, nullptr),
+            std::out_of_range);
+    }
+}
+
+TEST_CASE("rd_kw_copy_indexed rejects out of range indices", "[rd_kw]") {
+    auto target = make_int_kw("A", 3);
+    auto src = make_int_kw("B", 3);
+
+    REQUIRE_THROWS_WITH(
+        rd_kw_copy_indexed(target.get(), std::vector<size_t>{3}, src.get()),
+        ContainsSubstring("out of range"));
+}
+
+TEST_CASE("rd_kw_first_different rejects a negative offset", "[rd_kw]") {
+    auto a = make_int_kw("A", 3);
+    auto b = make_int_kw("B", 3);
+    REQUIRE_THROWS_WITH(rd_kw_first_different(a.get(), b.get(), -1, 0, 0),
+                        ContainsSubstring("invalid offset"));
 }
 
 TEST_CASE("inplace binary ops validate size and type", "[rd_kw]") {
@@ -232,7 +267,7 @@ TEST_CASE("inplace unary ops validate type", "[rd_kw]") {
 }
 
 TEST_CASE("indexed inplace/copy ops validate size and type", "[rd_kw]") {
-    std::vector<int> index_set{0};
+    std::vector<size_t> index_set{0};
 
     auto a = make_int_kw("A", 3);
     auto b = make_int_kw("B", 4);
@@ -267,7 +302,7 @@ TEST_CASE("element sum validates type", "[rd_kw]") {
     REQUIRE_THROWS_WITH(rd_kw_element_sum_float(int_kw.get()),
                         ContainsSubstring("invalid type"));
 
-    std::vector<int> index_set{0};
+    std::vector<size_t> index_set{0};
     REQUIRE_THROWS_WITH(
         rd_kw_element_sum_indexed(char_kw.get(), index_set, sum),
         ContainsSubstring("invalid type for element sum"));
@@ -322,7 +357,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc rejects bad logical value", "[rd_kw]") {
     auto good = (dirname / "GOOD.txt").string();
     {
         auto kw = make_rd_kw("BKW", 3, RD_BOOL);
-        for (int i = 0; i < 3; i++)
+        for (size_t i = 0; i < 3; i++)
             rd_kw_iset_bool(kw.get(), i, true);
         ERT::FortIO fortio(good, std::ios_base::out, /*fmt_file=*/true);
         rd_kw_fwrite(kw.get(), fortio);
