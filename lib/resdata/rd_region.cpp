@@ -525,7 +525,7 @@ void rd_region_cmp_deselect_more(rd_region_type *rd_region,
 
 static void rd_region_select_from_box__(rd_region_type *region,
                                         const rd::rd_box &rd_box, bool select) {
-    for (auto global_index : rd_box.active_list())
+    for (auto global_index : rd_box.global_list())
         region->active_mask[global_index] = select;
 
     rd_region_invalidate_index_list(region);

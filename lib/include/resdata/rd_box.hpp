@@ -10,13 +10,13 @@ class rd_box {
 public:
     rd_box(const rd_grid_type *grid, int i1, int i2, int j1, int j2, int k1,
            int k2);
-    const std::vector<int> &active_list() const;
+    /** Global indices of every cell in the box, active or not. */
+    const std::vector<int> &global_list() const;
 
 private:
     const rd_grid_type *grid;
 
     int i1, i2, j1, j2, k1, k2;
-    std::vector<int> active_index_list;
     std::vector<int> global_index_list;
 };
 
