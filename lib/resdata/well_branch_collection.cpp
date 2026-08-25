@@ -1,6 +1,7 @@
 
+#include <cstddef>
 #include <memory>
-#include <vector>
+#include <unordered_map>
 
 #include <ert/util/type_macros.hpp>
 
@@ -14,8 +15,7 @@
 struct well_branch_collection_struct {
     UTIL_TYPE_ID_DECLARATION;
 
-    std::vector<std::shared_ptr<WellSegment>> __start_segments;
-    std::vector<int> index_map;
+    std::unordered_map<int, std::shared_ptr<WellSegment>> start_segments;
 };
 
 UTIL_IS_INSTANCE_FUNCTION(well_branch_collection,
@@ -28,52 +28,26 @@ well_branch_collection_type *well_branch_collection_alloc() {
     return branch_collection;
 }
 
-namespace {
-
-int well_branch_collection_safe_iget_index(
-    const well_branch_collection_type *branches, int index) {
-    if (index >= (int)branches->index_map.size())
-        return -1;
-    else
-        return branches->index_map[index];
-}
-
-} // namespace
-
 void well_branch_collection_free(well_branch_collection_type *branches) {
     delete branches;
 }
 
-int well_branch_collection_get_size(
-    const well_branch_collection_type *branches) {
-    return branches->__start_segments.size();
+size_t
+well_branch_collection_get_size(const well_branch_collection_type *branches) {
+    return branches->start_segments.size();
 }
 
 bool well_branch_collection_has_branch(
     const well_branch_collection_type *branches, int branch_id) {
-    if (well_branch_collection_safe_iget_index(branches, branch_id) >= 0)
-        return true;
-    else
-        return false;
-}
-
-const std::shared_ptr<WellSegment> well_branch_collection_iget_start_segment(
-    const well_branch_collection_type *branches, int index) {
-    if (index < static_cast<int>(branches->__start_segments.size()))
-        return branches->__start_segments[index];
-    else
-        return {nullptr};
+    return branches->start_segments.count(branch_id) > 0;
 }
 
 const std::shared_ptr<WellSegment> well_branch_collection_get_start_segment(
     const well_branch_collection_type *branches, int branch_id) {
-    int internal_index =
-        well_branch_collection_safe_iget_index(branches, branch_id);
-    if (internal_index >= 0)
-        return well_branch_collection_iget_start_segment(branches,
-                                                         internal_index);
-    else
+    auto iter = branches->start_segments.find(branch_id);
+    if (iter == branches->start_segments.end())
         return {nullptr};
+    return iter->second;
 }
 
 bool well_branch_collection_add_start_segment(
@@ -81,19 +55,8 @@ bool well_branch_collection_add_start_segment(
     std::shared_ptr<WellSegment> start_segment) {
     if ((start_segment->get_link_count() == 0) &&
         (start_segment->get_outlet())) {
-        int branch_id = start_segment->get_branch_id();
-        int current_index =
-            well_branch_collection_safe_iget_index(branches, branch_id);
-        if (current_index >= 0)
-            branches->__start_segments[current_index] = start_segment;
-        else {
-            int new_index = branches->__start_segments.size();
-            branches->__start_segments.push_back(start_segment);
-            if (branch_id >= (int)branches->index_map.size())
-                branches->index_map.resize(branch_id + 1, -1);
-            branches->index_map[branch_id] = new_index;
-        }
-
+        branches->start_segments[start_segment->get_branch_id()] =
+            start_segment;
         return true;
     } else
         return false;
