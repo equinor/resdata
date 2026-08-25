@@ -11,7 +11,6 @@
 #include <vector>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_kw.hpp>
@@ -205,9 +204,9 @@ void validate_report_step(int report_step) {
 namespace rd {
 
 rd_sum_file_data::rd_sum_file_data(const rd_smspec_type *smspec)
-    : rd_smspec(smspec), data(vector_alloc_new()) {}
+    : rd_smspec(smspec) {}
 
-rd_sum_file_data::~rd_sum_file_data() { vector_free(data); }
+rd_sum_file_data::~rd_sum_file_data() = default;
 
 int rd_sum_file_data::length() const {
     if (this->loader)
@@ -284,13 +283,13 @@ double rd_sum_file_data::iget(int time_index, int params_index) const {
     }
 }
 
-void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
+void rd_sum_file_data::append_tstep(rd_sum_tstep_ptr tstep) {
     /*
      Here the tstep is just appended naively, the vector will be
      sorted by ministep_nr before the data instance is returned.
   */
 
-    vector_append_owned_ref(data, tstep, rd_sum_tstep_free__);
+    data.push_back(std::move(tstep));
 }
 
 /*
@@ -304,18 +303,18 @@ rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(int report_step,
                                                    double sim_seconds) {
     validate_report_step(report_step);
 
-    int ministep_nr = vector_get_size(data);
-    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
+    int ministep_nr = data.size();
+    rd_sum_tstep_ptr tstep(
         rd_sum_tstep_alloc_new(report_step, ministep_nr, sim_seconds,
                                rd_smspec),
         &rd_sum_tstep_free);
     rd_sum_tstep_type *prev_tstep = NULL;
 
-    if (vector_get_size(data) > 0)
-        prev_tstep = (rd_sum_tstep_type *)vector_get_last(data);
+    if (!data.empty())
+        prev_tstep = data.back().get();
 
     rd_sum_tstep_type *new_tstep = tstep.get();
-    append_tstep(tstep.release());
+    append_tstep(std::move(tstep));
 
     bool rebuild_index = true;
     /*
@@ -347,7 +346,7 @@ exit:
 }
 
 rd_sum_tstep_type *rd_sum_file_data::iget_ministep(int internal_index) const {
-    return (rd_sum_tstep_type *)vector_iget(data, internal_index);
+    return data.at(internal_index).get();
 }
 
 double rd_sum_file_data::iget_sim_days(int time_index) const {
@@ -360,19 +359,10 @@ double rd_sum_file_data::iget_sim_seconds(int time_index) const {
     return node.sim_seconds;
 }
 
-static int cmp_ministep(const void *arg1, const void *arg2) {
-    const rd_sum_tstep_type *ministep1 = rd_sum_tstep_safe_cast_const(arg1);
-    const rd_sum_tstep_type *ministep2 = rd_sum_tstep_safe_cast_const(arg2);
-
-    time_t time1 = rd_sum_tstep_get_sim_time(ministep1);
-    time_t time2 = rd_sum_tstep_get_sim_time(ministep2);
-
-    if (time1 < time2)
-        return -1;
-    else if (time1 == time2)
-        return 0;
-    else
-        return 1;
+static bool cmp_ministep(const rd_sum_tstep_ptr &ministep1,
+                         const rd_sum_tstep_ptr &ministep2) {
+    return rd_sum_tstep_get_sim_time(ministep1.get()) <
+           rd_sum_tstep_get_sim_time(ministep2.get());
 }
 
 void rd_sum_file_data::build_index() {
@@ -388,14 +378,11 @@ void rd_sum_file_data::build_index() {
             this->index.add(sim_time[i], sim_seconds[i], report_steps[i]);
         }
     } else {
-        vector_sort(data, cmp_ministep);
-        for (int internal_index = 0; internal_index < vector_get_size(data);
-             internal_index++) {
-            const rd_sum_tstep_type *ministep = iget_ministep(internal_index);
-            this->index.add(rd_sum_tstep_get_sim_time(ministep),
-                            rd_sum_tstep_get_sim_seconds(ministep),
-                            rd_sum_tstep_get_report(ministep));
-        }
+        std::stable_sort(data.begin(), data.end(), cmp_ministep);
+        for (const auto &ministep : data)
+            this->index.add(rd_sum_tstep_get_sim_time(ministep.get()),
+                            rd_sum_tstep_get_sim_seconds(ministep.get()),
+                            rd_sum_tstep_get_report(ministep.get()));
     }
 }
 
@@ -562,14 +549,13 @@ void rd_sum_file_data::add_rd_file(int report_step,
             {
                 int ministep_nr = rd_kw_iget_int(ministep_kw, 0);
                 std::string filename = summary_view.filename();
-                std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
-                    tstep(rd_sum_tstep_alloc_from_file(
-                              report_step, ministep_nr, params_kw,
-                              filename.c_str(), this->rd_smspec),
-                          &rd_sum_tstep_free);
+                rd_sum_tstep_ptr tstep(rd_sum_tstep_alloc_from_file(
+                                           report_step, ministep_nr, params_kw,
+                                           filename.c_str(), this->rd_smspec),
+                                       &rd_sum_tstep_free);
 
                 if (tstep)
-                    append_tstep(tstep.release());
+                    append_tstep(std::move(tstep));
             }
         }
     }

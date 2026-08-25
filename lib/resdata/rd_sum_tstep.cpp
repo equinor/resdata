@@ -76,11 +76,6 @@ UTIL_SAFE_CAST_FUNCTION_CONST(rd_sum_tstep, RD_SUM_TSTEP_ID)
 
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep) { delete ministep; }
 
-void rd_sum_tstep_free__(void *__ministep) {
-    rd_sum_tstep_type *ministep = rd_sum_tstep_safe_cast(__ministep);
-    rd_sum_tstep_free(ministep);
-}
-
 /**
    This function sets the internal time representation in the
    rd_sum_tstep. The treatment of time is a bit weird; on the one

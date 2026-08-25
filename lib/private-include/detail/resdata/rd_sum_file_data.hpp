@@ -7,7 +7,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <ert/util/vector.hpp>
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
@@ -144,11 +143,11 @@ private:
     const rd_smspec_type *rd_smspec;
 
     TimeIndex index;
-    vector_type *data;
+    std::vector<rd_sum_tstep_ptr> data;
 
     std::unique_ptr<rd::unsmry_loader> loader;
 
-    void append_tstep(rd_sum_tstep_type *tstep);
+    void append_tstep(rd_sum_tstep_ptr tstep);
     void build_index();
     void fwrite_report(int report_step, ERT::FortIO &fortio) const;
     bool check_file(rd::File *rd_file);
