@@ -152,8 +152,12 @@ static bool is_special(const char c, const basic_parser_type *parser) {
     return in_set(c, parser->specials);
 }
 
-static bool is_in_quoters(const char c, const basic_parser_type *parser) {
-    return in_set(c, parser->quoters);
+/* Takes an int so that an EOF returned by fgetc() can be passed in without
+   being aliased onto the legitimate byte 0xFF. */
+static bool is_in_quoters(int c, const basic_parser_type *parser) {
+    if (c == EOF)
+        return false;
+    return in_set(static_cast<char>(c), parser->quoters);
 }
 
 static bool is_in_delete_set(const char c, const basic_parser_type *parser) {
@@ -439,7 +443,7 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
     return tokens;
 }
 
-static bool fseek_quote_end(char quoter, FILE *stream) {
+static bool fseek_quote_end(int quoter, FILE *stream) {
     int c;
     do {
         c = fgetc(stream);
