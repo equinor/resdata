@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>

@@ -11,8 +11,6 @@
 #include <array>
 #include <fmt/format.h>
 
-#include <ert/util/int_vector.hpp>
-
 #include <resdata/rd_grid.hpp>
 #include <resdata/layer.hpp>
 

@@ -361,7 +361,7 @@ namespace fs = std::filesystem;
                 nnc_info_iget_vector(nnc_info, lgr_index);
             size_t lgr_nr = nnc_vector_get_lgr_nr(nnc_vector);
             if (lgr_nr != nnc_info_get_lgr_nr(nnc_info)) {
-                const int_vector_type *nnc_list =
+                const auto nnc_list =
                     nnc_vector_get_index_list(nnc_vector);
                 for (int j = 0; j < int_vector_size(nnc_list); j++)
                     printf("Cell[%d] -> %d  in lgr:%d/%s \n", cell_index,

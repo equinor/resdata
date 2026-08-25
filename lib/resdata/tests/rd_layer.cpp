@@ -6,7 +6,6 @@
 
 #include <resdata/layer.hpp>
 #include "detail/resdata/layer_cxx.hpp"
-#include "ert/util/int_vector.hpp"
 
 void test_get_cell() {
     layer_type *layer = layer_alloc(10, 10);

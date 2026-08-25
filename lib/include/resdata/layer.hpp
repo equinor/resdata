@@ -5,7 +5,6 @@
 #include <tuple>
 #include <vector>
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
