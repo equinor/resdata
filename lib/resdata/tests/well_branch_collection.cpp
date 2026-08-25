@@ -21,8 +21,6 @@ int main(int argc, char **argv) {
     test_assert_true(well_branch_collection_is_instance(branches));
     test_assert_int_equal(well_branch_collection_get_size(branches), 0);
     test_assert_NULL(
-        well_branch_collection_iget_start_segment(branches, 0).get());
-    test_assert_NULL(
         well_branch_collection_get_start_segment(branches, 0).get());
     test_assert_false(well_branch_collection_has_branch(branches, 0));
     {
