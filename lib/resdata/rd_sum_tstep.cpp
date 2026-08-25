@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 #include <fmt/format.h>
 
@@ -119,26 +120,22 @@ static void rd_sum_tstep_set_time_info_from_date(rd_sum_tstep_type *tstep,
 
 static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
                                        const rd_smspec_type *smspec) {
-    int date_day_index = rd_smspec_get_date_day_index(smspec);
-    int date_month_index = rd_smspec_get_date_month_index(smspec);
-    int date_year_index = rd_smspec_get_date_year_index(smspec);
-    int sim_time_index = rd_smspec_get_time_index(smspec);
     time_t sim_start = rd_smspec_get_start_time(smspec);
+    const rd::TimeInfo &time_info = rd_smspec_get_time_info(smspec);
 
-    if (sim_time_index >= 0) {
-        double sim_time = tstep->data[sim_time_index];
-        double sim_seconds = sim_time * rd_smspec_get_time_seconds(smspec);
+    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&time_info)) {
+        double sim_time = tstep->data[time->params_index];
+        double sim_seconds = sim_time * time->seconds_per_unit;
         rd_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
-    } else if (date_day_index >= 0) {
-        int day = util_roundf(tstep->data[date_day_index]);
-        int month = util_roundf(tstep->data[date_month_index]);
-        int year = util_roundf(tstep->data[date_year_index]);
+    } else {
+        const auto &date = std::get<rd::DateParamsIndex>(time_info);
+        int day = util_roundf(tstep->data[date.day]);
+        int month = util_roundf(tstep->data[date.month]);
+        int year = util_roundf(tstep->data[date.year]);
 
         time_t sim_time = rd_make_date(day, month, year);
         rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
-    } else
-        throw std::invalid_argument(
-            "Could not extract date/time information from SMSPEC header file.");
+    }
 }
 
 /**
@@ -190,8 +187,13 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
 
     rd_sum_tstep_set_time_info_from_seconds(
         tstep.get(), rd_smspec_get_start_time(smspec), sim_seconds);
-    rd_sum_tstep_iset(tstep.get(), rd_smspec_get_time_index(smspec),
-                      sim_seconds / rd_smspec_get_time_seconds(smspec));
+    const auto *time =
+        std::get_if<rd::TimeParamsIndex>(&rd_smspec_get_time_info(smspec));
+    if (time == nullptr)
+        throw std::invalid_argument("Cannot create a new summary timestep for "
+                                    "a SMSPEC without a TIME variable");
+    rd_sum_tstep_iset(tstep.get(), time->params_index,
+                      sim_seconds / time->seconds_per_unit);
     return tstep.release();
 }
 

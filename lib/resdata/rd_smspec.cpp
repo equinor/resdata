@@ -1,20 +1,21 @@
 #include <cstring>
-#include <cmath>
 #include <ctime>
-#include <cerrno>
 
+#include <ios>
 #include <string>
+#include <system_error>
+#include <utility>
+#include <variant>
 #include <vector>
 #include <map>
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <filesystem>
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include "detail/util/path.hpp"
-
-#include <fmt/format.h>
+#include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_file.hpp>
@@ -22,12 +23,8 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/smspec_node.hpp>
-#include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_type.hpp>
-
-#ifdef HAVE_FNMATCH
-#include <fnmatch.h>
-#endif
+#include <resdata/FortIO.hpp>
 
 namespace fs = std::filesystem;
 
@@ -114,7 +111,6 @@ struct rd_smspec_struct {
     std::map<int, int> inv_index_map;
     int params_size;
 
-    int time_seconds;
     int grid_dims[3]; /* Grid dimensions - in DIMENS[1,2,3] */
     int num_regions;
     int Nwells, param_offset;
@@ -128,10 +124,7 @@ struct rd_smspec_struct {
         formatted; /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
     time_t sim_start_time; /* When did the simulation start - worldtime. */
 
-    int time_index; /* The fields time_index, day_index, month_index and year_index */
-    int day_index; /* are used by the rd_sum_data object to locate per. timestep */
-    int month_index; /* time information. */
-    int year_index;
+    rd::TimeInfo time_info;
     bool has_lgr;
     std::vector<float> params_default;
 
@@ -244,11 +237,6 @@ static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
     rd_smspec->key_join_string = key_join_string;
     rd_smspec->header_file = "";
 
-    rd_smspec->time_index = -1;
-    rd_smspec->day_index = -1;
-    rd_smspec->year_index = -1;
-    rd_smspec->month_index = -1;
-    rd_smspec->time_seconds = -1;
     rd_smspec->params_size = -1;
 
     /*
@@ -493,15 +481,17 @@ rd_smspec_alloc_writer__(const char *key_join_string, const char *restart_case,
 
     {
         const rd::smspec_node *time_node;
+        int seconds_per_unit;
 
         if (time_in_days) {
-            rd_smspec->time_seconds = 3600 * 24;
+            seconds_per_unit = 3600 * 24;
             time_node = rd_smspec_add_node(rd_smspec.get(), "TIME", "DAYS", 0);
         } else {
-            rd_smspec->time_seconds = 3600;
+            seconds_per_unit = 3600;
             time_node = rd_smspec_add_node(rd_smspec.get(), "TIME", "HOURS", 0);
         }
-        rd_smspec->time_index = time_node->get_params_index();
+        rd_smspec->time_info = rd::TimeParamsIndex{
+            time_node->get_params_index(), seconds_per_unit};
     }
     return rd_smspec.release();
 }
@@ -1023,39 +1013,38 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
             if (time_unit == nullptr)
                 throw std::invalid_argument(
                     "TIME variable is missing a unit string");
-            rd_smspec->time_index = time_node->get_params_index();
 
+            int seconds_per_unit;
             if (util_string_equal(time_unit, "DAYS"))
-                rd_smspec->time_seconds = 3600 * 24;
+                seconds_per_unit = 3600 * 24;
             else if (util_string_equal(time_unit, "HOURS"))
-                rd_smspec->time_seconds = 3600;
+                seconds_per_unit = 3600;
             else
                 throw std::invalid_argument(
                     fmt::format("time_unit:{} not recognized", time_unit));
-        }
 
-        const rd::smspec_node *day_node =
-            rd_smspec_get_var_node(rd_smspec->misc_var_index, "DAY");
-        const rd::smspec_node *month_node =
-            rd_smspec_get_var_node(rd_smspec->misc_var_index, "MONTH");
-        const rd::smspec_node *year_node =
-            rd_smspec_get_var_node(rd_smspec->misc_var_index, "YEAR");
+            rd_smspec->time_info = rd::TimeParamsIndex{
+                time_node->get_params_index(), seconds_per_unit};
+        } else {
+            const rd::smspec_node *day_node =
+                rd_smspec_get_var_node(rd_smspec->misc_var_index, "DAY");
+            const rd::smspec_node *month_node =
+                rd_smspec_get_var_node(rd_smspec->misc_var_index, "MONTH");
+            const rd::smspec_node *year_node =
+                rd_smspec_get_var_node(rd_smspec->misc_var_index, "YEAR");
 
-        if (day_node != NULL && month_node != NULL && year_node != NULL) {
-            rd_smspec->day_index = day_node->get_params_index();
-            rd_smspec->month_index = month_node->get_params_index();
-            rd_smspec->year_index = year_node->get_params_index();
-        }
+            if (day_node == NULL || month_node == NULL || year_node == NULL)
+                // Unusable configuration.
+                // Seems the restart file can also have time specified with
+                // 'YEARS' as basic time unit; that mode is not supported.
+                throw std::invalid_argument(
+                    "The SMSPEC file seems to lack time information, need "
+                    "either TIME, or DAY/MONTH/YEAR information. Cannot "
+                    "proceed.");
 
-        if ((rd_smspec->time_index == -1) && (rd_smspec->day_index == -1)) {
-            // Unusable configuration.
-            // Seems the restart file can also have time specified with
-            // 'YEARS' as basic time unit; that mode is not supported.
-
-            throw std::invalid_argument(
-                "The SMSPEC file seems to lack all time information, need "
-                "either TIME, or DAY/MONTH/YEAR information. Can not "
-                "proceed.");
+            rd_smspec->time_info = rd::DateParamsIndex{
+                day_node->get_params_index(), month_node->get_params_index(),
+                year_node->get_params_index()};
         }
         return rd_smspec.release();
     } else {
@@ -1133,12 +1122,18 @@ bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
     return node_exists(node_ptr);
 }
 
-int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->time_seconds;
+const rd::TimeInfo &rd_smspec_get_time_info(const rd_smspec_type *smspec) {
+    return smspec->time_info;
 }
 
-int rd_smspec_get_time_index(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->time_index;
+int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec) {
+    const rd::TimeInfo &time_info = rd_smspec_get_time_info(rd_smspec);
+    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&time_info))
+        return time->seconds_per_unit;
+
+    // A summary without a TIME vector has no time unit of its own; its time
+    // information is expressed as whole dates, so days is the natural scale.
+    return 3600 * 24;
 }
 
 time_t rd_smspec_get_start_time(const rd_smspec_type *rd_smspec) {
@@ -1177,18 +1172,6 @@ rd_smspec_get_params_default(const rd_smspec_type *rd_smspec) {
 }
 
 void rd_smspec_free(rd_smspec_type *rd_smspec) { delete rd_smspec; }
-
-int rd_smspec_get_date_day_index(const rd_smspec_type *smspec) {
-    return smspec->day_index;
-}
-
-int rd_smspec_get_date_month_index(const rd_smspec_type *smspec) {
-    return smspec->month_index;
-}
-
-int rd_smspec_get_date_year_index(const rd_smspec_type *smspec) {
-    return smspec->year_index;
-}
 
 /** Returns all the gen_key string matching the supplied pattern. I.e.
 

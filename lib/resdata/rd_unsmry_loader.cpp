@@ -1,8 +1,10 @@
 #include <ctime>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <ert/util/int_vector.hpp>
@@ -12,7 +14,6 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_file_view.hpp>
-#include <resdata/rd_file_kw.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_type.hpp>
@@ -25,8 +26,7 @@ namespace rd {
 unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
                              const std::string &filename, FileMode file_options)
     : size(rd_smspec_get_params_size(smspec)),
-      time_index(rd_smspec_get_time_index(smspec)),
-      time_seconds(rd_smspec_get_time_seconds(smspec)),
+      time_info(rd_smspec_get_time_info(smspec)),
       sim_start(rd_smspec_get_start_time(smspec)) {
     {
         std::unique_ptr<rd::File> file = rd::File::open(filename, file_options);
@@ -41,9 +41,8 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
         throw std::bad_alloc();
     }
 
-    this->date_index = {{rd_smspec_get_date_day_index(smspec),
-                         rd_smspec_get_date_month_index(smspec),
-                         rd_smspec_get_date_year_index(smspec)}};
+    if (const auto *date = std::get_if<rd::DateParamsIndex>(&this->time_info))
+        this->date_index = {{date->day, date->month, date->year}};
     auto file_view = this->file->get_global_view();
     int length = file_view->num_named_kw(PARAMS_KW);
 
@@ -97,7 +96,7 @@ double unsmry_loader::iget(int time_index, int params_index) const {
 }
 
 time_t unsmry_loader::iget_sim_time(int time_index) const {
-    if (this->time_index >= 0) {
+    if (std::holds_alternative<rd::TimeParamsIndex>(this->time_info)) {
         double sim_seconds = this->iget_sim_seconds(time_index);
         time_t sim_time = this->sim_start;
         util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
@@ -118,9 +117,9 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
 }
 
 double unsmry_loader::iget_sim_seconds(int time_index) const {
-    if (this->time_index >= 0) {
-        double raw_time = this->iget(time_index, this->time_index);
-        return raw_time * this->time_seconds;
+    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&this->time_info)) {
+        double raw_time = this->iget(time_index, time->params_index);
+        return raw_time * time->seconds_per_unit;
     } else {
         time_t sim_time = this->iget_sim_time(time_index);
         return util_difftime_seconds(this->sim_start, sim_time);
@@ -141,7 +140,7 @@ std::vector<int> unsmry_loader::report_steps(int offset) const {
 }
 
 std::vector<time_t> unsmry_loader::sim_time() const {
-    if (this->time_index >= 0) {
+    if (std::holds_alternative<rd::TimeParamsIndex>(this->time_info)) {
         const std::vector<double> sim_seconds = this->sim_seconds();
         std::vector<time_t> st(this->length(), this->sim_start);
 
@@ -165,10 +164,10 @@ std::vector<time_t> unsmry_loader::sim_time() const {
 }
 
 std::vector<double> unsmry_loader::sim_seconds() const {
-    if (this->time_index >= 0) {
-        std::vector<double> seconds = this->get_vector(this->time_index);
+    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&this->time_info)) {
+        std::vector<double> seconds = this->get_vector(time->params_index);
         for (size_t i = 0; i < seconds.size(); i++)
-            seconds[i] *= this->time_seconds;
+            seconds[i] *= time->seconds_per_unit;
 
         return seconds;
     } else {

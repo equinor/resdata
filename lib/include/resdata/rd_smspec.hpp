@@ -3,6 +3,7 @@
 #include <ctime>
 
 #include <memory>
+#include <variant>
 #include <vector>
 #include <string>
 
@@ -10,6 +11,25 @@
 #include <resdata/smspec_node.hpp>
 
 typedef struct rd_smspec_struct rd_smspec_type;
+
+namespace rd {
+
+/** A summary which stores elapsed time in a TIME vector. */
+struct TimeParamsIndex {
+    int params_index;
+    int seconds_per_unit;
+};
+
+/** A summary which stores the time of each step as a whole date. */
+struct DateParamsIndex {
+    int day;
+    int month;
+    int year;
+};
+
+using TimeInfo = std::variant<TimeParamsIndex, DateParamsIndex>;
+
+} // namespace rd
 
 const std::vector<float> &
 rd_smspec_get_params_default(const rd_smspec_type *rd_smspec);
@@ -54,10 +74,6 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
                                       bool include_restart);
 void rd_smspec_free(rd_smspec_type *);
 
-int rd_smspec_get_date_day_index(const rd_smspec_type *smspec);
-int rd_smspec_get_date_month_index(const rd_smspec_type *smspec);
-int rd_smspec_get_date_year_index(const rd_smspec_type *smspec);
-
 int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
                                            const char *lookup_kw);
 bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
@@ -66,8 +82,8 @@ std::vector<std::string>
 rd_smspec_select_matching_general_var_list(const rd_smspec_type *smspec,
                                            const char *pattern);
 
+const rd::TimeInfo &rd_smspec_get_time_info(const rd_smspec_type *smspec);
 int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec);
-int rd_smspec_get_time_index(const rd_smspec_type *rd_smspec);
 time_t rd_smspec_get_start_time(const rd_smspec_type *);
 bool rd_smspec_get_formatted(const rd_smspec_type *rd_smspec);
 const char *rd_smspec_get_header_file(const rd_smspec_type *rd_smspec);
