@@ -9,11 +9,11 @@
 */
 
 #include <algorithm>
-#include <linux/limits.h>
 #include <signal.h>
 #include <stdexcept>
 
 #include <cassert>
+#include <climits>
 #include <cstring>
 #include <ctime>
 #include <cmath>
