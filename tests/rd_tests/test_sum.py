@@ -915,68 +915,172 @@ def test_that_end_time_is_sim_start_when_there_are_no_steps():
     # sum.data_start will raise
 
 
+def _write_day_month_year_case(case, dates, values):
+    """Write a summary whose only time information is DAY/MONTH/YEAR.
+
+    The simulation start is taken from the first date, and a single FOPT
+    keyword carries `values`.
+    """
+    smspec = Smspec(
+        nx=2,
+        ny=2,
+        nz=2,
+        restarted_from_step=0,
+        num_keywords=4,
+        restart="        ",
+        keywords=["DAY     ", "MONTH   ", "YEAR    ", "FOPT    "],
+        well_names=[":+:+:+:+", ":+:+:+:+", ":+:+:+:+", "A_NAME  "],
+        region_numbers=[-32676, -32676, -32676, 0],
+        units=["        ", "        ", "        ", "SM3"],
+        start_date=Date(
+            day=dates[0].day,
+            month=dates[0].month,
+            year=dates[0].year,
+            hour=0,
+            minutes=0,
+            micro_seconds=0,
+        ),
+        intehead=SmspecIntehead(
+            unit=ResfoUnitSystem.METRIC,
+            simulator=Simulator.ECLIPSE_100,
+        ),
+    )
+    unsmry = Unsmry(
+        steps=[
+            SummaryStep(
+                seqnum=i,
+                ministeps=[
+                    SummaryMiniStep(
+                        mini_step=i,
+                        params=[
+                            float(date.day),
+                            float(date.month),
+                            float(date.year),
+                            value,
+                        ],
+                    )
+                ],
+            )
+            for i, (date, value) in enumerate(zip(dates, values))
+        ]
+    )
+    smspec.to_file(f"{case}.SMSPEC")
+    unsmry.to_file(f"{case}.UNSMRY")
+
+
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_a_summary_with_day_month_year_instead_of_time_is_read_correctly():
-    """
-    SummaryTStep derives the simulated time either from a TIME keyword
-    (given in DAYS/HOURS since simulation start) or, if that is absent,
-    from a set of DAY/MONTH/YEAR keywords
-    """
+@pytest.mark.parametrize("lazy_load", [True, False])
+def test_that_a_summary_with_day_month_year_instead_of_time_is_read_correctly(
+    lazy_load,
+):
     case = "DAY_MONTH_YEAR_CASE"
+    expected_dates = [
+        datetime.datetime(2010, 1, 1),
+        datetime.datetime(2010, 3, 15),
+    ]
+    expected_values = [10.0, 20.0]
+    _write_day_month_year_case(case, expected_dates, expected_values)
+
+    summary = Summary(case, lazy_load=lazy_load)
+    assert summary.dates == expected_dates
+    assert list(summary["FOPT"].values) == expected_values
+    assert summary.start_date == datetime.date(2010, 1, 1)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("lazy_load", [True, False])
+def test_that_sim_length_of_a_day_month_year_summary_is_measured_in_days(lazy_load):
+    """
+    sim_length is the elapsed simulation time expressed in the unit of the
+    TIME keyword. A summary without a TIME keyword has no unit of its own, so
+    it is reported in days.
+    """
+    case = "DAY_MONTH_YEAR_LENGTH_CASE"
+    _write_day_month_year_case(
+        case,
+        [datetime.datetime(2010, 1, 1), datetime.datetime(2010, 3, 15)],
+        [10.0, 20.0],
+    )
+
+    summary = Summary(case, lazy_load=lazy_load)
+    assert summary.sim_length == pytest.approx(73.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("lazy_load", [True, False])
+def test_that_a_timestep_cannot_be_added_to_a_day_month_year_summary(lazy_load):
+    case = "DAY_MONTH_YEAR_APPEND_CASE"
+    _write_day_month_year_case(case, [datetime.datetime(2010, 1, 1)], [10.0])
+
+    summary = Summary(case, lazy_load=lazy_load)
+    with pytest.raises(ValueError, match="without a TIME variable"):
+        summary.add_t_step(1, 10.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize(
+    "date_keywords",
+    [
+        pytest.param([], id="no_time_keywords"),
+        pytest.param(["DAY     ", "MONTH   "], id="day_and_month_but_no_year"),
+    ],
+)
+def test_that_a_summary_lacking_time_information_is_rejected(lazy_load, date_keywords):
+    """
+    Time information must come either from TIME or from a complete set of
+    DAY/MONTH/YEAR keywords. A partial set of date keywords is not usable,
+    so such a case must be rejected rather than silently read with a
+    wrong/default params index.
+    """
+    case = "NO_TIME_CASE"
     summary_keys = ["FOPT"]
-    start_date = Date(day=1, month=1, year=2010, hour=0, minutes=0, micro_seconds=0)
+    keywords = [*date_keywords, *summary_keys]
 
     smspec = Smspec(
         nx=2,
         ny=2,
         nz=2,
         restarted_from_step=0,
-        num_keywords=3 + len(summary_keys),
+        num_keywords=len(keywords),
         restart="        ",
-        keywords=["DAY     ", "MONTH   ", "YEAR    ", *summary_keys],
+        keywords=keywords,
         well_names=[
-            ":+:+:+:+",
-            ":+:+:+:+",
-            ":+:+:+:+",
+            *([":+:+:+:+"] * len(date_keywords)),
             *(["A_NAME  "] * len(summary_keys)),
         ],
-        region_numbers=[-32676, -32676, -32676, *([0] * len(summary_keys))],
-        units=["        ", "        ", "        ", *(["SM3"] * len(summary_keys))],
-        start_date=start_date,
+        region_numbers=[
+            *([-32676] * len(date_keywords)),
+            *([0] * len(summary_keys)),
+        ],
+        units=[
+            *(["        "] * len(date_keywords)),
+            *(["SM3"] * len(summary_keys)),
+        ],
+        start_date=Date(day=1, month=1, year=2010, hour=0, minutes=0, micro_seconds=0),
         intehead=SmspecIntehead(
             unit=ResfoUnitSystem.METRIC,
             simulator=Simulator.ECLIPSE_100,
         ),
     )
-
-    expected_dates = [
-        datetime.datetime(2010, 1, 1),
-        datetime.datetime(2010, 3, 15),
-    ]
-    expected_values = [10.0, 20.0]
     unsmry = Unsmry(
         steps=[
             SummaryStep(
                 seqnum=0,
                 ministeps=[
-                    SummaryMiniStep(mini_step=0, params=[1.0, 1.0, 2010.0, 10.0])
+                    SummaryMiniStep(
+                        mini_step=0,
+                        params=[*([1.0] * len(date_keywords)), 10.0],
+                    )
                 ],
-            ),
-            SummaryStep(
-                seqnum=1,
-                ministeps=[
-                    SummaryMiniStep(mini_step=1, params=[15.0, 3.0, 2010.0, 20.0])
-                ],
-            ),
+            )
         ]
     )
     smspec.to_file(f"{case}.SMSPEC")
     unsmry.to_file(f"{case}.UNSMRY")
 
-    summary = Summary(case)
-    assert summary.dates == expected_dates
-    assert list(summary["FOPT"].values) == expected_values
-    assert summary.start_date == datetime.date(2010, 1, 1)
+    with pytest.raises(ValueError, match="lack time information"):
+        Summary(case, lazy_load=lazy_load)
 
 
 def test_that_summary_keyword_vector_lifetime_is_longer_than_summary():
