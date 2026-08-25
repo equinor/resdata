@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include <cassert>
+#include <climits>
 #include <cstring>
 #include <ctime>
 #include <cmath>

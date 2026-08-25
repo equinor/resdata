@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -1399,7 +1400,7 @@ void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
 }
 
 void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type) {
-    memcpy(&rd_kw->data_type, &data_type, sizeof data_type);
+    new (&rd_kw->data_type) rd_data_type(data_type);
 }
 
 bool rd_kw_fread_realloc(rd_kw_type *rd_kw, ERT::FortIO &fortio) {

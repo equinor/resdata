@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -242,7 +243,7 @@ struct Case {
     const char *kw;
     Mode mode;
     bool throws;
-    int wells;
+    size_t wells;
 };
 
 std::vector<Case> all_cases() {
