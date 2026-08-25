@@ -55,13 +55,13 @@ int main(int argc, char **argv) {
                 test_assert_true(rst_file->has_kw(ISEG_KW));
                 test_assert_int_not_equal(
                     well_segment_collection_get_size(segments), 0);
-                test_assert_int_not_equal(
+                test_assert_size_t_not_equal(
                     well_branch_collection_get_size(branches), 0);
             } else {
                 test_assert_int_equal(
                     well_segment_collection_get_size(segments), 0);
-                test_assert_int_equal(well_branch_collection_get_size(branches),
-                                      0);
+                test_assert_size_t_equal(
+                    well_branch_collection_get_size(branches), 0);
                 test_assert_false(well_state.is_MSW());
             }
         }
