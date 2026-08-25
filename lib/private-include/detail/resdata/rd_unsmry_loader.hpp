@@ -28,8 +28,7 @@ public:
 
 private:
     int size; //Number of entries in the smspec index
-    int time_index;
-    int time_seconds;
+    rd::TimeInfo time_info;
     time_t sim_start;
     int m_length; //Number of PARAMS in the UNSMRY file
 
