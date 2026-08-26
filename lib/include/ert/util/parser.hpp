@@ -1,10 +1,6 @@
-#ifndef ERT_PARSER_H
-#define ERT_PARSER_H
+#pragma once
+#include <cstdio>
 #include <ert/util/stringlist.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 typedef struct basic_parser_struct basic_parser_type;
 
@@ -119,8 +115,3 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
 bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
                                const char *string, bool skip_string,
                                bool case_sensitive);
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-
-#endif
