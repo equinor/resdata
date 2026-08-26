@@ -12,8 +12,6 @@ party packages.
 
 import warnings
 
-from cwrap import Prototype
-
 import resdata
 
 from .ctime import CTime, TimeLike

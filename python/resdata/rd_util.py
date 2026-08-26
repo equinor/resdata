@@ -1,17 +1,3 @@
-"""
-Constants from the header rd_util.h - some stateless functions.
-
-This module does not contain any class definitions; it mostly consists
-of enum definitions/values from rd_util.h; the enum values are
-extracted from the shared library in a semi-automagic manner using the
-BaseCEnum class from cwrap.
-
-In addition to the enum definitions there are a few stateless
-functions from rd_util.c which are not bound to any class type.
-"""
-
-from cwrap import BaseCEnum
-
 from resdata._rd_util import (
     FileMode,
     FileType,
