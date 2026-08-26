@@ -217,6 +217,7 @@ add_resdata_pybind_module(rd_smspec_node resdata/smspec_node_pybind.cpp
                           resdata/summary)
 add_resdata_pybind_module(_type resdata/rd_type_pybind.cpp resdata/types)
 add_resdata_pybind_module(_rd_util resdata/rd_util_pybind.cpp resdata)
+add_resdata_pybind_module(_ctime resdata/ctime_pybind.cpp resdata/util/util)
 
 add_resdata_pybind_module(_cpolyline geometry/geo_polygon_pybind.cpp
                           resdata/geometry)

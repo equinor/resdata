@@ -12,7 +12,6 @@ functions from rd_util.c which are not bound to any class type.
 
 from cwrap import BaseCEnum
 
-from resdata import ResdataPrototype
 from resdata._rd_util import (
     FileMode,
     FileType,
