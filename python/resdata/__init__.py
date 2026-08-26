@@ -1,4 +1,5 @@
 import ctypes as ct
+import os
 import pathlib
 import warnings
 from importlib.util import find_spec

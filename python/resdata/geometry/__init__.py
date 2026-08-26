@@ -3,8 +3,6 @@ Simple package for working with 2D geometry.
 
 """
 
-from cwrap import Prototype
-
 import resdata
 
 from .cpolyline import CPolyline
