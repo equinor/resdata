@@ -107,9 +107,6 @@ from .rd_util import (
     ResdataUtil,
     UnitSystem,
 )
-from .util.util import updateAbortSignals
-
-updateAbortSignals()
 
 
 def root():
