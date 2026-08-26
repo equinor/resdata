@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/native_enum.h>
 
 #include <resdata/rd_type.hpp>
 
@@ -15,6 +16,16 @@ PYBIND11_MODULE(_type, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_type.py and rd_type.cpp";
 
+    py::native_enum<rd_type_enum>(m, "ResdataTypeEnum", "enum.IntEnum")
+        .value("RD_CHAR_TYPE", RD_CHAR_TYPE)
+        .value("RD_FLOAT_TYPE", RD_FLOAT_TYPE)
+        .value("RD_DOUBLE_TYPE", RD_DOUBLE_TYPE)
+        .value("RD_INT_TYPE", RD_INT_TYPE)
+        .value("RD_BOOL_TYPE", RD_BOOL_TYPE)
+        .value("RD_MESS_TYPE", RD_MESS_TYPE)
+        .value("RD_STRING_TYPE", RD_STRING_TYPE)
+        .finalize();
+
     m.def("_name", [](py::handle data_type) {
         auto *rd_type = from_cwrap<rd_data_type>(data_type);
         return rd_type_name(*rd_type);
@@ -25,19 +36,19 @@ PYBIND11_MODULE(_type, m) {
             new rd_data_type(rd_type_create_from_name(name.c_str())));
     });
 
-    m.def("_create_from_type", [](int type_enum) {
-        return reinterpret_cast<std::uintptr_t>(new rd_data_type(
-            rd_type_create_from_type(static_cast<rd_type_enum>(type_enum))));
+    m.def("_create_from_type", [](rd_type_enum type_enum) {
+        return reinterpret_cast<std::uintptr_t>(
+            new rd_data_type(rd_type_create_from_type(type_enum)));
     });
 
-    m.def("_create", [](int type_enum, size_t element_size) {
-        return reinterpret_cast<std::uintptr_t>(new rd_data_type(rd_type_create(
-            static_cast<rd_type_enum>(type_enum), element_size)));
+    m.def("_create", [](rd_type_enum type_enum, size_t element_size) {
+        return reinterpret_cast<std::uintptr_t>(
+            new rd_data_type(rd_type_create(type_enum, element_size)));
     });
 
     m.def("_get_type", [](py::handle data_type) {
         auto *rd_type = from_cwrap<rd_data_type>(data_type);
-        return static_cast<int>(rd_type_get_type(*rd_type));
+        return rd_type_get_type(*rd_type);
     });
 
     m.def("_get_sizeof_iotype", [](py::handle data_type) {
