@@ -8,16 +8,12 @@ from typing import TypeAlias
 import numpy as np
 from cwrap import BaseCValue
 
-from resdata import ResdataPrototype
+import resdata.util.util._ctime as _ctime
 
 
 class CTime(BaseCValue):
     TYPE_NAME = "rd_time_t"
     DATA_TYPE = ctypes.c_long
-    _timezone = ResdataPrototype("char* util_get_timezone()", bind=False)
-    _timegm = ResdataPrototype(
-        "long util_make_datetime_utc(int, int, int, int, int, int)", bind=False
-    )
 
     def __init__(self, value: TimeLike):
         if isinstance(value, int):
@@ -25,7 +21,7 @@ class CTime(BaseCValue):
         elif isinstance(value, CTime):
             value = value.value()
         elif isinstance(value, datetime.datetime):
-            value = CTime._timegm(
+            value = _ctime._timegm(
                 value.second,
                 value.minute,
                 value.hour,
@@ -34,10 +30,10 @@ class CTime(BaseCValue):
                 value.year,
             )
         elif isinstance(value, datetime.date):
-            value = CTime._timegm(0, 0, 0, value.day, value.month, value.year)
+            value = _ctime._timegm(0, 0, 0, value.day, value.month, value.year)
         elif isinstance(value, np.datetime64):
             d = value.astype("datetime64[s]").item()
-            value = CTime._timegm(
+            value = _ctime._timegm(
                 d.second,
                 d.minute,
                 d.hour,
@@ -152,7 +148,7 @@ class CTime(BaseCValue):
         """
         Returns the current timezone "in" C
         """
-        return CTime._timezone()
+        return _ctime._timezone()
 
 
 TimeLike: TypeAlias = int | CTime | datetime.datetime | datetime.date | np.datetime64
