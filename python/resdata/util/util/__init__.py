@@ -17,4 +17,3 @@ from cwrap import Prototype
 import resdata
 
 from .ctime import CTime, TimeLike
-from .install_abort_signals import installAbortSignals, updateAbortSignals

@@ -5,7 +5,6 @@ import traceback
 from unittest import TestCase
 
 import pytest
-from resdata.util.util import installAbortSignals
 
 from .source_enumerator import SourceEnumerator
 
@@ -56,7 +55,6 @@ class ExtendedTestCase(TestCase):
     SOURCE_ROOT = None
 
     def __init__(self, *args, **kwargs):
-        installAbortSignals()
         super().__init__(*args, **kwargs)
 
     @pytest.fixture(autouse=True)
