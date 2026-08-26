@@ -1,5 +1,9 @@
 #pragma once
 #include <cstdio>
+
+#include <memory>
+#include <string_view>
+
 #include <ert/util/stringlist.hpp>
 
 typedef struct basic_parser_struct basic_parser_type;
@@ -113,5 +117,11 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
                                               bool strip_quote_marks);
 
 bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
-                               const char *string, bool skip_string,
+                               const std::string_view string, bool skip_string,
                                bool case_sensitive);
+struct BasicParserDeleter {
+    void operator()(basic_parser_type *parser) const {
+        basic_parser_free(parser);
+    }
+};
+using parser_ptr = std::unique_ptr<basic_parser_type, BasicParserDeleter>;

@@ -25,11 +25,13 @@
 #include "ert/util/build_config.hpp"
 
 #include <cerrno>
+#include <system_error>
 
 #include <cstdint>
 #include <cctype>
 #include <cstdlib>
 #include <csignal>
+#include <string_view>
 #include <sys/stat.h>
 
 #ifdef HAVE_FNMATCH
@@ -295,16 +297,49 @@ char *util_alloc_substring_copy(const char *src, int offset, int N_) {
     return copy;
 }
 
-void util_strupr(char *s) {
-    size_t i;
-    for (i = 0; i < strlen(s); i++)
-        s[i] = toupper(s[i]);
-}
+bool util_fgetc_while_equal(FILE *stream, std::string_view str,
+                            bool case_sensitive) {
+    if (str.empty())
+        return true;
+    if (!stream) {
+        return false;
+    }
+    offset_type current_pos = util_ftell(stream);
+    if (current_pos == (offset_type)-1) {
+        return false;
+    }
 
-char *util_alloc_strupr_copy(const char *s) {
-    char *c = util_alloc_string_copy(s);
-    util_strupr(c);
-    return c;
+    bool equal = true;
+    for (size_t string_index = 0; string_index < str.length(); ++string_index) {
+        int c = std::fgetc(stream);
+
+        if (c == EOF) {
+            equal = false;
+            break;
+        }
+
+        unsigned char target_char =
+            static_cast<unsigned char>(str[string_index]);
+        unsigned char stream_char = static_cast<unsigned char>(c);
+
+        if (!case_sensitive) {
+            stream_char = static_cast<unsigned char>(std::toupper(stream_char));
+            target_char = static_cast<unsigned char>(std::toupper(target_char));
+        }
+        if (stream_char != target_char) {
+            equal = false;
+            break;
+        }
+    }
+
+    if (!equal) { /* not equal - go back. */
+        if (util_fseek(stream, current_pos, SEEK_SET) != 0)
+            throw std::system_error(errno, std::generic_category(),
+                                    "util_fgetc_while_equal: Failed to seek "
+                                    "back");
+    }
+
+    return equal;
 }
 
 /**
@@ -321,63 +356,44 @@ char *util_alloc_strupr_copy(const char *s) {
    case, otherwise we accept any case combination.
 */
 
-bool util_fseek_string(FILE *stream, const char *__string, bool skip_string,
+bool util_fseek_string(FILE *stream, std::string_view string, bool skip_string,
                        bool case_sensitive) {
+    /* Searching for the empty string succeeds immediately, without moving the
+       stream position. */
+    if (string.empty())
+        return true;
+
     bool string_found = false;
-    char *string = util_alloc_string_copy(__string);
-
+    int string_start = static_cast<unsigned char>(string[0]);
     if (!case_sensitive)
-        util_strupr(string);
-    {
-        int len = strlen(string);
-        long int initial_pos =
-            util_ftell(stream); /* Store the inital position. */
-        bool cont = true;
-        do {
-            int c = fgetc(stream);
-            if (!case_sensitive)
-                c = toupper(c);
+        string_start = std::toupper(string_start);
+    std::string_view string_rest = string.substr(1);
 
-            if (c ==
-                string
-                    [0]) { /* OK - we got the first character right - lets try in more detail: */
-                long int current_pos = util_ftell(stream);
-                bool equal = true;
-                int string_index;
-                for (string_index = 1; string_index < len; string_index++) {
-                    c = fgetc(stream);
-                    if (!case_sensitive)
-                        c = toupper(c);
+    offset_type initial_pos =
+        util_ftell(stream); /* Store the inital position. */
+    int c;
+    do {
+        c = fgetc(stream);
+        if (!case_sensitive && c != EOF)
+            c = std::toupper(c);
 
-                    if (c != string[string_index]) {
-                        equal = false;
-                        break;
-                    }
-                }
+        if (c == string_start) {
+            /* we got the first character right - lets try in more detail: */
+            string_found =
+                util_fgetc_while_equal(stream, string_rest, case_sensitive);
+        }
+    } while (c != EOF && !string_found);
 
-                if (equal) {
-                    string_found = true;
-                    cont = false;
-                } else /* Go back to current pos and continue searching. */
-                    util_fseek(stream, current_pos, SEEK_SET);
-            }
-            if (c == EOF)
-                cont = false;
-        } while (cont);
-
-        if (string_found) {
-            if (!skip_string) {
-                offset_type offset = (offset_type)strlen(string);
-                util_fseek(
-                    stream, -offset,
-                    SEEK_CUR); /* Reposition to the beginning of 'string' */
-            }
-        } else
-            util_fseek(
-                stream, initial_pos,
-                SEEK_SET); /* Could not find the string reposition at initial position. */
-    }
-    free(string);
+    if (string_found) {
+        if (!skip_string) {
+            offset_type offset = (offset_type)string.size();
+            util_fseek(stream, -offset,
+                       SEEK_CUR); /* Reposition to the beginning of 'string' */
+        }
+    } else
+        util_fseek(
+            stream, initial_pos,
+            SEEK_SET); /* Could not find the string reposition at initial position. */
     return string_found;
 }
 
