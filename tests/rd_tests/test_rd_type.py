@@ -4,7 +4,7 @@ from tests import ResdataTest
 
 
 def get_const_size_types():
-    return ResdataTypeEnum.enums()[:-1:]
+    return list(ResdataTypeEnum)[:-1:]
 
 
 class ResDataTypeTest(ResdataTest):

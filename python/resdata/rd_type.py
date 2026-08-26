@@ -1,26 +1,9 @@
-from cwrap import BaseCClass, BaseCEnum
+from cwrap import BaseCClass
 
 import resdata.types._type as _rd_type
+from resdata.types._type import ResdataTypeEnum
 
-
-class ResdataTypeEnum(BaseCEnum):
-    TYPE_NAME = "rd_type_enum"
-    RD_CHAR_TYPE = None
-    RD_FLOAT_TYPE = None
-    RD_DOUBLE_TYPE = None
-    RD_INT_TYPE = None
-    RD_BOOL_TYPE = None
-    RD_MESS_TYPE = None
-    RD_STRING_TYPE = None
-
-
-ResdataTypeEnum.addEnum("RD_CHAR_TYPE", 0)
-ResdataTypeEnum.addEnum("RD_FLOAT_TYPE", 1)
-ResdataTypeEnum.addEnum("RD_DOUBLE_TYPE", 2)
-ResdataTypeEnum.addEnum("RD_INT_TYPE", 3)
-ResdataTypeEnum.addEnum("RD_BOOL_TYPE", 4)
-ResdataTypeEnum.addEnum("RD_MESS_TYPE", 5)
-ResdataTypeEnum.addEnum("RD_STRING_TYPE", 7)
+__all__ = ["ResDataType", "ResdataTypeEnum"]
 
 
 class ResDataType(BaseCClass):
@@ -64,7 +47,7 @@ class ResDataType(BaseCClass):
 
     @property
     def type(self):
-        return ResdataTypeEnum(_rd_type._get_type(self))
+        return _rd_type._get_type(self)
 
     @property
     def element_size(self):
