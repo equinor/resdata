@@ -109,9 +109,7 @@ void util_make_path(const char *);
 double util_file_difftime(const char *, const char *);
 size_t util_file_size(const char *);
 size_t util_fd_size(int fd);
-void util_strupr(char *);
 bool util_string_equal(const char *s1, const char *s2);
-char *util_alloc_strupr_copy(const char *);
 bool util_copy_file(const char *, const char *);
 bool util_copy_file__(const char *src_file, const char *target_file,
                       size_t buffer_size, void *buffer, bool abort_on_error);
@@ -178,8 +176,6 @@ void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
 int util_fread_int(FILE *);
 void util_fwrite_int(int, FILE *);
 int util_get_current_linenr(FILE *stream);
-bool util_fseek_string(FILE *stream, const char *string, bool skip_string,
-                       bool case_sensitive);
 bool util_files_equal(const char *file1, const char *file2);
 double util_kahan_sum(const double *data, size_t N);
 bool util_double_approx_equal(double d1, double d2);
@@ -264,5 +260,10 @@ extern "C" [[noreturn]] void util_abort__(const char *file,
 
 #ifdef __cplusplus
 }
+#include <string_view>
+bool util_fgetc_while_equal(FILE *stream, std::string_view str,
+                            bool case_sensitive);
+bool util_fseek_string(FILE *stream, std::string_view string, bool skip_string,
+                       bool case_sensitive);
 #endif
 #endif

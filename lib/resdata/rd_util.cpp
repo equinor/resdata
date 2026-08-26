@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 #include <algorithm>
 #include <ert/util/ert_api_config.hpp>
@@ -79,62 +80,52 @@ int rd_filename_report_nr(const char *filename) {
     return report_nr;
 }
 
+namespace {
+struct ExtInfo {
+    FileType type;
+    bool fmt_file;
+};
+
+const std::unordered_map<std::string_view, ExtInfo> &ext_type_map() {
+    static const std::unordered_map<std::string_view, ExtInfo> m = {
+        {"UNRST", {FileType::UNIFIED_RESTART, false}},
+        {"FUNRST", {FileType::UNIFIED_RESTART, true}},
+        {"UNSMRY", {FileType::UNIFIED_SUMMARY, false}},
+        {"FUNSMRY", {FileType::UNIFIED_SUMMARY, true}},
+        {"SMSPEC", {FileType::SUMMARY_HEADER, false}},
+        {"FSMSPEC", {FileType::SUMMARY_HEADER, true}},
+        {"GRID", {FileType::GRID, false}},
+        {"FGRID", {FileType::GRID, true}},
+        {"EGRID", {FileType::EGRID, false}},
+        {"FEGRID", {FileType::EGRID, true}},
+        {"INIT", {FileType::INIT, false}},
+        {"FINIT", {FileType::INIT, true}},
+        {"FRFT", {FileType::RFT, true}},
+        {"RFT", {FileType::RFT, false}},
+        {"DATA", {FileType::DATA, true}},
+    };
+    return m;
+}
+
 /*
  We accept mixed lowercase/uppercase Eclipse file extensions even if Eclipse itself does not accept them.
 */
-static FileType rd_inspect_extension(const char *ext, bool *_fmt_file,
-                                     int *_report_nr) {
+static FileType inspect_extension(std::string_view ext, bool *_fmt_file,
+                                  int *_report_nr) {
     FileType file_type = FileType::OTHER;
     bool fmt_file = true;
     int report_nr = -1;
-    char *upper_ext = util_alloc_strupr_copy(ext);
-    if (strcmp(upper_ext, "UNRST") == 0) {
-        file_type = FileType::UNIFIED_RESTART;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FUNRST") == 0) {
-        file_type = FileType::UNIFIED_RESTART;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "UNSMRY") == 0) {
-        file_type = FileType::UNIFIED_SUMMARY;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FUNSMRY") == 0) {
-        file_type = FileType::UNIFIED_SUMMARY;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "SMSPEC") == 0) {
-        file_type = FileType::SUMMARY_HEADER;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FSMSPEC") == 0) {
-        file_type = FileType::SUMMARY_HEADER;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "GRID") == 0) {
-        file_type = FileType::GRID;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FGRID") == 0) {
-        file_type = FileType::GRID;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "EGRID") == 0) {
-        file_type = FileType::EGRID;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FEGRID") == 0) {
-        file_type = FileType::EGRID;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "INIT") == 0) {
-        file_type = FileType::INIT;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "FINIT") == 0) {
-        file_type = FileType::INIT;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "FRFT") == 0) {
-        file_type = FileType::RFT;
-        fmt_file = true;
-    } else if (strcmp(upper_ext, "RFT") == 0) {
-        file_type = FileType::RFT;
-        fmt_file = false;
-    } else if (strcmp(upper_ext, "DATA") == 0) {
-        file_type = FileType::DATA;
-        fmt_file = true; /* Not really relevant ... */
+
+    std::string upper_ext(ext);
+    for (char &c : upper_ext)
+        c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+
+    auto it = ext_type_map().find(std::string_view(upper_ext));
+    if (it != ext_type_map().end()) {
+        file_type = it->second.type;
+        fmt_file = it->second.fmt_file;
     } else {
-        switch (upper_ext[0]) {
+        switch (upper_ext.empty() ? '\0' : upper_ext[0]) {
         case ('X'):
             file_type = FileType::RESTART;
             fmt_file = false;
@@ -155,7 +146,7 @@ static FileType rd_inspect_extension(const char *ext, bool *_fmt_file,
             file_type = FileType::OTHER;
         }
         if (file_type != FileType::OTHER)
-            if (!util_sscanf_int(&upper_ext[1], &report_nr))
+            if (!util_sscanf_int(upper_ext.c_str() + 1, &report_nr))
                 file_type = FileType::OTHER;
     }
 
@@ -164,10 +155,9 @@ static FileType rd_inspect_extension(const char *ext, bool *_fmt_file,
 
     if (_report_nr != NULL)
         *_report_nr = report_nr;
-
-    free(upper_ext);
     return file_type;
 }
+} // namespace
 
 /**
   This function takes an eclipse filename as input - looks at the
@@ -183,7 +173,7 @@ FileType rd_get_file_type(const char *filename, bool *fmt_file,
     if (ext == NULL)
         return FileType::OTHER;
 
-    return rd_inspect_extension(&ext[1], fmt_file, report_nr);
+    return inspect_extension(&ext[1], fmt_file, report_nr);
 }
 
 static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
@@ -402,8 +392,7 @@ fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
 
     return casepath.parent_path() / (base + "." + ext);
 }
-}; // namespace rd
-
+} // namespace rd
 /**
    This function assumes that:
 
@@ -733,45 +722,29 @@ bool rd_fmt_file(const char *filename, bool *__fmt_file) {
    Will return -1 for an unrecognized month name.
 */
 
-static int rd_get_month_nr__(const char *_month_name) {
-    int month_nr = -1;
-    char *month_name = util_alloc_string_copy(_month_name);
-    util_strupr(month_name);
+static int rd_get_month_nr__(const char *month_name_) {
+    constexpr size_t month_len = 3;
 
-    if (strncmp(month_name, "JAN", 3) == 0)
-        month_nr = 1;
-    else if (strncmp(month_name, "FEB", 3) == 0)
-        month_nr = 2;
-    else if (strncmp(month_name, "MAR", 3) == 0)
-        month_nr = 3;
-    else if (strncmp(month_name, "APR", 3) == 0)
-        month_nr = 4;
-    else if (strncmp(month_name, "MAI", 3) == 0)
-        month_nr = 5;
-    else if (strncmp(month_name, "MAY", 3) == 0)
-        month_nr = 5;
-    else if (strncmp(month_name, "JUN", 3) == 0)
-        month_nr = 6;
-    else if (strncmp(month_name, "JUL", 3) == 0)
-        month_nr = 7;
-    else if (strncmp(month_name, "JLY", 3) == 0) /* ECLIPSE ambigus on July. */
-        month_nr = 7;
-    else if (strncmp(month_name, "AUG", 3) == 0)
-        month_nr = 8;
-    else if (strncmp(month_name, "SEP", 3) == 0)
-        month_nr = 9;
-    else if (strncmp(month_name, "OCT", 3) == 0)
-        month_nr = 10;
-    else if (strncmp(month_name, "OKT", 3) == 0)
-        month_nr = 10;
-    else if (strncmp(month_name, "NOV", 3) == 0)
-        month_nr = 11;
-    else if (strncmp(month_name, "DEC", 3) == 0)
-        month_nr = 12;
-    else if (strncmp(month_name, "DES", 3) == 0)
-        month_nr = 12;
-    free(month_name);
-    return month_nr;
+    /* Guard against reading past the end of short/malformed input before
+       touching any of its bytes. */
+    if (strnlen(month_name_, month_len) != month_len)
+        return -1;
+
+    char upper_month[month_len + 1];
+    for (size_t i = 0; i < month_len; ++i)
+        upper_month[i] = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(month_name_[i])));
+    upper_month[month_len] = '\0';
+
+    static const std::unordered_map<std::string_view, int> month_map = {
+        {"JAN", 1},  {"FEB", 2},  {"MAR", 3},  {"APR", 4},
+        {"MAI", 5},  {"MAY", 5},  {"JUN", 6},  {"JUL", 7},
+        {"JLY", 7},  {"AUG", 8},  {"SEP", 9},  {"OCT", 10},
+        {"OKT", 10}, {"NOV", 11}, {"DEC", 12}, {"DES", 12},
+    };
+
+    auto it = month_map.find(std::string_view(upper_month, month_len));
+    return it != month_map.end() ? it->second : -1;
 }
 
 static int rd_get_month_nr(const char *month_name) {
@@ -793,37 +766,39 @@ static int rd_get_month_nr(const char *month_name) {
 */
 
 time_t rd_get_start_date(const char *data_file) {
-    basic_parser_type *parser =
-        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n");
+    parser_ptr parser{
+        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
     time_t start_date = -1;
-    FILE *stream = util_fopen(data_file, "r");
-    char *buffer;
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+                                                   [](FILE *f) { fclose(f); }};
+    std::vector<char> buffer;
 
-    if (!basic_parser_fseek_string(parser, stream, "START", true,
+    if (!basic_parser_fseek_string(parser.get(), stream.get(), "START", true,
                                    true)) /* Seeks case insensitive. */
         util_abort("%s: sorry - could not find START in DATA file %s \n",
                    __func__, data_file);
 
     {
-        long int start_pos = util_ftell(stream);
-        int buffer_size;
+        offset_type start_pos = util_ftell(stream.get());
 
         /* Look for terminating '/' */
-        if (!basic_parser_fseek_string(parser, stream, "/", false, true))
+        if (!basic_parser_fseek_string(parser.get(), stream.get(), "/", false,
+                                       true))
             util_abort("%s: sorry - could not find \"/\" termination of START "
                        "keyword in data_file: \n",
                        __func__, data_file);
 
-        buffer_size = (util_ftell(stream) - start_pos);
-        buffer = (char *)util_calloc(buffer_size + 1, sizeof *buffer);
-        util_fseek(stream, start_pos, SEEK_SET);
-        util_fread(buffer, sizeof *buffer, buffer_size, stream, __func__);
-        buffer[buffer_size] = '\0';
+        size_t buffer_size =
+            static_cast<size_t>(util_ftell(stream.get()) - start_pos);
+        buffer.assign(buffer_size + 1, '\0');
+        util_fseek(stream.get(), start_pos, SEEK_SET);
+        util_fread(buffer.data(), sizeof(char), buffer_size, stream.get(),
+                   __func__);
     }
 
     {
         stringlist_type *tokens =
-            basic_parser_tokenize_buffer(parser, buffer, true);
+            basic_parser_tokenize_buffer(parser.get(), buffer.data(), true);
         int day, year, month_nr;
         if (util_sscanf_int(stringlist_iget(tokens, 0), &day) &&
             util_sscanf_int(stringlist_iget(tokens, 2), &year)) {
@@ -831,13 +806,9 @@ time_t rd_get_start_date(const char *data_file) {
             start_date = rd_make_date(day, month_nr, year);
         } else
             util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",
-                       __func__, buffer);
+                       __func__, buffer.data());
         stringlist_free(tokens);
     }
-
-    free(buffer);
-    basic_parser_free(parser);
-    fclose(stream);
 
     return start_date;
 }
@@ -845,9 +816,8 @@ time_t rd_get_start_date(const char *data_file) {
 static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
                                      const char *data_file) {
     int num_cpu = 1;
-    char *buffer;
-    long int start_pos = util_ftell(stream);
-    int buffer_size;
+    std::vector<char> buffer;
+    offset_type start_pos = util_ftell(stream);
 
     /* Look for terminating '/' */
     if (!basic_parser_fseek_string(parser, stream, "/", false, true))
@@ -855,15 +825,14 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
                    "keyword in data_file: \n",
                    __func__, data_file);
 
-    buffer_size = (util_ftell(stream) - start_pos);
-    buffer = (char *)util_calloc(buffer_size + 1, sizeof *buffer);
+    size_t buffer_size = static_cast<size_t>(util_ftell(stream) - start_pos);
+    buffer.assign(buffer_size + 1, '\0');
     util_fseek(stream, start_pos, SEEK_SET);
-    util_fread(buffer, sizeof *buffer, buffer_size, stream, __func__);
-    buffer[buffer_size] = '\0';
+    util_fread(buffer.data(), sizeof(char), buffer_size, stream, __func__);
 
     {
         stringlist_type *tokens =
-            basic_parser_tokenize_buffer(parser, buffer, true);
+            basic_parser_tokenize_buffer(parser, buffer.data(), true);
 
         if (stringlist_get_size(tokens) > 0) {
             const char *num_cpu_string = stringlist_iget(tokens, 0);
@@ -878,7 +847,6 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
 
         stringlist_free(tokens);
     }
-    free(buffer);
     return num_cpu;
 }
 
@@ -941,7 +909,7 @@ static int rd_get_num_slave_cpu__(basic_parser_type *parser, FILE *stream,
    and (possibly) blank lines between the title keyword and the title. */
 static bool rd_find_keyword__(basic_parser_type *parser, FILE *stream,
                               const char *keyword) {
-    long int title_pos = -1;
+    offset_type title_pos = -1;
 
     /* Find the first occurenced of TITLE, if any. */
     if (basic_parser_fseek_string(parser, stream, "TITLE", false, true)) {
@@ -951,7 +919,7 @@ static bool rd_find_keyword__(basic_parser_type *parser, FILE *stream,
 
     /* Find all keyword occurences, returning the first that is valid. */
     while (basic_parser_fseek_string(parser, stream, keyword, false, true)) {
-        long int keyword_pos = util_ftell(stream);
+        offset_type keyword_pos = util_ftell(stream);
 
         /* Starting with last title found, find all titles that start before
            this keyword occurence, to see if they contain the keyword: */
@@ -986,7 +954,9 @@ static bool rd_find_keyword__(basic_parser_type *parser, FILE *stream,
 
         /* Position to the end of the keyword, we either are succesful, or we
            need to continue looking for the next keyword. */
-        util_fseek(stream, keyword_pos + strlen(keyword), SEEK_SET);
+        util_fseek(stream,
+                   keyword_pos + static_cast<offset_type>(strlen(keyword)),
+                   SEEK_SET);
 
         /* If we are not within a title: success. */
         if (title_pos < 0 || keyword_pos < title_pos)
@@ -998,22 +968,23 @@ static bool rd_find_keyword__(basic_parser_type *parser, FILE *stream,
 
 int rd_get_num_cpu(const char *data_file) {
     int num_cpu = 1;
-    basic_parser_type *parser =
-        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n");
-    FILE *stream = util_fopen(data_file, "r");
+    parser_ptr parser{
+        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+                                                   [](FILE *f) { fclose(f); }};
 
-    if (rd_find_keyword__(parser, stream, "PARALLEL")) {
-        num_cpu = rd_get_num_parallel_cpu__(parser, stream, data_file);
-    } else if (rd_find_keyword__(parser, stream, "SLAVES")) {
-        num_cpu = rd_get_num_slave_cpu__(parser, stream, data_file) + 1;
+    if (rd_find_keyword__(parser.get(), stream.get(), "PARALLEL")) {
+        num_cpu =
+            rd_get_num_parallel_cpu__(parser.get(), stream.get(), data_file);
+    } else if (rd_find_keyword__(parser.get(), stream.get(), "SLAVES")) {
+        num_cpu =
+            rd_get_num_slave_cpu__(parser.get(), stream.get(), data_file) + 1;
         fprintf(stderr,
                 "Information: \"SLAVES\" option found, returning %d number "
                 "of CPUs",
                 num_cpu);
     }
 
-    basic_parser_free(parser);
-    fclose(stream);
     return num_cpu;
 }
 
