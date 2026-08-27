@@ -195,22 +195,6 @@ py::object CTime() {
     return cls;
 }
 
-py::object CPolyline() {
-    static py::object cls;
-    if (!cls) {
-        cls = py::module_::import("resdata.geometry").attr("CPolyline");
-    }
-    return cls;
-}
-
-template <> rd::Polygon *from_cwrap<rd::Polygon>(py::handle obj) {
-    if (!py::isinstance(obj, CPolyline()))
-        throw py::type_error("Expected CPolyline, got " +
-                             static_cast<std::string>(py::repr(obj)));
-
-    return cast_cwrap<rd::Polygon>(obj);
-}
-
 py::object GeoPointset() {
     static py::object cls;
     if (!cls) {

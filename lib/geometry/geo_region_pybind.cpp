@@ -48,25 +48,34 @@ PYBIND11_MODULE(_geo_region, m) {
         return geo_region_get_index_list(from_cwrap<geo_region_type>(self));
     });
 
-    m.def("_select_inside_polygon", [](py::handle self, py::handle polygon) {
-        geo_region_select_inside_polygon(from_cwrap<geo_region_type>(self),
-                                         from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_select_outside_polygon", [](py::handle self, py::handle polygon) {
-        geo_region_select_outside_polygon(
-            from_cwrap<geo_region_type>(self),
-            from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_deselect_inside_polygon", [](py::handle self, py::handle polygon) {
-        geo_region_deselect_inside_polygon(
-            from_cwrap<geo_region_type>(self),
-            from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_deselect_outside_polygon", [](py::handle self, py::handle polygon) {
-        geo_region_deselect_outside_polygon(
-            from_cwrap<geo_region_type>(self),
-            from_cwrap<rd::Polygon>(polygon));
-    });
+    m.def(
+        "_select_inside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            geo_region_select_inside_polygon(from_cwrap<geo_region_type>(self),
+                                             polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_select_outside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            geo_region_select_outside_polygon(from_cwrap<geo_region_type>(self),
+                                              polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_deselect_inside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            geo_region_deselect_inside_polygon(
+                from_cwrap<geo_region_type>(self), polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_deselect_outside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            geo_region_deselect_outside_polygon(
+                from_cwrap<geo_region_type>(self), polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
 
     m.def("_select_above_line", [](py::handle self, std::vector<double> xcoords,
                                    std::vector<double> ycoords) {

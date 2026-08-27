@@ -358,24 +358,34 @@ PYBIND11_MODULE(_rd_region, m) {
                                              plane_vector_data(n, "n"),
                                              plane_vector_data(p, "p"));
           });
-    m.def("_select_inside_polygon", [](py::handle self, py::handle polygon) {
-        rd_region_select_inside_polygon(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_select_outside_polygon", [](py::handle self, py::handle polygon) {
-        rd_region_select_outside_polygon(from_cwrap<rd_region_type>(self),
-                                         from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_deselect_inside_polygon", [](py::handle self, py::handle polygon) {
-        rd_region_deselect_inside_polygon(
-            from_cwrap<rd_region_type>(self),
-            from_cwrap<rd::Polygon>(polygon));
-    });
-    m.def("_deselect_outside_polygon", [](py::handle self, py::handle polygon) {
-        rd_region_deselect_outside_polygon(
-            from_cwrap<rd_region_type>(self),
-            from_cwrap<rd::Polygon>(polygon));
-    });
+    m.def(
+        "_select_inside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            rd_region_select_inside_polygon(from_cwrap<rd_region_type>(self),
+                                            polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_select_outside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            rd_region_select_outside_polygon(from_cwrap<rd_region_type>(self),
+                                             polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_deselect_inside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            rd_region_deselect_inside_polygon(from_cwrap<rd_region_type>(self),
+                                              polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
+    m.def(
+        "_deselect_outside_polygon",
+        [](py::handle self, rd::Polygon *polygon) {
+            rd_region_deselect_outside_polygon(from_cwrap<rd_region_type>(self),
+                                               polygon);
+        },
+        py::arg("self"), py::arg("polygon").none(false));
     m.def("_set_name",
           [](py::handle self, const std::optional<std::string> &name) {
               rd_region_set_name(from_cwrap<rd_region_type>(self), name);

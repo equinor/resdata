@@ -14,7 +14,6 @@ class CPolylineCollection(BaseCClass):
     def __init__(self):
         c_ptr = _cpolyline_collection._alloc_new()
         super().__init__(c_ptr)
-        self.parent_ref = None
 
     def __contains__(self, name):
         return _cpolyline_collection._has_polyline(self, name)
@@ -51,11 +50,8 @@ class CPolylineCollection(BaseCClass):
     def shallowCopy(self):
         copy = CPolylineCollection()
         for pl in self:
-            _cpolyline_collection._add_polyline(copy, pl, False)
+            _cpolyline_collection._add_polyline(copy, pl)
 
-        # If we make a shallow copy we must ensure that source, owning
-        # all the polyline objects does not go out of scope.
-        copy.parent_ref = self
         return copy
 
     def addPolyline(self, polyline, name=None):
@@ -71,11 +67,7 @@ class CPolylineCollection(BaseCClass):
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
 
-        if polyline.isReference():
-            _cpolyline_collection._add_polyline(self, polyline, False)
-        else:
-            polyline.convertToCReference(self)
-            _cpolyline_collection._add_polyline(self, polyline, True)
+        _cpolyline_collection._add_polyline(self, polyline)
 
     def createPolyline(self, name=None):
         if name and name in self:

@@ -1,11 +1,13 @@
 #include <cstdlib>
 
 #include <map>
+#include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/vector.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_polygon_collection.hpp>
@@ -14,8 +16,8 @@
 
 struct geo_polygon_collection_struct {
     UTIL_TYPE_ID_DECLARATION;
-    vector_ptr polygon_list = new_vector();
-    std::map<std::string, rd::Polygon *> polygon_map;
+    std::vector<std::shared_ptr<rd::Polygon>> polygon_list;
+    std::map<std::string, std::shared_ptr<rd::Polygon>> polygon_map;
 };
 
 UTIL_IS_INSTANCE_FUNCTION(geo_polygon_collection,
@@ -27,42 +29,37 @@ geo_polygon_collection_type *geo_polygon_collection_alloc() {
     return polygons;
 }
 
-int geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
-    return vector_get_size(polygons->polygon_list.get());
+size_t
+geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
+    return polygons->polygon_list.size();
 }
 
-rd::Polygon *
+std::shared_ptr<rd::Polygon>
 geo_polygon_collection_create_polygon(geo_polygon_collection_type *polygons,
                                       const char *name) {
-    rd::Polygon *polygon{nullptr};
-    bool create_polygon = true;
+    std::shared_ptr<rd::Polygon> polygon;
 
     if (name && geo_polygon_collection_has_polygon(polygons, name))
-        create_polygon = false;
+        return polygon;
 
-    if (create_polygon) {
-        polygon = new rd::Polygon(name);
-        geo_polygon_collection_add_polygon(polygons, polygon, true);
-    }
+    polygon = std::make_shared<rd::Polygon>(
+        name ? std::optional<std::string>(name) : std::nullopt);
+    geo_polygon_collection_add_polygon(polygons, polygon);
 
     return polygon;
 }
 
 bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
-                                        rd::Polygon *polygon,
-                                        bool polygon_owner) {
-    const char *name = geo_polygon_get_name(polygon);
-    if (geo_polygon_collection_has_polygon(polygons, name))
+                                        std::shared_ptr<rd::Polygon> polygon) {
+    auto name = polygon->get_name();
+    if (geo_polygon_collection_has_polygon(
+            polygons, name.has_value() ? name->c_str() : nullptr))
         return false;
     else {
-        if (polygon_owner)
-            vector_append_owned_ref(polygons->polygon_list.get(), polygon,
-                                    [](void *arg) {delete static_cast<rd::Polygon *>(arg);});
-        else
-            vector_append_ref(polygons->polygon_list.get(), polygon);
+        polygons->polygon_list.push_back(polygon);
 
-        if (name)
-            polygons->polygon_map[name] = polygon;
+        if (name.has_value())
+            polygons->polygon_map[*name] = polygon;
 
         return true;
     }
@@ -80,14 +77,14 @@ void geo_polygon_collection_free(geo_polygon_collection_type *polygons) {
     delete polygons;
 }
 
-rd::Polygon *
+std::shared_ptr<rd::Polygon>
 geo_polygon_collection_iget_polygon(const geo_polygon_collection_type *polygons,
-                                    int index) {
-    return (rd::Polygon *)vector_iget(polygons->polygon_list.get(), index);
+                                    size_t index) {
+    return polygons->polygon_list.at(index);
 }
 
-rd::Polygon *
+std::shared_ptr<rd::Polygon>
 geo_polygon_collection_get_polygon(const geo_polygon_collection_type *polygons,
-                                   const char *polygon_name) {
+                                   const std::string &polygon_name) {
     return polygons->polygon_map.at(polygon_name);
 }

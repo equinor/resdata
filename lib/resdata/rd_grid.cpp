@@ -3516,14 +3516,14 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
                                             double y, int k, int i1, int i2,
                                             int j1, int j2,
                                             rd::Polygon *polygon) {
-    geo_polygon_reset(polygon);
+    polygon->clear();
 
     /* Bottom edge */
     for (int i = i1; i < i2; i++) {
         double corner_pos[3];
         rd_grid_get_corner_xyz(grid, i, j1, k, &corner_pos[0], &corner_pos[1],
                                &corner_pos[2]);
-        geo_polygon_add_point(polygon, corner_pos[0], corner_pos[1]);
+        polygon->add_point(corner_pos[0], corner_pos[1]);
     }
 
     /* Right edge */
@@ -3531,7 +3531,7 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
         double corner_pos[3];
         rd_grid_get_corner_xyz(grid, i2, j, k, &corner_pos[0], &corner_pos[1],
                                &corner_pos[2]);
-        geo_polygon_add_point(polygon, corner_pos[0], corner_pos[1]);
+        polygon->add_point(corner_pos[0], corner_pos[1]);
     }
 
     /* Top edge */
@@ -3539,7 +3539,7 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
         double corner_pos[3];
         rd_grid_get_corner_xyz(grid, i, j2, k, &corner_pos[0], &corner_pos[1],
                                &corner_pos[2]);
-        geo_polygon_add_point(polygon, corner_pos[0], corner_pos[1]);
+        polygon->add_point(corner_pos[0], corner_pos[1]);
     }
 
     /* Left edge */
@@ -3547,10 +3547,10 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
         double corner_pos[3];
         rd_grid_get_corner_xyz(grid, i1, j, k, &corner_pos[0], &corner_pos[1],
                                &corner_pos[2]);
-        geo_polygon_add_point(polygon, corner_pos[0], corner_pos[1]);
+        polygon->add_point(corner_pos[0], corner_pos[1]);
     }
-    geo_polygon_close(polygon);
-    return geo_polygon_contains_point(polygon, x, y, true);
+    polygon->close();
+    return polygon->contains_point(x, y, true);
 }
 
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,

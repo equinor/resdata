@@ -894,7 +894,7 @@ static void rd_region_polygon_select__(rd_region_type *region,
                 rd_grid_get_global_index3(region->parent_grid, i, j, define_k);
 
             rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
-            inside = geo_polygon_contains_point(polygon, x, y);
+            inside = polygon->contains_point(x, y);
 
             if (select_inside == inside) {
                 for (int k = k1; k < k2; k++) {

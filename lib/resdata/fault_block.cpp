@@ -120,10 +120,10 @@ bool FaultBlock::neighbour_xpolyline(
     rd_grid_get_xyz1(grid, g1, &x1, &y1, &z1);
     rd_grid_get_xyz1(grid, g2, &x2, &y2, &z2);
 
-    for (int i = 0; i < geo_polygon_collection_size(polylines); i++) {
-        const rd::Polygon *polyline =
+    for (size_t i = 0; i < geo_polygon_collection_size(polylines); i++) {
+        std::shared_ptr<rd::Polygon> polyline =
             geo_polygon_collection_iget_polygon(polylines, i);
-        if (geo_polygon_segment_intersects(polyline, x1, y1, x2, y2))
+        if (polyline->segment_intersects(x1, y1, x2, y2))
             return true;
     }
     return false;
