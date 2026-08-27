@@ -18,9 +18,6 @@ struct geo_polygon_struct {
 
 typedef struct geo_polygon_struct geo_polygon_type;
 
-geo_polygon_type *geo_polygon_alloc(const char *name);
-void geo_polygon_free(geo_polygon_type *polygon);
-void geo_polygon_free__(void *arg);
 void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y);
 void geo_polygon_add_point_front(geo_polygon_type *polygon, double x, double y);
 geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename);
@@ -38,8 +35,3 @@ void geo_polygon_set_name(geo_polygon_type *polygon, const char *name);
 double geo_polygon_get_length(geo_polygon_type *polygon);
 bool geo_polygon_equal(const geo_polygon_type *polygon1,
                        const geo_polygon_type *polygon2);
-
-using geo_polygon_ptr =
-    std::unique_ptr<geo_polygon_type, decltype(&geo_polygon_free)>;
-
-geo_polygon_ptr make_geo_polygon(std::string name);

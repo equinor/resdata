@@ -101,7 +101,7 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
 
 TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
     GIVEN("A square polygon") {
-        auto polygon = make_geo_polygon("square");
+        auto polygon = std::make_unique<geo_polygon_struct>("square");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 10.0);
@@ -134,7 +134,7 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
 
 TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
     GIVEN("A square polygon with vertical edges at x=0 and x=10") {
-        auto polygon = make_geo_polygon("square");
+        auto polygon = std::make_unique<geo_polygon_struct>("square");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 10.0);
@@ -172,7 +172,7 @@ TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
 
 TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
     GIVEN("A square polygon with horizontal edges at y=0 and y=10") {
-        auto polygon = make_geo_polygon("square");
+        auto polygon = std::make_unique<geo_polygon_struct>("square");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 10.0);
@@ -202,7 +202,7 @@ TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
 TEST_CASE("geo_polygon_contains_point handles general sloped edges",
           "[geometry]") {
     GIVEN("A triangular polygon with a sloped hypotenuse") {
-        auto polygon = make_geo_polygon("triangle");
+        auto polygon = std::make_unique<geo_polygon_struct>("triangle");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 0.0, 10.0);
@@ -241,7 +241,7 @@ TEST_CASE("geo_polygon_contains_point handles general sloped edges",
 TEST_CASE("geo_polygon_contains_point ray casting without force_edge_inside",
           "[geometry]") {
     GIVEN("A square polygon") {
-        auto polygon = make_geo_polygon("square");
+        auto polygon = std::make_unique<geo_polygon_struct>("square");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 10.0);
@@ -272,7 +272,7 @@ TEST_CASE("geo_polygon_contains_point ignores degenerate zero-length edges",
           "[geometry]") {
     GIVEN("A square polygon with a duplicated point creating a zero-length "
           "edge") {
-        auto polygon = make_geo_polygon("square_with_duplicate");
+        auto polygon = std::make_unique<geo_polygon_struct>("square_with_duplicate");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
@@ -335,7 +335,7 @@ TEST_CASE("geo_region polygon selection", "[geometry]") {
         geo_pointset_add_xyz(pointset.get(), 15.0, 15.0, 0.0);
         geo_pointset_add_xyz(pointset.get(), -5.0, 5.0, 0.0);
 
-        auto polygon = make_geo_polygon("square");
+        auto polygon = std::make_unique<geo_polygon_struct>("square");
         geo_polygon_add_point(polygon.get(), 0.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 0.0);
         geo_polygon_add_point(polygon.get(), 10.0, 10.0);

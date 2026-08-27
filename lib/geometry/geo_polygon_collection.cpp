@@ -34,14 +34,14 @@ int geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
 geo_polygon_type *
 geo_polygon_collection_create_polygon(geo_polygon_collection_type *polygons,
                                       const char *name) {
-    geo_polygon_type *polygon = NULL;
+    geo_polygon_struct *polygon{nullptr};
     bool create_polygon = true;
 
     if (name && geo_polygon_collection_has_polygon(polygons, name))
         create_polygon = false;
 
     if (create_polygon) {
-        polygon = geo_polygon_alloc(name);
+        polygon = new geo_polygon_struct(name);
         geo_polygon_collection_add_polygon(polygons, polygon, true);
     }
 
@@ -57,7 +57,7 @@ bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
     else {
         if (polygon_owner)
             vector_append_owned_ref(polygons->polygon_list.get(), polygon,
-                                    geo_polygon_free__);
+                                    [](void *arg) {delete static_cast<geo_polygon_struct *>(arg);});
         else
             vector_append_ref(polygons->polygon_list.get(), polygon);
 

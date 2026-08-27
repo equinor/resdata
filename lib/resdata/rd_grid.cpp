@@ -3555,7 +3555,7 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
 
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
                             int *i, int *j) {
-    auto polygon = make_geo_polygon("");
+    auto polygon = std::make_unique<geo_polygon_struct>("");
     int nx = rd_grid_get_nx(grid);
     int ny = rd_grid_get_ny(grid);
     bool inside = rd_grid_sublayer_contanins_xy__(grid, x, y, k, 0, nx, 0, ny,
