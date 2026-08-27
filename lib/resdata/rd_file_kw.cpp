@@ -26,7 +26,7 @@ void FileKW::assert_kw() const {
         throw std::runtime_error(std::string(__func__) +
                                  ": type mismatch between header and file.");
 
-    if (kw_size != rd_kw_get_size(kw.get()))
+    if (get_size() != rd_kw_get_size(kw.get()))
         throw std::runtime_error(std::string(__func__) +
                                  ": size mismatch between header and file.");
 

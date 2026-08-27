@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
@@ -34,17 +35,17 @@ rd_region_type *rd_region_alloc_copy(const rd_region_type *rd_region);
 rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect);
 void rd_region_free(rd_region_type *region);
 
-const std::vector<int> &rd_region_get_active_list(rd_region_type *region);
-const std::vector<int> &rd_region_get_global_list(rd_region_type *region);
-const std::vector<int> &
+const std::vector<size_t> &rd_region_get_active_list(rd_region_type *region);
+const std::vector<size_t> &rd_region_get_global_list(rd_region_type *region);
+const std::vector<size_t> &
 rd_region_get_global_active_list(rd_region_type *region);
 
-bool rd_region_contains_ijk(const rd_region_type *rd_region, int i, int j,
-                            int k);
+bool rd_region_contains_ijk(const rd_region_type *rd_region, size_t i, size_t j,
+                            size_t k);
 bool rd_region_contains_global(const rd_region_type *rd_region,
-                               int global_index);
+                               size_t global_index);
 bool rd_region_contains_active(const rd_region_type *rd_region,
-                               int active_index);
+                               size_t active_index);
 
 void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw);
 
@@ -70,10 +71,11 @@ void rd_region_deselect_inactive_cells(rd_region_type *region);
 void rd_region_select_active_cells(rd_region_type *region);
 void rd_region_deselect_active_cells(rd_region_type *region);
 
-void rd_region_select_from_ijkbox(rd_region_type *region, int i1, int i2,
-                                  int j1, int j2, int k1, int k2);
-void rd_region_deselect_from_ijkbox(rd_region_type *region, int i1, int i2,
-                                    int j1, int j2, int k1, int k2);
+void rd_region_select_from_ijkbox(rd_region_type *region, size_t i1, size_t i2,
+                                  size_t j1, size_t j2, size_t k1, size_t k2);
+void rd_region_deselect_from_ijkbox(rd_region_type *region, size_t i1,
+                                    size_t i2, size_t j1, size_t j2, size_t k1,
+                                    size_t k2);
 
 void rd_region_select_i1i2(rd_region_type *region, int i1, int i2);
 void rd_region_deselect_i1i2(rd_region_type *region, int i1, int i2);
@@ -144,7 +146,7 @@ void rd_region_deselect_outside_polygon(rd_region_type *region,
                                         const geo_polygon_type *polygon);
 
 void rd_region_select_from_layer(rd_region_type *region,
-                                 const layer_type *layer, int k,
+                                 const layer_type *layer, size_t k,
                                  int layer_value);
 
 void rd_region_set_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
@@ -181,9 +183,9 @@ void rd_region_shift_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
 void rd_region_shift_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
                               float value, bool force_active);
 
-const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                    const rd_kw_type *rd_kw,
-                                                    bool force_active);
+const std::vector<size_t> &
+rd_region_get_kw_index_list(rd_region_type *rd_region, const rd_kw_type *rd_kw,
+                            bool force_active);
 
 void rd_region_set_name(rd_region_type *region,
                         const std::optional<std::string> &name);

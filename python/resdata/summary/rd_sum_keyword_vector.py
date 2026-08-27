@@ -20,7 +20,7 @@ class SummaryKeyWordVector(BaseCClass):
         if index < 0:
             index += len(self)
 
-        if index >= len(self):
+        if index < 0 or index >= len(self):
             raise IndexError("Out of range")
 
         return _rd_sum_keyword_vector._iget_key(self, index)

@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     test_install_SIGNALS();
     {
         double CF = 88;
-        int segment_id = 78;
+        size_t segment_id = 78;
         int outlet_segment_id = 100;
         int branch_nr = WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
         WellSegment ws(segment_id, outlet_segment_id, branch_nr);

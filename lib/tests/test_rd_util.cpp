@@ -73,7 +73,7 @@ TEST_CASE("Test checked allocation size_t overflow guard", "[unittest]") {
 
         auto calloc_ptr = rd::checked_calloc<int>(4);
         REQUIRE(calloc_ptr != nullptr);
-        for (int i = 0; i < 4; ++i) {
+        for (size_t i = 0; i < 4; ++i) {
             REQUIRE(calloc_ptr[i] == 0);
         }
 

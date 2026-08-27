@@ -3,6 +3,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_contains.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <cstddef>
 #include <filesystem>
 #include <resdata/rd_grid.hpp>
 #include <vector>
@@ -59,7 +60,7 @@ TEST_CASE_METHOD(Tmpdir, "Large nncg raises") {
 namespace {
 
 void write_egrid_with_sized_mapaxes(const fs::path &filename, int nx, int ny,
-                                    int nz, int mapaxes_size) {
+                                    int nz, size_t mapaxes_size) {
     auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto fortio = make_fortio_writer(filename);
 
@@ -79,7 +80,7 @@ void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
     write_egrid_filehead(fortio);
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
     write_egrid_grid_body(grid.get(), fortio);
-    std::vector<int> corsnum(corsnum_size, 0);
+    std::vector<int> corsnum(static_cast<size_t>(corsnum_size), 0);
     write_int_kw(fortio, CORSNUM_KW, corsnum.data(), corsnum_size);
     write_empty_kw(fortio, ENDGRID_KW);
 }
@@ -88,7 +89,7 @@ void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
 
 TEST_CASE_METHOD(Tmpdir, "Wrong size MAPAXES raises for EGRID") {
     auto filename = dirname / "BAD_MAPAXES.EGRID";
-    int bad_size = 7;
+    size_t bad_size = 7;
     write_egrid_with_sized_mapaxes(filename, 2, 2, 2, bad_size);
 
     REQUIRE_THROWS_WITH(read_grid(filename),

@@ -1,5 +1,7 @@
 #pragma once
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
@@ -11,11 +13,12 @@ UTIL_IS_INSTANCE_HEADER(fault_block_layer);
 
 typedef struct fault_block_layer_struct fault_block_layer_type;
 
-fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, int k);
+fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, size_t k);
 void fault_block_layer_free(fault_block_layer_type *layer);
 bool fault_block_layer_has_block(const fault_block_layer_type *layer,
-                                 int block_id);
-void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id);
+                                 size_t block_id);
+void fault_block_layer_del_block(fault_block_layer_type *layer,
+                                 size_t block_id);
 
 /** FaultBlocks are returned as shared_ptr which may outlive
     the fault_block_layer. However, if the fault_block_layer is freed,
@@ -24,22 +27,25 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id);
     eg. getting neighbours.
 */
 std::shared_ptr<FaultBlock>
-fault_block_layer_add_block(fault_block_layer_type *layer, int block_id);
+fault_block_layer_add_block(fault_block_layer_type *layer, size_t block_id);
 std::shared_ptr<FaultBlock>
-fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id);
+fault_block_layer_get_block(const fault_block_layer_type *layer,
+                            size_t block_id);
 std::shared_ptr<FaultBlock>
 fault_block_layer_iget_block(const fault_block_layer_type *layer,
-                             int storage_index);
+                             size_t storage_index);
 std::shared_ptr<FaultBlock>
-fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id);
-int fault_block_layer_get_max_id(const fault_block_layer_type *layer);
-int fault_block_layer_get_next_id(const fault_block_layer_type *layer);
-int fault_block_layer_get_size(const fault_block_layer_type *layer);
+fault_block_layer_safe_get_block(fault_block_layer_type *layer,
+                                 size_t block_id);
+std::optional<size_t>
+fault_block_layer_get_max_id(const fault_block_layer_type *layer);
+size_t fault_block_layer_get_next_id(const fault_block_layer_type *layer);
+size_t fault_block_layer_get_size(const fault_block_layer_type *layer);
 bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
                                const rd_kw_type *fault_block_kw);
 bool fault_block_layer_load_kw(fault_block_layer_type *layer,
                                const rd_kw_type *fault_block_kw);
-int fault_block_layer_get_k(const fault_block_layer_type *layer);
+size_t fault_block_layer_get_k(const fault_block_layer_type *layer);
 void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
                                   layer_type *layer);
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,

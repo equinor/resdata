@@ -557,6 +557,87 @@ def test_summary_sim_length():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize(
+    "time_units, expected_dates",
+    [
+        pytest.param(
+            "DAYS",
+            [
+                datetime.datetime(2010, 1, 1),
+                datetime.datetime(2010, 1, 25),
+                datetime.datetime(2010, 2, 18),
+            ],
+            id="days",
+        ),
+        pytest.param(
+            "HOURS",
+            [
+                datetime.datetime(2010, 1, 1),
+                datetime.datetime(2010, 1, 2),
+                datetime.datetime(2010, 1, 3),
+            ],
+            id="hours",
+        ),
+    ],
+)
+def test_that_the_time_vector_is_scaled_by_the_unit_of_the_time_keyword(
+    lazy_load, time_units, expected_dates
+):
+    """
+    The same raw TIME values mean different things depending on the unit of
+    the TIME keyword, so the dates must differ while sim_length, which is
+    reported in those same units, must not. Lazy and eager loading derive the
+    dates through separate code paths, so both are checked.
+    """
+    create_summary(
+        summary_keys=("FOPR",),
+        time_units=time_units,
+        times=(0.0, 24.0, 48.0),
+        start_date=Date(day=1, month=1, year=2010, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    summary = Summary("TEST", lazy_load=lazy_load)
+    assert summary.dates == expected_dates
+    assert summary.sim_length == pytest.approx(48.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("lazy_load", [True, False])
+def test_that_an_unrecognized_time_unit_is_rejected(lazy_load):
+    """Only DAYS and HOURS can be scaled to seconds; YEARS is not supported."""
+    create_summary(summary_keys=("FOPR",), time_units="YEARS")
+
+    with pytest.raises(ValueError, match=r"time_unit:YEARS.*not recognized"):
+        Summary("TEST", lazy_load=lazy_load)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_resampling_an_hourly_case_keeps_the_time_vector_in_hours():
+    """
+    The resampled case is written with a freshly built SMSPEC, and it should
+    inherit the time unit of the case it was resampled from rather than
+    silently switching to days.
+    """
+    create_summary(
+        summary_keys=("FOPR",),
+        time_units="HOURS",
+        times=(0.0, 24.0, 48.0),
+        start_date=Date(day=1, month=1, year=2010, hour=0, minutes=0, micro_seconds=0),
+    )
+
+    time_points = [
+        datetime.datetime(2010, 1, 1),
+        datetime.datetime(2010, 1, 2),
+        datetime.datetime(2010, 1, 3),
+    ]
+    resampled = Summary("TEST").resample("RESAMPLED", time_points)
+
+    assert resampled.dates == time_points
+    assert resampled.sim_length == pytest.approx(48.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_iget_date():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
@@ -2265,6 +2346,16 @@ def test_that_solve_days_precision_is_unaffected_by_start_date(start_date):
     assert list(summary.solve_days("FOPT", 2.9999999999999996)) == pytest.approx(
         [0.9999999999999998], abs=0
     )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_add_t_step_rejects_negative_report_step():
+    start_date = datetime.datetime(2000, 1, 1)
+    writer = Summary.writer("NEGATIVE_REPORT_STEP", start_date, 5, 5, 5)
+    writer.add_variable("FOPT")
+
+    with pytest.raises(IndexError, match="negative index"):
+        writer.add_t_step(-1, 1.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")

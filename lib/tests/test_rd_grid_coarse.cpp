@@ -19,7 +19,7 @@
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
     GIVEN("An EGRID file on disc with two coarse cell groups") {
         const int nx = 3, ny = 3, nz = 3;
-        const int size = nx * ny * nz;
+        const size_t size = nx * ny * nz;
 
         // Assign two coarse groups. 0 means the cell is not in a
         // coarse group. Group 1 covers the two cells along i at (0,0,0)
@@ -55,10 +55,9 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
         }
 
         THEN("The grid reports no fracture cells") {
-            REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), 0) == -1);
-            REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), size / 2) ==
-                    -1);
-            REQUIRE(rd_grid_get_global_index1F(grid.get(), 0) == -1);
+            REQUIRE(!rd_grid_get_active_fracture_index1(grid.get(), 0));
+            REQUIRE(!rd_grid_get_active_fracture_index1(grid.get(), size / 2));
+            REQUIRE(!rd_grid_get_global_index1F(grid.get(), 0));
         }
 
         THEN("The grid reports a consistent (empty) LGR tree") {
@@ -68,7 +67,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
         THEN("rd_grid_init_actnum_data returns the actnum") {
             std::vector<int> actnum(size);
             rd_grid_init_actnum_data(grid.get(), actnum.data());
-            for (int i = 0; i < size; i++)
+            for (size_t i = 0; i < size; i++)
                 REQUIRE(actnum[i] ==
                         (rd_grid_cell_active1(grid.get(), i) ? 1 : 0));
         }
@@ -80,7 +79,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with non-consecutive coarse group numbers",
     // CORSNUM values are allowed to have gap, we return null for skipped slots.
     GIVEN("An EGRID file whose CORSNUM uses groups 1 and 3 but not 2") {
         const int nx = 3, ny = 3, nz = 3;
-        const int size = nx * ny * nz;
+        const size_t size = nx * ny * nz;
 
         std::vector<int> corsnum(size, 0);
         corsnum[0] = 1;

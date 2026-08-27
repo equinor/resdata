@@ -1,7 +1,7 @@
 #pragma once
 #include <ctime>
-
-#include <ert/util/type_macros.hpp>
+#include <memory>
+#include <vector>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/smspec_node.hpp>
@@ -11,7 +11,6 @@
 typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep);
-void rd_sum_tstep_free__(void *__ministep);
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 int ministep_nr,
                                                 const rd_kw_type *params_kw,
@@ -28,7 +27,7 @@ void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
 double rd_sum_tstep_get_from_node(const rd_sum_tstep_type *tstep,
                                   const rd::smspec_node &smspec_node);
 
-double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index);
+double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, size_t index);
 time_t rd_sum_tstep_get_sim_time(const rd_sum_tstep_type *ministep);
 double rd_sum_tstep_get_sim_days(const rd_sum_tstep_type *ministep);
 double rd_sum_tstep_get_sim_seconds(const rd_sum_tstep_type *ministep);
@@ -37,9 +36,9 @@ int rd_sum_tstep_get_report(const rd_sum_tstep_type *ministep);
 int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep);
 
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
-                         const int *index_map, int index_map_size,
+                         const std::vector<size_t> &index_map,
                          ERT::FortIO &fortio);
-void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value);
+void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, size_t index, float value);
 
 void rd_sum_tstep_set_from_key(rd_sum_tstep_type *tstep, const char *gen_key,
                                float value);
@@ -47,5 +46,5 @@ double rd_sum_tstep_get_from_key(const rd_sum_tstep_type *tstep,
                                  const char *gen_key);
 bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key);
 
-UTIL_SAFE_CAST_HEADER(rd_sum_tstep);
-UTIL_SAFE_CAST_HEADER_CONST(rd_sum_tstep);
+using rd_sum_tstep_ptr =
+    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>;

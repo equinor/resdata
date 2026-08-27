@@ -25,9 +25,9 @@
   Grid nr ...............: 110
 */
 
-void test_name(const rd_grid_type *grid, int lgr_nr, const char *name) {
+void test_name(const rd_grid_type *grid, size_t lgr_nr, const char *name) {
     test_assert_string_equal(name, rd_grid_get_lgr_name(grid, lgr_nr));
-    test_assert_int_equal(lgr_nr, rd_grid_get_lgr_nr_from_name(grid, name));
+    test_assert_size_t_equal(lgr_nr, rd_grid_get_lgr_nr_from_name(grid, name));
 }
 
 int main(int argc, char **argv) {

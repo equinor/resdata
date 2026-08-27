@@ -362,14 +362,30 @@ def test_deselect_thick(empty_region, full_region):
     assert empty_region == full_region
 
 
-def test_select_box(empty_region, active_region):
+def test_select_box(empty_region, full_region):
     empty_region.select_box((0, 0, 0), (9, 9, 0))
-    assert empty_region == active_region
+    assert empty_region == full_region
 
 
-def test_deselect_box(full_region, inactive_region):
+def test_deselect_box(full_region, empty_region):
     full_region.deselect_box((0, 0, 0), (9, 9, 0))
-    assert full_region == inactive_region
+    assert full_region == empty_region
+
+
+def test_select_box_selects_by_global_index(grid, empty_region):
+    """A box covering only inactive cells must still select those cells.
+
+    The grid fixture has actnum = [1]*50 + [0]*50, so global indices 50..99
+    are inactive. Selecting the j=5..9 rows must select exactly those.
+    """
+    empty_region.select_box((0, 5, 0), (9, 9, 0))
+    assert list(empty_region.get_global_list()) == list(range(50, 100))
+    assert empty_region.active_size() == 0
+
+
+def test_select_box_of_single_inactive_cell(grid, empty_region):
+    empty_region.select_box((3, 7, 0), (3, 7, 0))
+    assert list(empty_region.get_global_list()) == [7 * 10 + 3]
 
 
 def test_select_islice(empty_region, full_region):

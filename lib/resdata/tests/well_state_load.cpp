@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     auto type = WellType::GAS_INJECTOR;
     bool load_segment_information = true;
 
-    for (int global_well_nr = 0; global_well_nr < header.nwells;
+    for (size_t global_well_nr = 0; global_well_nr < header.get_nwells();
          global_well_nr++) {
         WellState well_state(well_name, global_well_nr, open, type, report_nr,
                              valid_from);
@@ -55,13 +55,13 @@ int main(int argc, char **argv) {
                 test_assert_true(rst_file->has_kw(ISEG_KW));
                 test_assert_int_not_equal(
                     well_segment_collection_get_size(segments), 0);
-                test_assert_int_not_equal(
-                    well_branch_collection_get_size(branches), 0);
+                test_assert_true(well_branch_collection_get_size(branches) !=
+                                 0);
             } else {
                 test_assert_int_equal(
                     well_segment_collection_get_size(segments), 0);
-                test_assert_int_equal(well_branch_collection_get_size(branches),
-                                      0);
+                test_assert_size_t_equal(
+                    well_branch_collection_get_size(branches), 0);
                 test_assert_false(well_state.is_MSW());
             }
         }

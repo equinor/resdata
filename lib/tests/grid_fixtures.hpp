@@ -5,6 +5,7 @@
  */
 
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <filesystem>
 #include <initializer_list>
@@ -71,9 +72,9 @@ inline void write_egrid_grid_body(rd_grid_type *grid, ERT::FortIO &fortio) {
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const char *name,
-                         const int *values, int size) {
-    auto kw = make_rd_kw(name, size, RD_INT);
-    for (int i = 0; i < size; i++)
+                         const int *values, size_t size) {
+    auto kw = make_rd_kw(name, static_cast<int>(size), RD_INT);
+    for (size_t i = 0; i < size; i++)
         rd_kw_iset_int(kw.get(), i, values[i]);
     rd_kw_fwrite(kw.get(), fortio);
 }
@@ -90,9 +91,9 @@ inline void write_int_kw(ERT::FortIO &fortio, const std::string &name,
 }
 
 inline void write_float_kw(ERT::FortIO &fortio, const char *name,
-                           const float *values, int size) {
-    auto kw = make_rd_kw(name, size, RD_FLOAT);
-    for (int i = 0; i < size; i++)
+                           const float *values, size_t size) {
+    auto kw = make_rd_kw(name, static_cast<int>(size), RD_FLOAT);
+    for (size_t i = 0; i < size; i++)
         rd_kw_iset_float(kw.get(), i, values[i]);
     rd_kw_fwrite(kw.get(), fortio);
 }
@@ -100,7 +101,7 @@ inline void write_float_kw(ERT::FortIO &fortio, const char *name,
 inline void write_char8_kw(ERT::FortIO &fortio, const char *name,
                            std::initializer_list<const char *> values) {
     auto kw = make_rd_kw(name, static_cast<int>(values.size()), RD_CHAR);
-    int i = 0;
+    size_t i = 0;
     for (const char *v : values)
         rd_kw_iset_string8(kw.get(), i++, v);
     rd_kw_fwrite(kw.get(), fortio);
@@ -133,7 +134,7 @@ inline void write_lgr_egrid_section(ERT::FortIO &fortio,
                          grid_nr);
     write_egrid_grid_body(lgr.get(), fortio);
 
-    const int lgr_size = rd_grid_get_global_size(lgr.get());
+    const size_t lgr_size = rd_grid_get_global_size(lgr.get());
     std::vector<int> hostnum(lgr_size, host_global);
     write_int_kw(fortio, HOSTNUM_KW, hostnum);
 
@@ -187,7 +188,7 @@ inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd_kw_type *zcorn,
 
 inline void set_pillar(rd_kw_type *coord_kw, int pillar, float tx, float ty,
                        float tz, float bx, float by, float bz) {
-    const int off = 6 * pillar;
+    const size_t off = 6 * static_cast<size_t>(pillar);
     rd_kw_iset_float(coord_kw, off + 0, tx);
     rd_kw_iset_float(coord_kw, off + 1, ty);
     rd_kw_iset_float(coord_kw, off + 2, tz);
@@ -225,8 +226,9 @@ inline rd_grid_ptr generate_coordkw_grid(
 
             for (int k = 0; k < num_z; k++) {
                 for (int c = 0; c < 4; c++) {
-                    int zi1 = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-                    int zi2 =
+                    size_t zi1 =
+                        rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
+                    size_t zi2 =
                         rd_grid_zcorn_index__(num_x, num_y, i, j, k, c + 4);
 
                     double z1 = k;
@@ -259,7 +261,8 @@ inline void write_egrid_with_single_lgr(
     int lgr_nz, int host_i, int host_j, int host_k, const std::string &lgr_name,
     const float *mapaxes = nullptr, const std::vector<int> &nncg = {},
     const std::vector<int> &nncl = {},
-    std::optional<int> hostnum_override = std::nullopt) {
+    std::optional<int> hostnum_override = std::nullopt, int lgr_grid_nr = 1,
+    int nnc_lgr_nr = 1) {
     auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto lgr_grid = make_rectangular_grid(lgr_nx, lgr_ny, lgr_nz, 1.0 / lgr_nx,
                                           1.0 / lgr_ny, 1.0 / lgr_nz, nullptr);
@@ -280,9 +283,9 @@ inline void write_egrid_with_single_lgr(
     write_egrid_grid_body(main_grid.get(), fortio);
     write_empty_kw(fortio, ENDGRID_KW);
 
-    write_lgr_egrid_section(fortio, lgr_name, "", 1, lgr_grid,
+    write_lgr_egrid_section(fortio, lgr_name, "", lgr_grid_nr, lgr_grid,
                             host_global_index + 1);
-    write_nnc_pair_section(fortio, 1, NNCG_KW, NNCL_KW, nncg, nncl);
+    write_nnc_pair_section(fortio, nnc_lgr_nr, NNCG_KW, NNCL_KW, nncg, nncl);
 }
 
 /**
@@ -601,7 +604,7 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
     }
 
     for (int c = 0; c < 8; ++c) {
-        int zi = rd_grid_zcorn_index__(nx, ny, 0, 0, 0, c);
+        size_t zi = rd_grid_zcorn_index__(nx, ny, 0, 0, 0, c);
         rd_kw_iset_float(zcorn_kw.get(), zi, corners[c][2]);
     }
 

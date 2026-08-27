@@ -78,10 +78,11 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
         }
 
         SECTION("print kw as GRDECL") {
-            auto kw = make_rd_kw("PORO", rd_grid_get_global_size(grid.get()),
-                                 RD_FLOAT);
+            auto kw = make_rd_kw(
+                "PORO", static_cast<int>(rd_grid_get_global_size(grid.get())),
+                RD_FLOAT);
 
-            for (int i = 0; i < rd_grid_get_global_size(grid.get()); i++) {
+            for (size_t i = 0; i < rd_grid_get_global_size(grid.get()); i++) {
                 rd_kw_iset_float(kw.get(), i, 0.2f + i * 0.01f);
             }
             auto filename = (dirname / "KW.GRDECL");
@@ -98,12 +99,12 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
     // the type's default.
     GIVEN("A grid with inactive cells") {
         const int nx = 2, ny = 2, nz = 2;
-        const int global_size = nx * ny * nz;
+        const size_t global_size = nx * ny * nz;
         std::vector<int> actnum(global_size, 1);
         actnum[0] = 0;
         actnum[3] = 0;
         auto grid = make_rectangular_grid(nx, ny, nz, 1, 1, 1, actnum.data());
-        const int nactive = rd_grid_get_active_size(grid.get());
+        const size_t nactive = rd_grid_get_active_size(grid.get());
         REQUIRE(nactive < global_size);
 
         auto print_kw = [&](const rd_kw_ptr &kw, const char *fname) {
@@ -117,7 +118,7 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
             rd_grid_grdecl_fprintf_kw(grid.get(), kw.get(), nullptr, fp.get(),
                                       -999.0);
         };
-        auto read_kw = [&](const char *fname, const char *kw, int size,
+        auto read_kw = [&](const char *fname, const char *kw, size_t size,
                            rd_data_type data_type) {
             auto filename = (dirname / fname);
             auto fp = std::unique_ptr<FILE, void (*)(FILE *)>(
@@ -125,19 +126,19 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
                     if (f)
                         fclose(f);
                 });
-            return rd_kw_ptr(
-                rd_kw_fscanf_alloc_grdecl(fp.get(), kw, data_type, size),
-                &rd_kw_free);
+            return rd_kw_ptr(rd_kw_fscanf_alloc_grdecl(fp.get(), kw, data_type,
+                                                       static_cast<int>(size)),
+                             &rd_kw_free);
         };
 
         SECTION("active-sized FLOAT keyword sets default in inactive indices") {
-            auto kw = make_rd_kw("PORO", nactive, RD_FLOAT);
-            for (int a = 0; a < nactive; ++a)
+            auto kw = make_rd_kw("PORO", static_cast<int>(nactive), RD_FLOAT);
+            for (size_t a = 0; a < nactive; ++a)
                 rd_kw_iset_float(kw.get(), a, 0.2f + a * 0.01f);
             print_kw(kw, "KW_ACTIVE_FLOAT.GRDECL");
             auto kw_read = read_kw("KW_ACTIVE_FLOAT.GRDECL", "PORO",
                                    global_size, RD_FLOAT);
-            for (int i = 0, a = 0; i < global_size; ++i) {
+            for (size_t i = 0, a = 0; i < global_size; ++i) {
                 if (actnum[i])
                     REQUIRE(rd_kw_iget_float(kw_read.get(), i) ==
                             rd_kw_iget_float(kw.get(), a++));
@@ -147,13 +148,13 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
         }
 
         SECTION("active-sized INT keyword sets default in inactive indices") {
-            auto kw = make_rd_kw("SATNUM", nactive, RD_INT);
-            for (int a = 0; a < nactive; ++a)
-                rd_kw_iset_int(kw.get(), a, a + 1);
+            auto kw = make_rd_kw("SATNUM", static_cast<int>(nactive), RD_INT);
+            for (size_t a = 0; a < nactive; ++a)
+                rd_kw_iset_int(kw.get(), a, static_cast<int>(a) + 1);
             print_kw(kw, "KW_ACTIVE_INT.GRDECL");
             auto kw_read =
                 read_kw("KW_ACTIVE_INT.GRDECL", "SATNUM", global_size, RD_INT);
-            for (int i = 0, a = 0; i < global_size; ++i) {
+            for (size_t i = 0, a = 0; i < global_size; ++i) {
                 if (actnum[i])
                     REQUIRE(rd_kw_iget_int(kw_read.get(), i) ==
                             rd_kw_iget_int(kw.get(), a++));
@@ -163,13 +164,13 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
         }
 
         SECTION("active-sized DOUBLE keyword sets 0.0 in inactive indices") {
-            auto kw = make_rd_kw("PORO", nactive, RD_DOUBLE);
-            for (int a = 0; a < nactive; ++a)
+            auto kw = make_rd_kw("PORO", static_cast<int>(nactive), RD_DOUBLE);
+            for (size_t a = 0; a < nactive; ++a)
                 rd_kw_iset_double(kw.get(), a, 0.2 + a * 0.01);
             print_kw(kw, "KW_ACTIVE_DOUBLE.GRDECL");
             auto kw_read = read_kw("KW_ACTIVE_DOUBLE.GRDECL", "PORO",
                                    global_size, RD_DOUBLE);
-            for (int i = 0, a = 0; i < global_size; ++i) {
+            for (size_t i = 0, a = 0; i < global_size; ++i) {
                 if (actnum[i])
                     REQUIRE_THAT(
                         rd_kw_iget_double(kw_read.get(), i),
@@ -180,8 +181,8 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
         }
 
         SECTION("active-sized BOOL keyword is written") {
-            auto kw = make_rd_kw("FLAG", nactive, RD_BOOL);
-            for (int a = 0; a < nactive; ++a)
+            auto kw = make_rd_kw("FLAG", static_cast<int>(nactive), RD_BOOL);
+            for (size_t a = 0; a < nactive; ++a)
                 rd_kw_iset_bool(kw.get(), a, (a % 2) == 0);
             auto filename = (dirname / "KW_ACTIVE_BOOL.GRDECL");
             FILE *fp = fopen(filename.c_str(), "w");

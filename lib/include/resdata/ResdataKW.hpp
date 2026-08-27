@@ -64,7 +64,7 @@ public:
 
     const char *name() const { return rd_kw_get_header(this->m_kw); }
 
-    size_t size() const { return size_t(rd_kw_get_size(this->m_kw)); }
+    size_t size() const { return rd_kw_get_size(this->m_kw); }
 
     void fwrite(FortIO &fortio) const { rd_kw_fwrite(this->m_kw, fortio); }
 

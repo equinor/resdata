@@ -129,8 +129,8 @@ public:
         return get_kw(get_file_kw(kw, ith));
     }
 
-    void index_fload_kw(const std::string &kw, int index,
-                        const int_vector_type *index_map, char *io_buffer);
+    void index_fload_kw(const std::string &kw, size_t index,
+                        const std::vector<size_t> &index_map, char *io_buffer);
     void write(ERT::FortIO &target, size_t offset);
 
     /** Creates a FileView with keywords from @start_kw to @end_kw.
@@ -172,7 +172,7 @@ public:
     std::shared_ptr<FileView> restart_view_from_sim_time(time_t sim_time);
     std::shared_ptr<FileView> restart_view_from_sim_days(double sim_days);
 
-    std::shared_ptr<FileView> summary_view(int report_step);
+    std::shared_ptr<FileView> summary_view(size_t report_step);
 
     void close();
     /** Write the index of this view to @ostream.

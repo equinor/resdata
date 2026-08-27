@@ -12,18 +12,18 @@
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_segment.hpp>
 
-std::shared_ptr<WellSegment> WellSegment::from_kw(
-    const rd_kw_type *iseg_kw, const well_rseg_loader_type *rseg_loader,
-    const RSTHead &header, int well_nr, int segment_index, int segment_id) {
+std::shared_ptr<WellSegment>
+WellSegment::from_kw(const rd_kw_type *iseg_kw,
+                     well_rseg_loader_type *rseg_loader, const RSTHead &header,
+                     size_t well_nr, size_t segment_index, int segment_id) {
     if (!rseg_loader) {
         throw std::invalid_argument(
             "fatal internal error - tried to create well_segment "
             "instance without RSEG keyword");
     } else {
-        const int iseg_offset =
-            header.nisegz * (header.nsegmx * well_nr + segment_index);
-        const int rseg_offset =
-            header.nrsegz * (header.nsegmx * well_nr + segment_index);
+        const size_t segment_nr = header.get_nsegmx() * well_nr + segment_index;
+        const size_t iseg_offset = header.get_nisegz() * segment_nr;
+        const size_t rseg_offset = header.get_nrsegz() * segment_nr;
         int outlet_segment_id =
             rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_OUTLET_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET; // -1
@@ -44,6 +44,9 @@ std::shared_ptr<WellSegment> WellSegment::from_kw(
 }
 
 bool WellSegment::link(WellSegment *outlet_segment) {
+    if (!outlet_segment)
+        return false;
+
     if (this->outlet_segment_id == outlet_segment->segment_id) {
         this->outlet_segment = outlet_segment;
         if (outlet_segment->branch_id == this->branch_id) {
@@ -58,17 +61,16 @@ bool WellSegment::link(WellSegment *outlet_segment) {
 
 bool WellSegment::add_connection(const std::string &grid_name,
                                  std::shared_ptr<WellConnection> conn) {
-    int conn_segment_id = conn->get_segment_id();
-    if (conn_segment_id == this->segment_id) {
+    if (conn->get_segment_id() == this->segment_id) {
         connections[grid_name].push_back(conn);
         return true;
     } else
         return false;
 }
 
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
+bool well_segment_well_is_MSW(size_t well_nr, const rd_kw_type *iwel_kw,
                               const RSTHead &rst_head) {
-    int iwel_offset = rst_head.niwelz * well_nr;
+    size_t iwel_offset = rst_head.get_niwelz() * well_nr;
     int segment_well_nr =
         rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
 

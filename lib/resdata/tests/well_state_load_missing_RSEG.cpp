@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
         auto type = WellType::GAS_INJECTOR;
         bool load_segment_information = false;
 
-        for (int global_well_nr = 0; global_well_nr < header.nwells;
+        for (size_t global_well_nr = 0; global_well_nr < header.get_nwells();
              global_well_nr++) {
             WellState well_state(well_name, global_well_nr, open, type,
                                  report_nr, valid_from);

@@ -27,14 +27,17 @@ double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node);
 double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time);
 
-int rd_sum_get_report_step_from_time(const rd_sum_type *sum, time_t sim_time);
-int rd_sum_get_report_step_from_days(const rd_sum_type *sum, double sim_days);
+std::optional<size_t> rd_sum_get_report_step_from_time(const rd_sum_type *sum,
+                                                       time_t sim_time);
+std::optional<size_t> rd_sum_get_report_step_from_days(const rd_sum_type *sum,
+                                                       double sim_days);
 bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time);
 bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days);
 const char *rd_sum_get_unit(const rd_sum_type *sum, const char *gen_key);
 
-double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index);
-int rd_sum_get_data_length(const rd_sum_type *rd_sum);
+double rd_sum_iget(const rd_sum_type *rd_sum, size_t time_index,
+                   size_t param_index);
+size_t rd_sum_get_data_length(const rd_sum_type *rd_sum);
 
 rd_sum_type *rd_sum_fread_alloc(const char *,
                                 const std::vector<std::string> &data_files,
@@ -49,10 +52,10 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
                                  bool lower_extrapolation,
                                  bool upper_extrapolation);
 
-double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
+double rd_sum_get_general_var(const rd_sum_type *rd_sum, size_t time_index,
                               const char *lookup_kw);
-int rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
-                                        const char *lookup_kw);
+size_t rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
+                                           const char *lookup_kw);
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
                                                    const char *lookup_kw);
 bool rd_sum_has_general_var(const rd_sum_type *rd_sum, const char *lookup_kw);
@@ -64,19 +67,21 @@ double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
 UnitSystem rd_sum_get_unit_system(const rd_sum_type *rd_sum);
 
 int rd_sum_get_restart_step(const rd_sum_type *rd_sum);
-int rd_sum_get_first_gt(const rd_sum_type *rd_sum, int param_index,
-                        double limit);
-int rd_sum_get_first_lt(const rd_sum_type *rd_sum, int param_index,
-                        double limit);
-int rd_sum_get_last_report_step(const rd_sum_type *rd_sum);
-int rd_sum_get_first_report_step(const rd_sum_type *rd_sum);
-time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, int report_step);
-time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, int index);
-double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int time_index);
-int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index);
+std::optional<size_t> rd_sum_get_first_gt(const rd_sum_type *rd_sum,
+                                          size_t param_index, double limit);
+std::optional<size_t> rd_sum_get_first_lt(const rd_sum_type *rd_sum,
+                                          size_t param_index, double limit);
+size_t rd_sum_get_last_report_step(const rd_sum_type *rd_sum);
+size_t rd_sum_get_first_report_step(const rd_sum_type *rd_sum);
+time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, size_t report_step);
+time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, size_t index);
+double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, size_t time_index);
+size_t rd_sum_iget_report_step(const rd_sum_type *rd_sum,
+                               size_t internal_index);
 
 std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
-                                             int data_index, bool report_only);
+                                             size_t data_index,
+                                             bool report_only);
 std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only);
 time_t rd_sum_get_data_start(const rd_sum_type *rd_sum);
@@ -102,7 +107,7 @@ rd_sum_select_matching_general_var_list(const rd_sum_type *rd_sum,
 rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum);
 rd_smspec_var_type rd_sum_identify_var_type(const char *var);
 
-int rd_sum_iget_report_end(const rd_sum_type *rd_sum, int report_step);
+size_t rd_sum_iget_report_end(const rd_sum_type *rd_sum, size_t report_step);
 void rd_sum_set_case(rd_sum_type *rd_sum, const std::string &input_arg);
 void rd_sum_fwrite(const rd_sum_type *rd_sum);
 bool rd_sum_can_write(const rd_sum_type *rd_sum);
@@ -117,7 +122,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
                                             const char *unit, const char *lgr,
                                             int lgr_i, int lgr_j, int lgr_k,
                                             float default_value);
-rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
+rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, size_t report_step,
                                     double sim_seconds);
 
 void rd_sum_export_csv(const rd_sum_type *rd_sum, const std::string &filename,

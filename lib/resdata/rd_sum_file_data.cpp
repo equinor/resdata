@@ -32,9 +32,12 @@ namespace fs = std::filesystem;
 
 namespace {
 
-void validate_report_step(int report_step) {
+/** Report steps are stored as signed 32 bit values in the summary files and
+ *  are derived from file names; validate before using them as indices. */
+size_t validate_report_step(int report_step) {
     if (report_step < 0)
         throw std::invalid_argument("report step cannot be negative");
+    return static_cast<size_t>(report_step);
 }
 
 } // namespace
@@ -205,19 +208,19 @@ void validate_report_step(int report_step) {
 namespace rd {
 
 rd_sum_file_data::rd_sum_file_data(const rd_smspec_type *smspec)
-    : rd_smspec(smspec), data(vector_alloc_new()) {}
+    : rd_smspec(smspec) {}
 
-rd_sum_file_data::~rd_sum_file_data() { vector_free(data); }
+rd_sum_file_data::~rd_sum_file_data() = default;
 
-int rd_sum_file_data::length() const {
+size_t rd_sum_file_data::length() const {
     if (this->loader)
         return this->loader->length();
     else
         return this->index.size();
 }
 
-int rd_sum_file_data::length_before(time_t end_time) const {
-    int offset = 0;
+size_t rd_sum_file_data::length_before(time_t end_time) const {
+    size_t offset = 0;
     while (true) {
         time_t itime = this->iget_sim_time(offset);
         if (itime >= end_time)
@@ -229,20 +232,24 @@ int rd_sum_file_data::length_before(time_t end_time) const {
     }
 }
 
-int rd_sum_file_data::report_before(time_t end_time) const {
-    int len = this->length_before(end_time);
-    if (len <= 0)
+size_t rd_sum_file_data::report_before(time_t end_time) const {
+    size_t len = this->length_before(end_time);
+    if (len == 0)
         throw std::invalid_argument("time argument before first report step");
 
     return this->index[len - 1].report_step;
 }
 
-int rd_sum_file_data::first_report() const {
+size_t rd_sum_file_data::first_report() const {
+    if (this->index.empty())
+        throw std::out_of_range("rd_sum_file_data::first_report(): no data");
     const auto &node = this->index[0];
     return node.report_step;
 }
 
-int rd_sum_file_data::last_report() const {
+size_t rd_sum_file_data::last_report() const {
+    if (this->index.empty())
+        throw std::out_of_range("rd_sum_file_data::last_report(): no data");
     const auto &node = this->index.back();
     return node.report_step;
 }
@@ -262,7 +269,7 @@ time_t rd_sum_file_data::get_sim_end() const {
     return node.sim_time;
 }
 
-time_t rd_sum_file_data::iget_sim_time(int time_index) const {
+time_t rd_sum_file_data::iget_sim_time(size_t time_index) const {
     const auto &node = this->index[time_index];
     return node.sim_time;
 }
@@ -275,7 +282,7 @@ double rd_sum_file_data::get_sim_length() const {
     return node.sim_seconds / rd_smspec_get_time_seconds(this->rd_smspec);
 }
 
-double rd_sum_file_data::iget(int time_index, int params_index) const {
+double rd_sum_file_data::iget(size_t time_index, size_t params_index) const {
     if (this->loader)
         return this->loader->iget(time_index, params_index);
     else {
@@ -284,13 +291,13 @@ double rd_sum_file_data::iget(int time_index, int params_index) const {
     }
 }
 
-void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
+void rd_sum_file_data::append_tstep(rd_sum_tstep_ptr tstep) {
     /*
      Here the tstep is just appended naively, the vector will be
      sorted by ministep_nr before the data instance is returned.
   */
 
-    vector_append_owned_ref(data, tstep, rd_sum_tstep_free__);
+    data.push_back(std::move(tstep));
 }
 
 /*
@@ -300,22 +307,20 @@ void rd_sum_file_data::append_tstep(rd_sum_tstep_type *tstep) {
   rd_sum_tstep_iset() to set elements in the tstep.
 */
 
-rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(int report_step,
+rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(size_t report_step,
                                                    double sim_seconds) {
-    validate_report_step(report_step);
-
-    int ministep_nr = vector_get_size(data);
-    std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
-        rd_sum_tstep_alloc_new(report_step, ministep_nr, sim_seconds,
-                               rd_smspec),
-        &rd_sum_tstep_free);
+    int ministep_nr = static_cast<int>(data.size());
+    rd_sum_tstep_ptr tstep(rd_sum_tstep_alloc_new(static_cast<int>(report_step),
+                                                  ministep_nr, sim_seconds,
+                                                  rd_smspec),
+                           &rd_sum_tstep_free);
     rd_sum_tstep_type *prev_tstep = NULL;
 
-    if (vector_get_size(data) > 0)
-        prev_tstep = (rd_sum_tstep_type *)vector_get_last(data);
+    if (!data.empty())
+        prev_tstep = data.back().get();
 
     rd_sum_tstep_type *new_tstep = tstep.get();
-    append_tstep(tstep.release());
+    append_tstep(std::move(tstep));
 
     bool rebuild_index = true;
     /*
@@ -346,103 +351,100 @@ exit:
     return new_tstep;
 }
 
-rd_sum_tstep_type *rd_sum_file_data::iget_ministep(int internal_index) const {
-    return (rd_sum_tstep_type *)vector_iget(data, internal_index);
+rd_sum_tstep_type *
+rd_sum_file_data::iget_ministep(size_t internal_index) const {
+    return data.at(internal_index).get();
 }
 
-double rd_sum_file_data::iget_sim_days(int time_index) const {
+double rd_sum_file_data::iget_sim_days(size_t time_index) const {
     const auto &node = this->index[time_index];
     return node.sim_seconds / 86400;
 }
 
-double rd_sum_file_data::iget_sim_seconds(int time_index) const {
+double rd_sum_file_data::iget_sim_seconds(size_t time_index) const {
     const auto &node = this->index[time_index];
     return node.sim_seconds;
 }
 
-static int cmp_ministep(const void *arg1, const void *arg2) {
-    const rd_sum_tstep_type *ministep1 = rd_sum_tstep_safe_cast_const(arg1);
-    const rd_sum_tstep_type *ministep2 = rd_sum_tstep_safe_cast_const(arg2);
-
-    time_t time1 = rd_sum_tstep_get_sim_time(ministep1);
-    time_t time2 = rd_sum_tstep_get_sim_time(ministep2);
-
-    if (time1 < time2)
-        return -1;
-    else if (time1 == time2)
-        return 0;
-    else
-        return 1;
+static bool cmp_ministep(const rd_sum_tstep_ptr &ministep1,
+                         const rd_sum_tstep_ptr &ministep2) {
+    return rd_sum_tstep_get_sim_time(ministep1.get()) <
+           rd_sum_tstep_get_sim_time(ministep2.get());
 }
 
 void rd_sum_file_data::build_index() {
     this->index.clear();
 
     if (this->loader) {
-        int offset = rd_smspec_get_first_step(this->rd_smspec) - 1;
-        std::vector<int> report_steps = this->loader->report_steps(offset);
+        size_t offset = rd_smspec_get_first_step(this->rd_smspec) - 1;
+        std::vector<size_t> report_steps = this->loader->report_steps(offset);
         std::vector<time_t> sim_time = this->loader->sim_time();
         std::vector<double> sim_seconds = this->loader->sim_seconds();
 
-        for (int i = 0; i < this->loader->length(); i++) {
+        for (size_t i = 0; i < this->loader->length(); i++) {
             this->index.add(sim_time[i], sim_seconds[i], report_steps[i]);
         }
     } else {
-        vector_sort(data, cmp_ministep);
-        for (int internal_index = 0; internal_index < vector_get_size(data);
-             internal_index++) {
-            const rd_sum_tstep_type *ministep = iget_ministep(internal_index);
-            this->index.add(rd_sum_tstep_get_sim_time(ministep),
-                            rd_sum_tstep_get_sim_seconds(ministep),
-                            rd_sum_tstep_get_report(ministep));
-        }
+        std::stable_sort(data.begin(), data.end(), cmp_ministep);
+        for (const auto &ministep : data)
+            this->index.add(
+                rd_sum_tstep_get_sim_time(ministep.get()),
+                rd_sum_tstep_get_sim_seconds(ministep.get()),
+                validate_report_step(rd_sum_tstep_get_report(ministep.get())));
     }
 }
 
-void rd_sum_file_data::get_time(int length, time_t *data) {
-    for (int time_index = 0; time_index < length; time_index++)
+void rd_sum_file_data::get_time(size_t length, time_t *data) {
+    for (size_t time_index = 0; time_index < length; time_index++)
         data[time_index] = this->iget_sim_time(time_index);
 }
 
-int rd_sum_file_data::get_time_report(int end_index, time_t *data) {
-    int offset = 0;
+size_t rd_sum_file_data::get_time_report(size_t end_index, time_t *data) {
+    size_t offset = 0;
 
-    for (int report_step = this->first_report();
+    for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
-        const auto &range = this->report_range(report_step);
-        int time_index = range.second;
-        if (time_index >= end_index)
+        const auto range = this->report_range(report_step);
+        if (!range)
+            continue;
+
+        if (range->last >= end_index)
             break;
 
-        data[offset] = this->iget_sim_time(time_index);
+        data[offset] = this->iget_sim_time(range->last);
 
         offset += 1;
     }
     return offset;
 }
 
-void rd_sum_file_data::get_data(int params_index, int length, double *data) {
+void rd_sum_file_data::get_data(size_t params_index, size_t length,
+                                double *data) {
     if (this->loader) {
         const auto tmp_data = loader->get_vector(params_index);
         memcpy(data, tmp_data.data(), length * sizeof data);
     } else {
-        for (int time_index = 0; time_index < length; time_index++)
+        for (size_t time_index = 0; time_index < length; time_index++)
             data[time_index] = this->iget(time_index, params_index);
     }
 }
 
-int rd_sum_file_data::get_data_report(int params_index, int end_index,
-                                      double *data, double default_value) {
-    int offset = 0;
+size_t rd_sum_file_data::get_data_report(std::optional<size_t> params_index,
+                                         size_t end_index, double *data,
+                                         double default_value) {
+    size_t offset = 0;
 
-    for (int report_step = this->first_report();
+    for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
-        int time_index = this->index.report_range(report_step).second;
-        if (time_index >= end_index)
+        const auto range = this->report_range(report_step);
+        if (!range)
+            continue;
+
+        if (range->last >= end_index)
             break;
 
-        if (params_index >= 0)
-            data[offset] = this->iget(time_index, params_index);
+        if (params_index)
+            data[offset] = this->iget(range->last, *params_index);
         else
             data[offset] = default_value;
 
@@ -451,15 +453,16 @@ int rd_sum_file_data::get_data_report(int params_index, int end_index,
     return offset;
 }
 
-bool rd_sum_file_data::has_report(int report_step) const {
+bool rd_sum_file_data::has_report(size_t report_step) const {
     return this->index.has_report(report_step);
 }
 
-std::pair<int, int> rd_sum_file_data::report_range(int report_step) const {
+std::optional<ReportRange>
+rd_sum_file_data::report_range(size_t report_step) const {
     return this->index.report_range(report_step);
 }
 
-void rd_sum_file_data::fwrite_report(int report_step,
+void rd_sum_file_data::fwrite_report(size_t report_step,
                                      ERT::FortIO &fortio) const {
     {
         auto seqhdr_kw = make_rd_kw(SEQHDR_KW, SEQHDR_SIZE, RD_INT);
@@ -468,12 +471,14 @@ void rd_sum_file_data::fwrite_report(int report_step,
     }
 
     {
-        auto range = this->report_range(report_step);
-        for (int index = range.first; index <= range.second; index++) {
+        const auto range = this->report_range(report_step);
+        if (!range)
+            return;
+
+        for (size_t index = range->first; index <= range->last; index++) {
             const rd_sum_tstep_type *tstep = iget_ministep(index);
-            //rd_sum_tstep_fwrite( tstep , rd_smspec_get_index_map( rd_smspec ) , fortio );
             rd_sum_tstep_fwrite(tstep, rd_smspec_get_index_map(rd_smspec),
-                                rd_smspec_num_nodes(rd_smspec), fortio);
+                                fortio);
         }
     }
 }
@@ -482,7 +487,7 @@ void rd_sum_file_data::fwrite_unified(ERT::FortIO &fortio) const {
     if (this->length() == 0)
         return;
 
-    for (int report_step = first_report(); report_step <= last_report();
+    for (size_t report_step = first_report(); report_step <= last_report();
          report_step++) {
         if (has_report(report_step))
             fwrite_report(report_step, fortio);
@@ -494,11 +499,12 @@ void rd_sum_file_data::fwrite_multiple(const std::string &rd_case,
     if (this->length() == 0)
         return;
 
-    for (int report_step = this->first_report();
+    for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         if (this->has_report(report_step)) {
             fs::path filename =
-                rd::filename(rd_case, FileType::SUMMARY, fmt_case, report_step);
+                rd::filename(rd_case, FileType::SUMMARY, fmt_case,
+                             static_cast<int>(report_step));
             ERT::FortIO fortio(filename.string(), std::ios_base::out, fmt_case);
 
             fwrite_report(report_step, fortio);
@@ -548,10 +554,8 @@ bool rd_sum_file_data::check_file(rd::File *rd_file) {
    calling routine will read the unified summary file partly.
 */
 
-void rd_sum_file_data::add_rd_file(int report_step,
+void rd_sum_file_data::add_rd_file(size_t report_step,
                                    rd::FileView &summary_view) {
-    validate_report_step(report_step);
-
     size_t num_ministep = summary_view.num_named_kw(PARAMS_KW);
     if (num_ministep > 0) {
 
@@ -562,14 +566,14 @@ void rd_sum_file_data::add_rd_file(int report_step,
             {
                 int ministep_nr = rd_kw_iget_int(ministep_kw, 0);
                 std::string filename = summary_view.filename();
-                std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
-                    tstep(rd_sum_tstep_alloc_from_file(
-                              report_step, ministep_nr, params_kw,
-                              filename.c_str(), this->rd_smspec),
-                          &rd_sum_tstep_free);
+                rd_sum_tstep_ptr tstep(rd_sum_tstep_alloc_from_file(
+                                           static_cast<int>(report_step),
+                                           ministep_nr, params_kw,
+                                           filename.c_str(), this->rd_smspec),
+                                       &rd_sum_tstep_free);
 
                 if (tstep)
-                    append_tstep(tstep.release());
+                    append_tstep(std::move(tstep));
             }
         }
     }
@@ -600,7 +604,8 @@ bool rd_sum_file_data::fread(const std::vector<std::string> &filelist,
                 std::unique_ptr<rd::File> rd_file = rd::File::open(data_file);
                 if (rd_file && check_file(rd_file.get())) {
                     auto global_view = rd_file->get_global_view();
-                    this->add_rd_file(report_step, *global_view);
+                    this->add_rd_file(validate_report_step(report_step),
+                                      *global_view);
                 }
             }
         }
@@ -618,9 +623,9 @@ bool rd_sum_file_data::fread(const std::vector<std::string> &filelist,
             // report step sequence will be restarted?
             std::unique_ptr<rd::File> rd_file = rd::File::open(first_file);
             if (rd_file && check_file(rd_file.get())) {
-                int first_report_step =
+                size_t first_report_step =
                     rd_smspec_get_first_step(this->rd_smspec);
-                int block_index = 0;
+                size_t block_index = 0;
                 while (true) {
                     /*
             Observe that there is a number discrepancy between ECLIPSE
@@ -649,42 +654,40 @@ const rd_smspec_type *rd_sum_file_data::smspec() const {
     return this->rd_smspec;
 }
 
-int rd_sum_file_data::report_step_from_days(double sim_days) const {
-    int report_step = this->first_report();
+std::optional<size_t>
+rd_sum_file_data::report_step_from_days(double sim_days) const {
     double sim_seconds = sim_days * 86400;
-    while (true) {
-        const auto &range = this->index.report_range(report_step);
-        if (range.second >= 0) {
-            const auto &node = this->index[range.second];
+    for (size_t report_step = this->first_report();
+         report_step <= this->last_report(); report_step++) {
+        const auto range = this->index.report_range(report_step);
+        if (!range)
+            continue;
 
-            // Warning - this is a double == comparison!
-            if (sim_seconds == node.sim_seconds)
-                return report_step;
+        const auto &node = this->index[range->last];
 
-            report_step++;
-            if (report_step > this->last_report())
-                return -1;
-        }
+        // Warning - this is a double == comparison!
+        if (sim_seconds == node.sim_seconds)
+            return report_step;
     }
+    return std::nullopt;
 }
 
-int rd_sum_file_data::report_step_from_time(time_t sim_time) const {
-    int report_step = this->first_report();
-    while (true) {
-        const auto &range = this->index.report_range(report_step);
-        if (range.second >= 0) {
-            const auto &node = this->index[range.second];
-            if (sim_time == node.sim_time)
-                return report_step;
+std::optional<size_t>
+rd_sum_file_data::report_step_from_time(time_t sim_time) const {
+    for (size_t report_step = this->first_report();
+         report_step <= this->last_report(); report_step++) {
+        const auto range = this->index.report_range(report_step);
+        if (!range)
+            continue;
 
-            report_step++;
-            if (report_step > this->last_report())
-                return -1;
-        }
+        const auto &node = this->index[range->last];
+        if (sim_time == node.sim_time)
+            return report_step;
     }
+    return std::nullopt;
 }
 
-int rd_sum_file_data::iget_report(int time_index) const {
+size_t rd_sum_file_data::iget_report(size_t time_index) const {
     const auto &index_node = this->index[time_index];
     return index_node.report_step;
 }

@@ -20,7 +20,7 @@
 #define __PI 3.14159265
 struct geo_surface_struct {
     // Irap data:
-    int nx, ny;
+    size_t nx, ny;
     double rot_angle; // Radians
     double origo[2];
     double cell_size[2];
@@ -53,17 +53,17 @@ static geo_surface_type *geo_surface_alloc_empty(bool external_z) {
 static void
 geo_surface_init_regular(geo_surface_type *surface,
                          const std::optional<std::vector<double>> &zcoord) {
-    int zstride_nx = 1;
-    int zstride_ny = surface->nx;
+    size_t zstride_nx = 1;
+    size_t zstride_ny = surface->nx;
 
-    for (int iy = 0; iy < surface->ny; iy++) {
-        for (int ix = 0; ix < surface->nx; ix++) {
+    for (size_t iy = 0; iy < surface->ny; iy++) {
+        for (size_t ix = 0; ix < surface->nx; ix++) {
             double x = surface->origo[0] + ix * surface->vec1[0] +
                        iy * surface->vec2[0];
             double y = surface->origo[1] + ix * surface->vec1[1] +
                        iy * surface->vec2[1];
             if (zcoord) {
-                int z_index = ix * zstride_nx + iy * zstride_ny;
+                size_t z_index = ix * zstride_nx + iy * zstride_ny;
                 geo_pointset_add_xyz(surface->pointset.get(), x, y,
                                      (*zcoord)[z_index]);
             } else
@@ -110,7 +110,7 @@ static void geo_surface_fprintf_irap_header(const geo_surface_type *surface,
 static void geo_surface_fprintf_zcoord(const geo_surface_type *surface,
                                        std::ofstream &stream) {
     const auto &zcoord = geo_pointset_get_zcoord(surface->pointset.get());
-    int num_columns = 6;
+    size_t num_columns = 6;
     for (size_t i = 0; i < zcoord.size(); i++) {
         stream << std::setw(12) << zcoord[i] << " ";
 
@@ -134,7 +134,7 @@ void geo_surface_fprintf_irap(const geo_surface_type *surface,
     geo_surface_fprintf_zcoord(surface, stream);
 }
 
-geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
+geo_surface_type *geo_surface_alloc_new(size_t nx, size_t ny, double xinc,
                                         double yinc, double xstart,
                                         double ystart, double angle) {
     geo_surface_ptr surface{geo_surface_alloc_empty(true), geo_surface_free};
@@ -174,11 +174,16 @@ static void geo_surface_fload_irap_header(geo_surface_type *surface,
             throw std::invalid_argument("reading irap header failed");
     }
 
+    if (nx < 0 || ny < 0)
+        throw std::invalid_argument(
+            "surface size was negative: " + std::to_string(nx) + "x" +
+            std::to_string(ny));
+
     surface->origo[0] = xstart;
     surface->origo[1] = ystart;
     surface->rot_angle = angle * __PI / 180.0;
-    surface->nx = nx;
-    surface->ny = ny;
+    surface->nx = static_cast<size_t>(nx);
+    surface->ny = static_cast<size_t>(ny);
 
     surface->vec1[0] = xinc * cos(surface->rot_angle);
     surface->vec1[1] = xinc * sin(surface->rot_angle);
@@ -199,13 +204,8 @@ static void geo_surface_fload_irap(geo_surface_type *surface,
     {
         std::optional<std::vector<double>> zcoord = std::nullopt;
         if (loadz) {
-            if (surface->nx < 0 || surface->ny < 0)
-                throw std::invalid_argument("surface size was negative: " +
-                                            std::to_string(surface->nx) + "x" +
-                                            std::to_string(surface->ny));
-            zcoord = std::make_optional<std::vector<double>>(
-                static_cast<size_t>(surface->nx) *
-                static_cast<size_t>(surface->ny));
+            zcoord = std::make_optional<std::vector<double>>(surface->nx *
+                                                             surface->ny);
             geo_surface_fscanf_zcoord(stream, *zcoord);
         }
 
@@ -263,21 +263,23 @@ geo_pointset_type *geo_surface_get_pointset(const geo_surface_type *surface) {
     return surface->pointset.get();
 }
 
-void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
-                         double *y) {
+void geo_surface_iget_xy(const geo_surface_type *surface, size_t index,
+                         double *x, double *y) {
     const geo_pointset_type *pointset = geo_surface_get_pointset(surface);
-    if (index < 0)
-        throw std::out_of_range("Index was negative: " + std::to_string(index));
-    geo_pointset_iget_xy(pointset, static_cast<size_t>(index), x, y);
+    geo_pointset_iget_xy(pointset, index, x, y);
 }
 
-int geo_surface_get_size(const geo_surface_type *surface) {
+size_t geo_surface_get_size(const geo_surface_type *surface) {
     return geo_pointset_get_size(surface->pointset.get());
 }
 
-int geo_surface_get_nx(const geo_surface_type *surface) { return surface->nx; }
+size_t geo_surface_get_nx(const geo_surface_type *surface) {
+    return surface->nx;
+}
 
-int geo_surface_get_ny(const geo_surface_type *surface) { return surface->ny; }
+size_t geo_surface_get_ny(const geo_surface_type *surface) {
+    return surface->ny;
+}
 
 bool geo_surface_equal(const geo_surface_type *surface1,
                        const geo_surface_type *surface2) {
@@ -288,11 +290,11 @@ bool geo_surface_equal(const geo_surface_type *surface1,
         return false;
 }
 
-double geo_surface_iget_zvalue(const geo_surface_type *surface, int index) {
+double geo_surface_iget_zvalue(const geo_surface_type *surface, size_t index) {
     return geo_pointset_iget_z(surface->pointset.get(), index);
 }
 
-void geo_surface_iset_zvalue(geo_surface_type *surface, int index,
+void geo_surface_iset_zvalue(geo_surface_type *surface, size_t index,
                              double value) {
     return geo_pointset_iset_z(surface->pointset.get(), index, value);
 }
@@ -334,7 +336,7 @@ void geo_surface_isqrt(geo_surface_type *surface) {
     geo_pointset_isqrt(surface->pointset.get());
 }
 
-geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
+geo_surface_ptr make_geo_surface(size_t nx, size_t ny, double xinc, double yinc,
                                  double xstart, double ystart, double angle) {
     return {geo_surface_alloc_new(nx, ny, xinc, yinc, xstart, ystart, angle),
             &geo_surface_free};

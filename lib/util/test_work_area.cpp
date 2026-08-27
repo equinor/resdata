@@ -1,3 +1,12 @@
+#include <ctime>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+#include <system_error>
+#include <filesystem>
+
 #include <ert/util/ert_api_config.hpp>
 
 #ifdef ERT_HAVE_GETUID
@@ -6,12 +15,6 @@
 #include <pwd.h>
 #include <paths.h>
 #endif
-
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-
-#include <filesystem>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
@@ -134,9 +137,9 @@ static bool test_work_area_copy_parent__(const TestArea *work_area,
 static char *create_test_path(const std::string &test_name, const char *prefix,
                               const char *user_name) {
     const int MAX_TRIES = 10;
+    std::srand(std::time({}));
     for (int try_count = 0; try_count < MAX_TRIES; try_count++) {
-        unsigned int random_int;
-        util_fread_dev_urandom(sizeof random_int, (char *)&random_int);
+        unsigned int random_int = static_cast<unsigned int>(std::rand());
         random_int = random_int % 100000000;
 
         char *test_path = util_alloc_sprintf(TEST_PATH_FMT, user_name,

@@ -70,15 +70,7 @@ static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
     return tstep.release();
 }
 
-UTIL_SAFE_CAST_FUNCTION(rd_sum_tstep, RD_SUM_TSTEP_ID)
-UTIL_SAFE_CAST_FUNCTION_CONST(rd_sum_tstep, RD_SUM_TSTEP_ID)
-
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep) { delete ministep; }
-
-void rd_sum_tstep_free__(void *__ministep) {
-    rd_sum_tstep_type *ministep = rd_sum_tstep_safe_cast(__ministep);
-    rd_sum_tstep_free(ministep);
-}
 
 /**
    This function sets the internal time representation in the
@@ -119,26 +111,22 @@ static void rd_sum_tstep_set_time_info_from_date(rd_sum_tstep_type *tstep,
 
 static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
                                        const rd_smspec_type *smspec) {
-    int date_day_index = rd_smspec_get_date_day_index(smspec);
-    int date_month_index = rd_smspec_get_date_month_index(smspec);
-    int date_year_index = rd_smspec_get_date_year_index(smspec);
-    int sim_time_index = rd_smspec_get_time_index(smspec);
+    const rd::TimeInfo &time_info = rd_smspec_get_time_info(smspec);
     time_t sim_start = rd_smspec_get_start_time(smspec);
 
-    if (sim_time_index >= 0) {
-        double sim_time = tstep->data[sim_time_index];
-        double sim_seconds = sim_time * rd_smspec_get_time_seconds(smspec);
+    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&time_info)) {
+        double sim_time = tstep->data.at(time->params_index);
+        double sim_seconds = sim_time * time->seconds_per_unit;
         rd_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
-    } else if (date_day_index >= 0) {
-        int day = util_roundf(tstep->data[date_day_index]);
-        int month = util_roundf(tstep->data[date_month_index]);
-        int year = util_roundf(tstep->data[date_year_index]);
+    } else {
+        const auto &date = std::get<rd::DateParamsIndex>(time_info);
+        int day = util_roundf(tstep->data.at(date.day));
+        int month = util_roundf(tstep->data.at(date.month));
+        int year = util_roundf(tstep->data.at(date.year));
 
         time_t sim_time = rd_make_date(day, month, year);
         rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);
-    } else
-        throw std::invalid_argument(
-            "Could not extract date/time information from SMSPEC header file.");
+    }
 }
 
 /**
@@ -152,7 +140,7 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 const char *src_file,
                                                 const rd_smspec_type *smspec) {
 
-    int data_size = rd_kw_get_size(params_kw);
+    size_t data_size = rd_kw_get_size(params_kw);
 
     if (data_size == rd_smspec_get_params_size(smspec)) {
         std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
@@ -169,8 +157,8 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
        discarded.
     */
         fprintf(stderr,
-                "** Warning size mismatch between timestep loaded from:%s(%d) "
-                "and header:%s(%d) - timestep discarded.\n",
+                "** Warning size mismatch between timestep loaded from:%s(%zu) "
+                "and header:%s(%zu) - timestep discarded.\n",
                 src_file, data_size, rd_smspec_get_header_file(smspec),
                 rd_smspec_get_params_size(smspec));
         return NULL;
@@ -190,13 +178,17 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
 
     rd_sum_tstep_set_time_info_from_seconds(
         tstep.get(), rd_smspec_get_start_time(smspec), sim_seconds);
-    rd_sum_tstep_iset(tstep.get(), rd_smspec_get_time_index(smspec),
-                      sim_seconds / rd_smspec_get_time_seconds(smspec));
+    const auto *time =
+        std::get_if<rd::TimeParamsIndex>(&rd_smspec_get_time_info(smspec));
+    if (time == nullptr)
+        throw std::invalid_argument("Can not create a new summary timestep for "
+                                    "a SMSPEC without a TIME variable");
+    tstep->data.at(time->params_index) = sim_seconds / time->seconds_per_unit;
     return tstep.release();
 }
 
-double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
-    if ((index >= 0) && (index < (int)ministep->data.size()))
+double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, size_t index) {
+    if (index < ministep->data.size())
         return ministep->data[index];
     else {
         throw std::out_of_range(
@@ -226,7 +218,7 @@ int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep) {
 }
 
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
-                         const int *index_map, int index_map_size,
+                         const std::vector<size_t> &index_map,
                          ERT::FortIO &fortio) {
     {
         auto ministep_kw = make_rd_kw(MINISTEP_KW, 1, RD_INT);
@@ -235,20 +227,19 @@ void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
     }
 
     {
-        int compact_size = index_map_size;
-        auto params_kw = make_rd_kw(PARAMS_KW, compact_size, RD_FLOAT);
+        auto params_kw = make_rd_kw(PARAMS_KW, index_map.size(), RD_FLOAT);
 
         float *data = (float *)rd_kw_get_ptr(params_kw.get());
 
-        for (int i = 0; i < compact_size; i++)
-            data[i] = ministep->data[index_map[i]];
+        for (size_t i = 0; i < index_map.size(); i++)
+            data[i] = ministep->data.at(index_map[i]);
 
         rd_kw_fwrite(params_kw.get(), fortio);
     }
 }
 
-void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
-    if ((index < static_cast<int>(tstep->data.size())) && (index >= 0))
+void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, size_t index, float value) {
+    if (index < tstep->data.size())
         tstep->data[index] = value;
     else
         throw std::out_of_range(
@@ -259,13 +250,13 @@ void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
                                 const rd::smspec_node &smspec_node,
                                 float value) {
-    int data_index = smspec_node.get_params_index();
+    size_t data_index = smspec_node.get_params_index();
     rd_sum_tstep_iset(tstep, data_index, value);
 }
 
 double rd_sum_tstep_get_from_node(const rd_sum_tstep_type *tstep,
                                   const rd::smspec_node &smspec_node) {
-    int data_index = smspec_node.get_params_index();
+    size_t data_index = smspec_node.get_params_index();
     return rd_sum_tstep_iget(tstep, data_index);
 }
 

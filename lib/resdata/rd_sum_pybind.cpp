@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <ctime>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -21,6 +22,26 @@
 namespace py = pybind11;
 
 namespace {
+
+size_t index_to_size_t(const py::int_ &index, const char *func_name) {
+    if (index < py::int_(0))
+        throw std::out_of_range(
+            fmt::format("Got negative index in {}", func_name));
+
+    if (index > py::int_(std::numeric_limits<size_t>::max()))
+        throw std::out_of_range(fmt::format(
+            "Got index too large to fit in size_t in {}", func_name));
+
+    return index.cast<size_t>();
+}
+
+/** The Python API documents "not found" as -1; the C++ API returns
+ *  std::nullopt. */
+py::int_ optional_index_to_py(std::optional<size_t> index) {
+    if (index)
+        return py::int_(*index);
+    return py::int_(-1);
+}
 
 PYBIND11_MODULE(_rd_sum, m) {
     register_exceptions(m);
@@ -72,30 +93,41 @@ PYBIND11_MODULE(_rd_sum, m) {
         py::return_value_policy::reference);
     m.def("_free",
           [](py::handle self) { rd_sum_free(from_cwrap<rd_sum_type>(self)); });
-    m.def("_iiget", [](py::handle self, int time_index, int param_index) {
-        return rd_sum_iget(from_cwrap<rd_sum_type>(self), time_index,
-                           param_index);
-    });
+    m.def("_iiget",
+          [](py::handle self, py::int_ time_index, py::int_ param_index) {
+              return rd_sum_iget(from_cwrap<rd_sum_type>(self),
+                                 index_to_size_t(time_index, "Summary.iget"),
+                                 index_to_size_t(param_index, "Summary.iget"));
+          });
     m.def("_data_length", [](py::handle self) {
         return rd_sum_get_data_length(from_cwrap<rd_sum_type>(self));
     });
-    m.def("_iget_sim_days", [](py::handle self, int index) {
-        return rd_sum_iget_sim_days(from_cwrap<rd_sum_type>(self), index);
+    m.def("_iget_sim_days", [](py::handle self, py::int_ index) {
+        return rd_sum_iget_sim_days(
+            from_cwrap<rd_sum_type>(self),
+            index_to_size_t(index, "Summary.iget_days"));
     });
-    m.def("_iget_report_step", [](py::handle self, int index) {
-        return rd_sum_iget_report_step(from_cwrap<rd_sum_type>(self), index);
+    m.def("_iget_report_step", [](py::handle self, py::int_ index) {
+        return rd_sum_iget_report_step(
+            from_cwrap<rd_sum_type>(self),
+            index_to_size_t(index, "Summary.iget_report_step"));
     });
-    m.def("_iget_sim_time", [](py::handle self, int index) -> std::time_t {
-        return rd_sum_iget_sim_time(from_cwrap<rd_sum_type>(self), index);
+    m.def("_iget_sim_time", [](py::handle self, py::int_ index) -> std::time_t {
+        return rd_sum_iget_sim_time(
+            from_cwrap<rd_sum_type>(self),
+            index_to_size_t(index, "Summary.iget_date"));
     });
-    m.def("_get_report_end", [](py::handle self, int report_step) {
-        return rd_sum_iget_report_end(from_cwrap<rd_sum_type>(self),
-                                      report_step);
+    m.def("_get_report_end", [](py::handle self, py::int_ report_step) {
+        return rd_sum_iget_report_end(
+            from_cwrap<rd_sum_type>(self),
+            index_to_size_t(report_step, "Summary.get_report_end"));
     });
     m.def("_get_general_var",
-          [](py::handle self, int time_index, std::string lookup_kw) {
-              return rd_sum_get_general_var(from_cwrap<rd_sum_type>(self),
-                                            time_index, lookup_kw.c_str());
+          [](py::handle self, py::int_ time_index, std::string lookup_kw) {
+              return rd_sum_get_general_var(
+                  from_cwrap<rd_sum_type>(self),
+                  index_to_size_t(time_index, "Summary.get_general_var"),
+                  lookup_kw.c_str());
           });
     m.def("_get_general_var_index", [](py::handle self, std::string lookup_kw) {
         return rd_sum_get_general_var_params_index(
@@ -111,14 +143,18 @@ PYBIND11_MODULE(_rd_sum, m) {
               return rd_sum_get_general_var_from_sim_time(
                   from_cwrap<rd_sum_type>(self), sim_time, var.c_str());
           });
-    m.def("_get_first_gt", [](py::handle self, int param_index, double limit) {
-        return rd_sum_get_first_gt(from_cwrap<rd_sum_type>(self), param_index,
-                                   limit);
-    });
-    m.def("_get_first_lt", [](py::handle self, int param_index, double limit) {
-        return rd_sum_get_first_lt(from_cwrap<rd_sum_type>(self), param_index,
-                                   limit);
-    });
+    m.def("_get_first_gt",
+          [](py::handle self, py::int_ param_index, double limit) {
+              return optional_index_to_py(rd_sum_get_first_gt(
+                  from_cwrap<rd_sum_type>(self),
+                  index_to_size_t(param_index, "Summary.get_first_gt"), limit));
+          });
+    m.def("_get_first_lt",
+          [](py::handle self, py::int_ param_index, double limit) {
+              return optional_index_to_py(rd_sum_get_first_lt(
+                  from_cwrap<rd_sum_type>(self),
+                  index_to_size_t(param_index, "Summary.get_first_lt"), limit));
+          });
     m.def("_get_start_date", [](py::handle self) -> std::time_t {
         return rd_sum_get_start_time(from_cwrap<rd_sum_type>(self));
     });
@@ -190,17 +226,18 @@ PYBIND11_MODULE(_rd_sum, m) {
     });
     m.def("_get_report_step_from_time",
           [](py::handle self, std::time_t sim_time) {
-              return rd_sum_get_report_step_from_time(
-                  from_cwrap<rd_sum_type>(self), sim_time);
+              return optional_index_to_py(rd_sum_get_report_step_from_time(
+                  from_cwrap<rd_sum_type>(self), sim_time));
           });
     m.def("_get_report_step_from_days", [](py::handle self, double sim_days) {
-        return rd_sum_get_report_step_from_days(from_cwrap<rd_sum_type>(self),
-                                                sim_days);
+        return optional_index_to_py(rd_sum_get_report_step_from_days(
+            from_cwrap<rd_sum_type>(self), sim_days));
     });
     m.def("_get_report_time",
-          [](py::handle self, int report_step) -> std::time_t {
-              return rd_sum_get_report_time(from_cwrap<rd_sum_type>(self),
-                                            report_step);
+          [](py::handle self, py::int_ report_step) -> std::time_t {
+              return rd_sum_get_report_time(
+                  from_cwrap<rd_sum_type>(self),
+                  index_to_size_t(report_step, "Summary.get_report_time"));
           });
     m.def("_fwrite_sum", [](py::handle self) {
         rd_sum_fwrite(from_cwrap<rd_sum_type>(self));
@@ -224,7 +261,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         return result;
     });
     m.def("_alloc_data_vector",
-          [](py::handle self, int data_index, bool report_only) {
+          [](py::handle self, size_t data_index, bool report_only) {
               return rd_sum_alloc_data_vector(from_cwrap<rd_sum_type>(self),
                                               data_index, report_only);
           });
@@ -305,9 +342,11 @@ PYBIND11_MODULE(_rd_sum, m) {
         py::return_value_policy::reference, py::keep_alive<0, 1>());
     m.def(
         "_add_tstep",
-        [](py::handle self, int report_step, double sim_seconds) {
+        [](py::handle self, py::int_ report_step, double sim_seconds) {
             return reinterpret_cast<std::uintptr_t>(rd_sum_add_tstep(
-                from_cwrap<rd_sum_type>(self), report_step, sim_seconds));
+                from_cwrap<rd_sum_type>(self),
+                index_to_size_t(report_step, "Summary.add_t_step"),
+                sim_seconds));
         },
         py::return_value_policy::reference);
 
@@ -337,15 +376,15 @@ PYBIND11_MODULE(_rd_sum, m) {
               auto keyvec = from_cwrap<rd_sum_vector_type>(keywords);
               auto rd_sum = from_cwrap<rd_sum_type>(self);
               double *out = data.mutable_data();
-              int keylen = rd_sum_vector_get_size(keyvec);
-              int timelen = rd_sum_get_data_length(rd_sum);
-              if (data.request().size < timelen * keylen)
+              size_t keylen = rd_sum_vector_get_size(keyvec);
+              size_t timelen = rd_sum_get_data_length(rd_sum);
+              if (static_cast<size_t>(data.request().size) < timelen * keylen)
                   throw std::invalid_argument("Incorrect size of buffer");
-              for (int time_index = 0; time_index < timelen; time_index++) {
-                  for (int key_index = 0; key_index < keylen; key_index++) {
-                      int param_index =
+              for (size_t time_index = 0; time_index < timelen; time_index++) {
+                  for (size_t key_index = 0; key_index < keylen; key_index++) {
+                      size_t param_index =
                           rd_sum_vector_iget_param_index(keyvec, key_index);
-                      int data_index = key_index + time_index * keylen;
+                      size_t data_index = key_index + time_index * keylen;
                       out[data_index] =
                           rd_sum_iget(rd_sum, time_index, param_index);
                   }
@@ -402,10 +441,10 @@ PYBIND11_MODULE(_rd_sum, m) {
            int multiplier) {
             int64_t *out = data.mutable_data();
             auto rd_sum = from_cwrap<rd_sum_type>(self);
-            int len = rd_sum_get_data_length(rd_sum);
-            if (data.request().size < len)
+            size_t len = rd_sum_get_data_length(rd_sum);
+            if (static_cast<size_t>(data.request().size) < len)
                 throw std::invalid_argument("Incorrect size of buffer");
-            for (int i = 0; i < len; i++)
+            for (size_t i = 0; i < len; i++)
                 out[i] = rd_sum_iget_sim_time(rd_sum, i) * multiplier;
         });
 }

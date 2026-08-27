@@ -6,9 +6,8 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
 #include <resdata/rd_kw.hpp>
-#include <string>
 
-int num_selected(rd_region_type *region) {
+size_t num_selected(rd_region_type *region) {
     return rd_region_get_global_list(region).size();
 }
 
@@ -64,10 +63,10 @@ TEST_CASE("rd_region", "[rd_region]") {
 
         SECTION("Invert selection") {
             rd_region_select_i1i2(region, 0, 4);
-            int initial_size = num_selected(region);
+            size_t initial_size = num_selected(region);
 
             rd_region_invert_selection(region);
-            int inverted_size = num_selected(region);
+            size_t inverted_size = num_selected(region);
             REQUIRE(initial_size + inverted_size == 1000);
         }
 
@@ -92,26 +91,29 @@ TEST_CASE("rd_region", "[rd_region]") {
             }
 
             SECTION("Contains global") {
-                int global_idx = rd_grid_get_global_index3(grid.get(), 2, 0, 0);
+                size_t global_idx =
+                    rd_grid_get_global_index3(grid.get(), 2, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == true);
                 global_idx = rd_grid_get_global_index3(grid.get(), 0, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == false);
             }
 
             SECTION("Contains active") {
-                int active_idx = rd_grid_get_active_index3(grid.get(), 2, 0, 0);
-                REQUIRE(rd_region_contains_active(region, active_idx) == true);
+                auto active_idx =
+                    rd_grid_get_active_index3(grid.get(), 2, 0, 0);
+                REQUIRE(rd_region_contains_active(region, *active_idx) == true);
                 active_idx = rd_grid_get_active_index3(grid.get(), 0, 0, 0);
-                REQUIRE(rd_region_contains_active(region, active_idx) == false);
+                REQUIRE(rd_region_contains_active(region, *active_idx) ==
+                        false);
             }
         }
 
         SECTION("select with int kw") {
             rd_kw_type *int_kw = rd_kw_alloc("INTGR", 1000, RD_INT);
 
-            for (int i = 0; i < 500; i++)
+            for (size_t i = 0; i < 500; i++)
                 rd_kw_iset_int(int_kw, i, 1);
-            for (int i = 500; i < 1000; i++)
+            for (size_t i = 500; i < 1000; i++)
                 rd_kw_iset_int(int_kw, i, 2);
 
             rd_region_select_equal(region, int_kw, 1);
@@ -125,9 +127,9 @@ TEST_CASE("rd_region", "[rd_region]") {
         SECTION("select with bool kw") {
             rd_kw_type *bool_kw = rd_kw_alloc("BOOL", 1000, RD_BOOL);
 
-            for (int i = 0; i < 500; i++)
+            for (size_t i = 0; i < 500; i++)
                 rd_kw_iset_bool(bool_kw, i, true);
-            for (int i = 500; i < 1000; i++)
+            for (size_t i = 500; i < 1000; i++)
                 rd_kw_iset_bool(bool_kw, i, false);
 
             rd_region_select_true(region, bool_kw);
@@ -141,8 +143,8 @@ TEST_CASE("rd_region", "[rd_region]") {
         SECTION("select with float kw") {
             rd_kw_type *float_kw = rd_kw_alloc("FLOAT", 1000, RD_FLOAT);
 
-            for (int i = 0; i < 1000; i++)
-                rd_kw_iset_float(float_kw, i, i * 0.1f);
+            for (size_t i = 0; i < 1000; i++)
+                rd_kw_iset_float(float_kw, i, static_cast<float>(i) * 0.1f);
 
             SECTION("Select in interval") {
                 rd_region_select_in_interval(region, float_kw, 10.0, 50.0);
@@ -168,7 +170,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("comparison select") {
                 rd_kw_type *cmp_kw = rd_kw_alloc("KW2", 1000, RD_FLOAT);
 
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_float(cmp_kw, i, 50.0f);
 
                 SECTION("Compare less") {
@@ -403,7 +405,7 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("Shift keyword int") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_int(kw, i, 10);
                 rd_region_shift_kw_int(region, kw, 5, false);
                 const auto list = rd_region_get_global_list(region);
@@ -413,7 +415,7 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("Scale keyword float") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_float(kw, i, 10.0f);
                 rd_region_scale_kw_float(region, kw, 2.0f, false);
                 const auto list = rd_region_get_global_list(region);
@@ -425,7 +427,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Keyword copy") {
                 rd_kw_type *kw_src = rd_kw_alloc("SRC", 1000, RD_INT);
                 rd_kw_type *kw_dst = rd_kw_alloc("DST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_int(kw_src, i, 99);
                 rd_region_kw_copy(region, kw_dst, kw_src, false);
                 const auto list = rd_region_get_global_list(region);
@@ -437,7 +439,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Keyword iadd") {
                 rd_kw_type *kw1 = rd_kw_alloc("KW1", 1000, RD_FLOAT);
                 rd_kw_type *kw2 = rd_kw_alloc("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
+                for (size_t i = 0; i < 1000; i++) {
                     rd_kw_iset_float(kw1, i, 10.0f);
                     rd_kw_iset_float(kw2, i, 5.0f);
                 }
@@ -452,7 +454,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Keyword isub") {
                 rd_kw_type *kw1 = rd_kw_alloc("KW1", 1000, RD_FLOAT);
                 rd_kw_type *kw2 = rd_kw_alloc("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
+                for (size_t i = 0; i < 1000; i++) {
                     rd_kw_iset_float(kw1, i, 10.0f);
                     rd_kw_iset_float(kw2, i, 3.0f);
                 }
@@ -467,7 +469,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Keyword imul") {
                 rd_kw_type *kw1 = rd_kw_alloc("KW1", 1000, RD_FLOAT);
                 rd_kw_type *kw2 = rd_kw_alloc("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
+                for (size_t i = 0; i < 1000; i++) {
                     rd_kw_iset_float(kw1, i, 10.0f);
                     rd_kw_iset_float(kw2, i, 2.0f);
                 }
@@ -482,7 +484,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             SECTION("Keyword idiv") {
                 rd_kw_type *kw1 = rd_kw_alloc("KW1", 1000, RD_FLOAT);
                 rd_kw_type *kw2 = rd_kw_alloc("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
+                for (size_t i = 0; i < 1000; i++) {
                     rd_kw_iset_float(kw1, i, 20.0f);
                     rd_kw_iset_float(kw2, i, 4.0f);
                 }
@@ -496,7 +498,7 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("Sum keyword int") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_int(kw, i, 2);
                 int sum = rd_region_sum_kw_int(region, kw, false);
                 REQUIRE(sum == 1000);
@@ -505,7 +507,7 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("Sum keyword float") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_float(kw, i, 2.5f);
                 float sum = rd_region_sum_kw_float(region, kw, false);
                 REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0f, 0.01f));
@@ -514,7 +516,7 @@ TEST_CASE("rd_region", "[rd_region]") {
 
             SECTION("Sum keyword double") {
                 rd_kw_type *kw = rd_kw_alloc("TEST", 1000, RD_DOUBLE);
-                for (int i = 0; i < 1000; i++)
+                for (size_t i = 0; i < 1000; i++)
                     rd_kw_iset_double(kw, i, 2.5);
                 double sum = rd_region_sum_kw_double(region, kw, false);
                 REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0, 0.01f));

@@ -18,8 +18,8 @@ bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x,
 void geo_polygon_reset(geo_polygon_type *polygon);
 void geo_polygon_close(geo_polygon_type *polygoon);
 size_t geo_polygon_get_size(const geo_polygon_type *polygon);
-void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
-                         double *y);
+void geo_polygon_iget_xy(const geo_polygon_type *polygon, size_t index,
+                         double *x, double *y);
 bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
                                     double y1, double x2, double y2);
 const char *geo_polygon_get_name(const geo_polygon_type *polygon);

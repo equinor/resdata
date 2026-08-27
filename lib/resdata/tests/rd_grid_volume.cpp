@@ -37,9 +37,9 @@ int main(int argc, char **argv) {
     if (init->has_kw("MULTPV"))
         multpv = init->get_kw("MULTPV", 0);
 
-    for (int iactive = 0; iactive < rd_grid_get_nactive(grid.get());
+    for (size_t iactive = 0; iactive < rd_grid_get_nactive(grid.get());
          ++iactive) {
-        int iglobal = rd_grid_get_global_index1A(grid.get(), iactive);
+        size_t iglobal = rd_grid_get_global_index1A(grid.get(), iactive);
         double grid_volume = rd_grid_get_cell_volume1(grid.get(), iglobal);
         double eclipse_volume = rd_kw_iget_float(porv_kw, iglobal) /
                                 rd_kw_iget_float(poro_kw, iactive);
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
         if (!util_double_approx_equal__(grid_volume, eclipse_volume, 2.5e-3,
                                         0.00)) {
             double diff = 100 * (grid_volume - eclipse_volume) / eclipse_volume;
-            printf("Error in cell: %d V1: %g    V2: %g   diff:%g %% \n",
+            printf("Error in cell: %zu V1: %g    V2: %g   diff:%g %% \n",
                    iglobal, grid_volume, eclipse_volume, diff);
             error_count++;
             error_found = true;
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
            100 * total_diff / total_volume);
 
     if (error_found) {
-        printf("Error_count: %d / %d \n", error_count,
+        printf("Error_count: %d / %zu \n", error_count,
                rd_grid_get_nactive(grid.get()));
         exit(1);
     } else

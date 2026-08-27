@@ -806,7 +806,7 @@ time_t rd_get_start_date(const char *data_file) {
 
     {
         long int start_pos = util_ftell(stream);
-        int buffer_size;
+        size_t buffer_size;
 
         /* Look for terminating '/' */
         if (!basic_parser_fseek_string(parser, stream, "/", false, true))
@@ -814,7 +814,9 @@ time_t rd_get_start_date(const char *data_file) {
                        "keyword in data_file: \n",
                        __func__, data_file);
 
-        buffer_size = (util_ftell(stream) - start_pos);
+        /* fseek_string succeeded, so the stream has advanced past
+           start_pos. */
+        buffer_size = static_cast<size_t>(util_ftell(stream) - start_pos);
         buffer = (char *)util_calloc(buffer_size + 1, sizeof *buffer);
         util_fseek(stream, start_pos, SEEK_SET);
         util_fread(buffer, sizeof *buffer, buffer_size, stream, __func__);
@@ -847,7 +849,7 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
     int num_cpu = 1;
     char *buffer;
     long int start_pos = util_ftell(stream);
-    int buffer_size;
+    size_t buffer_size;
 
     /* Look for terminating '/' */
     if (!basic_parser_fseek_string(parser, stream, "/", false, true))
@@ -855,7 +857,8 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
                    "keyword in data_file: \n",
                    __func__, data_file);
 
-    buffer_size = (util_ftell(stream) - start_pos);
+    /* fseek_string succeeded, so the stream has advanced past start_pos. */
+    buffer_size = static_cast<size_t>(util_ftell(stream) - start_pos);
     buffer = (char *)util_calloc(buffer_size + 1, sizeof *buffer);
     util_fseek(stream, start_pos, SEEK_SET);
     util_fread(buffer, sizeof *buffer, buffer_size, stream, __func__);
@@ -986,7 +989,8 @@ static bool rd_find_keyword__(basic_parser_type *parser, FILE *stream,
 
         /* Position to the end of the keyword, we either are succesful, or we
            need to continue looking for the next keyword. */
-        util_fseek(stream, keyword_pos + strlen(keyword), SEEK_SET);
+        util_fseek(stream, keyword_pos + static_cast<long int>(strlen(keyword)),
+                   SEEK_SET);
 
         /* If we are not within a title: success. */
         if (title_pos < 0 || keyword_pos < title_pos)

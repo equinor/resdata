@@ -9,27 +9,29 @@
 */
 
 #include <algorithm>
+#include <signal.h>
 #include <stdexcept>
 
 #include <cassert>
+#include <climits>
 #include <cstring>
 #include <ctime>
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
-
-#include <fcntl.h>
-#include <climits>
-
-#include <ert/util/ert_api_config.hpp>
-#include "ert/util/build_config.hpp"
-
-#include <cerrno>
-
 #include <cstdint>
 #include <cctype>
 #include <cstdlib>
 #include <csignal>
+
+#include <fcntl.h>
+
+#include <ert/util/ert_api_config.hpp>
+#include "ert/util/build_config.hpp"
+
+#include <limits>
+#include <cerrno>
+
 #include <sys/stat.h>
 
 #ifdef HAVE_FNMATCH
@@ -135,15 +137,14 @@ static uint64_t util_endian_convert32_64(uint64_t u) {
     return u;
 }
 
-void util_endian_flip_vector(void *data, int element_size, int elements) {
-    int i;
+void util_endian_flip_vector(void *data, size_t element_size, size_t elements) {
     switch (element_size) {
     case (1):
         break;
     case (2): {
         uint16_t *tmp16 = (uint16_t *)data;
 
-        for (i = 0; i < elements; i++)
+        for (size_t i = 0; i < elements; i++)
             tmp16[i] = util_endian_convert16(tmp16[i]);
         break;
     }
@@ -158,7 +159,7 @@ void util_endian_flip_vector(void *data, int element_size, int elements) {
       */
         uint64_t *tmp64 = (uint64_t *)data;
 
-        for (i = 0; i < elements / 2; i++)
+        for (size_t i = 0; i < elements / 2; i++)
             tmp64[i] = util_endian_convert32_64(tmp64[i]);
 
         if (elements & 1) {
@@ -170,7 +171,7 @@ void util_endian_flip_vector(void *data, int element_size, int elements) {
 #else
         uint32_t *tmp32 = (uint32_t *)data;
 
-        for (i = 0; i < elements; i++)
+        for (size_t i = 0; i < elements; i++)
             tmp32[i] = util_endian_convert32(tmp32[i]);
 
         break;
@@ -179,12 +180,12 @@ void util_endian_flip_vector(void *data, int element_size, int elements) {
     case (8): {
         uint64_t *tmp64 = (uint64_t *)data;
 
-        for (i = 0; i < elements; i++)
+        for (size_t i = 0; i < elements; i++)
             tmp64[i] = util_endian_convert64(tmp64[i]);
         break;
     }
     default:
-        fprintf(stderr, "%s: current element size: %d \n", __func__,
+        fprintf(stderr, "%s: current element size: %zu \n", __func__,
                 element_size);
         util_abort(
             "%s: can only endian flip 1/2/4/8 byte variables - aborting \n",
@@ -202,16 +203,6 @@ static bool EOL_CHAR(char c) {
         return true;
     else
         return false;
-}
-
-void util_fread_dev_urandom(int buffer_size_, char *buffer) {
-    size_t buffer_size = buffer_size_;
-    FILE *stream = util_fopen("/dev/urandom", "r");
-    if (fread(buffer, 1, buffer_size, stream) != buffer_size)
-        util_abort("%s: failed to read:%d bytes from /dev/random \n", __func__,
-                   buffer_size);
-
-    fclose(stream);
 }
 
 /**
@@ -285,7 +276,7 @@ bool util_double_approx_equal(double d1, double d2) {
 
 char *util_alloc_string_copy(const char *src) {
     if (src != NULL) {
-        int byte_size = (strlen(src) + 1) * sizeof *src;
+        size_t byte_size = (strlen(src) + 1) * sizeof *src;
         char *copy = (char *)util_calloc(byte_size, sizeof *copy);
         memcpy(copy, src, byte_size);
         return copy;
@@ -294,9 +285,10 @@ char *util_alloc_string_copy(const char *src) {
 }
 
 char *util_alloc_substring_copy(const char *src, int offset, int N_) {
-    size_t N = N_;
     char *copy;
-    if ((N + offset) < strlen(src)) {
+    if (N_ >= 0 && offset >= 0 &&
+        (static_cast<size_t>(N_) + static_cast<size_t>(offset)) < strlen(src)) {
+        size_t N = static_cast<size_t>(N_);
         copy = (char *)util_calloc(N + 1, sizeof *copy);
         strncpy(copy, &src[offset], N);
         copy[N] = '\0';
@@ -308,7 +300,7 @@ char *util_alloc_substring_copy(const char *src, int offset, int N_) {
 void util_strupr(char *s) {
     size_t i;
     for (i = 0; i < strlen(s); i++)
-        s[i] = toupper(s[i]);
+        s[i] = toupper(static_cast<unsigned char>(s[i]));
 }
 
 char *util_alloc_strupr_copy(const char *s) {
@@ -392,9 +384,9 @@ bool util_fseek_string(FILE *stream, const char *__string, bool skip_string,
 }
 
 static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
-    int init_pos = util_ftell(stream);
+    offset_type init_pos = util_ftell(stream);
     char *new_line;
-    int len;
+    size_t len;
     int end_char;
     bool cont;
     bool dos_newline;
@@ -457,7 +449,7 @@ char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
     return util_fscanf_alloc_line__(stream, at_eof, NULL);
 }
 
-static char *util_getcwd(char *buffer, int size) {
+static char *util_getcwd(char *buffer, size_t size) {
 #ifdef HAVE_POSIX_GETCWD
     return getcwd(buffer, size);
 #endif
@@ -515,7 +507,8 @@ char *util_alloc_realpath__(const char *input_path) {
         int path_len;
 
         util_path_split(abs_path, &path_len, &path_list);
-        path_stack = (const char **)util_malloc(path_len * sizeof *path_stack);
+        path_stack = (const char **)util_malloc(static_cast<size_t>(path_len) *
+                                                sizeof *path_stack);
         for (int i = 0; i < path_len; i++)
             path_stack[i] = NULL;
 
@@ -532,7 +525,8 @@ char *util_alloc_realpath__(const char *input_path) {
                 if (strcmp(path_elm, BACKREF) == 0) {
                     if (stack_size > 0) {
                         memmove(path_stack, &path_stack[1],
-                                (stack_size - 1) * sizeof *path_stack);
+                                static_cast<size_t>(stack_size - 1) *
+                                    sizeof *path_stack);
                         stack_size--;
                     }
                     continue;
@@ -540,7 +534,7 @@ char *util_alloc_realpath__(const char *input_path) {
 
                 /* Normal path element - push onto stack. */
                 memmove(&path_stack[1], path_stack,
-                        stack_size * sizeof *path_stack);
+                        static_cast<size_t>(stack_size) * sizeof *path_stack);
                 path_stack[0] = path_elm;
                 stack_size++;
             }
@@ -724,7 +718,7 @@ void util_fskip_lines(FILE *stream, int lines) {
     int line_nr = 0;
     do {
         bool at_eof = false;
-        char c;
+        int c;
         do {
             c = fgetc(stream);
             if (c == EOF)
@@ -804,9 +798,13 @@ bool util_sscanf_int(const char *buffer, int *value) {
 
     char *error_ptr;
 
-    int tmp_value = strtol(buffer, &error_ptr, 10);
+    long tmp_value = strtol(buffer, &error_ptr, 10);
 
     if (error_ptr == buffer)
+        return false;
+
+    if (tmp_value < std::numeric_limits<int>::min() ||
+        tmp_value > std::numeric_limits<int>::max())
         return false;
 
     // Skip trailing white-space
@@ -817,7 +815,7 @@ bool util_sscanf_int(const char *buffer, int *value) {
         return false;
 
     if (value != NULL)
-        *value = tmp_value;
+        *value = static_cast<int>(tmp_value);
     return true;
 }
 
@@ -841,7 +839,7 @@ bool util_string_equal(const char *s1, const char *s2) {
     the allocation. Can pass in NULL if that size is not interesting.
 */
 
-char *util_fread_alloc_file_content(const char *filename, int *buffer_size) {
+char *util_fread_alloc_file_content(const char *filename, size_t *buffer_size) {
     size_t file_size = util_file_size(filename);
     char *buffer = (char *)util_calloc(file_size + 1, sizeof *buffer);
     {
@@ -966,8 +964,10 @@ bool util_files_equal(const char *file1, const char *file2) {
     FILE *stream2 = util_fopen(file2, "r");
 
     do {
-        int count1 = fread(buffer1, 1, buffer_size, stream1);
-        int count2 = fread(buffer2, 1, buffer_size, stream2);
+        size_t count1 =
+            fread(buffer1, 1, static_cast<size_t>(buffer_size), stream1);
+        size_t count2 =
+            fread(buffer2, 1, static_cast<size_t>(buffer_size), stream2);
 
         if (count1 != count2)
             equal = false;
@@ -1007,7 +1007,7 @@ bool util_access(const char *entry, int mode) {
 
 #ifdef HAVE_POSIX_ACCESS
 bool util_access(const char *entry, mode_t mode) {
-    return (access(entry, mode) == 0);
+    return (access(entry, static_cast<int>(mode)) == 0);
 }
 #endif
 
@@ -1078,7 +1078,7 @@ static size_t util_get_path_length(const char *file) {
         if (last_slash == NULL)
             return 0;
         else
-            return last_slash - file;
+            return static_cast<size_t>(last_slash - file);
     }
 }
 
@@ -1188,7 +1188,8 @@ void util_alloc_file_components(const char *file, char **_path,
         basename = util_alloc_substring_copy(file, path_length + slash_length,
                                              base_length);
 
-    ext_length = strlen(file) - (path_length + base_length + 1);
+    ext_length =
+        static_cast<int>(strlen(file)) - (path_length + base_length + 1);
     if (ext_length > 0)
         extension = util_alloc_substring_copy(
             file, (path_length + slash_length + base_length + 1), ext_length);
@@ -1228,9 +1229,11 @@ size_t util_file_size(const char *file) {
 size_t util_fd_size(int fd) {
     stat_type buffer;
 
-    util_fstat(fd, &buffer);
+    if (util_fstat(fd, &buffer) != 0)
+        util_abort("%s: fstat(fd=%d) failed: %s \n", __func__, fd,
+                   strerror(errno));
 
-    return buffer.st_size;
+    return static_cast<size_t>(buffer.st_size);
 }
 
 bool util_ftruncate(FILE *stream, long size) {
@@ -1528,7 +1531,7 @@ time_t util_make_date_utc(int mday, int month, int year) {
 char *util_alloc_strip_copy(const char *src) {
     char *target;
     int strip_length = 0;
-    int end_index = strlen(src) - 1;
+    int end_index = static_cast<int>(strlen(src)) - 1;
     while (end_index >= 0 && src[end_index] == ' ')
         end_index--;
 
@@ -1538,11 +1541,13 @@ char *util_alloc_strip_copy(const char *src) {
         while (src[start_index] == ' ')
             start_index++;
         strip_length = end_index - start_index + 1;
-        target = (char *)util_calloc(strip_length + 1, sizeof *target);
-        memcpy(target, &src[start_index], strip_length);
+        target = (char *)util_calloc(static_cast<size_t>(strip_length + 1),
+                                     sizeof *target);
+        memcpy(target, &src[start_index], static_cast<size_t>(strip_length));
     } else
         /* A blank string */
-        target = (char *)util_calloc(strip_length + 1, sizeof *target);
+        target = (char *)util_calloc(static_cast<size_t>(strip_length + 1),
+                                     sizeof *target);
 
     target[strip_length] = '\0';
     return target;
@@ -1577,8 +1582,8 @@ char *util_realloc_string_copy(char *old_string, const char *src) {
 
 static void util_split_string(const char *line, const char *sep_set,
                               int *_tokens, char ***_token_list) {
-    int offset;
-    int tokens, token, token_length;
+    size_t offset;
+    size_t tokens, token, token_length;
     char **token_list;
 
     offset = strspn(line, sep_set);
@@ -1605,7 +1610,8 @@ static void util_split_string(const char *line, const char *sep_set,
             token_length = strcspn(&line[offset], sep_set);
             if (token_length > 0) {
                 token_list[token] =
-                    util_alloc_substring_copy(line, offset, token_length);
+                    util_alloc_substring_copy(line, static_cast<int>(offset),
+                                              static_cast<int>(token_length));
                 token++;
             } else
                 token_list[token] = NULL;
@@ -1616,7 +1622,7 @@ static void util_split_string(const char *line, const char *sep_set,
     } else
         token_list = NULL;
 
-    *_tokens = tokens;
+    *_tokens = static_cast<int>(tokens);
     *_token_list = token_list;
 }
 
@@ -1644,7 +1650,7 @@ char *util_strcat_realloc(char *s1, const char *s2) {
         s1 = util_alloc_string_copy(s2);
     else {
         if (s2 != NULL) {
-            int new_length = strlen(s1) + strlen(s2) + 1;
+            size_t new_length = strlen(s1) + strlen(s2) + 1;
             s1 = (char *)util_realloc(s1, new_length);
             strcat(s1, s2);
         }
@@ -1695,15 +1701,16 @@ void util_binary_split_string(const char *__src, const char *sep_set,
         while ((offset < strlen(__src)) &&
                (strchr(sep_set, __src[offset]) != NULL))
             offset++;
-        len = strlen(__src) - offset;
+        len = static_cast<int>(strlen(__src) - offset);
         if (len > 0) {
-            int tail_pos = strlen(__src) - 1;
+            int tail_pos = static_cast<int>(strlen(__src)) - 1;
             /* 2: Remove trailing split characters. */
             while (strchr(sep_set, __src[tail_pos]) != NULL)
                 tail_pos--;
-            len = 1 + tail_pos - offset;
+            len = 1 + tail_pos - static_cast<int>(offset);
 
-            src = util_alloc_substring_copy(__src, offset, len);
+            src =
+                util_alloc_substring_copy(__src, static_cast<int>(offset), len);
         } else
             src = NULL;
 
@@ -1717,9 +1724,9 @@ void util_binary_split_string(const char *__src, const char *sep_set,
             if (split_on_first) {
                 start_pos = 0;
                 delta = 1;
-                end_pos = strlen(src);
+                end_pos = static_cast<int>(strlen(src));
             } else {
-                start_pos = strlen(src) - 1;
+                start_pos = static_cast<int>(strlen(src)) - 1;
                 delta = -1;
                 end_pos = -1;
             }
@@ -1783,12 +1790,12 @@ void util_binary_split_string(const char *__src, const char *sep_set,
 int static util_string_replace_inplace__(char **_buffer, const char *expr,
                                          const char *subs) {
     char *buffer = *_buffer;
-    int buffer_size =
+    size_t buffer_size =
         strlen(buffer) +
         1; /* The variable buffer_size is the TOTAL size - including the terminating \0. */
-    int len_expr = strlen(expr);
-    int len_subs = strlen(subs);
-    int size = strlen(buffer);
+    size_t len_expr = strlen(expr);
+    size_t len_subs = strlen(subs);
+    size_t size = strlen(buffer);
     size_t offset = 0;
     int match_count = 0;
 
@@ -1802,10 +1809,10 @@ int static util_string_replace_inplace__(char **_buffer, const char *expr,
          buffer pointer might be realloced.
       */
             {
-                int start_offset = match - buffer;
-                int end_offset = match + len_expr - buffer;
-                int target_offset = match + len_subs - buffer;
-                int new_size = size + len_subs - len_expr;
+                size_t start_offset = static_cast<size_t>(match - buffer);
+                size_t end_offset = start_offset + len_expr;
+                size_t target_offset = start_offset + len_subs;
+                size_t new_size = size + len_subs - len_expr;
                 if (new_size >= (buffer_size - 1)) {
                     buffer_size += buffer_size + 2 * len_subs;
                     buffer = (char *)util_realloc(buffer, buffer_size);
@@ -1985,8 +1992,11 @@ char *util_alloc_sprintf_va(const char *fmt, va_list ap) {
     UTIL_VA_COPY(tmp_va, ap);
 
     length = vsnprintf(NULL, 0, fmt, tmp_va);
-    s = (char *)util_calloc(length + 1, sizeof *s);
-    vsnprintf(s, length + 1, fmt, ap);
+    if (length < 0)
+        util_abort("%s: vsnprintf() failed to determine formatted length \n",
+                   __func__);
+    s = (char *)util_calloc(static_cast<size_t>(length) + 1, sizeof *s);
+    vsnprintf(s, static_cast<size_t>(length) + 1, fmt, ap);
     return s;
 }
 
@@ -2236,7 +2246,7 @@ static int util_mkdir(const char *path) {
 bool util_mkdir_p(const char *_path) {
     char *active_path;
     char *path = (char *)_path;
-    int current_pos = 0;
+    size_t current_pos = 0;
 
     if (util_is_directory(path))
         return true;
@@ -2288,7 +2298,7 @@ void util_make_path(const char *path) {
 char *util_alloc_filename(const char *path, const char *basename,
                           const char *extension) {
     char *file;
-    int length = strlen(basename) + 1;
+    size_t length = strlen(basename) + 1;
 
     if (path && strlen(path))
         length += strlen(path) + 1;
@@ -2358,7 +2368,7 @@ char *util_alloc_parent_path(const char *path) {
 
         util_path_split(work_path, &path_ncomp, &path_component_list);
         if (path_ncomp > 0) {
-            int current_length = 4;
+            size_t current_length = 4;
             int ip;
 
             parent_path = (char *)util_realloc(
@@ -2367,7 +2377,7 @@ char *util_alloc_parent_path(const char *path) {
 
             for (ip = 0; ip < path_ncomp - 1; ip++) {
                 const char *ipath = path_component_list[ip];
-                int min_length = strlen(parent_path) + strlen(ipath) + 1;
+                size_t min_length = strlen(parent_path) + strlen(ipath) + 1;
 
                 if (min_length >= current_length) {
                     current_length = 2 * min_length;

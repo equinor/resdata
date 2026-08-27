@@ -32,14 +32,14 @@ void test_create_and_load_index_file() {
         int data_size = 10;
         rd_kw_type *kw1 = rd_kw_alloc("TEST1_KW", data_size, RD_INT);
         for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_int(kw1, i, 537 + i);
+            rd_kw_iset_int(kw1, static_cast<size_t>(i), 537 + i);
         ERT::FortIO fortio(file_name, std::ios_base::out);
         rd_kw_fwrite(kw1, fortio);
 
         data_size = 5;
         rd_kw_type *kw2 = rd_kw_alloc("TEST2_KW", data_size, RD_FLOAT);
         for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_float(kw2, i, 0.15 * i);
+            rd_kw_iset_float(kw2, static_cast<size_t>(i), 0.15 * i);
         rd_kw_fwrite(kw2, fortio);
         fortio.fflush();
         //finished creating data file

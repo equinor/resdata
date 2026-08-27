@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     rd_grid_test_lgr_consistency(rd_grid.get());
 
     if (rd_file->num_named_kw(COORD_KW))
-        test_assert_int_equal(rd_file->num_named_kw(COORD_KW) - 1,
-                              rd_grid_get_num_lgr(rd_grid.get()));
+        test_assert_size_t_equal(rd_file->num_named_kw(COORD_KW) - 1,
+                                 rd_grid_get_num_lgr(rd_grid.get()));
     exit(0);
 }

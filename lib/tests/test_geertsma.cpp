@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -25,7 +26,7 @@ using namespace Catch::Matchers;
 namespace {
 
 /** Writes an INIT file containing PORO and PORV keywords. */
-void write_subsidence_init(const fs::path &filename, int size) {
+void write_subsidence_init(const fs::path &filename, size_t size) {
     auto fortio = make_fortio_writer(filename);
 
     std::vector<float> poro(size, 0.0f);
@@ -48,12 +49,10 @@ void write_restart_block(ERT::FortIO &fortio, int seqnum, int year,
     intehead[INTEHEAD_YEAR_INDEX] = year;
     write_int_kw(fortio, INTEHEAD_KW, intehead);
 
-    write_float_kw(fortio, PRESSURE_KW, pressure.data(),
-                   static_cast<int>(pressure.size()));
+    write_float_kw(fortio, PRESSURE_KW, pressure.data(), pressure.size());
 
     if (rporv.has_value())
-        write_float_kw(fortio, RPORV_KW, rporv->data(),
-                       static_cast<int>(rporv->size()));
+        write_float_kw(fortio, RPORV_KW, rporv->data(), rporv->size());
 }
 
 /** Writes a UNRST file with one or two restart blocks. */
@@ -73,7 +72,7 @@ void write_subsidence_restart(
 
 TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
     auto grid = make_rectangular_grid(1, 1, 1, 50.0, 50.0, 50.0, nullptr);
-    const int size = rd_grid_get_active_size(grid.get());
+    const size_t size = rd_grid_get_active_size(grid.get());
 
     auto init_path = dirname / "TEST.INIT";
     auto unrst_path = dirname / "TEST.UNRST";

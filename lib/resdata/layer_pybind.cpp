@@ -18,7 +18,7 @@ PYBIND11_MODULE(_layer, m) {
 
     m.def(
         "_alloc",
-        [](int nx, int ny) {
+        [](size_t nx, size_t ny) {
             return reinterpret_cast<std::uintptr_t>(layer_alloc(nx, ny));
         },
         py::return_value_policy::reference);
@@ -30,29 +30,30 @@ PYBIND11_MODULE(_layer, m) {
     m.def("_get_ny", [](py::handle self) {
         return layer_get_ny(from_cwrap<layer_type>(self));
     });
-    m.def("_set_cell", [](py::handle self, int i, int j, int value) {
+    m.def("_set_cell", [](py::handle self, size_t i, size_t j, int value) {
         layer_iset_cell_value(from_cwrap<layer_type>(self), i, j, value);
     });
-    m.def("_get_cell", [](py::handle self, int i, int j) {
+    m.def("_get_cell", [](py::handle self, size_t i, size_t j) {
         return layer_iget_cell_value(from_cwrap<layer_type>(self), i, j);
     });
-    m.def("_get_bottom_barrier", [](py::handle self, int i, int j) {
+    m.def("_get_bottom_barrier", [](py::handle self, size_t i, size_t j) {
         return layer_iget_bottom_barrier(from_cwrap<layer_type>(self), i, j);
     });
-    m.def("_get_left_barrier", [](py::handle self, int i, int j) {
+    m.def("_get_left_barrier", [](py::handle self, size_t i, size_t j) {
         return layer_iget_left_barrier(from_cwrap<layer_type>(self), i, j);
     });
-    m.def("_cell_contact", [](py::handle self, int i1, int j1, int i2, int j2) {
+    m.def("_cell_contact", [](py::handle self, size_t i1, size_t j1, size_t i2,
+                              size_t j2) {
         return layer_cell_contact(from_cwrap<layer_type>(self), i1, j1, i2, j2);
     });
-    m.def("_add_barrier", [](py::handle self, int c1, int c2) {
+    m.def("_add_barrier", [](py::handle self, size_t c1, size_t c2) {
         layer_add_barrier(from_cwrap<layer_type>(self), c1, c2);
     });
     m.def("_add_ijbarrier",
-          [](py::handle self, int i1, int j1, int i2, int j2) {
+          [](py::handle self, size_t i1, size_t j1, size_t i2, size_t j2) {
               layer_add_ijbarrier(from_cwrap<layer_type>(self), i1, j1, i2, j2);
           });
-    m.def("_add_interp_barrier", [](py::handle self, int c1, int c2) {
+    m.def("_add_interp_barrier", [](py::handle self, size_t c1, size_t c2) {
         layer_add_interp_barrier(from_cwrap<layer_type>(self), c1, c2);
     });
     m.def("_clear_cells", [](py::handle self) {
@@ -64,21 +65,21 @@ PYBIND11_MODULE(_layer, m) {
     m.def("_cell_sum", [](py::handle self) {
         return layer_get_cell_sum(from_cwrap<layer_type>(self));
     });
-    m.def("_update_connected",
-          [](py::handle self, int i, int j, int org_value, int new_value) {
-              layer_update_connected_cells(from_cwrap<layer_type>(self), i, j,
-                                           org_value, new_value);
-          });
+    m.def("_update_connected", [](py::handle self, size_t i, size_t j,
+                                  int org_value, int new_value) {
+        layer_update_connected_cells(from_cwrap<layer_type>(self), i, j,
+                                     org_value, new_value);
+    });
     m.def("_cells_equal", [](py::handle self, int value) {
         return layer_cells_equal(from_cwrap<layer_type>(self), value);
     });
     m.def("_count_equal", [](py::handle self, int value) {
         return layer_count_equal(from_cwrap<layer_type>(self), value);
     });
-    m.def("_active_cell", [](py::handle self, int i, int j) {
+    m.def("_active_cell", [](py::handle self, size_t i, size_t j) {
         return layer_iget_active(from_cwrap<layer_type>(self), i, j);
     });
-    m.def("_update_active", [](py::handle self, py::handle grid, int k) {
+    m.def("_update_active", [](py::handle self, py::handle grid, size_t k) {
         layer_update_active(from_cwrap<layer_type>(self),
                             from_cwrap<rd_grid_type>(grid), k);
     });

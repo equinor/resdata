@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
         rd_kw_type *actnum = GRID_file->get_kw("ACTNUM", 0);
         rd_kw_type *swat = RST_file->get_kw("SWAT", 0);
         rd_kw_type *permx = INIT_file->get_kw("PERMX", 0);
-        int fracture_size = rd_grid_get_nactive_fracture(rd_grid.get());
-        int matrix_size = rd_grid_get_nactive(rd_grid.get());
+        size_t fracture_size = rd_grid_get_nactive_fracture(rd_grid.get());
+        size_t matrix_size = rd_grid_get_nactive(rd_grid.get());
 
         test_assert_int_equal(fracture_size + matrix_size,
                               rd_kw_get_size(swat));
@@ -37,28 +37,28 @@ int main(int argc, char **argv) {
                               rd_kw_get_size(permx));
 
         {
-            int gi;
-            int matrix_index = 0;
-            int fracture_index = 0;
+            size_t gi;
+            size_t matrix_index = 0;
+            size_t fracture_index = 0;
 
             for (gi = 0; gi < rd_grid_get_global_size(rd_grid.get()); gi++) {
                 if (rd_kw_iget_int(actnum, gi) & CELL_ACTIVE_MATRIX) {
-                    test_assert_int_equal(
-                        rd_grid_get_active_index1(rd_grid.get(), gi),
+                    test_assert_size_t_equal(
+                        *rd_grid_get_active_index1(rd_grid.get(), gi),
                         matrix_index);
-                    test_assert_int_equal(
+                    test_assert_size_t_equal(
                         rd_grid_get_global_index1A(rd_grid.get(), matrix_index),
                         gi);
                     matrix_index++;
                 }
 
                 if (rd_kw_iget_int(actnum, gi) & CELL_ACTIVE_FRACTURE) {
-                    test_assert_int_equal(
-                        rd_grid_get_active_fracture_index1(rd_grid.get(), gi),
+                    test_assert_size_t_equal(
+                        *rd_grid_get_active_fracture_index1(rd_grid.get(), gi),
                         fracture_index);
-                    test_assert_int_equal(rd_grid_get_global_index1F(
-                                              rd_grid.get(), fracture_index),
-                                          gi);
+                    test_assert_size_t_equal(*rd_grid_get_global_index1F(
+                                                 rd_grid.get(), fracture_index),
+                                             gi);
                     fracture_index++;
                 }
             }

@@ -61,9 +61,9 @@ void test_file_list() {
 
     auto s = rd_select_filelist(NULL, "case", FileType::RESTART, true);
     test_assert_size_t_equal(s.size(), 5);
-    for (int i = 0; i < 5; i++) {
-        std::string fname =
-            rd::filename("case", FileType::RESTART, true, 2 * i);
+    for (size_t i = 0; i < 5; i++) {
+        std::string fname = rd::filename("case", FileType::RESTART, true,
+                                         2 * static_cast<int>(i));
         test_assert_string_equal(fname.c_str(), s[i].c_str());
     }
 

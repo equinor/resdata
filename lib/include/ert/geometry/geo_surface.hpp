@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -14,22 +15,22 @@ void geo_surface_free(geo_surface_type *geo_surface);
 geo_pointset_type *geo_surface_get_pointset(const geo_surface_type *surface);
 geo_surface_type *geo_surface_fload_alloc_irap(const std::string &filename,
                                                bool loadz);
-geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
+geo_surface_type *geo_surface_alloc_new(size_t nx, size_t ny, double xinc,
                                         double yinc, double xstart,
                                         double ystart, double angle);
-double geo_surface_iget_zvalue(const geo_surface_type *surface, int index);
-int geo_surface_get_size(const geo_surface_type *surface);
+double geo_surface_iget_zvalue(const geo_surface_type *surface, size_t index);
+size_t geo_surface_get_size(const geo_surface_type *surface);
 void geo_surface_fprintf_irap(const geo_surface_type *surface,
                               const std::string &filename);
-int geo_surface_get_nx(const geo_surface_type *surface);
-int geo_surface_get_ny(const geo_surface_type *surface);
-void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
-                         double *y);
+size_t geo_surface_get_nx(const geo_surface_type *surface);
+size_t geo_surface_get_ny(const geo_surface_type *surface);
+void geo_surface_iget_xy(const geo_surface_type *surface, size_t index,
+                         double *x, double *y);
 
 void geo_surface_shift(const geo_surface_type *src, double value);
 void geo_surface_scale(const geo_surface_type *src, double value);
 void geo_surface_isub(geo_surface_type *self, const geo_surface_type *other);
-void geo_surface_iset_zvalue(geo_surface_type *surface, int index,
+void geo_surface_iset_zvalue(geo_surface_type *surface, size_t index,
                              double value);
 void geo_surface_assign_value(const geo_surface_type *src, double value);
 geo_surface_type *geo_surface_alloc_copy(const geo_surface_type *src,
@@ -41,5 +42,5 @@ void geo_surface_isqrt(geo_surface_type *surface);
 using geo_surface_ptr =
     std::unique_ptr<geo_surface_type, decltype(&geo_surface_free)>;
 
-geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
+geo_surface_ptr make_geo_surface(size_t nx, size_t ny, double xinc, double yinc,
                                  double xstart, double ystart, double angle);

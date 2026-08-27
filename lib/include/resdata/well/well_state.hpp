@@ -2,6 +2,8 @@
 
 #include <ctime>
 
+#include <optional>
+
 #include <map>
 #include <vector>
 #include <string>
@@ -103,7 +105,7 @@ class WellState {
     std::string name;
     time_t valid_from_time;
     int valid_from_report;
-    int global_well_nr;
+    size_t global_well_nr;
     bool open;
     WellType type;
     bool is_MSW_well;
@@ -124,12 +126,13 @@ class WellState {
         name_wellhead; // A WellConnection for the wellhead - indexed by lgr_name.
 
     void add_wellhead(const RSTHead &header, const rd_kw_type *iwel_kw,
-                      int well_nr, const std::string &grid_name, int grid_nr);
-    bool add_rates(rd::FileView *rst_view, int well_nr);
-    int get_lgr_well_nr(rd::FileView *file_view);
+                      size_t well_nr, const std::string &grid_name,
+                      size_t grid_nr);
+    bool add_rates(rd::FileView *rst_view, size_t well_nr);
+    std::optional<size_t> get_lgr_well_nr(rd::FileView *file_view);
     void add_connections(rd::FileView *rst_view, const std::string &grid_name,
-                         int grid_nr, int well_nr);
-    void add_global_connections(rd::FileView *rst_view, int well_nr);
+                         size_t grid_nr, size_t well_nr);
+    void add_global_connections(rd::FileView *rst_view, size_t well_nr);
     void add_LGR_connections(const rd_grid_type *grid, rd::FileView *file_view);
     std::shared_ptr<WellConnection> get_wellhead(const std::string &grid_name) {
         const auto it = name_wellhead.find(grid_name);
@@ -137,7 +140,7 @@ class WellState {
     }
 
 public:
-    WellState(std::string well_name, int global_well_nr, bool open,
+    WellState(std::string well_name, size_t global_well_nr, bool open,
               WellType type, int report_nr, time_t valid_from);
     [[nodiscard]] double get_oil_rate() const { return oil_rate; }
     [[nodiscard]] double get_gas_rate() const { return gas_rate; }
@@ -146,7 +149,7 @@ public:
     [[nodiscard]] int get_report_nr() const { return valid_from_report; }
     [[nodiscard]] bool is_MSW() const { return is_MSW_well; }
     [[nodiscard]] WellType get_type() const { return type; }
-    [[nodiscard]] int get_well_nr() const { return global_well_nr; }
+    [[nodiscard]] size_t get_well_nr() const { return global_well_nr; }
     [[nodiscard]] std::string get_name() const { return name; }
     [[nodiscard]] bool is_open() const { return open; }
     [[nodiscard]] time_t get_sim_time() const { return valid_from_time; }
@@ -164,7 +167,7 @@ public:
     }
     bool has_segment_data() { return num_segments() > 0; }
 
-    int num_segments() {
+    size_t num_segments() {
         return well_segment_collection_get_size(segments.get());
     }
 
@@ -184,13 +187,13 @@ public:
         return has_grid_connections(RD_GRID_GLOBAL_GRID);
     }
     void add_connections(const rd_grid_type *grid, rd::FileView *rst_view,
-                         int well_nr);
-    bool add_MSW(rd::FileView *rst_view, int well_nr,
+                         size_t well_nr);
+    bool add_MSW(rd::FileView *rst_view, size_t well_nr,
                  bool load_segment_information);
 
     static std::shared_ptr<WellState>
     read_wells_in_restart(rd::FileView *file_view, const rd_grid_type *grid,
-                          int report_nr, int global_well_nr,
+                          int report_nr, size_t global_well_nr,
                           bool load_segment_information);
     std::vector<std::shared_ptr<WellConnection>> *
     get_grid_connections(const std::string &grid_name) {

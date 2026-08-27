@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     {
         const char *well_name = "WELL";
         int report_nr = 100;
-        int global_well_nr = 67;
+        size_t global_well_nr = 67;
         time_t valid_from = -1;
         bool open = false;
         auto type = WellType::GAS_INJECTOR;
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
         test_assert_false(well_state.is_MSW());
         test_assert_string_equal(well_name, well_state.get_name().c_str());
-        test_assert_int_equal(global_well_nr, well_state.get_well_nr());
+        test_assert_true(global_well_nr == well_state.get_well_nr());
         test_assert_bool_equal(open, well_state.is_open());
         test_assert_true(type == well_state.get_type());
         test_assert_int_equal(report_nr, well_state.get_report_nr());

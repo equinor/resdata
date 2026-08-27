@@ -13,11 +13,13 @@ std::string string_format(const char *fmt, ...) {
         length = vsnprintf(NULL, 0, fmt, va);
         va_end(va);
     }
-    s.resize(length + 1);
+    if (length < 0)
+        return s;
+    s.resize(static_cast<size_t>(length) + 1);
     {
         va_list va;
         va_start(va, fmt);
-        vsnprintf((char *)s.data(), length + 1, fmt, va);
+        vsnprintf((char *)s.data(), static_cast<size_t>(length) + 1, fmt, va);
         va_end(va);
     }
     return s;

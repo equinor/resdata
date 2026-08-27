@@ -14,14 +14,14 @@ bool rd_sum_vector_add_key(rd_sum_vector_type *keylist, const char *key);
 void rd_sum_vector_add_keys(rd_sum_vector_type *keylist, const char *pattern);
 
 const char *rd_sum_vector_iget_key(const rd_sum_vector_type *rd_sum_vector,
-                                   int index);
+                                   size_t index);
 bool rd_sum_vector_iget_is_rate(const rd_sum_vector_type *rd_sum_vector,
-                                int index);
-int rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
-                                   int index);
-int rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector);
+                                size_t index);
+size_t rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
+                                      size_t index);
+size_t rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector);
 bool rd_sum_vector_iget_valid(const rd_sum_vector_type *rd_sum_vector,
-                              int index);
+                              size_t index);
 
 rd_sum_vector_type *
 rd_sum_vector_alloc_layout_copy(const rd_sum_vector_type *src_vector,

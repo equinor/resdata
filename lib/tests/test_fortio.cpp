@@ -42,10 +42,6 @@ TEST_CASE_METHOD(Tmpdir, "Basic FortIO operations") {
             else
                 REQUIRE_FALSE(fortio.fseek(0, 2000));
         }
-        THEN("Seeking data with negative count raises") {
-            REQUIRE_THROWS_AS(fortio.data_fseek(0, 1, 1, -1, 1),
-                              std::invalid_argument);
-        }
         THEN("Seeking data beyond count raises") {
             REQUIRE_THROWS_AS(fortio.data_fseek(0, 6, 1, 5, 1),
                               std::invalid_argument);
@@ -183,9 +179,11 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
     GIVEN("A fortio file with invalid record markers") {
         auto [head, tail] = GENERATE(std::pair{-1, -1}, std::pair{1, 3});
         {
-            auto content = concat(to_bytes_big(head), to_bytes_big(tail));
+            auto content = concat(to_bytes_big(static_cast<uint32_t>(head)),
+                                  to_bytes_big(static_cast<uint32_t>(tail)));
             std::ofstream file(filename, std::ios::binary);
-            file.write(as_char(content.data()), content.size());
+            file.write(as_char(content.data()),
+                       static_cast<std::streamsize>(content.size()));
         }
 
         ERT::FortIO fortio(filename, std::ios_base::in);
@@ -197,8 +195,9 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
     }
     GIVEN("An externally managed FILE*") {
         write_records(filename, {{"", 0}});
-        std::unique_ptr<FILE, decltype(&fclose)> stream(
-            fopen(filename.c_str(), "r"), fclose);
+        auto close_file = [](FILE *f) { fclose(f); };
+        std::unique_ptr<FILE, decltype(close_file)> stream(
+            fopen(filename.c_str(), "r"), close_file);
         REQUIRE(stream);
         WHEN("Constructing a FortIO from the FILE*") {
             ERT::FortIO fortio(filename, false, false, stream.get(), false);

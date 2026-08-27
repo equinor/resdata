@@ -487,7 +487,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
-    int params_index = rd_smspec_num_nodes(rd_sum->smspec.get());
+    size_t params_index = rd_smspec_num_nodes(rd_sum->smspec.get());
     return rd_smspec_add_node(rd_sum->smspec.get(), params_index, keyword,
                               wgname, num, unit, lgr, lgr_i, lgr_j, lgr_k,
                               default_value);
@@ -510,7 +510,7 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
     true the output time unit will be days, otherwise it will be hours.
 */
 
-rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
+rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, size_t report_step,
                                     double sim_seconds) {
     rd_sum_tstep_type *new_tstep =
         rd_sum_data_add_new_tstep(rd_sum->data.get(), report_step, sim_seconds);
@@ -604,8 +604,8 @@ const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
     return &node;
 }
 
-int rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
-                                        const char *lookup_kw) {
+size_t rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
+                                           const char *lookup_kw) {
     return rd_smspec_get_general_var_params_index(rd_sum->smspec.get(),
                                                   lookup_kw);
 }
@@ -618,9 +618,10 @@ bool rd_sum_has_key(const rd_sum_type *rd_sum, const char *lookup_kw) {
     return rd_sum_has_general_var(rd_sum, lookup_kw);
 }
 
-double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
+double rd_sum_get_general_var(const rd_sum_type *rd_sum, size_t time_index,
                               const char *lookup_kw) {
-    int params_index = rd_sum_get_general_var_params_index(rd_sum, lookup_kw);
+    size_t params_index =
+        rd_sum_get_general_var_params_index(rd_sum, lookup_kw);
     return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
 }
 
@@ -692,7 +693,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
         grid_dims[0], grid_dims[1], grid_dims[2]);
 
     //add remaining nodes
-    for (int i = 0; i < rd_smspec_num_nodes(rd_sum->smspec.get()); i++) {
+    for (size_t i = 0; i < rd_smspec_num_nodes(rd_sum->smspec.get()); i++) {
         const rd::smspec_node &node =
             rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
         if (util_string_equal(node.get_gen_key1(), "TIME"))
@@ -707,16 +708,16 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
 
   */
     rd_sum_vector_ptr rd_sum_vector = make_sum_vector(rd_sum, true);
-    int num_nodes = rd_smspec_num_nodes(rd_sum->smspec.get());
+    size_t num_nodes = rd_smspec_num_nodes(rd_sum->smspec.get());
     std::vector<double> data{};
 
-    int report_step = 0;
+    size_t report_step = 0;
     for (auto it = times_begin; it != times_end; ++it, ++report_step) {
         time_t input_t = *it;
         if (input_t < start_time) {
             data.resize(num_nodes, 0.0);
             //clamping to the first value for t < start_time or if it is a rate than derivative is 0
-            for (int i = 1; i < num_nodes; i++) {
+            for (size_t i = 1; i < num_nodes; i++) {
                 double value = 0;
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
@@ -728,7 +729,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
         } else if (input_t > end_time) {
             //clamping to the last value for t > end_time or if it is a rate than derivative is 0
             data.resize(num_nodes, 0.0);
-            for (int i = 1; i < num_nodes; i++) {
+            for (size_t i = 1; i < num_nodes; i++) {
                 double value = 0;
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
@@ -746,11 +747,11 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
         /* Add timestep corresponding to the interpolated data in the resampled case. */
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(
             rd_sum_resampled.get(), report_step, input_t - input_start);
-        for (int data_index = 0;
+        for (size_t data_index = 0;
              data_index < rd_sum_vector_get_size(rd_sum_vector.get());
              data_index++) {
             double value = data.at(data_index);
-            int params_index =
+            size_t params_index =
                 data_index +
                 1; // The +1 shift is because the first element in the tstep is time value.
             rd_sum_tstep_iset(tstep, params_index, value);
@@ -759,7 +760,8 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
     return rd_sum_resampled;
 }
 
-double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index) {
+double rd_sum_iget(const rd_sum_type *rd_sum, size_t time_index,
+                   size_t param_index) {
     return rd_sum_data_iget(rd_sum->data.get(), time_index, param_index);
 }
 
@@ -772,19 +774,20 @@ const char *rd_sum_get_unit(const rd_sum_type *rd_sum, const char *gen_key) {
     return node->get_unit();
 }
 
-int rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {
+size_t rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {
     return rd_sum_data_get_last_report_step(rd_sum->data.get());
 }
 
-int rd_sum_get_first_report_step(const rd_sum_type *rd_sum) {
+size_t rd_sum_get_first_report_step(const rd_sum_type *rd_sum) {
     return rd_sum_data_get_first_report_step(rd_sum->data.get());
 }
 
-int rd_sum_iget_report_end(const rd_sum_type *rd_sum, int report_step) {
+size_t rd_sum_iget_report_end(const rd_sum_type *rd_sum, size_t report_step) {
     return rd_sum_data_iget_report_end(rd_sum->data.get(), report_step);
 }
 
-int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index) {
+size_t rd_sum_iget_report_step(const rd_sum_type *rd_sum,
+                               size_t internal_index) {
     return rd_sum_data_iget_report_step(rd_sum->data.get(), internal_index);
 }
 
@@ -795,7 +798,7 @@ std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
 
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
                                double *data) {
-    int params_index = rd_sum_get_general_var_params_index(rd_sum, gen_key);
+    size_t params_index = rd_sum_get_general_var_params_index(rd_sum, gen_key);
     rd_sum_data_init_double_vector(rd_sum->data.get(), params_index, data);
 }
 
@@ -818,7 +821,8 @@ void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
 }
 
 std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
-                                             int data_index, bool report_only) {
+                                             size_t data_index,
+                                             bool report_only) {
     return rd_sum_data_alloc_data_vector(rd_sum->data.get(), data_index,
                                          report_only);
 }
@@ -835,10 +839,11 @@ std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
 
 */
 
-static int rd_sum_get_limiting(const rd_sum_type *rd_sum, int smspec_index,
-                               double limit, bool gt) {
-    const int length = rd_sum_data_get_length(rd_sum->data.get());
-    int internal_index = 0;
+static std::optional<size_t> rd_sum_get_limiting(const rd_sum_type *rd_sum,
+                                                 size_t smspec_index,
+                                                 double limit, bool gt) {
+    const size_t length = rd_sum_data_get_length(rd_sum->data.get());
+    size_t internal_index = 0;
     do {
         double value =
             rd_sum_data_iget(rd_sum->data.get(), internal_index, smspec_index);
@@ -853,26 +858,26 @@ static int rd_sum_get_limiting(const rd_sum_type *rd_sum, int smspec_index,
     } while (internal_index < length);
 
     if (internal_index == length) /* Did not find it */
-        internal_index = -1;
+        return std::nullopt;
 
     return internal_index;
 }
 
-int rd_sum_get_first_gt(const rd_sum_type *rd_sum, int param_index,
-                        double limit) {
+std::optional<size_t> rd_sum_get_first_gt(const rd_sum_type *rd_sum,
+                                          size_t param_index, double limit) {
     return rd_sum_get_limiting(rd_sum, param_index, limit, true);
 }
 
-int rd_sum_get_first_lt(const rd_sum_type *rd_sum, int param_index,
-                        double limit) {
+std::optional<size_t> rd_sum_get_first_lt(const rd_sum_type *rd_sum,
+                                          size_t param_index, double limit) {
     return rd_sum_get_limiting(rd_sum, param_index, limit, false);
 }
 
-time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, int report_step) {
+time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, size_t report_step) {
     return rd_sum_data_get_report_time(rd_sum->data.get(), report_step);
 }
 
-time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, int index) {
+time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, size_t index) {
     return rd_sum_data_iget_sim_time(rd_sum->data.get(), index);
 }
 
@@ -892,7 +897,7 @@ time_t rd_sum_get_end_time(const rd_sum_type *rd_sum) {
     }
 }
 
-double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
+double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, size_t index) {
     return rd_sum_data_iget_sim_days(rd_sum->data.get(), index);
 }
 
@@ -905,11 +910,11 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
 
 #define DATE_STRING_LENGTH 128
 
-static void rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
-                              int internal_index,
-                              const std::vector<bool> &has_var,
-                              const std::vector<int> &var_index,
-                              const char *date_format, const char *sep) {
+static void
+rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
+                  size_t internal_index,
+                  const std::vector<std::optional<size_t>> &var_index,
+                  const char *date_format, const char *sep) {
     stream << fmt::format("{:7.2f}",
                           rd_sum_iget_sim_days(rd_sum, internal_index))
            << sep;
@@ -925,22 +930,23 @@ static void rd_sum_write_line(const rd_sum_type *rd_sum, std::ostream &stream,
         stream << date_string.data();
     }
 
-    for (size_t ivar = 0; ivar < var_index.size(); ivar++) {
-        if (has_var.at(ivar))
+    for (const auto &index : var_index) {
+        if (index)
             stream << sep
                    << fmt::format("{:g}", rd_sum_iget(rd_sum, internal_index,
-                                                      var_index[ivar]));
+                                                      index.value()));
     }
 
     stream << "\r\n";
 }
 
-static void rd_sum_write_header(const std::vector<std::string> &key_list,
-                                const std::vector<bool> &has_var,
-                                std::ostream &stream, const char *sep) {
+static void
+rd_sum_write_header(const std::vector<std::string> &key_list,
+                    const std::vector<std::optional<size_t>> &var_index,
+                    std::ostream &stream, const char *sep) {
     stream << "DAYS" << sep << "DATE";
     for (size_t i = 0; i < key_list.size(); i++)
-        if (has_var.at(i))
+        if (var_index.at(i))
             stream << sep << key_list[i];
     stream << "\r\n";
 }
@@ -949,29 +955,25 @@ static void rd_sum_write_csv(const rd_sum_type *rd_sum, std::ostream &stream,
                              const std::vector<std::string> &var_list,
                              const char *date_format, const char *sep) {
 
-    std::vector<bool> has_var(var_list.size(), false);
-    std::vector<int> var_index(var_list.size(), -1);
+    std::vector<std::optional<size_t>> var_index(var_list.size(), std::nullopt);
 
-    for (int ivar = 0; static_cast<size_t>(ivar) < var_list.size(); ivar++) {
-        if (rd_sum_has_general_var(rd_sum, var_list[ivar].c_str())) {
-            has_var[ivar] = true;
+    for (size_t ivar = 0; ivar < var_list.size(); ivar++) {
+        if (rd_sum_has_general_var(rd_sum, var_list[ivar].c_str()))
             var_index[ivar] = rd_sum_get_general_var_params_index(
                 rd_sum, var_list[ivar].c_str());
-        } else {
+        else
             fprintf(stderr,
                     "** Warning: could not find variable: \'%s\' in "
                     "summary file \n",
                     var_list[ivar].c_str());
-            has_var[ivar] = false;
-        }
     }
 
-    rd_sum_write_header(var_list, has_var, stream, sep);
+    rd_sum_write_header(var_list, var_index, stream, sep);
 
-    for (int time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
+    for (size_t time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
          time_index++)
-        rd_sum_write_line(rd_sum, stream, time_index, has_var, var_index,
-                          date_format, sep);
+        rd_sum_write_line(rd_sum, stream, time_index, var_index, date_format,
+                          sep);
 }
 #undef DATE_STRING_LENGTH
 
@@ -1061,7 +1063,7 @@ double rd_sum_get_sim_length(const rd_sum_type *rd_sum) {
 /**
    Will return the number of data blocks.
 */
-int rd_sum_get_data_length(const rd_sum_type *rd_sum) {
+size_t rd_sum_get_data_length(const rd_sum_type *rd_sum) {
     return rd_sum_data_get_length(rd_sum->data.get());
 }
 
@@ -1073,11 +1075,13 @@ bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days) {
     return rd_sum_data_check_sim_days(sum->data.get(), sim_days);
 }
 
-int rd_sum_get_report_step_from_time(const rd_sum_type *sum, time_t sim_time) {
+std::optional<size_t> rd_sum_get_report_step_from_time(const rd_sum_type *sum,
+                                                       time_t sim_time) {
     return rd_sum_data_get_report_step_from_time(sum->data.get(), sim_time);
 }
 
-int rd_sum_get_report_step_from_days(const rd_sum_type *sum, double sim_days) {
+std::optional<size_t> rd_sum_get_report_step_from_days(const rd_sum_type *sum,
+                                                       double sim_days) {
     return rd_sum_data_get_report_step_from_days(sum->data.get(), sim_days);
 }
 

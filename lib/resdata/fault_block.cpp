@@ -15,21 +15,21 @@
 
 #include "detail/resdata/layer_cxx.hpp"
 
-FaultBlock::FaultBlock(fault_block_layer_type *parent_layer, int block_id)
+FaultBlock::FaultBlock(fault_block_layer_type *parent_layer, size_t block_id)
     : grid(fault_block_layer_get_grid(parent_layer)),
       parent_layer(parent_layer), block_id(block_id),
       k(fault_block_layer_get_k(parent_layer)) {}
 
-int FaultBlock::get_id() const { return block_id; }
+size_t FaultBlock::get_id() const { return block_id; }
 
-void FaultBlock::add_cell(int i, int j) {
+void FaultBlock::add_cell(size_t i, size_t j) {
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot add a cell on a detached fault block");
     index_list.emplace_back(i, j);
     valid_center = false;
     layer_iset_cell_value(fault_block_layer_get_layer(parent_layer), i, j,
-                          block_id);
+                          static_cast<int>(block_id));
 }
 
 void FaultBlock::assign_to_region(int region_id) { regions.insert(region_id); }
@@ -40,7 +40,7 @@ void FaultBlock::assert_center() {
         double new_yc = 0;
 
         for (const auto &[i, j] : index_list) {
-            int g = rd_grid_get_global_index3(grid, i, j, k);
+            size_t g = rd_grid_get_global_index3(grid, i, j, k);
             double x, y, z;
 
             rd_grid_get_xyz1(grid, g, &x, &y, &z);
@@ -79,7 +79,8 @@ const std::vector<int> FaultBlock::get_global_index_list() const {
     std::vector<int> global_index_list;
     global_index_list.reserve(index_list.size());
     for (const auto &[i, j] : index_list)
-        global_index_list.push_back(rd_grid_get_global_index3(grid, i, j, k));
+        global_index_list.push_back(
+            static_cast<int>(rd_grid_get_global_index3(grid, i, j, k)));
     return global_index_list;
 }
 
@@ -92,12 +93,12 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
         return edge;
 
     std::vector<int_point2d_type> corner_list;
-    auto cell_list = make_int_vector(0, 0);
+    std::vector<int> cell_list;
     const auto &[start_i, start_j] = index_list.at(0);
 
     layer_trace_block_edge(fault_block_layer_get_layer(parent_layer), start_i,
-                           start_j, block_id, corner_list, cell_list.get(),
-                           /*dedup_cells=*/false);
+                           start_j, static_cast<int>(block_id), corner_list,
+                           cell_list);
 
     edge.reserve(corner_list.size());
     for (std::size_t idx = 0; idx < corner_list.size(); idx++) {
@@ -105,17 +106,16 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
         double x, y, z;
 
         rd_grid_get_corner_xyz(grid, p.i, p.j, k, &x, &y, &z);
-        edge.emplace_back(
-            x, y, int_vector_iget(cell_list.get(), static_cast<int>(idx)));
+        edge.emplace_back(x, y, cell_list.at(idx));
     }
     return edge;
 }
 
 bool FaultBlock::neighbour_xpolyline(
-    int i1, int j1, int i2, int j2,
+    size_t i1, size_t j1, size_t i2, size_t j2,
     const geo_polygon_collection_type *polylines) const {
-    int g1 = rd_grid_get_global_index3(grid, i1, j1, k);
-    int g2 = rd_grid_get_global_index3(grid, i2, j2, k);
+    size_t g1 = rd_grid_get_global_index3(grid, i1, j1, k);
+    size_t g2 = rd_grid_get_global_index3(grid, i2, j2, k);
     double x1, y1, z1;
     double x2, y2, z2;
 
@@ -132,16 +132,13 @@ bool FaultBlock::neighbour_xpolyline(
 }
 
 bool FaultBlock::connected_neighbour(
-    int i1, int j1, int i2, int j2, bool connected_only,
+    size_t i1, size_t j1, size_t i2, size_t j2, bool connected_only,
     const geo_polygon_collection_type *polylines) const {
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot use connected_neighbour on a detached fault block");
     const layer_type *layer = fault_block_layer_get_layer(parent_layer);
-    if ((i2 < 0) || (i2 >= layer_get_nx(layer)))
-        return false;
-
-    if ((j2 < 0) || (j2 >= layer_get_ny(layer)))
+    if ((i2 >= layer_get_nx(layer)) || (j2 >= layer_get_ny(layer)))
         return false;
 
     /* Inactive cells do "not exist" - can not be connected neighbour
@@ -167,20 +164,23 @@ FaultBlock::get_neighbours(bool connected_only,
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot get neighbours of a detached fault block");
-    std::set<int> neighbour_ids;
+    std::set<size_t> neighbour_ids;
     layer_type *layer = fault_block_layer_get_layer(parent_layer);
     for (const auto &[i, j] : index_list) {
-        if (connected_neighbour(i, j, i - 1, j, connected_only, polylines))
-            neighbour_ids.insert(layer_iget_cell_value(layer, i - 1, j));
+        const auto probe = [&](size_t i2, size_t j2) {
+            if (connected_neighbour(i, j, i2, j2, connected_only, polylines))
+                neighbour_ids.insert(layer_iget_cell_value(layer, i2, j2));
+        };
 
-        if (connected_neighbour(i, j, i + 1, j, connected_only, polylines))
-            neighbour_ids.insert(layer_iget_cell_value(layer, i + 1, j));
+        if (i > 0)
+            probe(i - 1, j);
 
-        if (connected_neighbour(i, j, i, j - 1, connected_only, polylines))
-            neighbour_ids.insert(layer_iget_cell_value(layer, i, j - 1));
+        probe(i + 1, j);
 
-        if (connected_neighbour(i, j, i, j + 1, connected_only, polylines))
-            neighbour_ids.insert(layer_iget_cell_value(layer, i, j + 1));
+        if (j > 0)
+            probe(i, j - 1);
+
+        probe(i, j + 1);
     }
     neighbour_ids.erase(0);
     neighbour_ids.erase(block_id);
@@ -188,6 +188,8 @@ FaultBlock::get_neighbours(bool connected_only,
     std::vector<std::shared_ptr<FaultBlock>> neighbours;
     neighbours.reserve(neighbour_ids.size());
     for (int id : neighbour_ids) {
+        if (id < 0)
+            continue;
         neighbours.push_back(fault_block_layer_get_block(parent_layer, id));
     }
     return neighbours;

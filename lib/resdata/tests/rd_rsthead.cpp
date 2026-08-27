@@ -13,7 +13,7 @@
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_util.hpp>
 
-void test_file(const char *filename, int occurence, bool exists,
+void test_file(const char *filename, size_t occurence, bool exists,
                const RSTHead &true_header) {
     int report_step = rd_filename_report_nr(filename);
     std::unique_ptr<rd::File> rst_file = rd::File::open(filename);

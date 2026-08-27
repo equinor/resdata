@@ -36,8 +36,8 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
     rd_kw_type *dx = init_file->get_kw("DX", 0);
     rd_kw_type *dy = init_file->get_kw("DY", 0);
     rd_kw_type *dz = init_file->get_kw("DZ", 0);
-    for (int a = 0; a < rd_grid_get_active_size(grid.get()); a += 100) {
-        int g = rd_grid_get_global_index1A(grid.get(), a);
+    for (size_t a = 0; a < rd_grid_get_active_size(grid.get()); a += 100) {
+        size_t g = rd_grid_get_global_index1A(grid.get(), a);
 
         double dxg = rd_grid_get_cell_dx1(grid.get(), g);
         double dyg = rd_grid_get_cell_dy1(grid.get(), g);

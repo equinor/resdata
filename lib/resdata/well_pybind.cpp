@@ -274,10 +274,10 @@ PYBIND11_MODULE(well, m) {
             "segments",
             [](WellState &self) {
                 auto *segments = self.get_segments();
-                int size = well_segment_collection_get_size(segments);
+                size_t size = well_segment_collection_get_size(segments);
                 std::vector<std::shared_ptr<WellSegment>> result;
                 result.reserve(size);
-                for (int i = 0; i < size; i++) {
+                for (size_t i = 0; i < size; i++) {
                     auto segment = well_segment_collection_iget(segments, i);
                     result.push_back(segment);
                 }
@@ -292,7 +292,7 @@ PYBIND11_MODULE(well, m) {
             [](py::object py_self, py::int_ index) {
                 auto &self = py_self.cast<WellState &>();
                 auto *segments = self.get_segments();
-                int size = well_segment_collection_get_size(segments);
+                size_t size = well_segment_collection_get_size(segments);
                 if (index < py::int_(0))
                     index += py::int_(size);
                 if (!((py::int_(0) <= index) && (index < py::int_(size))))
@@ -300,7 +300,7 @@ PYBIND11_MODULE(well, m) {
                         fmt::format("Invalid index:{} - valid range [0,{})",
                                     index.cast<long>(), size));
                 return well_segment_collection_iget(segments,
-                                                    index.cast<int>());
+                                                    index.cast<size_t>());
             },
             py::arg("idx"))
         .def(

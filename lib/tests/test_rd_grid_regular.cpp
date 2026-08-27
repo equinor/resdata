@@ -36,8 +36,8 @@ TEST_CASE("Test unfractured grids", "[unittest]") {
         REQUIRE(rd_grid_get_nactive_fracture(grid.get()) == 0);
 
         THEN("It should return -1 on any fracture index") {
-            auto i = GENERATE(0, 1, 10, 20);
-            REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), i) == -1);
+            size_t i = GENERATE(size_t{0}, 1, 10, 20);
+            REQUIRE(!rd_grid_get_active_fracture_index1(grid.get(), i));
         }
         THEN("It does not have mapaxes") {
             REQUIRE_FALSE(rd_grid_alloc_mapaxes_kw(grid.get()));
@@ -56,8 +56,8 @@ TEST_CASE("rd_grid_alloc_GRDECL_kw with explicit ACTNUM", "[unittest]") {
             set_pillar(coord_kw.get(), (i + j * nx), i, j, -1, i, j, -1);
             for (int k = 0; k < nz; k++) {
                 for (int c = 0; c < 4; c++) {
-                    int zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
-                    int zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
+                    size_t zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
+                    size_t zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
                     rd_kw_iset_float(zcorn_kw.get(), zi1, k);
                     rd_kw_iset_float(zcorn_kw.get(), zi2, k + 1);
                 }
@@ -130,7 +130,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(rd_grid_get_ny(grid.get()) == 2);
             REQUIRE(rd_grid_get_nz(grid.get()) == 2);
 
-            int nx, ny, nz, nactive;
+            size_t nx, ny, nz, nactive;
             rd_grid_get_dims(grid.get(), &nx, &ny, &nz, &nactive);
             REQUIRE(nx == 2);
             REQUIRE(ny == 2);
@@ -155,10 +155,10 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         }
 
         SECTION("Index") {
-            int global_idx = rd_grid_get_global_index3(grid.get(), 0, 0, 0);
+            size_t global_idx = rd_grid_get_global_index3(grid.get(), 0, 0, 0);
             REQUIRE(global_idx == 0);
 
-            int i, j, k;
+            size_t i, j, k;
             rd_grid_get_ijk1(grid.get(), global_idx, &i, &j, &k);
             REQUIRE(i == 0);
             REQUIRE(j == 0);
@@ -168,17 +168,18 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(rd_grid_ijk_valid(grid.get(), 1, 1, 1));
             REQUIRE(!rd_grid_ijk_valid(grid.get(), 5, 5, 5));
 
-            int active_idx = rd_grid_get_active_index3(grid.get(), 0, 0, 0);
+            auto active_idx = rd_grid_get_active_index3(grid.get(), 0, 0, 0);
             REQUIRE(active_idx == 0);
 
-            int active_idx1 = rd_grid_get_active_index1(grid.get(), global_idx);
+            auto active_idx1 =
+                rd_grid_get_active_index1(grid.get(), global_idx);
             REQUIRE(active_idx1 == 0);
 
-            int global_from_active =
-                rd_grid_get_global_index1A(grid.get(), active_idx);
+            size_t global_from_active =
+                rd_grid_get_global_index1A(grid.get(), *active_idx);
             REQUIRE(global_from_active == global_idx);
 
-            rd_grid_get_ijk1A(grid.get(), active_idx, &i, &j, &k);
+            rd_grid_get_ijk1A(grid.get(), *active_idx, &i, &j, &k);
             REQUIRE(i == 0);
             REQUIRE(j == 0);
             REQUIRE(k == 0);
@@ -205,8 +206,8 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(y == 1.0);
             REQUIRE(z == 1.5);
 
-            int active_idx = rd_grid_get_active_index1(grid.get(), 6);
-            rd_grid_get_xyz1A(grid.get(), active_idx, &x, &y, &z);
+            auto active_idx = rd_grid_get_active_index1(grid.get(), 6);
+            rd_grid_get_xyz1A(grid.get(), *active_idx, &x, &y, &z);
             REQUIRE(x == 0.5);
             REQUIRE(y == 3.0);
             REQUIRE(z == 4.5);
@@ -265,14 +266,14 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             double thickness = rd_grid_get_cell_thickness1(grid.get(), 0);
             REQUIRE(thickness == 3.0);
 
-            int active_idx = rd_grid_get_active_index1(grid.get(), 0);
-            double dx_a = rd_grid_get_cell_dx1A(grid.get(), active_idx);
+            auto active_idx = rd_grid_get_active_index1(grid.get(), 0);
+            double dx_a = rd_grid_get_cell_dx1A(grid.get(), *active_idx);
             REQUIRE(dx_a == 1.0);
 
-            double dy_a = rd_grid_get_cell_dy1A(grid.get(), active_idx);
+            double dy_a = rd_grid_get_cell_dy1A(grid.get(), *active_idx);
             REQUIRE(dy_a == 2.0);
 
-            double dz_a = rd_grid_get_cell_dz1A(grid.get(), active_idx);
+            double dz_a = rd_grid_get_cell_dz1A(grid.get(), *active_idx);
             REQUIRE(dz_a == 3.0);
 
             double dx_dist, dy_dist, dz_dist;
@@ -287,14 +288,15 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             double volume = rd_grid_get_cell_volume1(grid.get(), 0);
             REQUIRE(volume == 6.0);
 
-            int active_idx = rd_grid_get_active_index1(grid.get(), 0);
-            double volume_a = rd_grid_get_cell_volume1A(grid.get(), active_idx);
+            auto active_idx = rd_grid_get_active_index1(grid.get(), 0);
+            double volume_a =
+                rd_grid_get_cell_volume1A(grid.get(), *active_idx);
             REQUIRE(volume_a == 6.0);
 
-            double cdepth_a = rd_grid_get_cdepth1A(grid.get(), active_idx);
+            double cdepth_a = rd_grid_get_cdepth1A(grid.get(), *active_idx);
             REQUIRE(cdepth_a == 1.5);
 
-            double top_a = rd_grid_get_top1A(grid.get(), active_idx);
+            double top_a = rd_grid_get_top1A(grid.get(), *active_idx);
             REQUIRE(top_a == 0.0);
 
             double cdepth = rd_grid_get_cdepth1(grid.get(), 0);
@@ -316,7 +318,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
             REQUIRE(rd_grid_cell_contains_xyz1(grid.get(), 0, x, y, z));
 
-            int found_idx =
+            auto found_idx =
                 rd_grid_get_global_index_from_xyz(grid.get(), x, y, z, 0);
             REQUIRE(found_idx == 0);
 
@@ -351,16 +353,16 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
         SECTION("Fractures") {
             REQUIRE(rd_grid_get_nactive_fracture(grid.get()) == 0);
-            REQUIRE(rd_grid_get_active_fracture_index1(grid.get(), 0) == -1);
-            REQUIRE(rd_grid_get_global_index1F(grid.get(), 0) == -1);
+            REQUIRE(!rd_grid_get_active_fracture_index1(grid.get(), 0));
+            REQUIRE(!rd_grid_get_global_index1F(grid.get(), 0));
         }
 
         std::vector<float> expected_zcorn(2 * 2 * 2 * 8);
-        for (int i = 0; i < 16; i++)
+        for (size_t i = 0; i < 16; i++)
             expected_zcorn[i] = 0.0f;
-        for (int i = 16; i < 48; i++)
+        for (size_t i = 16; i < 48; i++)
             expected_zcorn[i] = 3.0f;
-        for (int i = 48; i < 64; i++)
+        for (size_t i = 48; i < 64; i++)
             expected_zcorn[i] = 6.0f;
 
         std::vector<float> expected_coord{
@@ -373,8 +375,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         SECTION("Keyword allocation") {
             auto zcorn_kw = rd_grid_alloc_zcorn_kw(grid.get());
             REQUIRE(zcorn_kw != nullptr);
-            REQUIRE(rd_kw_get_size(zcorn_kw.get()) ==
-                    static_cast<int>(expected_zcorn.size()));
+            REQUIRE(rd_kw_get_size(zcorn_kw.get()) == expected_zcorn.size());
             for (size_t i = 0; i < expected_zcorn.size(); i++)
                 REQUIRE(rd_kw_iget_float(zcorn_kw.get(), i) ==
                         expected_zcorn[i]);
@@ -382,27 +383,26 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             auto actnum_kw = rd_grid_alloc_actnum_kw(grid.get());
             REQUIRE(actnum_kw != nullptr);
             REQUIRE(rd_kw_get_size(actnum_kw.get()) == 8);
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
                 REQUIRE(rd_kw_iget_int(actnum_kw.get(), i) == actnum_data[i]);
 
             auto coord_kw = rd_grid_alloc_coord_kw(grid.get());
             REQUIRE(coord_kw != nullptr);
-            REQUIRE(rd_kw_get_size(coord_kw.get()) ==
-                    static_cast<int>(expected_coord.size()));
-            for (int i = 0; i < rd_kw_get_size(coord_kw.get()); i++)
+            REQUIRE(rd_kw_get_size(coord_kw.get()) == expected_coord.size());
+            for (size_t i = 0; i < rd_kw_get_size(coord_kw.get()); i++)
                 REQUIRE(rd_kw_iget_float(coord_kw.get(), i) ==
                         expected_coord[i]);
 
             auto volume_kw = rd_grid_alloc_volume_kw(grid.get(), false);
             REQUIRE(volume_kw != nullptr);
             REQUIRE(rd_kw_get_size(volume_kw.get()) == 8);
-            for (int i = 0; i < rd_kw_get_size(volume_kw.get()); i++)
+            for (size_t i = 0; i < rd_kw_get_size(volume_kw.get()); i++)
                 REQUIRE(rd_kw_iget_double(volume_kw.get(), i) == 6.0);
 
             auto volume_kw_active = rd_grid_alloc_volume_kw(grid.get(), true);
             REQUIRE(volume_kw_active != nullptr);
             REQUIRE(rd_kw_get_size(volume_kw_active.get()) == 7);
-            for (int i = 0; i < rd_kw_get_size(volume_kw_active.get()); i++)
+            for (size_t i = 0; i < rd_kw_get_size(volume_kw_active.get()); i++)
                 REQUIRE(rd_kw_iget_double(volume_kw_active.get(), i) == 6.0);
         }
 
@@ -413,22 +413,24 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             int coord_size = rd_grid_get_coord_size(grid.get());
             REQUIRE(coord_size == static_cast<int>(expected_coord.size()));
 
-            std::vector<float> zcorn_data(zcorn_size);
+            std::vector<float> zcorn_data(static_cast<size_t>(zcorn_size));
             rd_grid_init_zcorn_data(grid.get(), zcorn_data.data());
             REQUIRE(zcorn_data == expected_zcorn);
 
-            std::vector<double> zcorn_data_double(zcorn_size);
+            std::vector<double> zcorn_data_double(
+                static_cast<size_t>(zcorn_size));
             rd_grid_init_zcorn_data_double(grid.get(),
                                            zcorn_data_double.data());
             REQUIRE(zcorn_data_double ==
                     std::vector<double>(expected_zcorn.begin(),
                                         expected_zcorn.end()));
 
-            std::vector<float> coord_data(coord_size);
+            std::vector<float> coord_data(static_cast<size_t>(coord_size));
             rd_grid_init_coord_data(grid.get(), coord_data.data());
             REQUIRE(coord_data == expected_coord);
 
-            std::vector<double> coord_data_double(coord_size);
+            std::vector<double> coord_data_double(
+                static_cast<size_t>(coord_size));
             rd_grid_init_coord_data_double(grid.get(),
                                            coord_data_double.data());
             REQUIRE(coord_data_double ==
@@ -437,7 +439,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
             std::vector<int> actnum(rd_grid_get_global_size(grid.get()));
             rd_grid_init_actnum_data(grid.get(), actnum.data());
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
                 REQUIRE(actnum[i] == actnum_data[i]);
         }
 
@@ -594,10 +596,10 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         }
 
         GIVEN("A grid keyword") {
-            int nactive = rd_grid_get_nactive(grid.get());
-            auto kw = make_rd_kw("PORO", nactive, RD_FLOAT);
+            size_t nactive = rd_grid_get_nactive(grid.get());
+            auto kw = make_rd_kw("PORO", static_cast<int>(nactive), RD_FLOAT);
 
-            for (int i = 0; i < nactive; i++) {
+            for (size_t i = 0; i < nactive; i++) {
                 rd_kw_iset_float(kw.get(), i, 0.2f + i * 0.01f);
             }
 
@@ -616,11 +618,15 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
             SECTION("Keyword copy") {
                 auto target_kw = make_rd_kw(
-                    "TARGET", rd_grid_get_global_size(grid.get()), RD_FLOAT);
+                    "TARGET",
+                    static_cast<int>(rd_grid_get_global_size(grid.get())),
+                    RD_FLOAT);
                 rd_grid_global_kw_copy(grid.get(), target_kw.get(), kw.get());
 
                 auto compressed_kw = make_rd_kw(
-                    "COMP", rd_grid_get_active_size(grid.get()), RD_FLOAT);
+                    "COMP",
+                    static_cast<int>(rd_grid_get_active_size(grid.get())),
+                    RD_FLOAT);
                 rd_grid_compressed_kw_copy(grid.get(), compressed_kw.get(),
                                            target_kw.get());
             }

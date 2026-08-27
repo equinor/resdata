@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <ert/geometry/geo_surface.hpp>
 #include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
@@ -382,11 +383,11 @@ TEST_CASE("geo_surface header equality", "[geometry]") {
 
 TEST_CASE("geo_surface initialization", "[geometry]") {
     GIVEN("A new surface with dimensions") {
-        int nx = 3, ny = 4;
+        size_t nx = 3, ny = 4;
         auto surface = make_geo_surface(nx, ny, 1.0, 2.0, 0.0, 0.0, 0.0);
 
         WHEN("Checking surface size") {
-            int size = geo_surface_get_size(surface.get());
+            size_t size = geo_surface_get_size(surface.get());
 
             THEN("Size equals nx * ny") { REQUIRE(size == nx * ny); }
 

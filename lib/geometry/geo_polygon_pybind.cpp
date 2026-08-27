@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -43,7 +44,7 @@ PYBIND11_MODULE(_cpolyline, m) {
     m.def("_size", [](py::handle self) {
         return geo_polygon_get_size(from_cwrap<geo_polygon_type>(self));
     });
-    m.def("_iget_xy", [](py::handle self, int index) {
+    m.def("_iget_xy", [](py::handle self, size_t index) {
         double x = 0;
         double y = 0;
         geo_polygon_iget_xy(from_cwrap<geo_polygon_type>(self), index, &x, &y);
