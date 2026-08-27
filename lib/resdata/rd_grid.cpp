@@ -5102,7 +5102,7 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
                 nnc_info_get_self_vector(nnc_info.get());
             if (!nnc_vector)
                 continue;
-            for (int i = 0; i < nnc_vector_get_size(nnc_vector); i++) {
+            for (size_t i = 0; i < nnc_vector_get_size(nnc_vector); i++) {
                 int nnc_index = nnc_vector_iget_nnc_index(nnc_vector, i);
                 if (nnc_index < 0)
                     throw std::domain_error(
