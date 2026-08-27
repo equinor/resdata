@@ -113,7 +113,6 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
 void rd_kw_max_min(const rd_kw_type *, void *, void *);
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw);
 
-void rd_kw_fprintf_data(const rd_kw_type *rd_kw, const char *fmt, FILE *stream);
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
 
 void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value);

@@ -2456,44 +2456,6 @@ int rd_kw_element_sum_int(const rd_kw_type *rd_kw) {
     return int_sum;
 }
 
-#define RD_KW_FPRINTF_DATA(ctype)                                              \
-    static void rd_kw_fprintf_data_##ctype(const rd_kw_type *rd_kw,            \
-                                           const char *fmt, FILE *stream) {    \
-        const ctype *data = (const ctype *)rd_kw->data;                        \
-        int i;                                                                 \
-        for (i = 0; i < rd_kw->size; i++)                                      \
-            fprintf(stream, fmt, data[i]);                                     \
-    }
-
-RD_KW_FPRINTF_DATA(int)
-RD_KW_FPRINTF_DATA(float)
-RD_KW_FPRINTF_DATA(double)
-RD_KW_FPRINTF_DATA(bool)
-#undef RD_KW_FPRINTF_DATA
-
-static void rd_kw_fprintf_data_string(const rd_kw_type *rd_kw, const char *fmt,
-                                      FILE *stream) {
-    int i;
-    for (i = 0; i < rd_kw->size; i++)
-        fprintf(stream, fmt,
-                &rd_kw->data[i * rd_type_get_sizeof_ctype(rd_kw->data_type)]);
-}
-
-void rd_kw_fprintf_data(const rd_kw_type *rd_kw, const char *fmt,
-                        FILE *stream) {
-    if (rd_type_is_double(rd_kw->data_type))
-        rd_kw_fprintf_data_double(rd_kw, fmt, stream);
-    else if (rd_type_is_float(rd_kw->data_type))
-        rd_kw_fprintf_data_float(rd_kw, fmt, stream);
-    else if (rd_type_is_int(rd_kw->data_type))
-        rd_kw_fprintf_data_int(rd_kw, fmt, stream);
-    else if (rd_type_is_bool(rd_kw->data_type))
-        rd_kw_fprintf_data_bool(rd_kw, fmt, stream);
-    else if (rd_type_is_char(rd_kw->data_type) ||
-             rd_type_is_string(rd_kw->data_type))
-        rd_kw_fprintf_data_string(rd_kw, fmt, stream);
-}
-
 static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
                                       const rd_kw_type *rd_kw2, int offset,
                                       double abs_epsilon, double rel_epsilon) {
