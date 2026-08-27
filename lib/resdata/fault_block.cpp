@@ -121,7 +121,7 @@ bool FaultBlock::neighbour_xpolyline(
     rd_grid_get_xyz1(grid, g2, &x2, &y2, &z2);
 
     for (int i = 0; i < geo_polygon_collection_size(polylines); i++) {
-        const geo_polygon_type *polyline =
+        const rd::Polygon *polyline =
             geo_polygon_collection_iget_polygon(polylines, i);
         if (geo_polygon_segment_intersects(polyline, x1, y1, x2, y2))
             return true;

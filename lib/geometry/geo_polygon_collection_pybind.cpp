@@ -11,7 +11,7 @@
 namespace py = pybind11;
 
 namespace {
-py::object create_polyline_ref(geo_polygon_type *polygon, py::handle parent) {
+py::object create_polyline_ref(rd::Polygon *polygon, py::handle parent) {
     if (!polygon)
         return py::none();
     return CPolyline().attr("createCReference")(
@@ -68,6 +68,6 @@ PYBIND11_MODULE(_cpolyline_collection, m) {
           [](py::handle self, py::handle polyline, bool polygon_owner) {
               geo_polygon_collection_add_polygon(
                   from_cwrap<geo_polygon_collection_type>(self),
-                  from_cwrap<geo_polygon_type>(polyline), polygon_owner);
+                  from_cwrap<rd::Polygon>(polyline), polygon_owner);
           });
 }

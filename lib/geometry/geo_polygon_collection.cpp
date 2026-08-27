@@ -15,7 +15,7 @@
 struct geo_polygon_collection_struct {
     UTIL_TYPE_ID_DECLARATION;
     vector_ptr polygon_list = new_vector();
-    std::map<std::string, geo_polygon_type *> polygon_map;
+    std::map<std::string, rd::Polygon *> polygon_map;
 };
 
 UTIL_IS_INSTANCE_FUNCTION(geo_polygon_collection,
@@ -31,17 +31,17 @@ int geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
     return vector_get_size(polygons->polygon_list.get());
 }
 
-geo_polygon_type *
+rd::Polygon *
 geo_polygon_collection_create_polygon(geo_polygon_collection_type *polygons,
                                       const char *name) {
-    geo_polygon_struct *polygon{nullptr};
+    rd::Polygon *polygon{nullptr};
     bool create_polygon = true;
 
     if (name && geo_polygon_collection_has_polygon(polygons, name))
         create_polygon = false;
 
     if (create_polygon) {
-        polygon = new geo_polygon_struct(name);
+        polygon = new rd::Polygon(name);
         geo_polygon_collection_add_polygon(polygons, polygon, true);
     }
 
@@ -49,7 +49,7 @@ geo_polygon_collection_create_polygon(geo_polygon_collection_type *polygons,
 }
 
 bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
-                                        geo_polygon_type *polygon,
+                                        rd::Polygon *polygon,
                                         bool polygon_owner) {
     const char *name = geo_polygon_get_name(polygon);
     if (geo_polygon_collection_has_polygon(polygons, name))
@@ -57,7 +57,7 @@ bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
     else {
         if (polygon_owner)
             vector_append_owned_ref(polygons->polygon_list.get(), polygon,
-                                    [](void *arg) {delete static_cast<geo_polygon_struct *>(arg);});
+                                    [](void *arg) {delete static_cast<rd::Polygon *>(arg);});
         else
             vector_append_ref(polygons->polygon_list.get(), polygon);
 
@@ -80,13 +80,13 @@ void geo_polygon_collection_free(geo_polygon_collection_type *polygons) {
     delete polygons;
 }
 
-geo_polygon_type *
+rd::Polygon *
 geo_polygon_collection_iget_polygon(const geo_polygon_collection_type *polygons,
                                     int index) {
-    return (geo_polygon_type *)vector_iget(polygons->polygon_list.get(), index);
+    return (rd::Polygon *)vector_iget(polygons->polygon_list.get(), index);
 }
 
-geo_polygon_type *
+rd::Polygon *
 geo_polygon_collection_get_polygon(const geo_polygon_collection_type *polygons,
                                    const char *polygon_name) {
     return polygons->polygon_map.at(polygon_name);

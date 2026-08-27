@@ -42,7 +42,7 @@ void geo_region_reset(geo_region_type *region) {
 void geo_region_free(geo_region_type *region) { delete region; }
 
 static void geo_region_polygon_select__(geo_region_type *region,
-                                        const geo_polygon_type *polygon,
+                                        const rd::Polygon *polygon,
                                         bool select_inside, bool select) {
     for (size_t i = 0; i < region->size(); i++) {
         double x, y;
@@ -61,22 +61,22 @@ static void geo_region_polygon_select__(geo_region_type *region,
 }
 
 void geo_region_select_inside_polygon(geo_region_type *region,
-                                      const geo_polygon_type *polygon) {
+                                      const rd::Polygon *polygon) {
     geo_region_polygon_select__(region, polygon, true, true);
 }
 
 void geo_region_select_outside_polygon(geo_region_type *region,
-                                       const geo_polygon_type *polygon) {
+                                       const rd::Polygon *polygon) {
     geo_region_polygon_select__(region, polygon, false, true);
 }
 
 void geo_region_deselect_inside_polygon(geo_region_type *region,
-                                        const geo_polygon_type *polygon) {
+                                        const rd::Polygon *polygon) {
     geo_region_polygon_select__(region, polygon, true, false);
 }
 
 void geo_region_deselect_outside_polygon(geo_region_type *region,
-                                         const geo_polygon_type *polygon) {
+                                         const rd::Polygon *polygon) {
     geo_region_polygon_select__(region, polygon, false, false);
 }
 

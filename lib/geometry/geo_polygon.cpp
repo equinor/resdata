@@ -15,18 +15,18 @@
 
 #include <ert/geometry/geo_polygon.hpp>
 
-void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y) {
+void geo_polygon_add_point(rd::Polygon *polygon, double x, double y) {
     polygon->xcoord.push_back(x);
     polygon->ycoord.push_back(y);
 }
 
-void geo_polygon_add_point_front(geo_polygon_type *polygon, double x,
+void geo_polygon_add_point_front(rd::Polygon *polygon, double x,
                                  double y) {
     polygon->xcoord.insert(polygon->xcoord.begin(), x);
     polygon->ycoord.insert(polygon->ycoord.begin(), y);
 }
 
-void geo_polygon_close(geo_polygon_type *polygon) {
+void geo_polygon_close(rd::Polygon *polygon) {
     double x = polygon->xcoord.at(0);
     double y = polygon->ycoord.at(0);
     geo_polygon_add_point(polygon, x, y);
@@ -60,7 +60,7 @@ static bool on_edge(double x1, double y1, double x2, double y2, double x0,
   edge will be identified as inside. If the force_edge_inside variable
   is set to false the behaviour on the edges is undefined.
 */
-bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x0,
+bool geo_polygon_contains_point(const rd::Polygon *polygon, double x0,
                                 double y0, bool force_edge_inside) {
     bool inside = false;
     double y = y0;
@@ -117,13 +117,13 @@ bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x0,
       included.
 */
 
-geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename) {
+rd::Polygon *geo_polygon_fload_alloc_irap(const char *filename) {
     std::string sfile{filename};
     std::ifstream stream{sfile};
     if (!stream)
         throw std::ios_base::failure("Failed to open: " + sfile);
 
-    auto polygon = std::make_unique<geo_polygon_struct>(filename);
+    auto polygon = std::make_unique<rd::Polygon>(filename);
     double x, y, z;
 
     while (stream >> x >> y >> z) {
@@ -146,16 +146,16 @@ geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename) {
     return polygon.release();
 }
 
-void geo_polygon_reset(geo_polygon_type *polygon) {
+void geo_polygon_reset(rd::Polygon *polygon) {
     polygon->xcoord.resize(0);
     polygon->ycoord.resize(0);
 }
 
-size_t geo_polygon_get_size(const geo_polygon_type *polygon) {
+size_t geo_polygon_get_size(const rd::Polygon *polygon) {
     return polygon->xcoord.size();
 }
 
-void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
+void geo_polygon_iget_xy(const rd::Polygon *polygon, int index, double *x,
                          double *y) {
     *x = polygon->xcoord.at(index);
     *y = polygon->ycoord.at(index);
@@ -229,7 +229,7 @@ static XLinesStatus xsegments(const std::array<std::array<double, 2>, 4> points,
     }
 }
 
-bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
+bool geo_polygon_segment_intersects(const rd::Polygon *polygon, double x1,
                                     double y1, double x2, double y2) {
     if (polygon->xcoord.empty())
         return false;
@@ -257,18 +257,18 @@ bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
     return false;
 }
 
-const char *geo_polygon_get_name(const geo_polygon_type *polygon) {
+const char *geo_polygon_get_name(const rd::Polygon *polygon) {
     return polygon->name.has_value() ? (*polygon->name).c_str() : nullptr;
 }
 
-void geo_polygon_set_name(geo_polygon_type *polygon, const char *name) {
+void geo_polygon_set_name(rd::Polygon *polygon, const char *name) {
     if (name)
         polygon->name = name;
     else
         polygon->name = std::nullopt;
 }
 
-double geo_polygon_get_length(geo_polygon_type *polygon) {
+double geo_polygon_get_length(rd::Polygon *polygon) {
     if (polygon->xcoord.size() == 1)
         return 0;
     else {
@@ -303,8 +303,8 @@ static bool approx_equal(const std::vector<double> &a,
 /*
   Name is ignored in the comparison.
 */
-bool geo_polygon_equal(const geo_polygon_type *polygon1,
-                       const geo_polygon_type *polygon2) {
+bool geo_polygon_equal(const rd::Polygon *polygon1,
+                       const rd::Polygon *polygon2) {
     bool equal = polygon1->xcoord == polygon2->xcoord &&
                  polygon1->ycoord == polygon2->ycoord;
 

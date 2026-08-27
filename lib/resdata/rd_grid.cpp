@@ -3515,7 +3515,7 @@ int rd_grid_get_global_index_from_xyz(rd_grid_type *grid, double x, double y,
 static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
                                             double y, int k, int i1, int i2,
                                             int j1, int j2,
-                                            geo_polygon_type *polygon) {
+                                            rd::Polygon *polygon) {
     geo_polygon_reset(polygon);
 
     /* Bottom edge */
@@ -3555,7 +3555,7 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
 
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
                             int *i, int *j) {
-    auto polygon = std::make_unique<geo_polygon_struct>("");
+    auto polygon = std::make_unique<rd::Polygon>("");
     int nx = rd_grid_get_nx(grid);
     int ny = rd_grid_get_ny(grid);
     bool inside = rd_grid_sublayer_contanins_xy__(grid, x, y, k, 0, nx, 0, ny,

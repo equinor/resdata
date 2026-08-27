@@ -879,7 +879,7 @@ void rd_region_deselect_below_plane(rd_region_type *region, const double n[3],
 */
 
 static void rd_region_polygon_select__(rd_region_type *region,
-                                       const geo_polygon_type *polygon,
+                                       const rd::Polygon *polygon,
                                        bool select_inside, bool select) {
 
     const int define_k = 0; // The k-level where the polygon is checked.
@@ -908,22 +908,22 @@ static void rd_region_polygon_select__(rd_region_type *region,
 }
 
 void rd_region_select_inside_polygon(rd_region_type *region,
-                                     const geo_polygon_type *polygon) {
+                                     const rd::Polygon *polygon) {
     rd_region_polygon_select__(region, polygon, true, true);
 }
 
 void rd_region_deselect_inside_polygon(rd_region_type *region,
-                                       const geo_polygon_type *polygon) {
+                                       const rd::Polygon *polygon) {
     rd_region_polygon_select__(region, polygon, true, false);
 }
 
 void rd_region_select_outside_polygon(rd_region_type *region,
-                                      const geo_polygon_type *polygon) {
+                                      const rd::Polygon *polygon) {
     rd_region_polygon_select__(region, polygon, false, true);
 }
 
 void rd_region_deselect_outside_polygon(rd_region_type *region,
-                                        const geo_polygon_type *polygon) {
+                                        const rd::Polygon *polygon) {
     rd_region_polygon_select__(region, polygon, false, false);
 }
 
