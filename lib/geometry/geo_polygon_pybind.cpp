@@ -21,7 +21,7 @@ PYBIND11_MODULE(_cpolyline, m) {
         "_alloc_new",
         [](std::optional<std::string> name) {
             return reinterpret_cast<std::uintptr_t>(
-                geo_polygon_alloc(name ? name->c_str() : nullptr));
+                new geo_polygon_struct(name));
         },
         py::return_value_policy::reference);
     m.def(
@@ -38,7 +38,7 @@ PYBIND11_MODULE(_cpolyline, m) {
         geo_polygon_add_point_front(from_cwrap<geo_polygon_type>(self), x, y);
     });
     m.def("_free", [](py::handle self) {
-        geo_polygon_free(from_cwrap<geo_polygon_type>(self));
+        delete from_cwrap<geo_polygon_type>(self);
     });
     m.def("_size", [](py::handle self) {
         return geo_polygon_get_size(from_cwrap<geo_polygon_type>(self));

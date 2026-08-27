@@ -6,6 +6,7 @@
 #include <array>
 #include <fstream>
 #include <ios>
+#include <memory>
 #include <string>
 #include <vector>
 #include <optional>
@@ -13,22 +14,6 @@
 #include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
-
-geo_polygon_type *geo_polygon_alloc(const char *name) {
-    geo_polygon_struct *polygon = nullptr;
-    if (name)
-        polygon = new geo_polygon_struct(name);
-    else
-        polygon = new geo_polygon_struct(std::nullopt);
-
-    return polygon;
-}
-
-void geo_polygon_free(geo_polygon_type *polygon) { delete polygon; }
-
-void geo_polygon_free__(void *arg) {
-    geo_polygon_free(static_cast<geo_polygon_type *>(arg));
-}
 
 void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y) {
     polygon->xcoord.push_back(x);
@@ -138,7 +123,7 @@ geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename) {
     if (!stream)
         throw std::ios_base::failure("Failed to open: " + sfile);
 
-    geo_polygon_ptr polygon{geo_polygon_alloc(filename), geo_polygon_free};
+    auto polygon = std::make_unique<geo_polygon_struct>(filename);
     double x, y, z;
 
     while (stream >> x >> y >> z) {
@@ -329,8 +314,4 @@ bool geo_polygon_equal(const geo_polygon_type *polygon1,
     }
 
     return equal;
-}
-
-geo_polygon_ptr make_geo_polygon(std::string name) {
-    return {geo_polygon_alloc(name.c_str()), &geo_polygon_free};
 }
