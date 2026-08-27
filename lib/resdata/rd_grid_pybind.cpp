@@ -1,4 +1,5 @@
 #include <optional>
+#include <stdio.h>
 #include <string>
 #include <tuple>
 #include <algorithm>
@@ -216,16 +217,18 @@ PYBIND11_MODULE(_grid, m) {
         return rd_grid_get_cdepth1(from_cwrap<rd_grid_type>(self), index);
     });
     m.def("_fwrite_grdecl", [](py::handle self, py::handle kw,
-                               std::optional<std::string> header,
-                               py::handle file, double default_value) {
+                               std::optional<std::string> header, int file,
+                               double default_value) {
+        FdStream stream(file, "w");
         if (header.has_value())
-            rd_grid_grdecl_fprintf_kw(
-                from_cwrap<rd_grid_type>(self), from_cwrap<rd_kw_type>(kw),
-                header->c_str(), from_cwrap<FILE>(file), default_value);
+            rd_grid_grdecl_fprintf_kw(from_cwrap<rd_grid_type>(self),
+                                      from_cwrap<rd_kw_type>(kw),
+                                      header->c_str(), stream, default_value);
         else
             rd_grid_grdecl_fprintf_kw(from_cwrap<rd_grid_type>(self),
                                       from_cwrap<rd_kw_type>(kw), nullptr,
-                                      from_cwrap<FILE>(file), default_value);
+                                      stream, default_value);
+        stream.close();
     });
     m.def("_load_column", [](py::handle self, py::handle kw, int i, int j) {
         return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
@@ -259,9 +262,11 @@ PYBIND11_MODULE(_grid, m) {
         return std::make_tuple(dx, dy, dz);
     });
     m.def("_fprintf_grdecl2",
-          [](py::handle self, py::handle file, UnitSystem rd_unit) {
-              rd_grid_fprintf_grdecl2(from_cwrap<rd_grid_type>(self),
-                                      from_cwrap<FILE>(file), rd_unit);
+          [](py::handle self, int file, UnitSystem rd_unit) {
+              FdStream stream(file, "w");
+              rd_grid_fprintf_grdecl2(from_cwrap<rd_grid_type>(self), stream,
+                                      rd_unit);
+              stream.close();
           });
     m.def("_fwrite_GRID2",
           [](py::handle self, std::string filename, UnitSystem rd_unit) {

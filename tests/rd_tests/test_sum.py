@@ -414,10 +414,10 @@ class SumTest(ResdataTest):
         tmpdir = self.tmp_path_factory.mktemp("sum_vector", numbered=True)
         with self.monkeypatch.context() as mp:
             mp.chdir(tmpdir)
-            with cwrap.open("f1.txt", "w") as f:
+            with open("f1.txt", "w") as f:
                 case1.dump_csv_line(t, kw_list, f)
 
-            with cwrap.open("f2.txt", "w") as f:
+            with open("f2.txt", "w") as f:
                 case2.dump_csv_line(t, kw_list2, f)
 
             with open("f1.txt") as f:

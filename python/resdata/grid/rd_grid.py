@@ -12,18 +12,19 @@ import ctypes
 import math
 import os.path
 import sys
-from typing import SupportsInt
+from io import TextIOWrapper
+from typing import SupportsFloat, SupportsInt
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from cwrap import CFILE, BaseCClass
-from cwrap import open as copen
+from cwrap import BaseCClass
 
 import resdata.grid._grid as _grid
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
+from resdata.util._fd import synced_fd
 
 
 class Grid(BaseCClass):
@@ -55,7 +56,7 @@ class Grid(BaseCClass):
         """
 
         if os.path.isfile(filename):
-            with copen(filename) as f:
+            with open(filename) as f:
                 specgrid = ResdataKW.read_grdecl(
                     f, "SPECGRID", rd_type=ResDataType.RD_INT, strict=False
                 )
@@ -995,14 +996,16 @@ class Grid(BaseCClass):
             )
             raise ValueError(err_msg)
 
-    def save_grdecl(self, pyfile, output_unit: UnitSystem = UnitSystem.METRIC):
+    def save_grdecl(
+        self, pyfile: TextIOWrapper, output_unit: UnitSystem = UnitSystem.METRIC
+    ):
         """
-        Will write the the grid content as grdecl formatted keywords.
+        Will write the grid content as grdecl formatted keywords.
 
         Will only write the main grid.
         """
-        cfile = CFILE(pyfile)
-        _grid._fprintf_grdecl2(self, cfile, output_unit)
+        with synced_fd(pyfile) as fd:
+            _grid._fprintf_grdecl2(self, fd, output_unit)
 
     def save_EGRID(self, filename, output_unit: UnitSystem | None = None):
         """Save the grid as an EGRID file.
@@ -1024,7 +1027,13 @@ class Grid(BaseCClass):
         """
         _grid._fwrite_GRID2(self, filename, output_unit)
 
-    def write_grdecl(self, rd_kw, pyfile, special_header=None, default_value=0):
+    def write_grdecl(
+        self,
+        rd_kw: ResdataKW,
+        pyfile: TextIOWrapper,
+        special_header: str | None = None,
+        default_value: SupportsFloat = 0,
+    ) -> None:
         """
         Writes an ResdataKW instance as an ECLIPSE grdecl formatted file.
 
@@ -1037,7 +1046,7 @@ class Grid(BaseCClass):
         float, double or bool. In the case of bool the default value
         must be specified as 1 (True) or 0 (False).
 
-        The input argument @pyfile should be a valid python filehandle
+        The input argument @pyfile should be a file handle
         opened for writing; i.e.
 
            pyfile = open("PORO.GRDECL", "w")
@@ -1048,8 +1057,8 @@ class Grid(BaseCClass):
         """
 
         if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
-            cfile = CFILE(pyfile)
-            _grid._fwrite_grdecl(self, rd_kw, special_header, cfile, default_value)
+            with synced_fd(pyfile) as fd:
+                _grid._fwrite_grdecl(self, rd_kw, special_header, fd, default_value)
         else:
             raise ValueError(
                 "Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d"

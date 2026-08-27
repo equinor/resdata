@@ -2,7 +2,6 @@
 import os
 from random import randint
 
-import cwrap
 import pytest
 from resdata import ResDataType
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
@@ -129,7 +128,7 @@ class FortIOTest(ResdataTest):
             with openFortIO("fortran_file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
 
-            with cwrap.open("text_file", "w") as f:
+            with open("text_file", "w") as f:
                 kw1.write_grdecl(f)
 
             self.assertTrue(FortIO.is_fortran_file("fortran_file"))

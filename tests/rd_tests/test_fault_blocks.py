@@ -56,7 +56,7 @@ class FaultBlockTest(ResdataTest):
                 fileH.write("4 4 4 0 0\n")
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
-            with cwrap.open("kw.grdecl") as f:
+            with open("kw.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
         grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
@@ -90,7 +90,7 @@ class FaultBlockTest(ResdataTest):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            with cwrap.open("kw.grdecl") as f:
+            with open("kw.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
         grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
@@ -152,7 +152,7 @@ class FaultBlockTest(ResdataTest):
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("/\n")
 
-            with cwrap.open("faultblock.grdecl") as f:
+            with open("faultblock.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
             with open("faults.grdecl", "w") as f:
@@ -225,7 +225,7 @@ class FaultBlockTest(ResdataTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
 
-            with cwrap.open("faultblock.grdecl") as f:
+            with open("faultblock.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
             with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
@@ -494,7 +494,7 @@ class FaultBlockTest(ResdataTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
 
-            with cwrap.open("faultblock.grdecl") as f:
+            with open("faultblock.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
             with open("faults.grdecl", "w") as f:

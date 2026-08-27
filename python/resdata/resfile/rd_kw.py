@@ -24,13 +24,15 @@ the resdata library.
 """
 
 import ctypes
+from io import TextIOWrapper
 
 import numpy as np
-from cwrap import CFILE, BaseCClass
+from cwrap import BaseCClass
 from typing_extensions import Self
 
 import resdata.resfile._kw as _kw
 from resdata import ResDataType
+from resdata.util._fd import synced_fd
 
 
 class ResdataKW(BaseCClass):
@@ -115,7 +117,7 @@ class ResdataKW(BaseCClass):
     @classmethod
     def read_grdecl(
         cls,
-        fileH,
+        fileH: TextIOWrapper,
         kw: str | None,
         strict: bool = True,
         rd_type: ResDataType | None = None,
@@ -127,8 +129,8 @@ class ResdataKW(BaseCClass):
         grdecl formatted file; the input files for petrophysical
         properties are typically given as grdecl files.
 
-        The @file argument should be a Python filehandle to an open
-        file. The @kw argument should be the keyword header you are
+        The @fileH argument should be a file handle in mode "r".
+        The @kw argument should be the keyword header you are
         searching for, e.g. "PORO" or "PVTNUM"[1], the method will
         then search forward through the file to look for this @kw. If
         the keyword can not be found the method will raise ValueError. The
@@ -137,19 +139,19 @@ class ResdataKW(BaseCClass):
         seek() method of the file object first.
 
         Observe that there is a strict 8 character limit on @kw -
-        altough you could in principle use an arbitrary external
+        although you could in principle use an arbitrary external
         program to create grdecl files with more than 8 character
         length headers, this implementation will refuse to even try
         loading them. In that case you will have to rename the
         keywords in your file - sorry. A TypeError exception
         will be raised if @kw has more than 8 characters.
 
-        The implementation in ert can read integer and float type
+        The function can read integer and float type
         keywords from grdecl files; however the grdecl files have no
         datatype header, and it is impossible to determine the type
         reliably by inspection. Hence the type must be known when
         reading the file. The algorithm for specifying type, in order
-        of presedence, is as follows:
+        of precedence, is as follows:
 
         1. The optional argument @rd_type can be used to specify
            the type:
@@ -170,7 +172,7 @@ class ResdataKW(BaseCClass):
 
            Observe that (currently) no case conversions take place
            when checking the 'int_kw_set'. The current built in set is
-           accesible through the int_kw property.
+           accessible through the int_kw property.
 
 
         3. Otherwise the default is float, i.e. RD_FLOAT.
@@ -189,7 +191,6 @@ class ResdataKW(BaseCClass):
         it finds in the file.
         """
 
-        cfile = CFILE(fileH)
         if kw:
             if len(kw) > 8:
                 raise TypeError(
@@ -212,14 +213,15 @@ class ResdataKW(BaseCClass):
                 % (rd_type.type_name, kw)
             )
 
-        return cls._load_grdecl(cfile, kw, strict, rd_type)
+        with synced_fd(fileH) as fd:
+            return cls._load_grdecl(fd, kw, strict, rd_type)
 
     @classmethod
     def _load_grdecl(cls, cfile, kw, strict, rd_type):
         return cls.createPythonObject(_kw._load_grdecl(cfile, kw, strict, rd_type))
 
     @classmethod
-    def fseek_grdecl(cls, fileH, kw, rewind=False):
+    def fseek_grdecl(cls, fileH: TextIOWrapper, kw, rewind=False):
         """
         Will search through the open file and look for string @kw.
 
@@ -243,8 +245,8 @@ class ResdataKW(BaseCClass):
         true the function rewind to the beginning of the file and
         search from there after the initial search.
         """
-        cfile = CFILE(fileH)
-        return _kw._fseek_grdecl(kw, rewind, cfile)
+        with synced_fd(fileH) as fd:
+            return _kw._fseek_grdecl(kw, rewind, fd)
 
     @classmethod
     def fread(cls, fortio):
@@ -966,7 +968,7 @@ class ResdataKW(BaseCClass):
     def fwrite(self, fortio):
         _kw._fwrite(self, fortio)
 
-    def write_grdecl(self, file):
+    def write_grdecl(self, file: TextIOWrapper) -> None:
         """
         Will write keyword in GRDECL format.
 
@@ -988,10 +990,10 @@ class ResdataKW(BaseCClass):
             >>> fileH.close()
 
         """
-        cfile = CFILE(file)
-        _kw._fprintf_grdecl(self, cfile)
+        with synced_fd(file) as fd:
+            _kw._fprintf_grdecl(self, fd)
 
-    def fprintf_data(self, file, fmt=None):
+    def fprintf_data(self, file: TextIOWrapper, fmt=None):
         """
         Will print the keyword data formatted to file.
 
@@ -1009,8 +1011,8 @@ class ResdataKW(BaseCClass):
         """
         if fmt is None:
             fmt = self.str_fmt + "\n"
-        cfile = CFILE(file)
-        _kw._fprintf_data(self, fmt, cfile)
+        with synced_fd(file) as fd:
+            _kw._fprintf_data(self, fmt, fd)
 
     def create_actnum(self, porv_limit=0):
         """Will create ACTNUM keyword from PORV keyword.

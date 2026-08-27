@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import resfo
-from cwrap import open as copen
 from hypothesis import assume, given
 from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, open_rd_file, openFortIO
@@ -84,7 +83,7 @@ def test_dump_csv_line():
 
     dtime = datetime.datetime(2010, 6, 1, 0, 0, 0)
     out_path = "dump.csv"
-    with copen(out_path, "w") as out_handle:
+    with open(out_path, "w") as out_handle:
         rd_sum.dump_csv_line(dtime, kw_vector, out_handle)
 
     assert os.path.isfile(out_path)
@@ -101,7 +100,7 @@ def test_dump_csv_line_with_wrong_type_keywords_raises_type_error(bad_keywords):
 
     rd_sum = Summary("CASE2")
     dtime = datetime.datetime(2010, 6, 1, 0, 0, 0)
-    with copen("dump_bad.csv", "w") as out_handle:
+    with open("dump_bad.csv", "w") as out_handle:
         with pytest.raises(TypeError, match="Expected SummaryKeyWordVector"):
             rd_sum.dump_csv_line(dtime, bad_keywords, out_handle)
 
@@ -139,8 +138,8 @@ class SummaryTest(ResdataTest):
         with self.monkeypatch.context() as mp:
             mp.chdir(tmpdir)
             test_file_name = self.createTestPath("dump.csv")
-            outputH = copen(test_file_name, "w")
-            self.rd_sum.dump_csv_line(dtime, rd_sum_vector, outputH)
+            with open(test_file_name, "w") as outputH:
+                self.rd_sum.dump_csv_line(dtime, rd_sum_vector, outputH)
             assert os.path.isfile(test_file_name)
 
     def test_truncated_smspec(self):

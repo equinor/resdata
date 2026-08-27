@@ -3,7 +3,6 @@ import random
 import tempfile
 import warnings
 
-import cwrap
 import hypothesis.strategies as st
 import numpy as np
 import numpy.testing as npt
@@ -57,14 +56,12 @@ class KWTest(ResdataTest):
         for i, d in enumerate(data):
             kw[i] = d
 
-        file1 = cwrap.open(name1, "w")
-        kw.fprintf_data(file1, fmt)
-        file1.close()
+        with open(name1, "w") as file1:
+            kw.fprintf_data(file1, fmt)
 
-        file2 = open(name2, "w")
-        for d in data:
-            file2.write(fmt % d)
-        file2.close()
+        with open(name2, "w") as file2:
+            for d in data:
+                file2.write(fmt % d)
         self.assertFilesAreEqual(name1, name2)
         self.assertEqual(kw.data_type, data_type)
 
@@ -199,9 +196,8 @@ class KWTest(ResdataTest):
             for i in range(len(kw)):
                 kw[i] = i
 
-            fileH = cwrap.open("test", "w")
-            kw.fprintf_data(fileH)
-            fileH.close()
+            with open("test", "w") as fileH:
+                kw.fprintf_data(fileH)
 
             data = []
             with open("test") as fileH:
@@ -708,13 +704,13 @@ def _write_grdecl(tmp_path, name, body):
 
 def test_missing_keyword_raises(tmp_path):
     path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
-    with pytest.raises(ValueError), cwrap.open(str(path), "r") as fh:
+    with pytest.raises(ValueError), open(str(path)) as fh:
         _ = ResdataKW.read_grdecl(fh, "NOTPORO", rd_type=ResDataType.RD_FLOAT)
 
 
 def test_read_grdecl_empty_body_returns_zero_len_kw(tmp_path):
     path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
-    with cwrap.open(str(path), "r") as fh:
+    with open(str(path)) as fh:
         kw = ResdataKW.read_grdecl(fh, "PORO", rd_type=ResDataType.RD_FLOAT)
     assert kw is not None
     assert kw.name == "PORO"
@@ -723,7 +719,7 @@ def test_read_grdecl_empty_body_returns_zero_len_kw(tmp_path):
 
 def test_read_grdecl_kw_none_loads_first_keyword(tmp_path):
     path = _write_grdecl(tmp_path, "first.grdecl", "PORO\n  0.1 0.2 0.3 /\n")
-    with cwrap.open(str(path), "r") as fh:
+    with open(str(path)) as fh:
         kw = ResdataKW.read_grdecl(fh, None, rd_type=ResDataType.RD_FLOAT)
     assert kw is not None
     assert kw.name == "PORO"
@@ -732,7 +728,7 @@ def test_read_grdecl_kw_none_loads_first_keyword(tmp_path):
 
 def test_read_grdecl_int_strict_raises_on_malformed(tmp_path):
     path = _write_grdecl(tmp_path, "intkw.grdecl", "INTKW\n  1 2 FOO 3 /\n")
-    with cwrap.open(str(path), "r") as fh:
+    with open(str(path)) as fh:
         with pytest.raises(
             ValueError,
             match=r'Malformed content:"FOO" when reading keyword:INTKW',
@@ -742,7 +738,7 @@ def test_read_grdecl_int_strict_raises_on_malformed(tmp_path):
 
 def test_read_grdecl_float_strict_raises_on_malformed(tmp_path):
     path = _write_grdecl(tmp_path, "fltkw.grdecl", "FLTKW\n  1.0 2.0 BAR 3.0 /\n")
-    with cwrap.open(str(path), "r") as fh:
+    with open(str(path)) as fh:
         with pytest.raises(
             ValueError,
             match=r'Malformed content:"BAR" when reading keyword:FLTKW',
@@ -927,7 +923,7 @@ def read_grdecl_from_text(rd_type, text):
             f.write(text)
             fname = f.name
 
-        with cwrap.open(f.name, "r") as fh:
+        with open(f.name) as fh:
             kw = ResdataKW.read_grdecl(fh, None, rd_type=rd_type)
     finally:
         if fname:

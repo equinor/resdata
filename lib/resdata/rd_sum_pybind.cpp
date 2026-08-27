@@ -2,6 +2,7 @@
 #include <ctime>
 #include <optional>
 #include <stdexcept>
+#include <stdio.h>
 #include <string>
 #include <vector>
 
@@ -319,10 +320,12 @@ PYBIND11_MODULE(_rd_sum, m) {
                                 var_list, date_format.c_str(), sep.c_str());
           });
     m.def("_dump_csv_line", [](py::handle self, std::time_t sim_time,
-                               py::handle key_words, py::handle file) {
+                               py::handle key_words, int file) {
+        FdStream stream(file, "w");
         rd_sum_fwrite_interp_csv_line(from_cwrap<rd_sum_type>(self), sim_time,
                                       from_cwrap<rd_sum_vector_type>(key_words),
-                                      from_cwrap<FILE>(file));
+                                      stream);
+        stream.close();
     });
     m.def("_get_interp_vector", [](py::handle self, std::time_t sim_time,
                                    py::handle key_words, double missing_value) {

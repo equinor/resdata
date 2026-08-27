@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <optional>
+#include <stdio.h>
 #include <tuple>
 #include <string>
 
@@ -27,28 +28,28 @@ PYBIND11_MODULE(_kw, m) {
 
     m.def(
         "_load_grdecl",
-        [](py::handle file, std::optional<std::string> kw, bool strict,
+        [](int fd, std::optional<std::string> kw, bool strict,
            py::handle data_type) {
-            auto *stream = from_cwrap<FILE>(file);
+            FdStream stream(fd, "r");
             auto *rd_data_type = from_cwrap<::rd_data_type>(data_type);
-            if (kw.has_value())
-                return reinterpret_cast<std::uintptr_t>(
-                    rd_kw_fscanf_alloc_grdecl(stream, kw->c_str(),
-                                              *rd_data_type, 0, strict));
-            else
-                return reinterpret_cast<std::uintptr_t>(
-                    rd_kw_fscanf_alloc_grdecl(stream, nullptr, *rd_data_type, 0,
-                                              strict));
+            rd_kw_type *loaded = rd_kw_fscanf_alloc_grdecl(
+                stream, kw.has_value() ? kw->c_str() : nullptr, *rd_data_type,
+                0, strict);
+            stream.close();
+            return reinterpret_cast<std::uintptr_t>(loaded);
         },
         py::return_value_policy::reference);
-    m.def("_fprintf_grdecl", [](py::handle self, py::handle file) {
-        auto *stream = from_cwrap<FILE>(file);
+    m.def("_fprintf_grdecl", [](py::handle self, int fd) {
+        FdStream stream(fd, "w");
         auto *kw = from_cwrap<rd_kw_type>(self);
         rd_kw_fprintf_grdecl(kw, stream);
+        stream.close();
     });
-    m.def("_fseek_grdecl", [](std::string name, bool rewind, py::handle file) {
-        auto *stream = from_cwrap<FILE>(file);
-        return rd_kw_grdecl_fseek_kw(name.c_str(), rewind, stream);
+    m.def("_fseek_grdecl", [](std::string name, bool rewind, int fd) {
+        FdStream stream(fd, "r");
+        bool found = rd_kw_grdecl_fseek_kw(name.c_str(), rewind, stream);
+        stream.close();
+        return found;
     });
 
     m.def(
@@ -102,11 +103,11 @@ PYBIND11_MODULE(_kw, m) {
                                         from_cwrap<rd_kw_type>(new_actnum)));
         },
         py::return_value_policy::reference);
-    m.def("_fprintf_data",
-          [](py::handle self, std::string fmt, py::handle file) {
-              rd_kw_fprintf_data(from_cwrap<rd_kw_type>(self), fmt.c_str(),
-                                 from_cwrap<FILE>(file));
-          });
+    m.def("_fprintf_data", [](py::handle self, std::string fmt, int fd) {
+        FdStream stream(fd, "w");
+        rd_kw_fprintf_data(from_cwrap<rd_kw_type>(self), fmt.c_str(), stream);
+        stream.close();
+    });
 
     m.def("_get_size", [](py::handle self) {
         return rd_kw_get_size(from_cwrap<rd_kw_type>(self));

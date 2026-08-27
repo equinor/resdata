@@ -6,7 +6,6 @@ import re
 from contextlib import suppress
 from unittest import skip
 
-import cwrap
 import hypothesis.strategies as st
 import numpy as np
 import pytest
@@ -787,7 +786,7 @@ class GridTest(ResdataTest):
 def test_save_grdecl(tmpdir):
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
     with tmpdir.as_cwd():
-        with cwrap.open("grid.grdecl", "w") as f:
+        with open("grid.grdecl", "w") as f:
             grid.save_grdecl(f)
         assert grid.equal(Grid.load_from_grdecl("grid.grdecl"))
         assert grid.equal(Grid.load_from_file("grid.grdecl"))
@@ -875,9 +874,9 @@ def test_write_grdecl(tmpdir):
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
 
     with tmpdir.as_cwd():
-        with cwrap.open("kw.grdecl", "w") as f:
+        with open("kw.grdecl", "w") as f:
             grid.write_grdecl(kw, f)
-        with cwrap.open("kw.grdecl", "r") as f:
+        with open("kw.grdecl") as f:
             kw2 = ResdataKW.read_grdecl(f, "KW")
 
         assert list(kw) == list(kw2)

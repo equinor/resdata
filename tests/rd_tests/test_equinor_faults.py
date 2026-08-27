@@ -1,6 +1,5 @@
 import time
 
-from cwrap import open as copen
 from resdata import ResDataType
 from resdata.grid import Grid
 from resdata.grid.faults import Fault, FaultCollection, FaultLine, FaultSegment
@@ -13,13 +12,13 @@ from tests import ResdataTest, equinor_test
 class EquinorFaultTest(ResdataTest):
     def loadGrid(self):
         grid_file = self.createTestPath("Equinor/ECLIPSE/Faults/grid.grdecl")
-        fileH = copen(grid_file, "r")
-        specgrid = ResdataKW.read_grdecl(
-            fileH, "SPECGRID", rd_type=ResDataType.RD_INT, strict=False
-        )
-        zcorn = ResdataKW.read_grdecl(fileH, "ZCORN")
-        coord = ResdataKW.read_grdecl(fileH, "COORD")
-        actnum = ResdataKW.read_grdecl(fileH, "ACTNUM", rd_type=ResDataType.RD_INT)
+        with open(grid_file) as fileH:
+            specgrid = ResdataKW.read_grdecl(
+                fileH, "SPECGRID", rd_type=ResDataType.RD_INT, strict=False
+            )
+            zcorn = ResdataKW.read_grdecl(fileH, "ZCORN")
+            coord = ResdataKW.read_grdecl(fileH, "COORD")
+            actnum = ResdataKW.read_grdecl(fileH, "ACTNUM", rd_type=ResDataType.RD_INT)
 
         return Grid.create(specgrid, zcorn, coord, actnum)
 
