@@ -211,7 +211,7 @@ def test_that_unzip2_returns_separate_x_and_y_lists():
 def test_that_getitem_with_non_integer_index_raises_type_error():
     polyline = CPolyline(init_points=[(0, 0), (1, 1)])
 
-    with pytest.raises(TypeError, match="Index argument must be integer"):
+    with pytest.raises(TypeError):
         polyline["first"]
 
 

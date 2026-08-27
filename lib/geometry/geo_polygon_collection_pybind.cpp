@@ -1,4 +1,6 @@
+#include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -6,19 +8,12 @@
 #include <pybind11/stl.h>
 
 #include <ert/geometry/geo_polygon_collection.hpp>
+#include "ert/geometry/geo_polygon.hpp"
 #include <detail/resdata/cwrap_pybind.hpp>
 
 namespace py = pybind11;
 
 namespace {
-py::object create_polyline_ref(rd::Polygon *polygon, py::handle parent) {
-    if (!polygon)
-        return py::none();
-    return CPolyline().attr("createCReference")(
-        reinterpret_cast<std::uintptr_t>(polygon), parent);
-}
-} // namespace
-
 PYBIND11_MODULE(_cpolyline_collection, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings for CPolylineCollection";
@@ -40,11 +35,9 @@ PYBIND11_MODULE(_cpolyline_collection, m) {
     });
     m.def("_create_polyline",
           [](py::handle self, std::optional<std::string> name) {
-              return create_polyline_ref(
-                  geo_polygon_collection_create_polygon(
-                      from_cwrap<geo_polygon_collection_type>(self),
-                      name ? name->c_str() : nullptr),
-                  self);
+              return geo_polygon_collection_create_polygon(
+                  from_cwrap<geo_polygon_collection_type>(self),
+                  name ? name->c_str() : nullptr);
           });
     m.def("_has_polyline",
           [](py::handle self, std::optional<std::string> name) {
@@ -52,22 +45,18 @@ PYBIND11_MODULE(_cpolyline_collection, m) {
                   from_cwrap<geo_polygon_collection_type>(self),
                   name ? name->c_str() : nullptr);
           });
-    m.def("_iget", [](py::handle self, int index) {
-        return create_polyline_ref(
-            geo_polygon_collection_iget_polygon(
-                from_cwrap<geo_polygon_collection_type>(self), index),
-            self);
+    m.def("_iget", [](py::handle self, size_t index) {
+        return geo_polygon_collection_iget_polygon(
+            from_cwrap<geo_polygon_collection_type>(self), index);
     });
-    m.def("_get", [](py::handle self, std::string name) {
-        return create_polyline_ref(
-            geo_polygon_collection_get_polygon(
-                from_cwrap<geo_polygon_collection_type>(self), name.c_str()),
-            self);
+    m.def("_get", [](py::handle self, const std::string &name) {
+        return geo_polygon_collection_get_polygon(
+            from_cwrap<geo_polygon_collection_type>(self), name);
     });
     m.def("_add_polyline",
-          [](py::handle self, py::handle polyline, bool polygon_owner) {
+          [](py::handle self, std::shared_ptr<rd::Polygon> polyline) {
               geo_polygon_collection_add_polygon(
-                  from_cwrap<geo_polygon_collection_type>(self),
-                  from_cwrap<rd::Polygon>(polyline), polygon_owner);
+                  from_cwrap<geo_polygon_collection_type>(self), polyline);
           });
 }
+} // namespace

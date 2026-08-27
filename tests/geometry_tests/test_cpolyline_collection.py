@@ -155,14 +155,19 @@ def test_that_creating_two_polylines_with_the_same_name_raises_key_error():
         collection.createPolyline(name="border")
 
 
-def test_that_a_reference_polyline_can_be_added_to_another_collection():
-    source = CPolylineCollection()
-    source.createPolyline(name="border")
-    reference = source["border"]
-    assert reference.isReference()
+def test_that_a_polyline_from_one_collection_can_be_added_to_another_collection():
+    # The usage pattern below is chosen to be
+    # a regression test for an object lifetime bug
+
+    def insert(target):
+        source = CPolylineCollection()
+        source.createPolyline(name="border")
+        reference = source["border"]
+        target.addPolyline(reference)
 
     target = CPolylineCollection()
-    target.addPolyline(reference)
+    insert(target)
+    gc.collect()
 
     assert "border" in target
     assert len(target) == 1

@@ -8,29 +8,13 @@
 #include <ios>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <optional>
 
 #include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
-
-void geo_polygon_add_point(rd::Polygon *polygon, double x, double y) {
-    polygon->xcoord.push_back(x);
-    polygon->ycoord.push_back(y);
-}
-
-void geo_polygon_add_point_front(rd::Polygon *polygon, double x,
-                                 double y) {
-    polygon->xcoord.insert(polygon->xcoord.begin(), x);
-    polygon->ycoord.insert(polygon->ycoord.begin(), y);
-}
-
-void geo_polygon_close(rd::Polygon *polygon) {
-    double x = polygon->xcoord.at(0);
-    double y = polygon->ycoord.at(0);
-    geo_polygon_add_point(polygon, x, y);
-}
 
 static bool on_edge(double x1, double y1, double x2, double y2, double x0,
                     double y0) {
@@ -60,20 +44,18 @@ static bool on_edge(double x1, double y1, double x2, double y2, double x0,
   edge will be identified as inside. If the force_edge_inside variable
   is set to false the behaviour on the edges is undefined.
 */
-bool geo_polygon_contains_point(const rd::Polygon *polygon, double x0,
-                                double y0, bool force_edge_inside) {
+bool rd::Polygon::contains_point(double x0, double y0,
+                                 bool force_edge_inside) const {
     bool inside = false;
     double y = y0;
     double xc = 0;
 
-    const size_t num_points = polygon->xcoord.size();
+    const size_t num_points = points.size();
 
     for (size_t i = 0; i < num_points; i++) {
         const size_t next_point = ((i + 1) % num_points);
-        double x1 = polygon->xcoord[i];
-        double y1 = polygon->ycoord[i];
-        double x2 = polygon->xcoord[next_point];
-        double y2 = polygon->ycoord[next_point];
+        auto [x1, y1] = points[i];
+        auto [x2, y2] = points[next_point];
 
         double ymin = std::min(y1, y2);
         double ymax = std::max(y1, y2);
@@ -117,48 +99,24 @@ bool geo_polygon_contains_point(const rd::Polygon *polygon, double x0,
       included.
 */
 
-rd::Polygon *geo_polygon_fload_alloc_irap(const char *filename) {
-    std::string sfile{filename};
+std::shared_ptr<rd::Polygon> rd::Polygon::load_irap(const std::string &sfile) {
     std::ifstream stream{sfile};
     if (!stream)
         throw std::ios_base::failure("Failed to open: " + sfile);
 
-    auto polygon = std::make_unique<rd::Polygon>(filename);
+    auto polygon = std::make_shared<rd::Polygon>(sfile);
     double x, y, z;
 
     while (stream >> x >> y >> z) {
         if ((x == 999) && (y == 999) && (z == 999))
             break;
-
-        geo_polygon_add_point(polygon.get(), x, y);
+        polygon->add_point(x, y);
     }
 
-    if ((polygon->xcoord.size() > 1)) {
-        if ((polygon->xcoord.at(polygon->xcoord.size() - 1) ==
-             polygon->xcoord.at(0)) &&
-            (polygon->ycoord.at(polygon->ycoord.size() - 1) ==
-             polygon->ycoord.at(0))) {
-
-            polygon->xcoord.pop_back();
-            polygon->ycoord.pop_back();
-        }
-    }
-    return polygon.release();
-}
-
-void geo_polygon_reset(rd::Polygon *polygon) {
-    polygon->xcoord.resize(0);
-    polygon->ycoord.resize(0);
-}
-
-size_t geo_polygon_get_size(const rd::Polygon *polygon) {
-    return polygon->xcoord.size();
-}
-
-void geo_polygon_iget_xy(const rd::Polygon *polygon, int index, double *x,
-                         double *y) {
-    *x = polygon->xcoord.at(index);
-    *y = polygon->ycoord.at(index);
+    if ((polygon->size() > 1))
+        if (polygon->points.back() == polygon->points[0])
+            polygon->points.pop_back();
+    return polygon;
 }
 
 enum XLinesStatus {
@@ -184,7 +142,7 @@ static bool interval_overlap(double a1, double a2, double b1, double b2) {
 }
 
 static XLinesStatus xsegments(const std::array<std::array<double, 2>, 4> points,
-                              double *x0, double *y0, double epsilon = 1e-6) {
+                              double epsilon = 1e-6) {
     double x1 = points[0][0];
     double x2 = points[1][0];
     double x3 = points[2][0];
@@ -210,7 +168,7 @@ static XLinesStatus xsegments(const std::array<std::array<double, 2>, 4> points,
             return NOT_CROSSING;
     }
 
-    // Parallell
+    // Parallel
     if (fabs(denominator) < epsilon)
         return NOT_CROSSING;
 
@@ -221,65 +179,46 @@ static XLinesStatus xsegments(const std::array<std::array<double, 2>, 4> points,
 
         if ((mua < 0.0) || (mua > 1.0) || (mub < 0.0) || (mub > 1.0))
             return NOT_CROSSING;
-
-        *x0 = x1 + mua * (x2 - x1);
-        *y0 = y1 + mua * (y2 - y1);
-
         return CROSSING;
     }
 }
 
-bool geo_polygon_segment_intersects(const rd::Polygon *polygon, double x1,
-                                    double y1, double x2, double y2) {
-    if (polygon->xcoord.empty())
+bool rd::Polygon::segment_intersects(double x1, double y1, double x2,
+                                     double y2) const {
+    if (empty())
         return false;
-    std::array<std::array<double, 2>, 4> points{};
+    std::array<std::array<double, 2>, 4> lpoints{};
 
-    points[0][0] = x1;
-    points[1][0] = x2;
-    points[0][1] = y1;
-    points[1][1] = y2;
+    lpoints[0][0] = x1;
+    lpoints[1][0] = x2;
+    lpoints[0][1] = y1;
+    lpoints[1][1] = y2;
 
-    for (size_t index = 0; index < polygon->xcoord.size() - 1; index++) {
-        double xc, yc;
+    for (size_t index = 0; index < points.size() - 1; index++) {
 
-        points[2][0] = polygon->xcoord.at(index);
-        points[3][0] = polygon->xcoord.at(index + 1);
-        points[2][1] = polygon->ycoord.at(index);
-        points[3][1] = polygon->ycoord.at(index + 1);
+        auto [x, y] = points.at(index);
+        auto [xn, yn] = points.at(index + 1);
+        lpoints[2][0] = x;
+        lpoints[3][0] = xn;
+        lpoints[2][1] = y;
+        lpoints[3][1] = yn;
 
-        {
-            auto xline_status = xsegments(points, &xc, &yc);
-            if ((xline_status == CROSSING) || (xline_status == OVERLAPPING))
-                return true;
-        }
+        auto xline_status = xsegments(lpoints);
+        if ((xline_status == CROSSING) || (xline_status == OVERLAPPING))
+            return true;
     }
     return false;
 }
 
-const char *geo_polygon_get_name(const rd::Polygon *polygon) {
-    return polygon->name.has_value() ? (*polygon->name).c_str() : nullptr;
-}
-
-void geo_polygon_set_name(rd::Polygon *polygon, const char *name) {
-    if (name)
-        polygon->name = name;
-    else
-        polygon->name = std::nullopt;
-}
-
-double geo_polygon_get_length(rd::Polygon *polygon) {
-    if (polygon->xcoord.size() == 1)
+double rd::Polygon::length() const {
+    if (size() <= 1)
         return 0;
     else {
         double length = 0;
-        double x0 = polygon->xcoord.at(0);
-        double y0 = polygon->ycoord.at(0);
+        auto [x0, y0] = points[0];
 
-        for (size_t i = 1; i < polygon->xcoord.size(); i++) {
-            double x1 = polygon->xcoord.at(i);
-            double y1 = polygon->ycoord.at(i);
-
+        for (size_t i = 1; i < size(); i++) {
+            auto [x1, y1] = points[i];
             length += sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
             x0 = x1;
             y0 = y1;
@@ -288,13 +227,17 @@ double geo_polygon_get_length(rd::Polygon *polygon) {
     }
 }
 
-static bool approx_equal(const std::vector<double> &a,
-                         const std::vector<double> &b, double epsilon = 1e-8) {
+static bool approx_equal(const std::vector<std::tuple<double, double>> &a,
+                         const std::vector<std::tuple<double, double>> &b,
+                         double epsilon = 1e-8) {
     if (a.size() != b.size())
         return false;
 
     for (size_t i = 0; i < a.size(); ++i) {
-        if (std::abs(a[i] - b[i]) > epsilon) {
+        if (std::abs(std::get<0>(a[i]) - std::get<0>(b[i])) > epsilon) {
+            return false;
+        }
+        if (std::abs(std::get<1>(a[i]) - std::get<1>(b[i])) > epsilon) {
             return false;
         }
     }
@@ -303,15 +246,6 @@ static bool approx_equal(const std::vector<double> &a,
 /*
   Name is ignored in the comparison.
 */
-bool geo_polygon_equal(const rd::Polygon *polygon1,
-                       const rd::Polygon *polygon2) {
-    bool equal = polygon1->xcoord == polygon2->xcoord &&
-                 polygon1->ycoord == polygon2->ycoord;
-
-    if (!equal) {
-        equal = approx_equal(polygon1->xcoord, polygon2->xcoord) &&
-                approx_equal(polygon1->ycoord, polygon2->ycoord);
-    }
-
-    return equal;
+bool rd::Polygon::operator==(const rd::Polygon &other) const {
+    return approx_equal(this->points, other.points);
 }

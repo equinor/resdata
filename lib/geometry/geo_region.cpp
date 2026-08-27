@@ -49,7 +49,7 @@ static void geo_region_polygon_select__(geo_region_type *region,
         bool is_inside;
         geo_pointset_iget_xy(region->pointset, i, &x, &y);
 
-        is_inside = geo_polygon_contains_point(polygon, x, y);
+        is_inside = polygon->contains_point(x, y);
         if (is_inside == select_inside) {
             if (region->active_mask[i] && !select)
                 region->num_selected -= 1;

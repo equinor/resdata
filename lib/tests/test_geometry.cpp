@@ -101,23 +101,21 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
 
 TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
     GIVEN("A square polygon") {
-        auto polygon = std::make_unique<rd::Polygon>("square");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking a segment that crosses the polygon edge") {
-            bool intersects = geo_polygon_segment_intersects(
-                polygon.get(), -5.0, 5.0, 5.0, 5.0);
+            bool intersects = polygon.segment_intersects(-5.0, 5.0, 5.0, 5.0);
 
             THEN("Intersection is detected") { REQUIRE(intersects == true); }
         }
 
         WHEN("Checking a segment that doesn't cross the polygon") {
-            bool intersects = geo_polygon_segment_intersects(
-                polygon.get(), -5.0, 5.0, -2.0, 5.0);
+            bool intersects = polygon.segment_intersects(-5.0, 5.0, -2.0, 5.0);
 
             THEN("No intersection is detected") {
                 REQUIRE(intersects == false);
@@ -125,7 +123,7 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
         }
 
         WHEN("Getting the length") {
-            double length = geo_polygon_get_length(polygon.get());
+            double length = polygon.length();
 
             THEN("it calculates the perimeter") { REQUIRE(length == 40.0); }
         }
@@ -134,16 +132,15 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
 
 TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
     GIVEN("A square polygon with vertical edges at x=0 and x=10") {
-        auto polygon = std::make_unique<rd::Polygon>("square");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking an interior point with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, true);
+            bool inside = polygon.contains_point(5.0, 5.0, true);
 
             THEN("The interior point is reported as inside") {
                 REQUIRE(inside == true);
@@ -151,8 +148,7 @@ TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
         }
 
         WHEN("Checking a point off a vertical edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 20.0, true);
+            bool inside = polygon.contains_point(5.0, 20.0, true);
 
             THEN("The outside point is reported as outside") {
                 REQUIRE(inside == false);
@@ -160,8 +156,7 @@ TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
         }
 
         WHEN("Checking a point on a vertical edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 0.0, 5.0, true);
+            bool inside = polygon.contains_point(0.0, 5.0, true);
 
             THEN("The point on the vertical edge is reported as inside") {
                 REQUIRE(inside == true);
@@ -172,16 +167,15 @@ TEST_CASE("geo_polygon_contains_point handles vertical edges", "[geometry]") {
 
 TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
     GIVEN("A square polygon with horizontal edges at y=0 and y=10") {
-        auto polygon = std::make_unique<rd::Polygon>("square");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking a point on a horizontal edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 0.0, true);
+            bool inside = polygon.contains_point(5.0, 0.0, true);
 
             THEN("The point on the horizontal edge is reported as inside") {
                 REQUIRE(inside == true);
@@ -189,8 +183,7 @@ TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
         }
 
         WHEN("Checking a point off a horizontal edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 20.0, 0.0, true);
+            bool inside = polygon.contains_point(20.0, 0.0, true);
 
             THEN("The outside point is reported as outside") {
                 REQUIRE(inside == false);
@@ -202,15 +195,14 @@ TEST_CASE("geo_polygon_contains_point handles horizontal edges", "[geometry]") {
 TEST_CASE("geo_polygon_contains_point handles general sloped edges",
           "[geometry]") {
     GIVEN("A triangular polygon with a sloped hypotenuse") {
-        auto polygon = std::make_unique<rd::Polygon>("triangle");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"triangle"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking a point on the sloped edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, true);
+            bool inside = polygon.contains_point(5.0, 5.0, true);
 
             THEN("The point on the sloped edge is reported as inside") {
                 REQUIRE(inside == true);
@@ -219,8 +211,7 @@ TEST_CASE("geo_polygon_contains_point handles general sloped edges",
 
         WHEN("Checking a point on the line of the sloped edge, but beyond "
              "its endpoints, with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 20.0, -10.0, true);
+            bool inside = polygon.contains_point(20.0, -10.0, true);
 
             THEN("The outside point is reported as outside") {
                 REQUIRE(inside == false);
@@ -228,8 +219,7 @@ TEST_CASE("geo_polygon_contains_point handles general sloped edges",
         }
 
         WHEN("Checking a point off the sloped edge with force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 8.0, 8.0, true);
+            bool inside = polygon.contains_point(8.0, 8.0, true);
 
             THEN("The outside point is reported as outside") {
                 REQUIRE(inside == false);
@@ -238,19 +228,18 @@ TEST_CASE("geo_polygon_contains_point handles general sloped edges",
     }
 }
 
-TEST_CASE("geo_polygon_contains_point ray casting without force_edge_inside",
+TEST_CASE("polygon.contains_point ray casting without force_edge_inside",
           "[geometry]") {
     GIVEN("A square polygon") {
-        auto polygon = std::make_unique<rd::Polygon>("square");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking an interior point without force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, false);
+            bool inside = polygon.contains_point(5.0, 5.0, false);
 
             THEN("The interior point is reported as inside") {
                 REQUIRE(inside == true);
@@ -258,8 +247,7 @@ TEST_CASE("geo_polygon_contains_point ray casting without force_edge_inside",
         }
 
         WHEN("Checking an exterior point without force_edge_inside") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 20.0, 20.0, false);
+            bool inside = polygon.contains_point(20.0, 20.0, false);
 
             THEN("The exterior point is reported as outside") {
                 REQUIRE(inside == false);
@@ -268,21 +256,20 @@ TEST_CASE("geo_polygon_contains_point ray casting without force_edge_inside",
     }
 }
 
-TEST_CASE("geo_polygon_contains_point ignores degenerate zero-length edges",
+TEST_CASE("polygon.contains_point ignores degenerate zero-length edges",
           "[geometry]") {
     GIVEN("A square polygon with a duplicated point creating a zero-length "
           "edge") {
-        auto polygon = std::make_unique<rd::Polygon>("square_with_duplicate");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square_with_duplicate"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Checking an interior point") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 5.0, 5.0, false);
+            bool inside = polygon.contains_point(5.0, 5.0, false);
 
             THEN("The interior point is still reported as inside") {
                 REQUIRE(inside == true);
@@ -290,8 +277,7 @@ TEST_CASE("geo_polygon_contains_point ignores degenerate zero-length edges",
         }
 
         WHEN("Checking an exterior point") {
-            bool inside =
-                geo_polygon_contains_point(polygon.get(), 20.0, 20.0, false);
+            bool inside = polygon.contains_point(20.0, 20.0, false);
 
             THEN("The exterior point is still reported as outside") {
                 REQUIRE(inside == false);
@@ -335,16 +321,16 @@ TEST_CASE("geo_region polygon selection", "[geometry]") {
         geo_pointset_add_xyz(pointset.get(), 15.0, 15.0, 0.0);
         geo_pointset_add_xyz(pointset.get(), -5.0, 5.0, 0.0);
 
-        auto polygon = std::make_unique<rd::Polygon>("square");
-        geo_polygon_add_point(polygon.get(), 0.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 0.0);
-        geo_polygon_add_point(polygon.get(), 10.0, 10.0);
-        geo_polygon_add_point(polygon.get(), 0.0, 10.0);
-        geo_polygon_close(polygon.get());
+        rd::Polygon polygon{"square"};
+        polygon.add_point(0.0, 0.0);
+        polygon.add_point(10.0, 0.0);
+        polygon.add_point(10.0, 10.0);
+        polygon.add_point(0.0, 10.0);
+        polygon.close();
 
         WHEN("Selecting inside polygon") {
             auto region = make_geo_region(pointset, false);
-            geo_region_select_inside_polygon(region.get(), polygon.get());
+            geo_region_select_inside_polygon(region.get(), &polygon);
             auto index_list = geo_region_get_index_list(region.get());
 
             THEN("Only inside points are selected") {
