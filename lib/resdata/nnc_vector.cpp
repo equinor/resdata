@@ -69,7 +69,7 @@ nnc_vector_get_nnc_index_list(const nnc_vector_type *nnc_vector) {
     return nnc_vector->nnc_index_list;
 }
 
-int nnc_vector_get_size(const nnc_vector_type *nnc_vector) {
+size_t nnc_vector_get_size(const nnc_vector_type *nnc_vector) {
     return nnc_vector->grid_index_list.size();
 }
 
@@ -77,10 +77,11 @@ int nnc_vector_get_lgr_nr(const nnc_vector_type *nnc_vector) {
     return nnc_vector->lgr_nr;
 }
 
-int nnc_vector_iget_nnc_index(const nnc_vector_type *nnc_vector, int index) {
+int nnc_vector_iget_nnc_index(const nnc_vector_type *nnc_vector, size_t index) {
     return nnc_vector->nnc_index_list[index];
 }
 
-int nnc_vector_iget_grid_index(const nnc_vector_type *nnc_vector, int index) {
+int nnc_vector_iget_grid_index(const nnc_vector_type *nnc_vector,
+                               size_t index) {
     return nnc_vector->grid_index_list[index];
 }
