@@ -2,7 +2,6 @@
 import os
 import random
 
-import cwrap
 from resdata import FileMode, ResDataType
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, Resdata3DKW, ResdataFile, ResdataKW
@@ -183,7 +182,7 @@ def test_read_grdecl(tmp_path):
         f.write("PORO\n")
         f.write("%d*0.25 /\n" % (nx * ny * nz))
 
-    with cwrap.open(grdecl_file) as f:
+    with open(grdecl_file) as f:
         kw = Resdata3DKW.read_grdecl(grid, f, "PORO")
 
     assert isinstance(kw, Resdata3DKW)

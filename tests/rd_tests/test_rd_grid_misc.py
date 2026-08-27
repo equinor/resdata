@@ -4,8 +4,6 @@ from pathlib import Path
 
 import pytest
 import resdata.grid._grid as _grid
-from cwrap import CFILE
-from cwrap import open as copen
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
@@ -32,7 +30,7 @@ def test_that_grid_can_be_written_as_GRID_and_loaded_back(rectangular_grid, tmp_
 
 def test_that_grid_can_be_written_as_GRDECL(rectangular_grid, tmp_path):
     filename = tmp_path / "TEST.GRDECL"
-    with copen(str(filename), "w") as f:
+    with open(str(filename), "w") as f:
         rectangular_grid.save_grdecl(f, output_unit=UnitSystem.METRIC)
     assert filename.exists()
     assert filename.stat().st_size > 0
@@ -53,7 +51,7 @@ def test_that_grid_keyword_can_be_printed_as_GRDECL(rectangular_grid, tmp_path):
         kw[i] = 0.2 + i * 0.01
 
     filename = tmp_path / "KW.GRDECL"
-    with copen(str(filename), "w") as f:
+    with open(str(filename), "w") as f:
         rectangular_grid.write_grdecl(kw, f, default_value=-999.0)
     assert filename.exists()
     assert filename.stat().st_size > 0
@@ -68,7 +66,7 @@ def grid_with_inactive_cells():
 
 
 def _read_grdecl_kw(path: Path, name: str, size: int, rd_type) -> ResdataKW:
-    with copen(str(path), "r") as f:
+    with open(str(path)) as f:
         return ResdataKW.read_grdecl(f, name, rd_type=rd_type)
 
 
@@ -86,7 +84,7 @@ def test_that_active_sized_float_keyword_fills_default_in_inactive_indices(
         kw[a] = 0.2 + a * 0.01
 
     filename = tmp_path / "KW_ACTIVE_FLOAT.GRDECL"
-    with copen(str(filename), "w") as f:
+    with open(str(filename), "w") as f:
         grid.write_grdecl(kw, f, default_value=-999.0)
 
     read_back = _read_grdecl_kw(filename, "PORO", global_size, ResDataType.RD_FLOAT)
@@ -112,7 +110,7 @@ def test_that_active_sized_int_keyword_fills_default_in_inactive_indices(
         kw[a] = a + 1
 
     filename = tmp_path / "KW_ACTIVE_INT.GRDECL"
-    with copen(str(filename), "w") as f:
+    with open(str(filename), "w") as f:
         grid.write_grdecl(kw, f, default_value=-999)
 
     read_back = _read_grdecl_kw(filename, "SATNUM", global_size, ResDataType.RD_INT)
@@ -139,7 +137,7 @@ def test_that_every_grid_can_be_written_to_disk_as_egrid_and_read_back(
 def test_that_every_grid_can_be_written_as_grdecl(all_grids, tmp_path):
     for label, grid in all_grids:
         filename = tmp_path / f"WRITE_{label}.GRDECL"
-        with copen(str(filename), "w") as f:
+        with open(str(filename), "w") as f:
             grid.save_grdecl(f, output_unit=UnitSystem.METRIC)
         assert filename.exists(), f"failed to write {label}"
         assert filename.stat().st_size > 0
@@ -227,10 +225,9 @@ def test_that_fwrite_grdecl_with_invalid_bool_default_raises_value_error(
     nactive = grid.get_num_active()
     bool_kw = ResdataKW("BOOLKW", nactive, ResDataType.RD_BOOL)
     out = tmp_path / "BOOL_OUT.GRDECL"
-    with copen(str(out), "w") as f:
-        cfile = CFILE(f)
+    with open(str(out), "w") as f:
         with pytest.raises(ValueError, match="bool interpolation"):
-            _grid._fwrite_grdecl(grid, bool_kw, None, cfile, 5.0)
+            _grid._fwrite_grdecl(grid, bool_kw, None, f.fileno(), 5.0)
 
 
 def test_that_fwrite_grdecl_with_mismatched_kw_size_raises_value_error(
@@ -238,10 +235,9 @@ def test_that_fwrite_grdecl_with_mismatched_kw_size_raises_value_error(
 ):
     bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
     out = tmp_path / "BAD_OUT.GRDECL"
-    with copen(str(out), "w") as f:
-        cfile = CFILE(f)
+    with open(str(out), "w") as f:
         with pytest.raises(ValueError, match="size mismatch"):
-            _grid._fwrite_grdecl(rectangular_grid, bad_kw, None, cfile, 0.0)
+            _grid._fwrite_grdecl(rectangular_grid, bad_kw, None, f.fileno(), 0.0)
 
 
 def test_that_compressed_kw_copy_with_mismatched_sizes_raises_value_error(

@@ -2,7 +2,6 @@ import math
 import time
 from unittest import skipIf
 
-from cwrap import open as copen
 from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator
 from resdata.resfile import ResdataKW, open_rd_file
@@ -91,20 +90,22 @@ class GridTest(ResdataTest):
         self.assertEqual(dims[2], grid.get_nz())
 
     def create(self, filename, load_actnum=True):
-        fileH = copen(filename, "r")
-        specgrid = ResdataKW.read_grdecl(
-            fileH, "SPECGRID", rd_type=ResDataType.RD_INT, strict=False
-        )
-        zcorn = ResdataKW.read_grdecl(fileH, "ZCORN")
-        coord = ResdataKW.read_grdecl(fileH, "COORD")
-        if load_actnum:
-            actnum = ResdataKW.read_grdecl(fileH, "ACTNUM", rd_type=ResDataType.RD_INT)
-        else:
-            actnum = None
+        with open(filename) as fileH:
+            specgrid = ResdataKW.read_grdecl(
+                fileH, "SPECGRID", rd_type=ResDataType.RD_INT, strict=False
+            )
+            zcorn = ResdataKW.read_grdecl(fileH, "ZCORN")
+            coord = ResdataKW.read_grdecl(fileH, "COORD")
+            if load_actnum:
+                actnum = ResdataKW.read_grdecl(
+                    fileH, "ACTNUM", rd_type=ResDataType.RD_INT
+                )
+            else:
+                actnum = None
 
-        mapaxes = ResdataKW.read_grdecl(fileH, "MAPAXES")
-        grid = Grid.create(specgrid, zcorn, coord, actnum, mapaxes=mapaxes)
-        return grid
+            mapaxes = ResdataKW.read_grdecl(fileH, "MAPAXES")
+            grid = Grid.create(specgrid, zcorn, coord, actnum, mapaxes=mapaxes)
+            return grid
 
     def test_rect(self):
         tmpdir = self.tmp_path_factory.mktemp(
@@ -174,7 +175,7 @@ class GridTest(ResdataTest):
                 f2.write("  10  10  10  'F' /\n")
 
             with open_rd_file("G.EGRID") as f:
-                with copen("grid.grdecl", "a") as f2:
+                with open("grid.grdecl", "a") as f2:
                     coord_kw = f["COORD"][0]
                     coord_kw.write_grdecl(f2)
 
@@ -215,9 +216,8 @@ class GridTest(ResdataTest):
             g2 = Grid("test.GRID")
             self.assertTrue(g1.equal(g2))
 
-            fileH = copen("test.grdecl", "w")
-            g1.save_grdecl(fileH)
-            fileH.close()
+            with open("test.grdecl", "w") as fileH:
+                g1.save_grdecl(fileH)
             g2 = self.create("test.grdecl")
             self.assertTrue(g1.equal(g2))
 

@@ -13,7 +13,7 @@ def test_resdatakw_read_grdecl(tmp_path):
         f.writelines(f"{block_size}*{value} \n" for _ in range(num_blocks))
         f.write("/\n")
 
-    with cwrap.open(str(tmp_path / "test.grdecl")) as f:
+    with open(str(tmp_path / "test.grdecl")) as f:
         kw = ResdataKW.read_grdecl(f, "COORD")
         assert ResdataKW.fseek_grdecl(f, "COORD", True)
         with pytest.raises(TypeError, match="Sorry keyword:TOOLONGAKW"):

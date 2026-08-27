@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime
 import os.path
 import re
+from io import TextIOWrapper
 from typing import Iterable, Sequence, SupportsFloat
 
 import numpy as np
@@ -21,11 +22,12 @@ import pandas as pd
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from cwrap import CFILE, BaseCClass
+from cwrap import BaseCClass
 from dateutil.relativedelta import relativedelta
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import FileMode, UnitSystem
+from resdata.util._fd import synced_fd
 from resdata.util.util import CTime, TimeLike
 
 from .rd_smspec_node import ResdataSMSPECNode
@@ -1399,15 +1401,14 @@ class Summary(BaseCClass):
         content = 'name="%s", time=[%s, %s], keys=%d' % (name, s_time, e_time, num_keys)
         return self._create_repr(content)
 
-    def dump_csv_line(self, time: TimeLike, keywords, pfile):
+    def dump_csv_line(self, time: TimeLike, keywords, pfile: TextIOWrapper):
         """
         Will dump a csv formatted line of the keywords in keywords, evaluated
-        at the interpolated time. pfile should point to an open Python
-        file handle.
+        at the interpolated time.
         """
-        cfile = CFILE(pfile)
         ctime = CTime(time)
-        _rd_sum._dump_csv_line(self, ctime.ctime(), keywords, cfile)
+        with synced_fd(pfile) as fd:
+            _rd_sum._dump_csv_line(self, ctime.ctime(), keywords, fd)
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
         """Will create a CSV file with summary data.
