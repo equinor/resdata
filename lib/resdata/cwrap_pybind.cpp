@@ -203,12 +203,12 @@ py::object CPolyline() {
     return cls;
 }
 
-template <> geo_polygon_type *from_cwrap<geo_polygon_type>(py::handle obj) {
+template <> rd::Polygon *from_cwrap<rd::Polygon>(py::handle obj) {
     if (!py::isinstance(obj, CPolyline()))
         throw py::type_error("Expected CPolyline, got " +
                              static_cast<std::string>(py::repr(obj)));
 
-    return cast_cwrap<geo_polygon_type>(obj);
+    return cast_cwrap<rd::Polygon>(obj);
 }
 
 py::object GeoPointset() {

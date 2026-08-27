@@ -360,21 +360,21 @@ PYBIND11_MODULE(_rd_region, m) {
           });
     m.def("_select_inside_polygon", [](py::handle self, py::handle polygon) {
         rd_region_select_inside_polygon(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<geo_polygon_type>(polygon));
+                                        from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_select_outside_polygon", [](py::handle self, py::handle polygon) {
         rd_region_select_outside_polygon(from_cwrap<rd_region_type>(self),
-                                         from_cwrap<geo_polygon_type>(polygon));
+                                         from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_deselect_inside_polygon", [](py::handle self, py::handle polygon) {
         rd_region_deselect_inside_polygon(
             from_cwrap<rd_region_type>(self),
-            from_cwrap<geo_polygon_type>(polygon));
+            from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_deselect_outside_polygon", [](py::handle self, py::handle polygon) {
         rd_region_deselect_outside_polygon(
             from_cwrap<rd_region_type>(self),
-            from_cwrap<geo_polygon_type>(polygon));
+            from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_set_name",
           [](py::handle self, const std::optional<std::string> &name) {

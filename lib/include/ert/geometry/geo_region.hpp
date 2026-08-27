@@ -19,13 +19,13 @@ size_t geo_region_num_selected(geo_region_type *region);
 const std::vector<int> geo_region_get_index_list(geo_region_type *region);
 
 void geo_region_select_inside_polygon(geo_region_type *region,
-                                      const geo_polygon_type *polygon);
+                                      const rd::Polygon *polygon);
 void geo_region_select_outside_polygon(geo_region_type *region,
-                                       const geo_polygon_type *polygon);
+                                       const rd::Polygon *polygon);
 void geo_region_deselect_inside_polygon(geo_region_type *region,
-                                        const geo_polygon_type *polygon);
+                                        const rd::Polygon *polygon);
 void geo_region_deselect_outside_polygon(geo_region_type *region,
-                                         const geo_polygon_type *polygon);
+                                         const rd::Polygon *polygon);
 
 void geo_region_select_above_line(geo_region_type *region,
                                   const double xcoords[2],

@@ -21,7 +21,7 @@ PYBIND11_MODULE(_cpolyline, m) {
         "_alloc_new",
         [](std::optional<std::string> name) {
             return reinterpret_cast<std::uintptr_t>(
-                new geo_polygon_struct(name));
+                new rd::Polygon(name));
         },
         py::return_value_policy::reference);
     m.def(
@@ -32,45 +32,45 @@ PYBIND11_MODULE(_cpolyline, m) {
         },
         py::return_value_policy::reference);
     m.def("_add_point", [](py::handle self, double x, double y) {
-        geo_polygon_add_point(from_cwrap<geo_polygon_type>(self), x, y);
+        geo_polygon_add_point(from_cwrap<rd::Polygon>(self), x, y);
     });
     m.def("_add_point_front", [](py::handle self, double x, double y) {
-        geo_polygon_add_point_front(from_cwrap<geo_polygon_type>(self), x, y);
+        geo_polygon_add_point_front(from_cwrap<rd::Polygon>(self), x, y);
     });
     m.def("_free", [](py::handle self) {
-        delete from_cwrap<geo_polygon_type>(self);
+        delete from_cwrap<rd::Polygon>(self);
     });
     m.def("_size", [](py::handle self) {
-        return geo_polygon_get_size(from_cwrap<geo_polygon_type>(self));
+        return geo_polygon_get_size(from_cwrap<rd::Polygon>(self));
     });
     m.def("_iget_xy", [](py::handle self, int index) {
         double x = 0;
         double y = 0;
-        geo_polygon_iget_xy(from_cwrap<geo_polygon_type>(self), index, &x, &y);
+        geo_polygon_iget_xy(from_cwrap<rd::Polygon>(self), index, &x, &y);
         return std::make_tuple(x, y);
     });
     m.def("_segment_intersects",
           [](py::handle self, double x1, double y1, double x2, double y2) {
               return geo_polygon_segment_intersects(
-                  from_cwrap<geo_polygon_type>(self), x1, y1, x2, y2);
+                  from_cwrap<rd::Polygon>(self), x1, y1, x2, y2);
           });
     m.def("_get_name", [](py::handle self) -> py::object {
         const char *name =
-            geo_polygon_get_name(from_cwrap<geo_polygon_type>(self));
+            geo_polygon_get_name(from_cwrap<rd::Polygon>(self));
         if (!name)
             return py::none();
         return py::str(name);
     });
     m.def("_set_name", [](py::handle self, std::optional<std::string> name) {
-        geo_polygon_set_name(from_cwrap<geo_polygon_type>(self),
+        geo_polygon_set_name(from_cwrap<rd::Polygon>(self),
                              name ? name->c_str() : nullptr);
     });
     m.def("_segment_length", [](py::handle self) {
-        return geo_polygon_get_length(from_cwrap<geo_polygon_type>(self));
+        return geo_polygon_get_length(from_cwrap<rd::Polygon>(self));
     });
     m.def("_equal", [](py::handle self, py::handle other) {
-        return geo_polygon_equal(from_cwrap<geo_polygon_type>(self),
-                                 from_cwrap<geo_polygon_type>(other));
+        return geo_polygon_equal(from_cwrap<rd::Polygon>(self),
+                                 from_cwrap<rd::Polygon>(other));
     });
 }
 } // namespace

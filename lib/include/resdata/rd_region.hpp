@@ -135,13 +135,13 @@ void rd_region_deselect_below_plane(rd_region_type *region, const double n[3],
                                     const double p[3]);
 
 void rd_region_select_inside_polygon(rd_region_type *region,
-                                     const geo_polygon_type *polygon);
+                                     const rd::Polygon *polygon);
 void rd_region_deselect_inside_polygon(rd_region_type *region,
-                                       const geo_polygon_type *polygon);
+                                       const rd::Polygon *polygon);
 void rd_region_select_outside_polygon(rd_region_type *region,
-                                      const geo_polygon_type *polygon);
+                                      const rd::Polygon *polygon);
 void rd_region_deselect_outside_polygon(rd_region_type *region,
-                                        const geo_polygon_type *polygon);
+                                        const rd::Polygon *polygon);
 
 void rd_region_select_from_layer(rd_region_type *region,
                                  const layer_type *layer, int k,

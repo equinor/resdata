@@ -50,22 +50,22 @@ PYBIND11_MODULE(_geo_region, m) {
 
     m.def("_select_inside_polygon", [](py::handle self, py::handle polygon) {
         geo_region_select_inside_polygon(from_cwrap<geo_region_type>(self),
-                                         from_cwrap<geo_polygon_type>(polygon));
+                                         from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_select_outside_polygon", [](py::handle self, py::handle polygon) {
         geo_region_select_outside_polygon(
             from_cwrap<geo_region_type>(self),
-            from_cwrap<geo_polygon_type>(polygon));
+            from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_deselect_inside_polygon", [](py::handle self, py::handle polygon) {
         geo_region_deselect_inside_polygon(
             from_cwrap<geo_region_type>(self),
-            from_cwrap<geo_polygon_type>(polygon));
+            from_cwrap<rd::Polygon>(polygon));
     });
     m.def("_deselect_outside_polygon", [](py::handle self, py::handle polygon) {
         geo_region_deselect_outside_polygon(
             from_cwrap<geo_region_type>(self),
-            from_cwrap<geo_polygon_type>(polygon));
+            from_cwrap<rd::Polygon>(polygon));
     });
 
     m.def("_select_above_line", [](py::handle self, std::vector<double> xcoords,
