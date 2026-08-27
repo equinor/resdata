@@ -24,7 +24,7 @@ the resdata library.
 """
 
 import ctypes
-from io import TextIOWrapper
+import io
 
 import numpy as np
 from cwrap import BaseCClass
@@ -117,7 +117,7 @@ class ResdataKW(BaseCClass):
     @classmethod
     def read_grdecl(
         cls,
-        fileH: TextIOWrapper,
+        fileH: io.TextIOWrapper,
         kw: str | None,
         strict: bool = True,
         rd_type: ResDataType | None = None,
@@ -221,7 +221,7 @@ class ResdataKW(BaseCClass):
         return cls.createPythonObject(_kw._load_grdecl(cfile, kw, strict, rd_type))
 
     @classmethod
-    def fseek_grdecl(cls, fileH: TextIOWrapper, kw, rewind=False):
+    def fseek_grdecl(cls, fileH: io.TextIOWrapper, kw, rewind=False):
         """
         Will search through the open file and look for string @kw.
 
@@ -370,6 +370,9 @@ class ResdataKW(BaseCClass):
         Returns the number of elements. Implements len()
         """
         return _kw._get_size(self)
+
+    def __iter__(self):
+        return _kw._iter(self)
 
     def __deep_copy__(self, memo):
         """
@@ -968,7 +971,7 @@ class ResdataKW(BaseCClass):
     def fwrite(self, fortio):
         _kw._fwrite(self, fortio)
 
-    def write_grdecl(self, file: TextIOWrapper) -> None:
+    def write_grdecl(self, file: io.TextIOWrapper) -> None:
         """
         Will write keyword in GRDECL format.
 
@@ -993,7 +996,7 @@ class ResdataKW(BaseCClass):
         with synced_fd(file) as fd:
             _kw._fprintf_grdecl(self, fd)
 
-    def fprintf_data(self, file: TextIOWrapper, fmt=None):
+    def fprintf_data(self, file: io.TextIOWrapper, fmt=None):
         """
         Will print the keyword data formatted to file.
 
@@ -1011,8 +1014,7 @@ class ResdataKW(BaseCClass):
         """
         if fmt is None:
             fmt = self.str_fmt + "\n"
-        with synced_fd(file) as fd:
-            _kw._fprintf_data(self, fmt, fd)
+        file.writelines(fmt % v for v in self)
 
     def create_actnum(self, porv_limit=0):
         """Will create ACTNUM keyword from PORV keyword.

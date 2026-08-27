@@ -22,7 +22,53 @@
 namespace py = pybind11;
 
 namespace {
+
+class KwIterator {
+public:
+    explicit KwIterator(py::object self)
+        : m_self(std::move(self)), m_kw(from_cwrap<rd_kw_type>(m_self)),
+          m_index(0), m_size(rd_kw_get_size(m_kw)),
+          m_type(rd_kw_get_type(m_kw)) {}
+
+    py::object next() {
+        if (m_index >= m_size)
+            throw py::stop_iteration();
+        int i = m_index++;
+        switch (m_type) {
+        case RD_INT_TYPE:
+            return py::cast(rd_kw_iget_int(m_kw, i));
+        case RD_FLOAT_TYPE:
+            return py::cast(rd_kw_iget_float(m_kw, i));
+        case RD_DOUBLE_TYPE:
+            return py::cast(rd_kw_iget_double(m_kw, i));
+        case RD_BOOL_TYPE:
+            return py::cast(rd_kw_iget_bool(m_kw, i));
+        case RD_CHAR_TYPE:
+            return py::cast(rd_kw_iget_char_ptr(m_kw, i));
+        case RD_STRING_TYPE:
+            return py::cast(rd_kw_iget_string_ptr(m_kw, i));
+        default:
+            throw std::invalid_argument(
+                "ResdataKW iteration not supported for this type");
+        }
+    }
+
+private:
+    // Keeps the owning ResdataKW Python object (and therefore its
+    // underlying rd_kw_type allocation) alive for as long as the
+    // iterator itself is alive.
+    py::object m_self;
+    rd_kw_type *m_kw;
+    int m_index;
+    int m_size;
+    rd_type_enum m_type;
+};
+
 PYBIND11_MODULE(_kw, m) {
+    py::class_<KwIterator>(m, "_KwIterator")
+        .def("__iter__", [](KwIterator &it) -> KwIterator & { return it; })
+        .def("__next__", &KwIterator::next);
+    m.def("_iter", [](py::object self) { return KwIterator(std::move(self)); });
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 
@@ -103,11 +149,6 @@ PYBIND11_MODULE(_kw, m) {
                                         from_cwrap<rd_kw_type>(new_actnum)));
         },
         py::return_value_policy::reference);
-    m.def("_fprintf_data", [](py::handle self, std::string fmt, int fd) {
-        FdStream stream(fd, "w");
-        rd_kw_fprintf_data(from_cwrap<rd_kw_type>(self), fmt.c_str(), stream);
-        stream.close();
-    });
 
     m.def("_get_size", [](py::handle self) {
         return rd_kw_get_size(from_cwrap<rd_kw_type>(self));
