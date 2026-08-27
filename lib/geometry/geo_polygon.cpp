@@ -12,14 +12,10 @@
 #include <optional>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
 
-#define GEO_POLYGON_TYPE_ID 9951322
-
 struct geo_polygon_struct {
-    UTIL_TYPE_ID_DECLARATION;
     std::vector<double> xcoord;
     std::vector<double> ycoord;
     std::optional<std::string> name;
@@ -28,9 +24,6 @@ struct geo_polygon_struct {
         : name(std::move(name)) {};
 };
 
-static UTIL_SAFE_CAST_FUNCTION(geo_polygon, GEO_POLYGON_TYPE_ID);
-UTIL_IS_INSTANCE_FUNCTION(geo_polygon, GEO_POLYGON_TYPE_ID);
-
 geo_polygon_type *geo_polygon_alloc(const char *name) {
     geo_polygon_struct *polygon = nullptr;
     if (name)
@@ -38,15 +31,13 @@ geo_polygon_type *geo_polygon_alloc(const char *name) {
     else
         polygon = new geo_polygon_struct(std::nullopt);
 
-    UTIL_TYPE_ID_INIT(polygon, GEO_POLYGON_TYPE_ID);
     return polygon;
 }
 
 void geo_polygon_free(geo_polygon_type *polygon) { delete polygon; }
 
 void geo_polygon_free__(void *arg) {
-    geo_polygon_type *polygon = geo_polygon_safe_cast(arg);
-    geo_polygon_free(polygon);
+    geo_polygon_free(static_cast<geo_polygon_type *>(arg));
 }
 
 void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y) {

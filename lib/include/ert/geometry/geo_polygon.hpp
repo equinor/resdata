@@ -3,8 +3,6 @@
 #include <memory>
 #include <string>
 
-#include <ert/util/type_macros.hpp>
-
 typedef struct geo_polygon_struct geo_polygon_type;
 
 geo_polygon_type *geo_polygon_alloc(const char *name);
@@ -27,8 +25,6 @@ void geo_polygon_set_name(geo_polygon_type *polygon, const char *name);
 double geo_polygon_get_length(geo_polygon_type *polygon);
 bool geo_polygon_equal(const geo_polygon_type *polygon1,
                        const geo_polygon_type *polygon2);
-
-UTIL_IS_INSTANCE_HEADER(geo_polygon);
 
 using geo_polygon_ptr =
     std::unique_ptr<geo_polygon_type, decltype(&geo_polygon_free)>;
