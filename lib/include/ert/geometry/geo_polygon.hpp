@@ -2,6 +2,19 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
+#include <optional>
+#include <vector>
+
+
+struct geo_polygon_struct {
+    std::vector<double> xcoord;
+    std::vector<double> ycoord;
+    std::optional<std::string> name;
+
+    geo_polygon_struct(std::optional<std::string> name)
+        : name(std::move(name)) {};
+};
 
 typedef struct geo_polygon_struct geo_polygon_type;
 

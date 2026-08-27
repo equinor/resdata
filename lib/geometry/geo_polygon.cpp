@@ -7,22 +7,12 @@
 #include <fstream>
 #include <ios>
 #include <string>
-#include <utility>
 #include <vector>
 #include <optional>
 
 #include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
-
-struct geo_polygon_struct {
-    std::vector<double> xcoord;
-    std::vector<double> ycoord;
-    std::optional<std::string> name;
-
-    geo_polygon_struct(std::optional<std::string> name)
-        : name(std::move(name)) {};
-};
 
 geo_polygon_type *geo_polygon_alloc(const char *name) {
     geo_polygon_struct *polygon = nullptr;
