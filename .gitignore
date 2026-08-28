@@ -26,7 +26,6 @@ scratch.sparsebundle
 /.vscode
 
 /venv/
-/_skbuild/
 /python/resdata/version.py
 *.egg-info/
 
