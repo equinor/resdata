@@ -1,13 +1,11 @@
 [build-system]
 requires = [
-  "cmake<4",
   "conan>=2",
-  "ninja",
-  "scikit-build",
-  "setuptools",
-  "setuptools_scm",
-  "wheel",
+  "scikit-build-core>=1.0",
+  "setuptools_scm>=8",
 ]
+build-backend = "backend"
+backend-path = ["_custom_build"]
 
 [project]
 name = "resdata"
@@ -46,19 +44,61 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/equinor/resdata"
 
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.setuptools_scm"
+
+[[tool.dynamic-metadata]]
+provider = { path = "_custom_build", module = "metadata" }
+field = "scripts"
+
+[tool.setuptools_scm]
+write_to = "python/resdata/version.py"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "_skbuild"
+wheel.packages = ["python/resdata", "python/view_summary"]
+ninja.make-fallback = false
+sdist.include = ["python/resdata/version.py"]
+sdist.exclude = [
+  "**/.DS_Store",
+  "**/__pycache__",
+  "**/*.pyc",
+  "/.cmake",
+  "/CMakeCache.txt",
+  "/CMakeFiles",
+  "/CMakeInit.txt",
+  "/CTestTestfile.cmake",
+  "/build.ninja",
+  "/cmake-build",
+  "/cmake_install.cmake",
+  "/applications/CTestTestfile.cmake",
+  "/applications/cmake_install.cmake",
+  "/lib/CTestTestfile.cmake",
+  "/lib/cmake_install.cmake",
+  "/lib/include/ert/util/build_config.hpp",
+  "/lib/include/ert/util/ert_api_config.hpp",
+  "/lib/include/ert/util/int_vector.hpp",
+  "/lib/int_vector.cpp",
+]
+
+[tool.scikit-build.cmake.define]
+BUILD_TESTS = "OFF"
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "^linux"
+cmake.define.BUILD_APPLICATIONS = "ON"
+
 [dependency-groups]
 build = [
   "cibuildwheel",
-  "cmake<4",
   "cwrap",
   "ninja",
   "numpy",
   "pandas",
-  "scikit-build",
-  "setuptools",
-  "setuptools_scm",
+  "scikit-build-core>=1.0",
+  "setuptools_scm>=8",
   "sphinx!=3.4.0",
-  "wheel",
 ]
 test = [
   "pytest",
@@ -93,20 +133,21 @@ skip = "*-musllinux_* *-win32"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y zlib-devel"
-before-build = "rm -rf {package}/_skbuild"
+before-build = "rm -rf {package}/build"
 test-groups = ["test"]
 test-command = "pytest {package}/tests"
 
 [tool.cibuildwheel.macos]
 before-all = "brew install zlib"
-before-build = "rm -rf {package}/_skbuild"
+before-build = "rm -rf {package}/build"
 test-groups = ["test"]
 test-command = "pytest {package}/tests"
 
 [tool.cibuildwheel.windows]
+before-build = "if exist {package}\\build rmdir /s /q {package}\\build"
 repair-wheel-command = """
 delvewheel repair \
-  --add-path "{package}/python/resdata/.bin/Release" \
+  --add-path "{package}/_skbuild/bin/Release" \
   -w {dest_dir} -v {wheel}
 """
 test-command = "python -c \"import resdata.grid\""

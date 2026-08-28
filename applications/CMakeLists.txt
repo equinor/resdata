@@ -3,7 +3,7 @@ project(resdata-applications)
 function(target_link_resdata target)
   target_link_libraries(${target} resdata)
   if(SKBUILD)
-    set_target_properties(${target} PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+    set_target_properties(${target} PROPERTIES INSTALL_RPATH "$ORIGIN")
   endif()
 endfunction()
 
@@ -29,9 +29,17 @@ if(apps)
         PROPERTY LINK_FLAGS ${OpenMP_CXX_FLAGS})
     endforeach()
   endif()
-  install(
-    TARGETS ${apps}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if(SKBUILD)
+    install(
+      TARGETS ${apps}
+      ARCHIVE DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata
+      LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata
+      RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata)
+  else()
+    install(
+      TARGETS ${apps}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
 endif()
