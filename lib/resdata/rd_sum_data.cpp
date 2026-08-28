@@ -701,38 +701,6 @@ static double rd_sum_data_vector_iget(const rd_sum_data_type *data,
     return value;
 }
 
-void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
-                                        time_t sim_time,
-                                        const rd_sum_vector_type *keylist,
-                                        FILE *fp) {
-    int num_keywords = rd_sum_vector_get_size(keylist);
-    double weight1, weight2;
-    int time_index1, time_index2;
-
-    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
-                                          &time_index2, &weight1, &weight2);
-
-    for (int i = 0; i < num_keywords; i++) {
-        if (rd_sum_vector_iget_valid(keylist, i)) {
-            int params_index = rd_sum_vector_iget_param_index(keylist, i);
-            bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
-            double value = rd_sum_data_vector_iget(
-                data, sim_time, params_index, is_rate, time_index1, time_index2,
-                weight1, weight2);
-
-            if (i == 0)
-                fprintf(fp, "%f", value);
-            else
-                fprintf(fp, ",%f", value);
-        } else {
-            if (i == 0)
-                fputs("", fp);
-            else
-                fputs(",", fp);
-        }
-    }
-}
-
 /** If the keylist contains invalid indices the corresponding element in the
   results vector will be set to missing_value. */
 std::vector<double>

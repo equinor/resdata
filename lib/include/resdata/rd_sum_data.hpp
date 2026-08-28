@@ -70,10 +70,6 @@ int rd_sum_data_iget_report_end(const rd_sum_data_type *data, int report_step);
 rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
                                              int report_step,
                                              double sim_seconds);
-void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
-                                        time_t sim_time,
-                                        const rd_sum_vector_type *keylist,
-                                        FILE *fp);
 double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
                                    int param_index);
 double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
