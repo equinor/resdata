@@ -89,13 +89,6 @@ UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
 #define READ_FMT_BOOL "  %c"
 #define READ_FMT_DOUBLE "%lgD%d"
 
-#define WRITE_FMT_CHAR " '%-8s'"
-#define WRITE_FMT_INT " %11d"
-#define WRITE_FMT_FLOAT "  %11.8fE%+03d"
-#define WRITE_FMT_DOUBLE "  %17.14fD%+03d"
-#define WRITE_FMT_MESS "%s"
-#define WRITE_FMT_BOOL "  %c"
-
 /* The boolean type is not a native type which can be uniquely
    identified between Fortran, C, formatted and unformatted
    files:
@@ -144,32 +137,6 @@ static std::string read_fmt(const rd_data_type data_type) {
         return READ_FMT_MESS;
     case (RD_STRING_TYPE):
         return read_fmt_string(data_type);
-    default:
-        throw std::invalid_argument(
-            fmt::format("invalid rd_type: {}", rd_type_name(data_type)));
-    }
-}
-
-static std::string write_fmt_string(const rd_data_type rd_type) {
-    return fmt::format(" '%-{}s'", rd_type_get_sizeof_iotype(rd_type));
-}
-
-static std::string write_fmt(const rd_data_type data_type) {
-    switch (rd_type_get_type(data_type)) {
-    case (RD_CHAR_TYPE):
-        return WRITE_FMT_CHAR;
-    case (RD_INT_TYPE):
-        return WRITE_FMT_INT;
-    case (RD_FLOAT_TYPE):
-        return WRITE_FMT_FLOAT;
-    case (RD_DOUBLE_TYPE):
-        return WRITE_FMT_DOUBLE;
-    case (RD_BOOL_TYPE):
-        return WRITE_FMT_BOOL;
-    case (RD_MESS_TYPE):
-        return WRITE_FMT_MESS;
-    case (RD_STRING_TYPE):
-        return write_fmt_string(data_type);
     default:
         throw std::invalid_argument(
             fmt::format("invalid rd_type: {}", rd_type_name(data_type)));
@@ -1479,41 +1446,6 @@ static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
     free(iobuffer);
 }
 
-/**
-     The point of this awkward function is that I have not managed to
-     use C fprintf() syntax to reproduce the ECLIPSE
-     formatting. ECLIPSE expects the following formatting for float
-     and double values:
-
-        0.ddddddddE+03       (float)
-        0.ddddddddddddddD+03 (double)
-
-     The problem with printf have been:
-
-        1. To force the radix part to start with 0.
-        2. To use 'D' as the exponent start for double values.
-
-     If you are more proficient with C fprintf() format strings than I
-     am, the __fprintf_scientific() function should be removed, and
-     the WRITE_FMT_DOUBLE and WRITE_FMT_FLOAT format specifiers
-     updated accordingly.
-  */
-
-static void __fprintf_scientific(FILE *stream, const char *fmt, double x) {
-    double pow_x = ceil(log10(fabs(x)));
-    double arg_x = x / pow(10.0, pow_x);
-    if (x != 0.0) {
-        if (fabs(arg_x) == 1.0) {
-            arg_x *= 0.10;
-            pow_x += 1;
-        }
-    } else {
-        arg_x = 0.0;
-        pow_x = 0.0;
-    }
-    fprintf(stream, fmt, arg_x, (int)pow_x);
-}
-
 static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
                                         ERT::FortIO &fortio) {
 
@@ -1522,7 +1454,7 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
         FILE *stream = fortio.get_FILE();
         const int blocksize = get_blocksize(rd_kw->data_type);
         const int columns = get_columns(rd_kw->data_type);
-        const std::string write_format = write_fmt(rd_kw->data_type);
+        const int string_width = rd_type_get_sizeof_iotype(rd_kw->data_type);
         const int num_blocks =
             rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
         int block_nr;
@@ -1543,42 +1475,36 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
                     int data_index =
                         block_nr * blocksize + line_nr * columns + col_nr;
                     void *data_ptr = rd_kw_iget_ptr_static(rd_kw, data_index);
+                    std::string element;
                     switch (rd_kw_get_type(rd_kw)) {
                     case (RD_CHAR_TYPE):
-                        fprintf(stream, write_format.c_str(), data_ptr);
+                        element = rd::format_kw_element((char *)data_ptr);
                         break;
                     case (RD_STRING_TYPE):
-                        fprintf(stream, write_format.c_str(), data_ptr);
+                        element = rd::format_kw_element((char *)data_ptr,
+                                                        string_width);
                         break;
-                    case (RD_INT_TYPE): {
-                        int int_value = ((int *)data_ptr)[0];
-                        fprintf(stream, write_format.c_str(), int_value);
-                    } break;
-                    case (RD_BOOL_TYPE): {
-                        bool bool_value = ((unsigned char *)data_ptr)[0] != 0;
-                        if (bool_value)
-                            fprintf(stream, write_format.c_str(),
-                                    BOOL_TRUE_CHAR);
-                        else
-                            fprintf(stream, write_format.c_str(),
-                                    BOOL_FALSE_CHAR);
-                    } break;
-                    case (RD_FLOAT_TYPE): {
-                        float float_value = ((float *)data_ptr)[0];
-                        __fprintf_scientific(stream, write_format.c_str(),
-                                             float_value);
-                    } break;
-                    case (RD_DOUBLE_TYPE): {
-                        double double_value = ((double *)data_ptr)[0];
-                        __fprintf_scientific(stream, write_format.c_str(),
-                                             double_value);
-                    } break;
+                    case (RD_INT_TYPE):
+                        element = rd::format_kw_element(((int *)data_ptr)[0]);
+                        break;
+                    case (RD_BOOL_TYPE):
+                        element = rd::format_kw_element(
+                            ((unsigned char *)data_ptr)[0] != 0);
+                        break;
+                    case (RD_FLOAT_TYPE):
+                        element = rd::format_kw_element(((float *)data_ptr)[0]);
+                        break;
+                    case (RD_DOUBLE_TYPE):
+                        element =
+                            rd::format_kw_element(((double *)data_ptr)[0]);
+                        break;
                     case (RD_MESS_TYPE):
                         throw std::runtime_error(
                             "Internal inconsistency : message type keywords "
                             "should not have data");
                         break;
                     }
+                    fputs(element.c_str(), stream);
                 }
                 fprintf(stream, "\n");
             }
