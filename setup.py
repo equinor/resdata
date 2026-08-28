@@ -1,107 +1,26 @@
-import json
-import os
-import subprocess
+import platform
 import sys
+from pathlib import Path
 
 import setuptools
 import skbuild
 from setuptools_scm import get_version
 
+from _custom_build.conan import prepare_conan
+
 version = get_version(relative_to=__file__, write_to="python/resdata/version.py")
 
 
-# Corporate networks tend to be behind a proxy server with their own non-public
-# SSL certificates. Conan keeps its own certificates, whose path we can override
-if "CONAN_CACERT_PATH" not in os.environ:
-    # Look for a RHEL-compatible system-wide file
-    for file_ in ("/etc/pki/tls/cert.pem",):
-        if not os.path.isfile(file_):
-            continue
-        os.environ["CONAN_CACERT_PATH"] = file_
-        break
-
-
 def get_skbuild_dir():
-    """Get the scikit-build cmake build directory path."""
-    import platform as plat
-
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-    return os.path.abspath(
-        os.path.join(
-            "_skbuild",
-            f"{plat.system().lower()}-{plat.machine()}-{python_version}",
-            "cmake-build",
-        )
+    return Path(
+        "_skbuild",
+        f"{platform.system().lower()}-{platform.machine()}-{python_version}",
+        "cmake-build",
     )
 
 
-def run_conan_install():
-    """Run conan install to generate CMake presets and toolchain file for Conan 2."""
-    import shutil
-
-    conan_exe = shutil.which("conan")
-    subprocess.run(
-        [conan_exe, "profile", "detect", "--force"],
-        check=False,  # Ignore if profile already exists
-    )
-
-    skbuild_dir = get_skbuild_dir()
-    os.makedirs(skbuild_dir, exist_ok=True)
-
-    subprocess.run(
-        [
-            conan_exe,
-            "install",
-            ".",
-            f"--output-folder={skbuild_dir}",
-            "--build=missing",
-        ],
-        check=True,
-    )
-
-    return skbuild_dir
-
-
-def get_cmake_args_from_preset(skbuild_dir):
-    """Extract CMake arguments from Conan-generated CMakePresets.json."""
-    presets_file = os.path.join(skbuild_dir, "CMakePresets.json")
-    cmake_args = []
-
-    if os.path.exists(presets_file):
-        with open(presets_file) as f:
-            presets = json.load(f)
-
-        if presets.get("configurePresets"):
-            preset = presets["configurePresets"][0]
-
-            if "toolchainFile" in preset:
-                toolchain = preset["toolchainFile"]
-                if not os.path.isabs(toolchain):
-                    toolchain = os.path.join(skbuild_dir, toolchain)
-                cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE='{toolchain}'")
-
-            for key, value in preset.get("cacheVariables", {}).items():
-                if isinstance(value, dict):
-                    value = value.get("value", "")
-                cmake_args.append(f"-D{key}={value}")
-
-            for key, value in preset.get("environment", {}).items():
-                if "$penv{" in value:
-                    import re
-
-                    value = re.sub(
-                        r"\$penv\{(\w+)\}",
-                        lambda m: os.environ.get(m.group(1), ""),
-                        value,
-                    )
-                os.environ[key] = value
-
-    return cmake_args
-
-
-skbuild_dir = run_conan_install()
-CMAKE_ARGS_FROM_PRESET = get_cmake_args_from_preset(skbuild_dir)
-
+CMAKE_ARGS_FROM_PRESET = prepare_conan(get_skbuild_dir())
 
 with open("README.md") as f:
     long_description = f.read()
