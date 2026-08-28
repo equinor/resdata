@@ -9,15 +9,42 @@ requires = [
   "wheel",
 ]
 
-# Minimum project setup such that uv can build the package conveniently without
-# the need to fully replace setup.py and setup.cfg by pyproject.toml.
 [project]
 name = "resdata"
 description = "Package for reading and writing the fortran result files from reservoir simulators"
 authors = [{ name = "Equinor ASA", email = "fg_sib-scout@equinor.com" }]
 license = "GPL-3.0-only"
-dynamic = ["version", "readme", "dependencies", "scripts", "classifiers"]
+readme = "README.md"
+dynamic = ["version", "scripts"]
 requires-python = ">=3.11"
+dependencies = [
+  "cwrap",
+  "numpy",
+  "pandas",
+  "python-dateutil",
+  "natsort",
+  "typing_extensions",
+  "resfo-utilities>=0.4.0",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Other Environment",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/equinor/resdata"
 
 [dependency-groups]
 build = [

@@ -22,9 +22,6 @@ def get_skbuild_dir():
 
 CMAKE_ARGS_FROM_PRESET = prepare_conan(get_skbuild_dir())
 
-with open("README.md") as f:
-    long_description = f.read()
-
 
 def utility_wrappers():
     """
@@ -44,10 +41,6 @@ def utility_wrappers():
 
 
 skbuild.setup(
-    name="resdata",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/equinor/resdata",
     packages=setuptools.find_packages(
         where="python",
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"],
@@ -55,15 +48,6 @@ skbuild.setup(
     package_dir={"": "python"},
     package_data={"resdata": ["py.typed", "well/*.pyi", "resfile/*.pyi"]},
     platforms="any",
-    install_requires=[
-        "cwrap",
-        "numpy",
-        "pandas",
-        "python-dateutil",
-        "natsort",
-        "typing_extensions",
-        "resfo-utilities>=0.4.0",
-    ],
     setup_requires=["conan>=2"],
     entry_points={"console_scripts": utility_wrappers()},
     cmake_args=CMAKE_ARGS_FROM_PRESET
@@ -75,22 +59,6 @@ skbuild.setup(
         "-DCMAKE_INSTALL_BINDIR=python/resdata/.bin",
         "-DCMAKE_INSTALL_LIBDIR=python/resdata/.libs",
         "-DCMAKE_INSTALL_INCLUDEDIR=python/resdata/.include",
-    ],
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Environment :: Other Environment",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "Natural Language :: English",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Programming Language :: Python :: 3.14",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Physics",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Utilities",
     ],
     version=version,
 )
