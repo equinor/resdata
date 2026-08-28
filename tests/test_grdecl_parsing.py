@@ -460,6 +460,15 @@ def test_that_read_grdecl_strict_raises_on_malformed_float_token(tmp_path):
             ResdataKW.read_grdecl(f, "FLTKW", rd_type=ResDataType.RD_FLOAT)
 
 
+def test_that_read_grdecl_strict_rejects_a_number_with_trailing_garbage(tmp_path):
+    path = write_grdecl_file(tmp_path, "INTKW\n1 5FOO 3 /\n")
+    with open(path) as f:
+        with pytest.raises(
+            ValueError, match=r'Malformed content:"5FOO" when reading keyword:INTKW'
+        ):
+            ResdataKW.read_grdecl(f, "INTKW", rd_type=ResDataType.RD_INT)
+
+
 def test_that_read_grdecl_non_strict_skips_malformed_tokens(tmp_path):
     path = write_grdecl_file(tmp_path, "SPECGRID\n10 10 3 F /\n")
     with open(path) as f:
