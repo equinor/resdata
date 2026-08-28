@@ -38,7 +38,6 @@ add_library(
   resdata/rd_sum_tstep.cpp
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
-  resdata/rd_kw_grdecl.cpp
   resdata/rd_file_kw.cpp
   resdata/rd_file_view.cpp
   resdata/rd_grav.cpp
@@ -335,7 +334,6 @@ foreach(
   rd_kw_cmp_string
   rd_kw_equal
   rd_kw_fread
-  rd_kw_grdecl
   rd_kw_init
   rd_layer
   rd_nnc_info_test

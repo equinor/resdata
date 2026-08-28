@@ -2,7 +2,6 @@
 #include <ctime>
 #include <optional>
 #include <stdexcept>
-#include <stdio.h>
 #include <string>
 #include <vector>
 

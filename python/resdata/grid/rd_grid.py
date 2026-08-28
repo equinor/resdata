@@ -13,7 +13,7 @@ import math
 import os.path
 import sys
 from io import TextIOWrapper
-from typing import SupportsFloat, SupportsInt
+from typing import Any, SupportsFloat, SupportsInt
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +24,6 @@ import resdata.grid._grid as _grid
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
-from resdata.util._fd import synced_fd
 
 
 class Grid(BaseCClass):
@@ -996,6 +995,12 @@ class Grid(BaseCClass):
             )
             raise ValueError(err_msg)
 
+    _GRDECL_UNIT_NAMES = {
+        UnitSystem.METRIC: "METRES",
+        UnitSystem.FIELD: "FEET",
+        UnitSystem.LAB: "CM",
+    }
+
     def save_grdecl(
         self, pyfile: TextIOWrapper, output_unit: UnitSystem = UnitSystem.METRIC
     ):
@@ -1004,8 +1009,24 @@ class Grid(BaseCClass):
 
         Will only write the main grid.
         """
-        with synced_fd(pyfile) as fd:
-            _grid._fprintf_grdecl2(self, fd, output_unit)
+        unit_name = self._GRDECL_UNIT_NAMES[output_unit].ljust(8)
+
+        pyfile.write(f"MAPUNITS\n '{unit_name}'\n/\n")
+
+        if (mapaxes_kw := self.export_mapaxes()) is not None:
+            mapaxes_kw.write_grdecl(pyfile)
+
+        pyfile.write(f"GRIDUNIT\n '{unit_name}' '        '\n/\n")
+
+        # The specgrid header is not properly internalized; the fourth and
+        # fifth elements are just set to hardcoded values (numres=1,
+        # coord_type='F')
+        pyfile.write("SPECGRID\n")
+        pyfile.write(f" {self.get_nx()} {self.get_ny()} {self.get_nz()} 1 F /\n")
+
+        self.export_coord().write_grdecl(pyfile)
+        self.export_zcorn().write_grdecl(pyfile)
+        self.export_actnum().write_grdecl(pyfile)
 
     def save_EGRID(self, filename, output_unit: UnitSystem | None = None):
         """Save the grid as an EGRID file.
@@ -1027,12 +1048,27 @@ class Grid(BaseCClass):
         """
         _grid._fwrite_GRID2(self, filename, output_unit)
 
+    def _scatter_to_global(self, rd_kw: ResdataKW, default_value: Any) -> ResdataKW:
+        """
+        Expands @rd_kw, which must have one value per *active* cell, to a
+        new keyword with one value per cell in the full grid (nx*ny*nz),
+        filling the cells that are inactive with @default_value.
+        """
+        data_type = rd_kw.data_type
+        full_kw = ResdataKW(rd_kw.get_name(), self.get_global_size(), data_type)
+        active_mask = self.exportACTNUM().astype(bool)
+
+        full_kw.numpy_view()[:] = default_value
+        full_kw.numpy_view()[active_mask] = rd_kw.numpy_view()
+
+        return full_kw
+
     def write_grdecl(
         self,
         rd_kw: ResdataKW,
         pyfile: TextIOWrapper,
-        special_header: str | None = None,
-        default_value: SupportsFloat = 0,
+        special_header=None,
+        default_value: Any = 0,
     ) -> None:
         """
         Writes an ResdataKW instance as an ECLIPSE grdecl formatted file.
@@ -1044,7 +1080,7 @@ class Grid(BaseCClass):
 
         The data in the @rd_kw argument can be of type integer,
         float, double or bool. In the case of bool the default value
-        must be specified as 1 (True) or 0 (False).
+        will turn anything truthy to True and False otherwise.
 
         The input argument @pyfile should be a file handle
         opened for writing; i.e.
@@ -1055,10 +1091,10 @@ class Grid(BaseCClass):
            pyfile.close()
 
         """
-
-        if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
-            with synced_fd(pyfile) as fd:
-                _grid._fwrite_grdecl(self, rd_kw, special_header, fd, default_value)
+        if len(rd_kw) == self.get_global_size():
+            full_kw = rd_kw
+        elif len(rd_kw) == self.get_num_active():
+            full_kw = self._scatter_to_global(rd_kw, default_value)
         else:
             raise ValueError(
                 "Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d"
@@ -1069,6 +1105,8 @@ class Grid(BaseCClass):
                     self.get_global_size(),
                 )
             )
+
+        full_kw.write_grdecl(pyfile, special_header=special_header)
 
     def exportACTNUM(self) -> npt.NDArray[np.intc]:
         return _grid._init_actnum(self)

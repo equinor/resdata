@@ -26,7 +26,6 @@
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_endian_flip.hpp>
@@ -4343,65 +4342,6 @@ std::vector<double> rd_grid_get_column_property(const rd_grid_type *rd_grid,
     }
 }
 
-void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
-                               const rd_kw_type *rd_kw,
-                               const char *special_header, FILE *stream,
-                               double double_default) {
-    int src_size = rd_kw_get_size(rd_kw);
-    if (src_size >= 0 && static_cast<size_t>(src_size) == rd_grid->size) {
-        rd_kw_fprintf_grdecl(rd_kw, stream, special_header);
-    } else if (src_size == rd_grid->total_active) {
-        void *default_ptr = NULL;
-        float float_default;
-        int int_default;
-        int bool_default;
-        rd_type_enum rd_type = rd_type_get_type(rd_kw_get_data_type(rd_kw));
-
-        if (rd_type == RD_FLOAT_TYPE) {
-            float_default = (float)double_default;
-            default_ptr = &float_default;
-        } else if (rd_type == RD_INT_TYPE) {
-            int_default = (int)double_default;
-            default_ptr = &int_default;
-        } else if (rd_type == RD_DOUBLE_TYPE) {
-            default_ptr = &double_default;
-        } else if (rd_type == RD_BOOL_TYPE) {
-            int tmp = (int)double_default;
-            if (tmp == 1)
-                bool_default = RD_BOOL_TRUE_INT;
-            else if (tmp == 0)
-                bool_default = RD_BOOL_FALSE_INT;
-            else
-                throw std::domain_error(fmt::format(
-                    "Only 0 and 1 are allowed for bool interpolation, got {}",
-                    tmp));
-            default_ptr = &bool_default;
-        }
-
-        if (default_ptr == NULL) {
-            std::string type_name = rd_type_name(rd_kw_get_data_type(rd_kw));
-            throw std::invalid_argument(fmt::format(
-                "rd_grid_grdecl_fprintf_kw: invalid type {}", type_name));
-        }
-
-        {
-            if (rd_grid->size > std::numeric_limits<int>::max())
-                throw std::out_of_range(
-                    "Size of grid overflowed max size of keyword");
-            auto tmp_kw =
-                rd_kw_ptr(rd_kw_alloc_scatter_copy(
-                              rd_kw, static_cast<int>(rd_grid->size),
-                              rd_grid->inv_index_map.data(), default_ptr),
-                          &rd_kw_free);
-            rd_kw_fprintf_grdecl(tmp_kw.get(), stream, special_header);
-        }
-    } else
-        throw std::invalid_argument(fmt::format(
-            "size mismatch: rd_kw has {} elements, must have either nx*ny*nz "
-            "= {} or nactive = {} elements",
-            src_size, rd_grid->size, rd_grid->total_active));
-}
-
 static bool rd_grid_test_lgr_consistency2(const rd_grid_type *parent,
                                           const rd_grid_type *child) {
     bool consistent = true;
@@ -5250,61 +5190,6 @@ void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
         output_unit = UnitSystem::FIELD;
 
     rd_grid_fwrite_EGRID2(grid, filename, output_unit);
-}
-
-/**
-   Writes the current grid as grdecl keywords. This function will only write the main grid and not
-   possible LGRs which are attached.
-*/
-void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
-                             UnitSystem output_unit) {
-    {
-        rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit),
-                              rd_kw_free);
-        rd_kw_fprintf_grdecl(mapunits_kw.get(), stream);
-        fprintf(stream, "\n");
-    }
-
-    if (auto mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid)) {
-        rd_kw_fprintf_grdecl(mapaxes_kw->get(), stream);
-    }
-
-    {
-        rd_kw_ptr gridunits_kw(rd_grid_alloc_gridunits_kw(output_unit),
-                               rd_kw_free);
-        rd_kw_fprintf_grdecl(gridunits_kw.get(), stream);
-        fprintf(stream, "\n");
-    }
-
-    /*
-     The specgrid header is not properly internalized; the fourth and
-     fifth elements are just set to hardcoded values.
-    */
-    {
-        int numres = 1;
-        char coord_type = 'F';
-        fprintf(stream, "%s\n", SPECGRID_KW);
-        fprintf(stream, "  %d  %d  %d  %d  %c / \n\n", grid->nx, grid->ny,
-                grid->nz, numres, coord_type);
-    }
-
-    {
-        rd_grid_assert_coord_kw(grid);
-        rd_kw_fprintf_grdecl(grid->coord_kw.get(), stream);
-        fprintf(stream, "\n");
-    }
-
-    {
-        rd_kw_ptr zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
-        rd_kw_fprintf_grdecl(zcorn_kw.get(), stream);
-        fprintf(stream, "\n");
-    }
-
-    {
-        rd_kw_ptr actnum_kw = rd_grid_alloc_actnum_kw(grid);
-        rd_kw_fprintf_grdecl(actnum_kw.get(), stream);
-        fprintf(stream, "\n");
-    }
 }
 
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid) {

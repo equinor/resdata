@@ -477,6 +477,7 @@ class ResdataKW(BaseCClass):
             if self.data_type.is_char():
                 self.str_fmt = "%8s"
             elif self.data_type.is_bool():
+                self.dtype = np.bool_
                 self.str_fmt = "%d"
             elif self.data_type.is_mess():
                 self.str_fmt = "%s"  # "Message type"
@@ -1100,17 +1101,23 @@ class ResdataKW(BaseCClass):
 
         if self.dtype is np.float64:
             ct = ctypes.c_double
+            data_ptr = self.data_ptr
         elif self.dtype is np.float32:
             ct = ctypes.c_float
+            data_ptr = self.data_ptr
         elif self.dtype is np.int32:
             ct = ctypes.c_int
+            data_ptr = self.data_ptr
+        elif self.dtype is np.bool_:
+            ct = ctypes.c_bool
+            data_ptr = ctypes.cast(_kw._bool_ptr(self), ctypes.POINTER(ct))
         else:
             raise ValueError(
-                "Invalid type - numpy array only valid for int/float/double"
+                "Invalid type - numpy array only valid for int/float/double/bool"
             )
 
         if len(self):
-            ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
+            ap = ctypes.cast(data_ptr, ctypes.POINTER(ct * len(self)))
             return np.frombuffer(ap.contents, dtype=self.dtype)
         else:
             return np.array([], dtype=self.dtype)
@@ -1138,7 +1145,11 @@ class ResdataKW(BaseCClass):
     _GRDECL_COLUMNS_BOOL = 25
     _GRDECL_COLUMNS_CHAR = 7
 
-    def write_grdecl(self, file: io.TextIOWrapper) -> None:
+    def write_grdecl(
+        self,
+        file: io.TextIOWrapper,
+        special_header=None,
+    ) -> None:
         """
         Will write keyword in GRDECL format.
 
@@ -1159,8 +1170,12 @@ class ResdataKW(BaseCClass):
             >>> poro.write_grdecl(fileH)
             >>> fileH.close()
 
+        The optional @special_header argument can be used to write the
+        keyword's data under a different header than its own name.
         """
-        file.write("%s\n" % self.name)
+        file.write(
+            "%s\n" % (special_header if special_header is not None else self.name)
+        )
 
         data_type = self.data_type
         if data_type.is_int():
