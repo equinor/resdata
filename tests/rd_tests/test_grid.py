@@ -870,7 +870,7 @@ def test_that_dual_porosity_egrid_with_lgr_roundtrips_as_grid(tmp_path):
 
 
 def test_write_grdecl(tmpdir):
-    kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_DOUBLE)
+    kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_FLOAT)
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
 
     with tmpdir.as_cwd():
@@ -969,7 +969,7 @@ ZCORN
    0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
 /
 ACTNUM
-   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   1 1 1 1
 /
 """
 

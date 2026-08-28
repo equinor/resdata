@@ -25,6 +25,7 @@ the resdata library.
 
 import ctypes
 import io
+import re
 
 import numpy as np
 from cwrap import BaseCClass
@@ -32,7 +33,71 @@ from typing_extensions import Self
 
 import resdata.resfile._kw as _kw
 from resdata import ResDataType
-from resdata.util._fd import synced_fd
+
+_GRDECL_INT_TOKEN_RE = re.compile(r"^[+-]?\d+$")
+_GRDECL_FLOAT_TOKEN_RE = re.compile(r"^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$")
+_GRDECL_MULTIPLIER_RE = re.compile(r"^(\d+)\*(.+)$")
+
+
+def _parse_grdecl_scalar(token: str, rd_type: ResDataType):
+    """Parses @token as a single scalar value of @rd_type."""
+    if rd_type.is_int():
+        if _GRDECL_INT_TOKEN_RE.match(token):
+            return int(token)
+    else:
+        if _GRDECL_FLOAT_TOKEN_RE.match(token):
+            return float(token)
+    return None
+
+
+def _parse_grdecl_token(token: str, rd_type: ResDataType):
+    """Parses a single grdecl data token, which is either a plain value or
+    a "N*VALUE" multiplier. Returns a list of the resulting value(s)
+    (length 1 for a plain value, N for a
+    multiplier), or None if @token is not valid.
+    """
+    match = _GRDECL_MULTIPLIER_RE.match(token)
+    if match:
+        count_str, value_str = match.groups()
+        value = _parse_grdecl_scalar(value_str, rd_type)
+        if value is None:
+            return None
+        count = int(count_str)
+        if count <= 0:
+            return None
+        return [value] * count
+
+    value = _parse_grdecl_scalar(token, rd_type)
+    if value is None:
+        return None
+    return [value]
+
+
+class _GrdeclTokenizer:
+    """Whitespace tokenizer used by read_grdecl() to walk the
+    data section of a grdecl keyword.
+
+    Tokens are handed out from lines read via readline(), one line at a
+    time - like _fseek_grdecl_forward(), this only ever moves forward
+    through the file (via readline()/tell()/seek()), never backward.
+    """
+
+    def __init__(self, fileH: io.TextIOWrapper):
+        self._fileH = fileH
+        self._pending: list[str] = []
+
+    def next_token(self):
+        """Returns the next whitespace-delimited token, or None at EOF."""
+        while not self._pending:
+            line = self._fileH.readline()
+            if not line:
+                return None
+            self._pending = line.split()[::-1]
+        return self._pending.pop()
+
+    def discard_rest_of_line(self):
+        """Discards any remaining tokens buffered from the current line."""
+        self._pending = []
 
 
 def _grdecl_write_tokens(file, tokens, blocksize, columns):
@@ -227,12 +292,45 @@ class ResdataKW(BaseCClass):
                 % (rd_type.type_name, kw)
             )
 
-        with synced_fd(fileH) as fd:
-            return cls._load_grdecl(fd, kw, strict, rd_type)
+        if kw:
+            if not cls.fseek_grdecl(fileH, kw, rewind=True):
+                raise ValueError(f"Could not find keyword:{kw} in file")
 
-    @classmethod
-    def _load_grdecl(cls, cfile, kw, strict, rd_type):
-        return cls.createPythonObject(_kw._load_grdecl(cfile, kw, strict, rd_type))
+        tokenizer = _GrdeclTokenizer(fileH)
+        header = tokenizer.next_token()
+        if header is None:
+            raise ValueError("Could not find any keyword in file")
+
+        values = cls._read_grdecl_values(tokenizer, header, rd_type, strict)
+
+        result = ResdataKW(header, len(values), rd_type)
+        if values:
+            result.numpy_view()[:] = values
+        return result
+
+    @staticmethod
+    def _read_grdecl_values(tokenizer: _GrdeclTokenizer, header, rd_type, strict):
+        values = []
+        while True:
+            token = tokenizer.next_token()
+            if token is None or token == "/":
+                break
+
+            if token == "--":
+                tokenizer.discard_rest_of_line()
+                continue
+
+            parsed = _parse_grdecl_token(token, rd_type)
+            if parsed is None:
+                if strict:
+                    raise ValueError(
+                        f'Malformed content:"{token}" when reading keyword:{header}'
+                    )
+                continue
+
+            values.extend(parsed)
+
+        return values
 
     @classmethod
     def fseek_grdecl(cls, fileH: io.TextIOWrapper, kw, rewind=False):

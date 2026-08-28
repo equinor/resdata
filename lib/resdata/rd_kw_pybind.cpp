@@ -141,19 +141,6 @@ PYBIND11_MODULE(_kw, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 
-    m.def(
-        "_load_grdecl",
-        [](int fd, std::optional<std::string> kw, bool strict,
-           py::handle data_type) {
-            FdStream stream(fd, "r");
-            auto *rd_data_type = from_cwrap<::rd_data_type>(data_type);
-            rd_kw_type *loaded = rd_kw_fscanf_alloc_grdecl(
-                stream, kw.has_value() ? kw->c_str() : nullptr, *rd_data_type,
-                0, strict);
-            stream.close();
-            return reinterpret_cast<std::uintptr_t>(loaded);
-        },
-        py::return_value_policy::reference);
     m.def("_fprintf_grdecl", [](py::handle self, int fd) {
         FdStream stream(fd, "w");
         auto *kw = from_cwrap<rd_kw_type>(self);
