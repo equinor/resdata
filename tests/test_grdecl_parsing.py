@@ -110,6 +110,22 @@ def test_that_fseek_does_not_find_keyword_before_current_position(tmp_path):
         assert not ResdataKW.fseek_grdecl(f, "PERMX")
 
 
+def test_that_fseek_finds_keyword_in_remainder_of_a_partially_consumed_line(
+    tmp_path,
+):
+    # If the current file position is mid-line, whatever remains of that
+    # line (as given by TextIOWrapper.readline()) is still considered a
+    # candidate - the implementation does not look backward to check for
+    # non-whitespace content preceding the current position. This differs
+    # from the old C implementation's byte-level backward scan, but does
+    # not occur through normal use of fseek_grdecl()/read_grdecl(), which
+    # always leave the file positioned at a line start or EOF.
+    path = write_grdecl_file(tmp_path, "MARKER PERMX\n1 2 3 /\n")
+    with open(path) as f:
+        f.read(len("MARKER"))  # Position ourselves mid-line, after MARKER.
+        assert ResdataKW.fseek_grdecl(f, "PERMX")
+
+
 def test_that_fseek_finds_keyword_when_position_is_already_at_line_start(tmp_path):
     # If the current position is already at the (whitespace-only-prefixed)
     # start of a line, that line is still a valid candidate.
