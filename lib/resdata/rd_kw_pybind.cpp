@@ -64,11 +64,80 @@ private:
     rd_type_enum m_type;
 };
 
+static py::list format_grdecl_tokens(py::object self) {
+    rd_kw_type *kw = from_cwrap<rd_kw_type>(self);
+    int size = rd_kw_get_size(kw);
+    rd_type_enum type = rd_kw_get_type(kw);
+    int string_width =
+        static_cast<int>(rd_type_get_sizeof_iotype(rd_kw_get_data_type(kw)));
+
+    py::list tokens(size);
+    switch (type) {
+    case RD_INT_TYPE: {
+        char buf[32];
+        for (int i = 0; i < size; i++) {
+            size_t len = rd::format_kw_element_buf(buf, sizeof(buf),
+                                                   rd_kw_iget_int(kw, i));
+            tokens[i] = py::str(buf, len);
+        }
+        break;
+    }
+    case RD_FLOAT_TYPE: {
+        char buf[48];
+        for (int i = 0; i < size; i++) {
+            size_t len = rd::format_kw_element_buf(buf, sizeof(buf),
+                                                   rd_kw_iget_float(kw, i));
+            tokens[i] = py::str(buf, len);
+        }
+        break;
+    }
+    case RD_DOUBLE_TYPE: {
+        char buf[48];
+        for (int i = 0; i < size; i++) {
+            size_t len = rd::format_kw_element_buf(buf, sizeof(buf),
+                                                   rd_kw_iget_double(kw, i));
+            tokens[i] = py::str(buf, len);
+        }
+        break;
+    }
+    case RD_BOOL_TYPE:
+        for (int i = 0; i < size; i++)
+            tokens[i] =
+                rd_kw_iget_bool(kw, i) ? py::str("  T") : py::str("  F");
+        break;
+    case RD_CHAR_TYPE: {
+        const std::string fmt = rd::format_kw_element_fmt(8);
+        std::vector<char> buf(8 + 4);
+        for (int i = 0; i < size; i++) {
+            size_t len = rd::format_kw_element_buf(
+                buf.data(), buf.size(), rd_kw_iget_char_ptr(kw, i), fmt);
+            tokens[i] = py::str(buf.data(), len);
+        }
+        break;
+    }
+    case RD_STRING_TYPE: {
+        const std::string fmt = rd::format_kw_element_fmt(string_width);
+        std::vector<char> buf(static_cast<size_t>(string_width) + 4);
+        for (int i = 0; i < size; i++) {
+            size_t len = rd::format_kw_element_buf(
+                buf.data(), buf.size(), rd_kw_iget_string_ptr(kw, i), fmt);
+            tokens[i] = py::str(buf.data(), len);
+        }
+        break;
+    }
+    default:
+        throw std::invalid_argument(
+            "ResdataKW formatted iteration not supported for this type");
+    }
+    return tokens;
+}
+
 PYBIND11_MODULE(_kw, m) {
     py::class_<KwIterator>(m, "_KwIterator")
         .def("__iter__", [](KwIterator &it) -> KwIterator & { return it; })
         .def("__next__", &KwIterator::next);
     m.def("_iter", [](py::object self) { return KwIterator(std::move(self)); });
+    m.def("_format_grdecl_tokens", &format_grdecl_tokens);
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 

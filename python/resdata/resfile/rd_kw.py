@@ -35,6 +35,20 @@ from resdata import ResDataType
 from resdata.util._fd import synced_fd
 
 
+def _grdecl_write_tokens(file, tokens, blocksize, columns):
+    """Write fixed-width formatted strings, one per element.
+
+    Output is wrapped into lines of @columns tokens each, with an additional
+    forced line break every @blocksize elements.
+    """
+    for block_start in range(0, len(tokens), blocksize):
+        block = tokens[block_start : block_start + blocksize]
+        file.writelines(
+            "".join(block[row_start : row_start + columns]) + "\n"
+            for row_start in range(0, len(block), columns)
+        )
+
+
 class ResdataKW(BaseCClass):
     """
     The ResdataKW class contains the information from one keyword.
@@ -971,6 +985,14 @@ class ResdataKW(BaseCClass):
     def fwrite(self, fortio):
         _kw._fwrite(self, fortio)
 
+    _GRDECL_BLOCKSIZE_NUMERIC = 1000
+    _GRDECL_BLOCKSIZE_CHAR = 105
+    _GRDECL_COLUMNS_INT = 6
+    _GRDECL_COLUMNS_FLOAT = 4
+    _GRDECL_COLUMNS_DOUBLE = 3
+    _GRDECL_COLUMNS_BOOL = 25
+    _GRDECL_COLUMNS_CHAR = 7
+
     def write_grdecl(self, file: io.TextIOWrapper) -> None:
         """
         Will write keyword in GRDECL format.
@@ -993,8 +1015,32 @@ class ResdataKW(BaseCClass):
             >>> fileH.close()
 
         """
-        with synced_fd(file) as fd:
-            _kw._fprintf_grdecl(self, fd)
+        file.write("%s\n" % self.name)
+
+        data_type = self.data_type
+        if data_type.is_int():
+            blocksize = self._GRDECL_BLOCKSIZE_NUMERIC
+            columns = self._GRDECL_COLUMNS_INT
+        elif data_type.is_float():
+            blocksize = self._GRDECL_BLOCKSIZE_NUMERIC
+            columns = self._GRDECL_COLUMNS_FLOAT
+        elif data_type.is_double():
+            blocksize = self._GRDECL_BLOCKSIZE_NUMERIC
+            columns = self._GRDECL_COLUMNS_DOUBLE
+        elif data_type.is_bool():
+            blocksize = self._GRDECL_BLOCKSIZE_NUMERIC
+            columns = self._GRDECL_COLUMNS_BOOL
+        elif data_type.is_char() or data_type.is_string():
+            blocksize = self._GRDECL_BLOCKSIZE_CHAR
+            columns = self._GRDECL_COLUMNS_CHAR
+        else:
+            raise ValueError(
+                "Internal inconsistency: message type keywords should not have data"
+            )
+
+        _grdecl_write_tokens(file, _kw._format_grdecl_tokens(self), blocksize, columns)
+
+        file.write("/\n")
 
     def fprintf_data(self, file: io.TextIOWrapper, fmt=None):
         """

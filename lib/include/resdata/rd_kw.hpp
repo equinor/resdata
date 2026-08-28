@@ -2,9 +2,12 @@
 #include <cstdlib>
 #include <cstdio>
 #include <climits>
+#include <cmath>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <ert/util/type_macros.hpp>
@@ -47,6 +50,99 @@ size_t rd_kw_fortio_size(const rd_kw_type *rd_kw);
 void *rd_kw_get_ptr(const rd_kw_type *rd_kw);
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data);
 void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio);
+
+namespace rd {
+/** Normalizes @x to a mantissa with absolute value in [0.1, 1.0) and a
+ base-10 exponent, i.e. `x == mantissa * 10**exponent`. This matches
+ Fortran's 'D'/'E' formatted output, which differs from the C/printf
+ convention of a mantissa in [1.0, 10.0). */
+inline std::tuple<double, int> normalize_scientific(double x) {
+    double pow_x = std::ceil(std::log10(std::fabs(x)));
+    double arg_x = x / std::pow(10.0, pow_x);
+    if (x != 0.0) {
+        if (std::fabs(arg_x) == 1.0) {
+            arg_x *= 0.10;
+            pow_x += 1;
+        }
+    } else {
+        arg_x = 0.0;
+        pow_x = 0.0;
+    }
+    return {arg_x, static_cast<int>(pow_x)};
+}
+
+inline size_t format_kw_element_buf(char *buf, size_t buf_size, int value) {
+    int written = std::snprintf(buf, buf_size, " %11d", value);
+    if (written < 0)
+        throw std::runtime_error(
+            "snprintf failed formatting int rd_kw element");
+    return static_cast<size_t>(written);
+}
+
+inline size_t format_kw_element_buf(char *buf, size_t buf_size, float value) {
+    auto [mantissa, exponent] = normalize_scientific(value);
+    int written =
+        std::snprintf(buf, buf_size, "  %11.8fE%+03d", mantissa, exponent);
+    if (written < 0)
+        throw std::runtime_error(
+            "snprintf failed formatting float rd_kw element");
+    return static_cast<size_t>(written);
+}
+
+inline size_t format_kw_element_buf(char *buf, size_t buf_size, double value) {
+    auto [mantissa, exponent] = normalize_scientific(value);
+    int written =
+        std::snprintf(buf, buf_size, "  %17.14fD%+03d", mantissa, exponent);
+    if (written < 0)
+        throw std::runtime_error(
+            "snprintf failed formatting double rd_kw element");
+    return static_cast<size_t>(written);
+}
+
+inline std::string format_kw_element_fmt(int width) {
+    return " '%-" + std::to_string(width) + "s'";
+}
+
+inline size_t format_kw_element_buf(char *buf, size_t buf_size,
+                                    const char *value, const std::string &fmt) {
+    int written = std::snprintf(buf, buf_size, fmt.c_str(), value);
+    if (written < 0)
+        throw std::runtime_error(
+            "snprintf failed formatting char/string rd_kw element");
+    return static_cast<size_t>(written);
+}
+
+inline std::string format_kw_element(int value) {
+    char buffer[32];
+    size_t len = format_kw_element_buf(buffer, sizeof(buffer), value);
+    return std::string(buffer, len);
+}
+
+inline std::string format_kw_element(bool value) {
+    return value ? "  T" : "  F";
+}
+
+inline std::string format_kw_element(float value) {
+    char buffer[48];
+    size_t len = format_kw_element_buf(buffer, sizeof(buffer), value);
+    return std::string(buffer, len);
+}
+
+inline std::string format_kw_element(double value) {
+    char buffer[48];
+    size_t len = format_kw_element_buf(buffer, sizeof(buffer), value);
+    return std::string(buffer, len);
+}
+
+inline std::string format_kw_element(const char *value, int width = 8) {
+    std::vector<char> buffer(static_cast<size_t>(width) + 4);
+    const std::string fmt = format_kw_element_fmt(width);
+    size_t len =
+        format_kw_element_buf(buffer.data(), buffer.size(), value, fmt);
+    return std::string(buffer.data(), len);
+}
+} // namespace rd
+
 bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
 rd_data_type rd_kw_get_data_type(const rd_kw_type *);
 const char *rd_kw_get_header(const rd_kw_type *rd_kw);
