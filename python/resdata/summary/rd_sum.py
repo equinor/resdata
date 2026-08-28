@@ -9,6 +9,7 @@ resdata/src directory.
 from __future__ import annotations
 
 import datetime
+import math
 import os.path
 import re
 from io import TextIOWrapper
@@ -27,7 +28,6 @@ from dateutil.relativedelta import relativedelta
 
 import resdata.summary._rd_sum as _rd_sum
 from resdata import FileMode, UnitSystem
-from resdata.util._fd import synced_fd
 from resdata.util.util import CTime, TimeLike
 
 from .rd_smspec_node import ResdataSMSPECNode
@@ -1406,9 +1406,8 @@ class Summary(BaseCClass):
         Will dump a csv formatted line of the keywords in keywords, evaluated
         at the interpolated time.
         """
-        ctime = CTime(time)
-        with synced_fd(pfile) as fd:
-            _rd_sum._dump_csv_line(self, ctime.ctime(), keywords, fd)
+        values = self.get_interp_row(keywords, time, invalid_value=math.nan)
+        pfile.write(",".join("" if math.isnan(v) else "%f" % v for v in values))
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
         """Will create a CSV file with summary data.

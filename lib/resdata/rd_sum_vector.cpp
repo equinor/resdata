@@ -73,7 +73,7 @@ static void rd_sum_vector_add_invalid_key(rd_sum_vector_type *vector,
   @rd_sum an entry marked as *invalid* will be added. The whole point about
   this function is to ensure that calls to:
 
-       rd_sum_fwrite_interp_csv_line( )
+       rd_sum_get_interp_vector( )
 
   will result in nicely aligned output even if the different summary cases do
   not have the exact same keys.
