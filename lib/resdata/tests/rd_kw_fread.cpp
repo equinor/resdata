@@ -8,7 +8,6 @@
 
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
@@ -76,26 +75,6 @@ void test_kw_io_charlength() {
 
         {
             test_assert_false(util_file_exists("TEST1"));
-        }
-
-        {
-            FILE *file = util_fopen("TEST2", "w");
-            rd_kw_fprintf_grdecl(rd_kw_out1, file);
-            fclose(file);
-        }
-
-        {
-            FILE *file = util_fopen("TEST2", "r");
-            rd_kw_type *rd_kw_in =
-                rd_kw_fscanf_alloc_grdecl(file, KW1, RD_FLOAT, -1);
-            test_assert_string_equal(KW1, rd_kw_get_header(rd_kw_in));
-            test_assert_int_equal(5, rd_kw_get_size(rd_kw_in));
-
-            test_assert_double_equal(rd_kw_iget_as_double(rd_kw_in, 0), 0.0);
-            test_assert_double_equal(rd_kw_iget_as_double(rd_kw_in, 4), 6.0);
-
-            rd_kw_free(rd_kw_in);
-            fclose(file);
         }
 
         rd_kw_free(rd_kw_out0);

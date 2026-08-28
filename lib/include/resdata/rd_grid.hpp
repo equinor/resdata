@@ -141,10 +141,6 @@ const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, int lgr_nr);
 
 double rd_grid_get_property(const rd_grid_type *rd_grid,
                             const rd_kw_type *rd_kw, int i, int j, int k);
-void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
-                               const rd_kw_type *rd_kw,
-                               const char *special_header, FILE *stream,
-                               double double_default);
 bool rd_grid_test_lgr_consistency(const rd_grid_type *rd_grid);
 
 void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
@@ -154,9 +150,6 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
 
 void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
                           UnitSystem output_unit);
-
-void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
-                             UnitSystem output_unit);
 
 int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c);
 

@@ -399,12 +399,25 @@ class KWTest(ResdataTest):
 
         for rd_type in [
             ResDataType.RD_CHAR,
-            ResDataType.RD_BOOL,
             ResDataType.RD_STRING(19),
         ]:
             kw2 = ResdataKW("TEST_KW", 10, rd_type)
             with self.assertRaises(ValueError):
                 kw2.numpy_view()
+
+        kw3 = ResdataKW("BOOL_KW", 10, ResDataType.RD_BOOL)
+        for i in range(len(kw3)):
+            kw3[i] = i % 2 == 0
+
+        bool_view = kw3.numpy_view()
+        bool_copy = kw3.numpy_copy()
+        self.assertTrue(np.array_equal(bool_view, bool_copy))
+        for i in range(len(kw3)):
+            self.assertEqual(bool(bool_view[i]), kw3[i])
+
+        kw3[0] = not kw3[0]
+        self.assertEqual(bool(bool_view[0]), kw3[0])
+        self.assertNotEqual(bool_copy[0], kw3[0])
 
     def test_slice(self):
         N = 100
