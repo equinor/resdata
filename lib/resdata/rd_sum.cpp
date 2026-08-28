@@ -632,13 +632,6 @@ rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
                                          key_words, missing_value);
 }
 
-void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
-                                   const rd_sum_vector_type *key_words,
-                                   FILE *fp) {
-    rd_sum_data_fwrite_interp_csv_line(rd_sum->data.get(), sim_time, key_words,
-                                       fp);
-}
-
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
                                             time_t sim_time, const char *var) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, var);
