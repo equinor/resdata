@@ -218,7 +218,7 @@ def test_that_load_column_with_wrong_type_kw_raises_type_error(
         rectangular_grid.load_column(bad_kw, 0, 0)
 
 
-def test_that_fwrite_grdecl_with_invalid_bool_default_raises_value_error(
+def test_that_write_grdecl_with_truthy_bool_default_fills_inactive_cells_true(
     grid_with_inactive_cells, tmp_path
 ):
     grid, _ = grid_with_inactive_cells
@@ -226,18 +226,18 @@ def test_that_fwrite_grdecl_with_invalid_bool_default_raises_value_error(
     bool_kw = ResdataKW("BOOLKW", nactive, ResDataType.RD_BOOL)
     out = tmp_path / "BOOL_OUT.GRDECL"
     with open(str(out), "w") as f:
-        with pytest.raises(ValueError, match="bool interpolation"):
-            _grid._fwrite_grdecl(grid, bool_kw, None, f.fileno(), 5.0)
+        grid.write_grdecl(bool_kw, f, default_value=5.0)
+    assert " T " in out.read_text()
 
 
-def test_that_fwrite_grdecl_with_mismatched_kw_size_raises_value_error(
+def test_that_write_grdecl_with_mismatched_kw_size_raises_value_error(
     rectangular_grid, tmp_path
 ):
     bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
     out = tmp_path / "BAD_OUT.GRDECL"
     with open(str(out), "w") as f:
-        with pytest.raises(ValueError, match="size mismatch"):
-            _grid._fwrite_grdecl(rectangular_grid, bad_kw, None, f.fileno(), 0.0)
+        with pytest.raises(ValueError, match="invalid size"):
+            rectangular_grid.write_grdecl(bad_kw, f, default_value=0.0)
 
 
 def test_that_compressed_kw_copy_with_mismatched_sizes_raises_value_error(

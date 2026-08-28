@@ -13,7 +13,6 @@
 #include <fmt/format.h>
 
 #include <resdata/rd_kw.hpp>
-#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/FortIO.hpp>
 
@@ -141,13 +140,6 @@ PYBIND11_MODULE(_kw, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_kw.py and rd_kw.cpp";
 
-    m.def("_fprintf_grdecl", [](py::handle self, int fd) {
-        FdStream stream(fd, "w");
-        auto *kw = from_cwrap<rd_kw_type>(self);
-        rd_kw_fprintf_grdecl(kw, stream);
-        stream.close();
-    });
-
     m.def(
         "_alloc_new",
         [](std::string name, int size, py::handle data_type) {
@@ -248,6 +240,13 @@ PYBIND11_MODULE(_kw, m) {
         [](py::handle self) {
             return reinterpret_cast<std::uintptr_t>(
                 rd_kw_get_double_ptr(from_cwrap<rd_kw_type>(self)));
+        },
+        py::return_value_policy::reference);
+    m.def(
+        "_bool_ptr",
+        [](py::handle self) {
+            return reinterpret_cast<std::uintptr_t>(
+                rd_kw_get_bool_ptr(from_cwrap<rd_kw_type>(self)));
         },
         py::return_value_policy::reference);
     m.def("_free",

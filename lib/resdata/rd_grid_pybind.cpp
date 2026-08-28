@@ -216,20 +216,6 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_get_depth", [](py::handle self, int index) {
         return rd_grid_get_cdepth1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_fwrite_grdecl", [](py::handle self, py::handle kw,
-                               std::optional<std::string> header, int file,
-                               double default_value) {
-        FdStream stream(file, "w");
-        if (header.has_value())
-            rd_grid_grdecl_fprintf_kw(from_cwrap<rd_grid_type>(self),
-                                      from_cwrap<rd_kw_type>(kw),
-                                      header->c_str(), stream, default_value);
-        else
-            rd_grid_grdecl_fprintf_kw(from_cwrap<rd_grid_type>(self),
-                                      from_cwrap<rd_kw_type>(kw), nullptr,
-                                      stream, default_value);
-        stream.close();
-    });
     m.def("_load_column", [](py::handle self, py::handle kw, int i, int j) {
         return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
                                            from_cwrap<rd_kw_type>(kw), i, j);
@@ -261,13 +247,6 @@ PYBIND11_MODULE(_grid, m) {
                              &dx, &dy, &dz);
         return std::make_tuple(dx, dy, dz);
     });
-    m.def("_fprintf_grdecl2",
-          [](py::handle self, int file, UnitSystem rd_unit) {
-              FdStream stream(file, "w");
-              rd_grid_fprintf_grdecl2(from_cwrap<rd_grid_type>(self), stream,
-                                      rd_unit);
-              stream.close();
-          });
     m.def("_fwrite_GRID2",
           [](py::handle self, std::string filename, UnitSystem rd_unit) {
               rd_grid_fwrite_GRID2(from_cwrap<rd_grid_type>(self),
