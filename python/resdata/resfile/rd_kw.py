@@ -258,9 +258,56 @@ class ResdataKW(BaseCClass):
         the file and forwards, if the optional argument @rewind is
         true the function rewind to the beginning of the file and
         search from there after the initial search.
+
+        The function rewinds to the start position when returning False
+        and leaves the position at the start of the kw (after leading whitespace)
+        if found. When using with rewind=False, the stream has to either
+        be at the start of a line or in one of those two positions to work
+        correctly, it will not take any previous context of the file pointer
+        into account.
         """
-        with synced_fd(fileH) as fd:
-            return _kw._fseek_grdecl(kw, rewind, fd)
+        start_pos = fileH.tell()
+        if cls._fseek_grdecl_forward(fileH, kw):
+            return True
+
+        if rewind:
+            fileH.seek(0)
+            if cls._fseek_grdecl_forward(fileH, kw):
+                return True
+
+        fileH.seek(start_pos)
+        return False
+
+    @staticmethod
+    def _fseek_grdecl_forward(fileH: io.TextIOWrapper, kw) -> bool:
+        """
+        Searches from the current position of @fileH to EOF for @kw,
+        leaving the file positioned at the start of @kw on success, and
+        at EOF on failure.
+
+        Only the first whitespace-delimited token of a line is ever
+        considered a candidate keyword; if it does not match, the rest of
+        the line is discarded. Lines whose first token starts with "--"
+        are comments and are skipped, as are blank lines.
+        """
+        while True:
+            line_start = fileH.tell()
+            line = fileH.readline()
+            if not line:
+                return False  # EOF
+
+            stripped = line.lstrip()
+            if not stripped:
+                continue  # Blank line.
+
+            token = stripped.split(None, 1)[0]
+            if token.startswith("--"):
+                continue  # Comment line.
+
+            if token == kw:
+                fileH.seek(line_start)
+                fileH.read(len(line) - len(stripped))
+                return True
 
     @classmethod
     def fread(cls, fortio):

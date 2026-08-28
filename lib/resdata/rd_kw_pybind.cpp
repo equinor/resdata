@@ -160,12 +160,6 @@ PYBIND11_MODULE(_kw, m) {
         rd_kw_fprintf_grdecl(kw, stream);
         stream.close();
     });
-    m.def("_fseek_grdecl", [](std::string name, bool rewind, int fd) {
-        FdStream stream(fd, "r");
-        bool found = rd_kw_grdecl_fseek_kw(name.c_str(), rewind, stream);
-        stream.close();
-        return found;
-    });
 
     m.def(
         "_alloc_new",
