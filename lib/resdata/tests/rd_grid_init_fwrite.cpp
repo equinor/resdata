@@ -1,11 +1,10 @@
-#include <cstdlib>
-
 #include <ios>
+#include <string>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_util.hpp>
@@ -14,7 +13,6 @@
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
-#include <string>
 
 static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
                                  UnitSystem output_unit) {
@@ -111,10 +109,9 @@ rd_grid_ptr create_grid() {
     int nx = 10;
     int ny = 10;
     int nz = 8;
-    auto actnum = make_int_vector(nx * ny * nz, 1);
+    std::vector<int> actnum(nx * ny * nz, 1);
 
-    return make_rectangular_grid(nx, ny, nz, 1, 1, 1,
-                                 int_vector_get_ptr(actnum.get()));
+    return make_rectangular_grid(nx, ny, nz, 1, 1, 1, actnum.data());
 }
 
 int main(int argc, char **argv) {
