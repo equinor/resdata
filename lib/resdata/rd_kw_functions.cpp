@@ -24,28 +24,25 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
     int i, j, k;
     int *data = (int *)rd_kw_get_ptr(rd_kw);
 
-    auto undetermined1 = make_int_vector(0, 0);
-    auto undetermined2 = make_int_vector(0, 0);
+    auto undetermined1 = std::make_unique<std::vector<int>>();
+    auto undetermined2 = std::make_unique<std::vector<int>>();
 
     for (k = 0; k < nz; k++) {
-        int_vector_reset(undetermined1.get());
+        undetermined1->clear();
         for (j = 0; j < ny; j++) {
             for (i = 0; i < nx; i++) {
                 int g0 = i + j * nx + k * nx * ny;
 
                 if (data[g0] == 0 && actnum[g0])
-                    int_vector_append(undetermined1.get(), g0);
+                    undetermined1->push_back(g0);
             }
         }
 
         while (true) {
-            int index;
             bool finished = true;
 
-            int_vector_reset(undetermined2.get());
-            for (index = 0; index < int_vector_size(undetermined1.get());
-                 index++) {
-                int g0 = int_vector_iget(undetermined1.get(), index);
+            undetermined2->clear();
+            for (auto g0 : *undetermined1) {
                 int j = (g0 - k * nx * ny) / nx;
                 int i = g0 - k * nx * ny - j * nx;
 
@@ -112,11 +109,11 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
                         }
                     }
                     if ((n1 + n2 + n3 + n4) == 0)
-                        int_vector_append(undetermined2.get(), g0);
+                        undetermined2->push_back(g0);
                 }
             }
             undetermined1.swap(undetermined2);
-            if (finished || (int_vector_size(undetermined1.get()) == 0))
+            if (finished || undetermined1->empty())
                 break;
         }
     }
