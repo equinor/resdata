@@ -26,7 +26,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/stringlist.hpp>
 #include <ert/util/parser.hpp>
 
 #include <resdata/rd_util.hpp>
@@ -55,6 +54,7 @@
 #define RD_RFT_UFMT_PATTERN "RFT"
 
 namespace fs = std::filesystem;
+typedef bool(file_pred_ftype)(const char *, const void *);
 
 const char *rd_get_phase_name(Phase phase) {
     switch (phase) {
@@ -797,17 +797,16 @@ time_t rd_get_start_date(const char *data_file) {
     }
 
     {
-        stringlist_type *tokens =
+        std::vector<std::string> tokens =
             basic_parser_tokenize_buffer(parser.get(), buffer.data(), true);
         int day, year, month_nr;
-        if (util_sscanf_int(stringlist_iget(tokens, 0), &day) &&
-            util_sscanf_int(stringlist_iget(tokens, 2), &year)) {
-            month_nr = rd_get_month_nr(stringlist_iget(tokens, 1));
+        if (util_sscanf_int(tokens.at(0).c_str(), &day) &&
+            util_sscanf_int(tokens.at(2).c_str(), &year)) {
+            month_nr = rd_get_month_nr(tokens.at(1).c_str());
             start_date = rd_make_date(day, month_nr, year);
         } else
             util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",
                        __func__, buffer.data());
-        stringlist_free(tokens);
     }
 
     return start_date;
@@ -831,21 +830,19 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
     util_fread(buffer.data(), sizeof(char), buffer_size, stream, __func__);
 
     {
-        stringlist_type *tokens =
+        std::vector<std::string> tokens =
             basic_parser_tokenize_buffer(parser, buffer.data(), true);
 
-        if (stringlist_get_size(tokens) > 0) {
-            const char *num_cpu_string = stringlist_iget(tokens, 0);
-            if (!util_sscanf_int(num_cpu_string, &num_cpu))
+        if (tokens.size() > 0) {
+            const std::string &num_cpu_string = tokens.at(0);
+            if (!util_sscanf_int(num_cpu_string.c_str(), &num_cpu))
                 fprintf(stderr,
                         "** Warning: failed to interpret:%s as integer - "
                         "assuming one CPU\n",
-                        num_cpu_string);
+                        num_cpu_string.c_str());
         } else
             fprintf(stderr, "** Warning: failed to load data for PARALLEL "
                             "keyword - assuming one CPU\n");
-
-        stringlist_free(tokens);
     }
     return num_cpu;
 }
@@ -868,29 +865,26 @@ static int rd_get_num_slave_cpu__(basic_parser_type *parser, FILE *stream,
                        __func__);
 
         {
-            stringlist_type *tokens =
+            std::vector<std::string> tokens =
                 basic_parser_tokenize_buffer(parser, buffer, true);
-            if (stringlist_get_size(tokens) > 0) {
+            if (tokens.size() > 0) {
 
-                const char *first_item = stringlist_iget(tokens, 0);
+                const std::string &first_item = tokens.at(0);
 
                 if (first_item[0] == '/') {
-                    stringlist_free(tokens);
                     free(buffer);
                     break;
                 } else {
-                    int no_of_tokens = stringlist_get_size(tokens);
+                    size_t no_of_tokens = tokens.size();
                     int no_of_slaves = 0;
                     if (no_of_tokens == 6 &&
-                        util_sscanf_int(stringlist_iget(tokens, 4),
-                                        &no_of_slaves)) {
+                        util_sscanf_int(tokens.at(4).c_str(), &no_of_slaves)) {
                         num_cpu += no_of_slaves;
                     } else {
                         ++num_cpu;
                     }
                 }
             }
-            stringlist_free(tokens);
         }
 
         free(buffer);

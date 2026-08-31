@@ -3,8 +3,8 @@
 
 #include <memory>
 #include <string_view>
-
-#include <ert/util/stringlist.hpp>
+#include <vector>
+#include <string>
 
 typedef struct basic_parser_struct basic_parser_type;
 
@@ -112,9 +112,9 @@ basic_parser_type *basic_parser_alloc(
 
 void basic_parser_free(basic_parser_type *parser);
 
-stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
-                                              const char *buffer,
-                                              bool strip_quote_marks);
+std::vector<std::string>
+basic_parser_tokenize_buffer(const basic_parser_type *parser,
+                             const char *buffer, bool strip_quote_marks);
 
 bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
                                const std::string_view string, bool skip_string,

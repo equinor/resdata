@@ -25,7 +25,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_util.hpp>

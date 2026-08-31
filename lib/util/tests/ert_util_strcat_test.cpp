@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <ert/util/vector.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
