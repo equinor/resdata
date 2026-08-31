@@ -360,11 +360,11 @@ namespace fs = std::filesystem;
                 nnc_info_iget_vector(nnc_info, lgr_index);
             int lgr_nr = nnc_vector_get_lgr_nr(nnc_vector);
             if (lgr_nr != nnc_info_get_lgr_nr(nnc_info)) {
-                const int_vector_type *nnc_list =
-                    nnc_vector_get_index_list(nnc_vector);
-                for (int j = 0; j < int_vector_size(nnc_list); j++)
+                auto nnc_list =
+                    nnc_vector_get_nnc_index_list(nnc_vector);
+                for (size_t j = 0; j < nnc_list.size(); j++)
                     printf("Cell[%d] -> %d  in lgr:%d/%s \n", cell_index,
-                           int_vector_iget(nnc_list, j), lgr_nr,
+                           nnc_list[j], lgr_nr,
                            rd_grid_get_lgr_name(rd_grid, lgr_nr));
             }
         }

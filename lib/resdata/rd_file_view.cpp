@@ -75,7 +75,7 @@ rd_kw_type *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
 }
 
 void FileView::index_fload_kw(const std::string &kw, int index,
-                              const int_vector_type *index_map,
+                              const std::vector<int> &index_map,
                               char *io_buffer) {
     if (index < 0)
         throw std::invalid_argument(

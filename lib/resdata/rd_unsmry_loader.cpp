@@ -7,7 +7,6 @@
 #include <variant>
 #include <vector>
 
-#include <ert/util/int_vector.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
@@ -71,12 +70,10 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
             " PARAMS_SIZE: " + std::to_string(size));
 
     std::vector<double> data(this->length());
-    auto index_map = make_int_vector(1, pos);
     float value;
 
     for (int index = 0; index < this->length(); index++) {
-        file_view->index_fload_kw(PARAMS_KW, index, index_map.get(),
-                                  (char *)&value);
+        file_view->index_fload_kw(PARAMS_KW, index, {pos}, (char *)&value);
         data[index] = value;
     }
 
@@ -88,9 +85,8 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 
 // This is horribly inefficient
 double unsmry_loader::iget(int time_index, int params_index) const {
-    auto index_map = make_int_vector(1, params_index);
     float value;
-    file_view->index_fload_kw(PARAMS_KW, time_index, index_map.get(),
+    file_view->index_fload_kw(PARAMS_KW, time_index, {params_index},
                               (char *)&value);
     return value;
 }
@@ -102,14 +98,11 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
         util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
         return sim_time;
     } else {
-        auto index_map = make_int_vector(3, 0);
-        int_vector_iset(index_map.get(), 0, this->date_index[0]);
-        int_vector_iset(index_map.get(), 1, this->date_index[1]);
-        int_vector_iset(index_map.get(), 2, this->date_index[2]);
-
         float values[3];
-        file_view->index_fload_kw(PARAMS_KW, time_index, index_map.get(),
-                                  (char *)&values);
+        file_view->index_fload_kw(
+            PARAMS_KW, time_index,
+            {this->date_index[0], this->date_index[1], this->date_index[2]},
+            (char *)&values);
 
         return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
                             util_roundf(values[2]));

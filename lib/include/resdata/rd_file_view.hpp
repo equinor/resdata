@@ -130,7 +130,7 @@ public:
     }
 
     void index_fload_kw(const std::string &kw, int index,
-                        const int_vector_type *index_map, char *io_buffer);
+                        const std::vector<int> &index_map, char *io_buffer);
     void write(ERT::FortIO &target, size_t offset);
 
     /** Creates a FileView with keywords from @start_kw to @end_kw.
