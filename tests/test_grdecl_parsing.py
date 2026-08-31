@@ -524,3 +524,23 @@ def test_that_read_grdecl_advances_position_past_the_terminator_for_next_read(
         permx = ResdataKW.read_grdecl(f, "PERMX", rd_type=ResDataType.RD_FLOAT)
     assert list(poro.numpy_view()) == pytest.approx([0.1, 0.2, 0.3])
     assert list(permx.numpy_view()) == pytest.approx([10, 20, 30])
+
+
+def test_that_read_grdecl_with_kw_none_infers_int_type_from_file_keyword(tmp_path):
+    path = write_grdecl_file(tmp_path, "PVTNUM\n  1 2 3 /\n", "pvtnum.grdecl")
+    with open(str(path)) as fh:
+        kw = ResdataKW.read_grdecl(fh, None)
+    assert kw.name == "PVTNUM"
+    assert kw.data_type.is_int()
+    assert list(kw) == [1, 2, 3]
+
+
+def test_that_read_grdecl_with_kw_none_defaults_to_float_for_unknown_keyword(
+    tmp_path,
+):
+    path = write_grdecl_file(tmp_path, "PORO\n  0.1 0.2 0.3 /\n", "poro.grdecl")
+    with open(str(path)) as fh:
+        kw = ResdataKW.read_grdecl(fh, None)
+    assert kw.name == "PORO"
+    assert not kw.data_type.is_int()
+    assert list(kw) == pytest.approx([0.1, 0.2, 0.3])
