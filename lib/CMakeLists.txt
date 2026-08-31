@@ -9,14 +9,6 @@ endif()
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
 
-foreach(type int)
-  set(TYPE ${type})
-  set(SIGNED_TYPE true)
-  configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
-  configure_file(util/vector_template.cpp.in ${type}_vector.cpp)
-  list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
-endforeach()
-
 configure_file(build_config.hpp.in include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
@@ -29,10 +21,7 @@ add_library(
   util/util_symlink.cpp
   util/util_lfs.cpp
   util/util_unlink.cpp
-  util/vector.cpp
   util/parser.cpp
-  util/stringlist.cpp
-  util/perm_vector.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}
   resdata/rd_sum_tstep.cpp
@@ -283,8 +272,6 @@ foreach(
   ert_util_realpath
   ert_util_relpath_test
   ert_util_strcat_test
-  ert_util_stringlist_test
-  ert_util_vector_test
   ert_util_sscan_test
   test_area)
 

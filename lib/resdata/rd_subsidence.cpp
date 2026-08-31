@@ -22,7 +22,6 @@
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 
 #include "detail/resdata/rd_grid_cache.hpp"
 

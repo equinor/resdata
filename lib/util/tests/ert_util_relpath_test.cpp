@@ -2,7 +2,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#include <ert/util/vector.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 

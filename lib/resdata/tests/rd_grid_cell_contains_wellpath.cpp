@@ -1,9 +1,10 @@
+#include "ert/util/util.hpp"
+#include <cstdio>
 #include <cstdlib>
-#include <cmath>
 
 #include <ert/util/test_util.hpp>
 #include <resdata/rd_grid.hpp>
-#include <ert/util/vector.hpp>
+#include <vector>
 
 typedef struct {
     double x;
@@ -18,9 +19,10 @@ typedef struct {
     bool skip;
 } point_type;
 
-vector_type *load_expected(const rd_grid_type *grid, const char *filename) {
+std::vector<point_type> load_expected(const rd_grid_type *grid,
+                                      const char *filename) {
     FILE *stream = util_fopen(filename, "r");
-    vector_type *expected = vector_alloc_new();
+    std::vector<point_type> expected;
 
     while (true) {
         double x, y, z;
@@ -28,23 +30,23 @@ vector_type *load_expected(const rd_grid_type *grid, const char *filename) {
 
         if (fscanf(stream, "%lg %lg %lg %d %d %d %d", &x, &y, &z, &i, &j, &k,
                    &skip) == 7) {
-            point_type *p = (point_type *)util_malloc(sizeof *p);
-            p->x = x;
-            p->y = y;
-            p->z = z;
+            point_type p;
+            p.x = x;
+            p.y = y;
+            p.z = z;
 
-            p->i = i - 1;
-            p->j = j - 1;
-            p->k = k - 1;
-            p->skip = skip;
-            p->g = rd_grid_get_global_index3(grid, p->i, p->j, p->k);
-            vector_append_owned_ref(expected, p, free);
+            p.i = i - 1;
+            p.j = j - 1;
+            p.k = k - 1;
+            p.skip = skip;
+            p.g = rd_grid_get_global_index3(grid, p.i, p.j, p.k);
+            expected.push_back(p);
         } else
             break;
     }
 
     fclose(stream);
-    test_assert_int_equal(10, vector_get_size(expected));
+    test_assert_size_t_equal(10, expected.size());
     return expected;
 }
 
@@ -79,14 +81,11 @@ int main(int argc, char **argv) {
     util_install_signals();
     {
         rd_grid_ptr grid = read_grid(argv[1]);
-        vector_type *expected = load_expected(grid.get(), argv[2]);
+        auto expected = load_expected(grid.get(), argv[2]);
 
-        for (int c = 0; c < vector_get_size(expected); c++) {
-            const point_type *p =
-                (const point_type *)vector_iget_const(expected, c);
-            test_well_point(grid.get(), p);
+        for (auto &p : expected) {
+            test_well_point(grid.get(), &p);
         }
-        vector_free(expected);
     }
     exit(0);
 }
