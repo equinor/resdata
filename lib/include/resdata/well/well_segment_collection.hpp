@@ -35,7 +35,7 @@ void well_segment_collection_add_branches(
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
     const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
-    const well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
+    well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segment_information, bool *is_MSW_well);
 void well_segment_collection_add_connections(
     well_segment_collection_type *segment_collection, const char *grid_name,

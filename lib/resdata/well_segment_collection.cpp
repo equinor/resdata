@@ -13,6 +13,7 @@
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_segment_collection.hpp>
 #include <resdata/well/well_branch_collection.hpp>
+#include <resdata/well/well_rseg_loader.hpp>
 
 struct well_segment_collection_struct {
     std::vector<int> segment_index_map;
@@ -85,7 +86,7 @@ bool well_segment_collection_has_segment(
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
     const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
-    const well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
+    well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segments, bool *is_MSW_well) {
 
     int iwel_offset = rst_head.niwelz * well_nr;

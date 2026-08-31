@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>
@@ -1168,9 +1167,9 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 */
 void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                               rd_data_type data_type, int element_count,
-                              const int_vector_type *index_map,
+                              const std::vector<int> &index_map,
                               char *io_buffer) {
-    int sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
+    size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
     // For unformatted (binary) files the individual elements have a fixed
     // on-disk size, so we can seek directly to each requested element. For
@@ -1184,8 +1183,8 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
             throw std::runtime_error(fmt::format(
                 "failed to load keyword at offset:{}", (long)kw_offset));
 
-        for (int index = 0; index < int_vector_size(index_map); index++) {
-            int element_index = int_vector_iget(index_map, index);
+        for (size_t index = 0; index < index_map.size(); index++) {
+            int element_index = index_map[index];
             memcpy(&io_buffer[index * sizeof_iotype],
                    rd_kw_iget_ptr(rd_kw.get(), element_index), sizeof_iotype);
         }
@@ -1194,8 +1193,8 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
         FILE *stream = fortio.get_FILE();
         offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
-        for (int index = 0; index < int_vector_size(index_map); index++) {
-            int element_index = int_vector_iget(index_map, index);
+        for (size_t index = 0; index < index_map.size(); index++) {
+            int element_index = index_map[index];
 
             if (element_index < 0 || element_index >= element_count)
                 throw std::invalid_argument(
@@ -1210,7 +1209,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 
         if (RD_ENDIAN_FLIP)
             util_endian_flip_vector(io_buffer, sizeof_iotype,
-                                    int_vector_size(index_map));
+                                    static_cast<int>(index_map.size()));
     }
 }
 
