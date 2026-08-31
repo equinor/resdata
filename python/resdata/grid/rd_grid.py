@@ -1289,10 +1289,11 @@ class Grid(BaseCClass):
         return ResdataKW.createPythonObject(_grid._export_actnum(self))
 
     def export_mapaxes(self):
-        if not _grid._use_mapaxes(self):
+        mapaxes_ptr = _grid._export_mapaxes(self)
+        if mapaxes_ptr is None:
             return None
 
-        return ResdataKW.createPythonObject(_grid._export_mapaxes(self))
+        return ResdataKW.createPythonObject(mapaxes_ptr)
 
     @property
     def unit_system(self):

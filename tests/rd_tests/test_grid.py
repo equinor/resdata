@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import functools
+import io
 import itertools
 import os.path
 import re
@@ -1157,3 +1158,136 @@ def test_rectangular_grid_does_not_have_mapaxes():
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
     assert grid is not None
     assert grid.export_mapaxes() is None
+
+
+def _create_grid_with_mapaxes():
+    """A small rectangular grid with a (rotated/translated) MAPAXES attached."""
+    grid = GridGen.create_rectangular((2, 2, 2), (1, 1, 1))
+    mapaxes = ResdataKW("MAPAXES", 6, ResDataType.RD_FLOAT)
+    for i, value in enumerate([10.0, 20.0, 10.0, 10.0, 20.0, 10.0]):
+        mapaxes[i] = value
+    return Grid.create(
+        (grid.get_nx(), grid.get_ny(), grid.get_nz()),
+        grid.export_zcorn(),
+        grid.export_coord(),
+        grid.export_actnum(),
+        mapaxes,
+    )
+
+
+@pytest.mark.parametrize("save_method_name", ["save_GRID", "save_EGRID"])
+@pytest.mark.parametrize("apply_mapaxes", [True, False])
+def test_that_export_mapaxes_does_not_depend_on_apply_mapaxes(
+    tmp_path, save_method_name, apply_mapaxes
+):
+    """export_mapaxes() should reflect whether MAPAXES data is internalized,
+    not whether the mapaxes transformation is applied to the coordinates."""
+    grid = _create_grid_with_mapaxes()
+    filename = tmp_path / f"CASE.{save_method_name[len('save_') :]}"
+    getattr(grid, save_method_name)(str(filename))
+
+    loaded = Grid(str(filename), apply_mapaxes=apply_mapaxes)
+
+    assert loaded.export_mapaxes().numpy_view().tolist() == [
+        10.0,
+        20.0,
+        10.0,
+        10.0,
+        20.0,
+        10.0,
+    ]
+
+
+@pytest.mark.parametrize("save_method_name", ["save_GRID", "save_EGRID"])
+def test_that_apply_mapaxes_false_still_skips_the_coordinate_transformation(
+    tmp_path, save_method_name
+):
+    untransformed_reference = GridGen.create_rectangular((2, 2, 2), (1, 1, 1))
+    grid = _create_grid_with_mapaxes()
+    filename = tmp_path / f"CASE.{save_method_name[len('save_') :]}"
+    getattr(grid, save_method_name)(str(filename))
+
+    transformed = Grid(str(filename), apply_mapaxes=True)
+    untransformed = Grid(str(filename), apply_mapaxes=False)
+
+    assert transformed.get_xyz(global_index=0) == (10.5, 10.5, 0.5)
+    assert untransformed.get_xyz(global_index=0) == (0.5, 0.5, 0.5)
+    assert untransformed.export_mapaxes().numpy_view().tolist() == [
+        10.0,
+        20.0,
+        10.0,
+        10.0,
+        20.0,
+        10.0,
+    ]
+
+
+@pytest.mark.parametrize("source_format", ["GRID", "EGRID"])
+@pytest.mark.parametrize("apply_mapaxes", [True, False])
+def test_that_saving_grdecl_after_loading_with_apply_mapaxes_false_keeps_mapaxes(
+    tmp_path, source_format, apply_mapaxes
+):
+    grid = _create_grid_with_mapaxes()
+    filename = tmp_path / f"CASE.F{source_format}"
+    save_method = grid.save_GRID if source_format == "GRID" else grid.save_EGRID
+    save_method(str(filename))
+
+    with_mapaxes = Grid(str(filename), apply_mapaxes=apply_mapaxes)
+
+    grdecl_file = tmp_path / "CASE.GRDECL"
+    with grdecl_file.open("w") as f:
+        with_mapaxes.save_grdecl(f)
+
+    assert "MAPAXES" in grdecl_file.read_text()
+
+    reloaded_with_mapaxes = Grid.load_from_grdecl(grdecl_file)
+
+    coord1 = grid.export_coord()
+    coord2 = with_mapaxes.export_coord()
+    coord3 = reloaded_with_mapaxes.export_coord()
+
+    np.testing.assert_allclose(
+        coord1.numpy_view(),
+        coord2.numpy_view(),
+        atol=1e-10,
+    )
+
+    np.testing.assert_allclose(
+        coord1.numpy_view(),
+        coord3.numpy_view(),
+        atol=1e-10,
+    )
+
+
+@pytest.mark.parametrize("source_format", ["GRID", "EGRID"])
+def test_that_saving_grid_after_loading_with_apply_mapaxes_false_keeps_mapaxes(
+    tmp_path, source_format
+):
+    grid = _create_grid_with_mapaxes()
+    filename = tmp_path / f"CASE.F{source_format}"
+    save_method = grid.save_GRID if source_format == "GRID" else grid.save_EGRID
+    save_method(str(filename))
+
+    loaded = Grid(str(filename), apply_mapaxes=False)
+
+    resaved_file = tmp_path / "RESAVED.FGRID"
+    loaded.save_GRID(str(resaved_file))
+
+    assert "MAPAXES" in resaved_file.read_text()
+
+
+@pytest.mark.parametrize("source_format", ["GRID", "EGRID"])
+def test_that_saving_egrid_after_loading_with_apply_mapaxes_false_keeps_mapaxes(
+    tmp_path, source_format
+):
+    grid = _create_grid_with_mapaxes()
+    filename = tmp_path / f"CASE.F{source_format}"
+    save_method = grid.save_GRID if source_format == "GRID" else grid.save_EGRID
+    save_method(str(filename))
+
+    loaded = Grid(str(filename), apply_mapaxes=False)
+
+    resaved_file = tmp_path / "RESAVED.FEGRID"
+    loaded.save_EGRID(str(resaved_file))
+
+    assert "MAPAXES" in resaved_file.read_text()
