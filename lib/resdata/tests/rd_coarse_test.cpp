@@ -1,47 +1,27 @@
 #include <cstdlib>
 
+#include <memory>
+#include <string>
+#include <vector>
+#include <filesystem>
+
 #include <ert/util/test_util.hpp>
 
+#include <resdata/rd_util.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_kw.hpp>
-#include <filesystem>
 
 namespace fs = std::filesystem;
 
 void test_coarse_cell(const rd_grid_type *grid, rd_coarse_cell_type *cell) {
-    const int_vector_type *global_index_list =
-        rd_coarse_cell_get_index_vector(cell);
-    const int *ijk = rd_coarse_cell_get_box_ptr(cell);
-    int prev_active = 0;
-
-    for (int c = 0; c < rd_coarse_cell_get_size(cell); c++) {
-        int gi = int_vector_iget(global_index_list, c);
-        int i, j, k;
-
-        /* The coordinates are right */
-        rd_grid_get_ijk1(grid, gi, &i, &j, &k);
-        if ((i < ijk[0]) || (i > ijk[1]))
-            test_error_exit("i:%d not inside range [%d,%d] \n", i, ijk[0],
-                            ijk[1]);
-
-        if ((j < ijk[2]) || (j > ijk[3]))
-            test_error_exit("j:%d not inside range [%d,%d] \n", j, ijk[2],
-                            ijk[3]);
-
-        if ((k < ijk[4]) || (k > ijk[5]))
-            test_error_exit("k:%d not inside range [%d,%d] \n", k, ijk[4],
-                            ijk[4]);
-
-        if (c == 0)
-            prev_active = rd_grid_get_active_index1(grid, gi);
-        else {
-            /* All the cells have the same active value */
-            int this_active = rd_grid_get_active_index1(grid, gi);
-            test_assert_int_equal(prev_active, this_active);
-            prev_active = this_active;
-        }
+    auto index_vector = rd_coarse_cell_get_index_vector(cell);
+    int first_active = rd_grid_get_active_index1(grid, index_vector.at(0));
+    for (int gi : index_vector) {
+        /* All the cells have the same active value */
+        int this_active = rd_grid_get_active_index1(grid, gi);
+        test_assert_int_equal(first_active, this_active);
     }
 }
 

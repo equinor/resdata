@@ -1,22 +1,21 @@
 #pragma once
 
+#include <array>
 #include <memory>
-#include <ert/util/int_vector.hpp>
+#include <vector>
 
 typedef struct rd_coarse_cell_struct rd_coarse_cell_type;
+void rd_coarse_cell_free(rd_coarse_cell_type *coarse_cell);
+using rd_coarse_cell_ptr =
+    std::unique_ptr<rd_coarse_cell_type, decltype(&rd_coarse_cell_free)>;
 
 bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
                           const rd_coarse_cell_type *coarse_cell2);
-rd_coarse_cell_type *rd_coarse_cell_alloc(void);
+rd_coarse_cell_ptr rd_coarse_cell_alloc();
 void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, int i, int j,
                            int k, int global_index);
-void rd_coarse_cell_free(rd_coarse_cell_type *coarse_cell);
 
-const int *rd_coarse_cell_get_box_ptr(const rd_coarse_cell_type *coarse_cell);
-
-int rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell);
-const int *rd_coarse_cell_get_index_ptr(rd_coarse_cell_type *coarse_cell);
-const int_vector_type *
+const std::vector<int> &
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell);
 
 void rd_coarse_cell_reset_active_index(rd_coarse_cell_type *coarse_cell);
@@ -31,6 +30,3 @@ int rd_coarse_cell_iget_active_cell_index(
 int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
                                      int index);
 int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell);
-
-using rd_coarse_cell_ptr =
-    std::unique_ptr<rd_coarse_cell_type, decltype(&rd_coarse_cell_free)>;

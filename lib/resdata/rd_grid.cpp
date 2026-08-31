@@ -1530,12 +1530,7 @@ static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
                 rd_grid->inv_fracture_index_map[active_fracture_index] =
                     global_index;
 
-            int coarse_size = rd_coarse_cell_get_size(coarse_cell);
-            const int_vector_type *global_index_list =
-                rd_coarse_cell_get_index_vector(coarse_cell);
-            for (int ic = 0; ic < coarse_size; ic++) {
-                int gi = int_vector_iget(global_index_list, ic);
-
+            for (int gi : rd_coarse_cell_get_index_vector(coarse_cell)) {
                 if (active_value &
                     CELL_ACTIVE_MATRIX) // All cells in the coarse group point to the same active index.
                     rd_grid->index_map[gi] = active_index;
@@ -1639,13 +1634,9 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
                     rd_coarse_cell_get_active_index(coarse_cell);
                 int cell_active_value =
                     rd_coarse_cell_iget_active_value(coarse_cell, 0);
-                int group_size = rd_coarse_cell_get_size(coarse_cell);
-                const int *coarse_cell_list =
-                    rd_coarse_cell_get_index_ptr(coarse_cell);
 
-                for (int i = 0; i < group_size; i++) {
-                    int global_index = coarse_cell_list[i];
-
+                for (int global_index :
+                     rd_coarse_cell_get_index_vector(coarse_cell)) {
                     rd_cell_type &cell = rd_grid->cells.at(global_index);
 
                     if (cell_active_value & CELL_ACTIVE_MATRIX)
@@ -1677,7 +1668,7 @@ rd_grid_get_or_create_coarse_cell(rd_grid_type *rd_grid, int coarse_nr) {
     while (static_cast<int>(rd_grid->coarse_cells.size()) <= coarse_nr)
         rd_grid->coarse_cells.emplace_back(nullptr, &rd_coarse_cell_free);
     if (!rd_grid->coarse_cells[coarse_nr])
-        rd_grid->coarse_cells[coarse_nr].reset(rd_coarse_cell_alloc());
+        rd_grid->coarse_cells[coarse_nr] = rd_coarse_cell_alloc();
 
     return rd_grid->coarse_cells[coarse_nr].get();
 }
@@ -4904,14 +4895,8 @@ void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
                 rd_grid_iget_coarse_group(grid, cell.coarse_group);
 
             /* 1: Set all the elements in the coarse group to inactive. */
-            {
-                int group_size = rd_coarse_cell_get_size(coarse_cell);
-                const int *index_ptr =
-                    rd_coarse_cell_get_index_ptr(coarse_cell);
-                int j;
-                for (j = 0; j < group_size; j++)
-                    actnum[index_ptr[j]] = CELL_NOT_ACTIVE;
-            }
+            for (int j : rd_coarse_cell_get_index_vector(coarse_cell))
+                actnum[j] = CELL_NOT_ACTIVE;
 
             /* 2: Explicitly pick up the active cells from the coarse group
             and mark them correctly. */
