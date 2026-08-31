@@ -11,7 +11,6 @@ rd_coarse_cell_type *rd_coarse_cell_alloc(void);
 void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, int i, int j,
                            int k, int global_index);
 void rd_coarse_cell_free(rd_coarse_cell_type *coarse_cell);
-void rd_coarse_cell_free__(void *arg);
 
 const int *rd_coarse_cell_get_box_ptr(const rd_coarse_cell_type *coarse_cell);
 

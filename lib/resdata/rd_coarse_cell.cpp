@@ -4,7 +4,6 @@
 #include <algorithm>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
@@ -85,10 +84,7 @@ following content:
 
 */
 
-#define RD_COARSE_CELL_TYPE_ID 91554106
-
 struct rd_coarse_cell_struct {
-    UTIL_TYPE_ID_DECLARATION;
     int ijk[6]; // {i1, i2 , j1 , j2 , k1 , k2}
     int active_index;
     int active_fracture_index;
@@ -99,13 +95,10 @@ struct rd_coarse_cell_struct {
     int_vector_type *active_values;
 };
 
-static UTIL_SAFE_CAST_FUNCTION(rd_coarse_cell, RD_COARSE_CELL_TYPE_ID);
-
 rd_coarse_cell_type *rd_coarse_cell_alloc() {
     const int LARGE = 1 << 30;
     rd_coarse_cell_type *coarse_cell =
         (rd_coarse_cell_type *)util_malloc(sizeof *coarse_cell);
-    UTIL_TYPE_ID_INIT(coarse_cell, RD_COARSE_CELL_TYPE_ID);
 
     coarse_cell->ijk[0] = LARGE;
     coarse_cell->ijk[2] = LARGE;
@@ -199,11 +192,6 @@ void rd_coarse_cell_free(rd_coarse_cell_type *coarse_cell) {
     int_vector_free(coarse_cell->active_cells);
     int_vector_free(coarse_cell->active_values);
     free(coarse_cell);
-}
-
-void rd_coarse_cell_free__(void *arg) {
-    rd_coarse_cell_type *coarse_cell = rd_coarse_cell_safe_cast(arg);
-    rd_coarse_cell_free(coarse_cell);
 }
 
 static void rd_coarse_cell_sort(rd_coarse_cell_type *coarse_cell) {
