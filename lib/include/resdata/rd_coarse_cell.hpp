@@ -1,11 +1,7 @@
-#ifndef ERT_RD_COARSE_CELL_H
-#define ERT_RD_COARSE_CELL_H
+#pragma once
 
+#include <memory>
 #include <ert/util/int_vector.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct rd_coarse_cell_struct rd_coarse_cell_type;
 
@@ -36,12 +32,6 @@ int rd_coarse_cell_iget_active_cell_index(
 int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
                                      int index);
 int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell);
-#ifdef __cplusplus
-}
-
-#include <memory>
 
 using rd_coarse_cell_ptr =
     std::unique_ptr<rd_coarse_cell_type, decltype(&rd_coarse_cell_free)>;
-#endif
-#endif
