@@ -277,20 +277,15 @@ class ResdataKW(BaseCClass):
                     % kw
                 )
 
-        if rd_type is None:
-            if cls.int_kw_set.__contains__(kw):
-                rd_type = ResDataType.RD_INT
-            else:
-                rd_type = ResDataType.RD_FLOAT
+        if rd_type is not None:
+            if not isinstance(rd_type, ResDataType):
+                raise TypeError("Expected ResDataType, was: %s" % type(rd_type))
 
-        if not isinstance(rd_type, ResDataType):
-            raise TypeError("Expected ResDataType, was: %s" % type(rd_type))
-
-        if rd_type not in [ResDataType.RD_FLOAT, ResDataType.RD_INT]:
-            raise ValueError(
-                "The type:%s is invalid when loading keyword:%s"
-                % (rd_type.type_name, kw)
-            )
+            if rd_type not in [ResDataType.RD_FLOAT, ResDataType.RD_INT]:
+                raise ValueError(
+                    "The type:%s is invalid when loading keyword:%s"
+                    % (rd_type.type_name, kw)
+                )
 
         if kw:
             if not cls.fseek_grdecl(fileH, kw, rewind=True):
@@ -300,6 +295,12 @@ class ResdataKW(BaseCClass):
         header = tokenizer.next_token()
         if header is None:
             raise ValueError("Could not find any keyword in file")
+
+        if rd_type is None:
+            if cls.int_kw_set.__contains__(header):
+                rd_type = ResDataType.RD_INT
+            else:
+                rd_type = ResDataType.RD_FLOAT
 
         values = cls._read_grdecl_values(tokenizer, header, rd_type, strict)
 
