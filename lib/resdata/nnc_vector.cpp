@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 
 #include <resdata/nnc_vector.hpp>
 

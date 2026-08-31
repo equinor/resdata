@@ -4,11 +4,15 @@
 #include <cctype>
 #include <cstdlib>
 
+#include <memory>
+#include <vector>
+#include <string>
 #include <string_view>
 
 #include <ert/util/util.hpp>
 #include <ert/util/parser.hpp>
-#include <ert/util/stringlist.hpp>
+
+#include <resdata/rd_util.hpp>
 
 #define PARSER_ESCAPE_CHAR '\\'
 
@@ -257,9 +261,7 @@ static char *alloc_quoted_token(const char *buffer, int length,
         token = (char *)util_calloc((length - 1), sizeof *token);
         memmove(token, &buffer[1], (length - 1) * sizeof *token);
         token[length - 2] = '\0';
-        /**
-      Removed escape char before any escaped quotation starts.
-    */
+        /* Removed escape char before any escaped quotation starts. */
         {
             char expr[3];
             char subs[2];
@@ -326,16 +328,16 @@ static int length_of_delete(const char *buffer,
 /**
    Allocates a new stringlist.
 */
-stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
-                                              const char *buffer,
-                                              bool strip_quote_marks) {
+std::vector<std::string>
+basic_parser_tokenize_buffer(const basic_parser_type *parser,
+                             const char *buffer, bool strip_quote_marks) {
     int position = 0;
     int buffer_size = strlen(buffer);
     int splitters_length = 0;
     int comment_length = 0;
     int delete_length = 0;
 
-    stringlist_type *tokens = stringlist_alloc_new();
+    std::vector<std::string> tokens;
 
     while (position < buffer_size) {
         /**
@@ -374,22 +376,21 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
             char key[2];
             key[0] = buffer[position];
             key[1] = '\0';
-            stringlist_append_copy(tokens, key);
+            tokens.emplace_back(key);
             position += 1;
             continue;
         }
 
-        /**
-       If the character is a quotation start, we copy the whole quotation.
-    */
+        // If the character is a quotation start, we copy the whole quotation.
         if (is_in_quoters(static_cast<unsigned char>(buffer[position]),
                           parser)) {
             int length = length_of_quotation(&buffer[position]);
-            char *token = alloc_quoted_token(&buffer[position], length,
-                                             strip_quote_marks);
-            stringlist_append_copy(tokens, token);
+            std::unique_ptr<char[], decltype(&std::free)> token{
+                alloc_quoted_token(&buffer[position], length,
+                                   strip_quote_marks),
+                std::free};
+            tokens.emplace_back(token.get());
             position += length;
-            free(token);
             continue;
         }
 
@@ -416,28 +417,27 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
         {
             int length =
                 length_of_normal_non_splitters(&buffer[position], parser);
-            char *token = (char *)util_calloc((length + 1), sizeof *token);
+            auto token = rd::checked_calloc<char>(length + 1);
             int token_length;
             if (parser->delete_set == NULL) {
                 token_length = length;
-                memcpy(token, &buffer[position], length * sizeof *token);
+                memcpy(token.get(), &buffer[position], length * sizeof(char));
             } else {
                 int i;
                 token_length = 0;
                 for (i = 0; i < length; i++) {
                     char c = buffer[position + i];
                     if (!is_in_delete_set(c, parser)) {
-                        token[token_length] = c;
+                        token.get()[token_length] = c;
                         token_length++;
                     }
                 }
             }
 
             if (token_length > 0) { /* We do not insert empty tokens. */
-                token[token_length] = '\0';
-                stringlist_append_copy(tokens, token);
+                token.get()[token_length] = '\0';
+                tokens.emplace_back(token.get());
             }
-            free(token);
 
             position += length;
             continue;

@@ -13,7 +13,6 @@
 #include <memory>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 
 #include <fmt/format.h>
 

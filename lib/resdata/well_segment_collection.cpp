@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <ert/util/util.hpp>
-#include <ert/util/vector.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
