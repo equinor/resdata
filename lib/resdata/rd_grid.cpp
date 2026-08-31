@@ -4507,8 +4507,7 @@ static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
                                              UnitSystem output_unit) {
     rd_grid_fwrite_mapunits(fortio, output_unit);
 
-    if (rd_grid->use_mapaxes)
-        rd_grid_fwrite_mapaxes(rd_grid, fortio);
+    rd_grid_fwrite_mapaxes(rd_grid, fortio);
 
     rd_grid_fwrite_gridunits(fortio, output_unit);
 }
