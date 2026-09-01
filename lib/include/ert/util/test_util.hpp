@@ -1,6 +1,4 @@
-#ifndef ERT_TEST_UTIL_H
-#define ERT_TEST_UTIL_H
-
+#pragma once
 #include <cstdlib>
 #include <setjmp.h>
 #include <ert/util/ert_api_config.hpp>
@@ -8,10 +6,6 @@
 #if defined(__APPLE__)
 #include <wchar.h>
 #include <ctime>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 void test_error_exit(const char *fmt, ...);
@@ -143,15 +137,9 @@ void test_assert_file_content__(const char *input_file, const char *expected,
 
 void test_install_SIGNALS(void);
 
-jmp_buf *util_abort_test_jump_buffer();
+extern "C" jmp_buf *util_abort_test_jump_buffer();
 void test_assert_util_abort(const char *function_name, void call_func(void *),
                             void *arg);
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
 
 #define test_assert_throw(expr, exception_type)                                \
     {                                                                          \
@@ -173,7 +161,3 @@ void test_assert_util_abort(const char *function_name, void call_func(void *),
             test_error_exit("Strings not equal at%s:%d (%s != %s)\n",          \
                             __FILE__, __LINE__, s0.c_str(), s1.c_str());       \
     }
-
-#endif
-
-#endif
