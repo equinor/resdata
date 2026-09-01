@@ -14,7 +14,7 @@
 
 3.  Download and install Microsoft Visual Studio . At a minimum **_resdata_** requires the VS Studio packages for cmake, msbuild, c and c++ compilers (CL.exe).
 
-4. Open a MSVC command prompt such as _x64 Native Tools Command Prompt for VS 2017_ from your start menu. In the open prompt, navigate to the **_resdata_** source directory you created in step 1. Use [uv](https://docs.astral.sh/uv/) (see [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it) to install **_resdata_**'s pinned build requirements (cmake, ninja, cwrap, etc.) via:
+4. Open a MSVC command prompt such as _x64 Native Tools Command Prompt for VS 2017_ from your start menu. In the open prompt, navigate to the **_resdata_** source directory you created in step 1. Use [uv](https://docs.astral.sh/uv/) (see [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it) to install **_resdata_**'s pinned build requirements (cmake, ninja, etc.) via:
    ~~~~
    uv sync --group build --no-install-project
    ~~~~

@@ -137,12 +137,10 @@ skbuild.setup(
     package_data={"resdata": ["py.typed", "well/*.pyi", "resfile/*.pyi"]},
     platforms="any",
     install_requires=[
-        "cwrap",
         "numpy",
         "pandas",
         "python-dateutil",
         "natsort",
-        "typing_extensions",
         "resfo-utilities>=0.4.0",
     ],
     setup_requires=["conan>=2"],

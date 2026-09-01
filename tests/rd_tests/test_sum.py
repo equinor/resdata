@@ -6,7 +6,6 @@ import os.path
 import shutil
 import stat
 
-import cwrap
 import pytest
 from resfo_utilities.testing import (
     Date,

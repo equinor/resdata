@@ -413,15 +413,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cwrap"
-version = "1.6.16"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d2/44/2b1c4ba3ec22e9664740002ec0760739b9ea4ab9e3b585079075d5437f11/cwrap-1.6.16.tar.gz", hash = "sha256:16784ecb822ba1cceb82329bc3f0166b2bce3743da667fa1fa5f0e38a4406151", size = 34039, upload-time = "2026-07-02T08:04:19.263Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/24/7d54ce3629b074b4b557af49435df2d7a9376579103239b81b7e867181a2/cwrap-1.6.16-py3-none-any.whl", hash = "sha256:2c51e9a84bb35e229e80c6e56303369172d3025865a53e41fb8a72f8eec93f45", size = 16183, upload-time = "2026-07-02T08:04:18.056Z" },
-]
-
-[[package]]
 name = "dependency-groups"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1489,21 +1480,18 @@ wheels = [
 name = "resdata"
 source = { editable = "." }
 dependencies = [
-    { name = "cwrap" },
     { name = "natsort" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pandas" },
     { name = "python-dateutil" },
     { name = "resfo-utilities" },
-    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
 build = [
     { name = "cibuildwheel" },
     { name = "cmake" },
-    { name = "cwrap" },
     { name = "ninja" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -1539,20 +1527,17 @@ types = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cwrap" },
     { name = "natsort" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "python-dateutil" },
     { name = "resfo-utilities", specifier = ">=0.4.0" },
-    { name = "typing-extensions" },
 ]
 
 [package.metadata.requires-dev]
 build = [
     { name = "cibuildwheel" },
     { name = "cmake", specifier = "<4" },
-    { name = "cwrap" },
     { name = "ninja" },
     { name = "numpy" },
     { name = "pandas" },

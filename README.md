@@ -14,13 +14,13 @@ pip install resdata
 ```
 
 ## Building
-ResData is a Python project with a C++ extension layer. Most of the functionality is implemented in C++ and uses [cwrap](https://github.com/equinor/cwrap) for binding it to Python.
+ResData is a Python project with a C++ extension layer. Most of the functionality is implemented in C++.
 
 A C++17-compatible compiler, like GCC 8+ or Clang 11+ is required. Other C++ dependencies are brought in automatically by [Conan](https://conan.io) during [CMake](https://cmake.org) compilation.
 
 Building and testing use [uv](https://docs.astral.sh/uv/) to manage Python dependencies. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it.
 
-ResData's build dependencies (`cmake`, `ninja`, `cwrap`, etc.) as well as ResData itself are pinned in [`uv.lock`](uv.lock) and installed together with `uv sync`:
+ResData's build dependencies as well as ResData itself are pinned in [`uv.lock`](uv.lock) and installed together with `uv sync`:
 
 ```sh
 git clone https://github.com/equinor/resdata

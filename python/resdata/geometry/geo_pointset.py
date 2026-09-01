@@ -1,9 +1,8 @@
-from cwrap import BaseCClass
-
 import resdata.geometry._geo_pointset as _geo_pointset
+from resdata._base_c_class import _BaseCClass
 
 
-class GeoPointset(BaseCClass):
+class GeoPointset(_BaseCClass):
     TYPE_NAME = "rd_geo_points"
 
     def __init__(self, external_z=False):
