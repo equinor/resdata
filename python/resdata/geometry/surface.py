@@ -4,13 +4,12 @@ Create a polygon
 
 import os.path
 
-from cwrap import BaseCClass
-
 import resdata.geometry._surface as _surface
+from resdata._base_c_class import _BaseCClass
 from resdata.geometry import GeoPointset
 
 
-class Surface(BaseCClass):
+class Surface(_BaseCClass):
     TYPE_NAME = "rd_surface"
 
     def __init__(

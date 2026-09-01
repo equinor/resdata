@@ -1,4 +1,3 @@
-import cwrap
 import pytest
 from numpy import allclose
 from resdata.resfile import ResdataKW

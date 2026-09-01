@@ -5,14 +5,13 @@ results and calculate the change in seafloor subsidence between the
 different surveys.
 """
 
-from cwrap import BaseCClass
-
 import resdata.gravimetry._subsidence as _subsidence
+from resdata._base_c_class import _BaseCClass
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
 
 
-class ResdataSubsidence(BaseCClass):
+class ResdataSubsidence(_BaseCClass):
     """ECLIPSE results for calculating subsidence changes.
 
     The ResdataSubsidence class is a collection class holding the results from

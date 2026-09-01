@@ -15,10 +15,9 @@ from __future__ import annotations
 
 from functools import wraps
 
-from cwrap import BaseCClass
-
 import resdata.grid._rd_region as _rd_region
 from resdata import ResDataType
+from resdata._base_c_class import _BaseCClass
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer
 from resdata.resfile import ResdataKW
@@ -68,7 +67,7 @@ def select_method(select):
     return select_wrapper
 
 
-class ResdataRegion(BaseCClass):
+class ResdataRegion(_BaseCClass):
     TYPE_NAME = "rd_region"
 
     def _set_kw_int(self, *args):

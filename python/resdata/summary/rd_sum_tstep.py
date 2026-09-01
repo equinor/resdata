@@ -1,10 +1,9 @@
-from cwrap import BaseCClass
-
 import resdata.summary._rd_sum_tstep as _rd_sum_tstep
+from resdata._base_c_class import _BaseCClass
 from resdata.util.util import CTime
 
 
-class SummaryTStep(BaseCClass):
+class SummaryTStep(_BaseCClass):
     TYPE_NAME = "rd_sum_tstep"
 
     def __init__(

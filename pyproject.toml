@@ -23,7 +23,6 @@ requires-python = ">=3.11"
 build = [
   "cibuildwheel",
   "cmake<4",
-  "cwrap",
   "ninja",
   "numpy",
   "pandas",
