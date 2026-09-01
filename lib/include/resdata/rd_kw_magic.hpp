@@ -1,10 +1,4 @@
-#ifndef ERT_RD_KW_MAGIC_H
-#define ERT_RD_KW_MAGIC_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#pragma once
 /*
    This header file contains names and indices of keywords
    which have special significance in various files. Observe that many
@@ -652,8 +646,3 @@ values (2e20) are denoted with '*'.
 #define CELL_ACTIVE_MATRIX 1
 #define CELL_ACTIVE CELL_ACTIVE_MATRIX
 #define CELL_ACTIVE_FRACTURE 2
-
-#ifdef __cplusplus
-}
-#endif
-#endif
