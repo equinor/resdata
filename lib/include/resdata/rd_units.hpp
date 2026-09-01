@@ -1,11 +1,5 @@
-#ifndef RD_UNITS_H
-#define RD_UNITS_H
-
+#pragma once
 #include <resdata/rd_util.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define RD_UNITS_CUBIC(x) ((x) * (x) * (x))
 #define RD_UNITS_MILLI(x) ((x) * 0.001)
@@ -23,9 +17,6 @@ extern "C" {
 
 #define RD_UNITS_TIME_HOUR 3600
 #define RD_UNITS_TIME_DAY (24 * RD_UNITS_TIME_HOUR)
-
-#ifdef __cplusplus
-}
 
 constexpr inline double liquid_conversion_factor(UnitSystem unit_system) {
     if (unit_system == UnitSystem::METRIC)
@@ -46,5 +37,3 @@ constexpr inline double gas_conversion_factor(UnitSystem unit_system) {
         return RD_UNITS_VOLUME_MILLI_LITER / RD_UNITS_TIME_HOUR;
     return 1;
 }
-#endif
-#endif
