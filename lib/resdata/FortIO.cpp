@@ -1,6 +1,8 @@
 #include <ios>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <fmt/format.h>
 #include <filesystem>
@@ -226,9 +228,13 @@ void FortIO::close() {
    zeroes. In that case it is difficult to determine, and we continue.
 */
 bool FortIO::looks_like_fortran_file(const char *filename, bool endian_flip) {
-    FILE *stream = util_fopen(filename, "rb");
-    bool is_fortran_stream = fortio_is_fortran_stream__(stream, endian_flip);
-    fclose(stream);
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{fopen(filename, "rb"),
+                                                   [](FILE *f) { fclose(f); }};
+    if (!stream)
+        throw std::system_error(errno, std::generic_category(),
+                                "looks_like_fortran_file: failed to open file");
+    bool is_fortran_stream =
+        fortio_is_fortran_stream__(stream.get(), endian_flip);
     return is_fortran_stream;
 }
 
