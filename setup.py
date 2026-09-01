@@ -137,7 +137,6 @@ skbuild.setup(
     package_data={"resdata": ["py.typed", "well/*.pyi", "resfile/*.pyi"]},
     platforms="any",
     install_requires=[
-        "cwrap",
         "numpy",
         "pandas",
         "python-dateutil",

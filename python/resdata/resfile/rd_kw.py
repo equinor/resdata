@@ -23,16 +23,18 @@ The rd_kw.py implementation wraps the rd_kw.c implementation from
 the resdata library.
 """
 
+from __future__ import annotations
+
 import ctypes
 import io
 import re
 
 import numpy as np
-from cwrap import BaseCClass
 from typing_extensions import Self
 
 import resdata.resfile._kw as _kw
 from resdata import ResDataType
+from resdata._base_c_class import _BaseCClass
 
 _GRDECL_INT_TOKEN_RE = re.compile(r"^[+-]?\d+$")
 _GRDECL_FLOAT_TOKEN_RE = re.compile(r"^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$")
@@ -114,7 +116,7 @@ def _grdecl_write_tokens(file, tokens, blocksize, columns):
         )
 
 
-class ResdataKW(BaseCClass):
+class ResdataKW(_BaseCClass):
     """
     The ResdataKW class contains the information from one keyword.
 
@@ -200,7 +202,7 @@ class ResdataKW(BaseCClass):
         kw: str | None,
         strict: bool = True,
         rd_type: ResDataType | None = None,
-    ) -> Self:
+    ) -> ResdataKW:
         """
         Function to load an ResdataKW instance from a grdecl formatted filehandle.
 

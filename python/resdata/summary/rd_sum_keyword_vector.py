@@ -3,12 +3,11 @@
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 
-from cwrap import BaseCClass
-
 import resdata.summary._rd_sum_keyword_vector as _rd_sum_keyword_vector
+from resdata._base_c_class import _BaseCClass
 
 
-class SummaryKeyWordVector(BaseCClass):
+class SummaryKeyWordVector(_BaseCClass):
     TYPE_NAME = "rd_sum_vector"
 
     def __init__(self, rd_sum, add_keywords=False):
@@ -27,6 +26,9 @@ class SummaryKeyWordVector(BaseCClass):
 
     def __len__(self):
         return _rd_sum_keyword_vector._get_size(self)
+
+    def __iter__(self):
+        return iter([self[i] for i in range(len(self))])
 
     def free(self):
         _rd_sum_keyword_vector._free(self)
