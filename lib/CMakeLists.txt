@@ -19,7 +19,6 @@ add_library(
   util/util_abort.cpp
   util/util_symlink.cpp
   util/util_lfs.cpp
-  util/util_unlink.cpp
   util/parser.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}
