@@ -256,8 +256,6 @@ extern "C" [[noreturn]] void util_abort__(const char *file,
                                           const char *fmt, ...);
 [[noreturn]] void util_abort_signal(int);
 
-#include "util_unlink.hpp"
-
 #ifdef __cplusplus
 }
 #include <string_view>
