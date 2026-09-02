@@ -271,6 +271,7 @@ def write_egrid_with_single_lgr(
     mapaxes: Sequence[float] | None = None,
     nncg: Sequence[int] = (),
     nncl: Sequence[int] = (),
+    lgr_nr: int = 1,
 ) -> None:
     main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0)
     lgr_grid = make_rectangular_grid(
@@ -286,8 +287,8 @@ def write_egrid_with_single_lgr(
         _write_grid_body(f, main_grid)
         write_empty_kw(f, ENDGRID_KW)
 
-        _write_lgr_egrid_section(f, lgr_name, "", 1, lgr_grid, host_global + 1)
-        _write_nnc_pair(f, 1, NNCG_KW, NNCL_KW, nncg, nncl)
+        _write_lgr_egrid_section(f, lgr_name, "", lgr_nr, lgr_grid, host_global + 1)
+        _write_nnc_pair(f, lgr_nr, NNCG_KW, NNCL_KW, nncg, nncl)
 
 
 def write_egrid_with_nested_lgr(
