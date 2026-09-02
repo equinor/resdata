@@ -491,18 +491,24 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
                            const std::string &name) {
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
-
-    if (restart_file->has_kw(RPORV_KW)) {
-        rd_kw_type *rporv_kw = restart_file->get_kw(RPORV_KW, 0);
-        int iactive;
-        for (iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
-            survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
-    } else
+    if (!restart_file->has_kw(RPORV_KW))
         throw std::runtime_error(std::string(__func__) +
                                  ": restart file did not contain " + RPORV_KW +
                                  " keyword");
+
+    rd_kw_type *rporv_kw = restart_file->get_kw(RPORV_KW, 0);
+    const int active_size = rd_grav->grid_cache->size();
+    const int rporv_size = rd_kw_get_size(rporv_kw);
+    if (rporv_size != active_size)
+        throw std::invalid_argument(
+            fmt::format("{} keyword has {} elements, but the grid has {} "
+                        "active cells",
+                        RPORV_KW, rporv_size, active_size));
+
+    rd_grav_survey_type *survey =
+        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
+    for (int iactive = 0; iactive < active_size; iactive++)
+        survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
 
     {
         const rd::File *init_file = rd_grav->init_file;
