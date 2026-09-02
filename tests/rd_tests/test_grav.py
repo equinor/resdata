@@ -464,3 +464,65 @@ class ResdataGravTest(ResdataTest):
                 match=r"substantially different from the initial porv value",
             ):
                 grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_that_oversized_rporv_raises(self):
+        rporv = ResdataKW(
+            "RPORV",
+            self.grid.get_num_active() + 1,
+            ResDataType.RD_FLOAT,
+        )
+        rporv.assign(0.5)
+        kws = [
+            self._float_kw(name)
+            for name in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "SGAS",
+                "OIL_DEN",
+                "GAS_DEN",
+                "WAT_DEN",
+            ]
+        ]
+        kws.append(rporv)
+
+        tmpdir = self.tmp_path_factory.mktemp("grav_oversized_rporv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            grav, restart_view = self._all_phase_grav(tmpdir, mp, kws)
+
+            with pytest.raises(
+                ValueError,
+                match=r"RPORV.*elements.*active cells",
+            ):
+                grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_that_undersized_rporv_raises(self):
+        rporv = ResdataKW(
+            "RPORV",
+            self.grid.get_num_active() - 1,
+            ResDataType.RD_FLOAT,
+        )
+        rporv.assign(0.5)
+        kws = [
+            self._float_kw(name)
+            for name in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "SGAS",
+                "OIL_DEN",
+                "GAS_DEN",
+                "WAT_DEN",
+            ]
+        ]
+        kws.append(rporv)
+
+        tmpdir = self.tmp_path_factory.mktemp("grav_undersized_rporv", numbered=True)
+        with self.monkeypatch.context() as mp:
+            grav, restart_view = self._all_phase_grav(tmpdir, mp, kws)
+
+            with pytest.raises(
+                ValueError,
+                match=r"RPORV.*elements.*active cells",
+            ):
+                grav.add_survey_RPORV("rporv", restart_view)
