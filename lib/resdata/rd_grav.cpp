@@ -455,18 +455,26 @@ static rd_grav_survey_type *
 rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
                            const rd_file_view_type *restart_file,
                            const char *name) {
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
-
-    if (rd_file_view_has_kw(restart_file, RPORV_KW)) {
-        rd_kw_type *rporv_kw =
-            rd_file_view_iget_named_kw(restart_file, RPORV_KW, 0);
-        int iactive;
-        for (iactive = 0; iactive < rd_kw_get_size(rporv_kw); iactive++)
-            survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
-    } else
+    if (!rd_file_view_has_kw(restart_file, RPORV_KW))
         util_abort("%s: restart file did not contain %s keyword??\n", __func__,
                    RPORV_KW);
+
+    rd_kw_type *rporv_kw =
+        rd_file_view_iget_named_kw(restart_file, RPORV_KW, 0);
+    const int active_size = rd_grav->grid_cache->size();
+    const int rporv_size = rd_kw_get_size(rporv_kw);
+    if (rporv_size != active_size) {
+        fprintf(stderr,
+                "%s: %s keyword has %d elements, but the grid has %d "
+                "active cells\n",
+                __func__, RPORV_KW, rporv_size, active_size);
+        return NULL;
+    }
+
+    rd_grav_survey_type *survey =
+        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
+    for (int iactive = 0; iactive < active_size; iactive++)
+        survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
 
     {
         const rd_file_type *init_file = rd_grav->init_file;
