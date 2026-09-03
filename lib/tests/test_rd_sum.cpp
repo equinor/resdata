@@ -1479,6 +1479,35 @@ SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
     }
 }
 
+SCENARIO_METHOD(
+    Tmpdir, "rd::unsmry_loader reports a vanished UNSMRY file as an error") {
+    GIVEN("A CLOSE_STREAM loader over a summary case") {
+        WriteSpec spec;
+        spec.num_report_steps = 4;
+        spec.num_ministep = 1;
+        const auto case_path = (dirname / "CASE").string();
+        write_test_summary(case_path, spec, /*fmt_output=*/false,
+                           /*unified=*/true);
+        auto rd_sum = read_summary(case_path);
+        REQUIRE(rd_sum);
+
+        rd::unsmry_loader loader(rd_sum_get_smspec(rd_sum.get()),
+                                 case_path + ".UNSMRY", FileMode::CLOSE_STREAM);
+        REQUIRE(loader.get_vector(1).size() == size_t(spec.num_report_steps));
+
+        WHEN("The UNSMRY file is removed while the stream is closed") {
+            REQUIRE(fs::remove(case_path + ".UNSMRY"));
+
+            THEN("Reading throws instead of returning uninitialized values") {
+                CHECK_THROWS_AS(loader.get_vector(1), std::ios_base::failure);
+                CHECK_THROWS_AS(loader.iget(0, 1), std::ios_base::failure);
+                CHECK_THROWS_AS(loader.iget_sim_time(0),
+                                std::ios_base::failure);
+            }
+        }
+    }
+}
+
 SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
     GIVEN("A summary case sampled at sim_days 1, 3, 5, 7") {
         WriteSpec spec;

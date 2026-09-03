@@ -204,3 +204,20 @@ bool rd_type_is_bool(const rd_data_type rd_type) {
 bool rd_type_is_string(const rd_data_type rd_type) {
     return (rd_type.type == RD_STRING_TYPE);
 }
+
+namespace rd {
+
+void assert_kw_data_type(rd_data_type actual, rd_type_enum expected,
+                         const std::string &kw, size_t occurrence,
+                         const std::string &filename) {
+    if (rd_type_get_type(actual) == expected)
+        return;
+
+    throw std::invalid_argument(fmt::format(
+        "Malformed file '{}': keyword {} (occurrence {}) has data type {}, "
+        "but must be {}.",
+        filename, kw, occurrence, rd_type_name(actual),
+        rd_type_name(rd_type_create_from_type(expected))));
+}
+
+} // namespace rd

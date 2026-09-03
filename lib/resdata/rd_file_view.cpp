@@ -74,12 +74,19 @@ rd_kw_type *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
     return rd_kw;
 }
 
-void FileView::index_fload_kw(const std::string &kw, int index,
-                              const std::vector<int> &index_map,
-                              char *io_buffer) {
+std::shared_ptr<FileKW>
+FileView::validate_index_fload_kw(const std::string &kw, int index,
+                                  rd_type_enum expected, size_t requested_count,
+                                  size_t out_count) const {
     if (index < 0)
         throw std::invalid_argument(
             fmt::format("Got negative index in index_fload_kw: {}", index));
+
+    if (out_count < requested_count)
+        throw std::invalid_argument(fmt::format(
+            "Buffer of {} elements is too small for the {} elements requested "
+            "from keyword {}",
+            out_count, requested_count, kw));
 
     auto file_kw = get_file_kw(kw, static_cast<size_t>(index));
 
@@ -87,14 +94,11 @@ void FileView::index_fload_kw(const std::string &kw, int index,
         throw std::invalid_argument(std::string("Keyword '") + kw + "' index " +
                                     std::to_string(index) +
                                     " not found in file view");
-    if (context->fortio.assert_stream_open()) {
-        offset_type offset = file_kw->get_offset();
-        rd_data_type data_type = file_kw->get_data_type();
-        int element_count = file_kw->get_size();
 
-        rd_kw_fread_indexed_data(context->fortio, offset, data_type,
-                                 element_count, index_map, io_buffer);
-    }
+    assert_kw_data_type(file_kw->get_data_type(), expected, kw,
+                        static_cast<size_t>(index), filename());
+
+    return file_kw;
 }
 
 void FileView::write(ERT::FortIO &target, size_t offset) {

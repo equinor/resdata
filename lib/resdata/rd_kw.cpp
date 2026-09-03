@@ -194,7 +194,8 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
             else
                 int_data[i] = RD_BOOL_FALSE_INT;
 
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+        util_endian_flip_vector(buffer, sizeof_iotype,
+                                static_cast<size_t>(rd_kw->size));
         return buffer;
     }
 
@@ -222,7 +223,8 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
 
     if (rd_kw->data && buffer_size > 0) {
         memcpy(buffer, rd_kw->data, buffer_size);
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+        util_endian_flip_vector(buffer, sizeof_iotype,
+                                static_cast<size_t>(rd_kw->size));
     }
 
     return buffer;
@@ -253,7 +255,8 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     if (RD_ENDIAN_FLIP) {
         if (rd_type_is_numeric(rd_kw->data_type) ||
             rd_type_is_bool(rd_kw->data_type))
-            util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
+            util_endian_flip_vector(buffer, sizeof_iotype,
+                                    static_cast<size_t>(rd_kw->size));
     }
 
     /*
@@ -1208,8 +1211,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
         }
 
         if (RD_ENDIAN_FLIP)
-            util_endian_flip_vector(io_buffer, sizeof_iotype,
-                                    static_cast<int>(index_map.size()));
+            util_endian_flip_vector(io_buffer, sizeof_iotype, index_map.size());
     }
 }
 

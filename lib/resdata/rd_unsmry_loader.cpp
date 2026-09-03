@@ -1,3 +1,4 @@
+#include <array>
 #include <ctime>
 #include <memory>
 #include <new>
@@ -70,11 +71,11 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
             " PARAMS_SIZE: " + std::to_string(size));
 
     std::vector<double> data(this->length());
-    float value;
+    std::array<float, 1> value;
 
     for (int index = 0; index < this->length(); index++) {
-        file_view->index_fload_kw(PARAMS_KW, index, {pos}, (char *)&value);
-        data[index] = value;
+        file_view->index_fload_kw(PARAMS_KW, index, {pos}, value);
+        data[index] = value[0];
     }
 
     if (file_view->has_flags(FileMode::CLOSE_STREAM))
@@ -85,10 +86,9 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 
 // This is horribly inefficient
 double unsmry_loader::iget(int time_index, int params_index) const {
-    float value;
-    file_view->index_fload_kw(PARAMS_KW, time_index, {params_index},
-                              (char *)&value);
-    return value;
+    std::array<float, 1> value;
+    file_view->index_fload_kw(PARAMS_KW, time_index, {params_index}, value);
+    return value[0];
 }
 
 time_t unsmry_loader::iget_sim_time(int time_index) const {
@@ -98,11 +98,11 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
         util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
         return sim_time;
     } else {
-        float values[3];
+        std::array<float, 3> values;
         file_view->index_fload_kw(
             PARAMS_KW, time_index,
             {this->date_index[0], this->date_index[1], this->date_index[2]},
-            (char *)&values);
+            values);
 
         return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
                             util_roundf(values[2]));

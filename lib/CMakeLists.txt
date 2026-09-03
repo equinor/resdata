@@ -250,6 +250,7 @@ add_executable(
   tests/test_rd_file_kw.cpp
   tests/testsuite.cpp
   tests/test_util.cpp
+  tests/test_util_endian_benchmark.cpp
   tests/test_rd_region.cpp
   tests/test_geertsma.cpp
   tests/test_layer.cpp

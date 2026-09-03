@@ -7,6 +7,7 @@ in [OPM flow 2025.04 manual Appendix F.8](https://opm-project.org/?page_id=955)
 
 import datetime
 import os
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TypeAlias
@@ -1018,6 +1019,57 @@ def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
         "WellSegment({Segment ID:1   BranchID:1  Length:12.5})"
     )
     assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
+
+
+@pytest.mark.parametrize(
+    "data_type, type_name",
+    [
+        (ResDataType.RD_FLOAT, "REAL"),
+        (ResDataType.RD_INT, "INTE"),
+        (ResDataType.RD_CHAR, "CHAR"),
+    ],
+)
+def test_that_rseg_with_wrong_data_type_gives_malformed_file_error(
+    tmp_path, grid, data_type, type_name
+):
+    """RSEG is DOUB in the restart format, see table F.23 of the OPM manual."""
+    well = Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=[Connection(i=1, j=1, k=1, segment=1)],
+        segments=[
+            Segment(
+                outlet=0,
+                branch=1,
+                length=12.5,
+                diameter=0.25,
+                total_length=12.5,
+                depth=2500.0,
+            ),
+        ],
+    )
+    keywords = _step_keywords([well], (2020, 1, 1))
+    rseg_index = next(
+        i for i, kw in enumerate(keywords) if kw.get_name().strip() == "RSEG"
+    )
+    size = len(keywords[rseg_index])
+    if data_type == ResDataType.RD_CHAR:
+        keywords[rseg_index] = _char_kw("RSEG", size)
+    else:
+        replacement = ResdataKW("RSEG", size, data_type)
+        for i in range(size):
+            replacement[i] = 0
+        keywords[rseg_index] = replacement
+
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    expected = (
+        f"Malformed file '{path}': keyword RSEG (occurrence 0) has data type "
+        f"{type_name}, but must be DOUB."
+    )
+    with pytest.raises(ValueError, match=re.escape(expected)):
+        WellInfo(grid, path)
 
 
 @st.composite

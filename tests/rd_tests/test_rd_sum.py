@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import os.path
+import re
 import shutil
 from dataclasses import dataclass, replace
 from textwrap import dedent
@@ -3114,6 +3115,34 @@ def test_unsmry_params_non_float_raises():
 
     with pytest.raises((IOError, ValueError)):
         Summary("TEST")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_unsmry_params_changing_type_between_steps_gives_malformed_file_error():
+    """PARAMS is REAL in the summary format, see appendix F of the OPM manual."""
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+
+    kws = list(resfo.read("TEST.UNSMRY"))
+    patched = []
+    params_seen = 0
+    for name, value in kws:
+        if name.strip() == "PARAMS":
+            # Leave the first block alone so that the loader is constructed
+            # successfully and the mismatch is hit during the indexed read.
+            if params_seen == 1:
+                value = value.astype(np.float64)
+            params_seen += 1
+        patched.append((name, value))
+    resfo.write("TEST.UNSMRY", patched)
+
+    # Even with lazy_load the constructor reads a PARAMS element per step to
+    # build the time index, so the mismatch is caught while opening the case.
+    expected = (
+        "Malformed file 'TEST.UNSMRY': keyword PARAMS "
+        "(occurrence 1) has data type DOUB, but must be REAL."
+    )
+    with pytest.raises(ValueError, match=re.escape(expected)):
+        Summary("TEST", lazy_load=True)
 
 
 @pytest.mark.usefixtures("use_tmpdir")

@@ -86,4 +86,37 @@ bool rd_type_is_string(const rd_data_type);
 
 std::string rd_type_name(const rd_data_type);
 
+namespace rd {
+
+template <typename> inline constexpr bool always_false = false;
+
+template <typename T> struct iotype {
+    static_assert(always_false<T>,
+                  "Type cannot be read element-wise from a keyword data "
+                  "section; expected float, double or int");
+};
+
+template <> struct iotype<float> {
+    static constexpr rd_type_enum tag = RD_FLOAT_TYPE;
+};
+
+template <> struct iotype<double> {
+    static constexpr rd_type_enum tag = RD_DOUBLE_TYPE;
+};
+
+template <> struct iotype<int> {
+    static constexpr rd_type_enum tag = RD_INT_TYPE;
+};
+
+/** Asserts that the keyword named @kw holds data of type @expected.
+
+    The keyword types of the restart and summary formats are fixed by the
+    format itself, so a mismatch means the file is malformed.
+    Throws std::invalid_argument on invalid files. */
+void assert_kw_data_type(rd_data_type actual, rd_type_enum expected,
+                         const std::string &kw, size_t occurrence,
+                         const std::string &filename);
+
+} // namespace rd
+
 #endif

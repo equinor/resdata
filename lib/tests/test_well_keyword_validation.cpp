@@ -293,7 +293,7 @@ std::vector<Case> all_cases() {
         {ISEG_KW, Mode::SHORT, true, 0},
 
         {RSEG_KW, Mode::MISSING, false, 1},
-        {RSEG_KW, Mode::WRONG_TYPE, false, 1}, // Should throw but doesn't
+        {RSEG_KW, Mode::WRONG_TYPE, true, 0},
         {RSEG_KW, Mode::EMPTY, true, 0},
         {RSEG_KW, Mode::SHORT, true, 0},
 
