@@ -107,7 +107,12 @@ class ResdataGrav(BaseCClass):
         add_survey_PORMOD() and add_survey_FIP() are alternatives
         which are based on other keywords.
         """
-        self._add_survey_RPORV(survey_name, restart_view)
+        void_ptr = self._add_survey_RPORV(survey_name, restart_view)
+        if void_ptr is None:
+            raise ValueError(
+                "Could not add RPORV survey: RPORV keyword size does not "
+                "match the number of active cells in the grid"
+            )
 
     def add_survey_PORMOD(
         self, survey_name: str, restart_view: ResdataFileView

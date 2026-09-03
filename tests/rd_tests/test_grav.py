@@ -134,3 +134,61 @@ class ResdataGravTest(ResdataTest):
             grav.add_std_density(1, 0, 0.5)
 
             grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_that_oversized_rporv_raises(self):
+        kws = [
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
+            for kw in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "OIL_DEN",
+            ]
+        ]
+        rporv = ResdataKW("RPORV", self.grid.get_num_active() + 1, ResDataType.RD_FLOAT)
+        rporv.assign(0.5)
+        kws.append(rporv)
+
+        with TestAreaContext("grav_oversized_rporv"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+
+            grav = ResdataGrav(self.grid, init)
+
+            restart_file = ResdataFile("TEST.UNRST")
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+
+            grav.new_std_density(1, 0.5)
+            grav.add_std_density(1, 0, 0.5)
+
+            with self.assertRaises(ValueError):
+                grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_that_undersized_rporv_raises(self):
+        kws = [
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
+            for kw in [
+                "PORO",
+                "PORV",
+                "SWAT",
+                "OIL_DEN",
+            ]
+        ]
+        rporv = ResdataKW("RPORV", self.grid.get_num_active() - 1, ResDataType.RD_FLOAT)
+        rporv.assign(0.5)
+        kws.append(rporv)
+
+        with TestAreaContext("grav_undersized_rporv"):
+            write_kws("TEST", kws)
+            init = ResdataFile("TEST.INIT")
+
+            grav = ResdataGrav(self.grid, init)
+
+            restart_file = ResdataFile("TEST.UNRST")
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+
+            grav.new_std_density(1, 0.5)
+            grav.add_std_density(1, 0, 0.5)
+
+            with self.assertRaises(ValueError):
+                grav.add_survey_RPORV("rporv", restart_view)
