@@ -16,7 +16,7 @@ struct well_rseg_loader_struct {
     rd::FileView *rst_view;
     std::vector<int> relative_index_map;
     std::vector<int> absolute_index_map;
-    std::array<char, 4 * sizeof(double)> buffer;
+    std::array<double, 4> buffer;
     const char *kw;
 };
 
@@ -51,7 +51,7 @@ double *well_rseg_loader_load_values(well_rseg_loader_type *loader,
     }
 
     loader->rst_view->index_fload_kw(loader->kw, 0, loader->absolute_index_map,
-                                     loader->buffer.data());
+                                     loader->buffer);
 
-    return (double *)loader->buffer.data();
+    return loader->buffer.data();
 }

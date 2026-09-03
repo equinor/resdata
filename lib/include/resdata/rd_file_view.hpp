@@ -1,5 +1,7 @@
 #pragma once
+#include <array>
 #include <ctime>
+#include <ios>
 #include <istream>
 #include <iterator>
 #include <ostream>
@@ -42,6 +44,16 @@ class FileView {
     }
     [[nodiscard]] rd_kw_type *get_kw(const std::shared_ptr<FileKW> &file_kw);
     [[nodiscard]] size_t get_occurence(size_t global_index);
+
+    /** Validates the arguments of index_fload_kw and returns the keyword.
+
+        Throws std::invalid_argument if @index is negative, if there is no
+        such keyword in the view, if the keyword does not hold data of type
+        @expected, or if @out_count is smaller than @requested_count. */
+    [[nodiscard]] std::shared_ptr<FileKW>
+    validate_index_fload_kw(const std::string &kw, int index,
+                            rd_type_enum expected, size_t requested_count,
+                            size_t out_count) const;
 
     /** Finds the occurrence of the first block for which @predicate holds for @header_kw.
 
@@ -129,8 +141,33 @@ public:
         return get_kw(get_file_kw(kw, ith));
     }
 
+    /** Reads the elements given by @index_map from the ith=@index keyword
+        named @kw into @out.
+
+        T must match the type the keyword is stored as on file; the keyword
+        types of the restart and summary formats are fixed by the format, so
+        a mismatch means the file is malformed and throws
+        std::invalid_argument, as does an @index_map with more entries than
+        @out has elements.
+
+        Throws std::ios_base::failure if the underlying file cannot be
+        opened; @out is only left unwritten when this function throws. */
+    template <typename T, size_t N>
     void index_fload_kw(const std::string &kw, int index,
-                        const std::vector<int> &index_map, char *io_buffer);
+                        const std::vector<int> &index_map,
+                        std::array<T, N> &out) {
+        auto file_kw = validate_index_fload_kw(kw, index, iotype<T>::tag,
+                                               index_map.size(), N);
+
+        if (!context->fortio.assert_stream_open())
+            throw std::ios_base::failure("Failed to open FortIO file " +
+                                         filename());
+
+        rd_kw_fread_indexed_data(context->fortio, file_kw->get_offset(),
+                                 file_kw->get_data_type(), file_kw->get_size(),
+                                 index_map,
+                                 reinterpret_cast<char *>(out.data()));
+    }
     void write(ERT::FortIO &target, size_t offset);
 
     /** Creates a FileView with keywords from @start_kw to @end_kw.
