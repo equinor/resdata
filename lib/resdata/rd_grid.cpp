@@ -1807,6 +1807,15 @@ static rd_grid_type *rd_grid_add_lgr(rd_grid_type *main_grid,
         throw std::invalid_argument(
             fmt::format("LGR number must be non-negative, got {}", lgr_nr));
 
+    // Bound check for LGR number to avoid excessive memory allocation in
+    // lgr_index_map. Value was choses arbitrarily, but should be large enough
+    // for any reasonable case.
+    constexpr int MAX_LGR_NR = 1'000'000;
+    if (lgr_nr > MAX_LGR_NR)
+        throw std::invalid_argument(
+            fmt::format("LGR number {} exceeds maximum supported value {}",
+                        lgr_nr, MAX_LGR_NR));
+
     auto ptr = lgr_grid.get();
     std::string lgr_name = lgr_grid->name;
     main_grid->LGR_list.push_back(std::move(lgr_grid));
