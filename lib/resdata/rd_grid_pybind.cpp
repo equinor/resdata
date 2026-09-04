@@ -283,7 +283,7 @@ PYBIND11_MODULE(_grid, m) {
         [](py::handle self) {
             auto rd_grid = from_cwrap<rd_grid_type>(self);
             int size = rd_grid_get_global_size(rd_grid);
-            rd_kw_ptr actnum(rd_kw_alloc("ACTNUM", size, RD_INT), rd_kw_free);
+            rd_kw_ptr actnum = make_rd_kw("ACTNUM", size, RD_INT);
             if (!actnum)
                 throw std::runtime_error(
                     fmt::format("Could not allocate ACTNUM of size {}", size));

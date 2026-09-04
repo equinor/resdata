@@ -318,9 +318,8 @@ namespace fs = std::filesystem;
         snprintf(fracture_kw, 9, "F-%6s", rd_kw_get_header(swat));
         snprintf(matrix_kw, 9, "M-%6s", rd_kw_get_header(swat));
 
-        rd_kw_type *M = rd_kw_alloc_sub_copy(swat, matrix_kw, 0, matrix_size);
-        rd_kw_type *F =
-            rd_kw_alloc_sub_copy(swat, fracture_kw, matrix_size, fracture_size);
+        rd_kw_type *M = new rd_kw_type{*swat, matrix_kw, 0, matrix_size};
+        rd_kw_type *F = new rd_kw_type{*swat, fracture_kw, matrix_size, fracture_size};
       }
 
   About nnc
@@ -729,12 +728,11 @@ struct rd_grid_struct {
     double unit_y[2];
     double origo[2];
     std::optional<std::array<float, 6>> mapaxes;
-    rd_kw_ptr coord_kw{nullptr,
-                       &rd_kw_free}; /* Retained for writing the grid to file.
-                                        In principal it should be possible to
-                                        recalculate this from the cell coordinates,
-                                        but in cases with skewed cells this has proved
-                                        numerically challenging. */
+    rd_kw_ptr coord_kw{nullptr}; /* Retained for writing the grid to file.
+                                    In principal it should be possible to
+                                    recalculate this from the cell coordinates,
+                                    but in cases with skewed cells this has proved
+                                    numerically challenging. */
 
     UnitSystem unit_system;
     int eclipse_version;
@@ -2181,8 +2179,8 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
 
         if (corsnum != NULL)
             rd_grid->coarsening_active = true;
-        rd_grid->coord_kw.reset(
-            rd_kw_alloc_new("COORD", coord_size, RD_FLOAT, coord));
+        rd_grid->coord_kw =
+            std::move(make_rd_kw("COORD", coord_size, RD_FLOAT, coord));
         int j;
 #pragma omp parallel for
         for (j = 0; j < ny; j++)
@@ -2196,8 +2194,8 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     return rd_grid;
 }
 
-static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
-                                             int grid_nr) {
+static rd_kw_ptr rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
+                                           int grid_nr) {
     auto gridhead_kw = make_rd_kw(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
     rd_kw_scalar_set_int(gridhead_kw.get(), 0);
     rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_TYPE_INDEX,
@@ -2207,7 +2205,7 @@ static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
     rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NZ_INDEX, nz);
     rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_NUMRES_INDEX, 1);
     rd_kw_iset_int(gridhead_kw.get(), GRIDHEAD_LGR_INDEX, grid_nr);
-    return gridhead_kw.release();
+    return gridhead_kw;
 }
 
 /**
@@ -2246,8 +2244,7 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
     }
 
     bool apply_mapaxes = true;
-    auto gridhead_kw =
-        rd_kw_ptr(rd_grid_alloc_gridhead_kw(nx, ny, nz, 0), &rd_kw_free);
+    auto gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, 0);
     rd_kw_type *gridunit_kw = NULL;
     return rd_grid_alloc_GRDECL_kw__(
                NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
@@ -2290,7 +2287,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
 
          ERT::FortIO init_file("CASE.INIT", std::ios_base::out, ...
          rd_grid_type * grid ...
-         rd_kw_type * trannnc_kw = rd_kw_alloc( "TRANNNC" , num_nnc , RD_FLOAT_TYPE );
+         rd_kw_type trannnc_kw{"TRANNNC" , num_nnc , RD_FLOAT_TYPE};
 
          for (int i = 0; i < num_nnc; i++) {
              int   g1 = ...
@@ -2298,11 +2295,11 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
              float T  = ..
 
              rd_grid_add_self_nnc( grid , g1 , g2 , i );
-             rd_kw_iset( trannnc_kw , i , T );
+             rd_kw_iset( &trannnc_kw , i , T );
          }
          ...
          rd_grid_fwrite_EGRID( grid , ... );
-         rd_kw_fwrite( trannnc_kw , init_file );
+         rd_kw_fwrite( &trannnc_kw , init_file );
 
 */
 void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
@@ -4425,7 +4422,7 @@ std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
         return std::nullopt;
 }
 
-static rd_kw_type *rd_grid_alloc_mapunits_kw(UnitSystem output_unit) {
+static rd_kw_ptr rd_grid_alloc_mapunits_kw(UnitSystem output_unit) {
     auto mapunits_kw = make_rd_kw(MAPUNITS_KW, 1, RD_CHAR);
 
     if (output_unit == UnitSystem::FIELD)
@@ -4437,10 +4434,10 @@ static rd_kw_type *rd_grid_alloc_mapunits_kw(UnitSystem output_unit) {
     if (output_unit == UnitSystem::LAB)
         rd_kw_iset_string8(mapunits_kw.get(), 0, "CM");
 
-    return mapunits_kw.release();
+    return mapunits_kw;
 }
 
-static rd_kw_type *rd_grid_alloc_gridunits_kw(UnitSystem output_unit) {
+static rd_kw_ptr rd_grid_alloc_gridunits_kw(UnitSystem output_unit) {
     auto gridunits_kw = make_rd_kw(GRIDUNIT_KW, 2, RD_CHAR);
 
     if (output_unit == UnitSystem::FIELD)
@@ -4453,7 +4450,7 @@ static rd_kw_type *rd_grid_alloc_gridunits_kw(UnitSystem output_unit) {
         rd_kw_iset_string8(gridunits_kw.get(), 0, "CM");
 
     rd_kw_iset_string8(gridunits_kw.get(), 1, "");
-    return gridunits_kw.release();
+    return gridunits_kw;
 }
 
 static UnitSystem rd_grid_check_unit_system(const rd_kw_type *gridunit_kw) {
@@ -4498,13 +4495,13 @@ static void rd_grid_fwrite_mapaxes(const rd_grid_type *grid,
 
 static void rd_grid_fwrite_mapunits(ERT::FortIO &fortio,
                                     UnitSystem output_unit) {
-    rd_kw_ptr mapunits_kw(rd_grid_alloc_mapunits_kw(output_unit), rd_kw_free);
+    rd_kw_ptr mapunits_kw = rd_grid_alloc_mapunits_kw(output_unit);
     rd_kw_fwrite(mapunits_kw.get(), fortio);
 }
 
 static void rd_grid_fwrite_gridunits(ERT::FortIO &fortio,
                                      UnitSystem output_unit) {
-    rd_kw_ptr gridunits_kw(rd_grid_alloc_gridunits_kw(output_unit), rd_kw_free);
+    rd_kw_ptr gridunits_kw = rd_grid_alloc_gridunits_kw(output_unit);
     rd_kw_fwrite(gridunits_kw.get(), fortio);
 }
 
@@ -4655,8 +4652,7 @@ static void rd_grid_fwrite_main_EGRID_header(const rd_grid_type *grid,
 
 static void rd_grid_fwrite_gridhead_kw(int nx, int ny, int nz, int grid_nr,
                                        ERT::FortIO &fortio) {
-    rd_kw_ptr gridhead_kw(rd_grid_alloc_gridhead_kw(nx, ny, nz, grid_nr),
-                          rd_kw_free);
+    rd_kw_ptr gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, grid_nr);
     rd_kw_fwrite(gridhead_kw.get(), fortio);
 }
 
@@ -4810,8 +4806,8 @@ void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord) {
 
 static void rd_grid_assert_coord_kw(rd_grid_type *grid) {
     if (!grid->coord_kw) {
-        grid->coord_kw.reset(
-            rd_kw_alloc(COORD_KW, rd_grid_get_coord_size(grid), RD_FLOAT));
+        grid->coord_kw = std::move(
+            make_rd_kw(COORD_KW, rd_grid_get_coord_size(grid), RD_FLOAT));
         rd_grid_init_coord_data(grid, static_cast<float *>(rd_kw_get_void_ptr(
                                           grid->coord_kw.get())));
     }
@@ -4881,7 +4877,7 @@ rd_kw_ptr rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
 
 rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
     if (grid->coord_kw)
-        return {rd_kw_alloc_copy(grid->coord_kw.get()), &rd_kw_free};
+        return std::make_unique<rd_kw_struct>(*grid->coord_kw.get());
 
     auto coord_kw =
         make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(grid->nx, grid->ny), RD_FLOAT);
@@ -5006,7 +5002,7 @@ static void rd_grid_init_corsnum_data(const rd_grid_type *grid, int *corsnum) {
     }
 }
 
-static rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
+static rd_kw_ptr rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
     if (grid->size > std::numeric_limits<int>::max())
         throw std::out_of_range(
             "Size of grid overflowed max size of CORSNUM keyword");
@@ -5014,7 +5010,7 @@ static rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
         make_rd_kw(CORSNUM_KW, static_cast<int>(grid->size), RD_INT);
     rd_grid_init_corsnum_data(
         grid, static_cast<int *>(rd_kw_get_void_ptr(corsnum_kw.get())));
-    return corsnum_kw.release();
+    return corsnum_kw;
 }
 
 void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
@@ -5069,12 +5065,10 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
         g2.resize(1, default_index);
     }
 
-    auto nnc1_kw =
-        rd_kw_ptr(rd_kw_alloc_new_shared(NNC1_KW, num_nnc, RD_INT, g1.data()),
-                  &rd_kw_free);
-    auto nnc2_kw =
-        rd_kw_ptr(rd_kw_alloc_new_shared(NNC2_KW, num_nnc, RD_INT, g2.data()),
-                  &rd_kw_free);
+    auto nnc1_kw = std::make_unique<rd_kw_struct>(
+        NNC1_KW, num_nnc, RD_INT, rd_kw_struct::shared_ref{g1.data()});
+    auto nnc2_kw = std::make_unique<rd_kw_struct>(
+        NNC2_KW, num_nnc, RD_INT, rd_kw_struct::shared_ref{g2.data()});
     auto nnchead_kw = make_rd_kw(NNCHEAD_KW, NNCHEAD_SIZE, RD_INT);
 
     rd_kw_scalar_set_int(nnchead_kw.get(), 0);
@@ -5121,7 +5115,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
         rd_grid_assert_coord_kw(grid);
         {
             auto coord_kw =
-                rd_kw_ptr(rd_kw_alloc_copy(grid->coord_kw.get()), &rd_kw_free);
+                std::make_unique<rd_kw_struct>(*grid->coord_kw.get());
             auto zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
 
             if (output_unit != grid->unit_system) {
@@ -5141,8 +5135,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, ERT::FortIO &fortio,
             rd_kw_fwrite(hostnum_kw.get(), fortio);
         }
         if (grid->coarsening_active) {
-            auto corsnum_kw =
-                rd_kw_ptr(rd_grid_alloc_corsnum_kw(grid), &rd_kw_free);
+            auto corsnum_kw = rd_grid_alloc_corsnum_kw(grid);
             rd_kw_fwrite(corsnum_kw.get(), fortio);
         }
 

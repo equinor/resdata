@@ -119,7 +119,8 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
     }
 }
 
-rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit) {
+rd_kw_ptr rd_kw_struct::make_actnum(const rd_kw_type *porv_kw,
+                                    float porv_limit) {
     if (!rd_type_is_float(porv_kw->data_type))
         return NULL;
 
@@ -138,5 +139,5 @@ rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit) {
             actnum_values[i] = 0;
     }
 
-    return actnum_kw.release();
+    return actnum_kw;
 }

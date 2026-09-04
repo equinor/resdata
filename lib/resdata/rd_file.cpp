@@ -124,31 +124,21 @@ namespace fs = std::filesystem;
    the file, possible garbage at the end will be ignored. */
 void rd::File::scan() {
     context->fortio.fseek(0, SEEK_SET);
-    {
-        rd_kw_ptr work_kw = make_rd_kw("WORK-KW", 0, RD_INT, nullptr);
+    while (true) {
+        if (context->fortio.read_at_eof())
+            break;
 
-        while (true) {
-            if (context->fortio.read_at_eof())
-                break;
+        offset_type current_offset = context->fortio.ftell();
+        auto work_kw = rd_kw_fread_header(context->fortio);
+        if (!work_kw)
+            break;
 
-            {
-                offset_type current_offset = context->fortio.ftell();
-                rd_read_status_enum read_status =
-                    rd_kw_fread_header(work_kw.get(), context->fortio);
-                if (read_status == RD_KW_READ_FAIL)
-                    break;
+        auto file_kw = std::make_shared<FileKW>(work_kw.get(), current_offset);
 
-                if (read_status == RD_KW_READ_OK) {
-                    auto file_kw =
-                        std::make_shared<FileKW>(work_kw.get(), current_offset);
-
-                    if (file_kw->skip_data(context->fortio)) {
-                        global_view->add_kw(file_kw);
-                    } else {
-                        break;
-                    }
-                }
-            }
+        if (file_kw->skip_data(context->fortio)) {
+            global_view->add_kw(file_kw);
+        } else {
+            break;
         }
     }
     global_view->make_index();

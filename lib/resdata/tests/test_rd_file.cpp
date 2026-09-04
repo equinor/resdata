@@ -21,24 +21,22 @@ void test_writable(size_t data_size) {
     rd::util::TestArea ta("file_writable");
     const char *data_file_name = "test_file";
 
-    rd_kw_type *kw = rd_kw_alloc("TEST_KW", data_size, RD_INT);
+    auto kw = make_rd_kw("TEST_KW", data_size, RD_INT);
     for (size_t i = 0; i < data_size; ++i)
-        rd_kw_iset_int(kw, i, ((i * 37) + 11) % data_size);
+        rd_kw_iset_int(kw.get(), i, ((i * 37) + 11) % data_size);
 
     {
         ERT::FortIO fortio(data_file_name, std::ios_base::out, false, true);
-        rd_kw_fwrite(kw, fortio);
+        rd_kw_fwrite(kw.get(), fortio);
     }
 
     for (int i = 0; i < 4; ++i) {
         auto rd_file = rd::File::open(data_file_name, FileMode::WRITABLE);
         rd_kw_type *loaded_kw = rd_file->get_global_view()->get_kw(0);
-        test_assert_true(rd_kw_equal(kw, loaded_kw));
+        test_assert_true(rd_kw_equal(kw.get(), loaded_kw));
 
         rd_file->save_kw(loaded_kw);
     }
-
-    rd_kw_free(kw);
 }
 
 void test_truncated() {
