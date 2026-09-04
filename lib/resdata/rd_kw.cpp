@@ -467,26 +467,6 @@ size_t rd_kw_fortio_size(const rd_kw_type *rd_kw) {
     return size;
 }
 
-/**
-   This is where the storage buffer of the rd_kw is allocated.
-*/
-static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
-    if (rd_kw->shared_data)
-        throw std::invalid_argument(
-            "trying to allocate data for rd_kw object which has been declared "
-            "with shared storage");
-
-    {
-
-        size_t byte_size =
-            rd_kw->size() * rd_type_get_sizeof_ctype(rd_kw->data_type);
-        rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
-        if (rd_kw->data) {
-            memset(rd_kw->data, 0, byte_size);
-        }
-    }
-}
-
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
         throw std::invalid_argument("type/size mismatch");
@@ -1066,7 +1046,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 /**
    Allocates storage and reads data.
 */
-bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
+bool rd_kw_struct::fskip_data(rd_data_type data_type, const int element_count,
                         ERT::FortIO &fortio) {
     if (element_count <= 0)
         return true;
@@ -1090,8 +1070,8 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
     return true;
 }
 
-bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    return rd_kw_fskip_data__(rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
+bool rd_kw_struct::fskip_data(ERT::FortIO &fortio) const{
+    return rd_kw_struct::fskip_data(rd_kw_get_data_type(this), rd_kw_get_size(this),
                               fortio);
 }
 
@@ -1164,12 +1144,6 @@ rd_kw_ptr rd_kw_fread_header(ERT::FortIO &fortio) {
     return make_rd_kw(header, size, data_type);
 }
 
-void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data) {
-    if (!rd_kw->shared_data)
-        free(rd_kw->data);
-    rd_kw->data = (char *)data;
-}
-
 void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
     rd_kw->header8 = (char *)realloc(rd_kw->header8, RD_STRING8_LENGTH + 1);
     if (strlen(header) <= 8) {
@@ -1186,7 +1160,6 @@ void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
 
 rd_kw_ptr rd_kw_struct::fread(ERT::FortIO &fortio) {
     if (auto rd_kw = rd_kw_fread_header(fortio)) {
-        rd_kw_alloc_data(rd_kw.get());
         if (!rd_kw_fread_data(rd_kw.get(), fortio))
             return {nullptr};
         return rd_kw;
