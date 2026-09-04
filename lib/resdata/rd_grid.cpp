@@ -1863,10 +1863,22 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
 
 static rd_grid_type *rd_grid_add_lgr(rd_grid_type *main_grid,
                                      rd_grid_ptr lgr_grid) {
+    int lgr_nr = lgr_grid->lgr_nr;
+    if (lgr_nr < 0)
+        throw std::invalid_argument(
+            fmt::format("LGR number must be non-negative, got {}", lgr_nr));
+
+    // Bound check for LGR number to avoid excessive memory allocation in
+    // lgr_index_map. Value was choses arbitrarily, but should be large enough
+    // for any reasonable case.
+    constexpr int MAX_LGR_NR = 1'000'000;
+    if (lgr_nr > MAX_LGR_NR)
+        throw std::invalid_argument(
+            fmt::format("LGR number {} exceeds maximum supported value {}",
+                        lgr_nr, MAX_LGR_NR));
+
     auto ptr = lgr_grid.get();
     std::string lgr_name = lgr_grid->name;
-    int lgr_nr = lgr_grid->lgr_nr;
-
     main_grid->LGR_list.push_back(std::move(lgr_grid));
     if (lgr_nr >= static_cast<int>(main_grid->lgr_index_map.size()))
         main_grid->lgr_index_map.resize(lgr_nr + 1, 0);
@@ -2167,6 +2179,10 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     if (nx <= 0 || ny <= 0 || nz <= 0)
         throw std::invalid_argument(fmt::format(
             "Invalid grid dimensions: nx={}, ny={}, nz={}", nx, ny, nz));
+
+    if (lgr_nr < 0)
+        throw std::invalid_argument(
+            fmt::format("Invalid lgr_nr: lgr_nr={}", lgr_nr));
 
     const int64_t nx64 = nx;
     const int64_t ny64 = ny;

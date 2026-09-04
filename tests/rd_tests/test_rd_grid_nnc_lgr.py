@@ -15,6 +15,7 @@ from ._grid_fixtures import (
     load_grid_file_with_lgr_parent,
     load_grid_file_with_mapaxes,
     load_grid_file_with_nested_lgr,
+    write_egrid_with_single_lgr,
 )
 
 
@@ -35,6 +36,50 @@ def test_that_egrid_with_single_lgr_reports_one_lgr(tmp_path):
 
     assert grid.get_num_lgr() == 1
     assert grid.has_lgr("LGR1")
+
+
+def test_that_egrid_with_negative_lgr_number_raises(tmp_path):
+    filename = tmp_path / "NEGATIVE_LGR_NUMBER.EGRID"
+    write_egrid_with_single_lgr(
+        filename,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        "LGR1",
+        lgr_nr=-1000,
+    )
+
+    with pytest.raises(ValueError, match="Invalid lgr_nr: lgr_nr=-1000"):
+        Grid(str(filename))
+
+
+def test_that_egrid_with_lgr_number_above_upper_bound_raises(tmp_path):
+    filename = tmp_path / "TOO_LARGE_LGR_NUMBER.EGRID"
+    write_egrid_with_single_lgr(
+        filename,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        "LGR1",
+        lgr_nr=1_000_001,
+    )
+
+    with pytest.raises(
+        ValueError, match="LGR number 1000001 exceeds maximum supported value"
+    ):
+        Grid(str(filename))
 
 
 def test_that_lgr_grid_has_expected_dimensions(tmp_path):
