@@ -36,16 +36,16 @@ int fault_block_layer_get_max_id(const fault_block_layer_type *layer);
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer);
 int fault_block_layer_get_size(const fault_block_layer_type *layer);
 bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
-                               const rd_kw_type *fault_block_kw);
+                               const rd::KW *fault_block_kw);
 bool fault_block_layer_load_kw(fault_block_layer_type *layer,
-                               const rd_kw_type *fault_block_kw);
+                               const rd::KW *fault_block_kw);
 int fault_block_layer_get_k(const fault_block_layer_type *layer);
 void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
                                   layer_type *layer);
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
                                             const FaultBlock &src_block);
 bool fault_block_layer_export(const fault_block_layer_type *layer,
-                              rd_kw_type *faultblock_kw);
+                              rd::KW *faultblock_kw);
 rd_grid_type *fault_block_layer_get_grid(const fault_block_layer_type *layer);
 layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer);
 

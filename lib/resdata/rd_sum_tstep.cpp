@@ -140,17 +140,17 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
 
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 int ministep_nr,
-                                                const rd_kw_type *params_kw,
+                                                const rd::KW *params_kw,
                                                 const char *src_file,
                                                 const rd_smspec_type *smspec) {
 
-    int data_size = rd_kw_get_size(params_kw);
+    int data_size = rd::kw_get_size(params_kw);
 
     if (data_size == rd_smspec_get_params_size(smspec)) {
         std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
             ministep(rd_sum_tstep_alloc(report_step, ministep_nr, smspec),
                      &rd_sum_tstep_free);
-        rd_kw_get_memcpy_data(params_kw, ministep->data.data());
+        ministep->data = params_kw->get_vector<float>();
         rd_sum_tstep_set_time_info(ministep.get(), smspec);
         return ministep.release();
     } else {
@@ -225,23 +225,16 @@ int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep) {
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
                          const int *index_map, int index_map_size,
                          ERT::FortIO &fortio) {
-    {
-        auto ministep_kw = make_rd_kw(MINISTEP_KW, 1, RD_INT);
-        rd_kw_iset_int(ministep_kw.get(), 0, ministep->ministep);
-        rd_kw_fwrite(ministep_kw.get(), fortio);
-    }
+    rd::KW ministep_kw{MINISTEP_KW, std::vector<int>{ministep->ministep}};
+    ministep_kw.fwrite(fortio);
 
-    {
-        int compact_size = index_map_size;
-        auto params_kw = make_rd_kw(PARAMS_KW, compact_size, RD_FLOAT);
+    int compact_size = index_map_size;
+    std::vector<float> data(compact_size);
+    for (int i = 0; i < compact_size; i++)
+        data[i] = ministep->data[index_map[i]];
 
-        float *data = (float *)rd_kw_get_ptr(params_kw.get());
-
-        for (int i = 0; i < compact_size; i++)
-            data[i] = ministep->data[index_map[i]];
-
-        rd_kw_fwrite(params_kw.get(), fortio);
-    }
+    rd::KW params_kw{PARAMS_KW, data};
+    params_kw.fwrite(fortio);
 }
 
 void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {

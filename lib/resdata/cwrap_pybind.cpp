@@ -43,21 +43,21 @@ py::object ResdataKW() {
     return cls;
 }
 
-template <> rd_kw_type *from_cwrap<rd_kw_type>(py::handle obj) {
+template <> rd::KW *from_cwrap<rd::KW>(py::handle obj) {
     if (!py::isinstance(obj, ResdataKW()))
         throw py::type_error("Expected ResdataKW, got " +
                              static_cast<std::string>(py::repr(obj)));
-    return cast_cwrap<rd_kw_type>(obj);
+    return cast_cwrap<rd::KW>(obj);
 }
 
-template <> rd_kw_type *from_cwrap(std::optional<py::handle> obj) {
+template <> rd::KW *from_cwrap(std::optional<py::handle> obj) {
     if (!obj)
         return nullptr;
 
     if (!py::isinstance(*obj, ResdataKW()))
         throw py::type_error("Expected ResdataKW, got " +
                              static_cast<std::string>(py::repr(*obj)));
-    return cast_cwrap<rd_kw_type>(*obj);
+    return cast_cwrap<rd::KW>(*obj);
 }
 
 py::object Grid() {

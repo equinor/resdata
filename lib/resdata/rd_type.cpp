@@ -173,8 +173,7 @@ bool rd_type_is_alpha(const rd_data_type rd_type) {
 
 bool rd_type_is_equal(const rd_data_type rd_type1,
                       const rd_data_type rd_type2) {
-    return (rd_type1.type == rd_type2.type &&
-            rd_type1.element_size == rd_type2.element_size);
+    return rd_type1 == rd_type2;
 }
 
 bool rd_type_is_char(const rd_data_type rd_type) {

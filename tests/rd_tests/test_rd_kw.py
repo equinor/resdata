@@ -794,14 +794,18 @@ def test_that_zero_sized_keywords_can_be_read(tmp_path):
 
 
 def test_that_short_data_section_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
+    with pytest.raises(
+        ValueError, match=r"Could not read record size for keyword KEYWORD1"
+    ):
         _ = read_kw_from_bytes(
             tmp_path, b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
         )
 
 
 def test_that_oversized_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
+    with pytest.raises(
+        ValueError, match=r"Could not read record size for keyword KEYWORD1"
+    ):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
@@ -810,7 +814,9 @@ def test_that_oversized_record_size_raises_value_error(tmp_path):
 
 
 def test_that_negative_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
+    with pytest.raises(
+        ValueError, match=r"Could not read record size for keyword KEYWORD1"
+    ):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10\xf0\x00\x00\x00",
@@ -818,7 +824,9 @@ def test_that_negative_record_size_raises_value_error(tmp_path):
 
 
 def test_that_mismatch_in_end_record_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
+    with pytest.raises(
+        ValueError, match=r"Could not read record size for keyword KEYWORD1"
+    ):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
@@ -1521,7 +1529,7 @@ TestKw = StatefulKwTest.TestCase
 
 
 def test_create_negative_size_raises():
-    with pytest.raises(ValueError, match="rd_kw size was negative"):
+    with pytest.raises(TypeError):
         ResdataKW("KW", -1, ResDataType.RD_INT)
 
 
@@ -2118,15 +2126,6 @@ def test_that_first_different_compares_alphanumeric_keywords_elementwise(data_ty
     assert lhs.first_different(rhs) == 3
 
 
-def test_that_reading_past_the_end_of_a_file_raises(tmp_path):
-    path = tmp_path / "empty.kw"
-    path.write_bytes(b"")
-
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
-        with openFortIO(str(path)) as fortio:
-            ResdataKW.fread(fortio)
-
-
 @pytest.mark.parametrize(
     "token",
     ["0.10000000000000E+01", "D+01", "0.1000000000000xD+01"],
@@ -2313,6 +2312,17 @@ def test_that_keywords_can_be_loaded_when_the_stream_is_closed_between_reads(tmp
     assert list(rd_file[1]) == [4, 5, 6, 7]
 
 
+def test_that_reading_empty_keyword_raises(tmp_path):
+    path = tmp_path / "empty.kw"
+    path.write_bytes(b"")
+
+    with pytest.raises(
+        RuntimeError, match="Record had zero size in reading keyword header"
+    ):
+        with openFortIO(str(path)) as fortio:
+            ResdataKW.fread(fortio)
+
+
 def test_that_reading_past_the_last_keyword_fails(tmp_path):
     path = tmp_path / "file"
     _write_two_keywords(path)
@@ -2320,5 +2330,23 @@ def test_that_reading_past_the_last_keyword_fails(tmp_path):
     with openFortIO(str(path)) as fortio:
         ResdataKW.fread(fortio)
         ResdataKW.fread(fortio)
-        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with pytest.raises(
+            RuntimeError, match="Record had zero size in reading keyword header"
+        ):
             ResdataKW.fread(fortio)
+
+
+def test_that_missing_end_quote_raises(tmp_path):
+    (path := tmp_path / "test").write_text("'CHARKW  ' 1 'CHAR' 'E0000     ")
+    with (
+        pytest.raises(RuntimeError, match="reading 'xxxxxxxx' formatted string failed"),
+        openFortIO(str(path), fmt_file=True) as fortio,
+    ):
+        ResdataKW.fread(fortio)
+
+
+def test_that_strings_can_be_zero_sized(tmp_path):
+    (path := tmp_path / "test").write_text("'CHARKW  ' 1 'C000' ''")
+    with openFortIO(str(path), fmt_file=True) as fortio:
+        kw = ResdataKW.fread(fortio)
+        assert kw[0] == ""

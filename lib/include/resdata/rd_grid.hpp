@@ -28,7 +28,7 @@ int rd_grid_get_num_coarse_groups(const rd_grid_type *main_grid);
 rd_coarse_cell_type *rd_grid_iget_coarse_group(const rd_grid_type *rd_grid,
                                                int coarse_nr);
 std::vector<double> rd_grid_get_column_property(const rd_grid_type *rd_grid,
-                                                const rd_kw_type *rd_kw, int i,
+                                                const rd::KW *rd_kw, int i,
                                                 int j);
 void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, int global_index,
                                   int corner_nr, double *xpos, double *ypos,
@@ -75,19 +75,21 @@ const nnc_info_type *rd_grid_get_cell_nnc_info1(const rd_grid_type *grid,
                                                 int global_index);
 void rd_grid_add_self_nnc(rd_grid_type *grid1, int g1, int g2, int nnc_index);
 rd_grid_type *rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz,
-                                      const rd_kw_type *zcorn_kw,
-                                      const rd_kw_type *coord_kw,
-                                      const rd_kw_type *actnum_kw,
-                                      const rd_kw_type *mapaxes_kw);
+                                      const rd::KW *zcorn_kw,
+                                      const rd::KW *coord_kw,
+                                      const rd::KW *actnum_kw,
+                                      const rd::KW *mapaxes_kw);
 rd_grid_type *rd_grid_alloc(const char *);
 rd_grid_type *rd_grid_load_case(const char *case_input);
 rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes);
 rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
                                         double dy, double dz,
                                         const int *actnum);
-rd_kw_ptr rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size);
-std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
-rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid);
+std::unique_ptr<rd::KW> rd_grid_alloc_volume_kw(const rd_grid_type *grid,
+                                                bool active_size);
+std::optional<std::unique_ptr<rd::KW>>
+rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
+std::unique_ptr<rd::KW> rd_grid_alloc_coord_kw(const rd_grid_type *grid);
 
 bool rd_grid_exists(const char *case_input);
 
@@ -139,8 +141,8 @@ bool rd_grid_has_lgr_nr(const rd_grid_type *main_grid, int lgr_nr);
 const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index);
 const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, int lgr_nr);
 
-double rd_grid_get_property(const rd_grid_type *rd_grid,
-                            const rd_kw_type *rd_kw, int i, int j, int k);
+double rd_grid_get_property(const rd_grid_type *rd_grid, const rd::KW *rd_kw,
+                            int i, int j, int k);
 bool rd_grid_test_lgr_consistency(const rd_grid_type *rd_grid);
 
 void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
@@ -153,8 +155,8 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
 
 int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c);
 
-rd_kw_ptr rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
-rd_kw_ptr rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
+std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
+std::unique_ptr<rd::KW> rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid);
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid);
 
@@ -172,10 +174,10 @@ bool rd_grid_use_mapaxes(const rd_grid_type *grid);
 void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
                                       double *mapaxes);
 void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum);
-void rd_grid_compressed_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
-                                const rd_kw_type *src_kw);
-void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
-                            const rd_kw_type *src_kw);
+void rd_grid_compressed_kw_copy(const rd_grid_type *grid, rd::KW *target_kw,
+                                const rd::KW *src_kw);
+void rd_grid_global_kw_copy(const rd_grid_type *grid, rd::KW *target_kw,
+                            const rd::KW *src_kw);
 void rd_grid_export_cell_corners1(const rd_grid_type *grid, int global_index,
                                   double *x, double *y, double *z);
 

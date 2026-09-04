@@ -34,6 +34,7 @@ add_library(
   resdata/rd_sum_file_data.cpp
   resdata/rd_util.cpp
   resdata/rd_kw.cpp
+  resdata/rd_kw_header.cpp
   resdata/rd_sum.cpp
   resdata/rd_sum_vector.cpp
   resdata/rd_grid.cpp
@@ -317,9 +318,7 @@ foreach(
   rd_grid_init_fwrite
   rd_grid_reset_actnum
   rd_kw_space_pad
-  rd_kw_equal
   rd_kw_fread
-  rd_kw_init
   rd_layer
   rd_nnc_info_test
   rd_nnc_vector

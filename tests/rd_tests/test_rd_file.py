@@ -673,6 +673,23 @@ def test_fast_open_with_index_roundtrip(tmpdir, extra_flags):
         assert list(fast_opened["MY_KEY"][0]) == [0, 1, 2, 3, 4]
 
 
+def test_save_kw_after_resize_raises(tmpdir):
+    with tmpdir.as_cwd():
+        _write_single_kw_file("TEST", size=5)
+
+        rd_file = ResdataFile("TEST", flags=FileMode.WRITABLE)
+        loaded_kw = rd_file["MY_KEY"][0]
+        loaded_kw.resize(10)
+
+        with pytest.raises(RuntimeError):
+            rd_file.save_kw(loaded_kw)
+        rd_file.close()
+
+        # The on-disk content is left untouched since the resized keyword
+        # was never written.
+        assert list(ResdataFile("TEST")["MY_KEY"][0]) == [0, 1, 2, 3, 4]
+
+
 def test_save_kw_with_kw_from_different_file_raises(tmpdir):
     with tmpdir.as_cwd():
         _write_single_kw_file("A")
