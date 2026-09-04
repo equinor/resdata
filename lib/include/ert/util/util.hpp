@@ -116,7 +116,6 @@ bool util_copy_file__(const char *src_file, const char *target_file,
 char *util_alloc_cwd(void);
 char *util_alloc_realpath(const char *);
 char *util_alloc_realpath__(const char *input_path);
-bool util_ftruncate(FILE *stream, long size);
 
 int util_roundf(float x);
 int util_round(double x);

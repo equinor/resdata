@@ -7,6 +7,7 @@
 #include <resdata/rd_region.hpp>
 #include <resdata/rd_kw.hpp>
 #include <string>
+#include <vector>
 
 int num_selected(rd_region_type *region) {
     return rd_region_get_global_list(region).size();
@@ -107,83 +108,74 @@ TEST_CASE("rd_region", "[rd_region]") {
         }
 
         SECTION("select with int kw") {
-            auto int_kw = make_rd_kw("INTGR", 1000, RD_INT);
+            rd::KW int_kw{"INTGR", 1000, RD_INT};
 
-            for (int i = 0; i < 500; i++)
-                rd_kw_iset_int(int_kw.get(), i, 1);
-            for (int i = 500; i < 1000; i++)
-                rd_kw_iset_int(int_kw.get(), i, 2);
+            for (size_t i = 0; i < 500; i++)
+                int_kw.at<int>(i) = 1;
+            for (size_t i = 500; i < 1000; i++)
+                int_kw.at<int>(i) = 2;
 
-            rd_region_select_equal(region, int_kw.get(), 1);
+            rd_region_select_equal(region, &int_kw, 1);
             REQUIRE(num_selected(region) == 500);
-            rd_region_deselect_equal(region, int_kw.get(), 1);
+            rd_region_deselect_equal(region, &int_kw, 1);
             REQUIRE(num_selected(region) == 0);
         }
 
         SECTION("select with bool kw") {
-            auto bool_kw = make_rd_kw("BOOL", 1000, RD_BOOL);
+            rd::KW bool_kw{"BOOL", 1000, RD_BOOL};
 
-            for (int i = 0; i < 500; i++)
-                rd_kw_iset_bool(bool_kw.get(), i, true);
-            for (int i = 500; i < 1000; i++)
-                rd_kw_iset_bool(bool_kw.get(), i, false);
+            for (size_t i = 0; i < 500; i++)
+                bool_kw.at<bool>(i) = true;
+            for (size_t i = 500; i < 1000; i++)
+                bool_kw.at<bool>(i) = false;
 
-            rd_region_select_true(region, bool_kw.get());
+            rd_region_select_true(region, &bool_kw);
             REQUIRE(num_selected(region) == 500);
-            rd_region_select_false(region, bool_kw.get());
+            rd_region_select_false(region, &bool_kw);
             REQUIRE(num_selected(region) == 1000);
         }
 
         SECTION("select with float kw") {
-            auto float_kw = make_rd_kw("FLOAT", 1000, RD_FLOAT);
+            rd::KW float_kw{"FLOAT", 1000, RD_FLOAT};
 
-            for (int i = 0; i < 1000; i++)
-                rd_kw_iset_float(float_kw.get(), i, i * 0.1f);
+            for (size_t i = 0; i < 1000; i++)
+                float_kw.at<float>(i) = i * 0.1f;
 
             SECTION("Select in interval") {
-                rd_region_select_in_interval(region, float_kw.get(), 10.0,
-                                             50.0);
+                rd_region_select_in_interval(region, &float_kw, 10.0, 50.0);
                 REQUIRE(num_selected(region) == 400);
-                rd_region_deselect_in_interval(region, float_kw.get(), 10.0,
-                                               50.0);
+                rd_region_deselect_in_interval(region, &float_kw, 10.0, 50.0);
                 REQUIRE(num_selected(region) == 0);
             }
 
             SECTION("Select comparison") {
-                rd_region_select_smaller(region, float_kw.get(), 50.0f);
+                rd_region_select_smaller(region, &float_kw, 50.0f);
                 REQUIRE(num_selected(region) == 500);
-                rd_region_deselect_smaller(region, float_kw.get(), 50.0f);
+                rd_region_deselect_smaller(region, &float_kw, 50.0f);
                 REQUIRE(num_selected(region) == 0);
             }
 
             SECTION("Select larger") {
-                rd_region_select_larger(region, float_kw.get(), 49.9f);
+                rd_region_select_larger(region, &float_kw, 49.9f);
                 REQUIRE(num_selected(region) == 501);
-                rd_region_deselect_larger(region, float_kw.get(), 49.9f);
+                rd_region_deselect_larger(region, &float_kw, 49.9f);
                 REQUIRE(num_selected(region) == 0);
             }
 
             SECTION("comparison select") {
-                auto cmp_kw = make_rd_kw("KW2", 1000, RD_FLOAT);
-
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_float(cmp_kw.get(), i, 50.0f);
+                rd::KW cmp_kw{"KW2", std::vector<float>(1000, 50.0f)};
 
                 SECTION("Compare less") {
-                    rd_region_cmp_select_less(region, float_kw.get(),
-                                              cmp_kw.get());
+                    rd_region_cmp_select_less(region, &float_kw, &cmp_kw);
                     REQUIRE(num_selected(region) == 500);
-                    rd_region_cmp_deselect_less(region, float_kw.get(),
-                                                cmp_kw.get());
+                    rd_region_cmp_deselect_less(region, &float_kw, &cmp_kw);
                     REQUIRE(num_selected(region) == 0);
                 }
 
                 SECTION("Compare more") {
-                    rd_region_cmp_select_more(region, float_kw.get(),
-                                              cmp_kw.get());
+                    rd_region_cmp_select_more(region, &float_kw, &cmp_kw);
                     REQUIRE(num_selected(region) == 500);
-                    rd_region_cmp_deselect_more(region, float_kw.get(),
-                                                cmp_kw.get());
+                    rd_region_cmp_deselect_more(region, &float_kw, &cmp_kw);
                     REQUIRE(num_selected(region) == 0);
                 }
             }
@@ -375,130 +367,102 @@ TEST_CASE("rd_region", "[rd_region]") {
             rd_region_select_i1i2(region, 0, 4);
 
             SECTION("Set keyword int") {
-                auto kw = make_rd_kw("TEST", 1000, RD_INT);
-                rd_region_set_kw_int(region, kw.get(), 42, false);
+                rd::KW kw{"TEST", 1000, RD_INT};
+                rd_region_set_kw<int>(region, &kw, 42, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE(rd_kw_iget_int(kw.get(), list.at(0)) == 42);
+                REQUIRE(kw.at<int>(list.at(0)) == 42);
             }
 
             SECTION("Set keyword float") {
-                auto kw = make_rd_kw("TEST", 1000, RD_FLOAT);
-                rd_region_set_kw_float(region, kw.get(), 3.14f, false);
+                rd::KW kw{"TEST", 1000, RD_FLOAT};
+                rd_region_set_kw<float>(region, &kw, 3.14f, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw.get(), list.at(0)),
+                REQUIRE_THAT(kw.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(3.14f, 0.01f));
             }
 
             SECTION("Set keyword double") {
-                auto kw = make_rd_kw("TEST", 1000, RD_DOUBLE);
-                rd_region_set_kw_double(region, kw.get(), 2.71, false);
+                rd::KW kw{"TEST", 1000, RD_DOUBLE};
+                rd_region_set_kw<double>(region, &kw, 2.71, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_double(kw.get(), list.at(0)),
+                REQUIRE_THAT(kw.at<double>(list.at(0)),
                              Catch::Matchers::WithinAbs(2.71, 0.01));
             }
 
             SECTION("Shift keyword int") {
-                auto kw = make_rd_kw("TEST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_int(kw.get(), i, 10);
-                rd_region_shift_kw_int(region, kw.get(), 5, false);
+                rd::KW kw{"TEST", std::vector<int>(1000, 10)};
+                rd_region_shift_kw<int>(region, &kw, 5, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE(rd_kw_iget_int(kw.get(), list.at(0)) == 15);
+                REQUIRE(kw.at<int>(list.at(0)) == 15);
             }
 
             SECTION("Scale keyword float") {
-                auto kw = make_rd_kw("TEST", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_float(kw.get(), i, 10.0f);
-                rd_region_scale_kw_float(region, kw.get(), 2.0f, false);
+                rd::KW kw{"TEST", std::vector<float>(1000, 10.0f)};
+                rd_region_scale_kw<float>(region, &kw, 2.0f, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw.get(), list.at(0)),
+                REQUIRE_THAT(kw.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(20.0f, 0.01f));
             }
 
             SECTION("Keyword copy") {
-                auto kw_src = make_rd_kw("SRC", 1000, RD_INT);
-                auto kw_dst = make_rd_kw("DST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_int(kw_src.get(), i, 99);
-                rd_region_kw_copy(region, kw_dst.get(), kw_src.get(), false);
+                rd::KW kw_src{"SRC", std::vector<int>(1000, 99)};
+                rd::KW kw_dst{"DST", 1000, RD_INT};
+                rd_region_kw_copy(region, &kw_dst, &kw_src, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE(rd_kw_iget_int(kw_dst.get(), list.at(0)) == 99);
+                REQUIRE(kw_dst.at<int>(list.at(0)) == 99);
             }
 
             SECTION("Keyword iadd") {
-                auto kw1 = make_rd_kw("KW1", 1000, RD_FLOAT);
-                auto kw2 = make_rd_kw("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
-                    rd_kw_iset_float(kw1.get(), i, 10.0f);
-                    rd_kw_iset_float(kw2.get(), i, 5.0f);
-                }
-                rd_region_kw_iadd(region, kw1.get(), kw2.get(), false);
+                rd::KW kw1{"KW1", std::vector<float>(1000, 10.0f)};
+                rd::KW kw2{"KW2", std::vector<float>(1000, 5.0f)};
+                rd_region_kw_iadd(region, &kw1, &kw2, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw1.get(), list.at(0)),
+                REQUIRE_THAT(kw1.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(15.0f, 0.01));
             }
 
             SECTION("Keyword isub") {
-                auto kw1 = make_rd_kw("KW1", 1000, RD_FLOAT);
-                auto kw2 = make_rd_kw("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
-                    rd_kw_iset_float(kw1.get(), i, 10.0f);
-                    rd_kw_iset_float(kw2.get(), i, 3.0f);
-                }
-                rd_region_kw_isub(region, kw1.get(), kw2.get(), false);
+                rd::KW kw1{"KW1", std::vector<float>(1000, 10.0f)};
+                rd::KW kw2{"KW2", std::vector<float>(1000, 3.0f)};
+                rd_region_kw_isub(region, &kw1, &kw2, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw1.get(), list.at(0)),
+                REQUIRE_THAT(kw1.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(7.0f, 0.01f));
             }
 
             SECTION("Keyword imul") {
-                auto kw1 = make_rd_kw("KW1", 1000, RD_FLOAT);
-                auto kw2 = make_rd_kw("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
-                    rd_kw_iset_float(kw1.get(), i, 10.0f);
-                    rd_kw_iset_float(kw2.get(), i, 2.0f);
-                }
-                rd_region_kw_imul(region, kw1.get(), kw2.get(), false);
+                rd::KW kw1{"KW1", std::vector<float>(1000, 10.0f)};
+                rd::KW kw2{"KW2", std::vector<float>(1000, 2.0f)};
+                rd_region_kw_imul(region, &kw1, &kw2, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw1.get(), list.at(0)),
+                REQUIRE_THAT(kw1.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(20.0f, 0.01f));
             }
 
             SECTION("Keyword idiv") {
-                auto kw1 = make_rd_kw("KW1", 1000, RD_FLOAT);
-                auto kw2 = make_rd_kw("KW2", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++) {
-                    rd_kw_iset_float(kw1.get(), i, 20.0f);
-                    rd_kw_iset_float(kw2.get(), i, 4.0f);
-                }
-                rd_region_kw_idiv(region, kw1.get(), kw2.get(), false);
+                rd::KW kw1{"KW1", std::vector<float>(1000, 20.0f)};
+                rd::KW kw2{"KW2", std::vector<float>(1000, 4.0f)};
+                rd_region_kw_idiv(region, &kw1, &kw2, false);
                 const auto list = rd_region_get_global_list(region);
-                REQUIRE_THAT(rd_kw_iget_float(kw1.get(), list.at(0)),
+                REQUIRE_THAT(kw1.at<float>(list.at(0)),
                              Catch::Matchers::WithinAbs(5.0f, 0.01f));
             }
 
             SECTION("Sum keyword int") {
-                auto kw = make_rd_kw("TEST", 1000, RD_INT);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_int(kw.get(), i, 2);
-                int sum = rd_region_sum_kw_int(region, kw.get(), false);
+                rd::KW kw{"TEST", std::vector<int>(1000, 2)};
+                int sum = rd_region_sum_kw<int>(region, &kw, false);
                 REQUIRE(sum == 1000);
             }
 
             SECTION("Sum keyword float") {
-                auto kw = make_rd_kw("TEST", 1000, RD_FLOAT);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_float(kw.get(), i, 2.5f);
-                float sum = rd_region_sum_kw_float(region, kw.get(), false);
+                rd::KW kw{"TEST", std::vector<float>(1000, 2.5f)};
+                float sum = rd_region_sum_kw<float>(region, &kw, false);
                 REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0f, 0.01f));
             }
 
             SECTION("Sum keyword double") {
-                auto kw = make_rd_kw("TEST", 1000, RD_DOUBLE);
-                for (int i = 0; i < 1000; i++)
-                    rd_kw_iset_double(kw.get(), i, 2.5);
-                double sum = rd_region_sum_kw_double(region, kw.get(), false);
+                rd::KW kw{"TEST", std::vector<double>(1000, 2.5)};
+                double sum = rd_region_sum_kw<double>(region, &kw, false);
                 REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0, 0.01f));
             }
         }

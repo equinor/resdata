@@ -1,6 +1,8 @@
 #include <cstdlib>
-#include <tuple>
 #include <unistd.h>
+
+#include <numeric>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 
@@ -11,15 +13,14 @@
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/rd_type.hpp>
 
-void test_create(rd_grid_type *grid, rd_kw_type *fault_block_kw) {
+void test_create(rd_grid_type *grid, rd::KW *fault_block_kw) {
     int k = 0;
     int i, j;
 
     for (j = 0; j < rd_grid_get_ny(grid); j++) {
         for (i = 0; i < rd_grid_get_nx(grid); i++) {
-
-            int g = rd_grid_get_global_index3(grid, i, j, k);
-            rd_kw_iset_int(fault_block_kw, g, 9);
+            size_t g = rd_grid_get_global_index3(grid, i, j, k);
+            fault_block_kw->at<int>(g) = 9;
         }
     }
 
@@ -40,8 +41,7 @@ void test_create(rd_grid_type *grid, rd_kw_type *fault_block_kw) {
 }
 
 void test_create_invalid(rd_grid_type *grid) {
-    auto fault_blk_kw =
-        make_rd_kw("FAULTBLK", rd_grid_get_global_size(grid) - 1, RD_INT);
+    rd::KW fault_blk_kw{"FAULTBLK", rd_grid_get_global_size(grid) - 1, RD_INT};
 
     test_assert_NULL(fault_block_layer_alloc(grid, 7));
 }
@@ -74,11 +74,9 @@ void test_trace_edge(rd_grid_type *grid) {
 
 void test_export(rd_grid_type *grid) {
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, 0);
-    auto rd_kw1 = make_rd_kw("FAULTBLK", rd_grid_get_global_size(grid), RD_INT);
-    auto rd_kw2 =
-        make_rd_kw("FAULTBLK", rd_grid_get_global_size(grid) + 1, RD_INT);
-    auto rd_kw3 =
-        make_rd_kw("FAULTBLK", rd_grid_get_global_size(grid), RD_FLOAT);
+    rd::KW rd_kw1{"FAULTBLK", rd_grid_get_global_size(grid), RD_INT};
+    rd::KW rd_kw2{"FAULTBLK", rd_grid_get_global_size(grid) + 1, RD_INT};
+    rd::KW rd_kw3{"FAULTBLK", rd_grid_get_global_size(grid), RD_FLOAT};
     auto block = fault_block_layer_add_block(layer, 10);
 
     block->add_cell(0, 0);
@@ -86,19 +84,21 @@ void test_export(rd_grid_type *grid) {
     block->add_cell(1, 1);
     block->add_cell(0, 1);
 
-    test_assert_true(fault_block_layer_export(layer, rd_kw1.get()));
-    test_assert_false(fault_block_layer_export(layer, rd_kw2.get()));
-    test_assert_false(fault_block_layer_export(layer, rd_kw3.get()));
+    test_assert_true(fault_block_layer_export(layer, &rd_kw1));
+    test_assert_false(fault_block_layer_export(layer, &rd_kw2));
+    test_assert_false(fault_block_layer_export(layer, &rd_kw3));
 
     {
         int nx = rd_grid_get_nx(grid);
 
-        test_assert_int_equal(rd_kw_iget_int(rd_kw1.get(), 0), 10);
-        test_assert_int_equal(rd_kw_iget_int(rd_kw1.get(), 1), 10);
-        test_assert_int_equal(rd_kw_iget_int(rd_kw1.get(), nx), 10);
-        test_assert_int_equal(rd_kw_iget_int(rd_kw1.get(), nx + 1), 10);
+        test_assert_int_equal(rd_kw1.at<int>(0), 10);
+        test_assert_int_equal(rd_kw1.at<int>(1), 10);
+        test_assert_int_equal(rd_kw1.at<int>(nx), 10);
+        test_assert_int_equal(rd_kw1.at<int>(nx + 1), 10);
     }
-    test_assert_int_equal(40, rd_kw_element_sum_int(rd_kw1.get()));
+    auto &kw_data = rd_kw1.get_vector<int>();
+    test_assert_int_equal(40,
+                          std::accumulate(kw_data.begin(), kw_data.end(), 0));
 
     fault_block_layer_free(layer);
 }
@@ -107,15 +107,14 @@ void test_neighbours(rd_grid_type *grid) {
     const int k = 0;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
     geo_polygon_collection_type *polylines = geo_polygon_collection_alloc();
-    rd_kw_ptr rd_kw =
-        make_rd_kw("FAULTBLK", rd_grid_get_global_size(grid), RD_INT);
-
-    rd_kw_iset_int(rd_kw.get(), 0, 1);
-    rd_kw_iset_int(rd_kw.get(), rd_grid_get_global_index3(grid, 3, 3, k), 2);
-    rd_kw_iset_int(rd_kw.get(), rd_grid_get_global_index3(grid, 4, 3, k), 3);
-    rd_kw_iset_int(rd_kw.get(), rd_grid_get_global_index3(grid, 5, 3, k), 4);
-    rd_kw_iset_int(rd_kw.get(), rd_grid_get_global_index3(grid, 4, 2, k), 5);
-    fault_block_layer_load_kw(layer, rd_kw.get());
+    std::vector<int> rd_kw_data(rd_grid_get_global_size(grid), 0);
+    rd_kw_data[0] = 1;
+    rd_kw_data[rd_grid_get_global_index3(grid, 3, 3, k)] = 2;
+    rd_kw_data[rd_grid_get_global_index3(grid, 4, 3, k)] = 3;
+    rd_kw_data[rd_grid_get_global_index3(grid, 5, 3, k)] = 4;
+    rd_kw_data[rd_grid_get_global_index3(grid, 4, 2, k)] = 5;
+    rd::KW rd_kw{"FAULTBLK", std::move(rd_kw_data)};
+    fault_block_layer_load_kw(layer, &rd_kw);
 
     {
         {
@@ -140,10 +139,10 @@ void test_neighbours(rd_grid_type *grid) {
 
 int main(int argc, char **argv) {
     rd_grid_ptr rd_grid = make_rectangular_grid(9, 9, 2, 1, 1, 1, NULL);
-    rd_kw_ptr fault_blk_kw =
-        make_rd_kw("FAULTBLK", rd_grid_get_global_size(rd_grid.get()), RD_INT);
+    rd::KW fault_blk_kw{"FAULTBLK", rd_grid_get_global_size(rd_grid.get()),
+                        RD_INT};
 
-    test_create(rd_grid.get(), fault_blk_kw.get());
+    test_create(rd_grid.get(), &fault_blk_kw);
     test_create_invalid(rd_grid.get());
     test_trace_edge(rd_grid.get());
     test_export(rd_grid.get());

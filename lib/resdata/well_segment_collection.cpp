@@ -84,13 +84,13 @@ bool well_segment_collection_has_segment(
 
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, int well_nr,
-    const rd_kw_type *iwel_kw, const rd_kw_type *iseg_kw,
+    const rd::KW *iwel_kw, const rd::KW *iseg_kw,
     well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segments, bool *is_MSW_well) {
 
     int iwel_offset = rst_head.niwelz * well_nr;
     int segment_well_nr =
-        rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
+        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
     int segments_added = 0;
 
     if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {

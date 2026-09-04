@@ -1,6 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <ios>
+#include <istream>
+#include <ostream>
+#include <fstream>
 #include <string>
 #include <cstdlib>
 #include <cstdio>
@@ -46,8 +50,6 @@ public:
     FortIO() = delete;
     FortIO(const std::string &filename, std::ios_base::openmode mode,
            bool fmt_file = false, bool endian_flip_header = RD_ENDIAN_FLIP);
-    FortIO(const std::string &filename, bool fmt_file, bool writable,
-           FILE *stream, bool endian_flip_header = RD_ENDIAN_FLIP);
     ~FortIO();
 
     FortIO(FortIO &&other) noexcept;
@@ -67,7 +69,8 @@ public:
     int fskip_record();
     bool fread_buffer(char *buffer, int buffer_size);
     void fwrite_record(const char *buffer, int buffer_size);
-    [[nodiscard]] FILE *get_FILE() const;
+    [[nodiscard]] std::istream &get_istream();
+    [[nodiscard]] std::ostream &get_ostream();
     void fflush() const;
     void rewind() const;
     [[nodiscard]] const char *filename_ref() const;
@@ -79,7 +82,7 @@ public:
                     size_t block_count);
     void data_fseek(offset_type data_offset, size_t data_element,
                     size_t element_size, int element_count, size_t block_size);
-    bool ftruncate(offset_type size);
+    bool ftruncate(std::uintmax_t size);
     int fclean();
     bool fclose_stream();
     bool fopen_stream();
@@ -91,12 +94,11 @@ public:
 private:
     bool fseek_(offset_type offset, int whence);
 
-    FILE *m_stream = nullptr;
+    mutable std::fstream m_stream;
     std::string m_filename;
     bool m_endian_flip_header = false;
     bool m_fmt_file = false;
-    const char *m_fopen_mode = nullptr;
-    bool m_stream_owner = false;
+    std::ios_base::openmode m_open_mode = std::ios_base::openmode{};
 
     /*
     The internal variable m_read_size is used in the functions fseek() and

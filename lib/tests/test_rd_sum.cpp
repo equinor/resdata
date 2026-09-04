@@ -31,6 +31,7 @@
 
 #include "detail/resdata/rd_unsmry_loader.hpp"
 #include "resdata/FortIO.hpp"
+#include "resdata/rd_type.hpp"
 #include "resdata/smspec_node.hpp"
 #include "tmpdir.hpp"
 
@@ -103,15 +104,13 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
 
 void write_single_string_kw(ERT::FortIO &fortio, const char *name,
                             const char *value) {
-    auto kw = make_rd_kw(name, 1, RD_CHAR);
-    rd_kw_iset_string8(kw.get(), 0, value);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, {std::string(value)}};
+    kw.fwrite(fortio);
 }
 
 void write_single_int_kw(ERT::FortIO &fortio, const char *name, int value) {
-    auto kw = make_rd_kw(name, 1, RD_INT);
-    rd_kw_iset_int(kw.get(), 0, value);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, std::vector<int>{value}};
+    kw.fwrite(fortio);
 }
 
 void write_malformed_lgr_smspec(const fs::path &path, bool with_lgrs,
@@ -120,35 +119,25 @@ void write_malformed_lgr_smspec(const fs::path &path, bool with_lgrs,
     constexpr int n = 1;
     ERT::FortIO fortio(path.string(), std::ios_base::out, false);
 
-    auto dimens = make_rd_kw(DIMENS_KW, DIMENS_SIZE, RD_INT);
-    rd_kw_scalar_set_int(dimens.get(), 0);
-    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_SIZE_INDEX, n);
-    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NX_INDEX, 10);
-    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NY_INDEX, 10);
-    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_NZ_INDEX, 10);
-    rd_kw_iset_int(dimens.get(), DIMENS_SMSPEC_RESTART_STEP_INDEX, 0);
-    rd_kw_fwrite(dimens.get(), fortio);
+    rd::KW dimens{DIMENS_KW, std::vector<int>{n, 10, 10, 10, 0, 0}};
+    dimens.fwrite(fortio);
 
-    auto keywords_kw = make_rd_kw(KEYWORDS_KW, n, RD_CHAR);
-    auto wgnames_kw = make_rd_kw(WGNAMES_KW, n, RD_CHAR);
-    auto units_kw = make_rd_kw(UNITS_KW, n, RD_CHAR);
-    auto nums_kw = make_rd_kw(NUMS_KW, n, RD_INT);
+    rd::KW keywords_kw{KEYWORDS_KW, n, RD_CHAR};
+    rd::KW wgnames_kw{WGNAMES_KW, n, RD_CHAR};
+    rd::KW units_kw{UNITS_KW, n, RD_CHAR};
+    rd::KW nums_kw{NUMS_KW, std::vector<int>{0}};
 
-    rd_kw_iset_string8(keywords_kw.get(), 0, "LBPR");
-    rd_kw_iset_string8(wgnames_kw.get(), 0, "");
-    rd_kw_iset_string8(units_kw.get(), 0, "BARS");
-    rd_kw_iset_int(nums_kw.get(), 0, 0);
+    keywords_kw.set_padded(0, "LBPR");
+    wgnames_kw.set_padded(0, "");
+    units_kw.set_padded(0, "BARS");
 
-    rd_kw_fwrite(keywords_kw.get(), fortio);
-    rd_kw_fwrite(wgnames_kw.get(), fortio);
-    rd_kw_fwrite(nums_kw.get(), fortio);
-    rd_kw_fwrite(units_kw.get(), fortio);
+    keywords_kw.fwrite(fortio);
+    wgnames_kw.fwrite(fortio);
+    nums_kw.fwrite(fortio);
+    units_kw.fwrite(fortio);
 
-    auto startdat = make_rd_kw(STARTDAT_KW, 3, RD_INT);
-    rd_kw_iset_int(startdat.get(), STARTDAT_DAY_INDEX, 1);
-    rd_kw_iset_int(startdat.get(), STARTDAT_MONTH_INDEX, 1);
-    rd_kw_iset_int(startdat.get(), STARTDAT_YEAR_INDEX, 2010);
-    rd_kw_fwrite(startdat.get(), fortio);
+    rd::KW startdat{STARTDAT_KW, std::vector<int>{1, 1, 2010}};
+    startdat.fwrite(fortio);
 
     if (with_lgrs)
         write_single_string_kw(fortio, LGRS_KW, "LGR1");
@@ -747,12 +736,10 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     REQUIRE(view->has_kw(RESTART_KW));
 
     SECTION("Parent case name is padded across 8-char blocks") {
-        rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
-        REQUIRE(rd_kw_get_size(restart_kw) == 8);
-        REQUIRE(std::string(static_cast<const char *>(
-                    rd_kw_iget_ptr(restart_kw, 0))) == "CASE1   ");
-        REQUIRE(std::string(static_cast<const char *>(
-                    rd_kw_iget_ptr(restart_kw, 1))) == "        ");
+        rd::KW *restart_kw = view->get_kw(RESTART_KW, 0);
+        REQUIRE(restart_kw->size() == 8);
+        REQUIRE(restart_kw->at<std::string>(0) == "CASE1   ");
+        REQUIRE(restart_kw->at<std::string>(1) == "        ");
     }
 
     SECTION("Loading with include_restart inserts the parent's FOPT values") {
@@ -786,11 +773,11 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
     auto smspec_file = rd::File::open(name + ".SMSPEC");
     auto view = smspec_file->get_global_view();
     REQUIRE(view->has_kw(RESTART_KW));
-    rd_kw_type *restart_kw = view->get_kw(RESTART_KW, 0);
-    REQUIRE(rd_kw_get_size(restart_kw) == 8);
+    rd::KW *restart_kw = view->get_kw(RESTART_KW, 0);
+    REQUIRE(restart_kw->size() == 8);
     for (int n = 0; n < 8; ++n) {
         const std::string expected = "WWWWGGG" + std::to_string(n);
-        REQUIRE(std::string(rd_kw_iget_char_ptr(restart_kw, n)) == expected);
+        REQUIRE(restart_kw->at<std::string>(n) == expected);
     }
 }
 
@@ -1372,31 +1359,31 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             auto smspec_in = rd::File::open(case3_path + ".SMSPEC");
             auto sum_in = rd::File::open(case3_path + ".UNSMRY");
 
-            rd_kw_type *keywords = smspec_in->get_kw("KEYWORDS", 0);
+            rd::KW *keywords = smspec_in->get_kw("KEYWORDS", 0);
             keywords->resize(5);
-            rd_kw_iset_char_ptr(keywords, 3, "WTPRWI1");
-            rd_kw_iset_char_ptr(keywords, 4, "BPR");
+            keywords->set_padded(3, "WTPRWI1");
+            keywords->set_padded(4, "BPR");
 
-            rd_kw_type *nums = smspec_in->get_kw("NUMS", 0);
+            rd::KW *nums = smspec_in->get_kw("NUMS", 0);
             nums->resize(5);
-            int *nums_ptr = rd_kw_get_int_ptr(nums);
+            int *nums_ptr = nums->get_vector<int>().data();
             nums_ptr[3] = 5;
             nums_ptr[4] = 8;
 
-            rd_kw_type *wgnames = smspec_in->get_kw("WGNAMES", 0);
+            rd::KW *wgnames = smspec_in->get_kw("WGNAMES", 0);
             wgnames->resize(5);
-            rd_kw_iset_char_ptr(wgnames, 4, ":+:+:+:+");
+            wgnames->at<std::string>(4) = ":+:+:+:+";
 
-            rd_kw_type *units = smspec_in->get_kw("UNITS", 0);
+            rd::KW *units = smspec_in->get_kw("UNITS", 0);
             units->resize(5);
-            rd_kw_iset_char_ptr(units, 4, "BARS");
+            units->at<std::string>(4) = rd::pad_spaces("BARS", 8);
 
             for (size_t i = 0; i < sum_in->num_named_kw("PARAMS"); ++i) {
-                rd_kw_type *params_kw = sum_in->get_kw("PARAMS", i);
+                rd::KW *params_kw = sum_in->get_kw("PARAMS", i);
                 params_kw->resize(5);
-                auto *ptr = static_cast<float *>(rd_kw_get_void_ptr(params_kw));
-                ptr[4] = ptr[3];
-                ptr[3] = -1.0f;
+                auto &vec = params_kw->get_vector<float>();
+                vec[4] = vec[3];
+                vec[3] = -1.0f;
             }
 
             {

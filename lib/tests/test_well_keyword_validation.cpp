@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <cstddef>
+#include <ios>
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -30,132 +32,122 @@ namespace {
  * contain every index the loader reads.
  */
 struct Dims {
-    int nx = 3;
-    int ny = 3;
-    int nz = 3;
-    int nactive = 27;
-    int nwells = 1;
-    int ncwmax = 1;
-    int niwelz = 72;
-    int nzwelz = 3;
-    int nxwelz = 8;
-    int niconz = 16;
-    int nsconz = 2;
-    int nxconz = 52;
-    int nisegz = 8;
-    int nsegmx = 1;
-    int nrsegz = 12;
-    int nlbrmx = 1;
-    int nilbrz = 2;
+    size_t nx = 3;
+    size_t ny = 3;
+    size_t nz = 3;
+    size_t nactive = 27;
+    size_t nwells = 1;
+    size_t ncwmax = 1;
+    size_t niwelz = 72;
+    size_t nzwelz = 3;
+    size_t nxwelz = 8;
+    size_t niconz = 16;
+    size_t nsconz = 2;
+    size_t nxconz = 52;
+    size_t nisegz = 8;
+    size_t nsegmx = 1;
+    size_t nrsegz = 12;
+    size_t nlbrmx = 1;
+    size_t nilbrz = 2;
 };
 
-rd_kw_ptr build_intehead(const Dims &d) {
-    auto kw = make_rd_kw(INTEHEAD_KW, 412, RD_INT);
-    rd_kw_scalar_set_int(kw.get(), 0);
-    rd_kw_iset_int(kw.get(), INTEHEAD_UNIT_INDEX, INTEHEAD_METRIC_VALUE);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NX_INDEX, d.nx);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NY_INDEX, d.ny);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NZ_INDEX, d.nz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NACTIVE_INDEX, d.nactive);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NWELLS_INDEX, d.nwells);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NCWMAX_INDEX, d.ncwmax);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NIWELZ_INDEX, d.niwelz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NXWELZ_INDEX, d.nxwelz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NZWELZ_INDEX, d.nzwelz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NICONZ_INDEX, d.niconz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NSCONZ_INDEX, d.nsconz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NXCONZ_INDEX, d.nxconz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NISEGZ_INDEX, d.nisegz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NSEGMX_INDEX, d.nsegmx);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NSWLMX_INDEX, 1);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NLBRMX_INDEX, d.nlbrmx);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NILBRZ_INDEX, d.nilbrz);
-    rd_kw_iset_int(kw.get(), INTEHEAD_NRSEGZ_INDEX, d.nrsegz);
+std::unique_ptr<rd::KW> build_intehead(const Dims &d) {
+    std::vector<int> data(412, 0);
+    data[INTEHEAD_UNIT_INDEX] = INTEHEAD_METRIC_VALUE;
+    data[INTEHEAD_NX_INDEX] = static_cast<int>(d.nx);
+    data[INTEHEAD_NY_INDEX] = static_cast<int>(d.ny);
+    data[INTEHEAD_NZ_INDEX] = static_cast<int>(d.nz);
+    data[INTEHEAD_NACTIVE_INDEX] = static_cast<int>(d.nactive);
+    data[INTEHEAD_NWELLS_INDEX] = static_cast<int>(d.nwells);
+    data[INTEHEAD_NCWMAX_INDEX] = static_cast<int>(d.ncwmax);
+    data[INTEHEAD_NIWELZ_INDEX] = static_cast<int>(d.niwelz);
+    data[INTEHEAD_NXWELZ_INDEX] = static_cast<int>(d.nxwelz);
+    data[INTEHEAD_NZWELZ_INDEX] = static_cast<int>(d.nzwelz);
+    data[INTEHEAD_NICONZ_INDEX] = static_cast<int>(d.niconz);
+    data[INTEHEAD_NSCONZ_INDEX] = static_cast<int>(d.nsconz);
+    data[INTEHEAD_NXCONZ_INDEX] = static_cast<int>(d.nxconz);
+    data[INTEHEAD_NISEGZ_INDEX] = static_cast<int>(d.nisegz);
+    data[INTEHEAD_NSEGMX_INDEX] = static_cast<int>(d.nsegmx);
+    data[INTEHEAD_NSWLMX_INDEX] = 1;
+    data[INTEHEAD_NLBRMX_INDEX] = static_cast<int>(d.nlbrmx);
+    data[INTEHEAD_NILBRZ_INDEX] = static_cast<int>(d.nilbrz);
+    data[INTEHEAD_NRSEGZ_INDEX] = static_cast<int>(d.nrsegz);
+    return std::make_unique<rd::KW>(INTEHEAD_KW, std::move(data));
+}
+
+std::unique_ptr<rd::KW> build_logihead() {
+    return std::make_unique<rd::KW>(LOGIHEAD_KW, LOGIHEAD_RESTART_SIZE,
+                                    RD_BOOL);
+}
+
+std::unique_ptr<rd::KW> build_doubhead() {
+    return std::make_unique<rd::KW>(DOUBHEAD_KW, std::vector<double>{0.0});
+}
+
+std::unique_ptr<rd::KW> build_iwel(const Dims &d) {
+    std::vector<int> data(d.niwelz * d.nwells, 0);
+    data[IWEL_HEADI_INDEX] = 1;
+    data[IWEL_HEADJ_INDEX] = 1;
+    data[IWEL_HEADK_INDEX] = 1;
+    data[IWEL_CONNECTIONS_INDEX] = 1;
+    data[IWEL_TYPE_INDEX] = IWEL_PRODUCER;
+    data[IWEL_STATUS_INDEX] = 1;
+    data[IWEL_SEGMENTED_WELL_NR_INDEX] = 1;
+    return std::make_unique<rd::KW>(IWEL_KW, std::move(data));
+}
+
+std::unique_ptr<rd::KW> build_zwel(const Dims &d) {
+    auto kw = std::make_unique<rd::KW>(ZWEL_KW, d.nzwelz * d.nwells, RD_CHAR);
+    kw->set_padded(0, "WELL-1");
     return kw;
 }
 
-rd_kw_ptr build_logihead() {
-    auto kw = make_rd_kw(LOGIHEAD_KW, LOGIHEAD_RESTART_SIZE, RD_BOOL);
-    for (int i = 0; i < LOGIHEAD_RESTART_SIZE; ++i)
-        rd_kw_iset_bool(kw.get(), i, false);
+std::unique_ptr<rd::KW> build_icon(const Dims &d) {
+    std::vector<int> data(d.niconz * d.ncwmax * d.nwells, 0);
+    data[ICON_IC_INDEX] = 1;
+    data[ICON_I_INDEX] = 1;
+    data[ICON_J_INDEX] = 1;
+    data[ICON_K_INDEX] = 1;
+    data[ICON_STATUS_INDEX] = 1;
+    data[ICON_DIRECTION_INDEX] = ICON_DIRZ;
+    data[ICON_SEGMENT_INDEX] = 0;
+    return std::make_unique<rd::KW>(ICON_KW, std::move(data));
+}
+
+std::unique_ptr<rd::KW> build_scon(const Dims &d) {
+    std::vector<double> data(d.nsconz * d.ncwmax * d.nwells, 0.0);
+    data[SCON_CF_INDEX] = 1.0;
+    return std::make_unique<rd::KW>(SCON_KW, std::move(data));
+}
+
+std::unique_ptr<rd::KW> build_xcon(const Dims &d) {
+    auto kw = std::make_unique<rd::KW>(XCON_KW, d.nxconz * d.ncwmax * d.nwells,
+                                       RD_DOUBLE);
+    kw->scalar_set<double>(0.0);
     return kw;
 }
 
-rd_kw_ptr build_doubhead() {
-    auto kw = make_rd_kw(DOUBHEAD_KW, 1, RD_DOUBLE);
-    rd_kw_iset_double(kw.get(), DOUBHEAD_DAYS_INDEX, 0.0);
-    return kw;
-}
-
-rd_kw_ptr build_iwel(const Dims &d) {
-    auto kw = make_rd_kw(IWEL_KW, d.niwelz * d.nwells, RD_INT);
-    rd_kw_scalar_set_int(kw.get(), 0);
-    rd_kw_iset_int(kw.get(), IWEL_HEADI_INDEX, 1);
-    rd_kw_iset_int(kw.get(), IWEL_HEADJ_INDEX, 1);
-    rd_kw_iset_int(kw.get(), IWEL_HEADK_INDEX, 1);
-    rd_kw_iset_int(kw.get(), IWEL_CONNECTIONS_INDEX, 1);
-    rd_kw_iset_int(kw.get(), IWEL_TYPE_INDEX, IWEL_PRODUCER);
-    rd_kw_iset_int(kw.get(), IWEL_STATUS_INDEX, 1);
-    rd_kw_iset_int(kw.get(), IWEL_SEGMENTED_WELL_NR_INDEX, 1);
-    return kw;
-}
-
-rd_kw_ptr build_zwel(const Dims &d) {
-    auto kw = make_rd_kw(ZWEL_KW, d.nzwelz * d.nwells, RD_CHAR);
-    rd_kw_iset_string_ptr(kw.get(), 0, "WELL-1");
-    return kw;
-}
-
-rd_kw_ptr build_icon(const Dims &d) {
-    auto kw = make_rd_kw(ICON_KW, d.niconz * d.ncwmax * d.nwells, RD_INT);
-    rd_kw_scalar_set_int(kw.get(), 0);
-    rd_kw_iset_int(kw.get(), ICON_IC_INDEX, 1);
-    rd_kw_iset_int(kw.get(), ICON_I_INDEX, 1);
-    rd_kw_iset_int(kw.get(), ICON_J_INDEX, 1);
-    rd_kw_iset_int(kw.get(), ICON_K_INDEX, 1);
-    rd_kw_iset_int(kw.get(), ICON_STATUS_INDEX, 1);
-    rd_kw_iset_int(kw.get(), ICON_DIRECTION_INDEX, ICON_DIRZ);
-    rd_kw_iset_int(kw.get(), ICON_SEGMENT_INDEX, 0);
-    return kw;
-}
-
-rd_kw_ptr build_scon(const Dims &d) {
-    auto kw = make_rd_kw(SCON_KW, d.nsconz * d.ncwmax * d.nwells, RD_DOUBLE);
-    rd_kw_scalar_set_double(kw.get(), 0.0);
-    rd_kw_iset_double(kw.get(), SCON_CF_INDEX, 1.0);
-    return kw;
-}
-
-rd_kw_ptr build_xcon(const Dims &d) {
-    auto kw = make_rd_kw(XCON_KW, d.nxconz * d.ncwmax * d.nwells, RD_DOUBLE);
-    rd_kw_scalar_set_double(kw.get(), 0.0);
-    return kw;
-}
-
-rd_kw_ptr build_iseg(const Dims &d) {
-    auto kw = make_rd_kw(ISEG_KW, d.nisegz * d.nsegmx, RD_INT);
-    rd_kw_scalar_set_int(kw.get(), 0);
+std::unique_ptr<rd::KW> build_iseg(const Dims &d) {
+    std::vector<int> data(d.nisegz * d.nsegmx, 0);
     // Make the single segment inactive (branch -> INACTIVE)
-    rd_kw_iset_int(kw.get(), ISEG_OUTLET_INDEX, 0);
-    rd_kw_iset_int(kw.get(), ISEG_BRANCH_INDEX, -1);
-    return kw;
+    data[ISEG_OUTLET_INDEX] = 0;
+    data[ISEG_BRANCH_INDEX] = -1;
+    return std::make_unique<rd::KW>(ISEG_KW, std::move(data));
 }
 
-rd_kw_ptr build_rseg(const Dims &d) {
-    auto kw = make_rd_kw(RSEG_KW, d.nrsegz * d.nsegmx, RD_DOUBLE);
-    rd_kw_scalar_set_double(kw.get(), 0.0);
-    return kw;
+std::unique_ptr<rd::KW> build_rseg(const Dims &d) {
+    return std::make_unique<rd::KW>(
+        RSEG_KW, std::vector<double>(d.nrsegz * d.nsegmx, 0.0));
 }
 
-rd_kw_ptr build_xwel(const Dims &d) {
-    auto kw = make_rd_kw(XWEL_KW, d.nxwelz * d.nwells, RD_DOUBLE);
-    rd_kw_scalar_set_double(kw.get(), 0.0);
-    return kw;
+std::unique_ptr<rd::KW> build_xwel(const Dims &d) {
+    return std::make_unique<rd::KW>(
+        XWEL_KW, std::vector<double>(d.nxwelz * d.nwells, 0.0));
 }
 
 struct NamedKw {
     std::string name;
-    rd_kw_ptr kw;
+    std::unique_ptr<rd::KW> kw;
 };
 
 std::vector<NamedKw> build_all(const Dims &d) {
@@ -178,7 +170,7 @@ void write_file(const std::string &path, const std::vector<NamedKw> &kws) {
     ERT::FortIO fortio(path, std::ios_base::out);
     for (const auto &nk : kws) {
         if (nk.kw)
-            rd_kw_fwrite(nk.kw.get(), fortio);
+            nk.kw->fwrite(fortio);
     }
     fortio.fflush();
 }
@@ -207,20 +199,20 @@ void mutate(std::vector<NamedKw> &kws, const std::string &name, Mode mode) {
     auto it = std::find_if(kws.begin(), kws.end(),
                            [&](const NamedKw &nk) { return nk.name == name; });
     REQUIRE(it != kws.end());
-    int size = rd_kw_get_size(it->kw.get());
+    size_t size = it->kw->size();
     const Spec &spec = kw_specs().at(name);
     switch (mode) {
     case Mode::MISSING:
         it->kw.reset();
         break;
     case Mode::WRONG_TYPE:
-        it->kw = make_rd_kw(name.c_str(), size, spec.wrong);
+        it->kw = std::make_unique<rd::KW>(name, size, spec.wrong);
         break;
     case Mode::EMPTY:
-        it->kw = make_rd_kw(name.c_str(), 0, spec.type);
+        it->kw = std::make_unique<rd::KW>(name, 0, spec.type);
         break;
     case Mode::SHORT:
-        it->kw = make_rd_kw(name.c_str(), 1, spec.type);
+        it->kw = std::make_unique<rd::KW>(name, 1, spec.type);
         break;
     }
 }
@@ -249,7 +241,7 @@ struct Case {
 std::vector<Case> all_cases() {
     return {
         {INTEHEAD_KW, Mode::MISSING, true, 0},
-        {INTEHEAD_KW, Mode::WRONG_TYPE, false, 0}, // Should throw but doesn't
+        {INTEHEAD_KW, Mode::WRONG_TYPE, true, 0},
         {INTEHEAD_KW, Mode::EMPTY, false, 0},
         {INTEHEAD_KW, Mode::SHORT, false, 0},
 
@@ -269,7 +261,7 @@ std::vector<Case> all_cases() {
         {IWEL_KW, Mode::SHORT, true, 0},
 
         {ZWEL_KW, Mode::MISSING, true, 0},
-        {ZWEL_KW, Mode::WRONG_TYPE, false, 1}, // Should throw but doesn't
+        {ZWEL_KW, Mode::WRONG_TYPE, true, 0},
         {ZWEL_KW, Mode::EMPTY, true, 0},
         {ZWEL_KW, Mode::SHORT, false, 1},
 
@@ -310,7 +302,9 @@ TEST_CASE_METHOD(Tmpdir, "well keyword failure conditions", "[well][wellkw]") {
     CAPTURE(c.kw, mode_name(c.mode));
 
     Dims d;
-    auto grid = make_rectangular_grid(d.nx, d.ny, d.nz, 1.0, 1.0, 1.0, nullptr);
+    auto grid =
+        make_rectangular_grid(static_cast<int>(d.nx), static_cast<int>(d.ny),
+                              static_cast<int>(d.nz), 1.0, 1.0, 1.0, nullptr);
     auto kws = build_all(d);
     mutate(kws, c.kw, c.mode);
 

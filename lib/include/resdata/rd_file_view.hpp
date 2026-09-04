@@ -18,10 +18,11 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_type.hpp>
 
 namespace rd {
 
-using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
+using inv_map_type = std::unordered_map<const rd::KW *, FileKW *>;
 
 struct FileContext {
     ERT::FortIO fortio;
@@ -42,7 +43,7 @@ class FileView {
                                                       size_t ith) const {
         return get_file_kw(kw_index.at(kw).at(ith));
     }
-    [[nodiscard]] rd_kw_type *get_kw(const std::shared_ptr<FileKW> &file_kw);
+    [[nodiscard]] rd::KW *get_kw(const std::shared_ptr<FileKW> &file_kw);
     [[nodiscard]] size_t get_occurence(size_t global_index);
 
     /** Validates the arguments of index_fload_kw and returns the keyword.
@@ -136,8 +137,8 @@ public:
     [[nodiscard]] bool has_kw(const std::string &kw) const {
         return kw_index.find(kw) != kw_index.end();
     }
-    rd_kw_type *get_kw(size_t index) { return get_kw(get_file_kw(index)); }
-    rd_kw_type *get_kw(const std::string &kw, size_t ith) {
+    rd::KW *get_kw(size_t index) { return get_kw(get_file_kw(index)); }
+    rd::KW *get_kw(const std::string &kw, size_t ith) {
         return get_kw(get_file_kw(kw, ith));
     }
 
@@ -163,10 +164,10 @@ public:
             throw std::ios_base::failure("Failed to open FortIO file " +
                                          filename());
 
-        rd_kw_fread_indexed_data(context->fortio, file_kw->get_offset(),
-                                 file_kw->get_data_type(), file_kw->get_size(),
-                                 index_map,
-                                 reinterpret_cast<char *>(out.data()));
+        rd::KW::fread_indexed_data(context->fortio, file_kw->get_offset(),
+                                   file_kw->get_data_type(),
+                                   file_kw->get_size(), index_map,
+                                   reinterpret_cast<char *>(out.data()));
     }
     void write(ERT::FortIO &target, size_t offset);
 
@@ -185,8 +186,10 @@ public:
 
     bool has_report_step(int report_step) {
         return find_block(SEQNUM_KW,
-                          [&](const rd_kw_type *seqnum_kw) {
-                              return rd_kw_data_equal(seqnum_kw, &report_step);
+                          [&](const rd::KW *seqnum_kw) {
+                              return seqnum_kw->size() > 0 &&
+                                     rd_type_is_int(seqnum_kw->data_type()) &&
+                                     seqnum_kw->at<int>(0) == report_step;
                           })
             .has_value();
     }

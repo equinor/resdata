@@ -126,7 +126,7 @@ PYBIND11_MODULE(fortio, m) {
     cls.def("get_position", &ERT::FortIO::ftell);
     cls.def(
         "truncate",
-        [](ERT::FortIO &self, std::optional<offset_type> size) {
+        [](ERT::FortIO &self, std::optional<std::uintmax_t> size) {
             if (!size)
                 size = self.ftell();
             if (!self.ftruncate(*size)) {

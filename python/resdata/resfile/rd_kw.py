@@ -747,18 +747,14 @@ class ResdataKW(_BaseCClass):
         Bool:   The number of true values
         """
         if mask is None:
-            if self.data_type.is_int():
-                return _kw._int_sum(self)
-            elif self.data_type.is_float():
-                return _kw._float_sum(self)
-            elif self.data_type.is_double():
-                return _kw._float_sum(self)
-            elif self.data_type.is_bool():
-                _sum = 0
-                for elm in self:
-                    if elm:
-                        _sum += 1
-                return _sum
+            if (
+                self.data_type.is_int()
+                or self.data_type.is_float()
+                or self.data_type.is_double()
+                or self.data_type.is_bool()
+            ):
+                view = self.numpy_view()
+                return np.sum(view, dtype=view.dtype)
             else:
                 raise ValueError(
                     'The keyword "%s" is of string type - sum is not implemented'

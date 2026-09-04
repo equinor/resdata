@@ -19,17 +19,16 @@ void test_writable(const char *src_file) {
     ta.copy_file(src_file);
     {
         auto rd_file = rd::File::open(fname, FileMode::WRITABLE);
-        rd_kw_type *swat = rd_file->get_kw("SWAT", 0);
-        auto swat0 = std::make_unique<rd_kw_struct>(*swat);
-        test_assert_true(rd_kw_equal(swat, swat0.get()));
-        rd_kw_iset_float(swat, 0, 1000.0);
+        rd::KW *swat = rd_file->get_kw("SWAT", 0);
+        rd::KW swat0{*swat};
+        test_assert_true(*swat == swat0);
+        swat->at<float>(0) = 1000.0;
         rd_file->save_kw(swat);
         test_assert_true(rd_file->is_writable());
 
         auto rd_file2 = rd::File::open(fname);
         swat = rd_file2->get_kw("SWAT", 0);
-        test_assert_true(
-            util_double_approx_equal(rd_kw_iget_float(swat, 0), 1000));
+        test_assert_true(util_double_approx_equal(swat->at<float>(0), 1000));
     }
 }
 

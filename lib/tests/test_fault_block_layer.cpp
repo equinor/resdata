@@ -168,15 +168,14 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
              *   0 0 0 0 0
              *   0 0 0 0 0
              */
-            auto kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_INT);
-            rd_kw_iset_int(kw.get(), idx(0, 0), 1);
-            rd_kw_iset_int(kw.get(), idx(1, 0), 1);
-            rd_kw_iset_int(kw.get(), idx(1, 1), 2);
-            rd_kw_iset_int(kw.get(),
-                           rd_grid_get_global_index3(grid.get(), 2, 1, 0), 2);
+            rd::KW kw{"FAULTBLK", nx * ny * nz, RD_INT};
+            kw.at<int>(idx(0, 0)) = 1;
+            kw.at<int>(idx(1, 0)) = 1;
+            kw.at<int>(idx(1, 1)) = 2;
+            kw.at<int>(rd_grid_get_global_index3(grid.get(), 2, 1, 0)) = 2;
 
             WHEN("scan_kw is called") {
-                bool ok = fault_block_layer_scan_kw(layer.get(), kw.get());
+                bool ok = fault_block_layer_scan_kw(layer.get(), &kw);
 
                 THEN("scan_kw returns true") { REQUIRE(ok); }
 
@@ -204,7 +203,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
 
             WHEN("load_kw is called") {
-                bool ok = fault_block_layer_load_kw(layer.get(), kw.get());
+                bool ok = fault_block_layer_load_kw(layer.get(), &kw);
 
                 THEN("load_kw returns true") { REQUIRE(ok); }
 
@@ -228,64 +227,62 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
                 }
             }
             WHEN("Exporting to a correctly sized integer keyword") {
-                fault_block_layer_load_kw(layer.get(), kw.get());
-                auto out_kw = make_rd_kw("OUT", nx * ny * nz, RD_INT);
-                bool ok = fault_block_layer_export(layer.get(), out_kw.get());
+                fault_block_layer_load_kw(layer.get(), &kw);
+                rd::KW out_kw{"OUT", nx * ny * nz, RD_INT};
+                bool ok = fault_block_layer_export(layer.get(), &out_kw);
 
                 THEN("export returns true") { REQUIRE(ok); }
 
                 THEN("exported cell values match the original keyword") {
-                    REQUIRE(rd_kw_iget_int(out_kw.get(), idx(0, 0)) == 1);
-                    REQUIRE(rd_kw_iget_int(out_kw.get(), idx(1, 0)) == 1);
-                    REQUIRE(rd_kw_iget_int(out_kw.get(), idx(1, 1)) == 2);
-                    REQUIRE(rd_kw_iget_int(out_kw.get(), idx(2, 1)) == 2);
-                    REQUIRE(rd_kw_iget_int(out_kw.get(), idx(2, 0)) == 0);
+                    REQUIRE(out_kw.at<int>(idx(0, 0)) == 1);
+                    REQUIRE(out_kw.at<int>(idx(1, 0)) == 1);
+                    REQUIRE(out_kw.at<int>(idx(1, 1)) == 2);
+                    REQUIRE(out_kw.at<int>(idx(2, 1)) == 2);
+                    REQUIRE(out_kw.at<int>(idx(2, 0)) == 0);
                 }
             }
 
             WHEN("Exporting to a keyword with wrong size") {
-                auto bad_kw = make_rd_kw("OUT", 1, RD_INT);
+                rd::KW bad_kw{"OUT", 1, RD_INT};
                 THEN("export returns false") {
                     REQUIRE_FALSE(
-                        fault_block_layer_export(layer.get(), bad_kw.get()));
+                        fault_block_layer_export(layer.get(), &bad_kw));
                 }
             }
 
             WHEN("Exporting to a float keyword") {
-                auto float_kw = make_rd_kw("OUT", nx * ny * nz, RD_FLOAT);
+                rd::KW float_kw{"OUT", nx * ny * nz, RD_FLOAT};
                 THEN("export returns false") {
                     REQUIRE_FALSE(
-                        fault_block_layer_export(layer.get(), float_kw.get()));
+                        fault_block_layer_export(layer.get(), &float_kw));
                 }
             }
         }
         WHEN("scan_kw is called with non-integer keyword") {
-            auto float_kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
+            rd::KW float_kw{"FAULTBLK", nx * ny * nz, RD_FLOAT};
             THEN("scan_kw returns false") {
                 REQUIRE_FALSE(
-                    fault_block_layer_scan_kw(layer.get(), float_kw.get()));
+                    fault_block_layer_scan_kw(layer.get(), &float_kw));
             }
         }
         WHEN("scan_kw is called with wrong size keyword") {
-            auto bad_kw = make_rd_kw("FAULTBLK", 1, RD_INT);
+            rd::KW bad_kw{"FAULTBLK", 1, RD_INT};
             THEN("scan_kw returns false") {
-                REQUIRE_FALSE(
-                    fault_block_layer_scan_kw(layer.get(), bad_kw.get()));
+                REQUIRE_FALSE(fault_block_layer_scan_kw(layer.get(), &bad_kw));
             }
         }
 
         WHEN("load_kw is called with wrong size keyword") {
-            auto bad_kw = make_rd_kw("FAULTBLK", 1, RD_INT);
+            rd::KW bad_kw{"FAULTBLK", 1, RD_INT};
             THEN("load_kw returns false") {
-                REQUIRE_FALSE(
-                    fault_block_layer_load_kw(layer.get(), bad_kw.get()));
+                REQUIRE_FALSE(fault_block_layer_load_kw(layer.get(), &bad_kw));
             }
         }
         WHEN("load_kw is called with non-integer keyword") {
-            auto float_kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
+            rd::KW float_kw{"FAULTBLK", nx * ny * nz, RD_FLOAT};
             THEN("load_kw returns false") {
                 REQUIRE_FALSE(
-                    fault_block_layer_load_kw(layer.get(), float_kw.get()));
+                    fault_block_layer_load_kw(layer.get(), &float_kw));
             }
         }
         AND_GIVEN("A layer with block containing two cells") {
@@ -435,18 +432,16 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
         }
         AND_GIVEN("A kw with nonzero data in k=2") {
-            auto kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_INT);
+            rd::KW kw{"FAULTBLK", nx * ny * nz, RD_INT};
 
             // Two cells with block id=1 in the last layer only
-            rd_kw_iset_int(kw.get(),
-                           rd_grid_get_global_index3(grid.get(), 0, 0, 2), 1);
-            rd_kw_iset_int(kw.get(),
-                           rd_grid_get_global_index3(grid.get(), 1, 0, 2), 1);
+            kw.at<int>(rd_grid_get_global_index3(grid.get(), 0, 0, 2)) = 1;
+            kw.at<int>(rd_grid_get_global_index3(grid.get(), 1, 0, 2)) = 1;
 
             WHEN("scan_kw is called on layer k=2 (last layer, where data "
                  "lives)") {
                 auto layer_2 = make_fb_layer(grid.get(), 2);
-                bool ok = fault_block_layer_scan_kw(layer_2.get(), kw.get());
+                bool ok = fault_block_layer_scan_kw(layer_2.get(), &kw);
 
                 THEN("scan_kw returns true") { REQUIRE(ok); }
 
@@ -458,7 +453,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
 
             WHEN("scan_kw is called on layer k=0 (no data in this layer)") {
-                fault_block_layer_scan_kw(layer.get(), kw.get());
+                fault_block_layer_scan_kw(layer.get(), &kw);
 
                 // All cells in k=0 are zero; assign_zero groups them into one
                 // single connected block.

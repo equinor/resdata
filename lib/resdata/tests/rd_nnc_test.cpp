@@ -43,12 +43,11 @@ void test_scan(const char *grid_filename) {
             /* Internal nnc */
             {
                 if (nnc_view->has_kw(NNC1_KW)) {
-                    rd_kw_type *nnc1_kw = nnc_view->get_kw(NNC1_KW, 0);
-                    rd_kw_type *nnc2_kw = nnc_view->get_kw(NNC2_KW, 0);
-                    int i;
-                    for (i = 0; i < rd_kw_get_size(nnc1_kw); i++) {
-                        const int g1 = rd_kw_iget_int(nnc1_kw, i) - 1;
-                        const int g2 = rd_kw_iget_int(nnc2_kw, i) - 1;
+                    rd::KW *nnc1_kw = nnc_view->get_kw(NNC1_KW, 0);
+                    rd::KW *nnc2_kw = nnc_view->get_kw(NNC2_KW, 0);
+                    for (size_t i = 0; i < nnc1_kw->size(); i++) {
+                        const int g1 = nnc1_kw->at<int>(i) - 1;
+                        const int g2 = nnc2_kw->at<int>(i) - 1;
 
                         if (g2 <
                             rd_grid_get_global_size(
@@ -69,14 +68,13 @@ void test_scan(const char *grid_filename) {
         /* Global -> lgr */
         {
             if (nnc_view->has_kw(NNCG_KW)) {
-                rd_kw_type *nnchead_kw = nnc_view->get_kw(NNCHEAD_KW, 0);
-                rd_kw_type *nncg_kw = nnc_view->get_kw(NNCG_KW, 0);
-                rd_kw_type *nncl_kw = nnc_view->get_kw(NNCL_KW, 0);
-                int i;
-                int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
-                for (i = 0; i < rd_kw_get_size(nncg_kw); i++) {
-                    const int g = rd_kw_iget_int(nncg_kw, i) - 1;
-                    const int l = rd_kw_iget_int(nncl_kw, i) - 1;
+                rd::KW *nnchead_kw = nnc_view->get_kw(NNCHEAD_KW, 0);
+                rd::KW *nncg_kw = nnc_view->get_kw(NNCG_KW, 0);
+                rd::KW *nncl_kw = nnc_view->get_kw(NNCL_KW, 0);
+                int lgr_nr = nnchead_kw->at<int>(NNCHEAD_LGR_INDEX);
+                for (size_t i = 0; i < nncg_kw->size(); i++) {
+                    const int g = nncg_kw->at<int>(i) - 1;
+                    const int l = nncl_kw->at<int>(i) - 1;
 
                     const nnc_info_type *nnc_info =
                         rd_grid_get_cell_nnc_info1(rd_grid, g);
@@ -96,17 +94,17 @@ void test_scan(const char *grid_filename) {
         /* Amalgamated: LGR -> LGR */
         {
             if (nnc_view->has_kw(NNCHEADA_KW)) {
-                rd_kw_type *nncheada_kw = nnc_view->get_kw(NNCHEADA_KW, 0);
-                rd_kw_type *nnc1_kw = nnc_view->get_kw(NNA1_KW, 0);
-                rd_kw_type *nnc2_kw = nnc_view->get_kw(NNA2_KW, 0);
-                int lgr_nr1 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC1_INDEX);
-                int lgr_nr2 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC2_INDEX);
+                rd::KW *nncheada_kw = nnc_view->get_kw(NNCHEADA_KW, 0);
+                rd::KW *nnc1_kw = nnc_view->get_kw(NNA1_KW, 0);
+                rd::KW *nnc2_kw = nnc_view->get_kw(NNA2_KW, 0);
+                int lgr_nr1 = nncheada_kw->at<int>(NNCHEADA_ILOC1_INDEX);
+                int lgr_nr2 = nncheada_kw->at<int>(NNCHEADA_ILOC2_INDEX);
 
                 rd_grid_type *lgr1 =
                     rd_grid_get_lgr_from_lgr_nr(rd_grid, lgr_nr1);
-                for (int i = 0; i < rd_kw_get_size(nnc1_kw); i++) {
-                    const int g1 = rd_kw_iget_int(nnc1_kw, i) - 1;
-                    const int g2 = rd_kw_iget_int(nnc2_kw, i) - 1;
+                for (size_t i = 0; i < nnc1_kw->size(); i++) {
+                    const int g1 = nnc1_kw->at<int>(i) - 1;
+                    const int g2 = nnc2_kw->at<int>(i) - 1;
 
                     const nnc_info_type *nnc_info =
                         rd_grid_get_cell_nnc_info1(lgr1, g1);

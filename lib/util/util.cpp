@@ -1217,22 +1217,6 @@ size_t util_fd_size(int fd) {
     return buffer.st_size;
 }
 
-bool util_ftruncate(FILE *stream, long size) {
-    int fd = fileno(stream);
-    int int_return;
-
-#ifdef HAVE_FTRUNCATE
-    int_return = ftruncate(fd, size);
-#else
-    int_return = _chsize(fd, size);
-#endif
-
-    if (int_return == 0)
-        return true;
-    else
-        return false;
-}
-
 /*
   The windows stat structure has the inode element, but it is not
   set. Actually - this is a property of the filesystem, and not the
