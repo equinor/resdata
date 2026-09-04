@@ -1,7 +1,7 @@
 project(resdata-applications)
 
 function(target_link_resdata target)
-  target_link_libraries(${target} resdata)
+  target_link_libraries(${target} resdata fmt::fmt)
   if(SKBUILD)
     set_target_properties(${target} PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
   endif()

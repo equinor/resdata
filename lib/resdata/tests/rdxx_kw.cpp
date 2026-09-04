@@ -94,13 +94,13 @@ void test_move_semantics_no_crash() {
 }
 
 void test_exception_assing_ref_wrong_type() {
-    auto *ptr = rd_kw_alloc("XYZ", 1, RD_INT);
+    auto ptr = make_rd_kw("XYZ", 1, RD_INT);
 
     try {
-        ERT::ResdataKW<double> kw(ptr);
+        ERT::ResdataKW<double> kw(ptr.get());
         test_assert_true(false);
     } catch (...) {
-        ERT::ResdataKW<int> kw(ptr);
+        ERT::ResdataKW<int> kw(ptr.release());
     }
 }
 

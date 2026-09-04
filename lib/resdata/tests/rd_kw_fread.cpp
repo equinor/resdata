@@ -20,27 +20,26 @@ void test_truncated(const char *filename, offset_type truncate_size) {
     }
     {
         ERT::FortIO fortio(filename, std::ios_base::in, false, true);
-        rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);
-        test_assert_NULL(kw2);
+        auto kw2 = rd_kw_struct::fread(fortio);
+        test_assert_NULL(kw2.get());
     }
 }
 
 void test_fread_alloc() {
     rd::util::TestArea ta("fread_alloc");
     {
-        rd_kw_type *kw1 = rd_kw_alloc("INT", 100, RD_INT);
+        auto kw1 = make_rd_kw("INT", 100, RD_INT);
         int i;
         for (i = 0; i < 100; i++)
-            rd_kw_iset_int(kw1, i, i);
+            rd_kw_iset_int(kw1.get(), i, i);
         {
             ERT::FortIO fortio("INT", std::ios_base::out, false, true);
-            rd_kw_fwrite(kw1, fortio);
+            rd_kw_fwrite(kw1.get(), fortio);
         }
         {
             ERT::FortIO fortio("INT", std::ios_base::in, false, true);
-            rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);
-            test_assert_true(rd_kw_equal(kw1, kw2));
-            rd_kw_free(kw2);
+            rd_kw_ptr kw2 = rd_kw_struct::fread(fortio);
+            test_assert_true(rd_kw_equal(kw1.get(), kw2.get()));
         }
 
         {
@@ -50,7 +49,6 @@ void test_fread_alloc() {
             test_truncated("INT", 5);
             test_truncated("INT", 0);
         }
-        rd_kw_free(kw1);
     }
 }
 
@@ -59,25 +57,22 @@ void test_kw_io_charlength() {
     {
         const char *KW0 = "QWERTYUI";
         const char *KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
-        rd_kw_type *rd_kw_out0 = rd_kw_alloc(KW0, 5, RD_FLOAT);
-        rd_kw_type *rd_kw_out1 = rd_kw_alloc(KW1, 5, RD_FLOAT);
-        for (int i = 0; i < rd_kw_get_size(rd_kw_out1); i++) {
-            rd_kw_iset_float(rd_kw_out0, i, i * 1.5);
-            rd_kw_iset_float(rd_kw_out1, i, i * 1.5);
+        rd_kw_ptr rd_kw_out0 = make_rd_kw(KW0, 5, RD_FLOAT);
+        rd_kw_ptr rd_kw_out1 = make_rd_kw(KW1, 5, RD_FLOAT);
+        for (int i = 0; i < rd_kw_get_size(rd_kw_out1.get()); i++) {
+            rd_kw_iset_float(rd_kw_out0.get(), i, i * 1.5);
+            rd_kw_iset_float(rd_kw_out1.get(), i, i * 1.5);
         }
 
         {
             ERT::FortIO f("TEST1", std::ios_base::out);
-            test_assert_true(rd_kw_fwrite(rd_kw_out0, f));
-            test_assert_false(rd_kw_fwrite(rd_kw_out1, f));
+            test_assert_true(rd_kw_fwrite(rd_kw_out0.get(), f));
+            test_assert_false(rd_kw_fwrite(rd_kw_out1.get(), f));
         }
 
         {
             test_assert_false(util_file_exists("TEST1"));
         }
-
-        rd_kw_free(rd_kw_out0);
-        rd_kw_free(rd_kw_out1);
     }
 }
 

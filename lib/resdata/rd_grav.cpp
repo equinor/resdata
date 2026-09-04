@@ -261,24 +261,22 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
             else
                 rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
 
-            {
-                int iactive;
-                for (iactive = 0; iactive < size; iactive++) {
-                    double rho = rd_kw_iget_as_double(den_kw, iactive);
-                    double rfip = rd_kw_iget_as_double(rfip_kw, iactive);
-                    grav_phase->fluid_mass[iactive] = rho * rfip;
-                }
+            for (int iactive = 0; iactive < size; iactive++) {
+                double rho = rd_kw_iget_as_double(den_kw, iactive);
+                double rfip = rd_kw_iget_as_double(rfip_kw, iactive);
+                grav_phase->fluid_mass[iactive] = rho * rfip;
             }
         } else {
             /* (calc_type == GRAV_CALC_RPORV) || (calc_type == GRAV_CALC_PORMOD) */
             rd_kw_type *sat_kw;
-            bool private_sat_kw = false;
+            rd_kw_ptr sat_kw_guard{nullptr};
             if (restart_file->has_kw(std::string(sat_kw_name)))
                 sat_kw = restart_file->get_kw(sat_kw_name, 0);
             else {
                 /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
                 const rd_kw_type *swat_kw = restart_file->get_kw("SWAT", 0);
-                sat_kw = rd_kw_alloc_copy(swat_kw);
+                sat_kw_guard.reset(new rd_kw_struct(*swat_kw));
+                sat_kw = sat_kw_guard.get();
                 rd_kw_scalar_set_float(sat_kw, 1.0);
                 rd_kw_inplace_sub(sat_kw, swat_kw); /* sat = 1 - SWAT */
 
@@ -286,21 +284,14 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
                     const rd_kw_type *sgas_kw = restart_file->get_kw("SGAS", 0);
                     rd_kw_inplace_sub(sat_kw, sgas_kw); /* sat -= SGAS */
                 }
-                private_sat_kw = true;
             }
 
-            {
-                int iactive;
-                for (iactive = 0; iactive < size; iactive++) {
-                    double rho = rd_kw_iget_as_double(den_kw, iactive);
-                    double sat = rd_kw_iget_as_double(sat_kw, iactive);
-                    grav_phase->fluid_mass[iactive] =
-                        rho * sat * survey->porv[iactive];
-                }
+            for (int iactive = 0; iactive < size; iactive++) {
+                double rho = rd_kw_iget_as_double(den_kw, iactive);
+                double sat = rd_kw_iget_as_double(sat_kw, iactive);
+                grav_phase->fluid_mass[iactive] =
+                    rho * sat * survey->porv[iactive];
             }
-
-            if (private_sat_kw)
-                rd_kw_free(sat_kw);
         }
     }
 

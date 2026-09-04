@@ -5,10 +5,12 @@
 #include <cmath>
 
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 
@@ -17,14 +19,101 @@
 #include <resdata/rd_type.hpp>
 
 typedef struct rd_kw_struct rd_kw_type;
+using rd_kw_ptr = std::unique_ptr<rd_kw_type>;
 
-typedef enum { RD_KW_READ_OK = 0, RD_KW_READ_FAIL = 1 } rd_read_status_enum;
+void rd_kw_set_header_name(rd_kw_type *, const char *);
+void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
+void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
 
 /* the rd_kw datastructure is tightly bound to the on-disk binary format
    supplied by Eclipse, and there the number of elements is stored as a signed
    32 bit integer. Internally, size_t is used to denote size, however when
    loaded or saved to disk, the size is validated to be no larger than the
    std::numeric_limits<int>::max */
+
+struct rd_kw_struct {
+private:
+    void init_data() {
+        this->data = (char *)calloc(size, rd_type_get_sizeof_ctype(data_type));
+        if (this->data == nullptr) {
+            std::free(this->data);
+            throw std::bad_alloc{};
+        }
+    }
+
+public:
+    size_t size;
+    rd_data_type data_type;
+    char *header8 =
+        nullptr; /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
+    char *header = nullptr;   /* Header which is trimmed to no-space. */
+    char *data = nullptr;     /* The actual data vector. */
+    bool shared_data = false; /* Whether this keyword has shared data or not. */
+
+    struct shared_ref {
+        void *data;
+    };
+
+    template <typename T> T at(size_t index) const;
+    double as_double(size_t index) const;
+
+    rd_kw_struct(rd_data_type data_type) = delete;
+
+    rd_kw_struct(const char *header, size_t size, rd_data_type data_type,
+                 const void *data = nullptr)
+        : size(size), data_type(data_type) {
+        rd_kw_set_header_name(this, header);
+        init_data();
+        rd_kw_set_memcpy_data(this, data);
+    }
+
+    rd_kw_struct(const char *header, int size, rd_data_type data_type,
+                 const void *data = nullptr)
+        : data_type(data_type) {
+        if (size < 0)
+            throw std::invalid_argument(
+                fmt::format("rd_kw size was negative: {}", size));
+        this->size = static_cast<size_t>(size);
+        rd_kw_set_header_name(this, header);
+        init_data();
+        rd_kw_set_memcpy_data(this, data);
+    }
+
+    /* Non-owning constructor */
+    rd_kw_struct(const char *header, int size, rd_data_type data_type,
+                 shared_ref ref)
+        : data_type(data_type) {
+        if (size < 0)
+            throw std::invalid_argument(
+                fmt::format("rd_kw size was negative: {}", size));
+        this->size = static_cast<size_t>(size);
+        rd_kw_set_header_name(this, header);
+        this->data = (char *)ref.data;
+        this->shared_data = true;
+    }
+
+    rd_kw_struct(const rd_kw_struct &other)
+        : size(other.size), data_type(other.data_type) {
+        init_data();
+        rd_kw_memcpy(this, &other);
+    }
+    rd_kw_struct(const rd_kw_struct &other, const char *new_kw, size_t offset,
+                 size_t count);
+
+    rd_kw_struct(const rd_kw_type &other, size_t index1, size_t index2,
+                 int stride);
+
+    ~rd_kw_struct() {
+        std::free(header);
+        std::free(header8);
+        if (!shared_data)
+            std::free(data);
+    }
+    static rd_kw_ptr fread(ERT::FortIO &fortio);
+    static rd_kw_ptr make_actnum(const rd_kw_type *porv_kw, float porv_limit);
+    static rd_kw_ptr global_copy(const rd_kw_type *src,
+                                 const rd_kw_type *actnum);
+};
 
 /*
   Character data in restart format files comes as an array of fixed-length
@@ -134,30 +223,17 @@ inline std::string format_kw_element(const char *value, size_t width = 8) {
 }
 } // namespace rd
 
-bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
 rd_data_type rd_kw_get_data_type(const rd_kw_type *);
 const char *rd_kw_get_header(const rd_kw_type *rd_kw);
-rd_kw_type *rd_kw_alloc_empty(void);
-rd_read_status_enum rd_kw_fread_header(rd_kw_type *, ERT::FortIO &);
-void rd_kw_set_header_name(rd_kw_type *, const char *);
+rd_kw_ptr rd_kw_fread_header(ERT::FortIO &);
 bool rd_kw_fseek_kw(const char *, bool, bool, ERT::FortIO &);
 void rd_kw_fskip(ERT::FortIO &);
-bool rd_kw_fread_realloc(rd_kw_type *, ERT::FortIO &);
-rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &);
-rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
 void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                               rd_data_type, int element_count,
                               const std::vector<int> &index_map, char *buffer);
-void rd_kw_free(rd_kw_type *);
-rd_kw_type *rd_kw_alloc_copy(const rd_kw_type *);
-rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
-                                 size_t offset, size_t count);
-rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
-                                   size_t index2, int stride);
 void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size);
 void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_get_memcpy_data(const rd_kw_type *, void *);
-void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
 bool rd_kw_fwrite(const rd_kw_type *, ERT::FortIO &);
 void rd_kw_iget(const rd_kw_type *, int, void *);
 void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr);
@@ -169,11 +245,6 @@ const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, int i);
 void *rd_kw_iget_ptr(const rd_kw_type *, int);
 int rd_kw_get_size(const rd_kw_type *);
 size_t rd_kw_size(const rd_kw_type *);
-rd_kw_type *rd_kw_alloc(const char *header, int size, rd_data_type);
-rd_kw_type *rd_kw_alloc_new(const char *, int, rd_data_type, const void *);
-rd_kw_type *rd_kw_alloc_new_shared(const char *, int, rd_data_type, void *);
-rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
-                                    const rd_kw_type *actnum);
 double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
@@ -326,17 +397,10 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
-using rd_kw_ptr = std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>;
 inline rd_kw_ptr make_rd_kw(const char *header, int size,
-                            rd_data_type data_type) {
-    return {rd_kw_alloc(header, size, data_type), rd_kw_free};
-}
-
-inline rd_kw_ptr make_rd_kw() { return {rd_kw_alloc_empty(), rd_kw_free}; }
-
-inline rd_kw_ptr make_rd_kw(const char *header, int size,
-                            rd_data_type data_type, const void *data) {
-    return {rd_kw_alloc_new(header, size, data_type, data), rd_kw_free};
+                            rd_data_type data_type,
+                            const void *data = nullptr) {
+    return std::make_unique<rd_kw_struct>(header, size, data_type, data);
 }
 
 inline std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {

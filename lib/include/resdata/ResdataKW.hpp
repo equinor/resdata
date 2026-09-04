@@ -124,12 +124,13 @@ public:
 
     ~ResdataKW() {
         if (this->m_kw)
-            rd_kw_free(this->m_kw);
+            delete this->m_kw;
     }
 
     ResdataKW(const std::string &kw, int size_)
-        : base(rd_kw_alloc(kw.c_str(), size_,
-                           rd_type_create_from_type(rd_type<T>::type))) {}
+        : base(make_rd_kw(kw.c_str(), size_,
+                          rd_type_create_from_type(rd_type<T>::type))
+                   .release()) {}
 
     ResdataKW(const std::string &kw, const std::vector<T> &data)
         : ResdataKW(kw, data.size()) {
@@ -153,12 +154,12 @@ public:
     }
 
     static ResdataKW load(FortIO &fortio) {
-        rd_kw_type *c_ptr = rd_kw_fread_alloc(fortio);
+        auto c_ptr = rd_kw_struct::fread(fortio);
 
         if (!c_ptr)
             throw std::invalid_argument("fread kw failed - EOF?");
 
-        return ResdataKW(c_ptr);
+        return ResdataKW(c_ptr.release());
     }
 };
 
@@ -233,8 +234,8 @@ void write_kw(FortIO &fortio, const std::string &kw,
   Will write an empty rd_kw instance of type 'MESS' to the Fortio file.
 */
 inline void write_mess(FortIO &fortio, const std::string &kw) {
-    rd_kw_type *rd_kw = rd_kw_alloc(kw.c_str(), 0, RD_MESS);
-    rd_kw_fwrite(rd_kw, fortio);
+    auto rd_kw = make_rd_kw(kw.c_str(), 0, RD_MESS);
+    rd_kw_fwrite(rd_kw.get(), fortio);
 }
 
 } // namespace ERT

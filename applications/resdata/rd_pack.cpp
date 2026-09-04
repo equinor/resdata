@@ -72,12 +72,12 @@ int main(int argc, char **argv) {
         std::vector<std::string> filelist(argv + 1, argv + argc);
         std::sort(filelist.begin(), filelist.end(), fname_cmp);
 
-        rd_kw_ptr seqnum_kw(nullptr, &rd_kw_free);
+        rd_kw_ptr seqnum_kw{nullptr};
         ERT::FortIO target(target_file, std::ios_base::out, fmt_file);
 
         if (target_type == FileType::UNIFIED_RESTART) {
             int dummy;
-            seqnum_kw.reset(rd_kw_alloc_new("SEQNUM", 1, RD_INT, &dummy));
+            seqnum_kw = std::move(make_rd_kw("SEQNUM", 1, RD_INT, &dummy));
         }
 
         int prev_report_step = -1;

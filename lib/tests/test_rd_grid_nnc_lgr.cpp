@@ -316,16 +316,15 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
             ERT::FortIO fortio(grid_filename.c_str(), std::ios_base::in);
 
-            rd_kw_ptr first_corners(nullptr, &rd_kw_free);
+            rd_kw_ptr first_corners{nullptr};
             while (true) {
-                rd_kw_type *kw = rd_kw_fread_alloc(fortio);
+                auto kw = rd_kw_struct::fread(fortio);
                 if (kw == nullptr)
                     break;
-                if (std::string(rd_kw_get_header(kw)) == CORNERS_KW) {
-                    first_corners.reset(kw);
+                if (std::string(rd_kw_get_header(kw.get())) == CORNERS_KW) {
+                    first_corners = std::move(kw);
                     break;
                 }
-                rd_kw_free(kw);
             }
 
             REQUIRE(first_corners != nullptr);

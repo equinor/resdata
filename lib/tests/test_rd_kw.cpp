@@ -34,13 +34,13 @@ rd_kw_ptr make_int_kw(const char *name, int size) {
 } // namespace
 
 TEST_CASE("rd_kw_alloc rejects negative size", "[rd_kw]") {
-    REQUIRE_THROWS_WITH(rd_kw_alloc("KW", -1, RD_INT),
+    REQUIRE_THROWS_WITH(make_rd_kw("KW", -1, RD_INT),
                         ContainsSubstring("rd_kw size was negative: -1"));
 }
 
 TEST_CASE("rd_kw_alloc_new rejects negative size", "[rd_kw]") {
     int data[1] = {0};
-    REQUIRE_THROWS_AS(rd_kw_alloc_new("KW", -1, RD_INT, data),
+    REQUIRE_THROWS_AS(make_rd_kw("KW", -1, RD_INT, data),
                       std::invalid_argument);
 }
 
@@ -153,26 +153,26 @@ TEST_CASE("scalar_set/scale/shift validate the type", "[rd_kw]") {
                         ContainsSubstring("wrong type"));
 }
 
-TEST_CASE("rd_kw_alloc_slice_copy validates range and stride", "[rd_kw]") {
+TEST_CASE("slice copy validates range and stride", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("index1 beyond size") {
-        REQUIRE_THROWS_WITH(rd_kw_alloc_slice_copy(src.get(), 10, 20, 1),
+        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), 10, 20, 1),
                             ContainsSubstring("> size"));
     }
     SECTION("non positive stride") {
-        REQUIRE_THROWS_WITH(rd_kw_alloc_slice_copy(src.get(), 0, 4, 0),
+        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), 0, 4, 0),
                             ContainsSubstring("completely broken"));
     }
 }
 
-TEST_CASE("rd_kw_alloc_sub_copy validates offset and count", "[rd_kw]") {
+TEST_CASE("sub copy constructor validates offset and count", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("invalid offset") {
-        REQUIRE_THROWS_WITH(rd_kw_alloc_sub_copy(src.get(), "NEW", 100, 1),
+        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), "NEW", 100, 1),
                             ContainsSubstring("invalid offset"));
     }
     SECTION("invalid count") {
-        REQUIRE_THROWS_WITH(rd_kw_alloc_sub_copy(src.get(), "NEW", 0, 100),
+        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), "NEW", 0, 100),
                             ContainsSubstring("invalid count value"));
     }
 }
@@ -308,7 +308,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc throws on corrupt data", "[rd_kw]") {
             out << corrupt;
         }
         ERT::FortIO fortio(bad, std::ios_base::in, /*fmt_file=*/true);
-        REQUIRE_THROWS_WITH(rd_kw_fread_alloc(fortio),
+        REQUIRE_THROWS_WITH(rd_kw_struct::fread(fortio),
                             ContainsSubstring("reading of keyword:INTKW"));
     }
 }
@@ -340,7 +340,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc rejects bad logical value", "[rd_kw]") {
     }
 
     ERT::FortIO fortio(bad, std::ios_base::in, /*fmt_file=*/true);
-    REQUIRE_THROWS_WITH(rd_kw_fread_alloc(fortio),
+    REQUIRE_THROWS_WITH(rd_kw_struct::fread(fortio),
                         ContainsSubstring("Logical value: [Q] not recogniced"));
 }
 

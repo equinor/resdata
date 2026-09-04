@@ -5,9 +5,11 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -21,39 +23,33 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
 
-struct rd_kw_struct {
-    size_t size;
-    rd_data_type data_type;
-    char *
-        header8; /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
-    char *header;     /* Header which is trimmed to no-space. */
-    char *data;       /* The actual data vector. */
-    bool shared_data; /* Whether this keyword has shared data or not. */
+static void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type) {
+    new (&rd_kw->data_type) rd_data_type(data_type);
+}
 
-    template <typename T> T at(size_t index) const {
-        if (index >= this->size)
-            throw std::invalid_argument(fmt::format(
-                "Invalid index lookup. kw:{} input_index:{}   size:{}", header,
-                index, size));
-        if (data_type.type != rd::iotype<T>::tag)
-            throw std::invalid_argument(
-                fmt::format("Keyword: {} is wrong type", header8));
-        size_t io_size = rd_type_get_sizeof_ctype(data_type);
-        T value;
-        std::memcpy(&value, &data[index * io_size], io_size);
-        return value;
-    }
-    double as_double(size_t index) const {
-        if (rd_type_is_float(this->data_type)) {
-            return static_cast<double>(this->at<float>(index));
-        } else if (rd_type_is_double(data_type)) {
-            return this->at<double>(index);
-        } else if (rd_type_is_int(data_type)) {
-            return static_cast<double>(this->at<int>(index));
-        } else
-            throw std::invalid_argument("cannot be converted to double");
-    }
-};
+template <typename T> T rd_kw_struct::at(size_t index) const {
+    if (index >= this->size)
+        throw std::invalid_argument(
+            fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
+                        header, index, size));
+    if (data_type.type != rd::iotype<T>::tag)
+        throw std::invalid_argument(
+            fmt::format("Keyword: {} is wrong type", header8));
+    size_t io_size = rd_type_get_sizeof_ctype(data_type);
+    T value;
+    std::memcpy(&value, &data[index * io_size], io_size);
+    return value;
+}
+double rd_kw_struct::as_double(size_t index) const {
+    if (rd_type_is_float(this->data_type)) {
+        return static_cast<double>(this->at<float>(index));
+    } else if (rd_type_is_double(data_type)) {
+        return this->at<double>(index);
+    } else if (rd_type_is_int(data_type)) {
+        return static_cast<double>(this->at<int>(index));
+    } else
+        throw std::invalid_argument("cannot be converted to double");
+}
 
 /* For some peculiar reason the keyword data is written in blocks, all
    numeric data is in blocks of 1000 elements, and character data is
@@ -136,7 +132,6 @@ struct rd_kw_struct {
 #define BOOL_FALSE_CHAR 'F'
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
-void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type);
 
 static std::string read_fmt_string(const rd_data_type rd_type) {
     return fmt::format("%{}c", rd_type_get_sizeof_iotype(rd_type));
@@ -458,33 +453,6 @@ bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
         return rd_kw_data_equal(rd_kw1, rd_kw2->data);
 }
 
-static void rd_kw_set_shared_ref(rd_kw_type *rd_kw, void *data_ptr) {
-    if (!rd_kw->shared_data) {
-        if (rd_kw->data != NULL)
-            throw std::invalid_argument(
-                "can not change to shared for keyword with allocated storage");
-    }
-    rd_kw->shared_data = true;
-    rd_kw->data = (char *)data_ptr;
-}
-
-static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, int size,
-                             rd_data_type data_type) {
-    rd_kw_set_data_type(rd_kw, data_type);
-    rd_kw_set_header_name(rd_kw, header);
-    if (size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", size));
-    rd_kw->size = static_cast<size_t>(size);
-}
-
-static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, size_t size,
-                             rd_data_type data_type) {
-    rd_kw_set_data_type(rd_kw, data_type);
-    rd_kw_set_header_name(rd_kw, header);
-    rd_kw->size = size;
-}
-
 static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
     const size_t blocksize = get_blocksize(rd_kw->data_type);
     const size_t num_blocks =
@@ -527,62 +495,6 @@ static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
     }
 }
 
-/**
-   The data is copied from the input argument to the rd_kw; data can be NULL.
-*/
-rd_kw_type *rd_kw_alloc_new(const char *header, int size,
-                            rd_data_type data_type, const void *data) {
-    rd_kw_ptr rd_kw = make_rd_kw();
-    rd_kw_initialize(rd_kw.get(), header, size, data_type);
-    if (data != NULL) {
-        rd_kw_alloc_data(rd_kw.get());
-        rd_kw_set_memcpy_data(rd_kw.get(), data);
-    }
-    return rd_kw.release();
-}
-
-rd_kw_type *rd_kw_alloc(const char *header, int size, rd_data_type data_type) {
-    rd_kw_ptr rd_kw = make_rd_kw();
-    rd_kw_initialize(rd_kw.get(), header, size, data_type);
-    rd_kw_alloc_data(rd_kw.get());
-    return rd_kw.release();
-}
-
-rd_kw_type *rd_kw_alloc_new_shared(const char *header, int size,
-                                   rd_data_type data_type, void *data) {
-    rd_kw_ptr rd_kw = make_rd_kw();
-    rd_kw_initialize(rd_kw.get(), header, size, data_type);
-    rd_kw_set_shared_ref(rd_kw.get(), data);
-    return rd_kw.release();
-}
-
-rd_kw_type *rd_kw_alloc_empty() {
-    rd_kw_type *rd_kw;
-
-    rd_kw = (rd_kw_type *)util_malloc(sizeof *rd_kw);
-    rd_kw->header = NULL;
-    rd_kw->header8 = NULL;
-    rd_kw->data = NULL;
-    rd_kw->shared_data = false;
-    rd_kw->size = 0;
-
-    return rd_kw;
-}
-
-static void rd_kw_free_data(rd_kw_type *rd_kw) {
-    if (!rd_kw->shared_data)
-        free(rd_kw->data);
-
-    rd_kw->data = NULL;
-}
-
-void rd_kw_free(rd_kw_type *rd_kw) {
-    free(rd_kw->header);
-    free(rd_kw->header8);
-    rd_kw_free_data(rd_kw);
-    free(rd_kw);
-}
-
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
         throw std::invalid_argument("type/size mismatch");
@@ -602,12 +514,6 @@ void rd_kw_memcpy(rd_kw_type *target, const rd_kw_type *src) {
     rd_kw_memcpy_data(target, src);
 }
 
-rd_kw_type *rd_kw_alloc_copy(const rd_kw_type *src) {
-    rd_kw_ptr new_ = make_rd_kw();
-    rd_kw_memcpy(new_.get(), src);
-    return new_.release();
-}
-
 /**
    This function will allocate a new copy of @src, where only the
    elements corresponding to the slice [index1:index2) is included.
@@ -622,18 +528,18 @@ rd_kw_type *rd_kw_alloc_copy(const rd_kw_type *src) {
    <= 0.
 */
 
-rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
-                                   size_t index2, int stride) {
-    if (index2 > src->size)
-        index2 = src->size;
-    if (index1 >= src->size)
+rd_kw_struct::rd_kw_struct(const rd_kw_struct &other, size_t index1,
+                           size_t index2, int stride)
+    : size(0), data_type(other.data_type) {
+    if (index2 > other.size)
+        index2 = other.size;
+    if (index1 >= other.size)
         throw std::invalid_argument(
-            fmt::format("index1={} > size:{}", index1, src->size));
+            fmt::format("index1={} > size:{}", index1, other.size));
     if (stride <= 0)
         throw std::invalid_argument(
             fmt::format("stride:{} completely broken ...", stride));
 
-    rd_kw_ptr new_kw(nullptr, rd_kw_free);
     size_t src_index = index1;
     /* 1: Determine size of the sliced copy. */
     size_t new_size = 0;
@@ -642,17 +548,17 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
         src_index += stride;
     }
     if (new_size > 0) {
-        new_kw.reset(rd_kw_alloc_empty());
-        rd_kw_initialize(new_kw.get(), src->header, new_size, src->data_type);
-        rd_kw_alloc_data(new_kw.get());
+        rd_kw_set_header_name(this, other.header);
+        this->size = new_size;
+        init_data();
 
         /* 2: Copy over the elements. */
         src_index = index1;
         {
             size_t target_index = 0;
-            const char *src_ptr = src->data;
-            char *new_ptr = new_kw->data;
-            size_t sizeof_ctype = rd_type_get_sizeof_ctype(new_kw->data_type);
+            const char *src_ptr = other.data;
+            char *new_ptr = this->data;
+            size_t sizeof_ctype = rd_type_get_sizeof_ctype(other.data_type);
 
             while (src_index < index2) {
                 memcpy(&new_ptr[target_index * sizeof_ctype],
@@ -662,7 +568,6 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
             }
         }
     }
-    return new_kw.release();
 }
 
 void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size) {
@@ -694,23 +599,23 @@ void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size) {
    used.
 */
 
-rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
-                                 size_t offset, size_t count) {
-    if (new_kw == NULL)
-        new_kw = src->header;
-
-    if (offset >= src->size)
+rd_kw_struct::rd_kw_struct(const rd_kw_type &other, const char *new_kw,
+                           size_t offset, size_t count)
+    : size(count), data_type(other.data_type) {
+    if (offset >= other.size)
         throw std::invalid_argument(
-            fmt::format("invalid offset - limits: [{},{})", 0, src->size));
-    if ((count + offset) > src->size)
+            fmt::format("invalid offset - limits: [{},{})", 0, other.size));
+    if ((count + offset) > other.size)
         throw std::invalid_argument(
             fmt::format("invalid count value: {}", count));
 
-    {
-        void *src_data = rd_kw_iget_ptr(src, static_cast<int>(offset));
-        return rd_kw_alloc_new(new_kw, static_cast<int>(count), src->data_type,
-                               src_data);
-    }
+    if (new_kw == NULL)
+        new_kw = other.header;
+    rd_kw_set_header_name(this, new_kw);
+
+    void *src_data = rd_kw_iget_ptr(&other, static_cast<int>(offset));
+    init_data();
+    rd_kw_set_memcpy_data(this, src_data);
 }
 
 static void *rd_kw_iget_ptr_static(const rd_kw_type *rd_kw, int i) {
@@ -791,7 +696,8 @@ void rd_kw_iset_string8(rd_kw_type *rd_kw, size_t index, const char *s8) {
         throw std::invalid_argument(
             fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
                         rd_kw->header, index, rd_kw->size));
-    char *rd_string = &rd_kw->data[index * rd_type_get_sizeof_ctype(rd_kw->data_type)];
+    char *rd_string =
+        &rd_kw->data[index * rd_type_get_sizeof_ctype(rd_kw->data_type)];
     if (strlen(s8) >= RD_STRING8_LENGTH) {
         /* The whole string goes in - possibly loosing content at the end. */
         for (size_t i = 0; i < RD_STRING8_LENGTH; i++)
@@ -1131,10 +1037,12 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
         const size_t sizeof_iotype =
             rd_type_get_sizeof_iotype(rd_kw->data_type);
         size_t record_size = rd_kw->size * sizeof_iotype;
-        if(record_size > std::numeric_limits<int>::max())
-            throw std::invalid_argument("record size exceeded signed 32 bit integer");
+        if (record_size > std::numeric_limits<int>::max())
+            throw std::invalid_argument(
+                "record size exceeded signed 32 bit integer");
 
-        bool read_ok = fortio.fread_buffer(buffer, static_cast<int>(record_size));
+        bool read_ok =
+            fortio.fread_buffer(buffer, static_cast<int>(record_size));
 
         if (read_ok)
             rd_kw_load_from_input_buffer(rd_kw, buffer);
@@ -1163,7 +1071,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
     // keyword and extract the requested elements afterwards.
     if (fortio.fmt_file()) {
         fortio.fseek(kw_offset, SEEK_SET);
-        rd_kw_ptr rd_kw(rd_kw_fread_alloc(fortio), rd_kw_free);
+        rd_kw_ptr rd_kw = rd_kw_struct::fread(fortio);
         if (rd_kw == NULL)
             throw std::runtime_error(fmt::format(
                 "failed to load keyword at offset:{}", (long)kw_offset));
@@ -1200,11 +1108,6 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 /**
    Allocates storage and reads data.
 */
-bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    rd_kw_alloc_data(rd_kw);
-    return rd_kw_fread_data(rd_kw, fortio);
-}
-
 bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
                         ERT::FortIO &fortio) {
     if (element_count <= 0)
@@ -1213,8 +1116,7 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
     bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
         /* Formatted skipping actually involves reading the data - nice ??? */
-        rd_kw_ptr tmp_kw = make_rd_kw();
-        rd_kw_initialize(tmp_kw.get(), "WORK", element_count, data_type);
+        rd_kw_ptr tmp_kw = make_rd_kw("WORK", element_count, data_type);
         rd_kw_alloc_data(tmp_kw.get());
         rd_kw_fread_data(tmp_kw.get(), fortio);
     } else {
@@ -1247,13 +1149,12 @@ bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 void rd_kw_fskip_header(ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
-        rd_kw_ptr rd_kw = make_rd_kw();
-        rd_kw_fread_header(rd_kw.get(), fortio);
+        rd_kw_fread_header(fortio);
     } else
         fortio.fskip_record();
 }
 
-rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+rd_kw_ptr rd_kw_fread_header(ERT::FortIO &fortio) {
     const char null_char = '\0';
     FILE *stream = fortio.get_FILE();
     bool fmt_file = fortio.fmt_file();
@@ -1264,14 +1165,14 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 
     if (fmt_file) {
         if (!rd_kw_fscanf_qstring(header, "%8c", 8, stream))
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         int read_count = fscanf(stream, "%d", &size);
         if (read_count != 1)
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         if (!rd_kw_fscanf_qstring(rd_type_str, "%4c", 4, stream))
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         fgetc(stream); /* Reading the trailing newline ... */
     } else {
@@ -1280,13 +1181,13 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
         record_size = fortio.init_read();
 
         if (record_size <= 0)
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         char buffer[RD_KW_HEADER_DATA_SIZE];
         size_t read_bytes = fread(buffer, 1, RD_KW_HEADER_DATA_SIZE, stream);
 
         if (read_bytes != RD_KW_HEADER_DATA_SIZE)
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         memcpy(header, &buffer[0], RD_STRING8_LENGTH);
         void *ptr = &buffer[RD_STRING8_LENGTH];
@@ -1296,16 +1197,14 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                RD_TYPE_LENGTH);
 
         if (!fortio.complete_read(record_size))
-            return RD_KW_READ_FAIL;
+            return {nullptr};
 
         if (RD_ENDIAN_FLIP)
             util_endian_flip_vector(&size, sizeof size, 1);
     }
 
     rd_data_type data_type = rd_type_create_from_name(rd_type_str);
-    rd_kw_initialize(rd_kw, header, size, data_type);
-
-    return RD_KW_READ_OK;
+    return make_rd_kw(header, size, data_type);
 }
 
 /**
@@ -1324,7 +1223,6 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 
 bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
                     ERT::FortIO &fortio) {
-    rd_kw_ptr tmp_kw = make_rd_kw();
     long int init_pos = fortio.ftell();
     bool cont, kw_found;
 
@@ -1332,7 +1230,7 @@ bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
     kw_found = false;
     while (cont) {
         long current_pos = fortio.ftell();
-        if (rd_kw_fread_header(tmp_kw.get(), fortio) == RD_KW_READ_OK) {
+        if (auto tmp_kw = rd_kw_fread_header(fortio)) {
             if (rd_kw_string_eq(rd_kw_get_header8(tmp_kw.get()), kw)) {
                 fortio.fseek(current_pos, SEEK_SET);
                 kw_found = true;
@@ -1378,30 +1276,17 @@ void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
     }
 }
 
-void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type) {
-    new (&rd_kw->data_type) rd_data_type(data_type);
+rd_kw_ptr rd_kw_struct::fread(ERT::FortIO &fortio) {
+    if (auto rd_kw = rd_kw_fread_header(fortio)) {
+        rd_kw_alloc_data(rd_kw.get());
+        if (!rd_kw_fread_data(rd_kw.get(), fortio))
+            return {nullptr};
+        return rd_kw;
+    } else
+        return {nullptr};
 }
 
-bool rd_kw_fread_realloc(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    if (rd_kw_fread_header(rd_kw, fortio) == RD_KW_READ_OK)
-        return rd_kw_fread_realloc_data(rd_kw, fortio);
-    else
-        return false;
-}
-
-rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &fortio) {
-    rd_kw_ptr rd_kw = make_rd_kw();
-    if (!rd_kw_fread_realloc(rd_kw.get(), fortio)) {
-        return nullptr;
-    }
-    return rd_kw.release();
-}
-
-void rd_kw_fskip(ERT::FortIO &fortio) {
-    rd_kw_type *tmp_kw;
-    tmp_kw = rd_kw_fread_alloc(fortio);
-    rd_kw_free(tmp_kw);
-}
+void rd_kw_fskip(ERT::FortIO &fortio) { rd_kw_struct::fread(fortio); }
 
 static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
                                           ERT::FortIO &fortio) {
@@ -1422,10 +1307,11 @@ static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
                 this_blocksize *
                 sizeof_iotype; /* The total size in bytes of the record written by the fortio layer. */
             if (record_size > std::numeric_limits<int>::max())
-                throw std::invalid_argument(
-                    fmt::format("Size of record exceeded 32-bit signed integer"));
+                throw std::invalid_argument(fmt::format(
+                    "Size of record exceeded 32-bit signed integer"));
             fortio.fwrite_record(
-                &iobuffer[block_nr * blocksize * sizeof_iotype], static_cast<int>(record_size));
+                &iobuffer[block_nr * blocksize * sizeof_iotype],
+                static_cast<int>(record_size));
         }
     }
     free(iobuffer);
@@ -1640,7 +1526,7 @@ rd_kw_type *rd_kw_alloc_scatter_copy(const rd_kw_type *src_kw, int target_size,
     return new_kw.release();
 }
 
-rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
+rd_kw_ptr rd_kw_struct::global_copy(const rd_kw_type *src,
                                     const rd_kw_type *actnum) {
     if (rd_kw_get_type(actnum) != RD_INT_TYPE)
         return NULL;
@@ -1669,7 +1555,7 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
         global_copy.reset(nullptr);
     }
 
-    return global_copy.release();
+    return global_copy;
 }
 
 #define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \

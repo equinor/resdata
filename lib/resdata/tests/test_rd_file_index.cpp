@@ -30,17 +30,17 @@ void test_create_and_load_index_file() {
 
         //creating the data file
         int data_size = 10;
-        rd_kw_type *kw1 = rd_kw_alloc("TEST1_KW", data_size, RD_INT);
+        auto kw1 = make_rd_kw("TEST1_KW", data_size, RD_INT);
         for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_int(kw1, i, 537 + i);
+            rd_kw_iset_int(kw1.get(), i, 537 + i);
         ERT::FortIO fortio(file_name, std::ios_base::out);
-        rd_kw_fwrite(kw1, fortio);
+        rd_kw_fwrite(kw1.get(), fortio);
 
         data_size = 5;
-        rd_kw_type *kw2 = rd_kw_alloc("TEST2_KW", data_size, RD_FLOAT);
+        auto kw2 = make_rd_kw("TEST2_KW", data_size, RD_FLOAT);
         for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_float(kw2, i, 0.15 * i);
-        rd_kw_fwrite(kw2, fortio);
+            rd_kw_iset_float(kw2.get(), i, 0.15 * i);
+        rd_kw_fwrite(kw2.get(), fortio);
         fortio.fflush();
         //finished creating data file
 
@@ -70,9 +70,6 @@ void test_create_and_load_index_file() {
 
         test_assert_true(rd_file_index->has_kw("TEST1_KW"));
         test_assert_true(rd_file_index->has_kw("TEST2_KW"));
-
-        rd_kw_free(kw1);
-        rd_kw_free(kw2);
     }
 }
 

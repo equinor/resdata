@@ -144,13 +144,14 @@ PYBIND11_MODULE(_kw, m) {
             auto *rd_data_type = from_cwrap<::rd_data_type>(data_type);
             if (rd_data_type == nullptr)
                 throw std::invalid_argument("data_type must not be None");
-            return to_capsule(rd_kw_alloc(name.c_str(), size, *rd_data_type));
+            return to_capsule(
+                make_rd_kw(name.c_str(), size, *rd_data_type).release());
         },
         py::return_value_policy::reference);
     m.def(
         "_fread_alloc",
         [](ERT::FortIO &fortio) {
-            return to_capsule(rd_kw_fread_alloc(fortio));
+            return to_capsule(rd_kw_struct::fread(fortio).release());
         },
         py::return_value_policy::reference);
     m.def(
@@ -166,17 +167,17 @@ PYBIND11_MODULE(_kw, m) {
                 count_size = count.cast<size_t>();
 
             if (new_kw.has_value())
-                return to_capsule(rd_kw_alloc_sub_copy(
-                    src, new_kw->c_str(), offset, count_size));
+                return to_capsule(new rd_kw_struct{*src, new_kw->c_str(),
+                                                   offset, count_size});
             else
                 return to_capsule(
-                    rd_kw_alloc_sub_copy(src, nullptr, offset, count_size));
+                    new rd_kw_struct{*src, nullptr, offset, count_size});
         },
         py::return_value_policy::reference);
     m.def(
         "_copyc",
         [](py::handle self) {
-            return to_capsule(rd_kw_alloc_copy(from_cwrap<rd_kw_type>(self)));
+            return to_capsule(new rd_kw_struct(*from_cwrap<rd_kw_type>(self)));
         },
         py::return_value_policy::reference);
     m.def(
@@ -186,17 +187,18 @@ PYBIND11_MODULE(_kw, m) {
                 index1 = 0;
             if (index2 < py::int_{0})
                 index2 = 0;
-            return to_capsule(rd_kw_alloc_slice_copy(
-                from_cwrap<rd_kw_type>(self), index1.cast<size_t>(),
-                index2.cast<size_t>(), stride));
+            return to_capsule(new rd_kw_struct{*from_cwrap<rd_kw_type>(self),
+                                               index1.cast<size_t>(),
+                                               index2.cast<size_t>(), stride});
         },
         py::return_value_policy::reference);
     m.def(
         "_global_copy",
         [](py::handle self, py::handle new_actnum) {
             return to_capsule(
-                rd_kw_alloc_global_copy(from_cwrap<rd_kw_type>(self),
-                                        from_cwrap<rd_kw_type>(new_actnum)));
+                rd_kw_struct::global_copy(from_cwrap<rd_kw_type>(self),
+                                          from_cwrap<rd_kw_type>(new_actnum))
+                    .release());
         },
         py::return_value_policy::reference);
 
@@ -212,7 +214,8 @@ PYBIND11_MODULE(_kw, m) {
     m.def("_iget_char_ptr", [](py::handle self, int index) {
         return rd_kw_iget_char_ptr(from_cwrap<rd_kw_type>(self), index);
     });
-    m.def("_iset_char_ptr", [](py::handle self, size_t index, std::string value) {
+    m.def("_iset_char_ptr", [](py::handle self, size_t index,
+                               std::string value) {
         rd_kw_iset_char_ptr(from_cwrap<rd_kw_type>(self), index, value.c_str());
     });
     m.def("_iget_string_ptr", [](py::handle self, int index) {
@@ -258,7 +261,7 @@ PYBIND11_MODULE(_kw, m) {
         },
         py::return_value_policy::reference);
     m.def("_free",
-          [](py::handle self) { rd_kw_free(from_cwrap<rd_kw_type>(self)); });
+          [](py::handle self) { delete from_cwrap<rd_kw_type>(self); });
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
         rd_kw_fwrite(from_cwrap<rd_kw_type>(self), fortio);
     });
@@ -383,8 +386,9 @@ PYBIND11_MODULE(_kw, m) {
     m.def(
         "_create_actnum",
         [](py::handle self, float porv_limit) {
-            return to_capsule(
-                rd_kw_alloc_actnum(from_cwrap<rd_kw_type>(self), porv_limit));
+            return to_capsule(rd_kw_struct::make_actnum(
+                                  from_cwrap<rd_kw_type>(self), porv_limit)
+                                  .release());
         },
         py::return_value_policy::reference);
     m.def("_first_different",
