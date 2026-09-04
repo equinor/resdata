@@ -326,7 +326,7 @@ static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
                                      ERT::FortIO &fortio) {
     rd_kw_ptr restart_kw =
         make_rd_kw(RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR);
-    for (int i = 0; i < SUMMARY_RESTART_SIZE; i++)
+    for (size_t i = 0; i < SUMMARY_RESTART_SIZE; i++)
         rd_kw_iset_string8(restart_kw.get(), i, "");
 
     if (smspec->restart_case.size() > 0) {
@@ -422,13 +422,15 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
       ignored when/if this smspec file is read at a later
       stage.
     */
+        size_t ii = static_cast<size_t>(i);
+
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {
-            rd_kw_iset_string8(keywords_kw.get(), i, "WWCT");
-            rd_kw_iset_string8(units_kw.get(), i, "????????");
+            rd_kw_iset_string8(keywords_kw.get(), ii, "WWCT");
+            rd_kw_iset_string8(units_kw.get(), ii, "????????");
             rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL.data());
         } else {
-            rd_kw_iset_string8(keywords_kw.get(), i, smspec_node.get_keyword());
-            rd_kw_iset_string8(units_kw.get(), i, smspec_node.get_unit());
+            rd_kw_iset_string8(keywords_kw.get(), ii, smspec_node.get_keyword());
+            rd_kw_iset_string8(units_kw.get(), ii, smspec_node.get_unit());
             {
                 std::string wgname{DUMMY_WELL};
                 if (smspec_node.get_wgname())
