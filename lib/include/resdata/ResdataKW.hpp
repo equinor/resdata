@@ -83,7 +83,7 @@ public:
 
     rd_kw_type *get() const { return this->m_kw; }
 
-    void resize(size_t new_size) { rd_kw_resize(this->m_kw, new_size); }
+    void resize(size_t new_size) { this->m_kw->resize(new_size); }
 
 protected:
     rd_kw_type *m_kw = nullptr;

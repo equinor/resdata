@@ -4,6 +4,7 @@
 #include <climits>
 #include <cmath>
 
+#include <cstring>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -22,8 +23,8 @@ typedef struct rd_kw_struct rd_kw_type;
 using rd_kw_ptr = std::unique_ptr<rd_kw_type>;
 
 void rd_kw_set_header_name(rd_kw_type *, const char *);
-void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
+void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
 
 /* the rd_kw datastructure is tightly bound to the on-disk binary format
    supplied by Eclipse, and there the number of elements is stored as a signed
@@ -33,8 +34,10 @@ void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
 
 struct rd_kw_struct {
 private:
+    size_t m_size;
     void init_data() {
-        this->data = (char *)calloc(size, rd_type_get_sizeof_ctype(data_type));
+        this->data =
+            (char *)calloc(m_size, rd_type_get_sizeof_ctype(data_type));
         if (this->data == nullptr) {
             std::free(this->data);
             throw std::bad_alloc{};
@@ -42,7 +45,6 @@ private:
     }
 
 public:
-    size_t size;
     rd_data_type data_type;
     char *header8 =
         nullptr; /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
@@ -61,7 +63,7 @@ public:
 
     rd_kw_struct(const char *header, size_t size, rd_data_type data_type,
                  const void *data = nullptr)
-        : size(size), data_type(data_type) {
+        : m_size(size), data_type(data_type) {
         rd_kw_set_header_name(this, header);
         init_data();
         rd_kw_set_memcpy_data(this, data);
@@ -73,7 +75,7 @@ public:
         if (size < 0)
             throw std::invalid_argument(
                 fmt::format("rd_kw size was negative: {}", size));
-        this->size = static_cast<size_t>(size);
+        this->m_size = static_cast<size_t>(size);
         rd_kw_set_header_name(this, header);
         init_data();
         rd_kw_set_memcpy_data(this, data);
@@ -86,16 +88,17 @@ public:
         if (size < 0)
             throw std::invalid_argument(
                 fmt::format("rd_kw size was negative: {}", size));
-        this->size = static_cast<size_t>(size);
+        this->m_size = static_cast<size_t>(size);
         rd_kw_set_header_name(this, header);
         this->data = (char *)ref.data;
         this->shared_data = true;
     }
 
     rd_kw_struct(const rd_kw_struct &other)
-        : size(other.size), data_type(other.data_type) {
+        : m_size(other.size()), data_type(other.data_type) {
+        rd_kw_set_header_name(this, other.header);
         init_data();
-        rd_kw_memcpy(this, &other);
+        rd_kw_memcpy_data(this, &other);
     }
     rd_kw_struct(const rd_kw_struct &other, const char *new_kw, size_t offset,
                  size_t count);
@@ -113,6 +116,8 @@ public:
     static rd_kw_ptr make_actnum(const rd_kw_type *porv_kw, float porv_limit);
     static rd_kw_ptr global_copy(const rd_kw_type *src,
                                  const rd_kw_type *actnum);
+    [[nodiscard]] size_t size() const { return m_size; }
+    void resize(size_t new_size);
 };
 
 /*
@@ -231,8 +236,6 @@ void rd_kw_fskip(ERT::FortIO &);
 void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                               rd_data_type, int element_count,
                               const std::vector<int> &index_map, char *buffer);
-void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size);
-void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_get_memcpy_data(const rd_kw_type *, void *);
 bool rd_kw_fwrite(const rd_kw_type *, ERT::FortIO &);
 void rd_kw_iget(const rd_kw_type *, int, void *);
@@ -244,7 +247,6 @@ const char *rd_kw_iget_string_ptr(const rd_kw_type *, int);
 const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, int i);
 void *rd_kw_iget_ptr(const rd_kw_type *, int);
 int rd_kw_get_size(const rd_kw_type *);
-size_t rd_kw_size(const rd_kw_type *);
 double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
@@ -270,8 +272,6 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
                                const std::vector<int> &index_list, void *_sum);
 void rd_kw_max_min(const rd_kw_type *, void *, void *);
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw);
-
-void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
 
 void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value);
 

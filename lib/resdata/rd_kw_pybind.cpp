@@ -162,7 +162,7 @@ PYBIND11_MODULE(_kw, m) {
 
             size_t count_size;
             if (count < py::int_{0})
-                count_size = py::int_{rd_kw_size(src) - offset};
+                count_size = py::int_{src->size() - offset};
             else
                 count_size = count.cast<size_t>();
 
@@ -202,9 +202,8 @@ PYBIND11_MODULE(_kw, m) {
         },
         py::return_value_policy::reference);
 
-    m.def("_get_size", [](py::handle self) {
-        return rd_kw_get_size(from_cwrap<rd_kw_type>(self));
-    });
+    m.def("_get_size",
+          [](py::handle self) { return from_cwrap<rd_kw_type>(self)->size(); });
     m.def("_get_fortio_size", [](py::handle self) {
         return rd_kw_fortio_size(from_cwrap<rd_kw_type>(self));
     });
@@ -399,7 +398,7 @@ PYBIND11_MODULE(_kw, m) {
                                            offset, abs_epsilon, rel_epsilon);
           });
     m.def("_resize", [](py::handle self, size_t new_size) {
-        rd_kw_resize(from_cwrap<rd_kw_type>(self), new_size);
+        from_cwrap<rd_kw_type>(self)->resize(new_size);
     });
     m.def("_safe_div", [](py::handle self, py::handle divisor) {
         return rd_kw_inplace_safe_div(from_cwrap<rd_kw_type>(self),
