@@ -388,7 +388,7 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     int num_nodes = rd_smspec_num_nodes(smspec);
     auto keywords_kw = make_rd_kw(KEYWORDS_KW, num_nodes, RD_CHAR);
     auto units_kw = make_rd_kw(UNITS_KW, num_nodes, RD_CHAR);
-    rd_kw_ptr nums_kw{nullptr, &rd_kw_free};
+    rd_kw_ptr nums_kw{nullptr};
 
     // If the names_type is an RD_STRING we expect this to be an INTERSECT
     // summary, otherwise an ECLIPSE summary.
@@ -398,7 +398,7 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
                    num_nodes, names_type);
 
     if (smspec->need_nums)
-        nums_kw.reset(rd_kw_alloc(NUMS_KW, num_nodes, RD_INT));
+        nums_kw = std::move(make_rd_kw(NUMS_KW, num_nodes, RD_INT));
 
     for (int i = 0; i < rd_smspec_num_nodes(smspec); i++) {
         const rd::smspec_node &smspec_node =
@@ -429,7 +429,8 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
             rd_kw_iset_string8(units_kw.get(), ii, "????????");
             rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL.data());
         } else {
-            rd_kw_iset_string8(keywords_kw.get(), ii, smspec_node.get_keyword());
+            rd_kw_iset_string8(keywords_kw.get(), ii,
+                               smspec_node.get_keyword());
             rd_kw_iset_string8(units_kw.get(), ii, smspec_node.get_unit());
             {
                 std::string wgname{DUMMY_WELL};

@@ -16,10 +16,9 @@ int main(int argc, char **argv) {
 
     // 1. Write a rd_kw instance with string data - uninitialized.
     {
-        rd_kw_type *rd_kw = rd_kw_alloc("SPACE", 1, RD_CHAR);
+        auto rd_kw = make_rd_kw("SPACE", 1, RD_CHAR);
         ERT::FortIO f("file", std::ios_base::out, false, true);
-        rd_kw_fwrite(rd_kw, f);
-        rd_kw_free(rd_kw);
+        rd_kw_fwrite(rd_kw.get(), f);
     }
 
     // 2. Open file with normal fopen() and verify that the data section consists of only spaces.
