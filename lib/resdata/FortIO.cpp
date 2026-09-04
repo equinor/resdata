@@ -1,5 +1,8 @@
 #include <ios>
-#include <memory>
+#include <fstream>
+#include <istream>
+#include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -7,6 +10,7 @@
 #include <fmt/format.h>
 #include <filesystem>
 
+#include <cstdint>
 #include <cstddef>
 #include <cstdlib>
 #include <cstdio>
@@ -17,59 +21,47 @@
 
 #include <resdata/FortIO.hpp>
 
-#define READ_MODE_TXT "r"
-#define READ_MODE_BINARY "rb"
-#define WRITE_MODE_TXT "w"
-#define WRITE_MODE_BINARY "wb"
-#define READ_WRITE_MODE_TXT "r+"
-#define READ_WRITE_MODE_BINARY "r+b"
-#define APPEND_MODE_TXT "a"
-#define APPEND_MODE_BINARY "ab"
-
 /*
   Observe that the stream open functions accept a failure, and call
   the fopen() function directly.
 */
 
-static const char *fortio_fopen_read_mode(bool fmt_file) {
-    if (fmt_file)
-        return READ_MODE_TXT;
-    else
-        return READ_MODE_BINARY;
-}
+static std::ios_base::openmode fortio_open_mode(std::ios_base::openmode mode,
+                                                bool fmt_file,
+                                                const std::string &filename) {
+    std::ios_base::openmode result;
+    if (mode == (std::ios_base::in | std::ios_base::out)) {
+        result = std::ios_base::in | std::ios_base::out;
+    } else if (mode == std::ios_base::in) {
+        if (util_file_exists(filename.c_str()))
+            result = std::ios_base::in;
+        else
+            throw std::ios_base::failure("File " + filename +
+                                         " does not exist");
+    } else if (mode == std::ios_base::app) {
+        result = std::ios_base::out | std::ios_base::app;
+    } else {
+        result = std::ios_base::out | std::ios_base::trunc;
+    }
 
-static const char *fortio_fopen_write_mode(bool fmt_file) {
-    if (fmt_file)
-        return WRITE_MODE_TXT;
-    else
-        return WRITE_MODE_BINARY;
-}
+    if (!fmt_file)
+        result |= std::ios_base::binary;
 
-static const char *fortio_fopen_readwrite_mode(bool fmt_file) {
-    if (fmt_file)
-        return READ_WRITE_MODE_TXT;
-    else
-        return READ_WRITE_MODE_BINARY;
-}
-
-static const char *fortio_fopen_append_mode(bool fmt_file) {
-    if (fmt_file)
-        return APPEND_MODE_TXT;
-    else
-        return APPEND_MODE_BINARY;
+    return result;
 }
 
 /**
    Helper function for fortio_is_fortran_stream__().
 */
-static bool __read_int(FILE *stream, int *value, bool endian_flip) {
-    /* This fread() can fail - can not use util_fread() here. */
-    if (fread(value, sizeof *value, 1, stream) == 1) {
+static bool __read_int(std::istream &stream, int *value, bool endian_flip) {
+    if (stream.read(reinterpret_cast<char *>(value), sizeof *value)) {
         if (endian_flip)
             util_endian_flip_vector(value, sizeof *value, 1);
         return true;
-    } else
+    } else {
+        stream.clear();
         return false;
+    }
 }
 
 /**
@@ -77,10 +69,10 @@ static bool __read_int(FILE *stream, int *value, bool endian_flip) {
    particular stream is formatted according to fortran io, for a fixed
    endianness.
 */
-static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
+static bool fortio_is_fortran_stream__(std::istream &stream, bool endian_flip) {
     const bool strict_checking =
         true; /* True: requires that *ALL* records in the file are fortran formatted */
-    offset_type init_pos = util_ftell(stream);
+    offset_type init_pos = stream.tellg();
     bool is_fortran_stream = false;
     int header, tail;
     bool cont;
@@ -89,7 +81,9 @@ static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
         cont = false;
         if (__read_int(stream, &header, endian_flip)) {
             if (header >= 0) {
-                if (util_fseek(stream, (offset_type)header, SEEK_CUR) == 0) {
+                stream.seekg(static_cast<offset_type>(header),
+                             std::ios_base::cur);
+                if (stream.good()) {
                     if (__read_int(stream, &tail, endian_flip)) {
                         cont = true;
                         // Read a header and a tail so it might be a fortran file.
@@ -113,7 +107,8 @@ static bool fortio_is_fortran_stream__(FILE *stream, bool endian_flip) {
             }
         }
     } while (cont);
-    util_fseek(stream, init_pos, SEEK_SET);
+    stream.clear();
+    stream.seekg(init_pos, std::ios_base::beg);
     return is_fortran_stream;
 }
 
@@ -124,26 +119,14 @@ FortIO::FortIO(const std::string &filename, std::ios_base::openmode mode,
     open(filename, mode, fmt_file, endian_flip_header);
 }
 
-FortIO::FortIO(const std::string &filename, bool fmt_file, bool writable,
-               FILE *stream, bool endian_flip_header) {
-    m_filename = filename;
-    m_endian_flip_header = endian_flip_header;
-    m_fmt_file = fmt_file;
-    m_stream_owner = false;
-    m_writable = writable;
-    m_read_size = 0;
-    m_stream = stream;
-}
-
 FortIO::~FortIO() { close(); }
 
 FortIO::FortIO(FortIO &&other) noexcept
-    : m_stream(std::exchange(other.m_stream, nullptr)),
+    : m_stream(std::move(other.m_stream)),
       m_filename(std::move(other.m_filename)),
       m_endian_flip_header(std::exchange(other.m_endian_flip_header, false)),
       m_fmt_file(std::exchange(other.m_fmt_file, false)),
-      m_fopen_mode(std::exchange(other.m_fopen_mode, nullptr)),
-      m_stream_owner(std::exchange(other.m_stream_owner, false)),
+      m_open_mode(std::exchange(other.m_open_mode, std::ios_base::openmode{})),
       m_writable(std::exchange(other.m_writable, false)),
       m_read_size(std::exchange(other.m_read_size, 0)) {
     other.m_filename = "";
@@ -155,12 +138,11 @@ FortIO &FortIO::operator=(FortIO &&other) noexcept {
 
     close();
 
-    m_stream = std::exchange(other.m_stream, nullptr);
+    m_stream = std::move(other.m_stream);
     m_filename = std::move(other.m_filename);
     m_endian_flip_header = std::exchange(other.m_endian_flip_header, false);
     m_fmt_file = std::exchange(other.m_fmt_file, false);
-    m_fopen_mode = std::exchange(other.m_fopen_mode, nullptr);
-    m_stream_owner = std::exchange(other.m_stream_owner, false);
+    m_open_mode = std::exchange(other.m_open_mode, std::ios_base::openmode{});
     m_writable = std::exchange(other.m_writable, false);
     m_read_size = std::exchange(other.m_read_size, 0);
 
@@ -171,42 +153,30 @@ FortIO &FortIO::operator=(FortIO &&other) noexcept {
 
 void FortIO::open(const std::string &filename, std::ios_base::openmode mode,
                   bool fmt_file, bool endian_flip_header) {
-    const char *cmode;
-    if (mode == (std::ios_base::in | std::ios_base::out)) {
-        cmode = fortio_fopen_readwrite_mode(fmt_file);
-    } else if (mode == std::ios_base::in) {
-        if (util_file_exists(filename.c_str())) {
-            cmode = fortio_fopen_read_mode(fmt_file);
-        } else
-            throw std::ios_base::failure("File " + filename +
-                                         " does not exist");
-    } else if (mode == std::ios_base::app) {
-        cmode = fortio_fopen_append_mode(fmt_file);
-    } else {
-        cmode = fortio_fopen_write_mode(fmt_file);
-    }
+    std::ios_base::openmode open_mode =
+        fortio_open_mode(mode, fmt_file, filename);
 
-    FILE *stream = fopen(filename.c_str(), cmode);
-    if (!stream)
+    std::fstream stream(filename, open_mode);
+    if (!stream.is_open())
         throw std::ios_base::failure("Failed to open FortIO file " + filename);
+
     m_filename = filename;
     m_endian_flip_header = endian_flip_header;
     m_fmt_file = fmt_file;
-    m_stream_owner = true;
     m_writable = (mode & std::ios_base::out) || (mode & std::ios_base::app);
     m_read_size = 0;
-    m_stream = stream;
-    m_fopen_mode = cmode;
-    m_read_size = util_fd_size(fileno(m_stream));
+    m_stream = std::move(stream);
+    m_open_mode = open_mode;
+    m_read_size =
+        static_cast<offset_type>(std::filesystem::file_size(filename));
 }
 
 void FortIO::close() {
-    if (m_stream && m_stream_owner)
-        fclose(m_stream);
-    m_stream = nullptr;
+    if (m_stream.is_open())
+        m_stream.close();
+    m_stream = std::fstream();
     m_filename = "";
-    m_fopen_mode = nullptr;
-    m_stream_owner = false;
+    m_open_mode = std::ios_base::openmode{};
     m_writable = false;
     m_read_size = 0;
 }
@@ -228,51 +198,35 @@ void FortIO::close() {
    zeroes. In that case it is difficult to determine, and we continue.
 */
 bool FortIO::looks_like_fortran_file(const char *filename, bool endian_flip) {
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{fopen(filename, "rb"),
-                                                   [](FILE *f) { fclose(f); }};
-    if (!stream)
+    std::ifstream stream(filename, std::ios_base::binary);
+    if (!stream.is_open())
         throw std::system_error(errno, std::generic_category(),
                                 "looks_like_fortran_file: failed to open file");
-    bool is_fortran_stream =
-        fortio_is_fortran_stream__(stream.get(), endian_flip);
+    bool is_fortran_stream = fortio_is_fortran_stream__(stream, endian_flip);
     return is_fortran_stream;
 }
 
 bool FortIO::fclose_stream() {
-    if (m_stream_owner) {
-        if (m_stream) {
-            int fclose_return = fclose(m_stream);
-            m_stream = nullptr;
-            if (fclose_return == 0)
-                return true;
-            else
-                return false;
-        } else
-            return false; // Already closed.
+    if (m_stream.is_open()) {
+        m_stream.close();
+        return !m_stream.fail();
     } else
-        return false;
+        return false; // Already closed.
 }
 
 bool FortIO::fopen_stream() {
-    if (m_stream == nullptr) {
-        m_stream = fopen(m_filename.c_str(), m_fopen_mode);
-        if (m_stream)
-            return true;
-        else
-            return false;
+    if (!m_stream.is_open()) {
+        m_stream.clear();
+        m_stream.open(m_filename, m_open_mode);
+        return m_stream.is_open();
     } else
         return false;
 }
 
-bool FortIO::stream_is_open() const {
-    if (m_stream)
-        return true;
-    else
-        return false;
-}
+bool FortIO::stream_is_open() const { return m_stream.is_open(); }
 
 bool FortIO::assert_stream_open() {
-    if (m_stream)
+    if (m_stream.is_open())
         return true;
     else {
         fopen_stream();
@@ -287,17 +241,17 @@ bool FortIO::assert_stream_open() {
   it will return -1.
 */
 int FortIO::init_read() {
-    size_t elm_read;
     int record_size;
-
-    elm_read = fread(&record_size, sizeof(record_size), 1, m_stream);
-    if (elm_read == 1) {
+    if (m_stream.read(reinterpret_cast<char *>(&record_size),
+                      sizeof record_size)) {
         if (m_endian_flip_header)
             util_endian_flip_vector(&record_size, sizeof record_size, 1);
 
         return record_size;
-    } else
+    } else {
+        m_stream.clear();
         return -1;
+    }
 }
 
 bool FortIO::data_fskip(size_t element_size, size_t element_count,
@@ -331,28 +285,30 @@ void FortIO::data_fseek(offset_type data_offset, size_t data_element,
 }
 
 int FortIO::fclean() {
-    long current_pos = ::ftell(m_stream);
-    if (current_pos == -1)
+    offset_type current_pos = m_stream.tellg();
+    if (current_pos == static_cast<offset_type>(-1))
         return -1;
 
-    int flush_status = ::fflush(m_stream);
-    if (flush_status != 0)
-        return flush_status;
+    m_stream.flush();
+    if (!m_stream)
+        return -1;
 
-    return ::fseek(m_stream, current_pos, SEEK_SET);
+    m_stream.clear();
+    m_stream.seekg(current_pos, std::ios_base::beg);
+    m_stream.seekp(current_pos, std::ios_base::beg);
+    return m_stream.good() ? 0 : -1;
 }
 
 bool FortIO::complete_read(int record_size) {
     int trailer;
-    size_t read_count = fread(&trailer, sizeof trailer, 1, m_stream);
-
-    if (read_count == 1) {
+    if (m_stream.read(reinterpret_cast<char *>(&trailer), sizeof trailer)) {
         if (m_endian_flip_header)
             util_endian_flip_vector(&trailer, sizeof trailer, 1);
 
         if (record_size == trailer)
             return true;
-    }
+    } else
+        m_stream.clear();
 
     return false;
 }
@@ -375,10 +331,14 @@ bool FortIO::fread_buffer(char *buffer, int buffer_size) {
             return false;
         if (end - itr < static_cast<ptrdiff_t>(record_size))
             return false;
-        size_t items_read = 0;
-        if (record_size > 0)
-            items_read = fread(itr, 1, record_size, m_stream);
-        if (items_read != static_cast<size_t>(record_size) ||
+        std::streamsize items_read = 0;
+        if (record_size > 0) {
+            m_stream.read(itr, record_size);
+            items_read = m_stream.gcount();
+            if (items_read != record_size)
+                m_stream.clear();
+        }
+        if (items_read != static_cast<std::streamsize>(record_size) ||
             !complete_read(record_size))
             return false;
         itr += record_size;
@@ -399,7 +359,8 @@ void FortIO::init_write(int record_size) {
     if (m_endian_flip_header)
         util_endian_flip_vector(&file_header, sizeof file_header, 1);
 
-    util_fwrite_int(file_header, m_stream);
+    m_stream.write(reinterpret_cast<const char *>(&file_header),
+                   sizeof file_header);
 }
 
 void FortIO::complete_write(int record_size) {
@@ -407,23 +368,42 @@ void FortIO::complete_write(int record_size) {
     if (m_endian_flip_header)
         util_endian_flip_vector(&file_header, sizeof file_header, 1);
 
-    util_fwrite_int(file_header, m_stream);
+    m_stream.write(reinterpret_cast<const char *>(&file_header),
+                   sizeof file_header);
 }
 
 void FortIO::fwrite_record(const char *buffer, int record_size) {
     init_write(record_size);
-    util_fwrite(buffer, 1, record_size, m_stream, __func__);
+    m_stream.write(buffer, record_size);
+    if (!m_stream)
+        throw std::runtime_error(fmt::format(
+            "{}: failed to write {} bytes to disk", __func__, record_size));
     complete_write(record_size);
 }
 
-offset_type FortIO::ftell() const { return util_ftell(m_stream); }
+offset_type FortIO::ftell() const { return m_stream.tellg(); }
 
 bool FortIO::fseek_(offset_type offset, int whence) {
-    int fseek_return = util_fseek(m_stream, offset, whence);
-    if (fseek_return == 0)
-        return true;
-    else
+    m_stream.clear();
+    switch (whence) {
+    case SEEK_SET:
+        m_stream.seekg(offset, std::ios_base::beg);
+        m_stream.seekp(offset, std::ios_base::beg);
+        break;
+    case SEEK_END:
+        m_stream.seekg(offset, std::ios_base::end);
+        m_stream.seekp(offset, std::ios_base::end);
+        break;
+    case SEEK_CUR: {
+        offset_type target = ftell() + offset;
+        m_stream.seekg(target, std::ios_base::beg);
+        m_stream.seekp(target, std::ios_base::beg);
+        break;
+    }
+    default:
         return false;
+    }
+    return m_stream.good();
 }
 
 /**
@@ -464,9 +444,28 @@ bool FortIO::fseek(offset_type offset, int whence) {
     }
 }
 
-bool FortIO::ftruncate(offset_type size) {
-    fseek(size, SEEK_SET);
-    return util_ftruncate(m_stream, size);
+bool FortIO::ftruncate(std::uintmax_t size) {
+    if (size >
+        static_cast<std::uintmax_t>(std::numeric_limits<std::streamoff>::max()))
+        throw std::invalid_argument(
+            "Size to ftruncate exceeded std::streamoff size");
+    std::streamoff offset = static_cast<std::streamoff>(size);
+
+    if (!m_writable)
+        return false;
+
+    // Resize the file on disk directly; no need to close/reopen the stream
+    // since resize_file() operates on the path, not the open file handle.
+    m_stream.flush();
+
+    std::error_code ec;
+    std::filesystem::resize_file(m_filename, size, ec);
+    if (ec)
+        return false;
+
+    m_stream.clear();
+
+    return fseek(offset, SEEK_SET);
 }
 
 /**
@@ -491,10 +490,15 @@ void FortIO::fwrite_error() {
         std::filesystem::remove(m_filename);
 }
 
-void FortIO::fflush() const { ::fflush(m_stream); }
-FILE *FortIO::get_FILE() const { return m_stream; }
+void FortIO::fflush() const { m_stream.flush(); }
+std::istream &FortIO::get_istream() { return m_stream; }
+std::ostream &FortIO::get_ostream() { return m_stream; }
 bool FortIO::fmt_file() const { return m_fmt_file; }
-void FortIO::rewind() const { util_rewind(m_stream); }
+void FortIO::rewind() const {
+    m_stream.clear();
+    m_stream.seekg(0, std::ios_base::beg);
+    m_stream.seekp(0, std::ios_base::beg);
+}
 const char *FortIO::filename_ref() const { return m_filename.c_str(); }
 
 } // namespace ERT

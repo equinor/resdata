@@ -129,7 +129,7 @@ void rd::File::scan() {
             break;
 
         offset_type current_offset = context->fortio.ftell();
-        auto work_kw = rd_kw_fread_header(context->fortio);
+        auto work_kw = rd::KW::fread_header(context->fortio);
         if (!work_kw)
             break;
 
@@ -192,7 +192,7 @@ std::unique_ptr<rd::File> rd::File::open(const std::string &filename,
 
     3. The rd_file must have been opened with one of the _writable()
        open functions. */
-bool rd::File::save_kw(const rd_kw_type *rd_kw) {
+bool rd::File::save_kw(const rd::KW *rd_kw) {
     FileKW *file_kw = context->inv_map.at(rd_kw);
     if (context->fortio.assert_stream_open()) {
 

@@ -14,7 +14,7 @@
 
 void test_rstfile(const char *filename, bool fracture_connection) {
     auto rst_file = rd::File::open(filename);
-    const rd_kw_type *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
+    const rd::KW *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
     auto header = RSTHead::read(rst_file->get_global_view().get(),
                                 rd_filename_report_nr(filename));
 

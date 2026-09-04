@@ -13,9 +13,9 @@
 #include <resdata/well/well_segment.hpp>
 
 std::shared_ptr<WellSegment>
-WellSegment::from_kw(const rd_kw_type *iseg_kw,
-                     well_rseg_loader_type *rseg_loader, const RSTHead &header,
-                     int well_nr, int segment_index, int segment_id) {
+WellSegment::from_kw(const rd::KW *iseg_kw, well_rseg_loader_type *rseg_loader,
+                     const RSTHead &header, int well_nr, int segment_index,
+                     int segment_id) {
     if (!rseg_loader) {
         throw std::invalid_argument(
             "fatal internal error - tried to create well_segment "
@@ -26,11 +26,10 @@ WellSegment::from_kw(const rd_kw_type *iseg_kw,
         const int rseg_offset =
             header.nrsegz * (header.nsegmx * well_nr + segment_index);
         int outlet_segment_id =
-            rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_OUTLET_INDEX) -
+            iseg_kw->at<int>(iseg_offset + ISEG_OUTLET_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET; // -1
-        int branch_id =
-            rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_BRANCH_INDEX) -
-            ECLIPSE_WELL_BRANCH_OFFSET + WELL_BRANCH_OFFSET; // -1
+        int branch_id = iseg_kw->at<int>(iseg_offset + ISEG_BRANCH_INDEX) -
+                        ECLIPSE_WELL_BRANCH_OFFSET + WELL_BRANCH_OFFSET; // -1
         const double *rseg_data =
             well_rseg_loader_load_values(rseg_loader, rseg_offset);
 
@@ -67,11 +66,11 @@ bool WellSegment::add_connection(const std::string &grid_name,
         return false;
 }
 
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
+bool well_segment_well_is_MSW(int well_nr, const rd::KW *iwel_kw,
                               const RSTHead &rst_head) {
     int iwel_offset = rst_head.niwelz * well_nr;
     int segment_well_nr =
-        rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
+        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
 
     if (segment_well_nr == IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE)
         return false;

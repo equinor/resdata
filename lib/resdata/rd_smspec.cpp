@@ -313,70 +313,42 @@ static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
 
 static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
                                       ERT::FortIO &fortio) {
-    rd_kw_ptr intehead = make_rd_kw(INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, RD_INT);
-    rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_UNIT_INDEX,
-                   static_cast<int>(smspec->unit_system));
+    std::vector<int> intehead_data(INTEHEAD_SMSPEC_SIZE, 0);
+    intehead_data[INTEHEAD_SMSPEC_UNIT_INDEX] =
+        static_cast<int>(smspec->unit_system);
     /* The simulator type is just hardcoded to ECLIPSE100. */
-    rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_IPROG_INDEX,
-                   INTEHEAD_ECLIPSE100_VALUE);
-    rd_kw_fwrite(intehead.get(), fortio);
+    intehead_data[INTEHEAD_SMSPEC_IPROG_INDEX] = INTEHEAD_ECLIPSE100_VALUE;
+    rd::KW intehead{INTEHEAD_KW, std::move(intehead_data)};
+    intehead.fwrite(fortio);
 }
 
 static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
                                      ERT::FortIO &fortio) {
-    rd_kw_ptr restart_kw =
-        make_rd_kw(RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR);
-    for (size_t i = 0; i < SUMMARY_RESTART_SIZE; i++)
-        rd_kw_iset_string8(restart_kw.get(), i, "");
-
-    if (smspec->restart_case.size() > 0) {
-        size_t restart_case_len = smspec->restart_case.size();
-
-        size_t offset = 0;
-        for (size_t i = 0; i < SUMMARY_RESTART_SIZE; i++) {
-            if (offset < restart_case_len)
-                rd_kw_iset_string8(restart_kw.get(), i,
-                                   &smspec->restart_case[offset]);
-            offset += RD_STRING8_LENGTH;
-        }
-    }
-    rd_kw_fwrite(restart_kw.get(), fortio);
+    rd::KW restart_kw{RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR};
+    restart_kw.set_string_array(0, smspec->restart_case);
+    restart_kw.fwrite(fortio);
 }
 
 static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
                                     ERT::FortIO &fortio) {
-    rd_kw_ptr dimens_kw = make_rd_kw(DIMENS_KW, DIMENS_SIZE, RD_INT);
     int num_nodes = rd_smspec_num_nodes(smspec);
-    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_SIZE_INDEX, num_nodes);
-    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NX_INDEX,
-                   smspec->grid_dims[0]);
-    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NY_INDEX,
-                   smspec->grid_dims[1]);
-    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NZ_INDEX,
-                   smspec->grid_dims[2]);
-    rd_kw_iset_int(dimens_kw.get(), 4, 0); // Do not know what this is for.
-    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_RESTART_STEP_INDEX,
-                   smspec->restart_step);
+    rd::KW dimens_kw{
+        DIMENS_KW,
+        std::vector<int>{num_nodes, smspec->grid_dims[0], smspec->grid_dims[1],
+                         smspec->grid_dims[2], 0, smspec->restart_step}};
 
-    rd_kw_fwrite(dimens_kw.get(), fortio);
+    dimens_kw.fwrite(fortio);
 }
 
 static void rd_smspec_fwrite_STARTDAT(const rd_smspec_type *smspec,
                                       ERT::FortIO &fortio) {
-    auto startdat_kw = make_rd_kw(STARTDAT_KW, STARTDAT_SIZE, RD_INT);
     int second, minute, hour, mday, month, year;
     rd_set_datetime_values(smspec->sim_start_time, &second, &minute, &hour,
                            &mday, &month, &year);
 
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_DAY_INDEX, mday);
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MONTH_INDEX, month);
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_YEAR_INDEX, year);
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_HOUR_INDEX, hour);
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MINUTE_INDEX, minute);
-    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MICRO_SECOND_INDEX,
-                   second * 1000000);
-
-    rd_kw_fwrite(startdat_kw.get(), fortio);
+    rd::KW startdat_kw{STARTDAT_KW, std::vector<int>{mday, month, year, hour,
+                                                     minute, second * 1000000}};
+    startdat_kw.fwrite(fortio);
 }
 
 static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
@@ -386,19 +358,18 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     rd_smspec_fwrite_DIMENS(smspec, fortio);
 
     int num_nodes = rd_smspec_num_nodes(smspec);
-    auto keywords_kw = make_rd_kw(KEYWORDS_KW, num_nodes, RD_CHAR);
-    auto units_kw = make_rd_kw(UNITS_KW, num_nodes, RD_CHAR);
-    rd_kw_ptr nums_kw{nullptr};
+    rd::KW keywords_kw{KEYWORDS_KW, num_nodes, RD_CHAR};
+    rd::KW units_kw{UNITS_KW, num_nodes, RD_CHAR};
+    std::unique_ptr<rd::KW> nums_kw{nullptr};
 
     // If the names_type is an RD_STRING we expect this to be an INTERSECT
     // summary, otherwise an ECLIPSE summary.
     rd_data_type names_type = get_wgnames_type(smspec);
-    auto wgnames_kw =
-        make_rd_kw(rd_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
-                   num_nodes, names_type);
+    rd::KW wgnames_kw{rd_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
+                      num_nodes, names_type};
 
     if (smspec->need_nums)
-        nums_kw = std::move(make_rd_kw(NUMS_KW, num_nodes, RD_INT));
+        nums_kw = std::make_unique<rd::KW>(NUMS_KW, num_nodes, RD_INT);
 
     for (int i = 0; i < rd_smspec_num_nodes(smspec); i++) {
         const rd::smspec_node &smspec_node =
@@ -424,30 +395,29 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     */
         size_t ii = static_cast<size_t>(i);
 
+        std::string wgname{DUMMY_WELL};
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {
-            rd_kw_iset_string8(keywords_kw.get(), ii, "WWCT");
-            rd_kw_iset_string8(units_kw.get(), ii, "????????");
-            rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL.data());
+            keywords_kw.set_padded(ii, "WWCT");
+            units_kw.set_padded(ii, "????????");
+            wgnames_kw.set_padded(ii, wgname);
         } else {
-            rd_kw_iset_string8(keywords_kw.get(), ii,
-                               smspec_node.get_keyword());
-            rd_kw_iset_string8(units_kw.get(), ii, smspec_node.get_unit());
+            keywords_kw.set_padded(ii, smspec_node.get_keyword());
+            units_kw.set_padded(ii, smspec_node.get_unit());
             {
-                std::string wgname{DUMMY_WELL};
                 if (smspec_node.get_wgname())
                     wgname = smspec_node.get_wgname();
-                rd_kw_iset_string_ptr(wgnames_kw.get(), i, wgname.c_str());
+                wgnames_kw.set_padded(ii, wgname);
             }
         }
 
         if (nums_kw)
-            rd_kw_iset_int(nums_kw.get(), i, smspec_node.get_num());
+            nums_kw->at<int>(ii) = smspec_node.get_num();
     }
-    rd_kw_fwrite(keywords_kw.get(), fortio);
-    rd_kw_fwrite(wgnames_kw.get(), fortio);
+    keywords_kw.fwrite(fortio);
+    wgnames_kw.fwrite(fortio);
     if (nums_kw)
-        rd_kw_fwrite(nums_kw.get(), fortio);
-    rd_kw_fwrite(units_kw.get(), fortio);
+        nums_kw->fwrite(fortio);
+    units_kw.fwrite(fortio);
 
     rd_smspec_fwrite_STARTDAT(smspec, fortio);
 }
@@ -639,19 +609,12 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd::File *header) {
     if (!header->has_kw(RESTART_KW))
         return;
-    const rd_kw_type *restart_kw = header->get_kw(RESTART_KW, 0);
+    const rd::KW *restart_kw = header->get_kw(RESTART_KW, 0);
     if (restart_kw == nullptr)
         throw std::invalid_argument(
             "RESTART keyword lookup failed despite keyword presence");
-    int num_blocks = rd_kw_get_size(restart_kw);
-    num_blocks = (num_blocks < 0) ? 0 : num_blocks;
-    auto tmp_base = rd::checked_calloc<char>(8 * num_blocks + 1);
-    for (int i = 0; i < num_blocks; i++) {
-        const char *part = (const char *)rd_kw_iget_ptr(restart_kw, i);
-        strncat(tmp_base.get(), part, 8);
-    }
-
-    std::string restart_base = rd::strip_spaces(std::string(tmp_base.get()));
+    std::string restart_base =
+        rd::strip_spaces(restart_kw->get_string_array(0, restart_kw->size()));
 
     /* We ignore the empty ones. */
     if (!restart_base.size())
@@ -846,18 +809,17 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
     if (header && rd_smspec_check_header(header.get())) {
         const char *names_alias =
             get_active_keyword_alias(header.get(), WGNAMES_KW);
-        rd_kw_type *wells = header->get_kw(names_alias, 0);
-        rd_kw_type *keywords = header->get_kw(KEYWORDS_KW, 0);
-        rd_kw_type *startdat = header->get_kw(STARTDAT_KW, 0);
-        rd_kw_type *units = header->get_kw(UNITS_KW, 0);
-        rd_kw_type *dimens = header->get_kw(DIMENS_KW, 0);
-        rd_kw_type *nums = NULL;
-        rd_kw_type *lgrs = NULL;
-        rd_kw_type *numlx = NULL;
-        rd_kw_type *numly = NULL;
-        rd_kw_type *numlz = NULL;
+        rd::KW *wells = header->get_kw(names_alias, 0);
+        rd::KW *keywords = header->get_kw(KEYWORDS_KW, 0);
+        rd::KW *startdat = header->get_kw(STARTDAT_KW, 0);
+        rd::KW *units = header->get_kw(UNITS_KW, 0);
+        rd::KW *dimens = header->get_kw(DIMENS_KW, 0);
+        rd::KW *nums = NULL;
+        rd::KW *lgrs = NULL;
+        rd::KW *numlx = NULL;
+        rd::KW *numly = NULL;
+        rd::KW *numlz = NULL;
 
-        int params_index;
         rd_smspec->num_regions = 0;
 
         if (wells == NULL)
@@ -876,18 +838,18 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             throw std::invalid_argument(
                 "Could not locate DIMENS keyword in header");
 
-        rd_smspec->params_size = rd_kw_get_size(keywords);
+        rd_smspec->params_size = rd::kw_get_size(keywords);
 
         if (header->has_kw(NUMS_KW))
             nums = header->get_kw(NUMS_KW, 0);
 
         if (header->has_kw(INTEHEAD_KW)) {
-            const rd_kw_type *intehead = header->get_kw(INTEHEAD_KW, 0);
+            const rd::KW *intehead = header->get_kw(INTEHEAD_KW, 0);
             if (intehead == NULL)
                 throw std::invalid_argument(
                     "INTEHEAD keyword lookup failed despite keyword presence");
             rd_smspec->unit_system = static_cast<UnitSystem>(
-                rd_kw_iget_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX));
+                intehead->at<int>(INTEHEAD_SMSPEC_UNIT_INDEX));
             /*
         The second item in the INTEHEAD vector is an integer designating which
         simulator has been used for the current simulation, that is currently
@@ -911,17 +873,14 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             rd_smspec->has_lgr = false;
 
         {
-            int *date = rd_kw_get_int_ptr(startdat);
-            if (date == NULL)
-                throw std::invalid_argument(
-                    "STARTDAT keyword has no integer data payload");
+            const std::vector<int> &date = startdat->get_vector<int>();
             int year = date[STARTDAT_YEAR_INDEX];
             int month = date[STARTDAT_MONTH_INDEX];
             int day = date[STARTDAT_DAY_INDEX];
             int hour = 0;
             int min = 0;
             int sec = 0;
-            if (rd_kw_get_size(startdat) == 6) {
+            if (startdat->size() == 6) {
                 hour = date[STARTDAT_HOUR_INDEX];
                 min = date[STARTDAT_MINUTE_INDEX];
                 sec = date[STARTDAT_MICRO_SECOND_INDEX] / 1000000;
@@ -931,66 +890,60 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                 rd_make_datetime(sec, min, hour, day, month, year);
         }
 
-        rd_smspec->grid_dims[0] =
-            rd_kw_iget_int(dimens, DIMENS_SMSPEC_NX_INDEX);
-        rd_smspec->grid_dims[1] =
-            rd_kw_iget_int(dimens, DIMENS_SMSPEC_NY_INDEX);
-        rd_smspec->grid_dims[2] =
-            rd_kw_iget_int(dimens, DIMENS_SMSPEC_NZ_INDEX);
+        rd_smspec->grid_dims[0] = dimens->at<int>(DIMENS_SMSPEC_NX_INDEX);
+        rd_smspec->grid_dims[1] = dimens->at<int>(DIMENS_SMSPEC_NY_INDEX);
+        rd_smspec->grid_dims[2] = dimens->at<int>(DIMENS_SMSPEC_NZ_INDEX);
         rd_smspec->restart_step =
-            rd_kw_iget_int(dimens, DIMENS_SMSPEC_RESTART_STEP_INDEX);
+            dimens->at<int>(DIMENS_SMSPEC_RESTART_STEP_INDEX);
 
         rd_get_file_type(header_file.c_str(), &rd_smspec->formatted, NULL);
 
-        {
-            for (params_index = 0; params_index < rd_kw_get_size(wells);
-                 params_index++) {
-                float default_value = PARAMS_GLOBAL_DEFAULT;
-                int num = SMSPEC_NUMS_INVALID;
-                std::string well =
-                    rd_kw_iget_stripped_string(wells, params_index);
-                std::string kw =
-                    rd_kw_iget_stripped_string(keywords, params_index);
-                std::string unit =
-                    rd_kw_iget_stripped_string(units, params_index);
+        for (size_t params_index = 0; params_index < wells->size();
+             params_index++) {
+            float default_value = PARAMS_GLOBAL_DEFAULT;
+            int num = SMSPEC_NUMS_INVALID;
+            std::string well =
+                rd::strip_spaces(wells->at<std::string>(params_index));
+            std::string kw =
+                rd::strip_spaces(keywords->at<std::string>(params_index));
+            std::string unit =
+                rd::strip_spaces(units->at<std::string>(params_index));
 
-                rd_smspec_var_type var_type;
-                if (nums != NULL)
-                    num = rd_kw_iget_int(nums, params_index);
-                var_type =
-                    rd::smspec_node::valid_type(kw.c_str(), well.c_str(), num);
-                if (var_type == RD_SMSPEC_INVALID_VAR) {
-                    continue;
-                }
-
-                if (rd_smspec_lgr_var_type(var_type) && !rd_smspec->has_lgr) {
-                    throw std::invalid_argument(
-                        "SMSPEC header contains LGR variable '" + kw +
-                        "' but required LGR metadata keywords are missing "
-                        "(expected LGRS, NUMLX, NUMLY, NUMLZ)");
-                }
-
-                if (rd_smspec_lgr_var_type(var_type)) {
-                    int lgr_i = rd_kw_iget_int(numlx, params_index);
-                    int lgr_j = rd_kw_iget_int(numly, params_index);
-                    int lgr_k = rd_kw_iget_int(numlz, params_index);
-                    std::string lgr_name =
-                        rd_kw_iget_stripped_string(lgrs, params_index);
-
-                    rd_smspec_insert_node(
-                        rd_smspec,
-                        std::make_unique<rd::smspec_node>(
-                            params_index, kw.c_str(), well.c_str(),
-                            unit.c_str(), lgr_name.c_str(), lgr_i, lgr_j, lgr_k,
-                            default_value, rd_smspec->key_join_string.c_str()));
-                } else
-                    rd_smspec_insert_node(
-                        rd_smspec,
-                        std::make_unique<rd::smspec_node>(
-                            params_index, kw.c_str(), well.c_str(), num,
-                            unit.c_str(), rd_smspec->grid_dims, default_value,
-                            rd_smspec->key_join_string.c_str()));
+            if (nums != NULL)
+                num = nums->at<int>(params_index);
+            rd_smspec_var_type var_type =
+                rd::smspec_node::valid_type(kw.c_str(), well.c_str(), num);
+            if (var_type == RD_SMSPEC_INVALID_VAR) {
+                continue;
             }
+
+            if (rd_smspec_lgr_var_type(var_type) && !rd_smspec->has_lgr) {
+                throw std::invalid_argument(
+                    "SMSPEC header contains LGR variable '" + kw +
+                    "' but required LGR metadata keywords are missing "
+                    "(expected LGRS, NUMLX, NUMLY, NUMLZ)");
+            }
+
+            if (rd_smspec_lgr_var_type(var_type)) {
+                int lgr_i = numlx->at<int>(params_index);
+                int lgr_j = numly->at<int>(params_index);
+                int lgr_k = numlz->at<int>(params_index);
+                std::string lgr_name =
+                    rd::strip_spaces(lgrs->at<std::string>(params_index));
+
+                rd_smspec_insert_node(
+                    rd_smspec, std::make_unique<rd::smspec_node>(
+                                   static_cast<int>(params_index), kw.c_str(),
+                                   well.c_str(), unit.c_str(), lgr_name.c_str(),
+                                   lgr_i, lgr_j, lgr_k, default_value,
+                                   rd_smspec->key_join_string.c_str()));
+            } else
+                rd_smspec_insert_node(
+                    rd_smspec,
+                    std::make_unique<rd::smspec_node>(
+                        static_cast<int>(params_index), kw.c_str(),
+                        well.c_str(), num, unit.c_str(), rd_smspec->grid_dims,
+                        default_value, rd_smspec->key_join_string.c_str()));
         }
 
         rd_smspec->header_file = fs::canonical(header_file).string();

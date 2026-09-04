@@ -5,11 +5,13 @@
  */
 
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <filesystem>
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <optional>
 
@@ -29,53 +31,48 @@ namespace fs = std::filesystem;
  */
 
 inline void write_empty_kw(ERT::FortIO &fortio, const char *name) {
-    auto kw = make_rd_kw(name, 0, RD_INT);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, 0, RD_INT};
+    kw.fwrite(fortio);
 }
 
 inline void write_egrid_filehead(ERT::FortIO &fortio,
                                  int dualp_flag = FILEHEAD_SINGLE_POROSITY) {
-    auto filehead = make_rd_kw(FILEHEAD_KW, 100, RD_INT);
-    rd_kw_scalar_set_int(filehead.get(), 0);
-    rd_kw_iset_int(filehead.get(), FILEHEAD_VERSION_INDEX, 3);
-    rd_kw_iset_int(filehead.get(), FILEHEAD_YEAR_INDEX, 2007);
-    rd_kw_iset_int(filehead.get(), FILEHEAD_TYPE_INDEX,
-                   FILEHEAD_GRIDTYPE_CORNERPOINT);
-    rd_kw_iset_int(filehead.get(), FILEHEAD_DUALP_INDEX, dualp_flag);
-    rd_kw_iset_int(filehead.get(), FILEHEAD_ORGFORMAT_INDEX,
-                   FILEHEAD_ORGTYPE_CORNERPOINT);
-    rd_kw_fwrite(filehead.get(), fortio);
+    std::vector<int> filehead_data(100, 0);
+    filehead_data[FILEHEAD_VERSION_INDEX] = 3;
+    filehead_data[FILEHEAD_YEAR_INDEX] = 2007;
+    filehead_data[FILEHEAD_TYPE_INDEX] = FILEHEAD_GRIDTYPE_CORNERPOINT;
+    filehead_data[FILEHEAD_DUALP_INDEX] = dualp_flag;
+    filehead_data[FILEHEAD_ORGFORMAT_INDEX] = FILEHEAD_ORGTYPE_CORNERPOINT;
+    rd::KW filehead{FILEHEAD_KW, std::move(filehead_data)};
+    filehead.fwrite(fortio);
 }
 
 inline void write_egrid_gridhead(ERT::FortIO &fortio, int gnx, int gny, int gnz,
                                  int grid_nr) {
-    auto kw = make_rd_kw(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
-    rd_kw_scalar_set_int(kw.get(), 0);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_TYPE_INDEX,
-                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_NX_INDEX, gnx);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_NY_INDEX, gny);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_NZ_INDEX, gnz);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_NUMRES_INDEX, 1);
-    rd_kw_iset_int(kw.get(), GRIDHEAD_LGR_INDEX, grid_nr);
-    rd_kw_fwrite(kw.get(), fortio);
+    std::vector<int> gridhead_data(GRIDHEAD_SIZE, 0);
+    gridhead_data[GRIDHEAD_TYPE_INDEX] = GRIDHEAD_GRIDTYPE_CORNERPOINT;
+    gridhead_data[GRIDHEAD_NX_INDEX] = gnx;
+    gridhead_data[GRIDHEAD_NY_INDEX] = gny;
+    gridhead_data[GRIDHEAD_NZ_INDEX] = gnz;
+    gridhead_data[GRIDHEAD_NUMRES_INDEX] = 1;
+    gridhead_data[GRIDHEAD_LGR_INDEX] = grid_nr;
+    rd::KW kw{GRIDHEAD_KW, std::move(gridhead_data)};
+    kw.fwrite(fortio);
 }
 
 inline void write_egrid_grid_body(rd_grid_type *grid, ERT::FortIO &fortio) {
     auto coord = rd_grid_alloc_coord_kw(grid);
-    rd_kw_fwrite(coord.get(), fortio);
+    coord->fwrite(fortio);
     auto zcorn = rd_grid_alloc_zcorn_kw(grid);
-    rd_kw_fwrite(zcorn.get(), fortio);
+    zcorn->fwrite(fortio);
     auto actnum = rd_grid_alloc_actnum_kw(grid);
-    rd_kw_fwrite(actnum.get(), fortio);
+    actnum->fwrite(fortio);
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const char *name,
                          const int *values, int size) {
-    auto kw = make_rd_kw(name, size, RD_INT);
-    for (int i = 0; i < size; i++)
-        rd_kw_iset_int(kw.get(), i, values[i]);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, std::vector<int>(values, values + size)};
+    kw.fwrite(fortio);
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const char *name,
@@ -91,19 +88,14 @@ inline void write_int_kw(ERT::FortIO &fortio, const std::string &name,
 
 inline void write_float_kw(ERT::FortIO &fortio, const char *name,
                            const float *values, int size) {
-    auto kw = make_rd_kw(name, size, RD_FLOAT);
-    for (int i = 0; i < size; i++)
-        rd_kw_iset_float(kw.get(), i, values[i]);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, std::vector<float>(values, values + size)};
+    kw.fwrite(fortio);
 }
 
 inline void write_char8_kw(ERT::FortIO &fortio, const char *name,
-                           std::initializer_list<const char *> values) {
-    auto kw = make_rd_kw(name, static_cast<int>(values.size()), RD_CHAR);
-    size_t i = 0;
-    for (const char *v : values)
-        rd_kw_iset_string8(kw.get(), i++, v);
-    rd_kw_fwrite(kw.get(), fortio);
+                           std::initializer_list<std::string> values) {
+    rd::KW kw{name, values};
+    kw.fwrite(fortio);
 }
 
 inline void write_nnc_pair_section(ERT::FortIO &fortio, int lgr_nr,
@@ -112,12 +104,11 @@ inline void write_nnc_pair_section(ERT::FortIO &fortio, int lgr_nr,
                                    const std::vector<int> &second) {
     if (first.empty())
         return;
-    auto nnchead = make_rd_kw(NNCHEAD_KW, NNCHEAD_SIZE, RD_INT);
-    rd_kw_scalar_set_int(nnchead.get(), 0);
-    rd_kw_iset_int(nnchead.get(), NNCHEAD_NUMNNC_INDEX,
-                   static_cast<int>(first.size()));
-    rd_kw_iset_int(nnchead.get(), NNCHEAD_LGR_INDEX, lgr_nr);
-    rd_kw_fwrite(nnchead.get(), fortio);
+    std::vector<int> nnchead_data(NNCHEAD_SIZE, 0);
+    nnchead_data[NNCHEAD_NUMNNC_INDEX] = static_cast<int>(first.size());
+    nnchead_data[NNCHEAD_LGR_INDEX] = lgr_nr;
+    rd::KW nnchead{NNCHEAD_KW, std::move(nnchead_data)};
+    nnchead.fwrite(fortio);
     write_int_kw(fortio, first_kw, first);
     write_int_kw(fortio, second_kw, second);
 }
@@ -126,8 +117,8 @@ inline void write_lgr_egrid_section(ERT::FortIO &fortio,
                                     const std::string &name,
                                     const std::string &parent, int grid_nr,
                                     const rd_grid_ptr &lgr, int host_global) {
-    write_char8_kw(fortio, LGR_KW, {name.c_str()});
-    write_char8_kw(fortio, LGR_PARENT_KW, {parent.c_str()});
+    write_char8_kw(fortio, LGR_KW, {name});
+    write_char8_kw(fortio, LGR_PARENT_KW, {parent});
     write_egrid_gridhead(fortio, rd_grid_get_nx(lgr.get()),
                          rd_grid_get_ny(lgr.get()), rd_grid_get_nz(lgr.get()),
                          grid_nr);
@@ -178,22 +169,26 @@ inline ERT::FortIO make_fortio_writer(const fs::path &filename,
             fmt ? false : RD_ENDIAN_FLIP};
 }
 
-inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd_kw_type *zcorn,
-                                     rd_kw_type *coord,
-                                     rd_kw_type *actnum = nullptr) {
+inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd::KW *zcorn,
+                                     rd::KW *coord, rd::KW *actnum = nullptr) {
     return {rd_grid_alloc_GRDECL_kw(nx, ny, nz, zcorn, coord, actnum, nullptr),
             &rd_grid_free};
 }
 
-inline void set_pillar(rd_kw_type *coord_kw, int pillar, float tx, float ty,
-                       float tz, float bx, float by, float bz) {
+inline void set_pillar(std::vector<float> &coord_data, int pillar, float tx,
+                       float ty, float tz, float bx, float by, float bz) {
     const int off = 6 * pillar;
-    rd_kw_iset_float(coord_kw, off + 0, tx);
-    rd_kw_iset_float(coord_kw, off + 1, ty);
-    rd_kw_iset_float(coord_kw, off + 2, tz);
-    rd_kw_iset_float(coord_kw, off + 3, bx);
-    rd_kw_iset_float(coord_kw, off + 4, by);
-    rd_kw_iset_float(coord_kw, off + 5, bz);
+    coord_data.at(off + 0) = tx;
+    coord_data.at(off + 1) = ty;
+    coord_data.at(off + 2) = tz;
+    coord_data.at(off + 3) = bx;
+    coord_data.at(off + 4) = by;
+    coord_data.at(off + 5) = bz;
+}
+
+inline void set_pillar(rd::KW *coord_kw, int pillar, float tx, float ty,
+                       float tz, float bx, float by, float bz) {
+    set_pillar(coord_kw->get_vector<float>(), pillar, tx, ty, tz, bx, by, bz);
 }
 
 /*
@@ -214,26 +209,26 @@ inline void set_pillar(rd_kw_type *coord_kw, int pillar, float tx, float ty,
 inline rd_grid_ptr generate_coordkw_grid(
     int num_x, int num_y, int num_z,
     const std::vector<std::tuple<int, int, int, int, double>> &z_vector) {
-    auto coord_kw =
-        make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(num_x, num_y), RD_FLOAT);
-    auto zcorn_kw =
-        make_rd_kw(ZCORN_KW, RD_GRID_ZCORN_SIZE(num_x, num_y, num_z), RD_FLOAT);
+    std::vector<float> coord_data(RD_GRID_COORD_SIZE(num_x, num_y), 0.0f);
+    std::vector<float> zcorn_data(RD_GRID_ZCORN_SIZE(num_x, num_y, num_z),
+                                  0.0f);
 
     for (int j = 0; j < num_y; j++) {
         for (int i = 0; i < num_x; i++) {
-            set_pillar(coord_kw.get(), i + j * num_x, i, j, -1, i, j, -1);
+            set_pillar(coord_data, i + j * num_x, i, j, -1, i, j, -1);
 
             for (int k = 0; k < num_z; k++) {
                 for (int c = 0; c < 4; c++) {
-                    int zi1 = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-                    int zi2 =
+                    size_t zi1 =
+                        rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
+                    size_t zi2 =
                         rd_grid_zcorn_index__(num_x, num_y, i, j, k, c + 4);
 
                     double z1 = k;
                     double z2 = k + 1;
 
-                    rd_kw_iset_float(zcorn_kw.get(), zi1, z1);
-                    rd_kw_iset_float(zcorn_kw.get(), zi2, z2);
+                    zcorn_data[zi1] = z1;
+                    zcorn_data[zi2] = z2;
                 }
             }
         }
@@ -241,11 +236,14 @@ inline rd_grid_ptr generate_coordkw_grid(
 
     for (const auto &[i, j, k, c, z] : z_vector) {
         auto index = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-        rd_kw_iset_float(zcorn_kw.get(), index, z);
+        zcorn_data[index] = z;
     }
 
-    return {rd_grid_alloc_GRDECL_kw(num_x, num_y, num_z, zcorn_kw.get(),
-                                    coord_kw.get(), nullptr, nullptr),
+    rd::KW coord_kw{COORD_KW, std::move(coord_data)};
+    rd::KW zcorn_kw{ZCORN_KW, std::move(zcorn_data)};
+
+    return {rd_grid_alloc_GRDECL_kw(num_x, num_y, num_z, &zcorn_kw, &coord_kw,
+                                    nullptr, nullptr),
             &rd_grid_free};
 }
 
@@ -355,11 +353,11 @@ inline void write_egrid_with_two_lgrs_and_amalgamated_nnc(
                             host2_global + 1);
 
     if (!nna1.empty()) {
-        auto nncheada_kw = make_rd_kw(NNCHEADA_KW, NNCHEAD_SIZE, RD_INT);
-        rd_kw_scalar_set_int(nncheada_kw.get(), 0);
-        rd_kw_iset_int(nncheada_kw.get(), NNCHEADA_ILOC1_INDEX, 1);
-        rd_kw_iset_int(nncheada_kw.get(), NNCHEADA_ILOC2_INDEX, 2);
-        rd_kw_fwrite(nncheada_kw.get(), fortio);
+        std::vector<int> nncheada_data(NNCHEAD_SIZE, 0);
+        nncheada_data[NNCHEADA_ILOC1_INDEX] = 1;
+        nncheada_data[NNCHEADA_ILOC2_INDEX] = 2;
+        rd::KW nncheada_kw{NNCHEADA_KW, std::move(nncheada_data)};
+        nncheada_kw.fwrite(fortio);
         write_int_kw(fortio, NNA1_KW, nna1);
         write_int_kw(fortio, NNA2_KW, nna2);
     }
@@ -408,9 +406,9 @@ inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     write_egrid_gridhead(fortio, nx, ny, nz, 0);
 
     auto coord = rd_grid_alloc_coord_kw(grid.get());
-    rd_kw_fwrite(coord.get(), fortio);
+    coord->fwrite(fortio);
     auto zcorn = rd_grid_alloc_zcorn_kw(grid.get());
-    rd_kw_fwrite(zcorn.get(), fortio);
+    zcorn->fwrite(fortio);
 
     const int size = nx * ny * nz;
     write_int_kw(fortio, ACTNUM_KW, actnum, size);
@@ -485,10 +483,9 @@ inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
 
     for (const auto &lgr : lgrs) {
         if (lgr.emit_parent)
-            write_char8_kw(fortio, LGR_KW,
-                           {lgr.lgr_name.c_str(), lgr.parent_name.c_str()});
+            write_char8_kw(fortio, LGR_KW, {lgr.lgr_name, lgr.parent_name});
         else
-            write_char8_kw(fortio, LGR_KW, {lgr.lgr_name.c_str()});
+            write_char8_kw(fortio, LGR_KW, {lgr.lgr_name});
 
         write_grid_dimens(fortio, lgr.nx, lgr.ny, lgr.nz);
         write_grid_radial_false(fortio);
@@ -537,18 +534,15 @@ write_egrid_with_single_lgr_no_parent_kw(const fs::path &filename,
     write_egrid_grid_body(main_grid.get(), fortio);
     write_empty_kw(fortio, ENDGRID_KW);
 
-    auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
-    rd_kw_iset_string8(lgr_kw.get(), 0, lgr_name.c_str());
-    rd_kw_fwrite(lgr_kw.get(), fortio);
+    rd::KW{LGR_KW, {lgr_name}}.fwrite(fortio);
 
     // Deliberately NO LGR_PARENT_KW here.
 
     write_egrid_gridhead(fortio, 1, 1, 1, 1);
     write_egrid_grid_body(lgr_grid.get(), fortio);
 
-    auto hostnum_kw = make_rd_kw(HOSTNUM_KW, 1, RD_INT);
-    rd_kw_iset_int(hostnum_kw.get(), 0, 1);
-    rd_kw_fwrite(hostnum_kw.get(), fortio);
+    rd::KW hostnum_kw{HOSTNUM_KW, std::vector<int>{1}};
+    hostnum_kw.fwrite(fortio);
 
     write_empty_kw(fortio, ENDGRID_KW);
     write_empty_kw(fortio, ENDLGR_KW);
@@ -580,10 +574,8 @@ inline void write_fegrid_minimal(const fs::path &filename) {
 inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
                                           int actnum_value = 1) {
     const int nx = 1, ny = 1, nz = 1;
-    auto coord_kw = make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(nx, ny), RD_FLOAT);
-    auto zcorn_kw =
-        make_rd_kw(ZCORN_KW, RD_GRID_ZCORN_SIZE(nx, ny, nz), RD_FLOAT);
-    auto actnum_kw = make_rd_kw(ACTNUM_KW, nx * ny * nz, RD_INT);
+    std::vector<float> coord_data(RD_GRID_COORD_SIZE(nx, ny), 0.0f);
+    std::vector<float> zcorn_data(RD_GRID_ZCORN_SIZE(nx, ny, nz), 0.0f);
 
     // The four pillars are at (i,j) in {0,1}x{0,1}; pillar layout is
     // 6*(i + j*(nx+1)).
@@ -594,21 +586,22 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
             int pillar = i + j * (nx + 1);
             int top = top_corner[i + 2 * j];
             int bot = bot_corner[i + 2 * j];
-            set_pillar(coord_kw.get(), pillar, corners[top][0], corners[top][1],
+            set_pillar(coord_data, pillar, corners[top][0], corners[top][1],
                        corners[top][2], corners[bot][0], corners[bot][1],
                        corners[bot][2]);
         }
     }
 
     for (int c = 0; c < 8; ++c) {
-        int zi = rd_grid_zcorn_index__(nx, ny, 0, 0, 0, c);
-        rd_kw_iset_float(zcorn_kw.get(), zi, corners[c][2]);
+        size_t zi = rd_grid_zcorn_index__(nx, ny, 0, 0, 0, c);
+        zcorn_data[zi] = corners[c][2];
     }
 
-    rd_kw_iset_int(actnum_kw.get(), 0, actnum_value);
+    rd::KW coord_kw{COORD_KW, std::move(coord_data)};
+    rd::KW zcorn_kw{ZCORN_KW, std::move(zcorn_data)};
+    rd::KW actnum_kw{ACTNUM_KW, std::vector<int>(nx * ny * nz, actnum_value)};
 
-    return build_grdecl_grid(nx, ny, nz, zcorn_kw.get(), coord_kw.get(),
-                             actnum_kw.get());
+    return build_grdecl_grid(nx, ny, nz, &zcorn_kw, &coord_kw, &actnum_kw);
 }
 
 inline rd_grid_ptr load_egrid_with_single_lgr(
