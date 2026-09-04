@@ -100,7 +100,7 @@ inline void write_float_kw(ERT::FortIO &fortio, const char *name,
 inline void write_char8_kw(ERT::FortIO &fortio, const char *name,
                            std::initializer_list<const char *> values) {
     auto kw = make_rd_kw(name, static_cast<int>(values.size()), RD_CHAR);
-    int i = 0;
+    size_t i = 0;
     for (const char *v : values)
         rd_kw_iset_string8(kw.get(), i++, v);
     rd_kw_fwrite(kw.get(), fortio);

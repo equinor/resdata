@@ -66,8 +66,7 @@ static py::list format_grdecl_tokens(py::object self) {
     rd_kw_type *kw = from_cwrap<rd_kw_type>(self);
     int size = rd_kw_get_size(kw);
     rd_type_enum type = rd_kw_get_type(kw);
-    int string_width =
-        static_cast<int>(rd_type_get_sizeof_iotype(rd_kw_get_data_type(kw)));
+    size_t string_width = rd_type_get_sizeof_iotype(rd_kw_get_data_type(kw));
 
     py::list tokens(size);
     switch (type) {
@@ -115,7 +114,7 @@ static py::list format_grdecl_tokens(py::object self) {
     }
     case RD_STRING_TYPE: {
         const std::string fmt = rd::format_kw_element_fmt(string_width);
-        std::vector<char> buf(static_cast<size_t>(string_width) + 4);
+        std::vector<char> buf(string_width + 4);
         for (int i = 0; i < size; i++) {
             size_t len = rd::format_kw_element_buf(
                 buf.data(), buf.size(), rd_kw_iget_string_ptr(kw, i), fmt);
@@ -156,15 +155,22 @@ PYBIND11_MODULE(_kw, m) {
         py::return_value_policy::reference);
     m.def(
         "_sub_copy",
-        [](py::handle self, std::optional<std::string> new_kw, int offset,
-           int count) {
+        [](py::handle self, std::optional<std::string> new_kw, size_t offset,
+           py::int_ count) {
             auto *src = from_cwrap<rd_kw_type>(self);
+
+            size_t count_size;
+            if (count < py::int_{0})
+                count_size = py::int_{rd_kw_size(src) - offset};
+            else
+                count_size = count.cast<size_t>();
+
             if (new_kw.has_value())
-                return to_capsule(
-                    rd_kw_alloc_sub_copy(src, new_kw->c_str(), offset, count));
+                return to_capsule(rd_kw_alloc_sub_copy(
+                    src, new_kw->c_str(), offset, count_size));
             else
                 return to_capsule(
-                    rd_kw_alloc_sub_copy(src, nullptr, offset, count));
+                    rd_kw_alloc_sub_copy(src, nullptr, offset, count_size));
         },
         py::return_value_policy::reference);
     m.def(
@@ -175,9 +181,14 @@ PYBIND11_MODULE(_kw, m) {
         py::return_value_policy::reference);
     m.def(
         "_slice_copyc",
-        [](py::handle self, int index1, int index2, int stride) {
+        [](py::handle self, py::int_ index1, py::int_ index2, int stride) {
+            if (index1 < py::int_{0})
+                index1 = 0;
+            if (index2 < py::int_{0})
+                index2 = 0;
             return to_capsule(rd_kw_alloc_slice_copy(
-                from_cwrap<rd_kw_type>(self), index1, index2, stride));
+                from_cwrap<rd_kw_type>(self), index1.cast<size_t>(),
+                index2.cast<size_t>(), stride));
         },
         py::return_value_policy::reference);
     m.def(
@@ -201,7 +212,7 @@ PYBIND11_MODULE(_kw, m) {
     m.def("_iget_char_ptr", [](py::handle self, int index) {
         return rd_kw_iget_char_ptr(from_cwrap<rd_kw_type>(self), index);
     });
-    m.def("_iset_char_ptr", [](py::handle self, int index, std::string value) {
+    m.def("_iset_char_ptr", [](py::handle self, size_t index, std::string value) {
         rd_kw_iset_char_ptr(from_cwrap<rd_kw_type>(self), index, value.c_str());
     });
     m.def("_iget_string_ptr", [](py::handle self, int index) {
@@ -376,13 +387,14 @@ PYBIND11_MODULE(_kw, m) {
                 rd_kw_alloc_actnum(from_cwrap<rd_kw_type>(self), porv_limit));
         },
         py::return_value_policy::reference);
-    m.def("_first_different", [](py::handle self, py::handle other, int offset,
-                                 double abs_epsilon, double rel_epsilon) {
-        return rd_kw_first_different(from_cwrap<rd_kw_type>(self),
-                                     from_cwrap<rd_kw_type>(other), offset,
-                                     abs_epsilon, rel_epsilon);
-    });
-    m.def("_resize", [](py::handle self, int new_size) {
+    m.def("_first_different",
+          [](py::handle self, py::handle other, size_t offset,
+             double abs_epsilon, double rel_epsilon) {
+              return rd_kw_first_different(from_cwrap<rd_kw_type>(self),
+                                           from_cwrap<rd_kw_type>(other),
+                                           offset, abs_epsilon, rel_epsilon);
+          });
+    m.def("_resize", [](py::handle self, size_t new_size) {
         rd_kw_resize(from_cwrap<rd_kw_type>(self), new_size);
     });
     m.def("_safe_div", [](py::handle self, py::handle divisor) {

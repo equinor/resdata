@@ -1,5 +1,7 @@
 #pragma once
 #include <ctime>
+#include <stdexcept>
+#include <string>
 
 #include <ert/util/util.hpp>
 

@@ -287,7 +287,7 @@ bool FortIO::assert_stream_open() {
   it will return -1.
 */
 int FortIO::init_read() {
-    int elm_read;
+    size_t elm_read;
     int record_size;
 
     elm_read = fread(&record_size, sizeof(record_size), 1, m_stream);
@@ -300,7 +300,8 @@ int FortIO::init_read() {
         return -1;
 }
 
-bool FortIO::data_fskip(int element_size, int element_count, int block_count) {
+bool FortIO::data_fskip(size_t element_size, size_t element_count,
+                        size_t block_count) {
     offset_type headers = static_cast<offset_type>(block_count) * 4;
     offset_type trailers = static_cast<offset_type>(block_count) * 4;
     offset_type bytes_to_skip =
@@ -312,7 +313,7 @@ bool FortIO::data_fskip(int element_size, int element_count, int block_count) {
 
 void FortIO::data_fseek(offset_type data_offset, size_t data_element,
                         size_t element_size, int element_count,
-                        int block_size) {
+                        size_t block_size) {
     if (element_count < 0 || data_element >= static_cast<size_t>(element_count))
         throw std::invalid_argument(
             fmt::format("Element index is out of range: 0 <= {} < {}",

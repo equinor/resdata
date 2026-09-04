@@ -44,12 +44,6 @@ TEST_CASE("rd_kw_alloc_new rejects negative size", "[rd_kw]") {
                       std::invalid_argument);
 }
 
-TEST_CASE("rd_kw_resize rejects negative size", "[rd_kw]") {
-    auto kw = make_int_kw("KW", 3);
-    REQUIRE_THROWS_WITH(rd_kw_resize(kw.get(), -1),
-                        ContainsSubstring("new_size was negative"));
-}
-
 TEST_CASE("typed accessors validate the index", "[rd_kw]") {
     auto kw = make_int_kw("KW", 3);
     SECTION("index too large") {
@@ -75,9 +69,8 @@ TEST_CASE("typed accessors validate the type", "[rd_kw]") {
     }
     SECTION("iget_as_double on non numeric type") {
         auto bool_kw = make_rd_kw("KW", 3, RD_BOOL);
-        REQUIRE_THROWS_WITH(
-            rd_kw_iget_as_double(bool_kw.get(), 0),
-            ContainsSubstring("can not be converted to double"));
+        REQUIRE_THROWS_WITH(rd_kw_iget_as_double(bool_kw.get(), 0),
+                            ContainsSubstring("cannot be converted to double"));
     }
 }
 
@@ -175,7 +168,7 @@ TEST_CASE("rd_kw_alloc_slice_copy validates range and stride", "[rd_kw]") {
 TEST_CASE("rd_kw_alloc_sub_copy validates offset and count", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("invalid offset") {
-        REQUIRE_THROWS_WITH(rd_kw_alloc_sub_copy(src.get(), "NEW", -1, 1),
+        REQUIRE_THROWS_WITH(rd_kw_alloc_sub_copy(src.get(), "NEW", 100, 1),
                             ContainsSubstring("invalid offset"));
     }
     SECTION("invalid count") {
@@ -283,8 +276,10 @@ TEST_CASE("rd_kw_first_different validates offset and size", "[rd_kw]") {
                             ContainsSubstring("sorry invalid comparison"));
     }
     SECTION("invalid offset") {
-        REQUIRE_THROWS_WITH(rd_kw_first_different(a.get(), c.get(), 5, 0, 0),
-                            ContainsSubstring("invalid offset value"));
+        REQUIRE_THROWS_WITH(
+            rd_kw_first_different(a.get(), c.get(), 5, 0, 0),
+            ContainsSubstring(
+                "offset value in first_difference exceeded size: 5"));
     }
 }
 

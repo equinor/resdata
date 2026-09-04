@@ -23,17 +23,11 @@ typedef struct rd_kw_struct rd_kw_type;
 
 typedef enum { RD_KW_READ_OK = 0, RD_KW_READ_FAIL = 1 } rd_read_status_enum;
 
-/*
-  The size of an rd_kw instance is denoted with an integer. The
-  choice of int to store the size obviously limits the maximum size to
-  INT_MAX elements. This choice is an historical mistake - it should
-  probably have been size_t; however the rd_kw datastructure is
-  tightly bound to the on-disk binary format supplied by Eclipse, and
-  there the number of elements is stored as a signed(?) 32 bit
-  integer - so using int for size does make some sense-
-*/
-
-#define RD_KW_MAX_SIZE INT_MAX
+/* the rd_kw datastructure is tightly bound to the on-disk binary format
+   supplied by Eclipse, and there the number of elements is stored as a signed
+   32 bit integer. Internally, size_t is used to denote size, however when
+   loaded or saved to disk, the size is validated to be no larger than the
+   std::numeric_limits<int>::max */
 
 /*
   Character data in restart format files comes as an array of fixed-length
@@ -43,8 +37,9 @@ typedef enum { RD_KW_READ_OK = 0, RD_KW_READ_FAIL = 1 } rd_read_status_enum;
 #define RD_KW_HEADER_DATA_SIZE RD_STRING8_LENGTH + RD_TYPE_LENGTH + 4
 #define RD_KW_HEADER_FORTIO_SIZE RD_KW_HEADER_DATA_SIZE + 8
 
-int rd_kw_first_different(const rd_kw_type *kw1, const rd_kw_type *kw2,
-                          int offset, double abs_epsilon, double rel_epsilon);
+size_t rd_kw_first_different(const rd_kw_type *kw1, const rd_kw_type *kw2,
+                             size_t offset, double abs_epsilon,
+                             double rel_epsilon);
 size_t rd_kw_fortio_size(const rd_kw_type *rd_kw);
 void *rd_kw_get_ptr(const rd_kw_type *rd_kw);
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data);
@@ -98,7 +93,7 @@ inline size_t format_kw_element_buf(char *buf, size_t buf_size, double value) {
     return static_cast<size_t>(written);
 }
 
-inline std::string format_kw_element_fmt(int width) {
+inline std::string format_kw_element_fmt(size_t width) {
     return " '%-" + std::to_string(width) + "s'";
 }
 
@@ -133,8 +128,8 @@ inline std::string format_kw_element(double value) {
     return std::string(buffer, len);
 }
 
-inline std::string format_kw_element(const char *value, int width = 8) {
-    std::vector<char> buffer(static_cast<size_t>(width) + 4);
+inline std::string format_kw_element(const char *value, size_t width = 8) {
+    std::vector<char> buffer(width + 4);
     const std::string fmt = format_kw_element_fmt(width);
     size_t len =
         format_kw_element_buf(buffer.data(), buffer.size(), value, fmt);
@@ -159,29 +154,29 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 void rd_kw_free(rd_kw_type *);
 rd_kw_type *rd_kw_alloc_copy(const rd_kw_type *);
 rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
-                                 int offset, int count);
-rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
-                                   int index2, int stride);
-void rd_kw_resize(rd_kw_type *rd_kw, int new_size);
+                                 size_t offset, size_t count);
+rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
+                                   size_t index2, int stride);
+void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size);
 void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_get_memcpy_data(const rd_kw_type *, void *);
 void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
 bool rd_kw_fwrite(const rd_kw_type *, ERT::FortIO &);
 void rd_kw_iget(const rd_kw_type *, int, void *);
 void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr);
-void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s);
-void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8);
+void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, size_t index, const char *s);
+void rd_kw_iset_string8(rd_kw_type *rd_kw, size_t index, const char *s8);
 void rd_kw_iset_string_ptr(rd_kw_type *, int, const char *);
 const char *rd_kw_iget_string_ptr(const rd_kw_type *, int);
 const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, int i);
 void *rd_kw_iget_ptr(const rd_kw_type *, int);
 int rd_kw_get_size(const rd_kw_type *);
+size_t rd_kw_size(const rd_kw_type *);
 rd_kw_type *rd_kw_alloc(const char *header, int size, rd_data_type);
 rd_kw_type *rd_kw_alloc_new(const char *, int, rd_data_type, const void *);
 rd_kw_type *rd_kw_alloc_new_shared(const char *, int, rd_data_type, void *);
 rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
                                     const rd_kw_type *actnum);
-void rd_kw_summarize(const rd_kw_type *rd_kw);
 double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
