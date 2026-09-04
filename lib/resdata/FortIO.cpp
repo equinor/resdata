@@ -300,7 +300,8 @@ int FortIO::init_read() {
         return -1;
 }
 
-bool FortIO::data_fskip(int element_size, int element_count, int block_count) {
+bool FortIO::data_fskip(size_t element_size, size_t element_count,
+                        size_t block_count) {
     offset_type headers = static_cast<offset_type>(block_count) * 4;
     offset_type trailers = static_cast<offset_type>(block_count) * 4;
     offset_type bytes_to_skip =

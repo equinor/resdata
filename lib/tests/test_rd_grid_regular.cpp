@@ -47,33 +47,34 @@ TEST_CASE("Test unfractured grids", "[unittest]") {
 
 TEST_CASE("rd_grid_alloc_GRDECL_kw with explicit ACTNUM", "[unittest]") {
     const int nx = 2, ny = 2, nz = 2;
-    auto coord_kw = make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(nx, ny), RD_FLOAT);
-    auto zcorn_kw =
-        make_rd_kw(ZCORN_KW, RD_GRID_ZCORN_SIZE(nx, ny, nz), RD_FLOAT);
+    rd::KW coord_kw{COORD_KW, RD_GRID_COORD_SIZE(nx, ny), RD_FLOAT};
+    std::vector<float> zcorn_data(RD_GRID_ZCORN_SIZE(nx, ny, nz), 0.0f);
 
     for (int j = 0; j < ny; j++) {
         for (int i = 0; i < nx; i++) {
-            set_pillar(coord_kw.get(), (i + j * nx), i, j, -1, i, j, -1);
+            set_pillar(&coord_kw, (i + j * nx), i, j, -1, i, j, -1);
             for (int k = 0; k < nz; k++) {
                 for (int c = 0; c < 4; c++) {
-                    int zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
-                    int zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
-                    rd_kw_iset_float(zcorn_kw.get(), zi1, k);
-                    rd_kw_iset_float(zcorn_kw.get(), zi2, k + 1);
+                    size_t zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
+                    size_t zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
+                    zcorn_data[zi1] = k;
+                    zcorn_data[zi2] = k + 1;
                 }
             }
         }
     }
 
-    const int size = nx * ny * nz;
-    auto actnum_kw = make_rd_kw(ACTNUM_KW, size, RD_INT);
-    rd_kw_scalar_set_int(actnum_kw.get(), 1);
-    rd_kw_iset_int(actnum_kw.get(), 0, 0);
+    rd::KW zcorn_kw{ZCORN_KW, std::move(zcorn_data)};
 
-    auto grid = rd_grid_ptr(rd_grid_alloc_GRDECL_kw(nx, ny, nz, zcorn_kw.get(),
-                                                    coord_kw.get(),
-                                                    actnum_kw.get(), NULL),
-                            &rd_grid_free);
+    const int size = nx * ny * nz;
+    std::vector<int> actnum_data(size, 1);
+    actnum_data[0] = 0;
+    rd::KW actnum_kw{ACTNUM_KW, std::move(actnum_data)};
+
+    auto grid =
+        rd_grid_ptr(rd_grid_alloc_GRDECL_kw(nx, ny, nz, &zcorn_kw, &coord_kw,
+                                            &actnum_kw, NULL),
+                    &rd_grid_free);
     REQUIRE(grid != nullptr);
     REQUIRE(rd_grid_get_active_size(grid.get()) == size - 1);
 }
@@ -373,37 +374,33 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         SECTION("Keyword allocation") {
             auto zcorn_kw = rd_grid_alloc_zcorn_kw(grid.get());
             REQUIRE(zcorn_kw != nullptr);
-            REQUIRE(rd_kw_get_size(zcorn_kw.get()) ==
-                    static_cast<int>(expected_zcorn.size()));
+            REQUIRE(zcorn_kw->size() == expected_zcorn.size());
             for (size_t i = 0; i < expected_zcorn.size(); i++)
-                REQUIRE(rd_kw_iget_float(zcorn_kw.get(), i) ==
-                        expected_zcorn[i]);
+                REQUIRE(zcorn_kw->at<float>(i) == expected_zcorn[i]);
 
             auto actnum_kw = rd_grid_alloc_actnum_kw(grid.get());
             REQUIRE(actnum_kw != nullptr);
-            REQUIRE(rd_kw_get_size(actnum_kw.get()) == 8);
-            for (int i = 0; i < 8; i++)
-                REQUIRE(rd_kw_iget_int(actnum_kw.get(), i) == actnum_data[i]);
+            REQUIRE(actnum_kw->size() == 8);
+            for (size_t i = 0; i < 8; i++)
+                REQUIRE(actnum_kw->at<int>(i) == actnum_data[i]);
 
             auto coord_kw = rd_grid_alloc_coord_kw(grid.get());
             REQUIRE(coord_kw != nullptr);
-            REQUIRE(rd_kw_get_size(coord_kw.get()) ==
-                    static_cast<int>(expected_coord.size()));
-            for (int i = 0; i < rd_kw_get_size(coord_kw.get()); i++)
-                REQUIRE(rd_kw_iget_float(coord_kw.get(), i) ==
-                        expected_coord[i]);
+            REQUIRE(coord_kw->size() == expected_coord.size());
+            for (size_t i = 0; i < coord_kw->size(); i++)
+                REQUIRE(coord_kw->at<float>(i) == expected_coord[i]);
 
             auto volume_kw = rd_grid_alloc_volume_kw(grid.get(), false);
             REQUIRE(volume_kw != nullptr);
-            REQUIRE(rd_kw_get_size(volume_kw.get()) == 8);
-            for (int i = 0; i < rd_kw_get_size(volume_kw.get()); i++)
-                REQUIRE(rd_kw_iget_double(volume_kw.get(), i) == 6.0);
+            REQUIRE(volume_kw->size() == 8);
+            for (size_t i = 0; i < volume_kw->size(); i++)
+                REQUIRE(volume_kw->at<double>(i) == 6.0);
 
             auto volume_kw_active = rd_grid_alloc_volume_kw(grid.get(), true);
             REQUIRE(volume_kw_active != nullptr);
-            REQUIRE(rd_kw_get_size(volume_kw_active.get()) == 7);
-            for (int i = 0; i < rd_kw_get_size(volume_kw_active.get()); i++)
-                REQUIRE(rd_kw_iget_double(volume_kw_active.get(), i) == 6.0);
+            REQUIRE(volume_kw_active->size() == 7);
+            for (size_t i = 0; i < volume_kw_active->size(); i++)
+                REQUIRE(volume_kw_active->at<double>(i) == 6.0);
         }
 
         SECTION("ZCORN and COORD size/data") {
@@ -595,19 +592,17 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
         GIVEN("A grid keyword") {
             int nactive = rd_grid_get_nactive(grid.get());
-            auto kw = make_rd_kw("PORO", nactive, RD_FLOAT);
-
-            for (int i = 0; i < nactive; i++) {
-                rd_kw_iset_float(kw.get(), i, 0.2f + i * 0.01f);
-            }
+            std::vector<float> poro_data(nactive);
+            for (int i = 0; i < nactive; i++)
+                poro_data[i] = 0.2f + i * 0.01f;
+            rd::KW kw{"PORO", std::move(poro_data)};
 
             SECTION("column property") {
-                double prop =
-                    rd_grid_get_property(grid.get(), kw.get(), 0, 0, 0);
+                double prop = rd_grid_get_property(grid.get(), &kw, 0, 0, 0);
                 REQUIRE(prop >= 0.0);
 
                 auto actual =
-                    rd_grid_get_column_property(grid.get(), kw.get(), 0, 0);
+                    rd_grid_get_column_property(grid.get(), &kw, 0, 0);
                 REQUIRE(actual.size() == 2);
                 REQUIRE_THAT(actual[0],
                              Catch::Matchers::WithinAbs(0.2, 0.0001));
@@ -615,14 +610,14 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             }
 
             SECTION("Keyword copy") {
-                auto target_kw = make_rd_kw(
-                    "TARGET", rd_grid_get_global_size(grid.get()), RD_FLOAT);
-                rd_grid_global_kw_copy(grid.get(), target_kw.get(), kw.get());
+                rd::KW target_kw{"TARGET", rd_grid_get_global_size(grid.get()),
+                                 RD_FLOAT};
+                rd_grid_global_kw_copy(grid.get(), &target_kw, &kw);
 
-                auto compressed_kw = make_rd_kw(
-                    "COMP", rd_grid_get_active_size(grid.get()), RD_FLOAT);
-                rd_grid_compressed_kw_copy(grid.get(), compressed_kw.get(),
-                                           target_kw.get());
+                rd::KW compressed_kw{
+                    "COMP", rd_grid_get_active_size(grid.get()), RD_FLOAT};
+                rd_grid_compressed_kw_copy(grid.get(), &compressed_kw,
+                                           &target_kw);
             }
         }
     }

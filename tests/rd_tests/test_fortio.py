@@ -221,7 +221,7 @@ def test_that_reading_a_record_with_a_mismatching_trailer_fails(tmp_path):
     path.write_bytes(bytes(content))
 
     with openFortIO(str(path)) as fortio:
-        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with pytest.raises(ValueError, match="Could not read record size for keyword"):
             ResdataKW.fread(fortio)
 
 
@@ -232,7 +232,7 @@ def test_that_reading_a_truncated_record_fails(tmp_path):
 
     with openFortIO(str(path)) as fortio:
         ResdataKW.fread(fortio)
-        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with pytest.raises(ValueError, match="Could not read record size for keyword"):
             ResdataKW.fread(fortio)
 
 
@@ -278,7 +278,9 @@ def test_that_reading_a_record_without_a_trailer_fails(tmp_path):
 
     with openFortIO(str(path)) as fortio:
         ResdataKW.fread(fortio)
-        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with pytest.raises(
+            ValueError, match="Could not read record size for keyword KW2"
+        ):
             ResdataKW.fread(fortio)
 
 

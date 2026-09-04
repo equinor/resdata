@@ -4,6 +4,7 @@
 #include <ios>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -29,18 +30,18 @@ void test_create_and_load_index_file() {
         const std::string index_file_name = "index_file";
 
         //creating the data file
-        int data_size = 10;
-        rd_kw_type *kw1 = rd_kw_alloc("TEST1_KW", data_size, RD_INT);
-        for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_int(kw1, i, 537 + i);
+        std::vector<int> kw1_data(10);
+        for (size_t i = 0; i < kw1_data.size(); ++i)
+            kw1_data[i] = 537 + i;
+        rd::KW kw1{"TEST1_KW", std::move(kw1_data)};
         ERT::FortIO fortio(file_name, std::ios_base::out);
-        rd_kw_fwrite(kw1, fortio);
+        kw1.fwrite(fortio);
 
-        data_size = 5;
-        rd_kw_type *kw2 = rd_kw_alloc("TEST2_KW", data_size, RD_FLOAT);
-        for (int i = 0; i < data_size; ++i)
-            rd_kw_iset_float(kw2, i, 0.15 * i);
-        rd_kw_fwrite(kw2, fortio);
+        std::vector<float> kw2_data(5);
+        for (size_t i = 0; i < kw2_data.size(); ++i)
+            kw2_data[i] = 0.15f * i;
+        rd::KW kw2{"TEST2_KW", std::move(kw2_data)};
+        kw2.fwrite(fortio);
         fortio.fflush();
         //finished creating data file
 
@@ -70,9 +71,6 @@ void test_create_and_load_index_file() {
 
         test_assert_true(rd_file_index->has_kw("TEST1_KW"));
         test_assert_true(rd_file_index->has_kw("TEST2_KW"));
-
-        rd_kw_free(kw1);
-        rd_kw_free(kw2);
     }
 }
 

@@ -49,7 +49,7 @@ public:
         return global_view->num_named_kw(kw);
     }
     /** Will return the ith occurence of @kw the File. */
-    [[nodiscard]] rd_kw_type *get_kw(const std::string &kw, size_t ith) const {
+    [[nodiscard]] rd::KW *get_kw(const std::string &kw, size_t ith) const {
         return global_view->get_kw(kw, ith);
     }
     /** The total number of rd_kws in the File. */
@@ -84,7 +84,7 @@ public:
            std::runtime_error if there is a mismatch.
 
         3. The File must have been opened with FileMode::WRITABLE. */
-    bool save_kw(const rd_kw_type *rd_kw);
+    bool save_kw(const rd::KW *rd_kw);
 
     /// Functions specialized to work with restart files.
 

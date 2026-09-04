@@ -3,71 +3,67 @@
 #include <cstddef>
 #include <ios>
 #include <istream>
+#include <limits>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_header.hpp>
 #include <resdata/rd_file_kw.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_type.hpp>
 
-void FileKW::assert_kw() const {
-    if (!kw)
-        throw std::runtime_error("keyword could not be loaded from file "
-                                 "(rd_kw_fread_alloc returned NULL)");
+rd::KW *FileKW::get_kw(ERT::FortIO &fortio) {
+    if (!this->kw) {
+        if (!fortio.assert_stream_open())
+            throw std::ios_base::failure(
+                std::string(__func__) +
+                ": trying to load a keyword after the backing "
+                "file has been detached.");
 
-    if (!rd_type_is_equal(this->data_type, rd_kw_get_data_type(kw.get())))
-        throw std::runtime_error(std::string(__func__) +
-                                 ": type mismatch between header and file.");
-
-    if (kw_size != rd_kw_get_size(kw.get()))
-        throw std::runtime_error(std::string(__func__) +
-                                 ": size mismatch between header and file.");
-
-    if (header != rd_kw_get_header(kw.get()))
-        throw std::runtime_error(std::string(__func__) +
-                                 ": name mismatch between header and file.");
-}
-
-void FileKW::load_kw(ERT::FortIO &fortio) {
-    if (!fortio.assert_stream_open())
-        throw std::ios_base::failure(
-            std::string(__func__) +
-            ": trying to load a keyword after the backing file has "
-            "been detached.");
-
-    fortio.fseek(file_offset, SEEK_SET);
-    // Note load_kw is only called when kw is nullptr
-    kw.reset(rd_kw_fread_alloc(fortio));
-    assert_kw();
-}
-
-rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
-    if (!kw)
-        load_kw(fortio);
-
-    return kw.get();
+        fortio.fseek(file_offset, SEEK_SET);
+        auto file_header = rd::KWHeader::fread(fortio);
+        if (header != file_header)
+            throw std::runtime_error(fmt::format(
+                "{}: mismatch between header and file: "
+                "expected name=\"{}\" size={} type={}, got "
+                "name=\"{}\" size={} type={}.",
+                __func__, header.name(), header.size(),
+                rd_type_name(header.data_type()), file_header.name(),
+                file_header.size(), rd_type_name(file_header.data_type())));
+        auto data = file_header.fread_data(fortio);
+        this->kw = std::make_unique<rd::KW>(header, std::move(data));
+    }
+    return this->kw.get();
 }
 
 bool FileKW::skip_data(ERT::FortIO &fortio) const {
-    return rd_kw_fskip_data__(data_type, kw_size, fortio);
+    return header.fskip_data(fortio);
 }
 
 void FileKW::inplace_write(ERT::FortIO &fortio) const {
-    assert_kw();
+    if (!this->kw)
+        throw std::runtime_error(
+            "cannot write FileKW in place: keyword has not been loaded");
+    if (header != this->kw->header())
+        throw std::runtime_error(
+            "cannot write FileKW in place: the header of the loaded "
+            "keyword no longer matches the header on file.");
     fortio.fseek(file_offset, SEEK_SET);
-    rd_kw_fskip_header(fortio);
+    rd::KW::fskip_header(fortio);
     fortio.fclean();
-    rd_kw_fwrite_data(kw.get(), fortio);
+    this->kw->fwrite_data(fortio);
 }
 
 void FileKW::write_header(std::ostream &stream) const {
+    std::string header = get_header();
     size_t header_length = header.size();
     for (size_t i = 0; i < RD_STRING8_LENGTH; i++) {
         if (i < header_length)
@@ -76,6 +72,12 @@ void FileKW::write_header(std::ostream &stream) const {
             stream.put(' ');
     }
 
+    auto data_type = get_data_type();
+    size_t size = get_size();
+    if (size > std::numeric_limits<int>::max())
+        throw std::invalid_argument(
+            fmt::format("Size of rd_kw exceeded int max: {}", size));
+    int kw_size = static_cast<int>(size);
     int type = rd_type_get_type(data_type);
     size_t type_size = rd_type_get_sizeof_iotype(data_type);
     stream.write(reinterpret_cast<const char *>(&kw_size), sizeof(kw_size));
@@ -114,4 +116,6 @@ std::vector<std::shared_ptr<FileKW>> FileKW::read(std::istream &stream,
     return kw_list;
 }
 
-void FileKW::clear() { kw.reset(nullptr); }
+void FileKW::clear() { this->kw.reset(); }
+
+rd::KW *FileKW::get_kw_ptr() { return this->kw.get(); };

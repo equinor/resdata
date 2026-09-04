@@ -46,13 +46,12 @@ WellConnection::WellConnection(int i, int j, int k, double connection_factor,
   aligned with the rest of the ert libraries.
 */
 std::shared_ptr<WellConnection>
-WellConnection::from_keywords(const rd_kw_type *icon_kw,
-                              const rd_kw_type *scon_kw,
-                              const rd_kw_type *xcon_kw, const RSTHead &header,
+WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
+                              const rd::KW *xcon_kw, const RSTHead &header,
                               int well_nr, int conn_nr) {
 
     const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
-    int IC = rd_kw_iget_int(icon_kw, icon_offset + ICON_IC_INDEX);
+    int IC = icon_kw->at<int>(icon_offset + ICON_IC_INDEX);
     if (IC <= 0)
         throw InvalidConnection("IC <= 0: Connection not in current LGR");
 
@@ -60,19 +59,17 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
     Out in the wild we have encountered files where the integer value used to
     indicate direction has had an invalid value for some connections.
     */
-    int int_direction =
-        rd_kw_iget_int(icon_kw, icon_offset + ICON_DIRECTION_INDEX);
+    int int_direction = icon_kw->at<int>(icon_offset + ICON_DIRECTION_INDEX);
     if ((int_direction < 0) || (int_direction > ICON_FRACY))
         throw InvalidConnection(fmt::format(
             "Invalid direction value:{} encountered for well", int_direction));
 
-    int i = rd_kw_iget_int(icon_kw, icon_offset + ICON_I_INDEX) - 1;
-    int j = rd_kw_iget_int(icon_kw, icon_offset + ICON_J_INDEX) - 1;
-    int k = rd_kw_iget_int(icon_kw, icon_offset + ICON_K_INDEX) - 1;
+    int i = icon_kw->at<int>(icon_offset + ICON_I_INDEX) - 1;
+    int j = icon_kw->at<int>(icon_offset + ICON_J_INDEX) - 1;
+    int k = icon_kw->at<int>(icon_offset + ICON_K_INDEX) - 1;
     double connection_factor = -1;
     bool matrix_connection = true;
-    bool is_open =
-        (rd_kw_iget_int(icon_kw, icon_offset + ICON_STATUS_INDEX) > 0);
+    bool is_open = (icon_kw->at<int>(icon_offset + ICON_STATUS_INDEX) > 0);
     auto dir = WellConnDir::fracX;
 
     /* Set the K value and fracture flag. */
@@ -111,14 +108,12 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
     if (scon_kw) {
         const int scon_offset =
             header.nsconz * (header.ncwmax * well_nr + conn_nr);
-        connection_factor =
-            rd_kw_iget_as_double(scon_kw, scon_offset + SCON_CF_INDEX);
+        connection_factor = scon_kw->as_double(scon_offset + SCON_CF_INDEX);
     }
 
     {
-        int segment_id =
-            rd_kw_iget_int(icon_kw, icon_offset + ICON_SEGMENT_INDEX) -
-            ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
+        int segment_id = icon_kw->at<int>(icon_offset + ICON_SEGMENT_INDEX) -
+                         ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
         auto conn = std::make_shared<WellConnection>(
             i, j, k, connection_factor, dir, is_open, segment_id,
             matrix_connection, header.unit_system);
@@ -128,13 +123,11 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
                 header.nxconz * (header.ncwmax * well_nr + conn_nr);
 
             conn->water_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_WRAT_INDEX);
-            conn->gas_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_GRAT_INDEX);
-            conn->oil_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_ORAT_INDEX);
+                xcon_kw->as_double(xcon_offset + XCON_WRAT_INDEX);
+            conn->gas_rate = xcon_kw->as_double(xcon_offset + XCON_GRAT_INDEX);
+            conn->oil_rate = xcon_kw->as_double(xcon_offset + XCON_ORAT_INDEX);
             conn->volume_rate =
-                rd_kw_iget_double(xcon_kw, xcon_offset + XCON_QR_INDEX);
+                xcon_kw->at<double>(xcon_offset + XCON_QR_INDEX);
         }
 
         /**
@@ -149,16 +142,14 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
 }
 
 std::shared_ptr<WellConnection>
-WellConnection::read_wellhead(const rd_kw_type *iwel_kw, const RSTHead &header,
+WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
                               int well_nr) {
     const int iwel_offset = header.niwelz * well_nr;
-    int conn_i = rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADI_INDEX) - 1;
+    int conn_i = iwel_kw->at<int>(iwel_offset + IWEL_HEADI_INDEX) - 1;
 
     if (conn_i >= 0) {
-        int conn_j =
-            rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADJ_INDEX) - 1;
-        int conn_k =
-            rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADK_INDEX) - 1;
+        int conn_j = iwel_kw->at<int>(iwel_offset + IWEL_HEADJ_INDEX) - 1;
+        int conn_k = iwel_kw->at<int>(iwel_offset + IWEL_HEADK_INDEX) - 1;
         bool matrix_connection = true;
         bool open = true;
         double connection_factor = -1;
