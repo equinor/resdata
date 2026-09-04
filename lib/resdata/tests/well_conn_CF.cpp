@@ -12,8 +12,8 @@
 #include <resdata/well/well_conn.hpp>
 #include <resdata/well/well_const.hpp>
 
-void well_conn_test_CF(const rd_kw_type *iwel_kw, const rd_kw_type *icon_kw,
-                       const rd_kw_type *scon_kw, const rd_kw_type *xcon_kw,
+void well_conn_test_CF(const rd::KW *iwel_kw, const rd::KW *icon_kw,
+                       const rd::KW *scon_kw, const rd::KW *xcon_kw,
                        const RSTHead &rst_head, int iwell, int iconn,
                        double CF) {
     auto conn = WellConnection::from_keywords(icon_kw, scon_kw, xcon_kw,
@@ -26,10 +26,10 @@ int main(int argc, char **argv) {
     auto rst_file = rd::File::open(Xfile);
     auto rst_head = RSTHead::read(rst_file->get_global_view().get(),
                                   rd_filename_report_nr(Xfile));
-    const rd_kw_type *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
-    const rd_kw_type *icon_kw = rst_file->get_kw(ICON_KW, 0);
-    const rd_kw_type *scon_kw = rst_file->get_kw(SCON_KW, 0);
-    const rd_kw_type *xcon_kw = 0;
+    const rd::KW *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
+    const rd::KW *icon_kw = rst_file->get_kw(ICON_KW, 0);
+    const rd::KW *scon_kw = rst_file->get_kw(SCON_KW, 0);
+    const rd::KW *xcon_kw = 0;
 
     well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 0,
                       32.948);

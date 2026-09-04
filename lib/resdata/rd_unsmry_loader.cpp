@@ -47,12 +47,12 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
     int length = file_view->num_named_kw(PARAMS_KW);
 
     if (length > 0) {
-        const rd_kw_type *params_kw = file_view->get_kw(PARAMS_KW, 0);
+        const rd::KW *params_kw = file_view->get_kw(PARAMS_KW, 0);
         if (params_kw == nullptr)
             throw std::invalid_argument(
                 "Malformed summary file: missing PARAMS keyword entry");
 
-        const rd_data_type params_data_type = rd_kw_get_data_type(params_kw);
+        const rd_data_type params_data_type = params_kw->data_type();
         if (!rd_type_is_float(params_data_type))
             throw std::invalid_argument(
                 "Malformed summary file: PARAMS keyword is not float");

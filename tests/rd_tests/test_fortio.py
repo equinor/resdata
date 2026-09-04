@@ -133,3 +133,110 @@ class FortIOTest(ResdataTest):
 
             self.assertTrue(FortIO.is_fortran_file("fortran_file"))
             self.assertFalse(FortIO.is_fortran_file("text_file"))
+
+
+def _record_size(data_size):
+    # keyword header record: 4 + (8 char name + 4 byte count + 4 char type) + 4
+    # data record:           4 + data + 4
+    return 24 + 2 * 4 + data_size
+
+
+def _write_kw(path, mode, name, length):
+    kw = ResdataKW(name, length, ResDataType.RD_INT)
+    for i in range(length):
+        kw[i] = i
+    with openFortIO(str(path), mode=mode) as f:
+        kw.fwrite(f)
+    return kw
+
+
+def test_that_ftell_is_zero_after_opening_a_new_file_for_write(tmp_path):
+    path = tmp_path / "file"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as f:
+        assert f.get_position() == 0
+
+
+def test_that_ftell_tracks_position_after_writes(tmp_path):
+    path = tmp_path / "file"
+    kw1 = ResdataKW("KW1", 10, ResDataType.RD_INT)
+    kw2 = ResdataKW("KW2", 5, ResDataType.RD_INT)
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as f:
+        kw1.fwrite(f)
+        assert f.get_position() == _record_size(kw1.data_type.element_size * 10)
+
+        pos_before_kw2 = f.get_position()
+        kw2.fwrite(f)
+        assert f.get_position() == pos_before_kw2 + _record_size(
+            kw2.data_type.element_size * 5
+        )
+
+
+def test_that_ftell_is_at_end_of_file_after_opening_in_append_mode(tmp_path):
+    path = tmp_path / "file"
+    _write_kw(path, FortIO.WRITE_MODE, "KW1", 10)
+    expected_size = os.path.getsize(path)
+
+    with openFortIO(str(path), mode=FortIO.APPEND_MODE) as f:
+        assert f.get_position() == expected_size
+
+        kw2 = ResdataKW("KW2", 3, ResDataType.RD_INT)
+        kw2.fwrite(f)
+        assert f.get_position() == expected_size + _record_size(
+            kw2.data_type.element_size * 3
+        )
+
+
+def test_that_ftell_tracks_position_after_reads(tmp_path):
+    path = tmp_path / "file"
+    kw1 = _write_kw(path, FortIO.WRITE_MODE, "KW1", 10)
+    kw1_record_size = _record_size(kw1.data_type.element_size * 10)
+
+    with openFortIO(str(path), mode=FortIO.READ_MODE) as f:
+        assert f.get_position() == 0
+        ResdataKW.fread(f)
+        assert f.get_position() == kw1_record_size
+
+
+def test_that_seek_and_ftell_are_consistent_in_read_mode(tmp_path):
+    path = tmp_path / "file"
+    _write_kw(path, FortIO.WRITE_MODE, "KW1", 10)
+    file_size = os.path.getsize(path)
+
+    with openFortIO(str(path), mode=FortIO.READ_MODE) as f:
+        assert f.seek(0, whence=2)  # SEEK_END
+        assert f.get_position() == file_size
+
+        assert f.seek(0, whence=0)  # SEEK_SET
+        assert f.get_position() == 0
+
+
+def test_that_seek_and_ftell_are_consistent_in_write_mode(tmp_path):
+    path = tmp_path / "file"
+    kw1 = ResdataKW("KW1", 10, ResDataType.RD_INT)
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as f:
+        kw1.fwrite(f)
+        end_of_kw1 = f.get_position()
+
+        assert f.seek(0, whence=0)  # SEEK_SET
+        assert f.get_position() == 0
+
+        assert f.seek(end_of_kw1, whence=0)  # SEEK_SET
+        assert f.get_position() == end_of_kw1
+
+
+def test_that_seek_and_ftell_are_consistent_in_read_and_write_mode(tmp_path):
+    path = tmp_path / "file"
+    open(path, "wb").close()
+
+    kw1 = ResdataKW("KW1", 10, ResDataType.RD_INT)
+    with openFortIO(str(path), mode=FortIO.READ_AND_WRITE_MODE) as f:
+        assert f.get_position() == 0
+        kw1.fwrite(f)
+        end_of_kw1 = f.get_position()
+
+        assert f.seek(0, whence=0)  # SEEK_SET
+        assert f.get_position() == 0
+
+        kw1_read_back = ResdataKW.fread(f)
+        assert f.get_position() == end_of_kw1
+        assert kw1_read_back == kw1
