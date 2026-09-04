@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <limits>
 #include <new>
 #include <stdexcept>
 #include <string>
@@ -12,24 +13,50 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_util.hpp>
 
 #define RD_KW_TYPE_ID 6111098
 
 struct rd_kw_struct {
     UTIL_TYPE_ID_DECLARATION;
-    int size;
+    size_t size;
     rd_data_type data_type;
     char *
         header8; /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
     char *header;     /* Header which is trimmed to no-space. */
     char *data;       /* The actual data vector. */
     bool shared_data; /* Whether this keyword has shared data or not. */
+
+    template <typename T> T at(size_t index) const {
+        if (index >= this->size)
+            throw std::invalid_argument(fmt::format(
+                "Invalid index lookup. kw:{} input_index:{}   size:{}", header,
+                index, size));
+        if (data_type.type != rd::iotype<T>::tag)
+            throw std::invalid_argument(
+                fmt::format("Keyword: {} is wrong type", header8));
+        size_t io_size = rd_type_get_sizeof_ctype(data_type);
+        T value;
+        std::memcpy(&value, &data[index * io_size], io_size);
+        return value;
+    }
+    double as_double(size_t index) const {
+        if (rd_type_is_float(this->data_type)) {
+            return static_cast<double>(this->at<float>(index));
+        } else if (rd_type_is_double(data_type)) {
+            return this->at<double>(index);
+        } else if (rd_type_is_int(data_type)) {
+            return static_cast<double>(this->at<int>(index));
+        } else
+            throw std::invalid_argument("cannot be converted to double");
+    }
 };
 
 UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
@@ -112,14 +139,14 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *);
 void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type);
 
 
-static int get_blocksize(rd_data_type data_type) {
+static size_t get_blocksize(rd_data_type data_type) {
     if (rd_type_is_alpha(data_type))
         return BLOCKSIZE_CHAR;
 
     return BLOCKSIZE_NUMERIC;
 }
 
-static int get_columns(const rd_data_type data_type) {
+static size_t get_columns(const rd_data_type data_type) {
     switch (rd_type_get_type(data_type)) {
     case (RD_CHAR_TYPE):
         return COLUMNS_CHAR;
@@ -143,7 +170,7 @@ static int get_columns(const rd_data_type data_type) {
 
 static void rd_kw_assert_index(const rd_kw_type *rd_kw, int index,
                                const char *caller) {
-    if (index < 0 || index >= rd_kw->size)
+    if (index < 0 || index >= rd_kw_get_size(rd_kw))
         throw std::invalid_argument(
             fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
                         rd_kw->header, index, rd_kw->size));
@@ -158,31 +185,30 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
         int *int_data = (int *)buffer;
         bool *bool_data = (bool *)rd_kw->data;
 
-        for (int i = 0; i < rd_kw->size; i++)
+        for (size_t i = 0; i < rd_kw->size; i++)
             if (bool_data[i])
                 int_data[i] = RD_BOOL_TRUE_INT;
             else
                 int_data[i] = RD_BOOL_FALSE_INT;
 
-        util_endian_flip_vector(buffer, sizeof_iotype,
-                                static_cast<size_t>(rd_kw->size));
+        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
         return buffer;
     }
 
     if (rd_type_is_char(rd_kw->data_type) ||
         rd_type_is_string(rd_kw->data_type)) {
         size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw->size; i++) {
             size_t buffer_offset = i * sizeof_iotype;
             size_t data_offset = i * sizeof_ctype;
             size_t string_length = strlen(&rd_kw->data[data_offset]);
 
-            for (size_t i = 0; i < string_length; i++)
-                buffer[buffer_offset + i] = rd_kw->data[data_offset + i];
+            for (size_t j = 0; j < string_length; j++)
+                buffer[buffer_offset + j] = rd_kw->data[data_offset + j];
 
             // Pad with spaces
-            for (size_t i = string_length; i < sizeof_iotype; i++)
-                buffer[buffer_offset + i] = ' ';
+            for (size_t j = string_length; j < sizeof_iotype; j++)
+                buffer[buffer_offset + j] = ' ';
         }
 
         return buffer;
@@ -193,20 +219,15 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
 
     if (rd_kw->data && buffer_size > 0) {
         memcpy(buffer, rd_kw->data, buffer_size);
-        util_endian_flip_vector(buffer, sizeof_iotype,
-                                static_cast<size_t>(rd_kw->size));
+        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
     }
 
     return buffer;
 }
 
 static char *rd_kw_alloc_input_buffer(const rd_kw_type *rd_kw) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw->size was negative: {}", rd_kw->size));
-
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
-    size_t count = static_cast<size_t>(rd_kw->size);
+    size_t count = rd_kw->size;
     if (sizeof_iotype != 0 &&
         count > std::numeric_limits<size_t>::max() / sizeof_iotype)
         throw std::invalid_argument(
@@ -225,8 +246,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     if (RD_ENDIAN_FLIP) {
         if (rd_type_is_numeric(rd_kw->data_type) ||
             rd_type_is_bool(rd_kw->data_type))
-            util_endian_flip_vector(buffer, sizeof_iotype,
-                                    static_cast<size_t>(rd_kw->size));
+            util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size);
     }
 
     /*
@@ -236,7 +256,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
         int *int_data = (int *)buffer;
         bool *bool_data = (bool *)rd_kw->data;
 
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw->size; i++) {
             if (int_data[i] == RD_BOOL_TRUE_INT)
                 bool_data[i] = true;
             else
@@ -253,7 +273,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     if (rd_type_is_char(rd_kw->data_type) ||
         rd_type_is_string(rd_kw->data_type)) {
         const char null_char = '\0';
-        for (int i = 0; i < rd_kw->size; i++) {
+        for (size_t i = 0; i < rd_kw->size; i++) {
             size_t buffer_offset = i * sizeof_iotype;
             size_t data_offset = i * sizeof_ctype;
             memcpy(&rd_kw->data[data_offset], &buffer[buffer_offset],
@@ -282,22 +302,14 @@ static const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
 const char *rd_kw_get_header(const rd_kw_type *rd_kw) { return rd_kw->header; }
 
 void rd_kw_get_memcpy_data(const rd_kw_type *rd_kw, void *target) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", rd_kw->size));
     memcpy(target, rd_kw->data,
-           static_cast<size_t>(rd_kw->size) *
-               rd_type_get_sizeof_ctype(rd_kw->data_type));
+           rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", rd_kw->size));
     if (src != NULL)
         memcpy(rd_kw->data, src,
-               static_cast<size_t>(rd_kw->size) *
-                   rd_type_get_sizeof_ctype(rd_kw->data_type));
+               rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
@@ -319,13 +331,9 @@ static bool rd_kw_header_eq(const rd_kw_type *rd_kw1,
 }
 
 static bool rd_kw_data_equal__(const rd_kw_type *rd_kw, const void *data,
-                               int cmp_elements) {
-    if (cmp_elements < 0)
-        throw std::invalid_argument(
-            fmt::format("cmp_elements was negative: {}", cmp_elements));
+                               size_t cmp_elements) {
     int cmp = memcmp(rd_kw->data, data,
-                     static_cast<size_t>(cmp_elements) *
-                         rd_type_get_sizeof_ctype(rd_kw->data_type));
+                     cmp_elements * rd_type_get_sizeof_ctype(rd_kw->data_type));
     if (cmp == 0)
         return true;
     else
@@ -357,12 +365,11 @@ bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2) {
     static bool rd_kw_numeric_equal_##ctype(const rd_kw_type *rd_kw1,          \
                                             const rd_kw_type *rd_kw2,          \
                                             ctype abs_diff, ctype rel_diff) {  \
-        int index;                                                             \
         bool equal = true;                                                     \
         {                                                                      \
             const ctype *data1 = (const ctype *)rd_kw1->data;                  \
             const ctype *data2 = (const ctype *)rd_kw2->data;                  \
-            for (index = 0; index < rd_kw1->size; index++) {                   \
+            for (size_t index = 0; index < rd_kw1->size; index++) {            \
                 equal = util_##ctype##_approx_equal__(                         \
                     data1[index], data2[index], rel_diff, abs_diff);           \
                 if (!equal)                                                    \
@@ -388,7 +395,9 @@ bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
         return false;
 
     if (rd_type_is_float(rd_kw1->data_type))
-        return rd_kw_numeric_equal_float(rd_kw1, rd_kw2, abs_diff, rel_diff);
+        return rd_kw_numeric_equal_float(rd_kw1, rd_kw2,
+                                         static_cast<float>(abs_diff),
+                                         static_cast<float>(rel_diff));
     else if (rd_type_is_double(rd_kw1->data_type))
         return rd_kw_numeric_equal_double(rd_kw1, rd_kw2, abs_diff, rel_diff);
     else
@@ -409,21 +418,26 @@ static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, int size,
                              rd_data_type data_type) {
     rd_kw_set_data_type(rd_kw, data_type);
     rd_kw_set_header_name(rd_kw, header);
+    if (size < 0)
+        throw std::invalid_argument(
+            fmt::format("rd_kw size was negative: {}", size));
+    rd_kw->size = static_cast<size_t>(size);
+}
+
+static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, size_t size,
+                             rd_data_type data_type) {
+    rd_kw_set_data_type(rd_kw, data_type);
+    rd_kw_set_header_name(rd_kw, header);
     rd_kw->size = size;
 }
 
 static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
-    if (rd_kw->size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw->size was negative: {}", rd_kw->size));
-
-    const int blocksize = get_blocksize(rd_kw->data_type);
-    const int num_blocks =
+    const size_t blocksize = get_blocksize(rd_kw->data_type);
+    const size_t num_blocks =
         rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
 
-    return static_cast<size_t>(num_blocks) *
-               (4 + 4) + // Fortran fluff for each block
-           static_cast<size_t>(rd_kw->size) *
+    return num_blocks * (4 + 4) + // Fortran fluff for each block
+           rd_kw->size *
                rd_type_get_sizeof_iotype(rd_kw->data_type); // Actual data
 }
 
@@ -450,11 +464,8 @@ static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
 
     {
 
-        if (rd_kw->size < 0)
-            throw std::invalid_argument(
-                fmt::format("rd_kw size was negative: {}", rd_kw->size));
-        size_t byte_size = static_cast<size_t>(rd_kw->size) *
-                           rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t byte_size =
+            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
         rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
         if (rd_kw->data) {
             memset(rd_kw->data, 0, byte_size);
@@ -524,14 +535,10 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
         throw std::invalid_argument("type/size mismatch");
 
-    if (target->size < 0)
-        throw std::invalid_argument(
-            fmt::format("target size was negative: {}", target->size));
     if (target->size == 0)
         return;
     memcpy(target->data, src->data,
-           static_cast<size_t>(target->size) *
-               rd_type_get_sizeof_ctype(target->data_type));
+           target->size * rd_type_get_sizeof_ctype(target->data_type));
 }
 
 void rd_kw_memcpy(rd_kw_type *target, const rd_kw_type *src) {
@@ -563,10 +570,8 @@ rd_kw_type *rd_kw_alloc_copy(const rd_kw_type *src) {
    <= 0.
 */
 
-rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
-                                   int index2, int stride) {
-    if (index1 < 0)
-        index1 = 0;
+rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, size_t index1,
+                                   size_t index2, int stride) {
     if (index2 > src->size)
         index2 = src->size;
     if (index1 >= src->size)
@@ -577,9 +582,9 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
             fmt::format("stride:{} completely broken ...", stride));
 
     rd_kw_ptr new_kw(nullptr, rd_kw_free);
-    int src_index = index1;
+    size_t src_index = index1;
     /* 1: Determine size of the sliced copy. */
-    int new_size = 0;
+    size_t new_size = 0;
     while (src_index < index2) {
         new_size++;
         src_index += stride;
@@ -592,10 +597,10 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
         /* 2: Copy over the elements. */
         src_index = index1;
         {
-            int target_index = 0;
+            size_t target_index = 0;
             const char *src_ptr = src->data;
             char *new_ptr = new_kw->data;
-            int sizeof_ctype = rd_type_get_sizeof_ctype(new_kw->data_type);
+            size_t sizeof_ctype = rd_type_get_sizeof_ctype(new_kw->data_type);
 
             while (src_index < index2) {
                 memcpy(&new_ptr[target_index * sizeof_ctype],
@@ -608,23 +613,17 @@ rd_kw_type *rd_kw_alloc_slice_copy(const rd_kw_type *src, int index1,
     return new_kw.release();
 }
 
-void rd_kw_resize(rd_kw_type *rd_kw, int new_size) {
+void rd_kw_resize(rd_kw_type *rd_kw, size_t new_size) {
     if (rd_kw->shared_data)
         throw std::invalid_argument(
             "trying to allocate data for rd_kw object which has been declared "
             "with shared storage");
 
     if (new_size != rd_kw->size) {
-        if (rd_kw->size < 0)
-            throw std::invalid_argument(
-                fmt::format("rd_kw size was negative: {}", rd_kw->size));
-        if (new_size < 0)
-            throw std::invalid_argument(
-                fmt::format("new_size was negative: {}", new_size));
-        size_t old_byte_size = static_cast<size_t>(rd_kw->size) *
-                               rd_type_get_sizeof_ctype(rd_kw->data_type);
-        size_t new_byte_size = static_cast<size_t>(new_size) *
-                               rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t old_byte_size =
+            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t new_byte_size =
+            new_size * rd_type_get_sizeof_ctype(rd_kw->data_type);
 
         rd_kw->data = (char *)util_realloc(rd_kw->data, new_byte_size);
         if (new_byte_size > old_byte_size) {
@@ -644,14 +643,11 @@ void rd_kw_resize(rd_kw_type *rd_kw, int new_size) {
 */
 
 rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
-                                 int offset, int count) {
+                                 size_t offset, size_t count) {
     if (new_kw == NULL)
         new_kw = src->header;
 
-    if (count < 0)
-        count = src->size - offset;
-
-    if ((offset < 0) || (offset >= src->size))
+    if (offset >= src->size)
         throw std::invalid_argument(
             fmt::format("invalid offset - limits: [{},{})", 0, src->size));
     if ((count + offset) > src->size)
@@ -659,8 +655,9 @@ rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
             fmt::format("invalid count value: {}", count));
 
     {
-        void *src_data = rd_kw_iget_ptr(src, offset);
-        return rd_kw_alloc_new(new_kw, count, src->data_type, src_data);
+        void *src_data = rd_kw_iget_ptr(src, static_cast<int>(offset));
+        return rd_kw_alloc_new(new_kw, static_cast<int>(count), src->data_type,
+                               src_data);
     }
 }
 
@@ -693,11 +690,8 @@ double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int index) {
         return rd_kw_iget_double(rd_kw, index);
     else if (rd_type_is_int(rd_kw->data_type))
         return rd_kw_iget_int(rd_kw, index); /*  */
-    else {
-        throw std::invalid_argument(
-            "can not be converted to double - no data for you!");
-        return -1;
-    }
+    else
+        throw std::invalid_argument("cannot be converted to double");
 }
 
 #define RD_KW_IGET_TYPED(ctype, RD_TYPE)                                       \
@@ -736,22 +730,23 @@ const char *rd_kw_iget_string_ptr(const rd_kw_type *rd_kw, int i) {
    be padded, if s8 is longer than 8 characters the characters from 9
    and out will be ignored.
 */
-void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8) {
-    char *rd_string = (char *)rd_kw_iget_ptr(rd_kw, index);
+void rd_kw_iset_string8(rd_kw_type *rd_kw, size_t index, const char *s8) {
+    if (index >= rd_kw->size)
+        throw std::invalid_argument(
+            fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
+                        rd_kw->header, index, rd_kw->size));
+    char *rd_string = &rd_kw->data[index * rd_type_get_sizeof_ctype(rd_kw->data_type)];
     if (strlen(s8) >= RD_STRING8_LENGTH) {
         /* The whole string goes in - possibly loosing content at the end. */
-        int i;
-        for (i = 0; i < RD_STRING8_LENGTH; i++)
+        for (size_t i = 0; i < RD_STRING8_LENGTH; i++)
             rd_string[i] = s8[i];
     } else {
         /* The string is padded with trailing spaces. */
-        int string_length = strlen(s8);
-        int i;
-
-        for (i = 0; i < string_length; i++)
+        size_t string_length = strlen(s8);
+        for (size_t i = 0; i < string_length; i++)
             rd_string[i] = s8[i];
 
-        for (i = string_length; i < RD_STRING8_LENGTH; i++)
+        for (size_t i = string_length; i < RD_STRING8_LENGTH; i++)
             rd_string[i] = ' ';
     }
 
@@ -769,16 +764,13 @@ void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8) {
    length greater than 8 - maybe the overwriting of consecutive
    elements is not what you want?
 */
-void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s) {
-    int strings = strlen(s) / RD_STRING8_LENGTH;
+void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, size_t index, const char *s) {
+    size_t strings = strlen(s) / RD_STRING8_LENGTH;
     if ((strlen(s) % RD_STRING8_LENGTH) != 0)
         strings++;
-    {
-        int sub_index;
-        for (sub_index = 0; sub_index < strings; sub_index++)
-            rd_kw_iset_string8(rd_kw, index + sub_index,
-                               &s[sub_index * RD_STRING8_LENGTH]);
-    }
+    for (size_t sub_index = 0; sub_index < strings; sub_index++)
+        rd_kw_iset_string8(rd_kw, index + sub_index,
+                           &s[sub_index * RD_STRING8_LENGTH]);
 }
 
 /**
@@ -984,103 +976,104 @@ static double __fscanf_RD_double(std::istream &stream) {
 
 static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
-    if (rd_kw->size > 0) {
-        const int blocksize = get_blocksize(rd_kw->data_type);
-        if (fmt_file) {
-            const int blocks = rd_kw->size / blocksize +
-                               (rd_kw->size % blocksize == 0 ? 0 : 1);
-            std::istream &stream = fortio.get_istream();
-            int offset = 0;
-            int index = 0;
-            int ib, ir;
-            for (ib = 0; ib < blocks; ib++) {
-                int read_elm = std::min((ib + 1) * blocksize, rd_kw->size) -
-                               ib * blocksize;
-                for (ir = 0; ir < read_elm; ir++) {
-                    switch (rd_kw_get_type(rd_kw)) {
-                    case (RD_CHAR_TYPE):
-                        rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
-                        break;
-                    case (RD_STRING_TYPE):
-                        rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                             rd_type_get_sizeof_iotype(
-                                                 rd_kw_get_data_type(rd_kw)),
-                                             stream);
-                        break;
-                    case (RD_INT_TYPE): {
-                        stream >> *(int *)&rd_kw->data[offset];
-                        if (stream.fail())
-                            throw std::runtime_error(fmt::format(
-                                "after reading {} values reading of keyword:{} "
-                                "from:{} failed",
-                                offset /
-                                    rd_type_get_sizeof_ctype(rd_kw->data_type),
-                                rd_kw->header8, fortio.filename_ref()));
-                    } break;
-                    case (RD_FLOAT_TYPE): {
-                        stream >> *(float *)&rd_kw->data[offset];
-                        if (stream.fail()) {
-                            throw std::runtime_error(fmt::format(
-                                "after reading {} values reading of keyword:{} "
-                                "from:{} failed",
-                                offset /
-                                    rd_type_get_sizeof_ctype(rd_kw->data_type),
-                                rd_kw->header8, fortio.filename_ref()));
-                        }
-                    } break;
-                    case (RD_DOUBLE_TYPE): {
-                        double value = __fscanf_RD_double(stream);
-                        rd_kw_iset(rd_kw, index, &value);
-                    } break;
-                    case (RD_BOOL_TYPE): {
-                        char bool_char;
-                        stream >> std::ws;
-                        if (stream.get(bool_char)) {
-                            if (bool_char == BOOL_TRUE_CHAR)
-                                rd_kw_iset_bool(rd_kw, index, true);
-                            else if (bool_char == BOOL_FALSE_CHAR)
-                                rd_kw_iset_bool(rd_kw, index, false);
-                            else
-                                throw std::runtime_error(fmt::format(
-                                    "Logical value: [{}] not recogniced",
-                                    bool_char));
-                        } else
-                            throw std::runtime_error(
-                                "read failed - premature file end?");
-                    } break;
-                    case (RD_MESS_TYPE):
-                        rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
-                        break;
-                    default:
-                        throw std::runtime_error(
-                            fmt::format("Internal error: internal "
-                                        "eclipse_type: {} not recognized",
-                                        rd_kw_get_type(rd_kw)));
-                    }
-                    offset += rd_type_get_sizeof_ctype(rd_kw->data_type);
-                    index++;
-                }
-            }
-
-            /* Skip the trailing newline */
-            fortio.fseek(1, SEEK_CUR);
-            return true;
-        } else {
-            char *buffer = rd_kw_alloc_input_buffer(rd_kw);
-            const int sizeof_iotype =
-                rd_type_get_sizeof_iotype(rd_kw->data_type);
-            bool read_ok =
-                fortio.fread_buffer(buffer, rd_kw->size * sizeof_iotype);
-
-            if (read_ok)
-                rd_kw_load_from_input_buffer(rd_kw, buffer);
-
-            free(buffer);
-            return read_ok;
-        }
-    } else
+    if (rd_kw->size == 0)
         /* The keyword has zero size - and reading data is trivially OK. */
         return true;
+    const size_t blocksize = get_blocksize(rd_kw->data_type);
+    if (fmt_file) {
+        const size_t blocks =
+            rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
+        std::istream &stream = fortio.get_istream();
+        int offset = 0;
+        int index = 0;
+        for (size_t ib = 0; ib < blocks; ib++) {
+            size_t read_elm =
+                std::min((ib + 1) * blocksize, rd_kw->size) - ib * blocksize;
+            for (size_t ir = 0; ir < read_elm; ir++) {
+                switch (rd_kw_get_type(rd_kw)) {
+                case (RD_CHAR_TYPE):
+                    rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
+                    break;
+                case (RD_STRING_TYPE):
+                    rd_kw_fscanf_qstring(
+                        &rd_kw->data[offset],
+                        rd_type_get_sizeof_iotype(rd_kw_get_data_type(rd_kw)),
+                        stream);
+                    break;
+                case (RD_INT_TYPE): {
+                    stream >> *(int *)&rd_kw->data[offset];
+                    if (stream.fail())
+                        throw std::runtime_error(fmt::format(
+                            "after reading {} values reading of keyword:{} "
+                            "from:{} failed",
+                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
+                            rd_kw->header8, fortio.filename_ref()));
+                } break;
+                case (RD_FLOAT_TYPE): {
+                    stream >> *(float *)&rd_kw->data[offset];
+                    if (stream.fail()) {
+                        throw std::runtime_error(fmt::format(
+                            "after reading {} values reading of keyword:{} "
+                            "from:{} failed",
+                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
+                            rd_kw->header8, fortio.filename_ref()));
+                    }
+                } break;
+                case (RD_DOUBLE_TYPE): {
+                    double value = __fscanf_RD_double(stream);
+                    rd_kw_iset(rd_kw, index, &value);
+                } break;
+                case (RD_BOOL_TYPE): {
+                    char bool_char;
+                    stream >> std::ws;
+                    if (stream.get(bool_char)) {
+                        if (bool_char == BOOL_TRUE_CHAR)
+                            rd_kw_iset_bool(rd_kw, index, true);
+                        else if (bool_char == BOOL_FALSE_CHAR)
+                            rd_kw_iset_bool(rd_kw, index, false);
+                        else
+                            throw std::runtime_error(fmt::format(
+                                "Logical value: [{}] not recogniced",
+                                bool_char));
+                    } else
+                        throw std::runtime_error(
+                            "read failed - premature file end?");
+                } break;
+                case (RD_MESS_TYPE):
+                    rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
+                    break;
+                default:
+                    throw std::runtime_error(
+                        fmt::format("Internal error: internal "
+                                    "eclipse_type: {} not recognized",
+                                    rd_kw_get_type(rd_kw)));
+                }
+                offset += rd_type_get_sizeof_ctype(rd_kw->data_type);
+                index++;
+            }
+        }
+
+        /* Skip the trailing newline */
+        fortio.fseek(1, SEEK_CUR);
+        return true;
+    } else {
+        char *buffer = rd_kw_alloc_input_buffer(rd_kw);
+        const size_t sizeof_iotype =
+            rd_type_get_sizeof_iotype(rd_kw->data_type);
+        size_t record_size = rd_kw->size * sizeof_iotype;
+        if (record_size > std::numeric_limits<int>::max())
+            throw std::invalid_argument(
+                "record size exceeded signed 32 bit integer");
+
+        bool read_ok =
+            fortio.fread_buffer(buffer, static_cast<int>(record_size));
+
+        if (read_ok)
+            rd_kw_load_from_input_buffer(rd_kw, buffer);
+
+        free(buffer);
+        return read_ok;
+    }
 }
 
 /**
@@ -1113,7 +1106,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
                    rd_kw_iget_ptr(rd_kw.get(), element_index), sizeof_iotype);
         }
     } else {
-        const int block_size = get_blocksize(data_type);
+        const size_t block_size = get_blocksize(data_type);
         std::istream &stream = fortio.get_istream();
         offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
@@ -1147,10 +1140,6 @@ bool rd_kw_fread_realloc_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     return rd_kw_fread_data(rd_kw, fortio);
 }
 
-/**
-   Static method without a class instance.
-*/
-
 bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
                         ERT::FortIO &fortio) {
     if (element_count <= 0)
@@ -1164,12 +1153,13 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
         rd_kw_alloc_data(tmp_kw.get());
         rd_kw_fread_data(tmp_kw.get(), fortio);
     } else {
-        const int blocksize = get_blocksize(data_type);
-        const int block_count =
-            element_count / blocksize + (element_count % blocksize != 0);
-        int element_size = rd_type_get_sizeof_iotype(data_type);
+        size_t num_elements = static_cast<size_t>(element_count);
+        const size_t blocksize = get_blocksize(data_type);
+        const size_t block_count =
+            num_elements / blocksize + (num_elements % blocksize != 0);
+        size_t element_size = rd_type_get_sizeof_iotype(data_type);
 
-        if (!fortio.data_fskip(element_size, element_count, block_count))
+        if (!fortio.data_fskip(element_size, num_elements, block_count))
             return false;
     }
 
@@ -1177,7 +1167,8 @@ bool rd_kw_fskip_data__(rd_data_type data_type, const int element_count,
 }
 
 bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    return rd_kw_fskip_data__(rd_kw_get_data_type(rd_kw), rd_kw->size, fortio);
+    return rd_kw_fskip_data__(rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
+                              fortio);
 }
 
 /**
@@ -1292,22 +1283,26 @@ rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &fortio) {
 static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
                                           ERT::FortIO &fortio) {
     char *iobuffer = rd_kw_alloc_output_buffer(rd_kw);
-    int sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
+    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
     {
-        const int blocksize = get_blocksize(rd_kw->data_type);
-        const int num_blocks =
+        const size_t blocksize = get_blocksize(rd_kw->data_type);
+        const size_t num_blocks =
             rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
-        int block_nr;
-
-        for (block_nr = 0; block_nr < num_blocks; block_nr++) {
-            int this_blocksize =
-                std::min((block_nr + 1) * blocksize, rd_kw->size) -
-                block_nr * blocksize;
-            int record_size =
+        for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
+            size_t blocksize_rem =
+                std::min((block_nr + 1) * blocksize, rd_kw->size);
+            size_t blocksize_prev = block_nr * blocksize;
+            size_t this_blocksize = blocksize_prev > blocksize_rem
+                                        ? 0
+                                        : blocksize_rem - blocksize_prev;
+            size_t record_size =
                 this_blocksize *
                 sizeof_iotype; /* The total size in bytes of the record written by the fortio layer. */
+            if (record_size > std::numeric_limits<int>::max())
+                throw std::invalid_argument(
+                    fmt::format("Size of record exceeded 32-bit signed integer"));
             fortio.fwrite_record(
-                &iobuffer[block_nr * blocksize * sizeof_iotype], record_size);
+                &iobuffer[block_nr * blocksize * sizeof_iotype], static_cast<int>(record_size));
         }
     }
     free(iobuffer);
@@ -1319,29 +1314,32 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
     {
 
         std::ostream &stream = fortio.get_ostream();
-        const int blocksize = get_blocksize(rd_kw->data_type);
-        const int columns = get_columns(rd_kw->data_type);
-        const int string_width = rd_type_get_sizeof_iotype(rd_kw->data_type);
-        const int num_blocks =
+        const size_t blocksize = get_blocksize(rd_kw->data_type);
+        const size_t columns = get_columns(rd_kw->data_type);
+        const size_t string_width = rd_type_get_sizeof_iotype(rd_kw->data_type);
+        const size_t num_blocks =
             rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
-        int block_nr;
-
-        for (block_nr = 0; block_nr < num_blocks; block_nr++) {
-            int this_blocksize =
-                std::min((block_nr + 1) * blocksize, rd_kw->size) -
-                block_nr * blocksize;
-            int num_lines = this_blocksize / columns +
-                            (this_blocksize % columns == 0 ? 0 : 1);
-            int line_nr;
-            for (line_nr = 0; line_nr < num_lines; line_nr++) {
-                int num_columns =
+        for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
+            size_t block_next =
+                std::min((block_nr + 1) * blocksize, rd_kw->size);
+            size_t block_prev = block_nr * blocksize;
+            size_t this_blocksize =
+                block_prev > block_next ? 0 : block_next - block_prev;
+            size_t num_lines = this_blocksize / columns +
+                               (this_blocksize % columns == 0 ? 0 : 1);
+            for (size_t line_nr = 0; line_nr < num_lines; line_nr++) {
+                size_t num_columns =
                     std::min((line_nr + 1) * columns, this_blocksize) -
                     columns * line_nr;
-                int col_nr;
-                for (col_nr = 0; col_nr < num_columns; col_nr++) {
-                    int data_index =
+                for (size_t col_nr = 0; col_nr < num_columns; col_nr++) {
+                    size_t data_index =
                         block_nr * blocksize + line_nr * columns + col_nr;
-                    void *data_ptr = rd_kw_iget_ptr_static(rd_kw, data_index);
+                    if (data_index >= rd_kw->size)
+                        throw std::logic_error("Loop exhausted size in "
+                                               "rd_kw_fwrite_data_formatted");
+                    void *data_ptr =
+                        &rd_kw->data[data_index * rd_type_get_sizeof_ctype(
+                                                      rd_kw->data_type)];
                     std::string element;
                     switch (rd_kw_get_type(rd_kw)) {
                     case (RD_CHAR_TYPE):
@@ -1394,11 +1392,15 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     std::string type_name = rd_type_name(rd_kw->data_type);
 
+    if (rd_kw->size > std::numeric_limits<int>::max())
+        throw std::invalid_argument(
+            fmt::format("Size of rd_kw exceeds format: {}", rd_kw->size));
+
     if (fmt_file)
-        stream << fmt::format(WRITE_HEADER_FMT, rd_kw->header8, rd_kw->size,
-                              type_name);
+        stream << fmt::format(WRITE_HEADER_FMT, rd_kw->header8,
+                              static_cast<int>(rd_kw->size), type_name);
     else {
-        int size = rd_kw->size;
+        int size = static_cast<int>(rd_kw->size);
         if (RD_ENDIAN_FLIP)
             util_endian_flip_vector(&size, sizeof size, 1);
 
@@ -1428,7 +1430,13 @@ void *rd_kw_get_ptr(const rd_kw_type *rd_kw) {
     return rd_kw_get_data_ref(rd_kw);
 }
 
-int rd_kw_get_size(const rd_kw_type *rd_kw) { return rd_kw->size; }
+int rd_kw_get_size(const rd_kw_type *rd_kw) {
+    if (rd_kw->size > std::numeric_limits<int>::max())
+        throw std::invalid_argument(
+            fmt::format("Size of rd_kw exceeded int max: {}", rd_kw->size));
+    return static_cast<int>(rd_kw->size);
+}
+size_t rd_kw_size(const rd_kw_type *rd_kw) { return rd_kw->size; }
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *rd_kw) {
     return rd_type_get_type(rd_kw->data_type);
@@ -1470,18 +1478,11 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
     return global_copy.release();
 }
 
-void rd_kw_summarize(const rd_kw_type *rd_kw) {
-    std::string type_name = rd_type_name(rd_kw->data_type);
-    printf("%8s   %10d:%4s \n", rd_kw_get_header8(rd_kw), rd_kw_get_size(rd_kw),
-           type_name.c_str());
-}
-
 #define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \
     void rd_kw_scalar_set_##ctype(rd_kw_type *rd_kw, ctype value) {            \
         if (rd_kw_get_type(rd_kw) == RD_TYPE) {                                \
             ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            int i;                                                             \
-            for (i = 0; i < rd_kw->size; i++)                                  \
+            for (size_t i = 0; i < rd_kw->size; i++)                           \
                 data[i] = value;                                               \
         } else                                                                 \
             throw std::invalid_argument("wrong type");                         \
@@ -1510,9 +1511,7 @@ void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value) {
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            int size = rd_kw_get_size(rd_kw);                                  \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
+            for (size_t i = 0; i < rd_kw->size; i++)                           \
                 data[i] *= scale_factor;                                       \
         }                                                                      \
     }
@@ -1539,9 +1538,7 @@ void rd_kw_scale_float_or_double(rd_kw_type *rd_kw, double scale_factor) {
                 "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
         {                                                                      \
             ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            int size = rd_kw_get_size(rd_kw);                                  \
-            int i;                                                             \
-            for (i = 0; i < size; i++)                                         \
+            for (size_t i = 0; i < rd_kw->size; i++)                           \
                 data[i] += shift_value;                                        \
         }                                                                      \
     }
@@ -1641,8 +1638,7 @@ void rd_kw_inplace_add_indexed(rd_kw_type *target_kw,
         {                                                                      \
             ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
             const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw); \
-            int i;                                                             \
-            for (i = 0; i < target_kw->size; i++)                              \
+            for (size_t i = 0; i < target_kw->size; i++)                       \
                 target_data[i] += add_data[i];                                 \
         }                                                                      \
     }
@@ -1679,8 +1675,7 @@ void rd_kw_inplace_add(rd_kw_type *target_kw, const rd_kw_type *add_kw) {
         {                                                                      \
             ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
             const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw); \
-            int i;                                                             \
-            for (i = 0; i < target_kw->size; i++)                              \
+            for (size_t i = 0; i < target_kw->size; i++)                       \
                 target_data[i] += add_data[i] * add_data[i];                   \
         }                                                                      \
     }
@@ -1718,8 +1713,7 @@ void rd_kw_inplace_add_squared(rd_kw_type *target_kw,
         {                                                                      \
             ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
             const ctype *sub_data = (const ctype *)rd_kw_get_data_ref(sub_kw); \
-            int i;                                                             \
-            for (i = 0; i < target_kw->size; i++)                              \
+            for (size_t i = 0; i < target_kw->size; i++)                       \
                 target_data[i] -= sub_data[i];                                 \
         }                                                                      \
     }
@@ -1788,8 +1782,7 @@ void rd_kw_inplace_sub_indexed(rd_kw_type *target_kw,
 #define RD_KW_TYPED_INPLACE_ABS(ctype, abs_func)                               \
     void rd_kw_inplace_abs_##ctype(rd_kw_type *kw) {                           \
         ctype *data = (ctype *)rd_kw_get_data_ref(kw);                         \
-        int i;                                                                 \
-        for (i = 0; i < kw->size; i++)                                         \
+        for (size_t i = 0; i < kw->size; i++)                                  \
             data[i] = abs_func(data[i]);                                       \
     }
 
@@ -1817,13 +1810,12 @@ void rd_kw_inplace_abs(rd_kw_type *kw) {
     }
 }
 
-static int sqrti(int x) { return round(sqrt(x)); }
+static int sqrti(int x) { return static_cast<int>(round(sqrt(x))); }
 
 #define RD_KW_TYPED_INPLACE_SQRT(ctype, sqrt_func)                             \
     void rd_kw_inplace_sqrt_##ctype(rd_kw_type *kw) {                          \
         ctype *data = (ctype *)rd_kw_get_data_ref(kw);                         \
-        int i;                                                                 \
-        for (i = 0; i < kw->size; i++)                                         \
+        for (size_t i = 0; i < kw->size; i++)                                  \
             data[i] = sqrt_func(data[i]);                                      \
     }
 
@@ -1859,8 +1851,7 @@ void rd_kw_inplace_sqrt(rd_kw_type *kw) {
         {                                                                      \
             ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
             const ctype *mul_data = (const ctype *)rd_kw_get_data_ref(mul_kw); \
-            int i;                                                             \
-            for (i = 0; i < target_kw->size; i++)                              \
+            for (size_t i = 0; i < target_kw->size; i++)                       \
                 target_data[i] *= mul_data[i];                                 \
         }                                                                      \
     }
@@ -1934,8 +1925,7 @@ void rd_kw_inplace_mul_indexed(rd_kw_type *target_kw,
         {                                                                      \
             ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
             const ctype *div_data = (const ctype *)rd_kw_get_data_ref(div_kw); \
-            int i;                                                             \
-            for (i = 0; i < target_kw->size; i++)                              \
+            for (size_t i = 0; i < target_kw->size; i++)                       \
                 target_data[i] /= div_data[i];                                 \
         }                                                                      \
     }
@@ -2010,9 +2000,9 @@ bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
 
     float *target_data = (float *)rd_kw_get_data_ref(target_kw);
     const int *div_data = (const int *)rd_kw_get_data_ref(divisor);
-    for (int i = 0; i < target_kw->size; i++) {
+    for (size_t i = 0; i < target_kw->size; i++) {
         if (div_data[i] != 0)
-            target_data[i] /= div_data[i];
+            target_data[i] /= static_cast<float>(div_data[i]);
     }
 
     return true;
@@ -2023,8 +2013,7 @@ bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
         type *data = (type *)rd_kw_get_data_ref(rd_kw);                        \
         type max = data[0];                                                    \
         type min = data[0];                                                    \
-        int i;                                                                 \
-        for (i = 1; i < rd_kw_get_size(rd_kw); i++)                            \
+        for (size_t i = 1; i < rd_kw->size; i++)                               \
             util_update_##type##_max_min(data[i], &max, &min);                 \
         memcpy(_max, &max, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
         memcpy(_min, &min, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
@@ -2109,7 +2098,7 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
     {                                                                          \
         const type *data = (const type *)rd_kw_get_data_ref(rd_kw);            \
         type sum = 0;                                                          \
-        for (int i = 0; i < rd_kw_get_size(rd_kw); i++)                        \
+        for (size_t i = 0; i < rd_kw->size; i++)                               \
             sum += data[i];                                                    \
         memcpy(_sum, &sum, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
     }
@@ -2161,20 +2150,16 @@ int rd_kw_element_sum_int(const rd_kw_type *rd_kw) {
 }
 
 static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
-                                      const rd_kw_type *rd_kw2, int offset,
+                                      const rd_kw_type *rd_kw2, size_t offset,
                                       double abs_epsilon, double rel_epsilon) {
-    double v1 = rd_kw_iget_as_double(rd_kw1, offset);
-    double v2 = rd_kw_iget_as_double(rd_kw2, offset);
+    double v1 = rd_kw1->as_double(offset);
+    double v2 = rd_kw2->as_double(offset);
     return util_double_approx_equal__(v1, v2, rel_epsilon, abs_epsilon);
 }
 
 static bool rd_kw_elm_equal__(const rd_kw_type *rd_kw1,
-                              const rd_kw_type *rd_kw2, int offset) {
-    if (offset < 0)
-        throw std::invalid_argument(
-            fmt::format("offset was negative: {}", offset));
-    size_t data_offset = static_cast<size_t>(offset) *
-                         rd_type_get_sizeof_ctype(rd_kw1->data_type);
+                              const rd_kw_type *rd_kw2, size_t offset) {
+    size_t data_offset = offset * rd_type_get_sizeof_ctype(rd_kw1->data_type);
     int cmp = memcmp(&rd_kw1->data[data_offset], &rd_kw2->data[data_offset],
                      rd_type_get_sizeof_ctype(rd_kw1->data_type));
     if (cmp == 0)
@@ -2183,41 +2168,31 @@ static bool rd_kw_elm_equal__(const rd_kw_type *rd_kw1,
         return false;
 }
 
-int rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
-                          int offset, double abs_epsilon, double rel_epsilon) {
+size_t rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
+                             size_t offset, double abs_epsilon,
+                             double rel_epsilon) {
     if (!rd_kw_size_and_type_equal(rd_kw1, rd_kw2))
         throw std::invalid_argument("sorry invalid comparison");
 
-    if (offset >= rd_kw_get_size(rd_kw1))
-        throw std::invalid_argument("sorry - invalid offset value");
+    if (offset >= rd_kw1->size)
+        throw std::invalid_argument(fmt::format(
+            "offset value in first_difference exceeded size: {}", offset));
 
-    {
-        bool numeric_compare = false;
+    bool numeric_compare = false;
 
-        if (((abs_epsilon > 0) || (rel_epsilon > 0)) &&
-            ((rd_kw_get_type(rd_kw1) == RD_FLOAT_TYPE) ||
-             (rd_kw_get_type(rd_kw1) == RD_DOUBLE_TYPE)))
-            numeric_compare = true;
-        {
-            int index = offset;
-
-            while (true) {
-                bool equal =
-                    (numeric_compare)
-                        ? rd_kw_elm_equal_numeric__(rd_kw1, rd_kw2, index,
-                                                    abs_epsilon, rel_epsilon)
-                        : rd_kw_elm_equal__(rd_kw1, rd_kw2, index);
-                if (!equal)
-                    break;
-
-                index++;
-                if (index == rd_kw_get_size(rd_kw1))
-                    break;
-            }
-
+    if (((abs_epsilon > 0) || (rel_epsilon > 0)) &&
+        ((rd_kw_get_type(rd_kw1) == RD_FLOAT_TYPE) ||
+         (rd_kw_get_type(rd_kw1) == RD_DOUBLE_TYPE)))
+        numeric_compare = true;
+    for (size_t index = offset; index < rd_kw1->size; index++) {
+        bool equal = (numeric_compare)
+                         ? rd_kw_elm_equal_numeric__(rd_kw1, rd_kw2, index,
+                                                     abs_epsilon, rel_epsilon)
+                         : rd_kw_elm_equal__(rd_kw1, rd_kw2, index);
+        if (!equal)
             return index;
-        }
     }
+    return rd_kw1->size;
 }
 
 #include "rd_kw_functions.cpp"
