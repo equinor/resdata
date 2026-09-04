@@ -1,11 +1,10 @@
-from cwrap import BaseCClass
-
 import resdata.geometry._geo_region as _geo_region
+from resdata._base_c_class import _BaseCClass
 
 from .cpolyline import CPolyline
 
 
-class GeoRegion(BaseCClass):
+class GeoRegion(_BaseCClass):
     TYPE_NAME = "rd_geo_region"
 
     def __init__(self, pointset, preselect=False):

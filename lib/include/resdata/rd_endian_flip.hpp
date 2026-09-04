@@ -1,10 +1,4 @@
-#ifndef ERT_RD_ENDIAN_FLIP_H
-#define ERT_RD_ENDIAN_FLIP_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#pragma once
 /**
    This header file checks if the restart format endianness and the hardware
    endianness are equal, and defines the macro RD_ENDIAN_FLIP
@@ -33,8 +27,3 @@ extern "C" {
 #endif
 
 #undef RD_BYTE_ORDER
-
-#ifdef __cplusplus
-}
-#endif
-#endif

@@ -18,15 +18,15 @@ from typing import Any, SupportsFloat, SupportsInt
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from cwrap import BaseCClass
 
 import resdata.grid._grid as _grid
 from resdata import ResDataType, UnitSystem
+from resdata._base_c_class import _BaseCClass
 from resdata.grid import Cell
 from resdata.resfile import FortIO, ResdataKW
 
 
-class Grid(BaseCClass):
+class Grid(_BaseCClass):
     """
     Class for loading and internalizing GRID/EGRID files.
     """

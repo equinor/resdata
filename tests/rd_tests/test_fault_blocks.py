@@ -1,6 +1,5 @@
 import gc
 
-import cwrap
 import pytest
 from resdata import ResDataType
 from resdata.geometry import CPolylineCollection, Polyline

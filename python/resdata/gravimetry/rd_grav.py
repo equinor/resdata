@@ -7,15 +7,14 @@ different surveys. The implementation is a thin wrapper around the
 rd_grav.c implementation in the resdata library.
 """
 
-from cwrap import BaseCClass
-
 import resdata.gravimetry._grav as _grav
 from resdata import Phase
+from resdata._base_c_class import _BaseCClass
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
 
 
-class ResdataGrav(BaseCClass):
+class ResdataGrav(_BaseCClass):
     """
     Holding ECLIPSE results for calculating gravity changes.
 

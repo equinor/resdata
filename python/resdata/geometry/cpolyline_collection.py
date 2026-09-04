@@ -2,13 +2,12 @@
 Create a polygon
 """
 
-from cwrap import BaseCClass
-
 import resdata.geometry._cpolyline_collection as _cpolyline_collection
+from resdata._base_c_class import _BaseCClass
 from resdata.geometry import CPolyline
 
 
-class CPolylineCollection(BaseCClass):
+class CPolylineCollection(_BaseCClass):
     TYPE_NAME = "rd_geo_polygon_collection"
 
     def __init__(self):

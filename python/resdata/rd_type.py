@@ -1,12 +1,11 @@
-from cwrap import BaseCClass
-
 import resdata.types._type as _rd_type
+from resdata._base_c_class import _BaseCClass
 from resdata.types._type import ResdataTypeEnum
 
 __all__ = ["ResDataType", "ResdataTypeEnum"]
 
 
-class ResDataType(BaseCClass):
+class ResDataType(_BaseCClass):
     TYPE_NAME = "rd_data_type"
 
     def __init__(self, type_enum=None, element_size=None, type_name=None):
