@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <string>
+#include <memory>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -19,8 +20,8 @@ void test_writable(const char *src_file) {
     {
         auto rd_file = rd::File::open(fname, FileMode::WRITABLE);
         rd_kw_type *swat = rd_file->get_kw("SWAT", 0);
-        rd_kw_type *swat0 = rd_kw_alloc_copy(swat);
-        test_assert_true(rd_kw_equal(swat, swat0));
+        auto swat0 = std::make_unique<rd_kw_struct>(*swat);
+        test_assert_true(rd_kw_equal(swat, swat0.get()));
         rd_kw_iset_float(swat, 0, 1000.0);
         rd_file->save_kw(swat);
         test_assert_true(rd_file->is_writable());
