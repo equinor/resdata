@@ -56,7 +56,7 @@ rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
 }
 
 bool FileKW::skip_data(ERT::FortIO &fortio) const {
-    return rd_kw_fskip_data__(data_type, kw_size, fortio);
+    return rd_kw_struct::fskip_data(data_type, kw_size, fortio);
 }
 
 void FileKW::inplace_write(ERT::FortIO &fortio) const {

@@ -35,6 +35,7 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
 struct rd_kw_struct {
 private:
     size_t m_size;
+    bool shared_data = false; /* Whether this keyword has shared data or not. */
     void init_data() {
         this->data =
             (char *)calloc(m_size, rd_type_get_sizeof_ctype(data_type));
@@ -50,7 +51,6 @@ public:
         nullptr; /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
     char *header = nullptr;   /* Header which is trimmed to no-space. */
     char *data = nullptr;     /* The actual data vector. */
-    bool shared_data = false; /* Whether this keyword has shared data or not. */
 
     struct shared_ref {
         void *data;
@@ -118,6 +118,9 @@ public:
                                  const rd_kw_type *actnum);
     [[nodiscard]] size_t size() const { return m_size; }
     void resize(size_t new_size);
+    bool fskip_data(ERT::FortIO &fortio) const;
+    static bool fskip_data(rd_data_type data_type, const int element_count,
+                        ERT::FortIO &fortio);
 };
 
 /*
@@ -133,7 +136,6 @@ size_t rd_kw_first_different(const rd_kw_type *kw1, const rd_kw_type *kw2,
                              double rel_epsilon);
 size_t rd_kw_fortio_size(const rd_kw_type *rd_kw);
 void *rd_kw_get_ptr(const rd_kw_type *rd_kw);
-void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data);
 void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio);
 
 namespace rd {
@@ -257,8 +259,6 @@ bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
                          double abs_diff, double rel_diff);
 bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data);
 bool rd_kw_content_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
-bool rd_kw_fskip_data__(rd_data_type, int, ERT::FortIO &);
-bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
 void rd_kw_fskip_header(ERT::FortIO &fortio);
 bool rd_kw_size_and_numeric_type_equal(const rd_kw_type *kw1,
                                        const rd_kw_type *kw2);
