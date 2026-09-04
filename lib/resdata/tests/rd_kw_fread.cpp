@@ -39,7 +39,6 @@ void test_fread_alloc() {
         {
             ERT::FortIO fortio("INT", std::ios_base::in, false, true);
             rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);
-            test_assert_true(rd_kw_is_instance(kw2));
             test_assert_true(rd_kw_equal(kw1, kw2));
             rd_kw_free(kw2);
         }

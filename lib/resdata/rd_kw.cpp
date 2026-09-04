@@ -13,7 +13,6 @@
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>
@@ -22,10 +21,7 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
 
-#define RD_KW_TYPE_ID 6111098
-
 struct rd_kw_struct {
-    UTIL_TYPE_ID_DECLARATION;
     size_t size;
     rd_data_type data_type;
     char *
@@ -58,8 +54,6 @@ struct rd_kw_struct {
             throw std::invalid_argument("cannot be converted to double");
     }
 };
-
-UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
 
 /* For some peculiar reason the keyword data is written in blocks, all
    numeric data is in blocks of 1000 elements, and character data is
@@ -571,8 +565,6 @@ rd_kw_type *rd_kw_alloc_empty() {
     rd_kw->data = NULL;
     rd_kw->shared_data = false;
     rd_kw->size = 0;
-
-    UTIL_TYPE_ID_INIT(rd_kw, RD_KW_TYPE_ID);
 
     return rd_kw;
 }

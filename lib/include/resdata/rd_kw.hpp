@@ -10,14 +10,11 @@
 #include <tuple>
 #include <vector>
 
-#include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
-
-UTIL_IS_INSTANCE_HEADER(rd_kw);
 
 typedef struct rd_kw_struct rd_kw_type;
 
