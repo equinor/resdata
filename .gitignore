@@ -1,5 +1,4 @@
 *.o
-*.so
 .svn/
 */.svn/
 *.pyc
@@ -7,7 +6,6 @@
 *.user
 *.user.*
 .idea
-python/lib64
 /build
 /temp-build
 /test-data/Equinor
@@ -21,7 +19,6 @@ scratch.sparsebundle
 *.DS_Store
 
 /.hypothesis
-/python/resdata/.libs
 
 /.vscode
 
