@@ -89,12 +89,12 @@ class Grid(_BaseCClass):
 
     @classmethod
     def _python_object_from_ptr(cls, ptr):
-        if not ptr:
+        if ptr is None:
             return None
         return cls.createPythonObject(ptr)
 
     def _reference_from_ptr(self, ptr):
-        if not ptr:
+        if ptr is None:
             return None
         return self.createCReference(ptr, parent=self)
 
@@ -129,7 +129,7 @@ class Grid(_BaseCClass):
         Will create a grid structure from an EGRID or GRID file.
         """
         c_ptr = _grid._fread_alloc(filename, apply_mapaxes)
-        if c_ptr:
+        if c_ptr is not None:
             super().__init__(c_ptr)
         else:
             raise OSError("Loading grid from:%s failed" % filename)

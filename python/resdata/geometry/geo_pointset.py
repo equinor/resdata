@@ -7,7 +7,7 @@ class GeoPointset(_BaseCClass):
 
     def __init__(self, external_z=False):
         c_ptr = _geo_pointset._alloc(external_z)
-        if c_ptr:
+        if c_ptr is not None:
             super().__init__(c_ptr)
         else:
             ext = "external" if external_z else "internal"

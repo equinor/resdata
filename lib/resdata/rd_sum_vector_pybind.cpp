@@ -16,7 +16,7 @@ PYBIND11_MODULE(_rd_sum_keyword_vector, m) {
     m.def(
         "_alloc",
         [](py::handle rd_sum, bool add_keywords) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_vector_alloc(
+            return to_capsule(rd_sum_vector_alloc(
                 from_cwrap<rd_sum_type>(rd_sum), add_keywords));
         },
         py::return_value_policy::reference);
@@ -24,10 +24,9 @@ PYBIND11_MODULE(_rd_sum_keyword_vector, m) {
     m.def(
         "_alloc_copy",
         [](py::handle self, py::handle rd_sum) {
-            return reinterpret_cast<std::uintptr_t>(
-                rd_sum_vector_alloc_layout_copy(
-                    from_cwrap<rd_sum_vector_type>(self),
-                    from_cwrap<rd_sum_type>(rd_sum)));
+            return to_capsule(rd_sum_vector_alloc_layout_copy(
+                from_cwrap<rd_sum_vector_type>(self),
+                from_cwrap<rd_sum_type>(rd_sum)));
         },
         py::return_value_policy::reference);
 

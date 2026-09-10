@@ -71,7 +71,7 @@ class GridGenerator:
             rd_grid = _grid._alloc_rectangular(
                 dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], list(actnum)
             )
-        if not rd_grid:
+        if rd_grid is None:
             raise MemoryError("Failed to allocated regualar grid")
         return Grid.createPythonObject(rd_grid)
 

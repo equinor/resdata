@@ -794,14 +794,14 @@ def test_that_zero_sized_keywords_can_be_read(tmp_path):
 
 
 def test_that_short_data_section_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
+    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
         _ = read_kw_from_bytes(
             tmp_path, b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
         )
 
 
 def test_that_oversized_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
+    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"
@@ -810,7 +810,7 @@ def test_that_oversized_record_size_raises_value_error(tmp_path):
 
 
 def test_that_negative_record_size_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
+    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10\xf0\x00\x00\x00",
@@ -818,7 +818,7 @@ def test_that_negative_record_size_raises_value_error(tmp_path):
 
 
 def test_that_mismatch_in_end_record_raises_value_error(tmp_path):
-    with pytest.raises(ValueError, match=r"Must have a valid \(not null\) pointer"):
+    with pytest.raises(ValueError, match=r"Failed to create ResdataKW instance"):
         _ = read_kw_from_bytes(
             tmp_path,
             b"\x00\x00\x00\x10KEYWORD1\x00\x00\x00\x01INTE\x00\x00\x00\x10"

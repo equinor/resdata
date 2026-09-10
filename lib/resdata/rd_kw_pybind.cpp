@@ -145,14 +145,13 @@ PYBIND11_MODULE(_kw, m) {
             auto *rd_data_type = from_cwrap<::rd_data_type>(data_type);
             if (rd_data_type == nullptr)
                 throw std::invalid_argument("data_type must not be None");
-            return reinterpret_cast<std::uintptr_t>(
-                rd_kw_alloc(name.c_str(), size, *rd_data_type));
+            return to_capsule(rd_kw_alloc(name.c_str(), size, *rd_data_type));
         },
         py::return_value_policy::reference);
     m.def(
         "_fread_alloc",
         [](ERT::FortIO &fortio) {
-            return reinterpret_cast<std::uintptr_t>(rd_kw_fread_alloc(fortio));
+            return to_capsule(rd_kw_fread_alloc(fortio));
         },
         py::return_value_policy::reference);
     m.def(
@@ -161,31 +160,30 @@ PYBIND11_MODULE(_kw, m) {
            int count) {
             auto *src = from_cwrap<rd_kw_type>(self);
             if (new_kw.has_value())
-                return reinterpret_cast<std::uintptr_t>(
+                return to_capsule(
                     rd_kw_alloc_sub_copy(src, new_kw->c_str(), offset, count));
             else
-                return reinterpret_cast<std::uintptr_t>(
+                return to_capsule(
                     rd_kw_alloc_sub_copy(src, nullptr, offset, count));
         },
         py::return_value_policy::reference);
     m.def(
         "_copyc",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
-                rd_kw_alloc_copy(from_cwrap<rd_kw_type>(self)));
+            return to_capsule(rd_kw_alloc_copy(from_cwrap<rd_kw_type>(self)));
         },
         py::return_value_policy::reference);
     m.def(
         "_slice_copyc",
         [](py::handle self, int index1, int index2, int stride) {
-            return reinterpret_cast<std::uintptr_t>(rd_kw_alloc_slice_copy(
+            return to_capsule(rd_kw_alloc_slice_copy(
                 from_cwrap<rd_kw_type>(self), index1, index2, stride));
         },
         py::return_value_policy::reference);
     m.def(
         "_global_copy",
         [](py::handle self, py::handle new_actnum) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_kw_alloc_global_copy(from_cwrap<rd_kw_type>(self),
                                         from_cwrap<rd_kw_type>(new_actnum)));
         },
@@ -264,8 +262,7 @@ PYBIND11_MODULE(_kw, m) {
         [](py::handle self) {
             auto rd_kw = from_cwrap<rd_kw_type>(self);
             rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-            return reinterpret_cast<std::uintptr_t>(
-                new rd_data_type(data_type));
+            return to_capsule(new rd_data_type(data_type));
         },
         py::return_value_policy::reference);
 
@@ -375,7 +372,7 @@ PYBIND11_MODULE(_kw, m) {
     m.def(
         "_create_actnum",
         [](py::handle self, float porv_limit) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_kw_alloc_actnum(from_cwrap<rd_kw_type>(self), porv_limit));
         },
         py::return_value_policy::reference);

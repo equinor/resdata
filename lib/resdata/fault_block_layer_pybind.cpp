@@ -39,7 +39,7 @@ PYBIND11_MODULE(_fault_block_layer, m) {
     m.def(
         "_alloc",
         [](py::handle grid, int k) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 fault_block_layer_alloc(from_cwrap<rd_grid_type>(grid), k));
         },
         py::return_value_policy::reference);
@@ -109,7 +109,7 @@ PYBIND11_MODULE(_fault_block_layer, m) {
     });
     m.def("_get_layer", [](py::handle self) {
         return Layer().attr("createCReference")(
-            reinterpret_cast<std::uintptr_t>(fault_block_layer_get_layer(
+            to_capsule(fault_block_layer_get_layer(
                 from_cwrap<fault_block_layer_type>(self))),
             self);
     });

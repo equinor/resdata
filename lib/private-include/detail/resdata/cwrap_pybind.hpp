@@ -7,6 +7,14 @@
 template <typename T> T *from_cwrap(pybind11::handle obj);
 template <typename T> T *from_cwrap(std::optional<pybind11::handle> obj);
 
+/// _BaseCClass stores the capsule it receives as its "_BaseCClass__c_pointer"
+/// attribute. A capsule holds the address as a void* struct field
+inline pybind11::object to_capsule(const void *ptr) {
+    if (!ptr)
+        return pybind11::none();
+    return pybind11::capsule(const_cast<void *>(ptr));
+}
+
 /// Sets up custom exception translators
 inline void register_exceptions(pybind11::module &m) {
     pybind11::register_exception_translator([](std::exception_ptr p) {

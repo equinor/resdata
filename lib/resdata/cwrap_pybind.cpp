@@ -31,9 +31,8 @@
 namespace py = pybind11;
 
 template <typename T> T *cast_cwrap(py::handle obj) {
-    py::int_ address = obj.attr("_BaseCClass__c_pointer");
-    void *pointer = PyLong_AsVoidPtr(address.ptr());
-    return reinterpret_cast<T *>(pointer);
+    py::capsule address = obj.attr("_BaseCClass__c_pointer");
+    return address.get_pointer<T>();
 }
 
 py::object ResdataKW() {

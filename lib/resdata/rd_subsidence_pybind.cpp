@@ -24,10 +24,7 @@ PYBIND11_MODULE(_subsidence, m) {
         auto *subsidence =
             rd_subsidence_alloc(from_cwrap<rd_grid_type>(grid), init_file);
 
-        if (subsidence == nullptr)
-            return py::none();
-
-        return py::cast(reinterpret_cast<std::uintptr_t>(subsidence));
+        return to_capsule(subsidence);
     });
 
     m.def("_free", [](py::handle self) {

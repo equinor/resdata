@@ -18,9 +18,7 @@ PYBIND11_MODULE(_layer, m) {
 
     m.def(
         "_alloc",
-        [](int nx, int ny) {
-            return reinterpret_cast<std::uintptr_t>(layer_alloc(nx, ny));
-        },
+        [](int nx, int ny) { return to_capsule(layer_alloc(nx, ny)); },
         py::return_value_policy::reference);
     m.def("_free",
           [](py::handle self) { layer_free(from_cwrap<layer_type>(self)); });

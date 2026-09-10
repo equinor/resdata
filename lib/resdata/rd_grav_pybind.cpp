@@ -29,11 +29,7 @@ PYBIND11_MODULE(_grav, m) {
 
         auto *grav = rd_grav_alloc(grid_ptr, init_file_ptr);
 
-        if (grav == nullptr) {
-            return py::none();
-        }
-
-        return py::int_(reinterpret_cast<uintptr_t>(grav));
+        return to_capsule(grav);
     });
 
     m.def("_add_survey_RPORV",
@@ -41,9 +37,7 @@ PYBIND11_MODULE(_grav, m) {
              rd::FileView *restart_file) -> py::object {
               auto *grav = from_cwrap<rd_grav_type>(self);
               auto *survey = rd_grav_add_survey_RPORV(grav, name, restart_file);
-              if (survey == nullptr)
-                  return py::none();
-              return py::int_(reinterpret_cast<uintptr_t>(survey));
+              return to_capsule(survey);
           });
 
     m.def("_add_survey_PORMOD", [](py::handle self, const std::string &name,
@@ -58,11 +52,7 @@ PYBIND11_MODULE(_grav, m) {
               auto *grav = from_cwrap<rd_grav_type>(self);
               auto *survey = rd_grav_add_survey_FIP(grav, name, restart_file);
 
-              if (survey == nullptr) {
-                  return py::none();
-              }
-
-              return py::int_(reinterpret_cast<uintptr_t>(survey));
+              return to_capsule(survey);
           });
 
     m.def("_add_survey_RFIP", [](py::handle self, const std::string &name,

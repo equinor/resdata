@@ -10,7 +10,7 @@ class GeoRegion(_BaseCClass):
     def __init__(self, pointset, preselect=False):
         self._preselect = True if preselect else False
         c_ptr = _geo_region._alloc(pointset, self._preselect)
-        if c_ptr:
+        if c_ptr is not None:
             super().__init__(c_ptr)
             # The C geo_region only borrows the pointset, so we must keep a
             # reference to it (and, transitively, whatever owns its memory)
