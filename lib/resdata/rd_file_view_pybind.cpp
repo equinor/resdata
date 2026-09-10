@@ -32,8 +32,7 @@ namespace {
 py::object create_kw_reference(rd_kw_type *kw, py::object parent) {
     if (!kw)
         return py::none();
-    return ResdataKW().attr("createCReference")(
-        reinterpret_cast<std::uintptr_t>(kw), parent);
+    return ResdataKW().attr("createCReference")(to_capsule(kw), parent);
 }
 } // namespace
 

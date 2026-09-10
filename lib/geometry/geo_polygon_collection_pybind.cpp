@@ -20,10 +20,7 @@ PYBIND11_MODULE(_cpolyline_collection, m) {
 
     m.def(
         "_alloc_new",
-        []() {
-            return reinterpret_cast<std::uintptr_t>(
-                geo_polygon_collection_alloc());
-        },
+        []() { return to_capsule(geo_polygon_collection_alloc()); },
         py::return_value_policy::reference);
     m.def("_free", [](py::handle self) {
         geo_polygon_collection_free(

@@ -31,7 +31,7 @@ PYBIND11_MODULE(_geo_region, m) {
     m.def(
         "_alloc",
         [](py::handle pointset, bool preselect) {
-            return reinterpret_cast<std::uintptr_t>(geo_region_alloc(
+            return to_capsule(geo_region_alloc(
                 from_cwrap<geo_pointset_type>(pointset), preselect));
         },
         py::return_value_policy::reference);

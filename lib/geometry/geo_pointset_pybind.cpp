@@ -17,8 +17,7 @@ PYBIND11_MODULE(_geo_pointset, m) {
     m.def(
         "_alloc",
         [](bool external_z) {
-            return reinterpret_cast<std::uintptr_t>(
-                geo_pointset_alloc(external_z));
+            return to_capsule(geo_pointset_alloc(external_z));
         },
         py::return_value_policy::reference);
     m.def("_free", [](py::handle self) {

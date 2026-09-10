@@ -36,14 +36,14 @@ PYBIND11_MODULE(_rd_region, m) {
     m.def(
         "_alloc",
         [](py::handle grid, bool preselect) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_region_alloc(from_cwrap<rd_grid_type>(grid), preselect));
         },
         py::return_value_policy::reference);
     m.def(
         "_alloc_copy",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_region_alloc_copy(from_cwrap<rd_region_type>(self)));
         },
         py::return_value_policy::reference);

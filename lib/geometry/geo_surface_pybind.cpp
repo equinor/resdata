@@ -19,16 +19,15 @@ PYBIND11_MODULE(_surface, m) {
     m.def(
         "_alloc",
         [](std::string filename, bool loadz) {
-            return reinterpret_cast<std::uintptr_t>(
-                geo_surface_fload_alloc_irap(filename, loadz));
+            return to_capsule(geo_surface_fload_alloc_irap(filename, loadz));
         },
         py::return_value_policy::reference);
     m.def(
         "_new",
         [](int nx, int ny, double xinc, double yinc, double xstart,
            double ystart, double angle) {
-            return reinterpret_cast<std::uintptr_t>(geo_surface_alloc_new(
-                nx, ny, xinc, yinc, xstart, ystart, angle));
+            return to_capsule(geo_surface_alloc_new(nx, ny, xinc, yinc, xstart,
+                                                    ystart, angle));
         },
         py::return_value_policy::reference);
     m.def("_free", [](py::handle self) {
@@ -62,7 +61,7 @@ PYBIND11_MODULE(_surface, m) {
     m.def(
         "_copy",
         [](py::handle self, bool copy_zdata) {
-            return reinterpret_cast<std::uintptr_t>(geo_surface_alloc_copy(
+            return to_capsule(geo_surface_alloc_copy(
                 from_cwrap<geo_surface_type>(self), copy_zdata));
         },
         py::return_value_policy::reference);
@@ -98,7 +97,7 @@ PYBIND11_MODULE(_surface, m) {
     });
     m.def("_get_pointset", [](py::handle self) {
         return GeoPointset().attr("createCReference")(
-            reinterpret_cast<std::uintptr_t>(
+            to_capsule(
                 geo_surface_get_pointset(from_cwrap<geo_surface_type>(self))),
             self);
     });

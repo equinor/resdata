@@ -30,7 +30,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         "_fread_alloc_case",
         [](std::string load_case, std::string key_join_string,
            bool include_restart, bool lazy_load, FileMode file_options) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_fread_alloc_case(
+            return to_capsule(rd_sum_fread_alloc_case(
                 load_case.c_str(), key_join_string.c_str(), include_restart,
                 lazy_load, file_options));
         },
@@ -40,7 +40,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         [](std::string header_file, std::vector<std::string> data_files,
            std::string key_join_string, bool include_restart, bool lazy_load,
            FileMode file_options) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_fread_alloc(
+            return to_capsule(rd_sum_fread_alloc(
                 header_file.c_str(), data_files, key_join_string.c_str(),
                 include_restart, lazy_load, file_options));
         },
@@ -51,11 +51,11 @@ PYBIND11_MODULE(_rd_sum, m) {
            std::string key_join_string, std::time_t sim_start,
            bool time_in_days, int nx, int ny, int nz,
            std::optional<std::string> restart_case, int restart_step) {
-            return reinterpret_cast<std::uintptr_t>(
-                make_summary_writer(rd_case, fmt_output, unified,
-                                    key_join_string, sim_start, time_in_days,
-                                    nx, ny, nz, restart_case, restart_step)
-                    .release());
+            return to_capsule(make_summary_writer(rd_case, fmt_output, unified,
+                                                  key_join_string, sim_start,
+                                                  time_in_days, nx, ny, nz,
+                                                  restart_case, restart_step)
+                                  .release());
         },
         py::return_value_policy::reference);
     m.def(
@@ -63,7 +63,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         [](py::handle self, std::string new_case,
            const std::vector<time_t> &times, bool lower_extrapolation,
            bool upper_extrapolation) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_sum_alloc_resample(from_cwrap<rd_sum_type>(self),
                                       new_case.c_str(), times,
                                       lower_extrapolation, upper_extrapolation)
@@ -159,7 +159,7 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def(
         "_get_restart_case",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_sum_get_restart_case(from_cwrap<rd_sum_type>(self)));
         },
         py::return_value_policy::reference);
@@ -306,8 +306,8 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def(
         "_add_tstep",
         [](py::handle self, int report_step, double sim_seconds) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_add_tstep(
-                from_cwrap<rd_sum_type>(self), report_step, sim_seconds));
+            return to_capsule(rd_sum_add_tstep(from_cwrap<rd_sum_type>(self),
+                                               report_step, sim_seconds));
         },
         py::return_value_policy::reference);
 

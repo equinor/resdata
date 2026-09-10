@@ -12,7 +12,7 @@ class FaultBlockLayer(_BaseCClass):
 
     def __init__(self, grid, k):
         c_ptr = _fault_block_layer._alloc(grid, k)
-        if c_ptr:
+        if c_ptr is not None:
             super().__init__(c_ptr)
         else:
             raise ValueError("Invalid input - failed to create FaultBlockLayer")

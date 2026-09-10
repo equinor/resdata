@@ -10,7 +10,7 @@ class Layer(_BaseCClass):
 
     def __init__(self, nx, ny):
         c_ptr = _layer._alloc(nx, ny)
-        if c_ptr:
+        if c_ptr is not None:
             super().__init__(c_ptr)
         else:
             raise ValueError("Invalid input - no Layer object created")

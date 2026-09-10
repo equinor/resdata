@@ -32,17 +32,17 @@ PYBIND11_MODULE(_type, m) {
     });
 
     m.def("_create_from_name", [](const std::string &name) {
-        return reinterpret_cast<std::uintptr_t>(
+        return to_capsule(
             new rd_data_type(rd_type_create_from_name(name.c_str())));
     });
 
     m.def("_create_from_type", [](rd_type_enum type_enum) {
-        return reinterpret_cast<std::uintptr_t>(
+        return to_capsule(
             new rd_data_type(rd_type_create_from_type(type_enum)));
     });
 
     m.def("_create", [](rd_type_enum type_enum, size_t element_size) {
-        return reinterpret_cast<std::uintptr_t>(
+        return to_capsule(
             new rd_data_type(rd_type_create(type_enum, element_size)));
     });
 
@@ -104,7 +104,7 @@ PYBIND11_MODULE(_type, m) {
 
     m.def("_alloc_copy", [](py::handle src_type) {
         auto *rd_type = from_cwrap<rd_data_type>(src_type);
-        return reinterpret_cast<std::uintptr_t>(new rd_data_type(*rd_type));
+        return to_capsule(new rd_data_type(*rd_type));
     });
 
     m.def("_free", [](py::handle obj) {

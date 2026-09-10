@@ -27,7 +27,7 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_fread_alloc",
         [](std::string filename, bool apply_mapaxes) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_grid_load_case__(filename.c_str(), apply_mapaxes));
         },
         py::return_value_policy::reference);
@@ -37,7 +37,7 @@ PYBIND11_MODULE(_grid, m) {
         [](int nx, int ny, int nz, py::handle zcorn, py::handle coord,
            std::optional<py::handle> actnum,
            std::optional<py::handle> mapaxes) {
-            return reinterpret_cast<std::uintptr_t>(rd_grid_alloc_GRDECL_kw(
+            return to_capsule(rd_grid_alloc_GRDECL_kw(
                 nx, ny, nz, from_cwrap<rd_kw_type>(zcorn),
                 from_cwrap<rd_kw_type>(coord), from_cwrap<rd_kw_type>(actnum),
                 from_cwrap<rd_kw_type>(mapaxes)));
@@ -48,32 +48,31 @@ PYBIND11_MODULE(_grid, m) {
         [](int nx, int ny, int nz, double dx, double dy, double dz,
            std::optional<std::vector<int>> actnum) {
             if (actnum.has_value())
-                return reinterpret_cast<std::uintptr_t>(
-                    rd_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz,
-                                              actnum->data()));
+                return to_capsule(rd_grid_alloc_rectangular(
+                    nx, ny, nz, dx, dy, dz, actnum->data()));
             else
-                return reinterpret_cast<std::uintptr_t>(
+                return to_capsule(
                     rd_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, nullptr));
         },
         py::return_value_policy::reference);
     m.def(
         "_get_numbered_lgr",
         [](py::handle self, int lgr_nr) {
-            return reinterpret_cast<std::uintptr_t>(rd_grid_get_lgr_from_lgr_nr(
+            return to_capsule(rd_grid_get_lgr_from_lgr_nr(
                 from_cwrap<rd_grid_type>(self), lgr_nr));
         },
         py::return_value_policy::reference);
     m.def(
         "_get_named_lgr",
         [](py::handle self, std::string lgr_name) {
-            return reinterpret_cast<std::uintptr_t>(rd_grid_get_lgr(
-                from_cwrap<rd_grid_type>(self), lgr_name.c_str()));
+            return to_capsule(rd_grid_get_lgr(from_cwrap<rd_grid_type>(self),
+                                              lgr_name.c_str()));
         },
         py::return_value_policy::reference);
     m.def(
         "_get_cell_lgr",
         [](py::handle self, int index) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_grid_get_cell_lgr1(from_cwrap<rd_grid_type>(self), index));
         },
         py::return_value_policy::reference);
@@ -290,7 +289,7 @@ PYBIND11_MODULE(_grid, m) {
                     fmt::format("Could not allocate ACTNUM of size {}", size));
             rd_grid_init_actnum_data(rd_grid, rd_kw_get_int_ptr(actnum.get()));
 
-            return reinterpret_cast<std::uintptr_t>(actnum.release());
+            return to_capsule(actnum.release());
         },
         py::return_value_policy::reference);
     m.def("_compressed_kw_copy",
@@ -308,10 +307,9 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_create_volume_keyword",
         [](py::handle self, bool active_size) {
-            return reinterpret_cast<std::uintptr_t>(
-                rd_grid_alloc_volume_kw(from_cwrap<rd_grid_type>(self),
-                                        active_size)
-                    .release());
+            return to_capsule(rd_grid_alloc_volume_kw(
+                                  from_cwrap<rd_grid_type>(self), active_size)
+                                  .release());
         },
         py::return_value_policy::reference);
     m.def("_use_mapaxes", [](py::handle self) {
@@ -320,7 +318,7 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_export_coord",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_grid_alloc_coord_kw(from_cwrap<rd_grid_type>(self))
                     .release());
         },
@@ -328,7 +326,7 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_export_zcorn",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_grid_alloc_zcorn_kw(from_cwrap<rd_grid_type>(self))
                     .release());
         },
@@ -336,19 +334,19 @@ PYBIND11_MODULE(_grid, m) {
     m.def(
         "_export_actnum",
         [](py::handle self) {
-            return reinterpret_cast<std::uintptr_t>(
+            return to_capsule(
                 rd_grid_alloc_actnum_kw(from_cwrap<rd_grid_type>(self))
                     .release());
         },
         py::return_value_policy::reference);
     m.def(
         "_export_mapaxes",
-        [](py::handle self) -> std::optional<std::uintptr_t> {
+        [](py::handle self) -> py::object {
             if (auto mapaxes =
                     rd_grid_alloc_mapaxes_kw(from_cwrap<rd_grid_type>(self)))
-                return reinterpret_cast<std::uintptr_t>(mapaxes->release());
+                return to_capsule(mapaxes->release());
             else
-                return std::nullopt;
+                return py::none();
         },
         py::return_value_policy::reference);
     m.def("_get_unit_system", [](py::handle self) {

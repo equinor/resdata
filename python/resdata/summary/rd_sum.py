@@ -36,12 +36,12 @@ class Summary(_BaseCClass):
 
     @classmethod
     def _python_object_from_ptr(cls, ptr):
-        if not ptr:
+        if ptr is None:
             return None
         return cls.createPythonObject(ptr)
 
     def _reference_from_ptr(self, ptr):
-        if not ptr:
+        if ptr is None:
             return None
         return self.createCReference(ptr, parent=self)
 
@@ -84,7 +84,7 @@ class Summary(_BaseCClass):
         c_pointer = _rd_sum._fread_alloc_case(
             load_case, join_string, include_restart, lazy_load, file_options
         )
-        if not c_pointer:
+        if c_pointer is None:
             raise OSError(
                 "Failed to create summary instance from argument:%s" % load_case
             )
@@ -108,7 +108,7 @@ class Summary(_BaseCClass):
             False,
             FileMode.DEFAULT,
         )
-        if not c_ptr:
+        if c_ptr is None:
             raise OSError("Failed to create summary instance")
 
         rd_sum = cls.createPythonObject(c_ptr)
@@ -981,7 +981,7 @@ class Summary(_BaseCClass):
     @property
     def restart_case(self):
         ptr = _rd_sum._get_restart_case(self)
-        if not ptr:
+        if ptr is None:
             return None
         return Summary.createCReference(ptr, parent=self)
 
