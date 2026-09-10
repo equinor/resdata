@@ -417,16 +417,18 @@ PYBIND11_MODULE(well, m) {
     py::class_<WellInfo>(well_info_module, "WellInfo")
         .def(py::init([](py::handle grid, std::optional<py::handle> rst_file,
                          bool load_segment_information) {
-                 auto self = new WellInfo(from_cwrap<rd_grid_type>(grid));
+                 auto self =
+                     std::make_unique<WellInfo>(from_cwrap<rd_grid_type>(grid));
                  if (rst_file.has_value()) {
                      if (py::isinstance<py::list>(*rst_file))
                          for (auto item : py::cast<py::list>(*rst_file))
-                             load_rstfile(self, item, load_segment_information);
+                             load_rstfile(self.get(), item,
+                                          load_segment_information);
                      else
-                         load_rstfile(self, *rst_file,
+                         load_rstfile(self.get(), *rst_file,
                                       load_segment_information);
                  }
-                 return self;
+                 return self.release();
              }),
              py::arg("grid"), py::arg("rst_file") = std::nullopt,
              py::arg("load_segment_information") = true)
