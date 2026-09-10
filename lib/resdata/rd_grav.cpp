@@ -2,15 +2,16 @@
 #include <cmath>
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include <string>
+#include <stdexcept>
 #include <fmt/format.h>
 
 #include <ert/util/util.hpp>
-
-#include <stdexcept>
-#include <string>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>
@@ -42,14 +43,48 @@ typedef enum {
     GRAV_CALC_RFIP = 4 + GRAV_CALC_USE_RHO
 } grav_calc_type;
 
+/** Data structure representing the results from one phase at one survey. */
+struct rd_grav_phase_struct {
+    const rd::rd_grid_cache *grid_cache;
+    const bool *aquifer_cell;
+    std::vector<double>
+        fluid_mass; /* The total fluid in place (mass) of this phase - for each active cell.*/
+    std::vector<double>
+        work; /* Temporary used in the summation over all cells. */
+    Phase phase;
+
+    rd_grav_phase_struct(const rd::rd_grid_cache *grid_cache,
+                         const bool *aquifer_cell, Phase phase)
+        : grid_cache(grid_cache), aquifer_cell(aquifer_cell),
+          fluid_mass(grid_cache->size()), work(0), phase(phase) {}
+};
+
 typedef struct rd_grav_phase_struct rd_grav_phase_type;
 
-/**
-   The rd_grav_struct datastructure is the main structure for
-   calculating the gravimetric response from time lapse ECLIPSE
-   simulations.
-*/
+/** Data structure representing one gravimetric survey. */
+struct rd_grav_survey_struct {
+    const rd::rd_grid_cache *grid_cache;
+    const bool *aquifer_cell;
+    std::string name; /* Name of the survey - arbitrary string. */
+    std::vector<double>
+        porv; /* Reference shared by the rd_grav_phase structures - i.e. it must not be updated. */
+    std::vector<std::unique_ptr<rd_grav_phase_type>>
+        phase_list; /* rd_grav_phase_type objects - one for each phase present in the model. */
+    std::unordered_map<std::string, rd_grav_phase_type *>
+        phase_map; /* The same objects as in the phase_list vector - accessible by the "SWAT", "SGAS" and "SOIL" keys. */
 
+    rd_grav_survey_struct(const rd::rd_grid_cache *grid_cache,
+                          const bool *aquifer_cell, const std::string &name,
+                          grav_calc_type calc_type)
+        : grid_cache(grid_cache), aquifer_cell(aquifer_cell), name(name) {
+        if (calc_type & GRAV_CALC_USE_PORV)
+            porv = std::vector<double>(grid_cache->size());
+    }
+};
+
+/** The rd_grav_struct datastructure is the main structure for
+    calculating the gravimetric response from time lapse ECLIPSE
+    simulations. */
 struct rd_grav_struct {
     const rd::File *
         init_file; /* The init file - a shared reference owned by calling scope. */
@@ -57,58 +92,11 @@ struct rd_grav_struct {
         grid_cache; /* An internal specialized structure to facilitate fast grid lookup. */
     bool *aquifer_cell; /* Numerical aquifer cells should be ignored. */
 
-    std::unordered_map<std::string, rd_grav_survey_type *> surveys;
+    std::unordered_map<std::string, std::unique_ptr<rd_grav_survey_struct>>
+        surveys;
     std::unordered_map<std::string, double> default_density;
     std::unordered_map<std::string, std::vector<double>> std_density;
 };
-
-/**
-   Data structure representing one gravimetric survey.
-*/
-
-#define RD_GRAV_SURVEY_ID 88517
-struct rd_grav_survey_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    const rd::rd_grid_cache *grid_cache;
-    const bool *aquifer_cell;
-    char *name; /* Name of the survey - arbitrary string. */
-    double *
-        porv; /* Reference shared by the rd_grav_phase structures - i.e. it must not be updated. */
-    std::vector<rd_grav_phase_type *>
-        phase_list; /* rd_grav_phase_type objects - one for each phase present in the model. */
-    std::unordered_map<std::string, rd_grav_phase_type *>
-        phase_map; /* The same objects as in the phase_list vector - accessible by the "SWAT", "SGAS" and "SOIL" keys. */
-};
-
-/**
-   Data structure representing the results from one phase at one survey.
-*/
-
-#define RD_GRAV_PHASE_TYPE_ID 1066652
-struct rd_grav_phase_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    const rd::rd_grid_cache *grid_cache;
-    const bool *aquifer_cell;
-    double *
-        fluid_mass; /* The total fluid in place (mass) of this phase - for each active cell.*/
-    double *work; /* Temporary used in the summation over all cells. */
-    Phase phase;
-};
-
-static void rd_grav_phase_free(rd_grav_phase_type *grav_phase) {
-    free(grav_phase->work);
-    free(grav_phase->fluid_mass);
-    delete grav_phase;
-}
-
-static void rd_grav_survey_free(rd_grav_survey_type *grav_survey) {
-    free(grav_survey->name);
-    free(grav_survey->porv);
-    for (auto *phase : grav_survey->phase_list)
-        rd_grav_phase_free(phase);
-
-    delete grav_survey;
-}
 
 static std::string get_den_kw(Phase phase, rd_version_enum rd_version) {
     if (rd_version == ECLIPSE100) {
@@ -151,9 +139,7 @@ static std::string get_den_kw(Phase phase, rd_version_enum rd_version) {
     }
 }
 static void rd_grav_phase_ensure_work(rd_grav_phase_type *grav_phase) {
-    if (grav_phase->work == NULL)
-        grav_phase->work = (double *)util_calloc(grav_phase->grid_cache->size(),
-                                                 sizeof *grav_phase->work);
+    grav_phase->work.resize(grav_phase->grid_cache->size());
 }
 
 static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
@@ -162,11 +148,11 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
                                  double utm_y, double depth) {
 
     rd_grav_phase_ensure_work(base_phase);
-    if ((monitor_phase == NULL) ||
+    if ((monitor_phase == nullptr) ||
         (base_phase->phase == monitor_phase->phase)) {
         const rd::rd_grid_cache &grid_cache = *(base_phase->grid_cache);
         const bool *aquifer = base_phase->aquifer_cell;
-        double *mass_diff = base_phase->work;
+        double *mass_diff = base_phase->work.data();
         double deltag;
         /*
        Initialize a work array to contain the difference in mass for
@@ -174,7 +160,7 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     */
         {
             int index;
-            if (monitor_phase == NULL) {
+            if (monitor_phase == nullptr) {
                 for (index = 0; index < grid_cache.size(); index++)
                     mass_diff[index] = -base_phase->fluid_mass[index];
             } else {
@@ -227,116 +213,105 @@ static rd_version_enum get_simulator_version(const rd::File *file) {
     }
 }
 
-static rd_grav_phase_type *rd_grav_phase_alloc(rd_grav_type *rd_grav,
-                                               rd_grav_survey_type *survey,
-                                               Phase phase,
-                                               rd::FileView *restart_file,
-                                               grav_calc_type calc_type) {
+static std::unique_ptr<rd_grav_phase_type>
+rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
+                    Phase phase, rd::FileView *restart_file,
+                    grav_calc_type calc_type) {
 
     const rd::File *init_file = rd_grav->init_file;
     const rd::rd_grid_cache *grid_cache = rd_grav->grid_cache;
     const char *sat_kw_name = rd_get_phase_name(phase);
-    {
-        rd_grav_phase_type *grav_phase = new rd_grav_phase_type();
-        const int size = grid_cache->size();
 
-        UTIL_TYPE_ID_INIT(grav_phase, RD_GRAV_PHASE_TYPE_ID);
-        grav_phase->grid_cache = grid_cache;
-        grav_phase->aquifer_cell = rd_grav->aquifer_cell;
-        grav_phase->fluid_mass =
-            (double *)util_calloc(size, sizeof *grav_phase->fluid_mass);
-        grav_phase->phase = phase;
-        grav_phase->work = NULL;
+    auto grav_phase = std::make_unique<rd_grav_phase_type>(
+        grid_cache, rd_grav->aquifer_cell, phase);
+    const int size = grid_cache->size();
 
-        if (calc_type == GRAV_CALC_FIP) {
-            rd_kw_type *pvtnum_kw = init_file->get_kw(PVTNUM_KW, 0);
-            const std::vector<double> std_density =
-                rd_grav->std_density[std::string(rd_get_phase_name(phase))];
+    if (calc_type == GRAV_CALC_FIP) {
+        rd_kw_type *pvtnum_kw = init_file->get_kw(PVTNUM_KW, 0);
+        const std::vector<double> std_density =
+            rd_grav->std_density[std::string(rd_get_phase_name(phase))];
 
-            rd_kw_type *fip_kw;
+        rd_kw_type *fip_kw;
 
+        if (phase == Phase::OIL)
+            fip_kw = restart_file->get_kw(FIPOIL_KW, 0);
+        else if (phase == Phase::GAS)
+            fip_kw = restart_file->get_kw(FIPGAS_KW, 0);
+        else
+            fip_kw = restart_file->get_kw(FIPWAT_KW, 0);
+
+        for (int iactive = 0; iactive < size; iactive++) {
+            double fip = rd_kw_iget_as_double(fip_kw, iactive);
+            int pvtnum = rd_kw_iget_int(pvtnum_kw, iactive);
+            if (pvtnum < 0 || std_density.size() <= static_cast<size_t>(pvtnum))
+                return {nullptr};
+            grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
+        }
+    } else {
+        rd_version_enum rd_version = get_simulator_version(init_file);
+        const std::string den_kw_name = get_den_kw(phase, rd_version);
+        const rd_kw_type *den_kw = restart_file->get_kw(den_kw_name, 0);
+
+        if (calc_type == GRAV_CALC_RFIP) {
+            rd_kw_type *rfip_kw;
             if (phase == Phase::OIL)
-                fip_kw = restart_file->get_kw(FIPOIL_KW, 0);
+                rfip_kw = restart_file->get_kw(RFIPOIL_KW, 0);
             else if (phase == Phase::GAS)
-                fip_kw = restart_file->get_kw(FIPGAS_KW, 0);
+                rfip_kw = restart_file->get_kw(RFIPGAS_KW, 0);
             else
-                fip_kw = restart_file->get_kw(FIPWAT_KW, 0);
+                rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
 
-            for (int iactive = 0; iactive < size; iactive++) {
-                double fip = rd_kw_iget_as_double(fip_kw, iactive);
-                int pvtnum = rd_kw_iget_int(pvtnum_kw, iactive);
-                if (std_density.size() <= pvtnum) {
-                    rd_grav_phase_free(grav_phase);
-                    return NULL;
+            {
+                int iactive;
+                for (iactive = 0; iactive < size; iactive++) {
+                    double rho = rd_kw_iget_as_double(den_kw, iactive);
+                    double rfip = rd_kw_iget_as_double(rfip_kw, iactive);
+                    grav_phase->fluid_mass[iactive] = rho * rfip;
                 }
-                grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
             }
         } else {
-            rd_version_enum rd_version = get_simulator_version(init_file);
-            const std::string den_kw_name = get_den_kw(phase, rd_version);
-            const rd_kw_type *den_kw = restart_file->get_kw(den_kw_name, 0);
+            /* (calc_type == GRAV_CALC_RPORV) || (calc_type == GRAV_CALC_PORMOD) */
+            rd_kw_type *sat_kw;
+            bool private_sat_kw = false;
+            if (restart_file->has_kw(std::string(sat_kw_name)))
+                sat_kw = restart_file->get_kw(sat_kw_name, 0);
+            else {
+                /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
+                const rd_kw_type *swat_kw = restart_file->get_kw("SWAT", 0);
+                sat_kw = rd_kw_alloc_copy(swat_kw);
+                rd_kw_scalar_set_float(sat_kw, 1.0);
+                rd_kw_inplace_sub(sat_kw, swat_kw); /* sat = 1 - SWAT */
 
-            if (calc_type == GRAV_CALC_RFIP) {
-                rd_kw_type *rfip_kw;
-                if (phase == Phase::OIL)
-                    rfip_kw = restart_file->get_kw(RFIPOIL_KW, 0);
-                else if (phase == Phase::GAS)
-                    rfip_kw = restart_file->get_kw(RFIPGAS_KW, 0);
-                else
-                    rfip_kw = restart_file->get_kw(RFIPWAT_KW, 0);
-
-                {
-                    int iactive;
-                    for (iactive = 0; iactive < size; iactive++) {
-                        double rho = rd_kw_iget_as_double(den_kw, iactive);
-                        double rfip = rd_kw_iget_as_double(rfip_kw, iactive);
-                        grav_phase->fluid_mass[iactive] = rho * rfip;
-                    }
+                if (restart_file->has_kw("SGAS")) {
+                    const rd_kw_type *sgas_kw = restart_file->get_kw("SGAS", 0);
+                    rd_kw_inplace_sub(sat_kw, sgas_kw); /* sat -= SGAS */
                 }
-            } else {
-                /* (calc_type == GRAV_CALC_RPORV) || (calc_type == GRAV_CALC_PORMOD) */
-                rd_kw_type *sat_kw;
-                bool private_sat_kw = false;
-                if (restart_file->has_kw(std::string(sat_kw_name)))
-                    sat_kw = restart_file->get_kw(sat_kw_name, 0);
-                else {
-                    /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
-                    const rd_kw_type *swat_kw = restart_file->get_kw("SWAT", 0);
-                    sat_kw = rd_kw_alloc_copy(swat_kw);
-                    rd_kw_scalar_set_float(sat_kw, 1.0);
-                    rd_kw_inplace_sub(sat_kw, swat_kw); /* sat = 1 - SWAT */
-
-                    if (restart_file->has_kw("SGAS")) {
-                        const rd_kw_type *sgas_kw =
-                            restart_file->get_kw("SGAS", 0);
-                        rd_kw_inplace_sub(sat_kw, sgas_kw); /* sat -= SGAS */
-                    }
-                    private_sat_kw = true;
-                }
-
-                {
-                    int iactive;
-                    for (iactive = 0; iactive < size; iactive++) {
-                        double rho = rd_kw_iget_as_double(den_kw, iactive);
-                        double sat = rd_kw_iget_as_double(sat_kw, iactive);
-                        grav_phase->fluid_mass[iactive] =
-                            rho * sat * survey->porv[iactive];
-                    }
-                }
-
-                if (private_sat_kw)
-                    rd_kw_free(sat_kw);
+                private_sat_kw = true;
             }
-        }
 
-        return grav_phase;
+            {
+                int iactive;
+                for (iactive = 0; iactive < size; iactive++) {
+                    double rho = rd_kw_iget_as_double(den_kw, iactive);
+                    double sat = rd_kw_iget_as_double(sat_kw, iactive);
+                    grav_phase->fluid_mass[iactive] =
+                        rho * sat * survey->porv[iactive];
+                }
+            }
+
+            if (private_sat_kw)
+                rd_kw_free(sat_kw);
+        }
     }
+
+    return grav_phase;
 }
 
-static void rd_grav_survey_add_phase(rd_grav_survey_type *survey, Phase phase,
-                                     rd_grav_phase_type *grav_phase) {
-    survey->phase_list.push_back(grav_phase);
-    survey->phase_map[std::string(rd_get_phase_name(phase))] = grav_phase;
+static void
+rd_grav_survey_add_phase(rd_grav_survey_type *survey, Phase phase,
+                         std::unique_ptr<rd_grav_phase_type> &&grav_phase) {
+    survey->phase_map[std::string(rd_get_phase_name(phase))] = grav_phase.get();
+    survey->phase_list.push_back(std::move(grav_phase));
 }
 
 /**
@@ -359,47 +334,29 @@ static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
                                       grav_calc_type calc_type) {
     int phases = get_phases(rd_grav->init_file);
     if (phases & static_cast<int>(Phase::OIL)) {
-        rd_grav_phase_type *oil_phase = rd_grav_phase_alloc(
-            rd_grav, survey, Phase::OIL, restart_file, calc_type);
-        if (oil_phase == NULL)
+        auto oil_phase = rd_grav_phase_alloc(rd_grav, survey, Phase::OIL,
+                                             restart_file, calc_type);
+        if (!oil_phase)
             return false;
-        rd_grav_survey_add_phase(survey, Phase::OIL, oil_phase);
+        rd_grav_survey_add_phase(survey, Phase::OIL, std::move(oil_phase));
     }
 
     if (phases & static_cast<int>(Phase::GAS)) {
-        rd_grav_phase_type *gas_phase = rd_grav_phase_alloc(
-            rd_grav, survey, Phase::GAS, restart_file, calc_type);
-        if (gas_phase == NULL)
+        auto gas_phase = rd_grav_phase_alloc(rd_grav, survey, Phase::GAS,
+                                             restart_file, calc_type);
+        if (!gas_phase)
             return false;
-        rd_grav_survey_add_phase(survey, Phase::GAS, gas_phase);
+        rd_grav_survey_add_phase(survey, Phase::GAS, std::move(gas_phase));
     }
 
     if (phases & static_cast<int>(Phase::WATER)) {
-        rd_grav_phase_type *water_phase = rd_grav_phase_alloc(
-            rd_grav, survey, Phase::WATER, restart_file, calc_type);
-        if (water_phase == NULL)
+        auto water_phase = rd_grav_phase_alloc(rd_grav, survey, Phase::WATER,
+                                               restart_file, calc_type);
+        if (!water_phase)
             return false;
-        rd_grav_survey_add_phase(survey, Phase::WATER, water_phase);
+        rd_grav_survey_add_phase(survey, Phase::WATER, std::move(water_phase));
     }
     return true;
-}
-
-static rd_grav_survey_type *
-rd_grav_survey_alloc_empty(const rd_grav_type *rd_grav, const std::string &name,
-                           grav_calc_type calc_type) {
-    rd_grav_survey_type *survey = new rd_grav_survey_type();
-    UTIL_TYPE_ID_INIT(survey, RD_GRAV_SURVEY_ID);
-    survey->grid_cache = rd_grav->grid_cache;
-    survey->aquifer_cell = rd_grav->aquifer_cell;
-    survey->name = util_alloc_string_copy(name.c_str());
-
-    if (calc_type & GRAV_CALC_USE_PORV)
-        survey->porv = (double *)util_calloc(rd_grav->grid_cache->size(),
-                                             sizeof *survey->porv);
-    else
-        survey->porv = NULL;
-
-    return survey;
 }
 
 /**
@@ -407,7 +364,6 @@ rd_grav_survey_alloc_empty(const rd_grav_type *rd_grav, const std::string &name,
    version 2008.2 they are way off. Check PORV versus RPORV
    for some random locations in the grid.
 */
-
 static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
                                         const rd::File *init_file) {
     const rd::rd_grid_cache &grid_cache = *(survey->grid_cache);
@@ -505,29 +461,27 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
                         "active cells",
                         RPORV_KW, rporv_size, active_size));
 
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
+    auto survey = std::make_unique<rd_grav_survey_struct>(
+        rd_grav->grid_cache, rd_grav->aquifer_cell, name, GRAV_CALC_RPORV);
     for (int iactive = 0; iactive < active_size; iactive++)
         survey->porv[iactive] = rd_kw_iget_as_double(rporv_kw, iactive);
 
     {
         const rd::File *init_file = rd_grav->init_file;
-        rd_grav_survey_assert_RPORV(survey, init_file);
-        if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
-                                       GRAV_CALC_RPORV)) {
-            rd_grav_survey_free(survey);
-            return NULL;
-        }
+        rd_grav_survey_assert_RPORV(survey.get(), init_file);
+        if (!rd_grav_survey_add_phases(rd_grav, survey.get(), restart_file,
+                                       GRAV_CALC_RPORV))
+            return nullptr;
     }
-    return survey;
+    return survey.release();
 }
 
 static rd_grav_survey_type *
 rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
                             const std::string &name) {
     rd::rd_grid_cache &grid_cache = *(rd_grav->grid_cache);
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_PORMOD);
+    auto survey = std::make_unique<rd_grav_survey_struct>(
+        rd_grav->grid_cache, rd_grav->aquifer_cell, name, GRAV_CALC_PORMOD);
 
     rd_kw_type *init_porv_kw =
         rd_grav->init_file->get_kw(PORV_KW, 0); /* Global indexing */
@@ -542,13 +496,11 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
             static_cast<double>(rd_kw_iget_float(pormod_kw, active_index)) *
             rd_kw_iget_float(init_porv_kw, global_index[active_index]);
 
-    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
-                                   GRAV_CALC_PORMOD)) {
-        rd_grav_survey_free(survey);
-        return NULL;
-    }
+    if (!rd_grav_survey_add_phases(rd_grav, survey.get(), restart_file,
+                                   GRAV_CALC_PORMOD))
+        return nullptr;
 
-    return survey;
+    return survey.release();
 }
 
 /**
@@ -561,32 +513,28 @@ static rd_grav_survey_type *rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
                                                      rd::FileView *restart_file,
                                                      const std::string &name) {
 
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_FIP);
+    auto survey = std::make_unique<rd_grav_survey_struct>(
+        rd_grav->grid_cache, rd_grav->aquifer_cell, name, GRAV_CALC_FIP);
 
-    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
-                                   GRAV_CALC_FIP)) {
-        rd_grav_survey_free(survey);
-        return NULL;
-    }
+    if (!rd_grav_survey_add_phases(rd_grav, survey.get(), restart_file,
+                                   GRAV_CALC_FIP))
+        return nullptr;
 
-    return survey;
+    return survey.release();
 }
 
 static rd_grav_survey_type *
 rd_grav_survey_alloc_RFIP(rd_grav_type *rd_grav, rd::FileView *restart_file,
                           const std::string &name) {
 
-    rd_grav_survey_type *survey =
-        rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RFIP);
+    auto survey = std::make_unique<rd_grav_survey_struct>(
+        rd_grav->grid_cache, rd_grav->aquifer_cell, name, GRAV_CALC_RFIP);
 
-    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
-                                   GRAV_CALC_RFIP)) {
-        rd_grav_survey_free(survey);
-        return NULL;
-    }
+    if (!rd_grav_survey_add_phases(rd_grav, survey.get(), restart_file,
+                                   GRAV_CALC_RFIP))
+        return nullptr;
 
-    return survey;
+    return survey.release();
 }
 
 static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
@@ -596,15 +544,15 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
     double deltag = 0;
     for (std::size_t phase_nr = 0; phase_nr < base_survey->phase_list.size();
          phase_nr++) {
-        rd_grav_phase_type *base_phase = base_survey->phase_list[phase_nr];
+        auto base_phase = base_survey->phase_list[phase_nr].get();
         if (static_cast<int>(base_phase->phase) & phase_mask) {
             if (monitor_survey != nullptr) {
-                const rd_grav_phase_type *monitor_phase =
-                    monitor_survey->phase_list[phase_nr];
+                const auto monitor_phase =
+                    monitor_survey->phase_list[phase_nr].get();
                 deltag += rd_grav_phase_eval(base_phase, monitor_phase, region,
                                              utm_x, utm_y, depth);
             } else
-                deltag += rd_grav_phase_eval(base_phase, NULL, region, utm_x,
+                deltag += rd_grav_phase_eval(base_phase, nullptr, region, utm_x,
                                              utm_y, depth);
         }
     }
@@ -619,19 +567,19 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
 */
 
 rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid, const rd::File *init_file) {
-    rd_grav_type *rd_grav = new rd_grav_type();
+    auto rd_grav = std::make_unique<rd_grav_type>();
 
     rd_grav->init_file = init_file;
     rd_grav->grid_cache = new rd::rd_grid_cache(rd_grid);
     rd_grav->aquifer_cell = rd_grav_common_alloc_aquifer_cell(
         *(rd_grav->grid_cache), rd_grav->init_file);
 
-    return rd_grav;
+    return rd_grav.release();
 }
 
 static void rd_grav_add_survey__(rd_grav_type *grav, const std::string &name,
                                  rd_grav_survey_type *survey) {
-    grav->surveys[name] = survey;
+    grav->surveys[name] = std::unique_ptr<rd_grav_survey_struct>{survey};
 }
 
 rd_grav_survey_type *rd_grav_add_survey_RPORV(rd_grav_type *grav,
@@ -652,8 +600,8 @@ rd_grav_survey_type *rd_grav_add_survey_FIP(rd_grav_type *grav,
                                             rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_FIP(grav, restart_file, name);
-    if (survey == NULL)
-        return NULL;
+    if (survey == nullptr)
+        return nullptr;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -663,8 +611,8 @@ rd_grav_survey_type *rd_grav_add_survey_RFIP(rd_grav_type *grav,
                                              rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RFIP(grav, restart_file, name);
-    if (survey == NULL)
-        return NULL;
+    if (survey == nullptr)
+        return nullptr;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -674,8 +622,8 @@ rd_grav_survey_type *rd_grav_add_survey_PORMOD(rd_grav_type *grav,
                                                rd::FileView *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_PORMOD(grav, restart_file, name);
-    if (survey == NULL)
-        return NULL;
+    if (survey == nullptr)
+        return nullptr;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -683,7 +631,7 @@ rd_grav_survey_type *rd_grav_add_survey_PORMOD(rd_grav_type *grav,
 static rd_grav_survey_type *rd_grav_get_survey(const rd_grav_type *grav,
                                                const std::string &name) {
     if (grav->surveys.count(name) > 0)
-        return grav->surveys.at(name);
+        return grav->surveys.at(name).get();
 
     std::string available_surveys;
     for (const auto &survey_pair : grav->surveys)
@@ -754,9 +702,5 @@ void rd_grav_add_std_density(rd_grav_type *grav, Phase phase, int pvtnum,
 void rd_grav_free(rd_grav_type *rd_grav) {
     delete rd_grav->grid_cache;
     free(rd_grav->aquifer_cell);
-
-    for (const auto &survey_pair : rd_grav->surveys)
-        rd_grav_survey_free(survey_pair.second);
-
     delete rd_grav;
 }
