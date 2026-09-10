@@ -72,7 +72,7 @@ class GridGenerator:
                 dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], list(actnum)
             )
         if rd_grid is None:
-            raise MemoryError("Failed to allocated regualar grid")
+            raise MemoryError("Failed to allocate regular grid")
         return Grid.createPythonObject(rd_grid)
 
     @classmethod
