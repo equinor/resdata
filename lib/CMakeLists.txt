@@ -110,27 +110,36 @@ set_target_properties(
                      SOVERSION ${RD_VERSION_MAJOR})
 
 if(SKBUILD)
-  # Build libresdata straight when built by _skbuild in order to support
-  # editable installs
-  set_target_properties(
-    resdata
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-               ${PROJECT_SOURCE_DIR}/python/resdata/.libs
-               RUNTIME_OUTPUT_DIRECTORY
-               ${PROJECT_SOURCE_DIR}/python/resdata/.bin
-               ARCHIVE_OUTPUT_DIRECTORY
-               ${PROJECT_SOURCE_DIR}/python/resdata/.libs)
+  if(WIN32)
+    # delvewheel vendors libresdata.dll from the build tree and patches the
+    # extension modules; installing a second copy would leave an unused DLL.
+    install(
+      TARGETS resdata
+      EXPORT resdata-config
+      ARCHIVE DESTINATION ${SKBUILD_NULL_DIR}
+      RUNTIME DESTINATION ${SKBUILD_NULL_DIR})
+  else()
+    install(
+      TARGETS resdata
+      EXPORT resdata-config
+      ARCHIVE DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata
+      LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata
+      RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/resdata)
+  endif()
+  install(DIRECTORY include/ DESTINATION ${SKBUILD_HEADERS_DIR}/resdata)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+          DESTINATION ${SKBUILD_HEADERS_DIR}/resdata)
+else()
+  install(
+    TARGETS resdata
+    EXPORT resdata-config
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
-
-install(
-  TARGETS resdata
-  EXPORT resdata-config
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
@@ -149,11 +158,9 @@ function(add_resdata_pybind_module module_name source_file py_pkg_path)
             ${CMAKE_CURRENT_BINARY_DIR}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
   if(SKBUILD)
-    set(${module_name}_install_dir "python/${py_pkg_path}")
-    # libresdata.so.<major> is installed at python/resdata/.libs/. The extension
-    # is installed at python/${py_pkg_path}/, which may be at any depth. Compute
-    # how many directories we must climb to get back to python/resdata/ so the
-    # RPATH is correct regardless of the module's package depth.
+    set(${module_name}_install_dir "${py_pkg_path}")
+    # libresdata and the top-level extensions are installed together. Compute
+    # how many directories nested extensions must climb to find the library.
     string(REPLACE "/" ";" _pkg_parts "${py_pkg_path}")
     list(LENGTH _pkg_parts _pkg_depth)
     math(EXPR _levels_up "${_pkg_depth} - 1")
@@ -169,19 +176,12 @@ function(add_resdata_pybind_module module_name source_file py_pkg_path)
       string(REPEAT "/.." ${_levels_up} _up)
       string(APPEND _rpath "${_up}")
     endif()
-    set(_rpath "${_rpath}/.libs")
     set_target_properties(${module_name} PROPERTIES INSTALL_RPATH "${_rpath}")
   else()
     set(${module_name}_install_dir "${CMAKE_INSTALL_LIBDIR}")
   endif()
   install(TARGETS ${module_name}
           LIBRARY DESTINATION ${${module_name}_install_dir})
-  # When running tests against the build tree (editable install), put the
-  # extension in the source package directory so it can be imported without
-  # installing.
-  set_target_properties(
-    ${module_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
-                              ${PROJECT_SOURCE_DIR}/python/${py_pkg_path})
 endfunction()
 
 add_resdata_pybind_module(_grid resdata/rd_grid_pybind.cpp resdata/grid)

@@ -6,21 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 
-# When building with scikit-build, the install directories are passed on the
-# command line. GNUInstallDirs sets them as cache variables, which prevents the
-# command-line values from taking effect. Override them here for SKBUILD.
-if(SKBUILD)
-  # These paths match what's passed from setup.py cmake_args
-  set(CMAKE_INSTALL_LIBDIR
-      "python/resdata/.libs"
-      CACHE PATH "Library install dir" FORCE)
-  set(CMAKE_INSTALL_BINDIR
-      "python/resdata/.bin"
-      CACHE PATH "Binary install dir" FORCE)
-  set(CMAKE_INSTALL_INCLUDEDIR
-      "python/resdata/.include"
-      CACHE PATH "Include install dir" FORCE)
-endif()
 include(TestBigEndian)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -71,6 +56,10 @@ set(RD_VERSION_MICRO "not-available")
 
 execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE RD_BUILD_TIME)
 string(STRIP "${RD_BUILD_TIME}" RD_BUILD_TIME)
+
+if(SKBUILD AND DEFINED SKBUILD_PROJECT_VERSION_FULL)
+  set(RD_VERSION "${SKBUILD_PROJECT_VERSION_FULL}")
+endif()
 
 if(RD_VERSION)
   # Have we been provided with an explicitly-set version?
@@ -163,9 +152,9 @@ endif()
 set(_local_test_data "${CMAKE_CURRENT_SOURCE_DIR}/test-data/local")
 set(_local_resdatapath ${_local_test_data}/ECLIPSE)
 
-# output libs to some lib/ path for testing
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if(USE_RPATH)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
@@ -449,7 +438,7 @@ if(RST_DOC)
 endif()
 
 if(NOT SKBUILD)
-  # Avoid installing when calling from python setup.py
+  # CMake package exports are only useful for standalone installations.
   install(EXPORT resdata-config DESTINATION share/cmake/resdata)
   export(TARGETS resdata FILE resdataConfig.cmake)
   export(PACKAGE resdata)
