@@ -384,8 +384,10 @@ class Summary(BaseCClass):
         self, time_index: Sequence[CTime | datetime.datetime | int | datetime.date]
     ) -> TimeVector:
         time_points = TimeVector()
-        for t in time_index:
-            time_points.append(t)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            for t in time_index:
+                time_points.append(t)
         return time_points
 
     def numpy_vector(self, key, time_index=None, report_only=False):
