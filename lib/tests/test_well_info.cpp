@@ -18,6 +18,7 @@
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_type.hpp>
 #include <resdata/well/well_info.hpp>
+#include <resdata/rd_util.hpp>
 
 #include "grid_fixtures.hpp"
 #include "tmpdir.hpp"
@@ -28,18 +29,14 @@ namespace {
 
 void write_int_kw(ERT::FortIO &fortio, const char *name,
                   const std::vector<int> &data) {
-    auto kw = make_rd_kw(name, static_cast<int>(data.size()), RD_INT);
-    for (size_t i = 0; i < data.size(); ++i)
-        rd_kw_iset_int(kw.get(), static_cast<int>(i), data[i]);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, data};
+    kw.fwrite(fortio);
 }
 
 void write_double_kw(ERT::FortIO &fortio, const char *name,
                      const std::vector<double> &data) {
-    auto kw = make_rd_kw(name, static_cast<int>(data.size()), RD_DOUBLE);
-    for (size_t i = 0; i < data.size(); ++i)
-        rd_kw_iset_double(kw.get(), static_cast<int>(i), data[i]);
-    rd_kw_fwrite(kw.get(), fortio);
+    rd::KW kw{name, data};
+    kw.fwrite(fortio);
 }
 
 struct RestartLayout {
@@ -81,9 +78,9 @@ void write_restart_file(const std::string &path, const RestartLayout &layout) {
                              0));
 
     if (layout.with_zwel) {
-        auto zwel = make_rd_kw(ZWEL_KW, layout.nzwelz * layout.nwells, RD_CHAR);
-        rd_kw_iset_string_ptr(zwel.get(), 0, "WELL-1");
-        rd_kw_fwrite(zwel.get(), fortio);
+        rd::KW zwel{ZWEL_KW, layout.nzwelz * layout.nwells, RD_CHAR};
+        zwel.set_padded(0, "WELL-1");
+        zwel.fwrite(fortio);
     }
 
     fortio.fflush();

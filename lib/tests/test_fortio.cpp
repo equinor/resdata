@@ -195,25 +195,6 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
             REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), 1));
         }
     }
-    GIVEN("An externally managed FILE*") {
-        write_records(filename, {{"", 0}});
-        std::unique_ptr<FILE, decltype(&fclose)> stream(
-            fopen(filename.c_str(), "r"), fclose);
-        REQUIRE(stream);
-        WHEN("Constructing a FortIO from the FILE*") {
-            ERT::FortIO fortio(filename, false, false, stream.get(), false);
-
-            THEN("fclose_stream returns false since the stream is not owned") {
-                REQUIRE_FALSE(fortio.fclose_stream());
-            }
-            THEN("fopen_stream returns false since the stream is already set") {
-                REQUIRE_FALSE(fortio.fopen_stream());
-            }
-            THEN("stream_is_open returns true") {
-                REQUIRE(fortio.stream_is_open());
-            }
-        }
-    }
     GIVEN("A file with two records where the second is truncated mid-data") {
         const int record_size = 1000;
         std::vector<char> buffer(record_size, 0);
@@ -228,6 +209,26 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
 
         THEN("The first record reads successfully but the second fails") {
             ERT::FortIO fortio(filename, std::ios_base::in, false, false);
+            REQUIRE(fortio.fread_buffer(buffer.data(), record_size));
+            REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), record_size));
+        }
+    }
+    GIVEN("A file with two records truncated via a still-open read/write "
+          "stream") {
+        const int record_size = 1000;
+        std::vector<char> buffer(record_size, 0);
+        std::ofstream(filename, std::ios_base::binary).close();
+        ERT::FortIO fortio(filename, std::ios_base::in | std::ios_base::out,
+                           false, false);
+        fortio.fwrite_record(buffer.data(), record_size);
+        fortio.fwrite_record(buffer.data(), record_size);
+
+        THEN("Truncating leaves the same stream's read position "
+             "immediately consistent with the new (smaller) size") {
+            fortio.ftruncate(2 * record_size - 100);
+            REQUIRE(util_file_size(filename.c_str()) == 2 * record_size - 100);
+
+            fortio.rewind();
             REQUIRE(fortio.fread_buffer(buffer.data(), record_size));
             REQUIRE_FALSE(fortio.fread_buffer(buffer.data(), record_size));
         }

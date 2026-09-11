@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <cstddef>
 #include <ios>
 #include <memory>
 #include <filesystem>
@@ -288,9 +289,9 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
             REQUIRE(coord_kw != nullptr);
             const int nx = rd_grid_get_nx(grid.get());
             const int ny = rd_grid_get_ny(grid.get());
-            REQUIRE(rd_kw_get_size(coord_kw.get()) ==
+            REQUIRE(rd::kw_get_size(coord_kw.get()) ==
                     RD_GRID_COORD_SIZE(nx, ny));
-            const float *data = rd_kw_get_float_ptr(coord_kw.get());
+            const float *data = coord_kw->get_vector<float>().data();
             // Fixture main grid: 3x3x3 unit cells, so pillar (i,j) has
             // local top (i,j,0) and bottom (i,j,3). MAPAXES would offset
             // x by at least the origin (10), so observing x==i, y==j
@@ -316,21 +317,20 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
             ERT::FortIO fortio(grid_filename.c_str(), std::ios_base::in);
 
-            rd_kw_ptr first_corners(nullptr, &rd_kw_free);
+            std::unique_ptr<rd::KW> first_corners{nullptr};
             while (true) {
-                rd_kw_type *kw = rd_kw_fread_alloc(fortio);
+                auto kw = rd::KW::fread(fortio);
                 if (kw == nullptr)
                     break;
-                if (std::string(rd_kw_get_header(kw)) == CORNERS_KW) {
-                    first_corners.reset(kw);
+                if (kw->header() == CORNERS_KW) {
+                    first_corners = std::move(kw);
                     break;
                 }
-                rd_kw_free(kw);
             }
 
             REQUIRE(first_corners != nullptr);
-            REQUIRE(rd_kw_get_size(first_corners.get()) == 24);
-            const float *corners = rd_kw_get_float_ptr(first_corners.get());
+            REQUIRE(first_corners->size() == 24);
+            const float *corners = first_corners->get_vector<float>().data();
             // Main grid cell (0,0,0) is a unit cell; in the local frame
             // its corners are at the 8 combinations of {0,1} in each axis.
             const float expected[24] = {
@@ -357,10 +357,10 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
         THEN("rd_grid_alloc_mapaxes_kw returns kw with mapaxes") {
             auto kw = rd_grid_alloc_mapaxes_kw(grid.get());
-            REQUIRE(kw != nullptr);
-            REQUIRE(rd_kw_get_size(kw->get()) == 6);
-            const float *data = rd_kw_get_float_ptr(kw->get());
-            for (int i = 0; i < 6; i++)
+            REQUIRE(kw);
+            REQUIRE((*kw)->size() == 6);
+            const auto &data = (*kw)->get_vector<float>();
+            for (size_t i = 0; i < 6; i++)
                 REQUIRE(data[i] == mapaxes[i]);
         }
 

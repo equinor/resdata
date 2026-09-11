@@ -20,17 +20,17 @@
 void FileKW::assert_kw() const {
     if (!kw)
         throw std::runtime_error("keyword could not be loaded from file "
-                                 "(rd_kw_fread_alloc returned NULL)");
+                                 "(rd::KW::fread returned NULL)");
 
-    if (!rd_type_is_equal(this->data_type, rd_kw_get_data_type(kw.get())))
+    if (!rd_type_is_equal(this->data_type, kw->data_type()))
         throw std::runtime_error(std::string(__func__) +
                                  ": type mismatch between header and file.");
 
-    if (kw_size != rd_kw_get_size(kw.get()))
+    if (kw_size != rd::kw_get_size(kw.get()))
         throw std::runtime_error(std::string(__func__) +
                                  ": size mismatch between header and file.");
 
-    if (header != rd_kw_get_header(kw.get()))
+    if (header != kw->header())
         throw std::runtime_error(std::string(__func__) +
                                  ": name mismatch between header and file.");
 }
@@ -44,11 +44,11 @@ void FileKW::load_kw(ERT::FortIO &fortio) {
 
     fortio.fseek(file_offset, SEEK_SET);
     // Note load_kw is only called when kw is nullptr
-    kw.reset(rd_kw_fread_alloc(fortio));
+    kw = rd::KW::fread(fortio);
     assert_kw();
 }
 
-rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
+rd::KW *FileKW::get_kw(ERT::FortIO &fortio) {
     if (!kw)
         load_kw(fortio);
 
@@ -56,15 +56,15 @@ rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
 }
 
 bool FileKW::skip_data(ERT::FortIO &fortio) const {
-    return rd_kw_fskip_data__(data_type, kw_size, fortio);
+    return rd::KW::fskip_data(data_type, kw_size, fortio);
 }
 
 void FileKW::inplace_write(ERT::FortIO &fortio) const {
     assert_kw();
     fortio.fseek(file_offset, SEEK_SET);
-    rd_kw_fskip_header(fortio);
+    rd::KW::fskip_header(fortio);
     fortio.fclean();
-    rd_kw_fwrite_data(kw.get(), fortio);
+    kw->fwrite_data(fortio);
 }
 
 void FileKW::write_header(std::ostream &stream) const {

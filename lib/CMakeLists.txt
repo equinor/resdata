@@ -257,7 +257,7 @@ add_executable(
 target_compile_features(rd_test_suite PUBLIC cxx_std_17)
 target_include_directories(rd_test_suite
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
-target_link_libraries(rd_test_suite resdata Catch2::Catch2)
+target_link_libraries(rd_test_suite resdata fmt::fmt Catch2::Catch2)
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
 
 foreach(
@@ -317,8 +317,6 @@ foreach(
   rd_grid_init_fwrite
   rd_grid_reset_actnum
   rd_kw_space_pad
-  rd_kw_cmp_string
-  rd_kw_equal
   rd_kw_fread
   rd_kw_init
   rd_layer
@@ -336,7 +334,7 @@ foreach(
   well_segment_collection
   test_rd_file)
   add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
-  target_link_libraries(${name} resdata)
+  target_link_libraries(${name} resdata fmt::fmt)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
   add_test(NAME ${name} COMMAND ${name})
@@ -361,9 +359,9 @@ add_test(
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu4
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu5)
 
-foreach(test rdxx_kw rdxx_types)
+foreach(test rdxx_types)
   add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
-  target_link_libraries(${test} resdata)
+  target_link_libraries(${test} resdata fmt::fmt)
   add_test(NAME ${test} COMMAND ${test})
 endforeach()
 
@@ -395,7 +393,7 @@ foreach(
   well_lgr_load)
 
   add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
-  target_link_libraries(${name} resdata)
+  target_link_libraries(${name} resdata fmt::fmt)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 endforeach()

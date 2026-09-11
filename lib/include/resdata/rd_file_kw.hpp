@@ -24,7 +24,7 @@ class FileKW {
     rd_data_type data_type;
     int kw_size;
     std::string header;
-    rd_kw_ptr kw{nullptr, &rd_kw_free};
+    std::unique_ptr<rd::KW> kw{nullptr};
 
     void assert_kw() const;
     void load_kw(ERT::FortIO &fortio);
@@ -41,9 +41,9 @@ public:
 
         It is the users responsibility that the @offset argument comes
         from the same fortio instance as used when calling get_kw().*/
-    FileKW(const rd_kw_type *rd_kw, offset_type offset)
-        : FileKW(offset, rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
-                 rd_kw_get_header(rd_kw)) {}
+    FileKW(const rd::KW *rd_kw, offset_type offset)
+        : FileKW(offset, rd_kw->data_type(), rd::kw_get_size(rd_kw),
+                 rd_kw->header()) {}
     [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
             return false;
@@ -62,11 +62,11 @@ public:
     [[nodiscard]] rd_data_type get_data_type() const { return data_type; };
 
     /** The rd_kw, if one is read, otherwise returns nullptr. */
-    [[nodiscard]] rd_kw_type *get_kw_ptr() const { return kw.get(); };
+    [[nodiscard]] rd::KW *get_kw_ptr() const { return kw.get(); };
 
     /** Return the rd_kw. If it is not loaded, the method will read it
        from @fortio. The kw is then cached. */
-    rd_kw_type *get_kw(ERT::FortIO &fortio);
+    rd::KW *get_kw(ERT::FortIO &fortio);
 
     bool skip_data(ERT::FortIO &fortio) const;
     /** Read @num keyword headers from @stream.
