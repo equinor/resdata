@@ -33,9 +33,9 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
                   << std::endl;
         exit(-1);
     }
-    rd_kw_type *dx = init_file->get_kw("DX", 0);
-    rd_kw_type *dy = init_file->get_kw("DY", 0);
-    rd_kw_type *dz = init_file->get_kw("DZ", 0);
+    rd::KW *dx = init_file->get_kw("DX", 0);
+    rd::KW *dy = init_file->get_kw("DY", 0);
+    rd::KW *dz = init_file->get_kw("DZ", 0);
     for (int a = 0; a < rd_grid_get_active_size(grid.get()); a += 100) {
         int g = rd_grid_get_global_index1A(grid.get(), a);
 
@@ -43,9 +43,9 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         double dyg = rd_grid_get_cell_dy1(grid.get(), g);
         double dzg = rd_grid_get_cell_dz1(grid.get(), g);
 
-        double dxi = rd_kw_iget_float(dx, a);
-        double dyi = rd_kw_iget_float(dy, a);
-        double dzi = rd_kw_iget_float(dz, a);
+        double dxi = dx->at<float>(a);
+        double dyi = dy->at<float>(a);
+        double dzi = dz->at<float>(a);
 
         double err_x = fabs(err(dxg, dxi));
         double err_y = fabs(err(dyg, dyi));

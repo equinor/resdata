@@ -168,6 +168,16 @@ inline std::string strip_spaces(std::string_view s) {
     return std::string(s.substr(first, last - first + 1));
 }
 
+/** Fits @s to exactly @width characters: pads with trailing spaces if
+   shorter, truncates if longer. */
+inline std::string pad_spaces(std::string_view s, size_t width) {
+    if (s.size() >= width)
+        return std::string(s.substr(0, width));
+    std::string result(s);
+    result.append(width - s.size(), ' ');
+    return result;
+}
+
 /** Compares two strings in "natural" order: maximal runs of digits are
    compared by numeric value, so that "S9" sorts before "S10", while all
    other characters are compared bytewise.

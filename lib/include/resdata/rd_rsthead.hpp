@@ -1,5 +1,7 @@
 #pragma once
 #include <ctime>
+#include <stdexcept>
+#include <string>
 
 #include <ert/util/util.hpp>
 
@@ -73,15 +75,15 @@ struct RSTHead {
           nisegz(nisegz), nsegmx(nsegmx), nswlmx(nswlmx), nlbrmx(nlbrmx),
           nilbrz(nilbrz), nrsegz(nrsegz), dualp(dualp), sim_days(sim_days) {};
 
-    inline RSTHead(int report_step, const rd_kw_type *intehead_kw,
-                   const rd_kw_type *doubhead_kw, const rd_kw_type *logihead_kw)
+    inline RSTHead(int report_step, const rd::KW *intehead_kw,
+                   const rd::KW *doubhead_kw, const rd::KW *logihead_kw)
         : report_step(report_step),
-          sim_days(rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX)) {
+          sim_days(doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX)) {
 
-        int nihead = rd_kw_get_size(intehead_kw);
-        const int *data = (const int *)rd_kw_get_void_ptr(intehead_kw);
+        const std::vector<int> &data = intehead_kw->get_vector<int>();
+        int nihead = static_cast<int>(data.size());
 
-        auto get = [data, nihead](int index) {
+        auto get = [&data, nihead](int index) {
             return index < nihead ? data[index] : 0;
         };
 
@@ -117,22 +119,22 @@ struct RSTHead {
         this->sim_time = rd_make_date(this->day, this->month, this->year);
 
         if (logihead_kw)
-            this->dualp = rd_kw_iget_bool(logihead_kw, LOGIHEAD_DUALP_INDEX);
+            this->dualp = logihead_kw->at<bool>(LOGIHEAD_DUALP_INDEX);
         else
             this->dualp = false;
     }
 
     inline static RSTHead read(rd::FileView *rst_view, int report_step) {
-        const rd_kw_type *intehead_kw = rst_view->get_kw(INTEHEAD_KW, 0);
-        const rd_kw_type *doubhead_kw = rst_view->get_kw(DOUBHEAD_KW, 0);
-        const rd_kw_type *logihead_kw = NULL;
+        const rd::KW *intehead_kw = rst_view->get_kw(INTEHEAD_KW, 0);
+        const rd::KW *doubhead_kw = rst_view->get_kw(DOUBHEAD_KW, 0);
+        const rd::KW *logihead_kw = NULL;
 
         if (rst_view->has_kw(LOGIHEAD_KW))
             logihead_kw = rst_view->get_kw(LOGIHEAD_KW, 0);
 
         if (rst_view->has_kw(SEQNUM_KW)) {
-            const rd_kw_type *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
-            report_step = rd_kw_iget_int(seqnum_kw, 0);
+            const rd::KW *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
+            report_step = seqnum_kw->at<int>(0);
         }
 
         return {report_step, intehead_kw, doubhead_kw, logihead_kw};
