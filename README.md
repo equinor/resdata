@@ -3,7 +3,7 @@ Python package for reading and writing the result files from
 reservoir simulators. The file types covered are the
 RESTART, INIT, RFT, Summary and GRID files in unified and non-unified, and formatted and unformatted.
 
-ResData officially only supports Linux and macOS. It was initially developed as part of the
+ResData officially only supports Linux (x86_64 and aarch64/arm64) and macOS. It was initially developed as part of the
 [_ert_](http://github.com/Equinor/ert) project.
 
 ## Using
