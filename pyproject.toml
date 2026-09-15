@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "cmake<4",
+  "cmake",
   "conan>=2",
   "ninja",
   "scikit-build",
