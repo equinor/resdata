@@ -53,8 +53,8 @@
    --------
 
    rd_grid_type   * rd_grid;
-   rd_kw_type     * soil;
-   rd_kw_type     * regions;
+   rd::KW     * soil;
+   rd::KW     * regions;
    rd_region_type * rd_region;
 
    // Load grid, soil and regions somehow.
@@ -171,8 +171,8 @@ const std::vector<int> &rd_region_get_global_list(rd_region_type *region) {
 }
 
 static void rd_region_assert_kw(const rd_region_type *region,
-                                const rd_kw_type *rd_kw, bool *global_kw) {
-    int kw_size = rd_kw_get_size(rd_kw);
+                                const rd::KW *rd_kw, bool *global_kw) {
+    int kw_size = rd::kw_get_size(rd_kw);
     if (!(kw_size == region->grid_vol || kw_size == region->grid_active))
         throw std::invalid_argument(
             "size mismatch between rd_kw instance and region->grid");
@@ -189,14 +189,14 @@ void rd_region_reset(rd_region_type *rd_region) {
 }
 
 static void rd_region_select_equal__(rd_region_type *region,
-                                     const rd_kw_type *rd_kw, int value,
+                                     const rd::KW *rd_kw, int value,
                                      bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
-    if (!rd_type_is_int(rd_kw_get_data_type(rd_kw)))
+    if (!rd_type_is_int(rd_kw->data_type()))
         throw std::invalid_argument(
             "select by equality is only supported for integer keywords");
-    const int *kw_data = rd_kw_get_int_ptr(rd_kw);
+    const int *kw_data = rd_kw->get_vector<int>().data();
     if (global_kw) {
         for (int global_index = 0; global_index < region->grid_vol;
              global_index++) {
@@ -216,34 +216,35 @@ static void rd_region_select_equal__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_select_equal(rd_region_type *region, const rd::KW *rd_kw,
                             int value) {
     rd_region_select_equal__(region, rd_kw, value, true);
 }
 
-void rd_region_deselect_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_deselect_equal(rd_region_type *region, const rd::KW *rd_kw,
                               int value) {
     rd_region_select_equal__(region, rd_kw, value, false);
 }
 
 static void rd_region_select_bool_equal__(rd_region_type *region,
-                                          const rd_kw_type *rd_kw, bool value,
+                                          const rd::KW *rd_kw, bool value,
                                           bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
-    if (!rd_type_is_bool(rd_kw_get_data_type(rd_kw)))
+    if (!rd_type_is_bool(rd_kw->data_type()))
         throw std::invalid_argument(
             "select by equality is only supported for boolean keywords");
     if (global_kw) {
-        for (int global_index = 0; global_index < region->grid_vol;
+        for (size_t global_index = 0;
+             global_index < static_cast<size_t>(region->grid_vol);
              global_index++) {
-            if (rd_kw_iget_bool(rd_kw, global_index) == value)
+            if (rd_kw->at<bool>(global_index) == value)
                 region->active_mask[global_index] = select;
         }
     } else {
         for (int active_index = 0; active_index < region->grid_active;
              active_index++) {
-            if (rd_kw_iget_bool(rd_kw, active_index) == value) {
+            if (rd_kw->at<bool>(active_index) == value) {
                 int global_index = rd_grid_get_global_index1A(
                     region->parent_grid, active_index);
                 region->active_mask[global_index] = select;
@@ -253,25 +254,24 @@ static void rd_region_select_bool_equal__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw) {
+void rd_region_select_true(rd_region_type *region, const rd::KW *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, true, true);
 }
 
-void rd_region_select_false(rd_region_type *region, const rd_kw_type *rd_kw) {
+void rd_region_select_false(rd_region_type *region, const rd::KW *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, false, true);
 }
 
 static void rd_region_select_in_interval__(rd_region_type *region,
-                                           const rd_kw_type *rd_kw,
-                                           float min_value, float max_value,
-                                           bool select) {
+                                           const rd::KW *rd_kw, float min_value,
+                                           float max_value, bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
-    if (!rd_type_is_float(rd_kw_get_data_type(rd_kw)))
+    if (!rd_type_is_float(rd_kw->data_type()))
         throw std::invalid_argument(
             "select by in_interval is only supported for float keywords");
     {
-        const float *kw_data = rd_kw_get_float_ptr(rd_kw);
+        const float *kw_data = rd_kw->get_vector<float>().data();
         if (global_kw) {
             for (int global_index = 0; global_index < region->grid_vol;
                  global_index++) {
@@ -294,15 +294,13 @@ static void rd_region_select_in_interval__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_in_interval(rd_region_type *region,
-                                  const rd_kw_type *rd_kw, float min_value,
-                                  float max_value) {
+void rd_region_select_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                  float min_value, float max_value) {
     rd_region_select_in_interval__(region, rd_kw, min_value, max_value, true);
 }
 
-void rd_region_deselect_in_interval(rd_region_type *region,
-                                    const rd_kw_type *rd_kw, float min_value,
-                                    float max_value) {
+void rd_region_deselect_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                    float min_value, float max_value) {
     rd_region_select_in_interval__(region, rd_kw, min_value, max_value, false);
 }
 
@@ -316,17 +314,17 @@ void rd_region_deselect_in_interval(rd_region_type *region,
   NBNBNBNB: Select >= on float values and select > on integer!!!!!!
 */
 static void rd_region_select_with_limit__(rd_region_type *region,
-                                          const rd_kw_type *rd_kw, float limit,
+                                          const rd::KW *rd_kw, float limit,
                                           bool select_less, bool select) {
     bool global_kw;
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
+    rd_data_type data_type = rd_kw->data_type();
     rd_region_assert_kw(region, rd_kw, &global_kw);
     if (!rd_type_is_numeric(data_type))
         throw std::invalid_argument(
             "select by smaller/larger is only supported for numeric keywords");
 
     if (rd_type_is_float(data_type)) {
-        const float *kw_data = rd_kw_get_float_ptr(rd_kw);
+        const float *kw_data = rd_kw->get_vector<float>().data();
         float float_limit = limit;
         if (global_kw) {
             for (int global_index = 0; global_index < region->grid_vol;
@@ -358,7 +356,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
             }
         }
     } else if (rd_type_is_int(data_type)) {
-        const int *kw_data = rd_kw_get_int_ptr(rd_kw);
+        const int *kw_data = rd_kw->get_vector<int>().data();
         int int_limit = (int)limit;
         if (global_kw) {
             for (int global_index = 0; global_index < region->grid_vol;
@@ -390,7 +388,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
             }
         }
     } else if (rd_type_is_double(data_type)) {
-        const double *kw_data = rd_kw_get_double_ptr(rd_kw);
+        const double *kw_data = rd_kw->get_vector<double>().data();
         double double_limit = (double)limit;
         if (global_kw) {
             for (int global_index = 0; global_index < region->grid_vol;
@@ -425,23 +423,23 @@ static void rd_region_select_with_limit__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_smaller(rd_region_type *rd_region,
-                              const rd_kw_type *rd_kw, float limit) {
+void rd_region_select_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                              float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, true, true);
 }
 
-void rd_region_deselect_smaller(rd_region_type *rd_region,
-                                const rd_kw_type *rd_kw, float limit) {
+void rd_region_deselect_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                                float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, true, false);
 }
 
-void rd_region_select_larger(rd_region_type *rd_region, const rd_kw_type *rd_kw,
+void rd_region_select_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
                              float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, false, true);
 }
 
-void rd_region_deselect_larger(rd_region_type *rd_region,
-                               const rd_kw_type *rd_kw, float limit) {
+void rd_region_deselect_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
+                               float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, false, false);
 }
 
@@ -449,18 +447,18 @@ void rd_region_deselect_larger(rd_region_type *rd_region,
     Selection based on comparing two keywords.
 */
 
-static void rd_region_cmp_select__(rd_region_type *region,
-                                   const rd_kw_type *kw1, const rd_kw_type *kw2,
-                                   bool select_less, bool select) {
+static void rd_region_cmp_select__(rd_region_type *region, const rd::KW *kw1,
+                                   const rd::KW *kw2, bool select_less,
+                                   bool select) {
     bool global_kw;
     rd_region_assert_kw(region, kw1, &global_kw);
-    if (!rd_type_is_float(rd_kw_get_data_type(kw1)))
+    if (!rd_type_is_float(kw1->data_type()))
         throw std::invalid_argument(
             "select by cmp() is only supported for float keywords");
-    if (rd_kw_size_and_type_equal(kw1, kw2)) {
+    if (kw1->size_and_type_equal(kw2)) {
 
-        const float *kw1_data = rd_kw_get_float_ptr(kw1);
-        const float *kw2_data = rd_kw_get_float_ptr(kw2);
+        const float *kw1_data = kw1->get_vector<float>().data();
+        const float *kw2_data = kw2->get_vector<float>().data();
 
         if (global_kw) {
             for (int global_index = 0; global_index < region->grid_vol;
@@ -496,23 +494,23 @@ static void rd_region_cmp_select__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_cmp_select_less(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2) {
+void rd_region_cmp_select_less(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, true, true);
 }
 
-void rd_region_cmp_deselect_less(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2) {
+void rd_region_cmp_deselect_less(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, true, false);
 }
 
-void rd_region_cmp_select_more(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2) {
+void rd_region_cmp_select_more(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, false, true);
 }
 
-void rd_region_cmp_deselect_more(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2) {
+void rd_region_cmp_deselect_more(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, false, false);
 }
 
@@ -1050,9 +1048,9 @@ void rd_region_subtract(rd_region_type *region,
 }
 
 const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                    const rd_kw_type *rd_kw,
+                                                    const rd::KW *rd_kw,
                                                     bool force_active) {
-    int kw_size = rd_kw_get_size(rd_kw);
+    int kw_size = rd::kw_get_size(rd_kw);
     int grid_active = rd_grid_get_active_size(rd_region->parent_grid);
     int grid_global = rd_grid_get_global_size(rd_region->parent_grid);
 
@@ -1069,102 +1067,109 @@ const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
             grid_active, grid_global, kw_size));
 }
 
-void rd_region_set_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                          int value, bool force_active) {
+void rd_region_kw_iadd(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *delta_kw, bool force_active) {
     const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_set_indexed_int(rd_kw, index_set, value);
+    if (!rd_kw->size_and_numeric_type_equal(delta_kw))
+        throw std::invalid_argument("type/size  mismatch");
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            if constexpr (std::is_arithmetic_v<T>) {
+                auto &target_data = rd_kw->get_vector<T>();
+                const auto &delta_data = delta_kw->get_vector<T>();
+                for (const auto i : index_set)
+                    target_data[i] += delta_data[i];
+            } else
+                throw std::invalid_argument(
+                    fmt::format("inplace add not implemented for type:{}",
+                                rd_type_name(rd_kw->data_type())));
+        },
+        rd_kw->data().value());
 }
 
-void rd_region_set_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            float value, bool force_active) {
+void rd_region_kw_idiv(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *div_kw, bool force_active) {
     const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_set_indexed_float(rd_kw, index_set, value);
+    if (!rd_kw->size_and_numeric_type_equal(div_kw))
+        throw std::invalid_argument("type/size  mismatch");
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            if constexpr (std::is_arithmetic_v<T>) {
+                auto &target_data = rd_kw->get_vector<T>();
+                const auto &div_data = div_kw->get_vector<T>();
+                for (const auto i : index_set)
+                    target_data[i] /= div_data[i];
+            } else
+                throw std::invalid_argument(
+                    fmt::format("inplace div not implemented for type:{}",
+                                rd_type_name(rd_kw->data_type())));
+        },
+        rd_kw->data().value());
 }
 
-void rd_region_set_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                             double value, bool force_active) {
+void rd_region_kw_imul(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *mul_kw, bool force_active) {
     const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_set_indexed_double(rd_kw, index_set, value);
+    if (!rd_kw->size_and_numeric_type_equal(mul_kw))
+        throw std::invalid_argument("type/size  mismatch");
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            if constexpr (std::is_arithmetic_v<T>) {
+                auto &target_data = rd_kw->get_vector<T>();
+                const auto &mul_data = mul_kw->get_vector<T>();
+                for (const auto i : index_set)
+                    target_data[i] *= mul_data[i];
+            } else
+                throw std::invalid_argument(
+                    fmt::format("inplace mul not implemented for type:{}",
+                                rd_type_name(rd_kw->data_type())));
+        },
+        rd_kw->data().value());
 }
 
-void rd_region_shift_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            int value, bool force_active) {
+void rd_region_kw_isub(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *delta_kw, bool force_active) {
     const std::vector<int> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_shift_indexed_int(rd_kw, index_set, value);
+    if (!rd_kw->size_and_numeric_type_equal(delta_kw))
+        throw std::invalid_argument("type/size  mismatch");
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            if constexpr (std::is_arithmetic_v<T>) {
+                auto &target_data = rd_kw->get_vector<T>();
+                const auto &delta_data = delta_kw->get_vector<T>();
+                for (const auto i : index_set)
+                    target_data[i] -= delta_data[i];
+            } else
+                throw std::invalid_argument(
+                    fmt::format("inplace sub not implemented for type:{}",
+                                rd_type_name(rd_kw->data_type())));
+        },
+        rd_kw->data().value());
 }
 
-void rd_region_shift_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                              float value, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_shift_indexed_float(rd_kw, index_set, value);
-}
-
-void rd_region_shift_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                               double value, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_shift_indexed_double(rd_kw, index_set, value);
-}
-
-void rd_region_scale_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            int value, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_scale_indexed_int(rd_kw, index_set, value);
-}
-
-void rd_region_scale_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                              float value, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_scale_indexed_float(rd_kw, index_set, value);
-}
-
-void rd_region_scale_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                               double value, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_scale_indexed_double(rd_kw, index_set, value);
-}
-
-void rd_region_kw_iadd(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *delta_kw, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_inplace_add_indexed(rd_kw, index_set, delta_kw);
-}
-
-void rd_region_kw_idiv(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *div_kw, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_inplace_div_indexed(rd_kw, index_set, div_kw);
-}
-
-void rd_region_kw_imul(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *mul_kw, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_inplace_mul_indexed(rd_kw, index_set, mul_kw);
-}
-
-void rd_region_kw_isub(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *delta_kw, bool force_active) {
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_inplace_sub_indexed(rd_kw, index_set, delta_kw);
-}
-
-void rd_region_kw_copy(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *src_kw, bool force_active) {
+void rd_region_kw_copy(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *src_kw, bool force_active) {
     const std::vector<int> &target_index =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_copy_indexed(rd_kw, target_index, src_kw);
+    if (!rd_kw->size_and_type_equal(src_kw))
+        throw std::invalid_argument("type/size  mismatch");
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            auto &target_data = rd_kw->get_vector<T>();
+            const auto &src_data = src_kw->get_vector<T>();
+            for (const auto i : target_index)
+                target_data[i] = src_data[i];
+        },
+        rd_kw->data().value());
 }
 
 void rd_region_set_name(rd_region_type *region,
@@ -1183,31 +1188,4 @@ bool rd_region_equal(const rd_region_type *region1,
         return region1->active_mask == region2->active_mask;
     } else
         return false;
-}
-
-int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                         bool force_active) {
-    int sum;
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
-    return sum;
-}
-
-float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                             bool force_active) {
-    float sum;
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
-    return sum;
-}
-
-double rd_region_sum_kw_double(rd_region_type *rd_region,
-                               const rd_kw_type *rd_kw, bool force_active) {
-    double sum;
-    const std::vector<int> &index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
-    return sum;
 }

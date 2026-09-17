@@ -15,7 +15,7 @@ typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep);
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 int ministep_nr,
-                                                const rd_kw_type *params_kw,
+                                                const rd::KW *params_kw,
                                                 const char *src_file,
                                                 const rd_smspec_type *smspec);
 

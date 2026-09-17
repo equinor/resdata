@@ -44,12 +44,12 @@ int main(int argc, char **argv) {
     }
 
     {
-        const rd_kw_type *swat0 = RST_file->get_kw("SWAT", 0);
-        const rd_kw_type *porv = INIT_file->get_kw("PORV", 0);
+        const rd::KW *swat0 = RST_file->get_kw("SWAT", 0);
+        const rd::KW *porv = INIT_file->get_kw("PORV", 0);
 
-        test_assert_int_equal(rd_kw_get_size(swat0),
+        test_assert_int_equal(rd::kw_get_size(swat0),
                               rd_grid_get_active_size(GRID.get()));
-        test_assert_int_equal(rd_kw_get_size(porv),
+        test_assert_int_equal(rd::kw_get_size(porv),
                               rd_grid_get_global_size(GRID.get()));
     }
 

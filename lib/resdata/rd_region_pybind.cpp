@@ -50,74 +50,68 @@ PYBIND11_MODULE(_rd_region, m) {
 
     m.def("_set_kw_int", [](py::handle self, py::handle kw, int value,
                             bool force_active) {
-        rd_region_set_kw_int(from_cwrap<rd_region_type>(self),
-                             from_cwrap<rd_kw_type>(kw), value, force_active);
+        rd_region_set_kw<int>(from_cwrap<rd_region_type>(self),
+                              from_cwrap<rd::KW>(kw), value, force_active);
     });
     m.def("_set_kw_float", [](py::handle self, py::handle kw, float value,
                               bool force_active) {
-        rd_region_set_kw_float(from_cwrap<rd_region_type>(self),
-                               from_cwrap<rd_kw_type>(kw), value, force_active);
+        rd_region_set_kw<float>(from_cwrap<rd_region_type>(self),
+                                from_cwrap<rd::KW>(kw), value, force_active);
     });
-    m.def("_set_kw_double",
-          [](py::handle self, py::handle kw, double value, bool force_active) {
-              rd_region_set_kw_double(from_cwrap<rd_region_type>(self),
-                                      from_cwrap<rd_kw_type>(kw), value,
-                                      force_active);
-          });
+    m.def("_set_kw_double", [](py::handle self, py::handle kw, double value,
+                               bool force_active) {
+        rd_region_set_kw<double>(from_cwrap<rd_region_type>(self),
+                                 from_cwrap<rd::KW>(kw), value, force_active);
+    });
     m.def("_shift_kw_int", [](py::handle self, py::handle kw, int value,
                               bool force_active) {
-        rd_region_shift_kw_int(from_cwrap<rd_region_type>(self),
-                               from_cwrap<rd_kw_type>(kw), value, force_active);
+        rd_region_shift_kw<int>(from_cwrap<rd_region_type>(self),
+                                from_cwrap<rd::KW>(kw), value, force_active);
     });
-    m.def("_shift_kw_float",
-          [](py::handle self, py::handle kw, float value, bool force_active) {
-              rd_region_shift_kw_float(from_cwrap<rd_region_type>(self),
-                                       from_cwrap<rd_kw_type>(kw), value,
-                                       force_active);
-          });
-    m.def("_shift_kw_double",
-          [](py::handle self, py::handle kw, double value, bool force_active) {
-              rd_region_shift_kw_double(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<rd_kw_type>(kw), value,
-                                        force_active);
-          });
+    m.def("_shift_kw_float", [](py::handle self, py::handle kw, float value,
+                                bool force_active) {
+        rd_region_shift_kw<float>(from_cwrap<rd_region_type>(self),
+                                  from_cwrap<rd::KW>(kw), value, force_active);
+    });
+    m.def("_shift_kw_double", [](py::handle self, py::handle kw, double value,
+                                 bool force_active) {
+        rd_region_shift_kw<double>(from_cwrap<rd_region_type>(self),
+                                   from_cwrap<rd::KW>(kw), value, force_active);
+    });
     m.def("_scale_kw_int", [](py::handle self, py::handle kw, int value,
                               bool force_active) {
-        rd_region_scale_kw_int(from_cwrap<rd_region_type>(self),
-                               from_cwrap<rd_kw_type>(kw), value, force_active);
+        rd_region_scale_kw<int>(from_cwrap<rd_region_type>(self),
+                                from_cwrap<rd::KW>(kw), value, force_active);
     });
-    m.def("_scale_kw_float",
-          [](py::handle self, py::handle kw, float value, bool force_active) {
-              rd_region_scale_kw_float(from_cwrap<rd_region_type>(self),
-                                       from_cwrap<rd_kw_type>(kw), value,
-                                       force_active);
-          });
-    m.def("_scale_kw_double",
-          [](py::handle self, py::handle kw, double value, bool force_active) {
-              rd_region_scale_kw_double(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<rd_kw_type>(kw), value,
-                                        force_active);
-          });
+    m.def("_scale_kw_float", [](py::handle self, py::handle kw, float value,
+                                bool force_active) {
+        rd_region_scale_kw<float>(from_cwrap<rd_region_type>(self),
+                                  from_cwrap<rd::KW>(kw), value, force_active);
+    });
+    m.def("_scale_kw_double", [](py::handle self, py::handle kw, double value,
+                                 bool force_active) {
+        rd_region_scale_kw<double>(from_cwrap<rd_region_type>(self),
+                                   from_cwrap<rd::KW>(kw), value, force_active);
+    });
     m.def("_sum_kw_int", [](py::handle self, py::handle kw, bool force_active) {
-        return rd_region_sum_kw_int(from_cwrap<rd_region_type>(self),
-                                    from_cwrap<rd_kw_type>(kw), force_active);
+        return rd_region_sum_kw<int>(from_cwrap<rd_region_type>(self),
+                                     from_cwrap<rd::KW>(kw), force_active);
     });
     m.def("_sum_kw_float", [](py::handle self, py::handle kw,
                               bool force_active) {
-        return rd_region_sum_kw_float(from_cwrap<rd_region_type>(self),
-                                      from_cwrap<rd_kw_type>(kw), force_active);
+        return rd_region_sum_kw<float>(from_cwrap<rd_region_type>(self),
+                                       from_cwrap<rd::KW>(kw), force_active);
     });
-    m.def("_sum_kw_double",
-          [](py::handle self, py::handle kw, bool force_active) {
-              return rd_region_sum_kw_double(from_cwrap<rd_region_type>(self),
-                                             from_cwrap<rd_kw_type>(kw),
-                                             force_active);
-          });
-    m.def("_sum_kw_bool", [](py::handle self, py::handle kw,
-                             bool force_active) {
-        return rd_region_sum_kw_int(from_cwrap<rd_region_type>(self),
-                                    from_cwrap<rd_kw_type>(kw), force_active);
+    m.def("_sum_kw_double", [](py::handle self, py::handle kw,
+                               bool force_active) {
+        return rd_region_sum_kw<double>(from_cwrap<rd_region_type>(self),
+                                        from_cwrap<rd::KW>(kw), force_active);
     });
+    m.def(
+        "_sum_kw_bool", [](py::handle self, py::handle kw, bool force_active) {
+            return rd_region_sum_kw_bool(from_cwrap<rd_region_type>(self),
+                                         from_cwrap<rd::KW>(kw), force_active);
+        });
 
     m.def("_free", [](py::handle self) {
         rd_region_free(from_cwrap<rd_region_type>(self));
@@ -133,39 +127,39 @@ PYBIND11_MODULE(_rd_region, m) {
     });
     m.def("_select_equal", [](py::handle self, py::handle kw, int value) {
         rd_region_select_equal(from_cwrap<rd_region_type>(self),
-                               from_cwrap<rd_kw_type>(kw), value);
+                               from_cwrap<rd::KW>(kw), value);
     });
     m.def("_deselect_equal", [](py::handle self, py::handle kw, int value) {
         rd_region_deselect_equal(from_cwrap<rd_region_type>(self),
-                                 from_cwrap<rd_kw_type>(kw), value);
+                                 from_cwrap<rd::KW>(kw), value);
     });
     m.def("_select_less", [](py::handle self, py::handle kw, float limit) {
         rd_region_select_smaller(from_cwrap<rd_region_type>(self),
-                                 from_cwrap<rd_kw_type>(kw), limit);
+                                 from_cwrap<rd::KW>(kw), limit);
     });
     m.def("_deselect_less", [](py::handle self, py::handle kw, float limit) {
         rd_region_deselect_smaller(from_cwrap<rd_region_type>(self),
-                                   from_cwrap<rd_kw_type>(kw), limit);
+                                   from_cwrap<rd::KW>(kw), limit);
     });
     m.def("_select_more", [](py::handle self, py::handle kw, float limit) {
         rd_region_select_larger(from_cwrap<rd_region_type>(self),
-                                from_cwrap<rd_kw_type>(kw), limit);
+                                from_cwrap<rd::KW>(kw), limit);
     });
     m.def("_deselect_more", [](py::handle self, py::handle kw, float limit) {
         rd_region_deselect_larger(from_cwrap<rd_region_type>(self),
-                                  from_cwrap<rd_kw_type>(kw), limit);
+                                  from_cwrap<rd::KW>(kw), limit);
     });
     m.def("_select_in_interval",
           [](py::handle self, py::handle kw, float min_value, float max_value) {
               rd_region_select_in_interval(from_cwrap<rd_region_type>(self),
-                                           from_cwrap<rd_kw_type>(kw),
-                                           min_value, max_value);
+                                           from_cwrap<rd::KW>(kw), min_value,
+                                           max_value);
           });
     m.def("_deselect_in_interval",
           [](py::handle self, py::handle kw, float min_value, float max_value) {
               rd_region_deselect_in_interval(from_cwrap<rd_region_type>(self),
-                                             from_cwrap<rd_kw_type>(kw),
-                                             min_value, max_value);
+                                             from_cwrap<rd::KW>(kw), min_value,
+                                             max_value);
           });
     m.def("_invert_selection", [](py::handle self) {
         rd_region_invert_selection(from_cwrap<rd_region_type>(self));
@@ -184,32 +178,32 @@ PYBIND11_MODULE(_rd_region, m) {
     m.def("_imul_kw", [](py::handle self, py::handle kw, py::handle other,
                          bool force_active) {
         rd_region_kw_imul(from_cwrap<rd_region_type>(self),
-                          from_cwrap<rd_kw_type>(kw),
-                          from_cwrap<rd_kw_type>(other), force_active);
+                          from_cwrap<rd::KW>(kw), from_cwrap<rd::KW>(other),
+                          force_active);
     });
     m.def("_idiv_kw", [](py::handle self, py::handle kw, py::handle other,
                          bool force_active) {
         rd_region_kw_idiv(from_cwrap<rd_region_type>(self),
-                          from_cwrap<rd_kw_type>(kw),
-                          from_cwrap<rd_kw_type>(other), force_active);
+                          from_cwrap<rd::KW>(kw), from_cwrap<rd::KW>(other),
+                          force_active);
     });
     m.def("_iadd_kw", [](py::handle self, py::handle kw, py::handle other,
                          bool force_active) {
         rd_region_kw_iadd(from_cwrap<rd_region_type>(self),
-                          from_cwrap<rd_kw_type>(kw),
-                          from_cwrap<rd_kw_type>(other), force_active);
+                          from_cwrap<rd::KW>(kw), from_cwrap<rd::KW>(other),
+                          force_active);
     });
     m.def("_isub_kw", [](py::handle self, py::handle kw, py::handle other,
                          bool force_active) {
         rd_region_kw_isub(from_cwrap<rd_region_type>(self),
-                          from_cwrap<rd_kw_type>(kw),
-                          from_cwrap<rd_kw_type>(other), force_active);
+                          from_cwrap<rd::KW>(kw), from_cwrap<rd::KW>(other),
+                          force_active);
     });
     m.def("_copy_kw", [](py::handle self, py::handle kw, py::handle src_kw,
                          bool force_active) {
         rd_region_kw_copy(from_cwrap<rd_region_type>(self),
-                          from_cwrap<rd_kw_type>(kw),
-                          from_cwrap<rd_kw_type>(src_kw), force_active);
+                          from_cwrap<rd::KW>(kw), from_cwrap<rd::KW>(src_kw),
+                          force_active);
     });
     m.def("_intersect", [](py::handle self, py::handle other) {
         rd_region_intersection(from_cwrap<rd_region_type>(self),
@@ -226,7 +220,7 @@ PYBIND11_MODULE(_rd_region, m) {
     m.def("_get_kw_index_list", [](py::handle self, py::handle kw,
                                    bool force_active) {
         return rd_region_get_kw_index_list(from_cwrap<rd_region_type>(self),
-                                           from_cwrap<rd_kw_type>(kw),
+                                           from_cwrap<rd::KW>(kw),
                                            force_active);
     });
     m.def("_get_active_size", [](py::handle self) {
@@ -246,26 +240,26 @@ PYBIND11_MODULE(_rd_region, m) {
     m.def("_select_cmp_less",
           [](py::handle self, py::handle kw1, py::handle kw2) {
               rd_region_cmp_select_less(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<rd_kw_type>(kw1),
-                                        from_cwrap<rd_kw_type>(kw2));
+                                        from_cwrap<rd::KW>(kw1),
+                                        from_cwrap<rd::KW>(kw2));
           });
     m.def("_select_cmp_more",
           [](py::handle self, py::handle kw1, py::handle kw2) {
               rd_region_cmp_select_more(from_cwrap<rd_region_type>(self),
-                                        from_cwrap<rd_kw_type>(kw1),
-                                        from_cwrap<rd_kw_type>(kw2));
+                                        from_cwrap<rd::KW>(kw1),
+                                        from_cwrap<rd::KW>(kw2));
           });
     m.def("_deselect_cmp_less",
           [](py::handle self, py::handle kw1, py::handle kw2) {
               rd_region_cmp_deselect_less(from_cwrap<rd_region_type>(self),
-                                          from_cwrap<rd_kw_type>(kw1),
-                                          from_cwrap<rd_kw_type>(kw2));
+                                          from_cwrap<rd::KW>(kw1),
+                                          from_cwrap<rd::KW>(kw2));
           });
     m.def("_deselect_cmp_more",
           [](py::handle self, py::handle kw1, py::handle kw2) {
               rd_region_cmp_deselect_more(from_cwrap<rd_region_type>(self),
-                                          from_cwrap<rd_kw_type>(kw1),
-                                          from_cwrap<rd_kw_type>(kw2));
+                                          from_cwrap<rd::KW>(kw1),
+                                          from_cwrap<rd::KW>(kw2));
           });
     m.def("_select_islice", [](py::handle self, int i1, int i2) {
         rd_region_select_i1i2(from_cwrap<rd_region_type>(self), i1, i2);
@@ -411,11 +405,11 @@ PYBIND11_MODULE(_rd_region, m) {
     });
     m.def("_select_true", [](py::handle self, py::handle kw) {
         rd_region_select_true(from_cwrap<rd_region_type>(self),
-                              from_cwrap<rd_kw_type>(kw));
+                              from_cwrap<rd::KW>(kw));
     });
     m.def("_select_false", [](py::handle self, py::handle kw) {
         rd_region_select_false(from_cwrap<rd_region_type>(self),
-                               from_cwrap<rd_kw_type>(kw));
+                               from_cwrap<rd::KW>(kw));
     });
     m.def("_select_from_layer", [](py::handle self, py::handle layer, int k,
                                    int value) {

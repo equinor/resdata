@@ -34,7 +34,7 @@ public:
           outlet_segment_id(outlet_segment_id), depth(depth), length(length),
           total_length(total_length), diameter(diameter) {};
     static std::shared_ptr<WellSegment>
-    from_kw(const rd_kw_type *iseg_kw, well_rseg_loader_type *rseg_loader,
+    from_kw(const rd::KW *iseg_kw, well_rseg_loader_type *rseg_loader,
             const RSTHead &header, int well_nr, int segment_index,
             int segment_id);
     [[nodiscard]] bool is_active() const {
@@ -79,5 +79,5 @@ public:
     }
 };
 
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
+bool well_segment_well_is_MSW(int well_nr, const rd::KW *iwel_kw,
                               const RSTHead &rst_head);
