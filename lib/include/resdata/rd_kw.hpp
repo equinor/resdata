@@ -148,8 +148,6 @@ const char *rd_kw_get_header(const rd_kw_type *rd_kw);
 rd_kw_type *rd_kw_alloc_empty(void);
 rd_read_status_enum rd_kw_fread_header(rd_kw_type *, ERT::FortIO &);
 void rd_kw_set_header_name(rd_kw_type *, const char *);
-bool rd_kw_fseek_kw(const char *, bool, bool, ERT::FortIO &);
-void rd_kw_fskip(ERT::FortIO &);
 bool rd_kw_fread_realloc(rd_kw_type *, ERT::FortIO &);
 rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &);
 rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
@@ -167,7 +165,6 @@ void rd_kw_memcpy(rd_kw_type *, const rd_kw_type *);
 void rd_kw_get_memcpy_data(const rd_kw_type *, void *);
 void rd_kw_set_memcpy_data(rd_kw_type *, const void *);
 bool rd_kw_fwrite(const rd_kw_type *, ERT::FortIO &);
-void rd_kw_iget(const rd_kw_type *, int, void *);
 void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr);
 void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, int index, const char *s);
 void rd_kw_iset_string8(rd_kw_type *rd_kw, int index, const char *s8);
@@ -191,7 +188,6 @@ bool rd_kw_icmp_string(const rd_kw_type *rd_kw, int index,
 bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
                          double abs_diff, double rel_diff);
 bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data);
-bool rd_kw_content_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_fskip_data__(rd_data_type, int, ERT::FortIO &);
 bool rd_kw_fskip_data(rd_kw_type *rd_kw, ERT::FortIO &fortio);
 void rd_kw_fskip_header(ERT::FortIO &fortio);
@@ -205,7 +201,6 @@ double rd_kw_element_sum_float(const rd_kw_type *rd_kw);
 void rd_kw_element_sum(const rd_kw_type *, void *);
 void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
                                const std::vector<int> &index_list, void *_sum);
-void rd_kw_max_min(const rd_kw_type *, void *, void *);
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw);
 
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
@@ -218,9 +213,6 @@ RD_KW_SCALAR_SET_TYPED_HEADER(int)
 RD_KW_SCALAR_SET_TYPED_HEADER(float)
 RD_KW_SCALAR_SET_TYPED_HEADER(double)
 #undef RD_KW_SCALAR_SET_TYPED_HEADER
-
-rd_kw_type *rd_kw_alloc_scatter_copy(const rd_kw_type *src_kw, int target_size,
-                                     const int *mapping, void *def_value);
 
 void rd_kw_inplace_add_squared(rd_kw_type *target_kw, const rd_kw_type *add_kw);
 void rd_kw_inplace_add(rd_kw_type *target_kw, const rd_kw_type *add_kw);
@@ -244,18 +236,6 @@ void rd_kw_inplace_div_indexed(rd_kw_type *target_kw,
 void rd_kw_copy_indexed(rd_kw_type *target_kw,
                         const std::vector<int> &index_set,
                         const rd_kw_type *src_kw);
-
-bool rd_kw_assert_binary_numeric(const rd_kw_type *kw1, const rd_kw_type *kw2);
-bool rd_kw_assert_numeric(const rd_kw_type *kw);
-bool rd_kw_assert_binary(const rd_kw_type *kw1, const rd_kw_type *kw2);
-
-#define RD_KW_ASSERT_TYPED_BINARY_OP_HEADER(ctype)                             \
-    bool rd_kw_assert_binary_##ctype(const rd_kw_type *kw1,                    \
-                                     const rd_kw_type *kw2)
-RD_KW_ASSERT_TYPED_BINARY_OP_HEADER(int);
-RD_KW_ASSERT_TYPED_BINARY_OP_HEADER(float);
-RD_KW_ASSERT_TYPED_BINARY_OP_HEADER(double);
-#undef RD_KW_ASSERT_TYPED_BINARY_OP_HEADER
 
 #define RD_KW_SCALE_TYPED_HEADER(ctype)                                        \
     void rd_kw_scale_##ctype(rd_kw_type *rd_kw, ctype scale_factor)
