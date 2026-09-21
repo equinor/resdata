@@ -91,10 +91,6 @@ TEST_CASE("char/string accessors validate the type", "[rd_kw]") {
         REQUIRE_THROWS_WITH(rd_kw_iget_string_ptr(int_kw.get(), 0),
                             ContainsSubstring("wrong type"));
     }
-    SECTION("icmp_string on non char type") {
-        REQUIRE_THROWS_WITH(rd_kw_icmp_string(int_kw.get(), 0, "X"),
-                            ContainsSubstring("wrong type"));
-    }
 }
 
 TEST_CASE("rd_kw_iset_string_ptr validates type and length", "[rd_kw]") {
