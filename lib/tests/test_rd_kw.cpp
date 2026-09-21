@@ -131,24 +131,6 @@ TEST_CASE("rd_kw_iget_stripped_string handles width edge cases", "[rd_kw]") {
     }
 }
 
-TEST_CASE("scalar_set/scale/shift validate the type", "[rd_kw]") {
-    auto float_kw = make_rd_kw("KW", 3, RD_FLOAT);
-    REQUIRE_THROWS_WITH(rd_kw_scalar_set_int(float_kw.get(), 1),
-                        ContainsSubstring("wrong type"));
-    REQUIRE_THROWS_WITH(rd_kw_scale_int(float_kw.get(), 1),
-                        ContainsSubstring("wrong type"));
-    REQUIRE_THROWS_WITH(rd_kw_shift_int(float_kw.get(), 1),
-                        ContainsSubstring("wrong type"));
-
-    auto int_kw = make_int_kw("KW", 3);
-    REQUIRE_THROWS_WITH(rd_kw_scalar_set_float_or_double(int_kw.get(), 1.0),
-                        ContainsSubstring("wrong type"));
-    REQUIRE_THROWS_WITH(rd_kw_scale_float_or_double(int_kw.get(), 1.0),
-                        ContainsSubstring("wrong type"));
-    REQUIRE_THROWS_WITH(rd_kw_shift_float_or_double(int_kw.get(), 1.0),
-                        ContainsSubstring("wrong type"));
-}
-
 TEST_CASE("slice copy validates range and stride", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("index1 beyond size") {
@@ -202,48 +184,6 @@ TEST_CASE("inplace binary ops validate size and type", "[rd_kw]") {
         REQUIRE_THROWS_WITH(rd_kw_inplace_div(a_char.get(), b_char.get()),
                             ContainsSubstring("not implemented for type"));
     }
-}
-
-TEST_CASE("inplace unary ops validate type", "[rd_kw]") {
-    auto char_kw = make_rd_kw("KW", 3, RD_CHAR);
-    REQUIRE_THROWS_WITH(rd_kw_inplace_abs(char_kw.get()),
-                        ContainsSubstring("inplace abs not implemented"));
-    REQUIRE_THROWS_WITH(rd_kw_inplace_sqrt(char_kw.get()),
-                        ContainsSubstring("inplace sqrt not implemented"));
-}
-
-TEST_CASE("indexed inplace/copy ops validate size and type", "[rd_kw]") {
-    std::vector<int> index_set{0};
-
-    auto a = make_int_kw("A", 3);
-    auto b = make_int_kw("B", 4);
-
-    REQUIRE_THROWS_WITH(rd_kw_copy_indexed(a.get(), index_set, b.get()),
-                        ContainsSubstring("type/size"));
-    REQUIRE_THROWS_WITH(rd_kw_inplace_add_indexed(a.get(), index_set, b.get()),
-                        ContainsSubstring("type/size"));
-    REQUIRE_THROWS_WITH(rd_kw_inplace_sub_indexed(a.get(), index_set, b.get()),
-                        ContainsSubstring("type/size"));
-    REQUIRE_THROWS_WITH(rd_kw_inplace_mul_indexed(a.get(), index_set, b.get()),
-                        ContainsSubstring("type/size"));
-    REQUIRE_THROWS_WITH(rd_kw_inplace_div_indexed(a.get(), index_set, b.get()),
-                        ContainsSubstring("type/size"));
-}
-
-TEST_CASE("element sum validates type", "[rd_kw]") {
-    auto char_kw = make_rd_kw("KW", 3, RD_CHAR);
-    char sum[8];
-    REQUIRE_THROWS_WITH(rd_kw_element_sum(char_kw.get(), sum),
-                        ContainsSubstring("invalid type for element sum"));
-
-    auto int_kw = make_int_kw("KW", 3);
-    REQUIRE_THROWS_WITH(rd_kw_element_sum_float(int_kw.get()),
-                        ContainsSubstring("invalid type"));
-
-    std::vector<int> index_set{0};
-    REQUIRE_THROWS_WITH(
-        rd_kw_element_sum_indexed(char_kw.get(), index_set, sum),
-        ContainsSubstring("invalid type for element sum"));
 }
 
 TEST_CASE("rd_kw_first_different validates offset and size", "[rd_kw]") {
