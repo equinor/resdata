@@ -1559,3 +1559,775 @@ def test_fread_formatted_bad_logical_raises(use_tmpdir):
     with pytest.raises(RuntimeError, match=r"Logical value: \[Q\] not recogniced"):
         with openFortIO("BAD.txt", fmt_file=True) as f:
             ResdataKW.fread(f)
+
+
+def _roundtrip(kw, path, fmt_file):
+    """Write `kw` to `path` with the given format and read it back."""
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE, fmt_file=fmt_file) as fortio:
+        kw.fwrite(fortio)
+    with openFortIO(str(path), fmt_file=fmt_file) as fortio:
+        return ResdataKW.fread(fortio)
+
+
+def test_that_bool_keywords_are_stored_as_integers(tmp_path):
+    kw = ResdataKW("BOOLKW", 2, ResDataType.RD_BOOL)
+    kw[0] = True
+    kw[1] = False
+
+    path = tmp_path / "bool.kw"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as fortio:
+        kw.fwrite(fortio)
+
+    # The trailing fortran record holds the data; True is encoded as
+    # 0xFFFFFFFF (-1) and False as 0.
+    data_record = path.read_bytes()[-16:]
+    assert data_record[4:8] == b"\xff\xff\xff\xff"
+    assert data_record[8:12] == b"\x00\x00\x00\x00"
+
+
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_bool_keywords_roundtrip(tmp_path, fmt_file):
+    values = [True, False, True, True, False]
+    kw = ResdataKW("BOOLKW", len(values), ResDataType.RD_BOOL)
+    for i, value in enumerate(values):
+        kw[i] = value
+
+    loaded = _roundtrip(kw, tmp_path / "bool.kw", fmt_file)
+
+    assert loaded.name == "BOOLKW"
+    assert loaded.data_type.is_bool()
+    assert list(loaded) == values
+
+
+@pytest.mark.parametrize("data_type", [ResDataType.RD_FLOAT, ResDataType.RD_DOUBLE])
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_floating_keywords_roundtrip(data_type, tmp_path, fmt_file):
+    values = [0.0, -1.5, 1234.5, 1.0e-7, -9.75e10]
+    kw = ResdataKW("FLOATKW", len(values), data_type)
+    for i, value in enumerate(values):
+        kw[i] = value
+
+    loaded = _roundtrip(kw, tmp_path / "float.kw", fmt_file)
+
+    assert loaded.data_type.is_float() == data_type.is_float()
+    assert loaded.data_type.is_double() == data_type.is_double()
+    npt.assert_allclose(loaded.numpy_view(), np.array(values, dtype=np.float32))
+
+
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_char_keywords_rountrip(tmp_path, fmt_file):
+    values = ["A", "AB", "ABCDEFGH", ""]
+    kw = ResdataKW("CHARKW", len(values), ResDataType.RD_CHAR)
+    for i, value in enumerate(values):
+        kw[i] = value
+
+    loaded = _roundtrip(kw, tmp_path / "char.kw", fmt_file)
+
+    assert loaded.data_type.is_char()
+    assert [value.strip() for value in loaded] == values
+
+
+def test_that_char_elements_shorter_than_eight_are_space_padded_when_written(tmp_path):
+    kw = ResdataKW("CHARKW", 1, ResDataType.RD_CHAR)
+    kw[0] = "AB"
+
+    path = tmp_path / "char.kw"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as fortio:
+        kw.fwrite(fortio)
+
+    assert path.read_bytes()[-12:-4] == b"AB      "
+
+
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_message_keywords_roundtrip_header_only(tmp_path, fmt_file):
+    kw = ResdataKW("MESSKW", 0, ResDataType.RD_MESS)
+
+    loaded = _roundtrip(kw, tmp_path / "mess.kw", fmt_file)
+
+    assert loaded.name == "MESSKW"
+    assert loaded.data_type.is_mess()
+    assert len(loaded) == 0
+
+
+def test_that_grdecl_output_of_float_keyword_roundtrips(tmp_path):
+    values = [0.0, 1.5, -2.25, 1.0e-7, 3.0e10]
+    kw = ResdataKW("PORO", len(values), ResDataType.RD_FLOAT)
+    for i, value in enumerate(values):
+        kw[i] = value
+
+    path = tmp_path / "poro.grdecl"
+    with open(path, "w") as f:
+        kw.write_grdecl(f)
+    with open(path) as f:
+        loaded = ResdataKW.read_grdecl(f, "PORO", rd_type=ResDataType.RD_FLOAT)
+
+    npt.assert_allclose(loaded.numpy_view(), np.array(values, dtype=np.float32))
+
+
+def test_that_numeric_keywords_support_elementwise_arithmetic():
+    lhs = ResdataKW("LHS", 3, ResDataType.RD_DOUBLE)
+    rhs = ResdataKW("RHS", 3, ResDataType.RD_DOUBLE)
+    for i, (left, right) in enumerate([(10.0, 2.0), (-3.0, 4.0), (0.0, 5.0)]):
+        lhs[i] = left
+        rhs[i] = right
+
+    added = lhs.copy()
+    added += rhs
+    npt.assert_allclose(added.numpy_view(), [12.0, 1.0, 5.0])
+
+    subtracted = lhs.copy()
+    subtracted -= rhs
+    npt.assert_allclose(subtracted.numpy_view(), [8.0, -7.0, -5.0])
+
+    multiplied = lhs.copy()
+    multiplied *= rhs
+    npt.assert_allclose(multiplied.numpy_view(), [20.0, -12.0, 0.0])
+
+    divided = lhs.copy()
+    divided.div(rhs)
+    npt.assert_allclose(divided.numpy_view(), [5.0, -0.75, 0.0])
+
+
+def test_that_numeric_keywords_can_be_divided_elementwise():
+    lhs = ResdataKW("LHS", 3, ResDataType.RD_FLOAT)
+    rhs = ResdataKW("RHS", 3, ResDataType.RD_FLOAT)
+    for i, (left, right) in enumerate([(1.0, 2.0), (-3.0, 4.0), (9.0, 3.0)]):
+        lhs[i] = left
+        rhs[i] = right
+
+    lhs.div(rhs)
+
+    npt.assert_allclose(lhs.numpy_view(), [0.5, -0.75, 3.0])
+
+
+def test_that_integer_keyword_division_truncates_towards_zero():
+    lhs = ResdataKW("LHS", 3, ResDataType.RD_INT)
+    rhs = ResdataKW("RHS", 3, ResDataType.RD_INT)
+    for i, (left, right) in enumerate([(7, 2), (-7, 2), (6, 3)]):
+        lhs[i] = left
+        rhs[i] = right
+
+    lhs.div(rhs)
+
+    assert list(lhs) == [3, -3, 2]
+
+
+def test_that_isqrt_rounds_int_elements_to_the_nearest_square_root():
+    kw = ResdataKW("INTKW", 5, ResDataType.RD_INT)
+    for i, value in enumerate([0, 1, 9, 15, 16]):
+        kw[i] = value
+
+    kw.isqrt()
+
+    # sqrt(15) == 3.87... is rounded to 4 rather than truncated.
+    assert list(kw) == [0, 1, 3, 4, 4]
+
+
+def test_that_isqrt_replaces_double_elements_with_their_square_root():
+    kw = ResdataKW("DOUBLEKW", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([0.0, 4.0, 2.0]):
+        kw[i] = value
+
+    kw.isqrt()
+
+    npt.assert_allclose(kw.numpy_view(), [0.0, 2.0, np.sqrt(2.0)])
+
+
+def test_that_abs_returns_absolute_values_without_modifying_the_original():
+    kw = ResdataKW("DOUBLEKW", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([-1.5, 0.0, 2.5]):
+        kw[i] = value
+
+    result = abs(kw)
+
+    npt.assert_allclose(result.numpy_view(), [1.5, 0.0, 2.5])
+    npt.assert_allclose(kw.numpy_view(), [-1.5, 0.0, 2.5])
+
+
+def test_that_abs_of_int_keyword_returns_absolute_values():
+    kw = ResdataKW("INTKW", 3, ResDataType.RD_INT)
+    for i, value in enumerate([-2, 0, 3]):
+        kw[i] = value
+
+    assert list(abs(kw)) == [2, 0, 3]
+
+
+def test_that_add_squared_accumulates_squares_of_keyword():
+    target = ResdataKW("TARGET", 3, ResDataType.RD_DOUBLE)
+    other = ResdataKW("OTHER", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([1.0, -2.0, 3.0]):
+        target[i] = 1.0
+        other[i] = value
+
+    target.add_squared(other)
+
+    npt.assert_allclose(target.numpy_view(), [2.0, 5.0, 10.0])
+
+
+def test_that_scalar_shift_and_scale_applies_elementwize():
+    kw = ResdataKW("DOUBLEKW", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([1.0, 2.0, 3.0]):
+        kw[i] = value
+
+    kw += 0.5
+    npt.assert_allclose(kw.numpy_view(), [1.5, 2.5, 3.5])
+
+    kw *= 2.0
+    npt.assert_allclose(kw.numpy_view(), [3.0, 5.0, 7.0])
+
+    kw -= 1.0
+    npt.assert_allclose(kw.numpy_view(), [2.0, 4.0, 6.0])
+
+
+def test_that_assign_sets_every_element_of_a_keyword():
+    kw = ResdataKW("DOUBLEKW", 4, ResDataType.RD_DOUBLE)
+
+    kw.assign(3.25)
+
+    npt.assert_allclose(kw.numpy_view(), [3.25] * 4)
+
+
+def test_that_assign_from_another_keyword_copies_its_data():
+    source = ResdataKW("SRC", 3, ResDataType.RD_DOUBLE)
+    target = ResdataKW("TARGET", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([1.0, 2.0, 3.0]):
+        source[i] = value
+
+    target.assign(source)
+
+    npt.assert_allclose(target.numpy_view(), [1.0, 2.0, 3.0])
+    assert target.name == "TARGET"
+
+
+def test_that_sum_of_a_keyword_is_the_sum_of_its_elements():
+    kw = ResdataKW("DOUBLEKW", 3, ResDataType.RD_DOUBLE)
+    for i, value in enumerate([1.5, 2.5, -1.0]):
+        kw[i] = value
+
+    assert kw.sum() == pytest.approx(3.0)
+
+
+@pytest.mark.parametrize(
+    "data_type, values",
+    [
+        (ResDataType.RD_INT, [3, -1, 7, 0]),
+        (ResDataType.RD_FLOAT, [3.5, -1.5, 7.25, 0.0]),
+        (ResDataType.RD_DOUBLE, [3.5, -1.5, 7.25, 0.0]),
+    ],
+    ids=["int", "float", "double"],
+)
+def test_that_get_min_max_returns_the_extreme_elements(data_type, values):
+    kw = ResdataKW("KW", len(values), data_type)
+    for i, value in enumerate(values):
+        kw[i] = value
+
+    assert kw.get_min_max() == (pytest.approx(min(values)), pytest.approx(max(values)))
+    assert kw.get_min() == pytest.approx(min(values))
+    assert kw.get_max() == pytest.approx(max(values))
+
+
+def _region_kw(values):
+    kw = ResdataKW("REGIONS", len(values), ResDataType.RD_INT)
+    for i, value in enumerate(values):
+        kw[i] = value
+    return kw
+
+
+def test_that_fix_uninitialized_fills_a_hole_where_all_neighbours_agree():
+    grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+    # The centre cell is uninitialized, all its xy neighbours are region 7.
+    kw = _region_kw([7, 7, 7, 7, 0, 7, 7, 7, 7])
+
+    kw.fix_uninitialized(grid)
+
+    assert list(kw) == [7] * 9
+
+
+def test_that_fix_uninitialized_leaves_cells_with_disagreeing_neighbours():
+    grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+    # The west neighbour says 1 and the east neighbour says 2, so the
+    # heuristic must not pick a value for the centre cell.
+    kw = _region_kw([0, 0, 0, 1, 0, 2, 0, 0, 0])
+
+    kw.fix_uninitialized(grid)
+
+    assert kw[4] == 0
+
+
+def test_that_fix_uninitialized_ignores_inactive_neighbours():
+    # Only the cells in the middle column are active.
+    actnum = [0, 1, 0] * 3
+    grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1), actnum=actnum)
+    kw = _region_kw([9, 3, 9, 9, 0, 9, 9, 3, 9])
+
+    kw.fix_uninitialized(grid)
+
+    # The 9s are inactive and must not contribute; the active north/south
+    # neighbours both hold 3.
+    assert kw[4] == 3
+
+
+def test_that_fix_uninitialized_propagates_values_across_several_passes():
+    grid = GridGenerator.create_rectangular((5, 1, 1), (1, 1, 1))
+    kw = _region_kw([4, 0, 0, 0, 0])
+
+    kw.fix_uninitialized(grid)
+
+    assert list(kw) == [4, 4, 4, 4, 4]
+
+
+def test_that_fix_uninitialized_is_applied_layer_by_layer():
+    grid = GridGenerator.create_rectangular((3, 3, 2), (1, 1, 1))
+    # Layer 0 can be resolved, layer 1 is entirely uninitialized.
+    kw = _region_kw([7, 7, 7, 7, 0, 7, 7, 7, 7] + [0] * 9)
+
+    kw.fix_uninitialized(grid)
+
+    assert list(kw)[:9] == [7] * 9
+    assert list(kw)[9:] == [0] * 9
+
+
+def test_that_create_actnum_marks_cells_strictly_above_the_pore_volume_limit():
+    porv = ResdataKW("PORV", 4, ResDataType.RD_FLOAT)
+    for i, value in enumerate([-1.0, 0.0, 0.5, 100.0]):
+        porv[i] = value
+
+    assert list(porv.create_actnum()) == [0, 0, 1, 1]
+    assert list(porv.create_actnum(porv_limit=1.0)) == [0, 0, 0, 1]
+    assert porv.create_actnum().name == "ACTNUM"
+
+
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_char_keywords_spanning_several_records_roundtrip(tmp_path, fmt_file):
+    # Alpha keywords are written in blocks of 105 elements.
+    size = 250
+    kw = ResdataKW("CHARKW", size, ResDataType.RD_CHAR)
+    for i in range(size):
+        kw[i] = "E%04d" % i
+
+    loaded = _roundtrip(kw, tmp_path / "char.kw", fmt_file)
+
+    assert [value.strip() for value in loaded] == ["E%04d" % i for i in range(size)]
+
+
+@pytest.mark.parametrize("fmt_file", [False, True], ids=["unformatted", "formatted"])
+def test_that_double_keywords_spanning_several_records_roundtrip(tmp_path, fmt_file):
+    # Numeric keywords are written in blocks of 1000 elements.
+    size = 2500
+    kw = ResdataKW("DOUBLEKW", size, ResDataType.RD_DOUBLE)
+    values = np.linspace(-1.0, 1.0, size)
+    kw.numpy_view()[:] = values
+
+    loaded = _roundtrip(kw, tmp_path / "double.kw", fmt_file)
+
+    npt.assert_allclose(loaded.numpy_view(), values)
+
+
+def test_that_keywords_can_be_written_and_read_back_in_order(tmp_path):
+    first = ResdataKW("FIRST", 2, ResDataType.RD_INT)
+    second = ResdataKW("SECOND", 3, ResDataType.RD_DOUBLE)
+    third = ResdataKW("THIRD", 1, ResDataType.RD_BOOL)
+    third[0] = True
+
+    path = tmp_path / "multi.kw"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as fortio:
+        for kw in (first, second, third):
+            kw.fwrite(fortio)
+
+    with openFortIO(str(path)) as fortio:
+        kws = [ResdataKW.fread(fortio) for _ in range(3)]
+
+    assert [k.name for k in kws] == ["FIRST", "SECOND", "THIRD"]
+    assert kws[2][0] is True
+
+
+def test_that_fort_io_size_is_the_number_of_bytes_written(tmp_path):
+    kw = ResdataKW("INTKW", 7, ResDataType.RD_INT)
+
+    path = tmp_path / "int.kw"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as fortio:
+        kw.fwrite(fortio)
+
+    assert kw.fort_io_size() == path.stat().st_size
+
+
+def test_that_message_keywords_roundtrip(tmp_path):
+    kw = ResdataKW("MESSKW", 3, ResDataType.RD_MESS)
+
+    loaded = _roundtrip(kw, tmp_path / "mess.kw", fmt_file=False)
+
+    assert loaded.name == "MESSKW"
+    assert loaded.type_name() == "MESS"
+    assert len(loaded) == 3
+
+
+def test_that_message_keywords_with_data_cannot_be_written_formatted(tmp_path):
+    kw = ResdataKW("MESSKW", 3, ResDataType.RD_MESS)
+
+    with pytest.raises(
+        RuntimeError, match="message type keywords should not have data"
+    ):
+        with openFortIO(
+            str(tmp_path / "mess.txt"), mode=FortIO.WRITE_MODE, fmt_file=True
+        ) as fortio:
+            kw.fwrite(fortio)
+
+
+def test_that_formatted_message_keywords_are_read_as_quoted_strings(tmp_path):
+    path = tmp_path / "mess.txt"
+    path.write_text(" 'MESSKW  '           3 'MESS'\n" + "HELLO   WORLD   AGAIN   \n")
+
+    with openFortIO(str(path), fmt_file=True) as fortio:
+        kw = ResdataKW.fread(fortio)
+
+    assert kw.name == "MESSKW"
+    assert kw.type_name() == "MESS"
+    assert len(kw) == 3
+
+
+def test_that_formatted_float_keyword_with_corrupt_data_raises(tmp_path):
+    kw = ResdataKW("FLOATKW", 3, ResDataType.RD_FLOAT)
+    path = tmp_path / "float.txt"
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE, fmt_file=True) as fortio:
+        kw.fwrite(fortio)
+
+    corrupt = tmp_path / "corrupt.txt"
+    corrupt.write_text(path.read_text().replace("0.000", "XYZ", 1))
+
+    with pytest.raises(RuntimeError, match="reading of keyword:FLOATKW"):
+        with openFortIO(str(corrupt), fmt_file=True) as fortio:
+            ResdataKW.fread(fortio)
+
+
+ALPHA_TYPES = [ResDataType.RD_CHAR, ResDataType.RD_STRING(5)]
+ALPHA_IDS = ["char", "string"]
+ALL_TYPES = [
+    ResDataType.RD_INT,
+    ResDataType.RD_FLOAT,
+    ResDataType.RD_DOUBLE,
+    ResDataType.RD_BOOL,
+    ResDataType.RD_CHAR,
+    ResDataType.RD_STRING(5),
+]
+ALL_IDS = ["int", "float", "double", "bool", "char", "string"]
+
+
+def _filled_kw(data_type, size=6):
+    kw = ResdataKW("KW", size, data_type)
+    for i in range(size):
+        if data_type.is_bool():
+            kw[i] = i % 2 == 0
+        elif data_type.is_char() or data_type.is_string():
+            kw[i] = "E%d" % i
+        else:
+            kw[i] = i
+    return kw
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_strided_slicing_selects_every_nth_element(data_type):
+    kw = _filled_kw(data_type)
+
+    sliced = kw[0:6:2]
+
+    assert len(sliced) == 3
+    assert list(sliced) == [kw[0], kw[2], kw[4]]
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_sub_copy_extracts_a_contiguous_block(data_type):
+    kw = _filled_kw(data_type)
+
+    copy = kw.sub_copy(2, 3, new_header="SUB")
+
+    assert copy.name == "SUB"
+    assert list(copy) == [kw[2], kw[3], kw[4]]
+
+
+def test_that_sub_copy_with_negative_count_copies_the_remaining_elements():
+    source = ResdataKW("SRC", 5, ResDataType.RD_INT)
+    for i in range(5):
+        source[i] = i
+
+    copy = source.sub_copy(2, -1, new_header="TAIL")
+
+    assert copy.name == "TAIL"
+    assert list(copy) == [2, 3, 4]
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_resize_keeps_the_prefix(data_type):
+    kw = _filled_kw(data_type, size=3)
+    original = list(kw)
+
+    kw.resize(5)
+
+    assert len(kw) == 5
+    assert list(kw)[:3] == original
+
+
+def test_that_first_different_reports_the_index_of_the_first_unequal_element():
+    lhs = ResdataKW("LHS", 4, ResDataType.RD_INT)
+    rhs = ResdataKW("RHS", 4, ResDataType.RD_INT)
+    for i in range(4):
+        lhs[i] = i
+        rhs[i] = i
+    rhs[2] = 100
+
+    assert lhs.first_different(rhs) == 2
+
+
+def test_that_first_different_returns_the_size_for_equal_keywords():
+    lhs = ResdataKW("LHS", 4, ResDataType.RD_INT)
+    rhs = ResdataKW("RHS", 4, ResDataType.RD_INT)
+    for i in range(4):
+        lhs[i] = i
+        rhs[i] = i
+
+    assert lhs.first_different(rhs) == 4
+
+
+@pytest.mark.parametrize(
+    "data_type", [ResDataType.RD_FLOAT, ResDataType.RD_DOUBLE], ids=["float", "double"]
+)
+def test_that_first_different_with_epsilon_compares_approximately(data_type):
+    lhs = ResdataKW("LHS", 3, data_type)
+    rhs = ResdataKW("RHS", 3, data_type)
+    for i, value in enumerate([1.0, 2.0, 3.0]):
+        lhs[i] = value
+        rhs[i] = value
+    rhs[1] = 2.0 + 1e-5
+    rhs[2] = 4.0
+
+    assert lhs.first_different(rhs) == 1
+    assert lhs.first_different(rhs, epsilon=1e-3) == 2
+
+
+def test_that_first_different_honours_the_offset_argument():
+    lhs = ResdataKW("LHS", 4, ResDataType.RD_INT)
+    rhs = ResdataKW("RHS", 4, ResDataType.RD_INT)
+    for i in range(4):
+        lhs[i] = i
+        rhs[i] = i
+    rhs[0] = 100
+    rhs[3] = 100
+
+    assert lhs.first_different(rhs) == 0
+    assert lhs.first_different(rhs, offset=1) == 3
+
+
+@pytest.mark.parametrize("data_type", ALPHA_TYPES, ids=ALPHA_IDS)
+def test_that_first_different_compares_alphanumeric_keywords_elementwise(data_type):
+    lhs = _filled_kw(data_type)
+    rhs = _filled_kw(data_type)
+
+    assert lhs.first_different(rhs) == len(lhs)
+
+    rhs[3] = "XX"
+    assert lhs.first_different(rhs) == 3
+
+
+def test_that_reading_past_the_end_of_a_file_raises(tmp_path):
+    path = tmp_path / "empty.kw"
+    path.write_bytes(b"")
+
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with openFortIO(str(path)) as fortio:
+            ResdataKW.fread(fortio)
+
+
+@pytest.mark.parametrize(
+    "token",
+    ["0.10000000000000E+01", "D+01", "0.1000000000000xD+01"],
+    ids=["no-d-marker", "no-mantissa", "bad-mantissa"],
+)
+def test_that_formatted_double_keyword_with_a_malformed_token_raises(tmp_path, token):
+    path = tmp_path / "double.txt"
+    path.write_text(" 'DOUBLEKW'           1 'DOUB'\n  %s\n" % token)
+
+    with pytest.raises(RuntimeError, match="read failed"):
+        with openFortIO(str(path), fmt_file=True) as fortio:
+            ResdataKW.fread(fortio)
+
+
+def test_that_formatted_double_keyword_truncated_before_the_data_raises(tmp_path):
+    path = tmp_path / "double.txt"
+    path.write_text(" 'DOUBLEKW'           1 'DOUB'\n")
+
+    with pytest.raises(RuntimeError, match="read failed"):
+        with openFortIO(str(path), fmt_file=True) as fortio:
+            ResdataKW.fread(fortio)
+
+
+def test_that_formatted_bool_keyword_truncated_before_the_data_raises(tmp_path):
+    path = tmp_path / "bool.txt"
+    path.write_text(" 'BOOLKW  '           1 'LOGI'\n")
+
+    with pytest.raises(RuntimeError, match="premature file end"):
+        with openFortIO(str(path), fmt_file=True) as fortio:
+            ResdataKW.fread(fortio)
+
+
+@pytest.mark.parametrize(
+    "data_type",
+    [ResDataType.RD_INT, ResDataType.RD_BOOL, ResDataType.RD_CHAR],
+    ids=["int", "bool", "char"],
+)
+def test_that_equal_numeric_falls_back_to_exact_comparison_for_non_float_types(
+    data_type,
+):
+    lhs = _filled_kw(data_type, size=3)
+    rhs = _filled_kw(data_type, size=3)
+
+    assert lhs.equal_numeric(rhs, epsilon=1e-3)
+
+    rhs[2] = "XX" if data_type.is_char() else (not lhs[2] if data_type.is_bool() else 7)
+    assert not lhs.equal_numeric(rhs, epsilon=1e-3)
+
+
+def test_that_message_keywords_compare_equal_when_headers_match():
+    lhs = ResdataKW("MESSKW", 3, ResDataType.RD_MESS)
+    rhs = ResdataKW("MESSKW", 3, ResDataType.RD_MESS)
+    other = ResdataKW("OTHERKW", 3, ResDataType.RD_MESS)
+
+    assert lhs == rhs
+    assert lhs.equal_numeric(rhs)
+    assert lhs != other
+
+
+@pytest.mark.parametrize(
+    "data_type", [ResDataType.RD_FLOAT, ResDataType.RD_DOUBLE], ids=["float", "double"]
+)
+def test_that_equal_numeric_with_epsilon_compares_approximately(data_type):
+    lhs = ResdataKW("KW", 3, data_type)
+    rhs = ResdataKW("KW", 3, data_type)
+    for i, value in enumerate([1.0, 2.0, 3.0]):
+        lhs[i] = value
+        rhs[i] = value + 1e-5
+
+    assert lhs.equal_numeric(rhs, epsilon=1e-3)
+    assert not lhs.equal_numeric(rhs, abs_epsilon=1e-12, rel_epsilon=1e-12)
+    assert not lhs.equal(rhs)
+
+
+def test_that_equal_distinguishes_keywords_differing_in_a_single_element():
+    lhs = ResdataKW("KW", 3, ResDataType.RD_INT)
+    rhs = ResdataKW("KW", 3, ResDataType.RD_INT)
+    for i in range(3):
+        lhs[i] = i
+        rhs[i] = i
+
+    assert lhs.equal(rhs)
+
+    rhs[2] = 99
+    assert not lhs.equal(rhs)
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_two_empty_keywords_of_the_same_type_are_equal(data_type):
+    assert ResdataKW("EMPTY", 0, data_type).equal(ResdataKW("EMPTY", 0, data_type))
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_an_empty_keyword_differs_from_a_non_empty_one_of_the_same_type(
+    data_type,
+):
+    assert not ResdataKW("EMPTY", 0, data_type).equal(_filled_kw(data_type, size=1))
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_scatter_copy_places_elements_on_the_active_cells(data_type):
+    src = _filled_kw(data_type, size=2)
+    actnum = ResdataKW("ACTNUM", 4, ResDataType.RD_INT)
+    actnum[1] = 1
+    actnum[3] = 1
+
+    scattered = src.scatter_copy(actnum)
+
+    assert len(scattered) == 4
+    assert scattered[1] == src[0]
+    assert scattered[3] == src[1]
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_scatter_copy_rejects_an_actnum_with_too_few_active_cells(data_type):
+    src = _filled_kw(data_type, size=3)
+    actnum = ResdataKW("ACTNUM", 2, ResDataType.RD_INT)
+    actnum[0] = 1
+    actnum[1] = 1
+
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        src.scatter_copy(actnum)
+
+
+@pytest.mark.parametrize("data_type", ALL_TYPES, ids=ALL_IDS)
+def test_that_scatter_copy_rejects_an_actnum_with_more_active_cells_than_elements(
+    data_type,
+):
+    src = _filled_kw(data_type, size=1)
+    actnum = ResdataKW("ACTNUM", 3, ResDataType.RD_INT)
+    actnum[0] = 1
+    actnum[2] = 1
+
+    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        src.scatter_copy(actnum)
+
+
+def _write_two_keywords(path):
+    """Writes two INTE keywords and returns the offset of the second one."""
+    with openFortIO(str(path), mode=FortIO.WRITE_MODE) as fortio:
+        _int_kw("KW1", [0, 1, 2, 3]).fwrite(fortio)
+        offset = fortio.get_position()
+        _int_kw("KW2", [4, 5, 6, 7]).fwrite(fortio)
+    return offset
+
+
+def _int_kw(name, values):
+    kw = ResdataKW(name, len(values), ResDataType.RD_INT)
+    for index, value in enumerate(values):
+        kw[index] = value
+    return kw
+
+
+def test_that_a_keyword_can_be_written_back_in_place(tmp_path):
+    path = tmp_path / "file"
+    _write_two_keywords(path)
+
+    rd_file = ResdataFile(str(path), flags=FileMode.WRITABLE)
+    kw = rd_file[1]
+    kw[0] = 42
+    rd_file.save_kw(kw)
+    rd_file.close()
+
+    assert list(ResdataFile(str(path))[1]) == [42, 5, 6, 7]
+
+
+def test_that_a_keyword_can_be_loaded_after_the_stream_has_been_closed(tmp_path):
+    path = tmp_path / "file"
+    _write_two_keywords(path)
+
+    rd_file = ResdataFile(str(path))
+    rd_file.close()
+
+    assert list(rd_file[0]) == [0, 1, 2, 3]
+
+
+def test_that_keywords_can_be_loaded_when_the_stream_is_closed_between_reads(tmp_path):
+    path = tmp_path / "file"
+    _write_two_keywords(path)
+
+    rd_file = ResdataFile(str(path), flags=FileMode.CLOSE_STREAM)
+
+    assert list(rd_file[0]) == [0, 1, 2, 3]
+    assert list(rd_file[1]) == [4, 5, 6, 7]
+
+
+def test_that_reading_past_the_last_keyword_fails(tmp_path):
+    path = tmp_path / "file"
+    _write_two_keywords(path)
+
+    with openFortIO(str(path)) as fortio:
+        ResdataKW.fread(fortio)
+        ResdataKW.fread(fortio)
+        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+            ResdataKW.fread(fortio)
