@@ -3,6 +3,7 @@
 
 #include <ios>
 #include <string>
+#include <filesystem>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -54,10 +55,8 @@ void test_truncated() {
     }
 
     {
-        offset_type file_size = util_file_size("TEST.EGRID");
-        FILE *stream = util_fopen("TEST.EGRID", "r+");
-        util_ftruncate(stream, file_size / 2);
-        fclose(stream);
+        auto file_size = std::filesystem::file_size("TEST.EGRID");
+        std::filesystem::resize_file("TEST.EGRID", file_size / 2);
     }
     {
         auto rd_file = rd::File::open("TEST.EGRID");
@@ -78,10 +77,8 @@ void test_mixed_case() {
     }
 
     {
-        offset_type file_size = util_file_size("TESTcase.EGRID");
-        FILE *stream = util_fopen("TESTcase.EGRID", "r+");
-        util_ftruncate(stream, file_size / 2);
-        fclose(stream);
+        auto file_size = std::filesystem::file_size("TESTcase.EGRID");
+        std::filesystem::resize_file("TESTcase.EGRID", file_size / 2);
     }
     {
         auto rd_file = rd::File::open("TESTcase.EGRID");

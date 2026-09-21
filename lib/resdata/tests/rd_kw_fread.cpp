@@ -1,5 +1,6 @@
 #include <cstdlib>
 
+#include <filesystem>
 #include <ios>
 
 #include <ert/util/test_util.hpp>
@@ -13,11 +14,7 @@
 #include <resdata/rd_file_view.hpp>
 
 void test_truncated(const char *filename, offset_type truncate_size) {
-    {
-        FILE *stream = util_fopen(filename, "r+");
-        util_ftruncate(stream, truncate_size);
-        fclose(stream);
-    }
+    std::filesystem::resize_file(filename, truncate_size);
     {
         ERT::FortIO fortio(filename, std::ios_base::in, false, true);
         rd_kw_type *kw2 = rd_kw_fread_alloc(fortio);

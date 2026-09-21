@@ -62,7 +62,7 @@ UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
 #define COLUMNS_BOOL 25
 
 /* Format string used when writing a formatted header. */
-#define WRITE_HEADER_FMT " '%-8s' %11d '%-4s'\n"
+#define WRITE_HEADER_FMT " '{:<8}' {:11d} '{:<4}'\n"
 
 /* Format string used when reading and writing formatted
    files. Observe the following about these format strings:
@@ -82,12 +82,6 @@ UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
 
 */
 
-#define READ_FMT_CHAR "%8c"
-#define READ_FMT_FLOAT "%gE"
-#define READ_FMT_INT "%d"
-#define READ_FMT_MESS "%8c"
-#define READ_FMT_BOOL "  %c"
-#define READ_FMT_DOUBLE "%lgD%d"
 
 /* The boolean type is not a native type which can be uniquely
    identified between Fortran, C, formatted and unformatted
@@ -117,31 +111,6 @@ UTIL_IS_INSTANCE_FUNCTION(rd_kw, RD_KW_TYPE_ID)
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
 void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type);
 
-static std::string read_fmt_string(const rd_data_type rd_type) {
-    return fmt::format("%{}c", rd_type_get_sizeof_iotype(rd_type));
-}
-
-static std::string read_fmt(const rd_data_type data_type) {
-    switch (rd_type_get_type(data_type)) {
-    case (RD_CHAR_TYPE):
-        return READ_FMT_CHAR;
-    case (RD_INT_TYPE):
-        return READ_FMT_INT;
-    case (RD_FLOAT_TYPE):
-        return READ_FMT_FLOAT;
-    case (RD_DOUBLE_TYPE):
-        return READ_FMT_DOUBLE;
-    case (RD_BOOL_TYPE):
-        return READ_FMT_BOOL;
-    case (RD_MESS_TYPE):
-        return READ_FMT_MESS;
-    case (RD_STRING_TYPE):
-        return read_fmt_string(data_type);
-    default:
-        throw std::invalid_argument(
-            fmt::format("invalid rd_type: {}", rd_type_name(data_type)));
-    }
-}
 
 static int get_blocksize(rd_data_type data_type) {
     if (rd_type_is_alpha(data_type))
@@ -941,42 +910,40 @@ void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr) {
     rd_kw_iset_static(rd_kw, i, iptr);
 }
 
-static bool rd_kw_qskip(FILE *stream) {
+static bool rd_kw_qskip(std::istream &stream) {
     const char sep = '\'';
     const char space = ' ';
     const char newline = '\n';
     const char tab = '\t';
     bool OK = true;
-    char c;
+    int c;
     bool cont = true;
     while (cont) {
-        c = fgetc(stream);
+        c = stream.get();
         if (c == EOF) {
             cont = false;
             OK = false;
         } else {
-            if (c == space || c == newline || c == tab)
+            char cc = static_cast<char>(c);
+            if (cc == space || cc == newline || cc == tab)
                 cont = true;
-            else if (c == sep)
+            else if (cc == sep)
                 cont = false;
         }
     }
     return OK;
 }
 
-static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
-                                 FILE *stream) {
+static bool rd_kw_fscanf_qstring(char *s, size_t len, std::istream &stream) {
     const char null_char = '\0';
-    char last_sep;
-    bool OK;
-    OK = rd_kw_qskip(stream);
+    bool OK = rd_kw_qskip(stream);
     if (OK) {
-        int read_count = 0;
-        read_count += fscanf(stream, fmt, s);
+        stream.read(s, len);
         s[len] = null_char;
-        read_count += fscanf(stream, "%c", &last_sep);
+        char last_sep;
+        stream.get(last_sep);
 
-        if (read_count != 2)
+        if (last_sep != '\'')
             throw std::runtime_error(
                 "reading 'xxxxxxxx' formatted string failed");
     }
@@ -989,17 +956,30 @@ static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
 */
 /** Should be: NESTED */
 
-static double __fscanf_RD_double(FILE *stream, const char *fmt) {
-    int read_count, power;
-    double value, arg;
-    read_count = fscanf(stream, fmt, &arg, &power);
-    if (read_count == 2)
-        value = arg * pow(10, power);
-    else {
+static double __fscanf_RD_double(std::istream &stream) {
+    std::string token;
+    stream >> token;
+    if (!stream)
         throw std::runtime_error("read failed");
-        value = -1;
-    }
-    return value;
+
+    const size_t dpos = token.find('D');
+    if (dpos == std::string::npos || dpos == 0)
+        throw std::runtime_error("read failed");
+
+    const std::string mantissa = token.substr(0, dpos);
+    const std::string exponent = token.substr(dpos + 1);
+
+    char *end = nullptr;
+    double arg = std::strtod(mantissa.c_str(), &end);
+    if (end != mantissa.c_str() + mantissa.size())
+        throw std::runtime_error("read failed");
+
+    end = nullptr;
+    long power = std::strtol(exponent.c_str(), &end, 10);
+    if (exponent.empty() || end != exponent.c_str() + exponent.size())
+        throw std::runtime_error("read failed");
+
+    return arg * pow(10, power);
 }
 
 static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
@@ -1009,8 +989,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
         if (fmt_file) {
             const int blocks = rd_kw->size / blocksize +
                                (rd_kw->size % blocksize == 0 ? 0 : 1);
-            const std::string read_format = read_fmt(rd_kw->data_type);
-            FILE *stream = fortio.get_FILE();
+            std::istream &stream = fortio.get_istream();
             int offset = 0;
             int index = 0;
             int ib, ir;
@@ -1020,20 +999,17 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                 for (ir = 0; ir < read_elm; ir++) {
                     switch (rd_kw_get_type(rd_kw)) {
                     case (RD_CHAR_TYPE):
-                        rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                             read_format.c_str(), 8, stream);
+                        rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
                         break;
                     case (RD_STRING_TYPE):
                         rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                             read_format.c_str(),
                                              rd_type_get_sizeof_iotype(
                                                  rd_kw_get_data_type(rd_kw)),
                                              stream);
                         break;
                     case (RD_INT_TYPE): {
-                        int iread = fscanf(stream, read_format.c_str(),
-                                           (int *)&rd_kw->data[offset]);
-                        if (iread != 1)
+                        stream >> *(int *)&rd_kw->data[offset];
+                        if (stream.fail())
                             throw std::runtime_error(fmt::format(
                                 "after reading {} values reading of keyword:{} "
                                 "from:{} failed",
@@ -1042,9 +1018,8 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                                 rd_kw->header8, fortio.filename_ref()));
                     } break;
                     case (RD_FLOAT_TYPE): {
-                        int iread = fscanf(stream, read_format.c_str(),
-                                           (float *)&rd_kw->data[offset]);
-                        if (iread != 1) {
+                        stream >> *(float *)&rd_kw->data[offset];
+                        if (stream.fail()) {
                             throw std::runtime_error(fmt::format(
                                 "after reading {} values reading of keyword:{} "
                                 "from:{} failed",
@@ -1054,14 +1029,13 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                         }
                     } break;
                     case (RD_DOUBLE_TYPE): {
-                        double value =
-                            __fscanf_RD_double(stream, read_format.c_str());
+                        double value = __fscanf_RD_double(stream);
                         rd_kw_iset(rd_kw, index, &value);
                     } break;
                     case (RD_BOOL_TYPE): {
                         char bool_char;
-                        if (fscanf(stream, read_format.c_str(), &bool_char) ==
-                            1) {
+                        stream >> std::ws;
+                        if (stream.get(bool_char)) {
                             if (bool_char == BOOL_TRUE_CHAR)
                                 rd_kw_iset_bool(rd_kw, index, true);
                             else if (bool_char == BOOL_FALSE_CHAR)
@@ -1075,8 +1049,7 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                                 "read failed - premature file end?");
                     } break;
                     case (RD_MESS_TYPE):
-                        rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                             read_format.c_str(), 8, stream);
+                        rd_kw_fscanf_qstring(&rd_kw->data[offset], 8, stream);
                         break;
                     default:
                         throw std::runtime_error(
@@ -1141,7 +1114,7 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
         }
     } else {
         const int block_size = get_blocksize(data_type);
-        FILE *stream = fortio.get_FILE();
+        std::istream &stream = fortio.get_istream();
         offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
         for (size_t index = 0; index < index_map.size(); index++) {
@@ -1154,8 +1127,11 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 
             fortio.data_fseek(data_offset, element_index, sizeof_iotype,
                               element_count, block_size);
-            util_fread(&io_buffer[index * sizeof_iotype], sizeof_iotype, 1,
-                       stream, __func__);
+            if (!stream.read(&io_buffer[index * sizeof_iotype],
+                             sizeof_iotype))
+                throw std::runtime_error(
+                    fmt::format("fread failed: only read {}/{} bytes",
+                                stream.gcount(), sizeof_iotype));
         }
 
         if (RD_ENDIAN_FLIP)
@@ -1223,7 +1199,7 @@ void rd_kw_fskip_header(ERT::FortIO &fortio) {
 
 rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     const char null_char = '\0';
-    FILE *stream = fortio.get_FILE();
+    std::istream &stream = fortio.get_istream();
     bool fmt_file = fortio.fmt_file();
     char header[RD_STRING8_LENGTH + 1];
     char rd_type_str[RD_TYPE_LENGTH + 1];
@@ -1231,17 +1207,17 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     int size;
 
     if (fmt_file) {
-        if (!rd_kw_fscanf_qstring(header, "%8c", 8, stream))
+        if (!rd_kw_fscanf_qstring(header, 8, stream))
             return RD_KW_READ_FAIL;
 
-        int read_count = fscanf(stream, "%d", &size);
-        if (read_count != 1)
+        stream >> size;
+        if (stream.fail())
             return RD_KW_READ_FAIL;
 
-        if (!rd_kw_fscanf_qstring(rd_type_str, "%4c", 4, stream))
+        if (!rd_kw_fscanf_qstring(rd_type_str, 4, stream))
             return RD_KW_READ_FAIL;
 
-        fgetc(stream); /* Reading the trailing newline ... */
+        stream.get(); /* Reading the trailing newline ... */
     } else {
         header[RD_STRING8_LENGTH] = null_char;
         rd_type_str[RD_TYPE_LENGTH] = null_char;
@@ -1251,9 +1227,7 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
             return RD_KW_READ_FAIL;
 
         char buffer[RD_KW_HEADER_DATA_SIZE];
-        size_t read_bytes = fread(buffer, 1, RD_KW_HEADER_DATA_SIZE, stream);
-
-        if (read_bytes != RD_KW_HEADER_DATA_SIZE)
+        if (!stream.read(buffer, RD_KW_HEADER_DATA_SIZE))
             return RD_KW_READ_FAIL;
 
         memcpy(header, &buffer[0], RD_STRING8_LENGTH);
@@ -1344,7 +1318,7 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
 
     {
 
-        FILE *stream = fortio.get_FILE();
+        std::ostream &stream = fortio.get_ostream();
         const int blocksize = get_blocksize(rd_kw->data_type);
         const int columns = get_columns(rd_kw->data_type);
         const int string_width = rd_type_get_sizeof_iotype(rd_kw->data_type);
@@ -1397,9 +1371,9 @@ static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
                             "should not have data");
                         break;
                     }
-                    fputs(element.c_str(), stream);
+                    stream << element;
                 }
-                fprintf(stream, "\n");
+                stream << "\n";
             }
         }
     }
@@ -1416,13 +1390,13 @@ void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio) {
 }
 
 void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    FILE *stream = fortio.get_FILE();
+    std::ostream &stream = fortio.get_ostream();
     bool fmt_file = fortio.fmt_file();
     std::string type_name = rd_type_name(rd_kw->data_type);
 
     if (fmt_file)
-        fprintf(stream, WRITE_HEADER_FMT, rd_kw->header8, rd_kw->size,
-                type_name.c_str());
+        stream << fmt::format(WRITE_HEADER_FMT, rd_kw->header8, rd_kw->size,
+                              type_name);
     else {
         int size = rd_kw->size;
         if (RD_ENDIAN_FLIP)
@@ -1430,9 +1404,9 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 
         fortio.init_write(RD_KW_HEADER_DATA_SIZE);
 
-        fwrite(rd_kw->header8, sizeof(char), RD_STRING8_LENGTH, stream);
-        fwrite(&size, sizeof(int), 1, stream);
-        fwrite(type_name.c_str(), sizeof(char), RD_TYPE_LENGTH, stream);
+        stream.write(rd_kw->header8, RD_STRING8_LENGTH);
+        stream.write(reinterpret_cast<const char *>(&size), sizeof(int));
+        stream.write(type_name.c_str(), RD_TYPE_LENGTH);
 
         fortio.complete_write(RD_KW_HEADER_DATA_SIZE);
     }
