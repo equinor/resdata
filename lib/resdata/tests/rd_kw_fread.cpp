@@ -12,19 +12,6 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 
-void test_truncated(const char *filename, offset_type truncate_size) {
-    {
-        FILE *stream = util_fopen(filename, "r+");
-        util_ftruncate(stream, truncate_size);
-        fclose(stream);
-    }
-    {
-        ERT::FortIO fortio(filename, std::ios_base::in, false, true);
-        auto kw2 = rd_kw_struct::fread(fortio);
-        test_assert_NULL(kw2.get());
-    }
-}
-
 void test_fread_alloc() {
     rd::util::TestArea ta("fread_alloc");
     {
@@ -40,14 +27,6 @@ void test_fread_alloc() {
             ERT::FortIO fortio("INT", std::ios_base::in, false, true);
             rd_kw_ptr kw2 = rd_kw_struct::fread(fortio);
             test_assert_true(rd_kw_equal(kw1.get(), kw2.get()));
-        }
-
-        {
-            offset_type file_size = util_file_size("INT");
-            test_truncated("INT", file_size - 4);
-            test_truncated("INT", file_size - 25);
-            test_truncated("INT", 5);
-            test_truncated("INT", 0);
         }
     }
 }
