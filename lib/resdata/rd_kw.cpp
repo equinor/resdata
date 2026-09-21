@@ -849,25 +849,6 @@ void rd_kw_iset_string_ptr(rd_kw_type *rd_kw, int index, const char *s) {
     }
 }
 
-/**
-   This function will compare the string at position @index with the
-   input @other string. The comparison will be done in a
-   'space-tolerant', i.e. trailing spaces are ignored in the
-   comparison. If the strings are considered equal true is returned.
-*/
-
-bool rd_kw_icmp_string(const rd_kw_type *rd_kw, int index,
-                       const char *other_string) {
-    const char *kw_string = (const char *)rd_kw_iget_char_ptr(rd_kw, index);
-    if (strlen(other_string)) {
-        const char *match = strstr(kw_string, other_string);
-        if (match == kw_string)
-            return true;
-    }
-
-    return false;
-}
-
 #define RD_KW_ISET_TYPED(ctype, RD_TYPE)                                       \
     void rd_kw_iset_##ctype(rd_kw_type *rd_kw, int i, ctype value) {           \
         if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
