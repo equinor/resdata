@@ -317,7 +317,6 @@ foreach(
   rd_grid_init_fwrite
   rd_grid_reset_actnum
   rd_kw_space_pad
-  rd_kw_cmp_string
   rd_kw_equal
   rd_kw_fread
   rd_kw_init
