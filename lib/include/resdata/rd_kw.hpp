@@ -183,8 +183,6 @@ double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
                                const rd_kw_type *rd_kw2);
-bool rd_kw_icmp_string(const rd_kw_type *rd_kw, int index,
-                       const char *other_string);
 bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
                          double abs_diff, double rel_diff);
 bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data);
