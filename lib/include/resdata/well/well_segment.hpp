@@ -78,6 +78,3 @@ public:
         return get_connections(RD_GRID_GLOBAL_GRID);
     }
 };
-
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
-                              const RSTHead &rst_head);
