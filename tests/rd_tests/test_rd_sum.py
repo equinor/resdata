@@ -245,22 +245,36 @@ class SummaryTest(ResdataTest):
         self.assertFloatEqual(summary.getSimulationLength(), 19.50)
 
 
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize(
+    "file_format, smspec_extension, unsmry_extension",
+    [
+        (resfo.Format.UNFORMATTED, "SMSPEC", "UNSMRY"),
+        (resfo.Format.FORMATTED, "FSMSPEC", "FUNSMRY"),
+    ],
+    ids=["unformatted", "formatted"],
+)
 @given(summaries())
 @pytest.mark.usefixtures("use_tmpdir")
-def test_to_from_pandas(summary):
+def test_to_from_pandas(
+    lazy_load, file_format, smspec_extension, unsmry_extension, summary
+):
     smspec, unsmry = summary
     assume(len(smspec.keywords) == len(set(smspec.keywords)))
-    smspec.to_file("TEST.SMSPEC")
-    unsmry.to_file("TEST.UNSMRY")
-    summary = Summary("TEST", lazy_load=False)
+    smspec.to_file(f"TEST.{smspec_extension}", file_format=file_format)
+    unsmry.to_file(f"TEST.{unsmry_extension}", file_format=file_format)
+    summary = Summary("TEST", lazy_load=lazy_load)
 
     baseline = summary.pandas_frame()
     roundtrip = Summary.from_pandas(
         "TEST", baseline, dims=(smspec.nx, smspec.ny, smspec.nz)
     ).pandas_frame()
 
-    roundtrip.index = roundtrip.index.values.astype(np.int64)
-    baseline.index = baseline.index.values.astype(np.int64)
+    # Compared as floats so that the tolerance below also applies to the
+    # timestamps; formatted files store the time values with less precision
+    # than float32 and can round to a slightly different instant.
+    roundtrip.index = roundtrip.index.values.astype(np.int64).astype(np.float64)
+    baseline.index = baseline.index.values.astype(np.int64).astype(np.float64)
 
     assert_frame_equal(roundtrip, baseline, check_exact=False, atol=0, rtol=1e-6)
 
