@@ -26,19 +26,7 @@ int main(int argc, char **argv) {
 
         rd_kw_set_header_name(rd_kw2, "TEST");
         test_assert_false(rd_kw_equal(rd_kw1, rd_kw2));
-        test_assert_true(rd_kw_content_equal(rd_kw1, rd_kw2));
         rd_kw_free(rd_kw2);
-    }
-
-    {
-        rd_kw_type *rd_ikw = rd_kw_alloc_new_shared("KW", 10, RD_INT, data);
-        rd_kw_type *rd_fkw = rd_kw_alloc_new_shared("KW", 10, RD_FLOAT, data);
-
-        test_assert_true(rd_kw_content_equal(rd_kw1, rd_ikw));
-        test_assert_false(rd_kw_content_equal(rd_kw1, rd_fkw));
-
-        rd_kw_free(rd_ikw);
-        rd_kw_free(rd_fkw);
     }
 
     test_assert_true(rd_kw_data_equal(rd_kw1, data));

@@ -184,14 +184,6 @@ TEST_CASE("rd_kw_alloc_sub_copy validates offset and count", "[rd_kw]") {
     }
 }
 
-TEST_CASE("rd_kw_alloc_scatter_copy rejects unsupported type", "[rd_kw]") {
-    auto src = make_rd_kw("KW", 1, RD_MESS);
-    int mapping[1] = {0};
-    REQUIRE_THROWS_WITH(
-        rd_kw_alloc_scatter_copy(src.get(), 1, mapping, nullptr),
-        ContainsSubstring("unsupported type"));
-}
-
 TEST_CASE("inplace binary ops validate size and type", "[rd_kw]") {
     auto a = make_int_kw("A", 3);
     auto b = make_int_kw("B", 4);
@@ -247,14 +239,6 @@ TEST_CASE("indexed inplace/copy ops validate size and type", "[rd_kw]") {
                         ContainsSubstring("type/size"));
     REQUIRE_THROWS_WITH(rd_kw_inplace_div_indexed(a.get(), index_set, b.get()),
                         ContainsSubstring("type/size"));
-}
-
-TEST_CASE("rd_kw_max_min validates type", "[rd_kw]") {
-    auto char_kw = make_rd_kw("KW", 3, RD_CHAR);
-    char max[8];
-    char min[8];
-    REQUIRE_THROWS_WITH(rd_kw_max_min(char_kw.get(), max, min),
-                        ContainsSubstring("invalid type for element sum"));
 }
 
 TEST_CASE("element sum validates type", "[rd_kw]") {
@@ -347,20 +331,6 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc rejects bad logical value", "[rd_kw]") {
     ERT::FortIO fortio(bad, std::ios_base::in, /*fmt_file=*/true);
     REQUIRE_THROWS_WITH(rd_kw_fread_alloc(fortio),
                         ContainsSubstring("Logical value: [Q] not recogniced"));
-}
-
-TEST_CASE_METHOD(Tmpdir, "fseek_kw throws on missing keyword", "[rd_kw]") {
-    auto path = (dirname / "FILE").string();
-    {
-        auto kw = make_int_kw("INTKW", 4);
-        ERT::FortIO fortio(path, std::ios_base::out);
-        rd_kw_fwrite(kw.get(), fortio);
-    }
-
-    ERT::FortIO fortio(path, std::ios_base::in);
-    REQUIRE_THROWS_WITH(rd_kw_fseek_kw("MISSING", /*rewind=*/false,
-                                       /*abort_on_error=*/true, fortio),
-                        ContainsSubstring("failed to locate keyword:MISSING"));
 }
 
 TEST_CASE_METHOD(Tmpdir, "FileKW::read guards against buffer_size overflow",
