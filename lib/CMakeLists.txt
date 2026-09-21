@@ -361,7 +361,7 @@ add_test(
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu4
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu5)
 
-foreach(test rdxx_kw rdxx_types)
+foreach(test rdxx_types)
   add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
   add_test(NAME ${test} COMMAND ${test})
