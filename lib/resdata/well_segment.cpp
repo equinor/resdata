@@ -66,15 +66,3 @@ bool WellSegment::add_connection(const std::string &grid_name,
     } else
         return false;
 }
-
-bool well_segment_well_is_MSW(int well_nr, const rd_kw_type *iwel_kw,
-                              const RSTHead &rst_head) {
-    int iwel_offset = rst_head.niwelz * well_nr;
-    int segment_well_nr =
-        rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
-
-    if (segment_well_nr == IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE)
-        return false;
-    else
-        return true;
-}
