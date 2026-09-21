@@ -331,29 +331,6 @@ void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
                    rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
-static bool rd_kw_string_eq(const char *s1, const char *s2) {
-    const char space_char = ' ';
-    const char *long_kw = (strlen(s1) >= strlen(s2)) ? s1 : s2;
-    const char *short_kw = (strlen(s1) < strlen(s2)) ? s1 : s2;
-    const int len1 = strlen(long_kw);
-    const int len2 = strlen(short_kw);
-    int index;
-    bool eq = true;
-    if (len1 > RD_STRING8_LENGTH)
-        throw std::invalid_argument(
-            fmt::format("eclipse keyword:{} is too long", long_kw));
-
-    for (index = 0; index < len2; index++)
-        eq = eq & (long_kw[index] == short_kw[index]);
-
-    if (eq) {
-        for (index = len2; index < len1; index++)
-            eq = eq & (long_kw[index] == space_char);
-    }
-
-    return eq;
-}
-
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
                                const rd_kw_type *rd_kw2) {
     return (rd_kw1->size == rd_kw2->size &&
@@ -393,13 +370,6 @@ static bool rd_kw_data_equal__(const rd_kw_type *rd_kw, const void *data,
 
 bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data) {
     return rd_kw_data_equal__(rd_kw, data, rd_kw->size);
-}
-
-bool rd_kw_content_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2) {
-    if (rd_kw_size_and_type_equal(rd_kw1, rd_kw2))
-        return rd_kw_data_equal__(rd_kw1, rd_kw2->data, rd_kw1->size);
-    else
-        return false;
 }
 
 /**
@@ -739,10 +709,6 @@ static void rd_kw_iset_static(rd_kw_type *rd_kw, int i, const void *iptr) {
     size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
     rd_kw_assert_index(rd_kw, i, __func__);
     memcpy(&rd_kw->data[i * sizeof_ctype], iptr, sizeof_ctype);
-}
-
-void rd_kw_iget(const rd_kw_type *rd_kw, int i, void *iptr) {
-    rd_kw_iget_static(rd_kw, i, iptr);
 }
 
 /**
@@ -1329,56 +1295,6 @@ rd_read_status_enum rd_kw_fread_header(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     return RD_KW_READ_OK;
 }
 
-/**
-   Will seek through the open fortio file and search for a keyword with
-   header 'kw'. It will always start the search from the present
-   position in the file, but if rewind is true it will rewind the
-   fortio file if not finding 'kw' between current offset and EOF.
-
-   If the kw is found the fortio pointer is positioned at the
-   beginning of the keyword, and the function returns true. If the the
-   'kw' is NOT found the file will be repositioned to the initial
-   position, and the function will return false; unless abort_on_error
-   == true in which case the function will abort if the 'kw' is not
-   found.
-*/
-
-bool rd_kw_fseek_kw(const char *kw, bool rewind, bool abort_on_error,
-                    ERT::FortIO &fortio) {
-    rd_kw_ptr tmp_kw = make_rd_kw();
-    long int init_pos = fortio.ftell();
-    bool cont, kw_found;
-
-    cont = true;
-    kw_found = false;
-    while (cont) {
-        long current_pos = fortio.ftell();
-        if (rd_kw_fread_header(tmp_kw.get(), fortio) == RD_KW_READ_OK) {
-            if (rd_kw_string_eq(rd_kw_get_header8(tmp_kw.get()), kw)) {
-                fortio.fseek(current_pos, SEEK_SET);
-                kw_found = true;
-                cont = false;
-            } else
-                rd_kw_fskip_data(tmp_kw.get(), fortio);
-        } else {
-            if (rewind) {
-                fortio.rewind();
-                rewind = false;
-            } else
-                cont = false;
-        }
-    }
-    if (!kw_found) {
-        if (abort_on_error)
-            throw std::runtime_error(
-                fmt::format("failed to locate keyword:{} in file:{}", kw,
-                            fortio.filename_ref()));
-
-        fortio.fseek(init_pos, SEEK_SET);
-    }
-    return kw_found;
-}
-
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data) {
     if (!rd_kw->shared_data)
         free(rd_kw->data);
@@ -1416,12 +1332,6 @@ rd_kw_type *rd_kw_fread_alloc(ERT::FortIO &fortio) {
         return nullptr;
     }
     return rd_kw.release();
-}
-
-void rd_kw_fskip(ERT::FortIO &fortio) {
-    rd_kw_type *tmp_kw;
-    tmp_kw = rd_kw_fread_alloc(fortio);
-    rd_kw_free(tmp_kw);
 }
 
 static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
@@ -1571,79 +1481,6 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *rd_kw) {
 
 rd_data_type rd_kw_get_data_type(const rd_kw_type *rd_kw) {
     return rd_kw->data_type;
-}
-
-/*
-  Untyped - low level alternative.
-*/
-static void rd_kw_scalar_set__(rd_kw_type *rd_kw, const void *value) {
-    int sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    int i;
-    for (i = 0; i < rd_kw->size; i++)
-        memcpy(&rd_kw->data[i * sizeof_ctype], value, sizeof_ctype);
-}
-
-/**
-   Will create a new keyword of the same type as src_kw, and size
-   @target_size. The integer array mapping is a list sizeof(src_kw)
-   elements, where each element is the new index, i.e.
-
-       new_kw[ mapping[i] ]  = src_kw[i]
-
-   For all inactive elements in new kw are set as follows:
-
-   0          - For float / int / double
-   False      - For logical
-   ""         - For char
-*/
-
-rd_kw_type *rd_kw_alloc_scatter_copy(const rd_kw_type *src_kw, int target_size,
-                                     const int *mapping, void *def_value) {
-    int default_int = 0;
-    double default_double = 0;
-    float default_float = 0;
-    bool default_bool = false;
-    const char *default_char = "";
-    rd_kw_ptr new_kw =
-        make_rd_kw(src_kw->header, target_size, src_kw->data_type);
-
-    if (def_value != NULL)
-        rd_kw_scalar_set__(new_kw.get(), def_value);
-    else {
-        /** Initialize with defaults .*/
-        switch (rd_kw_get_type(src_kw)) {
-        case (RD_INT_TYPE):
-            rd_kw_scalar_set__(new_kw.get(), &default_int);
-            break;
-        case (RD_FLOAT_TYPE):
-            rd_kw_scalar_set__(new_kw.get(), &default_float);
-            break;
-        case (RD_DOUBLE_TYPE):
-            rd_kw_scalar_set__(new_kw.get(), &default_double);
-            break;
-        case (RD_BOOL_TYPE):
-            rd_kw_scalar_set__(new_kw.get(), &default_bool);
-            break;
-        case (RD_CHAR_TYPE):
-            rd_kw_scalar_set__(new_kw.get(), default_char);
-            break;
-        default:
-            throw std::invalid_argument(
-                fmt::format("unsupported type:{}", rd_kw_get_type(src_kw)));
-        }
-    }
-
-    {
-        int sizeof_ctype = rd_type_get_sizeof_ctype(src_kw->data_type);
-        int i;
-        for (i = 0; i < src_kw->size; i++) {
-            int target_index = mapping[i];
-            memcpy(&new_kw->data[target_index * sizeof_ctype],
-                   &src_kw->data[i * sizeof_ctype], sizeof_ctype);
-        }
-    }
-
-    return new_kw.release();
 }
 
 rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
@@ -2237,22 +2074,6 @@ bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
         memcpy(_max, &max, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
         memcpy(_min, &min, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
     }
-
-void rd_kw_max_min(const rd_kw_type *rd_kw, void *_max, void *_min) {
-    switch (rd_kw_get_type(rd_kw)) {
-    case (RD_FLOAT_TYPE):
-        KW_MAX_MIN(float);
-        break;
-    case (RD_DOUBLE_TYPE):
-        KW_MAX_MIN(double);
-        break;
-    case (RD_INT_TYPE):
-        KW_MAX_MIN(int);
-        break;
-    default:
-        throw std::invalid_argument("invalid type for element sum");
-    }
-}
 
 #define RD_KW_MAX_MIN(ctype)                                                   \
     void rd_kw_max_min_##ctype(const rd_kw_type *rd_kw, ctype *_max,           \
