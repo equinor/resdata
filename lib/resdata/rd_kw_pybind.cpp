@@ -266,12 +266,6 @@ PYBIND11_MODULE(_kw, m) {
         },
         py::return_value_policy::reference);
 
-    m.def("_int_sum", [](py::handle self) {
-        return rd_kw_element_sum_int(from_cwrap<rd_kw_type>(self));
-    });
-    m.def("_float_sum", [](py::handle self) {
-        return rd_kw_element_sum_float(from_cwrap<rd_kw_type>(self));
-    });
     m.def("_iadd_squared", [](py::handle self, py::handle other) {
         rd_kw_inplace_add_squared(from_cwrap<rd_kw_type>(self),
                                   from_cwrap<rd_kw_type>(other));
