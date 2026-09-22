@@ -439,9 +439,8 @@ std::pair<int, int> rd_sum_file_data::report_range(int report_step) const {
 void rd_sum_file_data::fwrite_report(int report_step,
                                      ERT::FortIO &fortio) const {
     {
-        auto seqhdr_kw = make_rd_kw(SEQHDR_KW, SEQHDR_SIZE, RD_INT);
-        rd_kw_iset_int(seqhdr_kw.get(), 0, 0);
-        rd_kw_fwrite(seqhdr_kw.get(), fortio);
+        rd::KW seqhdr_kw{SEQHDR_KW, std::vector<int>(SEQHDR_SIZE, 0)};
+        seqhdr_kw.fwrite(fortio);
     }
 
     {

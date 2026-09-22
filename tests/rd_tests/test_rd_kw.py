@@ -1521,7 +1521,7 @@ TestKw = StatefulKwTest.TestCase
 
 
 def test_create_negative_size_raises():
-    with pytest.raises(ValueError, match="rd_kw size was negative"):
+    with pytest.raises(TypeError):
         ResdataKW("KW", -1, ResDataType.RD_INT)
 
 
