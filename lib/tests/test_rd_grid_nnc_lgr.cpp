@@ -317,7 +317,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
             ERT::FortIO fortio(grid_filename.c_str(), std::ios_base::in);
 
-            rd_kw_ptr first_corners{nullptr};
+            std::unique_ptr<rd::KW> first_corners{nullptr};
             while (true) {
                 auto kw = rd::KW::fread(fortio);
                 if (kw == nullptr)

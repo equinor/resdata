@@ -731,7 +731,8 @@ struct rd_grid_struct {
     double unit_y[2];
     double origo[2];
     std::optional<std::array<float, 6>> mapaxes;
-    rd_kw_ptr coord_kw{nullptr}; /* Retained for writing the grid to file.
+    std::unique_ptr<rd::KW> coord_kw{
+        nullptr}; /* Retained for writing the grid to file.
                                     In principal it should be possible to
                                     recalculate this from the cell coordinates,
                                     but in cases with skewed cells this has proved
@@ -801,8 +802,9 @@ static void rd_cell_dump_ascii(rd_cell_type &cell, int i, int j, int k,
 static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
                                 const rd_cell_type &cell, bool fracture_cell,
                                 int coords_size, int i, int j, int k,
-                                int global_index, const rd_kw_ptr &coords_kw,
-                                const rd_kw_ptr &corners_kw,
+                                int global_index,
+                                const std::unique_ptr<rd::KW> &coords_kw,
+                                const std::unique_ptr<rd::KW> &corners_kw,
                                 ERT::FortIO &fortio) {
     coords_kw->at<int>(0) = i + 1;
     coords_kw->at<int>(1) = j + 1;
@@ -4427,7 +4429,8 @@ void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
             mapaxes[i] = grid->mapaxes.value()[i];
 }
 
-std::optional<rd_kw_ptr> rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
+std::optional<std::unique_ptr<rd::KW>>
+rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
     if (grid->mapaxes)
         return std::make_unique<rd::KW>(
             MAPAXES_KW,
@@ -4864,7 +4867,7 @@ std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
     return zcorn_kw;
 }
 
-rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
+std::unique_ptr<rd::KW> rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
     if (grid->coord_kw)
         return std::make_unique<rd::KW>(*grid->coord_kw.get());
 
@@ -4917,7 +4920,7 @@ void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
     }
 }
 
-rd_kw_ptr rd_grid_alloc_actnum_kw(const rd_grid_type *grid) {
+std::unique_ptr<rd::KW> rd_grid_alloc_actnum_kw(const rd_grid_type *grid) {
     if (grid->size > std::numeric_limits<int>::max())
         throw std::out_of_range(
             "Size of grid overflowed max size of ACTNUM keyword");
@@ -5184,7 +5187,8 @@ rd_grid_alloc_volume_kw_global(const rd_grid_type *grid) {
     return std::make_unique<rd::KW>("VOLUME", volume);
 }
 
-rd_kw_ptr rd_grid_alloc_volume_kw(const rd_grid_type *grid, bool active_size) {
+std::unique_ptr<rd::KW> rd_grid_alloc_volume_kw(const rd_grid_type *grid,
+                                                bool active_size) {
     if (active_size)
         return rd_grid_alloc_volume_kw_active(grid);
     else

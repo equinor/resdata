@@ -24,7 +24,7 @@ class FileKW {
     rd_data_type data_type;
     int kw_size;
     std::string header;
-    rd_kw_ptr kw{nullptr};
+    std::unique_ptr<rd::KW> kw{nullptr};
 
     void assert_kw() const;
     void load_kw(ERT::FortIO &fortio);
