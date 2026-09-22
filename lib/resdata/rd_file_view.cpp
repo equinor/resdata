@@ -103,8 +103,8 @@ FileView::validate_index_fload_kw(const std::string &kw, int index,
 
 void FileView::write(ERT::FortIO &target, size_t offset) {
     for (size_t index = offset; index < kw_list.size(); index++) {
-        rd_kw_type *rd_kw = get_kw(index);
-        rd_kw_fwrite(rd_kw, target);
+        rd::KW *rd_kw = get_kw(index);
+        rd_kw->fwrite(target);
     }
 }
 
@@ -335,8 +335,10 @@ FileView::restart_view_from_seqnum_index(size_t index) {
 }
 std::shared_ptr<FileView>
 FileView::restart_view_from_report_step(int report_step) {
-    auto block = find_block(SEQNUM_KW, [&](const rd_kw_type *seqnum_kw) {
-        return rd_kw_data_equal(seqnum_kw, &report_step);
+    auto block = find_block(SEQNUM_KW, [&](const rd::KW *seqnum_kw) {
+        return seqnum_kw->size() > 0 &&
+               rd_type_is_int(seqnum_kw->data_type()) &&
+               seqnum_kw->at<int>(0) == report_step;
     });
     if (!block.has_value())
         throw std::invalid_argument(

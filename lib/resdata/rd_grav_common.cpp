@@ -25,8 +25,8 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
         aquifer_cell[active_index] = false;
 
     if (init_file->has_kw(AQUIFER_KW)) {
-        rd_kw_type *aquifer_kw = init_file->get_kw(AQUIFER_KW, 0);
-        const int *aquifer_data = rd_kw_get_int_ptr(aquifer_kw);
+        rd::KW *aquifer_kw = init_file->get_kw(AQUIFER_KW, 0);
+        const std::vector<int> &aquifer_data = aquifer_kw->get_vector<int>();
 
         for (int active_index = 0; active_index < grid_cache.size();
              active_index++) {

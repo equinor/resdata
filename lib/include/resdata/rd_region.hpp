@@ -147,14 +147,8 @@ void rd_region_select_from_layer(rd_region_type *region,
                                  const layer_type *layer, int k,
                                  int layer_value);
 
-void rd_region_set_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                          int value, bool force_active);
-void rd_region_set_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            float value, bool force_active);
-void rd_region_set_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                             double value, bool force_active);
-void rd_region_kw_copy(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *src_kw, bool force_active);
+void rd_region_kw_copy(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *src_kw, bool force_active);
 
 void rd_region_kw_iadd(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *delta_kw, bool force_active);
@@ -168,19 +162,6 @@ void rd_region_kw_isub(rd_region_type *rd_region, rd_kw_type *rd_kw,
 bool rd_region_equal(const rd_region_type *region1,
                      const rd_region_type *region2);
 
-void rd_region_scale_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                              float value, bool force_active);
-void rd_region_scale_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                               double value, bool force_active);
-void rd_region_scale_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            int value, bool force_active);
-void rd_region_shift_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                            int value, bool force_active);
-void rd_region_shift_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                               double value, bool force_active);
-void rd_region_shift_kw_float(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                              float value, bool force_active);
-
 const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
                                                     const rd_kw_type *rd_kw,
                                                     bool force_active);
@@ -189,9 +170,56 @@ void rd_region_set_name(rd_region_type *region,
                         const std::optional<std::string> &name);
 std::optional<std::string> rd_region_get_name(const rd_region_type *region);
 
-double rd_region_sum_kw_double(rd_region_type *rd_region,
-                               const rd_kw_type *rd_kw, bool force_active);
-int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                         bool force_active);
-float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                             bool force_active);
+template <typename T>
+T rd_region_sum_kw(rd_region_type *rd_region, const rd::KW *rd_kw,
+                   bool force_active) {
+    const std::vector<int> &index_set =
+        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
+    const auto &data = rd_kw->get_vector<T>();
+    T sum{};
+    for (const auto i : index_set)
+        sum += data[i];
+    return sum;
+}
+
+inline int rd_region_sum_kw_bool(rd_region_type *rd_region, const rd::KW *rd_kw,
+                                 bool force_active) {
+    const std::vector<int> &index_set =
+        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
+    const auto &data = rd_kw->get_vector<char>();
+    int sum = 0;
+    for (const auto i : index_set)
+        if (data[i] != 0)
+            sum += 1;
+    return sum;
+}
+
+template <typename T>
+void rd_region_scale_kw(rd_region_type *rd_region, rd::KW *rd_kw, T value,
+                        bool force_active) {
+    const std::vector<int> &index_set =
+        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
+    auto &data = rd_kw->get_vector<T>();
+    for (const auto i : index_set)
+        data[i] *= value;
+}
+
+template <typename T>
+void rd_region_shift_kw(rd_region_type *rd_region, rd::KW *rd_kw, T value,
+                        bool force_active) {
+    const std::vector<int> &index_set =
+        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
+    auto &data = rd_kw->get_vector<T>();
+    for (const auto i : index_set)
+        data[i] += value;
+}
+
+template <typename T>
+void rd_region_set_kw(rd_region_type *rd_region, rd::KW *rd_kw, T value,
+                      bool force_active) {
+    const std::vector<int> &index_set =
+        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
+    auto &data = rd_kw->get_vector<T>();
+    for (const auto i : index_set)
+        data[i] = value;
+}

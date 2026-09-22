@@ -129,7 +129,7 @@ void rd::File::scan() {
             break;
 
         offset_type current_offset = context->fortio.ftell();
-        auto work_kw = rd_kw_fread_header(context->fortio);
+        auto work_kw = rd::KW::fread_header(context->fortio);
         if (!work_kw)
             break;
 

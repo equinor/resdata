@@ -283,11 +283,9 @@ PYBIND11_MODULE(_grid, m) {
         [](py::handle self) {
             auto rd_grid = from_cwrap<rd_grid_type>(self);
             int size = rd_grid_get_global_size(rd_grid);
-            rd_kw_ptr actnum = make_rd_kw("ACTNUM", size, RD_INT);
-            if (!actnum)
-                throw std::runtime_error(
-                    fmt::format("Could not allocate ACTNUM of size {}", size));
-            rd_grid_init_actnum_data(rd_grid, rd_kw_get_int_ptr(actnum.get()));
+            std::unique_ptr<rd::KW> actnum =
+                std::make_unique<rd::KW>("ACTNUM", size, RD_INT);
+            rd_grid_init_actnum_data(rd_grid, actnum->get_vector<int>().data());
 
             return to_capsule(actnum.release());
         },
@@ -376,7 +374,7 @@ PYBIND11_MODULE(_grid, m) {
               int32_t *data_ptr = static_cast<int32_t *>(data_buffer.ptr);
               std::fill(data_ptr, data_ptr + data_buffer.size, fill_value);
 
-              int *input = rd_kw_get_int_ptr(rd_kw);
+              const auto &input = rd_kw->get_vector<int>();
               for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
                   int32_t di = idx_ptr[i];
                   if (di >= 0)
@@ -398,7 +396,7 @@ PYBIND11_MODULE(_grid, m) {
               for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
                   int32_t di = idx_ptr[i];
                   if (di >= 0)
-                      data_ptr[i] = rd_kw_iget_as_double(rd_kw, di);
+                      data_ptr[i] = rd_kw->as_double(di);
               }
               return data;
           });

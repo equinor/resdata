@@ -78,12 +78,12 @@ struct RSTHead {
     inline RSTHead(int report_step, const rd_kw_type *intehead_kw,
                    const rd_kw_type *doubhead_kw, const rd_kw_type *logihead_kw)
         : report_step(report_step),
-          sim_days(rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX)) {
+          sim_days(doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX)) {
 
-        int nihead = rd_kw_get_size(intehead_kw);
-        const int *data = (const int *)rd_kw_get_void_ptr(intehead_kw);
+        const std::vector<int> &data = intehead_kw->get_vector<int>();
+        int nihead = static_cast<int>(data.size());
 
-        auto get = [data, nihead](int index) {
+        auto get = [&data, nihead](int index) {
             return index < nihead ? data[index] : 0;
         };
 
@@ -119,7 +119,7 @@ struct RSTHead {
         this->sim_time = rd_make_date(this->day, this->month, this->year);
 
         if (logihead_kw)
-            this->dualp = rd_kw_iget_bool(logihead_kw, LOGIHEAD_DUALP_INDEX);
+            this->dualp = logihead_kw->at<bool>(LOGIHEAD_DUALP_INDEX);
         else
             this->dualp = false;
     }

@@ -76,8 +76,7 @@ int main(int argc, char **argv) {
         ERT::FortIO target(target_file, std::ios_base::out, fmt_file);
 
         if (target_type == FileType::UNIFIED_RESTART) {
-            int dummy;
-            seqnum_kw = std::move(make_rd_kw("SEQNUM", 1, RD_INT, &dummy));
+            seqnum_kw = std::make_unique<rd::KW>("SEQNUM", 1, RD_INT);
         }
 
         int prev_report_step = -1;
@@ -97,8 +96,8 @@ int main(int argc, char **argv) {
                     rd::File::open(filelist.at(i));
                 if (target_type == FileType::UNIFIED_RESTART) {
                     /* Must insert the SEQNUM keyword first. */
-                    rd_kw_iset_int(seqnum_kw.get(), 0, report_step);
-                    rd_kw_fwrite(seqnum_kw.get(), target);
+                    seqnum_kw->at<int>(0) = report_step;
+                    seqnum_kw->fwrite(target);
                 }
                 src_file->write(target, 0);
             } /* Else skipping file of incorrect type. */
