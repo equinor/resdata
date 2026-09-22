@@ -46,23 +46,21 @@ bool rd_region_contains_global(const rd_region_type *rd_region,
 bool rd_region_contains_active(const rd_region_type *rd_region,
                                int active_index);
 
-void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw);
+void rd_region_select_true(rd_region_type *region, const rd::KW *rd_kw);
 
 void rd_region_invert_selection(rd_region_type *region);
 void rd_region_select_all(rd_region_type *region);
 void rd_region_deselect_all(rd_region_type *region);
-void rd_region_select_false(rd_region_type *region, const rd_kw_type *rd_kw);
+void rd_region_select_false(rd_region_type *region, const rd::KW *rd_kw);
 
-void rd_region_select_in_interval(rd_region_type *region,
-                                  const rd_kw_type *rd_kw, float min_value,
-                                  float max_value);
-void rd_region_deselect_in_interval(rd_region_type *region,
-                                    const rd_kw_type *rd_kw, float min_value,
-                                    float max_value);
+void rd_region_select_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                  float min_value, float max_value);
+void rd_region_deselect_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                    float min_value, float max_value);
 
-void rd_region_select_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_select_equal(rd_region_type *region, const rd::KW *rd_kw,
                             int value);
-void rd_region_deselect_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_deselect_equal(rd_region_type *region, const rd::KW *rd_kw,
                               int value);
 
 void rd_region_select_inactive_cells(rd_region_type *region);
@@ -107,23 +105,23 @@ void rd_region_intersection(rd_region_type *region,
 void rd_region_union(rd_region_type *region, const rd_region_type *new_region);
 void rd_region_subtract(rd_region_type *region,
                         const rd_region_type *new_region);
-void rd_region_select_smaller(rd_region_type *rd_region,
-                              const rd_kw_type *rd_kw, float limit);
-void rd_region_deselect_smaller(rd_region_type *rd_region,
-                                const rd_kw_type *rd_kw, float limit);
-void rd_region_select_larger(rd_region_type *rd_region, const rd_kw_type *rd_kw,
+void rd_region_select_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                              float limit);
+void rd_region_deselect_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                                float limit);
+void rd_region_select_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
                              float limit);
-void rd_region_deselect_larger(rd_region_type *rd_region,
-                               const rd_kw_type *rd_kw, float limit);
+void rd_region_deselect_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
+                               float limit);
 
-void rd_region_cmp_select_less(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2);
-void rd_region_cmp_deselect_less(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2);
-void rd_region_cmp_select_more(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2);
-void rd_region_cmp_deselect_more(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2);
+void rd_region_cmp_select_less(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2);
+void rd_region_cmp_deselect_less(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2);
+void rd_region_cmp_select_more(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2);
+void rd_region_cmp_deselect_more(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2);
 
 void rd_region_select_above_plane(rd_region_type *region, const double n[3],
                                   const double p[3]);
@@ -150,20 +148,20 @@ void rd_region_select_from_layer(rd_region_type *region,
 void rd_region_kw_copy(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *src_kw, bool force_active);
 
-void rd_region_kw_iadd(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *delta_kw, bool force_active);
-void rd_region_kw_idiv(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *div_kw, bool force_active);
-void rd_region_kw_imul(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *mul_kw, bool force_active);
-void rd_region_kw_isub(rd_region_type *rd_region, rd_kw_type *rd_kw,
-                       const rd_kw_type *delta_kw, bool force_active);
+void rd_region_kw_iadd(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *delta_kw, bool force_active);
+void rd_region_kw_idiv(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *div_kw, bool force_active);
+void rd_region_kw_imul(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *mul_kw, bool force_active);
+void rd_region_kw_isub(rd_region_type *rd_region, rd::KW *rd_kw,
+                       const rd::KW *delta_kw, bool force_active);
 
 bool rd_region_equal(const rd_region_type *region1,
                      const rd_region_type *region2);
 
 const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                    const rd_kw_type *rd_kw,
+                                                    const rd::KW *rd_kw,
                                                     bool force_active);
 
 void rd_region_set_name(rd_region_type *region,

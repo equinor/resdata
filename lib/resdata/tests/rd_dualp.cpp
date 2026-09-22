@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
     std::unique_ptr<rd::File> GRID_file = rd::File::open(grid_file);
 
     {
-        rd_kw_type *actnum = GRID_file->get_kw("ACTNUM", 0);
-        rd_kw_type *swat = RST_file->get_kw("SWAT", 0);
-        rd_kw_type *permx = INIT_file->get_kw("PERMX", 0);
+        rd::KW *actnum = GRID_file->get_kw("ACTNUM", 0);
+        rd::KW *swat = RST_file->get_kw("SWAT", 0);
+        rd::KW *permx = INIT_file->get_kw("PERMX", 0);
         int fracture_size = rd_grid_get_nactive_fracture(rd_grid.get());
         int matrix_size = rd_grid_get_nactive(rd_grid.get());
 

@@ -216,7 +216,7 @@ namespace fs = std::filesystem;
             printf("lgr:%s has %d x %d x %d elements \n", rd_grid_get_name(lgr_grid) , nx , ny , nz);
 
             // ok - now we want to extract the solution vector (pressure) corresponding to this lgr:
-            rd_kw_type *pressure_kw = restart_data->get_kw("PRESSURE", rd_grid_get_lgr_nr(lgr_grid));
+            rd::KW *pressure_kw = restart_data->get_kw("PRESSURE", rd_grid_get_lgr_nr(lgr_grid));
                                                               ///               /|\
                                                               ///                |
                                                               ///                |
@@ -316,13 +316,13 @@ namespace fs = std::filesystem;
         int matrix_size = rd_grid_get_nactive(rd_grid);
         int fracture_size = rd_grid_get_nactive_fracture(rd_grid);
 
-        rd_kw_type *swat = rst_file.get_kw("SWAT", 0);
+        rd::KW *swat = rst_file.get_kw("SWAT", 0);
 
         snprintf(fracture_kw, 9, "F-%6s", swat->header().c_str());
         snprintf(matrix_kw, 9, "M-%6s", swat->header().c_str());
 
-        rd_kw_type *M = new rd_kw_type{*swat, matrix_kw, 0, matrix_size};
-        rd_kw_type *F = new rd_kw_type{*swat, fracture_kw, matrix_size, fracture_size};
+        rd::KW *M = new rd::KW{*swat, matrix_kw, 0, matrix_size};
+        rd::KW *F = new rd::KW{*swat, fracture_kw, matrix_size, fracture_size};
       }
 
   About nnc
@@ -671,7 +671,7 @@ struct rd_cell_struct {
     }
 };
 
-static UnitSystem rd_grid_check_unit_system(const rd_kw_type *gridunit_kw);
+static UnitSystem rd_grid_check_unit_system(const rd::KW *gridunit_kw);
 #define RD_GRID_ID 991010
 
 struct rd_grid_struct {
@@ -2222,10 +2222,10 @@ static std::unique_ptr<rd::KW> rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
    hierarchies.
 */
 rd_grid_type *
-rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
-                        const rd_kw_type *coord_kw,
-                        const rd_kw_type *actnum_kw,    /* Can be NULL */
-                        const rd_kw_type *mapaxes_kw) { /* Can be NULL */
+rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd::KW *zcorn_kw,
+                        const rd::KW *coord_kw,
+                        const rd::KW *actnum_kw,    /* Can be NULL */
+                        const rd::KW *mapaxes_kw) { /* Can be NULL */
 
     if (nx < 0 || ny < 0 || nz < 0)
         throw std::invalid_argument(
@@ -2255,7 +2255,7 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
 
     bool apply_mapaxes = true;
     auto gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, 0);
-    rd_kw_type *gridunit_kw = NULL;
+    rd::KW *gridunit_kw = NULL;
     return rd_grid_alloc_GRDECL_kw__(
                NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
                zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data)
@@ -2297,7 +2297,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
 
          ERT::FortIO init_file("CASE.INIT", std::ios_base::out, ...
          rd_grid_type * grid ...
-         rd_kw_type trannnc_kw{"TRANNNC" , num_nnc , RD_FLOAT_TYPE};
+         rd::KW trannnc_kw{"TRANNNC" , num_nnc , RD_FLOAT_TYPE};
 
          for (int i = 0; i < num_nnc; i++) {
              int   g1 = ...
@@ -2334,8 +2334,8 @@ void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
     NNA1 -> NNA2   For links between different LGRs
 */
 static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
-                                   const rd_kw_type *keyword1,
-                                   const rd_kw_type *keyword2) {
+                                   const rd::KW *keyword1,
+                                   const rd::KW *keyword2) {
 
     const auto &grid1_nnc_cells = keyword1->get_vector<int>();
     const auto &grid2_nnc_cells = keyword2->get_vector<int>();
@@ -2391,12 +2391,12 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd::File *rd_file) {
         auto lgr_view = rd_file->blockview(NNCHEAD_KW, i);
         if (!lgr_view)
             throw std::runtime_error("Could not find NNC section of grid file");
-        rd_kw_type *nnchead_kw = lgr_view->get_kw(NNCHEAD_KW, 0);
+        rd::KW *nnchead_kw = lgr_view->get_kw(NNCHEAD_KW, 0);
         int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
 
         if (lgr_view->has_kw(NNC1_KW)) {
-            const rd_kw_type *nnc1 = lgr_view->get_kw(NNC1_KW, 0);
-            const rd_kw_type *nnc2 = lgr_view->get_kw(NNC2_KW, 0);
+            const rd::KW *nnc1 = lgr_view->get_kw(NNC1_KW, 0);
+            const rd::KW *nnc2 = lgr_view->get_kw(NNC2_KW, 0);
 
             {
                 rd_grid_type *grid =
@@ -2408,8 +2408,8 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd::File *rd_file) {
         }
 
         if (lgr_view->has_kw(NNCL_KW)) {
-            const rd_kw_type *nncl = lgr_view->get_kw(NNCL_KW, 0);
-            const rd_kw_type *nncg = lgr_view->get_kw(NNCG_KW, 0);
+            const rd::KW *nncl = lgr_view->get_kw(NNCL_KW, 0);
+            const rd::KW *nncg = lgr_view->get_kw(NNCG_KW, 0);
             {
                 rd_grid_type *grid =
                     (lgr_nr > 0)
@@ -2431,7 +2431,7 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
     size_t num_nncheada_kw = rd_file->num_named_kw(NNCHEADA_KW);
 
     for (size_t i = 0; i < num_nncheada_kw; i++) {
-        rd_kw_type *nncheada_kw = rd_file->get_kw(NNCHEADA_KW, i);
+        rd::KW *nncheada_kw = rd_file->get_kw(NNCHEADA_KW, i);
         int lgr_nr1 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC1_INDEX);
         int lgr_nr2 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC2_INDEX);
 
@@ -2440,8 +2440,8 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
         rd_grid_type *lgr_grid2 =
             rd_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr2);
 
-        rd_kw_type *nna1_kw = rd_file->get_kw(NNA1_KW, i);
-        rd_kw_type *nna2_kw = rd_file->get_kw(NNA2_KW, i);
+        rd::KW *nna1_kw = rd_file->get_kw(NNA1_KW, i);
+        rd::KW *nna2_kw = rd_file->get_kw(NNA2_KW, i);
 
         rd_grid_init_nnc_cells(lgr_grid1, lgr_grid2, nna1_kw, nna2_kw);
     }
@@ -2464,17 +2464,17 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
                                          const rd::File *rd_file,
                                          size_t grid_nr, bool apply_mapaxes,
                                          const int *ext_actnum) {
-    rd_kw_type *gridhead_kw = rd_file->get_kw(GRIDHEAD_KW, grid_nr);
-    rd_kw_type *zcorn_kw = rd_file->get_kw(ZCORN_KW, grid_nr);
-    rd_kw_type *coord_kw = rd_file->get_kw(COORD_KW, grid_nr);
-    rd_kw_type *corsnum_kw = NULL;
-    rd_kw_type *actnum_kw = NULL;
-    rd_kw_type *gridunit_kw = NULL;
-    rd_kw_type *mapaxes_kw = NULL;
+    rd::KW *gridhead_kw = rd_file->get_kw(GRIDHEAD_KW, grid_nr);
+    rd::KW *zcorn_kw = rd_file->get_kw(ZCORN_KW, grid_nr);
+    rd::KW *coord_kw = rd_file->get_kw(COORD_KW, grid_nr);
+    rd::KW *corsnum_kw = NULL;
+    rd::KW *actnum_kw = NULL;
+    rd::KW *gridunit_kw = NULL;
+    rd::KW *mapaxes_kw = NULL;
     int dualp_flag;
     int eclipse_version;
     if (grid_nr == 0) {
-        rd_kw_type *filehead_kw = rd_file->get_kw(FILEHEAD_KW, grid_nr);
+        rd::KW *filehead_kw = rd_file->get_kw(FILEHEAD_KW, grid_nr);
         dualp_flag = rd_kw_iget_int(filehead_kw, FILEHEAD_DUALP_INDEX);
         eclipse_version = rd_kw_iget_int(filehead_kw, FILEHEAD_YEAR_INDEX);
     } else {
@@ -2544,7 +2544,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                     rd_grid_add_lgr(main_grid.get(), std::move(lgr_grid));
                 {
                     rd_grid_type *host_grid;
-                    rd_kw_type *hostnum_kw =
+                    rd::KW *hostnum_kw =
                         rd_file->get_kw(HOSTNUM_KW, grid_nr - 1);
                     if (!lgr->parent_name)
                         host_grid = main_grid.get();
@@ -2600,7 +2600,7 @@ rd_grid_alloc_GRID_data__(rd_grid_type *global_grid, size_t num_coords,
 }
 
 static int rd_grid_dual_porosity_GRID_check(rd::File *rd_file) {
-    rd_kw_type *dimens_kw = rd_file->get_kw(DIMENS_KW, 0);
+    rd::KW *dimens_kw = rd_file->get_kw(DIMENS_KW, 0);
     int nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
     int ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
     int nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
@@ -2618,8 +2618,8 @@ static int rd_grid_dual_porosity_GRID_check(rd::File *rd_file) {
         size_t matrix_index = 0;
         size_t fracture_index;
 
-        rd_kw_type *matrix_kw;
-        rd_kw_type *fracture_kw;
+        rd::KW *matrix_kw;
+        rd::KW *fracture_kw;
 
         size_t num_cells = static_cast<size_t>(nx) * ny * nz;
         if (num_corners > num_cells)
@@ -2656,7 +2656,7 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
 
     // 1: Fetching header data from the DIMENS keyword.
     {
-        rd_kw_type *dimens_kw = rd_file->get_kw(DIMENS_KW, grid_nr);
+        rd::KW *dimens_kw = rd_file->get_kw(DIMENS_KW, grid_nr);
         nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
         ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
         nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
@@ -2670,7 +2670,7 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     //    keyword is optional, and is only applicable to the global grid.
     {
         if ((grid_nr == 0) && (rd_file->has_kw(MAPAXES_KW))) {
-            const rd_kw_type *mapaxes_kw = rd_file->get_kw(MAPAXES_KW, 0);
+            const rd::KW *mapaxes_kw = rd_file->get_kw(MAPAXES_KW, 0);
             mapaxes_data = rd_grid_get_mapaxes_from_kw__(mapaxes_kw);
         }
     }
@@ -2731,9 +2731,9 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     std::vector<const float *> corners(num_coords);
 
     for (size_t index = 0; index < num_coords; index++) {
-        const rd_kw_type *coords_kw =
+        const rd::KW *coords_kw =
             rd_file->get_kw(COORDS_KW, index + cell_offset);
-        const rd_kw_type *corners_kw =
+        const rd::KW *corners_kw =
             rd_file->get_kw(CORNERS_KW, index + cell_offset);
 
         coords[index] = coords_kw->get_vector<int>().data();
@@ -4268,7 +4268,7 @@ double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
 
 */
 static int rd_grid_get_property_index__(const rd_grid_type *rd_grid,
-                                        const rd_kw_type *rd_kw, int i, int j,
+                                        const rd::KW *rd_kw, int i, int j,
                                         int k) {
     int kw_size = rd::kw_get_size(rd_kw);
     int lookup_index = -1;
@@ -4319,7 +4319,7 @@ double rd_grid_get_property(const rd_grid_type *rd_grid, const rd::KW *rd_kw,
    types, otherwise it raises std::invalid_argument.
 */
 std::vector<double> rd_grid_get_column_property(const rd_grid_type *rd_grid,
-                                                const rd_kw_type *rd_kw, int i,
+                                                const rd::KW *rd_kw, int i,
                                                 int j) {
     rd_data_type data_type = rd_kw->data_type();
     if (rd_type_is_numeric(data_type)) {
@@ -4866,7 +4866,7 @@ std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
 
 rd_kw_ptr rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
     if (grid->coord_kw)
-        return std::make_unique<rd_kw_struct>(*grid->coord_kw.get());
+        return std::make_unique<rd::KW>(*grid->coord_kw.get());
 
     auto coord_kw = std::make_unique<rd::KW>(
         COORD_KW, RD_GRID_COORD_SIZE(grid->nx, grid->ny), RD_FLOAT);

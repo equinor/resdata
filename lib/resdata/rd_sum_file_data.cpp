@@ -532,8 +532,8 @@ void rd_sum_file_data::add_rd_file(int report_step,
     if (num_ministep > 0) {
 
         for (size_t ikw = 0; ikw < num_ministep; ikw++) {
-            rd_kw_type *ministep_kw = summary_view.get_kw(MINISTEP_KW, ikw);
-            rd_kw_type *params_kw = summary_view.get_kw(PARAMS_KW, ikw);
+            rd::KW *ministep_kw = summary_view.get_kw(MINISTEP_KW, ikw);
+            rd::KW *params_kw = summary_view.get_kw(PARAMS_KW, ikw);
 
             {
                 int ministep_nr = rd_kw_iget_int(ministep_kw, 0);

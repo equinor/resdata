@@ -29,7 +29,7 @@
 namespace py = pybind11;
 
 namespace {
-py::object create_kw_reference(rd_kw_type *kw, py::object parent) {
+py::object create_kw_reference(rd::KW *kw, py::object parent) {
     if (!kw)
         return py::none();
     return ResdataKW().attr("createCReference")(to_capsule(kw), parent);
@@ -210,7 +210,7 @@ PYBIND11_MODULE(rd_file, m) {
             "save_kw",
             [](rd::File &self, py::handle kw) {
                 if (self.is_writable()) {
-                    self.save_kw(from_cwrap<rd_kw_type>(kw));
+                    self.save_kw(from_cwrap<rd::KW>(kw));
                 } else {
                     PyErr_SetString(
                         PyExc_OSError,

@@ -140,7 +140,7 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
 
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
                                                 int ministep_nr,
-                                                const rd_kw_type *params_kw,
+                                                const rd::KW *params_kw,
                                                 const char *src_file,
                                                 const rd_smspec_type *smspec) {
 

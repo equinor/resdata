@@ -540,98 +540,6 @@ void rd::KW::zero_init_data() {
     }
 }
 
-#define RD_KW_ISET_TYPED(ctype, RD_TYPE)                                       \
-    void rd_kw_iset_##ctype(rd_kw_type *rd_kw, int i, ctype value) {           \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        rd_kw_iset_static(rd_kw, i, &value);                                   \
-    }
-
-RD_KW_ISET_TYPED(double, RD_DOUBLE_TYPE);
-RD_KW_ISET_TYPED(float, RD_FLOAT_TYPE);
-RD_KW_ISET_TYPED(int, RD_INT_TYPE);
-RD_KW_ISET_TYPED(bool, RD_BOOL_TYPE);
-#undef RD_KW_ISET_TYPED
-
-#define RD_KW_SET_INDEXED(ctype, RD_TYPE)                                      \
-    void rd_kw_set_indexed_##ctype(                                            \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype value) {  \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        {                                                                      \
-            ctype *data = (ctype *)rd_kw->data;                                \
-            for (const auto i : index_list)                                    \
-                data[i] = value;                                               \
-        }                                                                      \
-    }
-
-RD_KW_SET_INDEXED(double, RD_DOUBLE_TYPE);
-RD_KW_SET_INDEXED(float, RD_FLOAT_TYPE);
-RD_KW_SET_INDEXED(int, RD_INT_TYPE);
-#undef RD_KW_SET_INDEXED
-
-#define RD_KW_SHIFT_INDEXED(ctype, RD_TYPE)                                    \
-    void rd_kw_shift_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype shift) {  \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        {                                                                      \
-            ctype *data = (ctype *)rd_kw->data;                                \
-            for (const auto i : index_list)                                    \
-                data[i] += shift;                                              \
-        }                                                                      \
-    }
-
-RD_KW_SHIFT_INDEXED(double, RD_DOUBLE_TYPE);
-RD_KW_SHIFT_INDEXED(float, RD_FLOAT_TYPE);
-RD_KW_SHIFT_INDEXED(int, RD_INT_TYPE);
-#undef RD_KW_SHIFT_INDEXED
-
-#define RD_KW_SCALE_INDEXED(ctype, RD_TYPE)                                    \
-    void rd_kw_scale_indexed_##ctype(                                          \
-        rd_kw_type *rd_kw, const std::vector<int> &index_list, ctype scale) {  \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        {                                                                      \
-            ctype *data = (ctype *)rd_kw->data;                                \
-            for (const auto i : index_list)                                    \
-                data[i] *= scale;                                              \
-        }                                                                      \
-    }
-
-RD_KW_SCALE_INDEXED(double, RD_DOUBLE_TYPE);
-RD_KW_SCALE_INDEXED(float, RD_FLOAT_TYPE);
-RD_KW_SCALE_INDEXED(int, RD_INT_TYPE);
-#undef RD_KW_SCALE_INDEXED
-
-#define RD_KW_GET_TYPED_PTR(ctype, RD_TYPE)                                    \
-    ctype *rd_kw_get_##ctype##_ptr(const rd_kw_type *rd_kw) {                  \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        return (ctype *)rd_kw->data;                                           \
-    }
-
-RD_KW_GET_TYPED_PTR(double, RD_DOUBLE_TYPE);
-RD_KW_GET_TYPED_PTR(float, RD_FLOAT_TYPE);
-RD_KW_GET_TYPED_PTR(int, RD_INT_TYPE);
-RD_KW_GET_TYPED_PTR(bool, RD_BOOL_TYPE);
-#undef RD_KW_GET_TYPED_PTR
-
-void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw) { return rd_kw->data; }
-
-void *rd_kw_iget_ptr(const rd_kw_type *rd_kw, int i) {
-    return rd_kw_iget_ptr_static(rd_kw, i);
-}
-
-void rd_kw_iset(rd_kw_type *rd_kw, int i, const void *iptr) {
-    rd_kw_iset_static(rd_kw, i, iptr);
-}
-
 static bool rd_kw_qskip(FILE *stream) {
     const char sep = '\'';
     const char space = ' ';
@@ -949,8 +857,11 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
     }
 }
 
-bool rd_kw_struct::fskip_data(rd_data_type data_type, const int element_count,
-                              ERT::FortIO &fortio) {
+/**
+   Allocates storage and reads data.
+*/
+bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
+                        ERT::FortIO &fortio) {
     if (element_count <= 0)
         return true;
 
@@ -1051,7 +962,7 @@ std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
         return {nullptr};
 }
 
-static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
+static void rd_kw_fwrite_data_unformatted(const rd::KW *rd_kw,
                                           ERT::FortIO &fortio) {
     auto iobuffer = alloc_output_buffer(rd_kw);
     size_t sizeof_iotype = rd_kw->iotype_size();
@@ -1153,7 +1064,7 @@ void rd::KW::fwrite_data(ERT::FortIO &fortio) const {
         rd_kw_fwrite_data_unformatted(this, fortio);
 }
 
-void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+void rd_kw_fwrite_header(const rd::KW *rd_kw, ERT::FortIO &fortio) {
     FILE *stream = fortio.get_FILE();
     bool fmt_file = fortio.fmt_file();
     std::string type_name = rd_type_name(rd_kw->data_type());

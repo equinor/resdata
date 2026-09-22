@@ -33,9 +33,9 @@ PYBIND11_MODULE(_rsthead, m) {
                 if (kw_arg.has_value()) {
                     return new RSTHead(
                         std::get<0>(*kw_arg),
-                        from_cwrap<rd_kw_type>(std::get<1>(*kw_arg)),
-                        from_cwrap<rd_kw_type>(std::get<2>(*kw_arg)),
-                        from_cwrap<rd_kw_type>(std::get<3>(*kw_arg)));
+                        from_cwrap<rd::KW>(std::get<1>(*kw_arg)),
+                        from_cwrap<rd::KW>(std::get<2>(*kw_arg)),
+                        from_cwrap<rd::KW>(std::get<3>(*kw_arg)));
                 } else {
                     return std::make_unique<RSTHead>(
                                RSTHead::read(rst_view->get(), -1))

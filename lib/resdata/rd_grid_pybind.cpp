@@ -38,9 +38,9 @@ PYBIND11_MODULE(_grid, m) {
            std::optional<py::handle> actnum,
            std::optional<py::handle> mapaxes) {
             return to_capsule(rd_grid_alloc_GRDECL_kw(
-                nx, ny, nz, from_cwrap<rd_kw_type>(zcorn),
-                from_cwrap<rd_kw_type>(coord), from_cwrap<rd_kw_type>(actnum),
-                from_cwrap<rd_kw_type>(mapaxes)));
+                nx, ny, nz, from_cwrap<rd::KW>(zcorn),
+                from_cwrap<rd::KW>(coord), from_cwrap<rd::KW>(actnum),
+                from_cwrap<rd::KW>(mapaxes)));
         },
         py::return_value_policy::reference);
     m.def(
@@ -196,7 +196,7 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_grid_value",
           [](py::handle self, py::handle kw, int i, int j, int k) {
               return rd_grid_get_property(from_cwrap<rd_grid_type>(self),
-                                          from_cwrap<rd_kw_type>(kw), i, j, k);
+                                          from_cwrap<rd::KW>(kw), i, j, k);
           });
     m.def("_get_cell_volume", [](py::handle self, int index) {
         return rd_grid_get_cell_volume1(from_cwrap<rd_grid_type>(self), index);
@@ -216,7 +216,7 @@ PYBIND11_MODULE(_grid, m) {
     });
     m.def("_load_column", [](py::handle self, py::handle kw, int i, int j) {
         return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
-                                           from_cwrap<rd_kw_type>(kw), i, j);
+                                           from_cwrap<rd::KW>(kw), i, j);
     });
     m.def("_get_top", [](py::handle self, int i, int j) {
         return rd_grid_get_top2(from_cwrap<rd_grid_type>(self), i, j);
@@ -293,14 +293,14 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_compressed_kw_copy",
           [](py::handle self, py::handle kw_copy, py::handle kw) {
               rd_grid_compressed_kw_copy(from_cwrap<rd_grid_type>(self),
-                                         from_cwrap<rd_kw_type>(kw_copy),
-                                         from_cwrap<rd_kw_type>(kw));
+                                         from_cwrap<rd::KW>(kw_copy),
+                                         from_cwrap<rd::KW>(kw));
           });
     m.def("_global_kw_copy",
           [](py::handle self, py::handle kw_copy, py::handle kw) {
               rd_grid_global_kw_copy(from_cwrap<rd_grid_type>(self),
-                                     from_cwrap<rd_kw_type>(kw_copy),
-                                     from_cwrap<rd_kw_type>(kw));
+                                     from_cwrap<rd::KW>(kw_copy),
+                                     from_cwrap<rd::KW>(kw));
           });
     m.def(
         "_create_volume_keyword",
@@ -365,7 +365,7 @@ PYBIND11_MODULE(_grid, m) {
     });
     m.def("_export_data_as_int",
           [](py::array_t<int32_t> idx, py::handle kw, int32_t fill_value) {
-              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto rd_kw = from_cwrap<rd::KW>(kw);
               auto idx_buffer = idx.request();
               int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
 
@@ -384,7 +384,7 @@ PYBIND11_MODULE(_grid, m) {
           });
     m.def("_export_data_as_double",
           [](py::array_t<int32_t> idx, py::handle kw, double fill_value) {
-              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto rd_kw = from_cwrap<rd::KW>(kw);
               auto idx_buffer = idx.request();
               int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
 

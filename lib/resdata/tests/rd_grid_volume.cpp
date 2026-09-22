@@ -21,10 +21,10 @@ int main(int argc, char **argv) {
 
     std::unique_ptr<rd::File> init = rd::File::open(init_file);
     rd_grid_ptr grid = read_grid(grid_file);
-    const rd_kw_type *poro_kw = init->get_kw("PORO", 0);
-    const rd_kw_type *porv_kw = init->get_kw("PORV", 0);
-    rd_kw_type *multpv = NULL;
-    rd_kw_type *NTG = NULL;
+    const rd::KW *poro_kw = init->get_kw("PORO", 0);
+    const rd::KW *porv_kw = init->get_kw("PORV", 0);
+    rd::KW *multpv = NULL;
+    rd::KW *NTG = NULL;
     bool error_found = false;
 
     double total_volume = 0;

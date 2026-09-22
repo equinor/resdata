@@ -75,8 +75,8 @@ struct RSTHead {
           nisegz(nisegz), nsegmx(nsegmx), nswlmx(nswlmx), nlbrmx(nlbrmx),
           nilbrz(nilbrz), nrsegz(nrsegz), dualp(dualp), sim_days(sim_days) {};
 
-    inline RSTHead(int report_step, const rd_kw_type *intehead_kw,
-                   const rd_kw_type *doubhead_kw, const rd_kw_type *logihead_kw)
+    inline RSTHead(int report_step, const rd::KW *intehead_kw,
+                   const rd::KW *doubhead_kw, const rd::KW *logihead_kw)
         : report_step(report_step),
           sim_days(doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX)) {
 
@@ -125,15 +125,15 @@ struct RSTHead {
     }
 
     inline static RSTHead read(rd::FileView *rst_view, int report_step) {
-        const rd_kw_type *intehead_kw = rst_view->get_kw(INTEHEAD_KW, 0);
-        const rd_kw_type *doubhead_kw = rst_view->get_kw(DOUBHEAD_KW, 0);
-        const rd_kw_type *logihead_kw = NULL;
+        const rd::KW *intehead_kw = rst_view->get_kw(INTEHEAD_KW, 0);
+        const rd::KW *doubhead_kw = rst_view->get_kw(DOUBHEAD_KW, 0);
+        const rd::KW *logihead_kw = NULL;
 
         if (rst_view->has_kw(LOGIHEAD_KW))
             logihead_kw = rst_view->get_kw(LOGIHEAD_KW, 0);
 
         if (rst_view->has_kw(SEQNUM_KW)) {
-            const rd_kw_type *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
+            const rd::KW *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
             report_step = rd_kw_iget_int(seqnum_kw, 0);
         }
 

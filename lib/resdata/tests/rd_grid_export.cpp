@@ -67,7 +67,7 @@ void export_zcorn(const rd_grid_type *grid, rd::File *rd_file) {
 
 void export_mapaxes(const rd_grid_type *grid, rd::File *rd_file) {
     if (rd_file->has_kw("MAPAXES")) {
-        rd_kw_type *mapaxes_kw = rd_file->get_kw("MAPAXES", 0);
+        rd::KW *mapaxes_kw = rd_file->get_kw("MAPAXES", 0);
         double mapaxes[6];
         test_assert_true(rd_grid_use_mapaxes(grid));
         rd_grid_init_mapaxes_data_double(grid, mapaxes);
