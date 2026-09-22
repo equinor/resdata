@@ -194,7 +194,7 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     is invalid. */
 static rd_version_enum get_simulator_version(const rd::File *file) {
     rd::KW *intehead_kw = file->get_kw(INTEHEAD_KW, 0);
-    int int_value = rd_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
+    int int_value = intehead_kw->at<int>(INTEHEAD_IPROG_INDEX);
 
     switch (int_value) {
     case INTEHEAD_ECLIPSE100_VALUE:
@@ -315,7 +315,7 @@ rd_grav_survey_add_phase(rd_grav_survey_type *survey, Phase phase,
   7: Gas + Water + Oil */
 static int get_phases(const rd::File *init_file) {
     rd::KW *intehead_kw = init_file->get_kw(INTEHEAD_KW, 0);
-    int phases = rd_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
+    int phases = intehead_kw->at<int>(INTEHEAD_PHASE_INDEX);
     return phases;
 }
 

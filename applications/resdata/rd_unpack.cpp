@@ -74,7 +74,7 @@ static void unpack_file(const fs::path &filepath) {
             rd::KW *seqnum_kw;
             active_view = src_file->blockview(SEQNUM_KW, block_index);
             seqnum_kw = active_view->get_kw(SEQNUM_KW, 0);
-            report_step = rd_kw_iget_int(seqnum_kw, 0);
+            report_step = seqnum_kw->at<int>(0);
             offset = 1;
         }
 

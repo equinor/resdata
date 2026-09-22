@@ -251,9 +251,9 @@ static time_t rsthead_date(int day, int month, int year) {
 }
 
 static time_t rd_rsthead_date(const rd::KW *intehead_kw) {
-    return rsthead_date(rd_kw_iget_int(intehead_kw, INTEHEAD_DAY_INDEX),
-                        rd_kw_iget_int(intehead_kw, INTEHEAD_MONTH_INDEX),
-                        rd_kw_iget_int(intehead_kw, INTEHEAD_YEAR_INDEX));
+    return rsthead_date(intehead_kw->at<int>(INTEHEAD_DAY_INDEX),
+                        intehead_kw->at<int>(INTEHEAD_MONTH_INDEX),
+                        intehead_kw->at<int>(INTEHEAD_YEAR_INDEX));
 }
 
 time_t FileView::restart_sim_date(size_t seqnum_index) {
@@ -275,7 +275,7 @@ double FileView::restart_sim_days(size_t seqnum_index) {
 
     if (seqnum_map) {
         rd::KW *doubhead_kw = seqnum_map->get_kw(DOUBHEAD_KW, 0);
-        return rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX);
+        return doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX);
     }
 
     throw std::out_of_range(
@@ -361,7 +361,7 @@ std::shared_ptr<FileView>
 FileView::restart_view_from_sim_days(double sim_days) {
     auto block = find_block(DOUBHEAD_KW, [&](const rd::KW *doubhead_kw) {
         return util_double_approx_equal(
-            sim_days, rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX));
+            sim_days, doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX));
     });
     if (!block.has_value())
         throw std::invalid_argument(

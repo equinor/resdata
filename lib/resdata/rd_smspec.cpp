@@ -849,7 +849,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                 throw std::invalid_argument(
                     "INTEHEAD keyword lookup failed despite keyword presence");
             rd_smspec->unit_system = static_cast<UnitSystem>(
-                rd_kw_iget_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX));
+                intehead->at<int>(INTEHEAD_SMSPEC_UNIT_INDEX));
             /*
         The second item in the INTEHEAD vector is an integer designating which
         simulator has been used for the current simulation, that is currently

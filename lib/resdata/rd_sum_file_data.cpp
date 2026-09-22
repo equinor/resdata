@@ -536,7 +536,7 @@ void rd_sum_file_data::add_rd_file(int report_step,
             rd::KW *params_kw = summary_view.get_kw(PARAMS_KW, ikw);
 
             {
-                int ministep_nr = rd_kw_iget_int(ministep_kw, 0);
+                int ministep_nr = ministep_kw->at<int>(0);
                 std::string filename = summary_view.filename();
                 rd_sum_tstep_ptr tstep(rd_sum_tstep_alloc_from_file(
                                            report_step, ministep_nr, params_kw,

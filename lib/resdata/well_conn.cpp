@@ -51,7 +51,7 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
                               int well_nr, int conn_nr) {
 
     const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
-    int IC = rd_kw_iget_int(icon_kw, icon_offset + ICON_IC_INDEX);
+    int IC = icon_kw->at<int>(icon_offset + ICON_IC_INDEX);
     if (IC <= 0)
         throw InvalidConnection("IC <= 0: Connection not in current LGR");
 
@@ -59,19 +59,17 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
     Out in the wild we have encountered files where the integer value used to
     indicate direction has had an invalid value for some connections.
     */
-    int int_direction =
-        rd_kw_iget_int(icon_kw, icon_offset + ICON_DIRECTION_INDEX);
+    int int_direction = icon_kw->at<int>(icon_offset + ICON_DIRECTION_INDEX);
     if ((int_direction < 0) || (int_direction > ICON_FRACY))
         throw InvalidConnection(fmt::format(
             "Invalid direction value:{} encountered for well", int_direction));
 
-    int i = rd_kw_iget_int(icon_kw, icon_offset + ICON_I_INDEX) - 1;
-    int j = rd_kw_iget_int(icon_kw, icon_offset + ICON_J_INDEX) - 1;
-    int k = rd_kw_iget_int(icon_kw, icon_offset + ICON_K_INDEX) - 1;
+    int i = icon_kw->at<int>(icon_offset + ICON_I_INDEX) - 1;
+    int j = icon_kw->at<int>(icon_offset + ICON_J_INDEX) - 1;
+    int k = icon_kw->at<int>(icon_offset + ICON_K_INDEX) - 1;
     double connection_factor = -1;
     bool matrix_connection = true;
-    bool is_open =
-        (rd_kw_iget_int(icon_kw, icon_offset + ICON_STATUS_INDEX) > 0);
+    bool is_open = (icon_kw->at<int>(icon_offset + ICON_STATUS_INDEX) > 0);
     auto dir = WellConnDir::fracX;
 
     /* Set the K value and fracture flag. */
@@ -147,13 +145,11 @@ std::shared_ptr<WellConnection>
 WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
                               int well_nr) {
     const int iwel_offset = header.niwelz * well_nr;
-    int conn_i = rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADI_INDEX) - 1;
+    int conn_i = iwel_kw->at<int>(iwel_offset + IWEL_HEADI_INDEX) - 1;
 
     if (conn_i >= 0) {
-        int conn_j =
-            rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADJ_INDEX) - 1;
-        int conn_k =
-            rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADK_INDEX) - 1;
+        int conn_j = iwel_kw->at<int>(iwel_offset + IWEL_HEADJ_INDEX) - 1;
+        int conn_k = iwel_kw->at<int>(iwel_offset + IWEL_HEADK_INDEX) - 1;
         bool matrix_connection = true;
         bool open = true;
         double connection_factor = -1;

@@ -335,13 +335,3 @@ inline std::string format_kw_element(const char *value, size_t width = 8) {
 }
 int kw_get_size(const rd::KW *);
 } // namespace rd
-
-inline int rd_kw_iget_int(const rd::KW *rd_kw, int i) {
-    return rd_kw->at<int>(i);
-}
-inline float rd_kw_iget_float(const rd::KW *rd_kw, int i) {
-    return rd_kw->at<float>(i);
-}
-inline double rd_kw_iget_double(const rd::KW *rd_kw, int i) {
-    return rd_kw->at<double>(i);
-}

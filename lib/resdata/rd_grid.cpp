@@ -2394,7 +2394,7 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd::File *rd_file) {
         if (!lgr_view)
             throw std::runtime_error("Could not find NNC section of grid file");
         rd::KW *nnchead_kw = lgr_view->get_kw(NNCHEAD_KW, 0);
-        int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
+        int lgr_nr = nnchead_kw->at<int>(NNCHEAD_LGR_INDEX);
 
         if (lgr_view->has_kw(NNC1_KW)) {
             const rd::KW *nnc1 = lgr_view->get_kw(NNC1_KW, 0);
@@ -2434,8 +2434,8 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
 
     for (size_t i = 0; i < num_nncheada_kw; i++) {
         rd::KW *nncheada_kw = rd_file->get_kw(NNCHEADA_KW, i);
-        int lgr_nr1 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC1_INDEX);
-        int lgr_nr2 = rd_kw_iget_int(nncheada_kw, NNCHEADA_ILOC2_INDEX);
+        int lgr_nr1 = nncheada_kw->at<int>(NNCHEADA_ILOC1_INDEX);
+        int lgr_nr2 = nncheada_kw->at<int>(NNCHEADA_ILOC2_INDEX);
 
         rd_grid_type *lgr_grid1 =
             rd_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr1);
@@ -2477,8 +2477,8 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
     int eclipse_version;
     if (grid_nr == 0) {
         rd::KW *filehead_kw = rd_file->get_kw(FILEHEAD_KW, grid_nr);
-        dualp_flag = rd_kw_iget_int(filehead_kw, FILEHEAD_DUALP_INDEX);
-        eclipse_version = rd_kw_iget_int(filehead_kw, FILEHEAD_YEAR_INDEX);
+        dualp_flag = filehead_kw->at<int>(FILEHEAD_DUALP_INDEX);
+        eclipse_version = filehead_kw->at<int>(FILEHEAD_YEAR_INDEX);
     } else {
         dualp_flag = main_grid->dualp_flag;
         eclipse_version = main_grid->eclipse_version;
@@ -2603,9 +2603,9 @@ rd_grid_alloc_GRID_data__(rd_grid_type *global_grid, size_t num_coords,
 
 static int rd_grid_dual_porosity_GRID_check(rd::File *rd_file) {
     rd::KW *dimens_kw = rd_file->get_kw(DIMENS_KW, 0);
-    int nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
-    int ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
-    int nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
+    int nx = dimens_kw->at<int>(DIMENS_NX_INDEX);
+    int ny = dimens_kw->at<int>(DIMENS_NY_INDEX);
+    int nz = dimens_kw->at<int>(DIMENS_NZ_INDEX);
 
     if (nx < 0 || ny < 0 || nz < 0)
         throw std::invalid_argument(
@@ -2659,9 +2659,9 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     // 1: Fetching header data from the DIMENS keyword.
     {
         rd::KW *dimens_kw = rd_file->get_kw(DIMENS_KW, grid_nr);
-        nx = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
-        ny = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
-        nz = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
+        nx = dimens_kw->at<int>(DIMENS_NX_INDEX);
+        ny = dimens_kw->at<int>(DIMENS_NY_INDEX);
+        nz = dimens_kw->at<int>(DIMENS_NZ_INDEX);
         if (nx < 0 || ny < 0 || nz < 0)
             throw std::invalid_argument(fmt::format(
                 "Dimensions of grid were negative: nx={}, ny={}, nz={}", nx, ny,
