@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         std::vector<std::string> filelist(argv + 1, argv + argc);
         std::sort(filelist.begin(), filelist.end(), fname_cmp);
 
-        rd_kw_ptr seqnum_kw{nullptr};
+        std::unique_ptr<rd::KW> seqnum_kw{nullptr};
         ERT::FortIO target(target_file, std::ios_base::out, fmt_file);
 
         if (target_type == FileType::UNIFIED_RESTART) {

@@ -336,8 +336,6 @@ inline std::string format_kw_element(const char *value, size_t width = 8) {
 int kw_get_size(const rd::KW *);
 } // namespace rd
 
-using rd_kw_ptr = std::unique_ptr<rd::KW>;
-
 inline int rd_kw_iget_int(const rd::KW *rd_kw, int i) {
     return rd_kw->at<int>(i);
 }
