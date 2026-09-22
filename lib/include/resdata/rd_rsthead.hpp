@@ -134,7 +134,7 @@ struct RSTHead {
 
         if (rst_view->has_kw(SEQNUM_KW)) {
             const rd::KW *seqnum_kw = rst_view->get_kw(SEQNUM_KW, 0);
-            report_step = rd_kw_iget_int(seqnum_kw, 0);
+            report_step = seqnum_kw->at<int>(0);
         }
 
         return {report_step, intehead_kw, doubhead_kw, logihead_kw};

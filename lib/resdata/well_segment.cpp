@@ -26,11 +26,10 @@ WellSegment::from_kw(const rd::KW *iseg_kw, well_rseg_loader_type *rseg_loader,
         const int rseg_offset =
             header.nrsegz * (header.nsegmx * well_nr + segment_index);
         int outlet_segment_id =
-            rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_OUTLET_INDEX) -
+            iseg_kw->at<int>(iseg_offset + ISEG_OUTLET_INDEX) -
             ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET; // -1
-        int branch_id =
-            rd_kw_iget_int(iseg_kw, iseg_offset + ISEG_BRANCH_INDEX) -
-            ECLIPSE_WELL_BRANCH_OFFSET + WELL_BRANCH_OFFSET; // -1
+        int branch_id = iseg_kw->at<int>(iseg_offset + ISEG_BRANCH_INDEX) -
+                        ECLIPSE_WELL_BRANCH_OFFSET + WELL_BRANCH_OFFSET; // -1
         const double *rseg_data =
             well_rseg_loader_load_values(rseg_loader, rseg_offset);
 

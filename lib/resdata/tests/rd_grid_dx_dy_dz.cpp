@@ -43,9 +43,9 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         double dyg = rd_grid_get_cell_dy1(grid.get(), g);
         double dzg = rd_grid_get_cell_dz1(grid.get(), g);
 
-        double dxi = rd_kw_iget_float(dx, a);
-        double dyi = rd_kw_iget_float(dy, a);
-        double dzi = rd_kw_iget_float(dz, a);
+        double dxi = dx->at<float>(a);
+        double dyi = dy->at<float>(a);
+        double dzi = dz->at<float>(a);
 
         double err_x = fabs(err(dxg, dxi));
         double err_y = fabs(err(dyg, dyi));

@@ -61,13 +61,10 @@ bool WellState::add_rates(rd::FileView *rst_view, int well_nr) {
         int offset = header.nxwelz * well_nr;
 
         this->unit_system = header.unit_system;
-        this->oil_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_ORAT_ITEM);
-        this->gas_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_GRAT_ITEM);
-        this->water_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_WRAT_ITEM);
-        this->volume_rate = rd_kw_iget_double(xwel_kw, offset + XWEL_RESV_ITEM);
+        this->oil_rate = xwel_kw->at<double>(offset + XWEL_RES_ORAT_ITEM);
+        this->gas_rate = xwel_kw->at<double>(offset + XWEL_RES_GRAT_ITEM);
+        this->water_rate = xwel_kw->at<double>(offset + XWEL_RES_WRAT_ITEM);
+        this->volume_rate = xwel_kw->at<double>(offset + XWEL_RESV_ITEM);
     }
     return has_xwel_kw;
 }
@@ -150,7 +147,7 @@ void WellState::add_connections(rd::FileView *rst_view,
 
             const int iwel_offset = header.niwelz * well_nr;
             int num_connections =
-                rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
+                iwel_kw->at<int>(iwel_offset + IWEL_CONNECTIONS_INDEX);
 
             for (int iconn = 0; iconn < num_connections; iconn++) {
                 try {
@@ -250,13 +247,13 @@ std::shared_ptr<WellState> WellState::read_wells_in_restart(
         const int iwel_offset = global_header.niwelz * global_well_nr;
 
         bool open =
-            rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_STATUS_INDEX) > 0;
+            global_iwel_kw->at<int>(iwel_offset + IWEL_STATUS_INDEX) > 0;
 
         auto type = WellType::ZERO;
 
         {
             int int_type =
-                rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_TYPE_INDEX);
+                global_iwel_kw->at<int>(iwel_offset + IWEL_TYPE_INDEX);
             type = well_state_translate_rd_type_int(int_type);
         }
 
