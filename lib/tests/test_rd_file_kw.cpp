@@ -245,7 +245,7 @@ SCENARIO_METHOD(Tmpdir, "A FileKW lazily loads its keyword from file") {
 
         WHEN("get_kw is called with a reading fortio handle") {
             ERT::FortIO fortio(filename, std::ios_base::in);
-            rd_kw_type *loaded = file_kw.get_kw(fortio);
+            rd::KW *loaded = file_kw.get_kw(fortio);
 
             THEN("The keyword is loaded and cached") {
                 REQUIRE(loaded != nullptr);

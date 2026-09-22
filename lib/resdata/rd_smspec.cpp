@@ -609,7 +609,7 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd::File *header) {
     if (!header->has_kw(RESTART_KW))
         return;
-    const rd_kw_type *restart_kw = header->get_kw(RESTART_KW, 0);
+    const rd::KW *restart_kw = header->get_kw(RESTART_KW, 0);
     if (restart_kw == nullptr)
         throw std::invalid_argument(
             "RESTART keyword lookup failed despite keyword presence");
@@ -809,16 +809,16 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
     if (header && rd_smspec_check_header(header.get())) {
         const char *names_alias =
             get_active_keyword_alias(header.get(), WGNAMES_KW);
-        rd_kw_type *wells = header->get_kw(names_alias, 0);
-        rd_kw_type *keywords = header->get_kw(KEYWORDS_KW, 0);
-        rd_kw_type *startdat = header->get_kw(STARTDAT_KW, 0);
-        rd_kw_type *units = header->get_kw(UNITS_KW, 0);
-        rd_kw_type *dimens = header->get_kw(DIMENS_KW, 0);
-        rd_kw_type *nums = NULL;
-        rd_kw_type *lgrs = NULL;
-        rd_kw_type *numlx = NULL;
-        rd_kw_type *numly = NULL;
-        rd_kw_type *numlz = NULL;
+        rd::KW *wells = header->get_kw(names_alias, 0);
+        rd::KW *keywords = header->get_kw(KEYWORDS_KW, 0);
+        rd::KW *startdat = header->get_kw(STARTDAT_KW, 0);
+        rd::KW *units = header->get_kw(UNITS_KW, 0);
+        rd::KW *dimens = header->get_kw(DIMENS_KW, 0);
+        rd::KW *nums = NULL;
+        rd::KW *lgrs = NULL;
+        rd::KW *numlx = NULL;
+        rd::KW *numly = NULL;
+        rd::KW *numlz = NULL;
 
         rd_smspec->num_regions = 0;
 
@@ -844,7 +844,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             nums = header->get_kw(NUMS_KW, 0);
 
         if (header->has_kw(INTEHEAD_KW)) {
-            const rd_kw_type *intehead = header->get_kw(INTEHEAD_KW, 0);
+            const rd::KW *intehead = header->get_kw(INTEHEAD_KW, 0);
             if (intehead == NULL)
                 throw std::invalid_argument(
                     "INTEHEAD keyword lookup failed despite keyword presence");

@@ -62,11 +62,11 @@ public:
     [[nodiscard]] rd_data_type get_data_type() const { return data_type; };
 
     /** The rd_kw, if one is read, otherwise returns nullptr. */
-    [[nodiscard]] rd_kw_type *get_kw_ptr() const { return kw.get(); };
+    [[nodiscard]] rd::KW *get_kw_ptr() const { return kw.get(); };
 
     /** Return the rd_kw. If it is not loaded, the method will read it
        from @fortio. The kw is then cached. */
-    rd_kw_type *get_kw(ERT::FortIO &fortio);
+    rd::KW *get_kw(ERT::FortIO &fortio);
 
     bool skip_data(ERT::FortIO &fortio) const;
     /** Read @num keyword headers from @stream.

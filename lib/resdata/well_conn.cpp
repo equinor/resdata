@@ -46,9 +46,8 @@ WellConnection::WellConnection(int i, int j, int k, double connection_factor,
   aligned with the rest of the ert libraries.
 */
 std::shared_ptr<WellConnection>
-WellConnection::from_keywords(const rd_kw_type *icon_kw,
-                              const rd_kw_type *scon_kw,
-                              const rd_kw_type *xcon_kw, const RSTHead &header,
+WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
+                              const rd::KW *xcon_kw, const RSTHead &header,
                               int well_nr, int conn_nr) {
 
     const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
@@ -145,7 +144,7 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
 }
 
 std::shared_ptr<WellConnection>
-WellConnection::read_wellhead(const rd_kw_type *iwel_kw, const RSTHead &header,
+WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
                               int well_nr) {
     const int iwel_offset = header.niwelz * well_nr;
     int conn_i = rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_HEADI_INDEX) - 1;

@@ -118,7 +118,7 @@ void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
 */
 
 bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
-                               const rd_kw_type *fault_block_kw) {
+                               const rd::KW *fault_block_kw) {
     bool assign_zero = true;
 
     if (rd::kw_get_size(fault_block_kw) != rd_grid_get_global_size(layer->grid))

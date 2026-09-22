@@ -115,7 +115,7 @@ TEST_CASE("rd::strip_spaces handles width edge cases", "[rd_kw]") {
 TEST_CASE("slice copy validates range and stride", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("index1 beyond size") {
-        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), 10, 20, 1),
+        REQUIRE_THROWS_WITH(rd::KW(*src.get(), 10, 20, 1),
                             ContainsSubstring("> size"));
     }
     SECTION("non positive stride") {
@@ -127,11 +127,11 @@ TEST_CASE("slice copy validates range and stride", "[rd_kw]") {
 TEST_CASE("sub copy constructor validates offset and count", "[rd_kw]") {
     auto src = make_int_kw("KW", 4);
     SECTION("invalid offset") {
-        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), "NEW", 100, 1),
+        REQUIRE_THROWS_WITH(rd::KW(*src.get(), "NEW", 100, 1),
                             ContainsSubstring("invalid offset"));
     }
     SECTION("invalid count") {
-        REQUIRE_THROWS_WITH(rd_kw_struct(*src.get(), "NEW", 0, 100),
+        REQUIRE_THROWS_WITH(rd::KW(*src.get(), "NEW", 0, 100),
                             ContainsSubstring("invalid count value"));
     }
 }
@@ -195,7 +195,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc throws on corrupt data", "[rd_kw]") {
             out << corrupt;
         }
         ERT::FortIO fortio(bad, std::ios_base::in, /*fmt_file=*/true);
-        REQUIRE_THROWS_WITH(rd_kw_struct::fread(fortio),
+        REQUIRE_THROWS_WITH(rd::KW::fread(fortio),
                             ContainsSubstring("reading of keyword:INTKW"));
     }
 }
@@ -227,7 +227,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc rejects bad logical value", "[rd_kw]") {
     }
 
     ERT::FortIO fortio(bad, std::ios_base::in, /*fmt_file=*/true);
-    REQUIRE_THROWS_WITH(rd_kw_struct::fread(fortio),
+    REQUIRE_THROWS_WITH(rd::KW::fread(fortio),
                         ContainsSubstring("Logical value: [Q] not recogniced"));
 }
 

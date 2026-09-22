@@ -56,7 +56,7 @@ public:
 
 private:
     // Keeps the owning ResdataKW Python object (and therefore its
-    // underlying rd_kw_type allocation) alive for as long as the
+    // underlying rd::KW allocation) alive for as long as the
     // iterator itself is alive.
     py::object m_self;
     const rd::KW *m_kw;
@@ -154,14 +154,14 @@ PYBIND11_MODULE(_kw, m) {
     m.def(
         "_fread_alloc",
         [](ERT::FortIO &fortio) {
-            return to_capsule(rd_kw_struct::fread(fortio).release());
+            return to_capsule(rd::KW::fread(fortio).release());
         },
         py::return_value_policy::reference);
     m.def(
         "_sub_copy",
         [](py::handle self, std::optional<std::string> new_kw, size_t offset,
            py::int_ count) {
-            auto *src = from_cwrap<rd_kw_type>(self);
+            auto *src = from_cwrap<rd::KW>(self);
 
             size_t count_size;
             if (count < py::int_{0})
@@ -185,23 +185,23 @@ PYBIND11_MODULE(_kw, m) {
                 index1 = 0;
             if (index2 < py::int_{0})
                 index2 = 0;
-            return to_capsule(new rd_kw_struct{*from_cwrap<rd_kw_type>(self),
-                                               index1.cast<size_t>(),
-                                               index2.cast<size_t>(), stride});
+            return to_capsule(new rd::KW{*from_cwrap<rd::KW>(self),
+                                         index1.cast<size_t>(),
+                                         index2.cast<size_t>(), stride});
         },
         py::return_value_policy::reference);
     m.def(
         "_global_copy",
         [](py::handle self, py::handle new_actnum) {
             return to_capsule(
-                rd_kw_struct::global_copy(from_cwrap<rd_kw_type>(self),
-                                          from_cwrap<rd_kw_type>(new_actnum))
+                rd::KW::global_copy(from_cwrap<rd::KW>(self),
+                                    from_cwrap<rd::KW>(new_actnum))
                     .release());
         },
         py::return_value_policy::reference);
 
     m.def("_get_size",
-          [](py::handle self) { return from_cwrap<rd_kw_type>(self)->size(); });
+          [](py::handle self) { return from_cwrap<rd::KW>(self)->size(); });
     m.def("_get_fortio_size", [](py::handle self) {
         return from_cwrap<rd::KW>(self)->fortio_size();
     });
@@ -258,8 +258,7 @@ PYBIND11_MODULE(_kw, m) {
                 from_cwrap<rd::KW>(self)->get_vector<char>().data());
         },
         py::return_value_policy::reference);
-    m.def("_free",
-          [](py::handle self) { delete from_cwrap<rd_kw_type>(self); });
+    m.def("_free", [](py::handle self) { delete from_cwrap<rd::KW>(self); });
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
         from_cwrap<rd::KW>(self)->fwrite(fortio);
     });
@@ -515,7 +514,7 @@ PYBIND11_MODULE(_kw, m) {
                   from_cwrap<rd::KW>(other), offset, abs_epsilon, rel_epsilon);
           });
     m.def("_resize", [](py::handle self, size_t new_size) {
-        from_cwrap<rd_kw_type>(self)->resize(new_size);
+        from_cwrap<rd::KW>(self)->resize(new_size);
     });
     m.def("_safe_div", [](py::handle self, py::handle divisor) {
         auto target_kw = from_cwrap<rd::KW>(self);

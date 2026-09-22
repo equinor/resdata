@@ -19,8 +19,8 @@ int main(int argc, char **argv) {
     auto rst_file = rd::File::open(Xfile);
     auto rst_view = rst_file->get_global_view();
     auto rst_head = RSTHead::read(rst_view.get(), rd_filename_report_nr(Xfile));
-    const rd_kw_type *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
-    const rd_kw_type *iseg_kw = rst_file->get_kw(ISEG_KW, 0);
+    const rd::KW *iwel_kw = rst_file->get_kw(IWEL_KW, 0);
+    const rd::KW *iseg_kw = rst_file->get_kw(ISEG_KW, 0);
     well_rseg_loader_type *rseg_loader = well_rseg_loader_alloc(rst_view.get());
 
     test_install_SIGNALS();

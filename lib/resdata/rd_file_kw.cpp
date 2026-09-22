@@ -20,7 +20,7 @@
 void FileKW::assert_kw() const {
     if (!kw)
         throw std::runtime_error("keyword could not be loaded from file "
-                                 "(rd_kw_struct::fread returned NULL)");
+                                 "(rd::KW::fread returned NULL)");
 
     if (!rd_type_is_equal(this->data_type, kw->data_type()))
         throw std::runtime_error(std::string(__func__) +
@@ -44,11 +44,11 @@ void FileKW::load_kw(ERT::FortIO &fortio) {
 
     fortio.fseek(file_offset, SEEK_SET);
     // Note load_kw is only called when kw is nullptr
-    kw = rd_kw_struct::fread(fortio);
+    kw = rd::KW::fread(fortio);
     assert_kw();
 }
 
-rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
+rd::KW *FileKW::get_kw(ERT::FortIO &fortio) {
     if (!kw)
         load_kw(fortio);
 
@@ -56,7 +56,7 @@ rd_kw_type *FileKW::get_kw(ERT::FortIO &fortio) {
 }
 
 bool FileKW::skip_data(ERT::FortIO &fortio) const {
-    return rd_kw_struct::fskip_data(data_type, kw_size, fortio);
+    return rd::KW::fskip_data(data_type, kw_size, fortio);
 }
 
 void FileKW::inplace_write(ERT::FortIO &fortio) const {
