@@ -18,6 +18,7 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file_flag.hpp>
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_type.hpp>
 
 namespace rd {
 
@@ -163,10 +164,10 @@ public:
             throw std::ios_base::failure("Failed to open FortIO file " +
                                          filename());
 
-        rd_kw_fread_indexed_data(context->fortio, file_kw->get_offset(),
-                                 file_kw->get_data_type(), file_kw->get_size(),
-                                 index_map,
-                                 reinterpret_cast<char *>(out.data()));
+        rd::KW::fread_indexed_data(context->fortio, file_kw->get_offset(),
+                                   file_kw->get_data_type(),
+                                   file_kw->get_size(), index_map,
+                                   reinterpret_cast<char *>(out.data()));
     }
     void write(ERT::FortIO &target, size_t offset);
 
@@ -185,8 +186,10 @@ public:
 
     bool has_report_step(int report_step) {
         return find_block(SEQNUM_KW,
-                          [&](const rd_kw_type *seqnum_kw) {
-                              return rd_kw_data_equal(seqnum_kw, &report_step);
+                          [&](const rd::KW *seqnum_kw) {
+                              return seqnum_kw->size() > 0 &&
+                                     rd_type_is_int(seqnum_kw->data_type()) &&
+                                     seqnum_kw->at<int>(0) == report_step;
                           })
             .has_value();
     }

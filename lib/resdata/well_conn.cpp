@@ -111,14 +111,12 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
     if (scon_kw) {
         const int scon_offset =
             header.nsconz * (header.ncwmax * well_nr + conn_nr);
-        connection_factor =
-            rd_kw_iget_as_double(scon_kw, scon_offset + SCON_CF_INDEX);
+        connection_factor = scon_kw->as_double(scon_offset + SCON_CF_INDEX);
     }
 
     {
-        int segment_id =
-            rd_kw_iget_int(icon_kw, icon_offset + ICON_SEGMENT_INDEX) -
-            ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
+        int segment_id = icon_kw->at<int>(icon_offset + ICON_SEGMENT_INDEX) -
+                         ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
         auto conn = std::make_shared<WellConnection>(
             i, j, k, connection_factor, dir, is_open, segment_id,
             matrix_connection, header.unit_system);
@@ -128,13 +126,11 @@ WellConnection::from_keywords(const rd_kw_type *icon_kw,
                 header.nxconz * (header.ncwmax * well_nr + conn_nr);
 
             conn->water_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_WRAT_INDEX);
-            conn->gas_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_GRAT_INDEX);
-            conn->oil_rate =
-                rd_kw_iget_as_double(xcon_kw, xcon_offset + XCON_ORAT_INDEX);
+                xcon_kw->as_double(xcon_offset + XCON_WRAT_INDEX);
+            conn->gas_rate = xcon_kw->as_double(xcon_offset + XCON_GRAT_INDEX);
+            conn->oil_rate = xcon_kw->as_double(xcon_offset + XCON_ORAT_INDEX);
             conn->volume_rate =
-                rd_kw_iget_double(xcon_kw, xcon_offset + XCON_QR_INDEX);
+                xcon_kw->at<double>(xcon_offset + XCON_QR_INDEX);
         }
 
         /**

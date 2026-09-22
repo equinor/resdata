@@ -32,9 +32,9 @@ int main(int argc, char **argv) {
         int matrix_size = rd_grid_get_nactive(rd_grid.get());
 
         test_assert_int_equal(fracture_size + matrix_size,
-                              rd_kw_get_size(swat));
+                              rd::kw_get_size(swat));
         test_assert_int_equal(fracture_size + matrix_size,
-                              rd_kw_get_size(permx));
+                              rd::kw_get_size(permx));
 
         {
             int gi;

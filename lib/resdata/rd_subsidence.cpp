@@ -74,7 +74,7 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
         std::make_unique<rd_subsidence_survey_struct>(*rd_subsidence, name));
     const rd::rd_grid_cache &grid_cache = *(rd_subsidence->grid_cache);
     const auto &global_index = grid_cache.global_index();
-    const int size = grid_cache.size();
+    const size_t size = grid_cache.size();
 
     rd_kw_type *init_porv_kw =
         rd_subsidence->init_file->get_kw(PORV_KW, 0); /*Global indexing*/
@@ -88,15 +88,14 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
         rporv_kw = restart_view->get_kw(RPORV_KW, 0);
     }
 
-    for (int active_index = 0; active_index < size; active_index++) {
+    for (size_t active_index = 0; active_index < size; active_index++) {
         survey->porv[active_index] =
-            rd_kw_iget_float(init_porv_kw, global_index[active_index]);
-        survey->pressure[active_index] =
-            rd_kw_iget_float(pressure_kw, active_index);
+            init_porv_kw->at<float>(global_index[active_index]);
+        survey->pressure[active_index] = pressure_kw->at<float>(active_index);
 
         if (survey->dynamic_porevolume.has_value())
             (*survey->dynamic_porevolume)[active_index] =
-                rd_kw_iget_float(rporv_kw, active_index);
+                rporv_kw->at<float>(active_index);
     }
     return survey;
 }

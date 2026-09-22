@@ -4,12 +4,15 @@
 #include <cmath>
 
 #include <algorithm>
+#include <ios>
 #include <limits>
 #include <memory>
-#include <new>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <fmt/format.h>
@@ -23,54 +26,114 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_util.hpp>
 
-template <typename T> T rd_kw_struct::at(size_t index) const {
+namespace {
+[[noreturn]] void throw_invalid_index(const std::string &header, size_t index,
+                                      size_t size) {
+    throw std::invalid_argument(
+        fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
+                    header, index, size));
+}
+
+[[noreturn]] void throw_wrong_type(const std::string &header) {
+    throw std::invalid_argument(
+        fmt::format("Keyword: {} is wrong type", header));
+}
+} // namespace
+
+template <typename T> T rd::KW::at(size_t index) const {
     if (index >= m_size)
-        throw std::invalid_argument(
-            fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
-                        header, index, m_size));
-    if (data_type.type != rd::iotype<T>::tag)
-        throw std::invalid_argument(
-            fmt::format("Keyword: {} is wrong type", header8));
-    size_t io_size = rd_type_get_sizeof_ctype(data_type);
-    T value;
-    std::memcpy(&value, &data[index * io_size], io_size);
-    return value;
+        throw_invalid_index(m_header, index, m_size);
+    if (!m_data.has_value() ||
+        !std::holds_alternative<std::vector<T>>(m_data.value()))
+        throw_wrong_type(m_header);
+    return std::get<std::vector<T>>(m_data.value())[index];
 }
 
-rd_kw_struct::rd_kw_struct(const char *header, int size, rd_data_type data_type,
-                           const void *data)
-    : data_type(data_type) {
+template <typename T> T &rd::KW::at(size_t index) {
+    if (index >= m_size)
+        throw_invalid_index(m_header, index, m_size);
+    if (!m_data.has_value() ||
+        !std::holds_alternative<std::vector<T>>(m_data.value()))
+        throw_wrong_type(m_header);
+    return std::get<std::vector<T>>(m_data.value())[index];
+}
+
+template <> bool rd::KW::at<bool>(size_t index) const {
+    if (index >= m_size)
+        throw_invalid_index(m_header, index, m_size);
+    if (!m_data.has_value() ||
+        !std::holds_alternative<std::vector<char>>(m_data.value()))
+        throw_wrong_type(m_header);
+    return std::get<std::vector<char>>(m_data.value())[index] != 0;
+}
+
+template <typename T> const std::vector<T> &rd::KW::get_vector() const {
+    if (!m_data.has_value() ||
+        !std::holds_alternative<std::vector<T>>(m_data.value()))
+        throw_wrong_type(m_header);
+    return std::get<std::vector<T>>(m_data.value());
+}
+
+/* rd::KW stores its elements in kw_data, so at() and get_vector() are only
+   ever used with the alternatives of that variant. */
+#define INSTANTIATE_KW_ACCESSORS(T)                                            \
+    template T rd::KW::at<T>(size_t) const;                                    \
+    template T &rd::KW::at<T>(size_t);                                         \
+    template const std::vector<T> &rd::KW::get_vector<T>() const;
+
+INSTANTIATE_KW_ACCESSORS(int)
+INSTANTIATE_KW_ACCESSORS(float)
+INSTANTIATE_KW_ACCESSORS(double)
+INSTANTIATE_KW_ACCESSORS(char)
+INSTANTIATE_KW_ACCESSORS(std::string)
+#undef INSTANTIATE_KW_ACCESSORS
+
+rd::KW::KW(const std::string &header, int size, rd_data_type data_type)
+    : m_data_type(data_type), m_header(strip_header(header)) {
     if (size < 0)
         throw std::invalid_argument(
             fmt::format("rd_kw size was negative: {}", size));
     this->m_size = static_cast<size_t>(size);
-    rd_kw_set_header_name(this, header);
-    init_data();
-    rd_kw_set_memcpy_data(this, data);
+    zero_init_data();
 }
 
-rd_kw_struct::rd_kw_struct(const char *header, int size, rd_data_type data_type,
-                           shared_ref ref)
-    : data_type(data_type) {
-    if (size < 0)
-        throw std::invalid_argument(
-            fmt::format("rd_kw size was negative: {}", size));
-    this->m_size = static_cast<size_t>(size);
-    rd_kw_set_header_name(this, header);
-    this->data = (char *)ref.data;
-    this->shared_data = true;
+void rd::KW::set_bool(size_t index, bool value) {
+    if (index >= m_size)
+        throw_invalid_index(m_header, index, m_size);
+    if (!m_data.has_value() ||
+        !std::holds_alternative<std::vector<char>>(m_data.value()))
+        throw_wrong_type(m_header);
+    std::get<std::vector<char>>(m_data.value())[index] =
+        static_cast<char>(value ? 1 : 0);
 }
 
-double rd_kw_struct::as_double(size_t index) const {
-    if (rd_type_is_float(this->data_type)) {
+void rd::KW::set_padded(size_t index, const std::string &v) {
+    size_t len = ctype_size() - 1;
+    if (v.size() > len)
+        throw std::invalid_argument(fmt::format(
+            "String of length {} cannot hold input string of length {}", len,
+            v.size()));
+    at<std::string>(index) = rd::pad_spaces(v, len);
+}
+
+double rd::KW::as_double(size_t index) const {
+    if (rd_type_is_float(m_data_type)) {
         return static_cast<double>(this->at<float>(index));
-    } else if (rd_type_is_double(data_type)) {
+    } else if (rd_type_is_double(m_data_type)) {
         return this->at<double>(index);
-    } else if (rd_type_is_int(data_type)) {
+    } else if (rd_type_is_int(m_data_type)) {
         return static_cast<double>(this->at<int>(index));
     } else
         throw std::invalid_argument("cannot be converted to double");
 }
+
+/*
+  Character data in restart format files comes as an array of fixed-length
+  string. Each of these strings is 8 characters long. The type name,
+  i.e. 'REAL', 'INTE', ... , come as 4 character strings.
+*/
+#define RD_KW_HEADER_DATA_SIZE RD_STRING8_LENGTH + RD_TYPE_LENGTH + 4
+#define RD_KW_HEADER_FORTIO_SIZE RD_KW_HEADER_DATA_SIZE + 8
 
 /* For some peculiar reason the keyword data is written in blocks, all
    numeric data is in blocks of 1000 elements, and character data is
@@ -140,19 +203,11 @@ double rd_kw_struct::as_double(size_t index) const {
       RD_BOOL_FALSE_INT respectively.
 
    Internally in an rd_kw instance boolean values are represented as
-   integers (NOT bool), with the representation given by RD_BOOL_TRUE_INT
-   and RD_BOOL_FALSE_INT. This implies that read/write of unformatted
-   data can go transparently without between ECLIPSE and the rd_kw
-   implementation, but exported set()/get() functions with bool must
-   intercept the bool values and convert to the appropriate integer
-   value.
-*/
+   char (NOT bool). */
 
 // For formatted files:
 #define BOOL_TRUE_CHAR 'T'
 #define BOOL_FALSE_CHAR 'F'
-
-rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
 static std::string read_fmt_string(const rd_data_type rd_type) {
     return fmt::format("%{}c", rd_type_get_sizeof_iotype(rd_type));
@@ -209,250 +264,155 @@ static size_t get_columns(const rd_data_type data_type) {
     }
 }
 
-static void rd_kw_assert_index(const rd_kw_type *rd_kw, int index,
-                               const char *caller) {
-    if (index < 0 || index >= rd_kw_get_size(rd_kw))
-        throw std::invalid_argument(
-            fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
-                        rd_kw->header, index, rd_kw->size()));
-}
-
-static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
-    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
+static std::unique_ptr<char[], void (*)(void *)>
+alloc_output_buffer(const rd::KW *rd_kw) {
+    size_t sizeof_iotype = rd_kw->iotype_size();
     size_t buffer_size = rd_kw->size() * sizeof_iotype;
-    char *buffer = (char *)util_malloc(buffer_size);
+    auto buffer = rd::checked_calloc<char>(buffer_size);
 
-    if (rd_type_is_bool(rd_kw->data_type)) {
-        int *int_data = (int *)buffer;
-        bool *bool_data = (bool *)rd_kw->data;
-
-        for (size_t i = 0; i < rd_kw->size(); i++)
-            if (bool_data[i])
-                int_data[i] = RD_BOOL_TRUE_INT;
-            else
-                int_data[i] = RD_BOOL_FALSE_INT;
-
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size());
-        return buffer;
-    }
-
-    if (rd_type_is_char(rd_kw->data_type) ||
-        rd_type_is_string(rd_kw->data_type)) {
-        size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-        for (size_t i = 0; i < rd_kw->size(); i++) {
-            size_t buffer_offset = i * sizeof_iotype;
-            size_t data_offset = i * sizeof_ctype;
-            size_t string_length = strlen(&rd_kw->data[data_offset]);
-
-            for (size_t j = 0; j < string_length; j++)
-                buffer[buffer_offset + j] = rd_kw->data[data_offset + j];
-
-            // Pad with spaces
-            for (size_t j = string_length; j < sizeof_iotype; j++)
-                buffer[buffer_offset + j] = ' ';
-        }
-
-        return buffer;
-    }
-
-    if (rd_type_is_mess(rd_kw->data_type))
+    const auto &m_data = rd_kw->data();
+    if (!m_data.has_value())
+        /* RD_MESS_TYPE keywords carry no element-wise data. */
         return buffer;
 
-    if (rd_kw->data && buffer_size > 0) {
-        memcpy(buffer, rd_kw->data, buffer_size);
-        util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size());
-    }
+    std::visit(
+        [&](const auto &vec) {
+            using VecT = std::decay_t<decltype(vec)>;
+            if constexpr (std::is_same_v<VecT, std::vector<char>>) {
+                /* RD_BOOL_TYPE, stored as vector<char> with 0/1 values. */
+                for (size_t i = 0; i < vec.size(); i++) {
+                    int value = vec[i] ? RD_BOOL_TRUE_INT : RD_BOOL_FALSE_INT;
+                    std::memcpy(&buffer[i * sizeof_iotype], &value,
+                                sizeof(value));
+                }
+                util_endian_flip_vector(buffer.get(), sizeof_iotype,
+                                        vec.size());
+            } else if constexpr (std::is_same_v<VecT,
+                                                std::vector<std::string>>) {
+                for (size_t i = 0; i < vec.size(); i++) {
+                    size_t buffer_offset = i * sizeof_iotype;
+                    size_t string_length =
+                        std::min(vec[i].size(), sizeof_iotype);
+
+                    std::memcpy(&buffer[buffer_offset], vec[i].data(),
+                                string_length);
+
+                    // Pad with spaces
+                    for (size_t j = string_length; j < sizeof_iotype; j++)
+                        buffer[buffer_offset + j] = ' ';
+                }
+            } else {
+                /* RD_INT_TYPE / RD_FLOAT_TYPE / RD_DOUBLE_TYPE: element
+                   layout matches the on-disk iotype directly. */
+                if (!vec.empty())
+                    std::memcpy(buffer.get(), vec.data(), buffer_size);
+                util_endian_flip_vector(buffer.get(), sizeof_iotype,
+                                        vec.size());
+            }
+        },
+        m_data.value());
 
     return buffer;
 }
 
-static char *rd_kw_alloc_input_buffer(const rd_kw_type *rd_kw) {
-    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
-    size_t count = rd_kw->size();
-    if (sizeof_iotype != 0 &&
-        count > std::numeric_limits<size_t>::max() / sizeof_iotype)
-        throw std::invalid_argument(
-            fmt::format("buffer size overflow: {} * {}", count, sizeof_iotype));
-
-    size_t buffer_size = count * sizeof_iotype;
-    char *buffer = (char *)util_malloc(buffer_size);
-
-    return buffer;
+bool rd::KW::size_and_type_equal(const rd::KW *rd_kw2) const {
+    return (this->size() == rd_kw2->size() &&
+            rd_type_is_equal(this->data_type(), rd_kw2->data_type()));
 }
 
-static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
-    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
-    size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    size_t buffer_size = rd_kw->size() * sizeof_iotype;
-    if (RD_ENDIAN_FLIP) {
-        if (rd_type_is_numeric(rd_kw->data_type) ||
-            rd_type_is_bool(rd_kw->data_type))
-            util_endian_flip_vector(buffer, sizeof_iotype, rd_kw->size());
-    }
-
-    /*
-    Special case bool: Return Eclipse integer representation of bool to native bool.
-  */
-    if (rd_type_is_bool(rd_kw->data_type)) {
-        int *int_data = (int *)buffer;
-        bool *bool_data = (bool *)rd_kw->data;
-
-        for (size_t i = 0; i < rd_kw->size(); i++) {
-            if (int_data[i] == RD_BOOL_TRUE_INT)
-                bool_data[i] = true;
-            else
-                bool_data[i] = false;
-        }
-        return;
-    }
-
-    /*
-    Special case: insert '\0' termination at end of strings loaded from file;
-    when writing out again strlen() will be called on data - i.e. it is
-    paramount to add this '\0'.
-  */
-    if (rd_type_is_char(rd_kw->data_type) ||
-        rd_type_is_string(rd_kw->data_type)) {
-        const char null_char = '\0';
-        for (size_t i = 0; i < rd_kw->size(); i++) {
-            size_t buffer_offset = i * sizeof_iotype;
-            size_t data_offset = i * sizeof_ctype;
-            memcpy(&rd_kw->data[data_offset], &buffer[buffer_offset],
-                   sizeof_iotype);
-            rd_kw->data[data_offset + sizeof_iotype] = null_char;
-        }
-        return;
-    }
-
-    if (rd_type_is_mess(rd_kw->data_type))
-        return;
-
-    /*
-    Plain int, double, float data - that can be copied straight over to the ->data field.
-  */
-    memcpy(rd_kw->data, buffer, buffer_size);
-}
-
-static const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
-    return rd_kw->header8;
-}
-
-/*
-   Return the header without the trailing spaces
-*/
-const char *rd_kw_get_header(const rd_kw_type *rd_kw) { return rd_kw->header; }
-
-void rd_kw_get_memcpy_data(const rd_kw_type *rd_kw, void *target) {
-    memcpy(target, rd_kw->data,
-           rd_kw->size() * rd_type_get_sizeof_ctype(rd_kw->data_type));
-}
-
-void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
-    if (src != NULL)
-        memcpy(rd_kw->data, src,
-               rd_kw->size() * rd_type_get_sizeof_ctype(rd_kw->data_type));
-}
-
-bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
-                               const rd_kw_type *rd_kw2) {
-    return (rd_kw1->size() == rd_kw2->size() &&
-            rd_type_is_equal(rd_kw1->data_type, rd_kw2->data_type));
-}
-
-static bool rd_kw_header_eq(const rd_kw_type *rd_kw1,
-                            const rd_kw_type *rd_kw2) {
-    bool equal = true;
-
-    if (strcmp(rd_kw1->header8, rd_kw2->header8) != 0)
-        equal = false;
-    else
-        equal = rd_kw_size_and_type_equal(rd_kw1, rd_kw2);
-
-    return equal;
-}
-
-static bool rd_kw_data_equal__(const rd_kw_type *rd_kw, const void *data,
-                               size_t cmp_elements) {
-    int cmp = memcmp(rd_kw->data, data,
-                     cmp_elements * rd_type_get_sizeof_ctype(rd_kw->data_type));
-    if (cmp == 0)
-        return true;
-    else
-        return false;
-}
-
-/**
-   Observe that the comparison is done with memcmp() -
-   i.e. "reasonably good" numerical agreement is *not* enough.
-*/
-
-bool rd_kw_data_equal(const rd_kw_type *rd_kw, const void *data) {
-    return rd_kw_data_equal__(rd_kw, data, rd_kw->size());
+static bool rd_kw_header_eq(const rd::KW *rd_kw1, const rd::KW *rd_kw2) {
+    return (fmt::format("{:8.8}", rd_kw1->header()) ==
+            fmt::format("{:8.8}", rd_kw2->header())) &&
+           rd_kw1->size_and_type_equal(rd_kw2);
 }
 
 /**
    This function compares two rd_kw instances, and returns true if they are equal.
 */
 
-bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2) {
-    bool equal = rd_kw_header_eq(rd_kw1, rd_kw2);
-    if (equal)
-        equal = rd_kw_data_equal(rd_kw1, rd_kw2->data);
+bool rd::KW::operator==(const rd::KW &other) const {
+    if (!rd_kw_header_eq(this, &other))
+        return false;
+    auto &data1 = this->data();
+    auto &data2 = other.data();
+    if (!data1.has_value() || !data2.has_value())
+        return !data1.has_value() && !data2.has_value();
 
-    return equal;
-}
-
-#define RD_KW_NUMERIC_CMP(ctype)                                               \
-    static bool rd_kw_numeric_equal_##ctype(const rd_kw_type *rd_kw1,          \
-                                            const rd_kw_type *rd_kw2,          \
-                                            ctype abs_diff, ctype rel_diff) {  \
-        bool equal = true;                                                     \
-        {                                                                      \
-            const ctype *data1 = (const ctype *)rd_kw1->data;                  \
-            const ctype *data2 = (const ctype *)rd_kw2->data;                  \
-            for (size_t index = 0; index < rd_kw1->size(); index++) {          \
-                equal = util_##ctype##_approx_equal__(                         \
-                    data1[index], data2[index], rel_diff, abs_diff);           \
-                if (!equal)                                                    \
-                    break;                                                     \
-            }                                                                  \
-        }                                                                      \
-        return equal;                                                          \
-    }
-
-RD_KW_NUMERIC_CMP(float)
-RD_KW_NUMERIC_CMP(double)
-#undef RD_KW_NUMERIC_CMP
-
-/**
-   This function compares the data of two rd_kw instances, and
-   returns true if the relative numerical difference is less than
-   @rel_diff. Does not consider consider the kw header.
-*/
-
-bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
-                         double abs_diff, double rel_diff) {
-    if (!rd_kw_size_and_type_equal(rd_kw1, rd_kw2))
+    auto &vec1 = *data1;
+    auto &vec2 = *data2;
+    if (vec1.index() != vec2.index())
         return false;
 
-    if (rd_type_is_float(rd_kw1->data_type))
-        return rd_kw_numeric_equal_float(rd_kw1, rd_kw2,
-                                         static_cast<float>(abs_diff),
-                                         static_cast<float>(rel_diff));
-    else if (rd_type_is_double(rd_kw1->data_type))
-        return rd_kw_numeric_equal_double(rd_kw1, rd_kw2, abs_diff, rel_diff);
-    else
-        return rd_kw_data_equal(rd_kw1, rd_kw2->data);
+    return std::visit(
+        [&vec2](const auto &v1) -> bool {
+            using T = std::decay_t<decltype(v1)>;
+            const T &v2 = std::get<T>(vec2);
+            if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+                return v1 == v2;
+            } else {
+                // Apply byte-wise comparison for floating points to preserve NaN behavior
+                if (v1.size() != v2.size())
+                    return false;
+                if (v1.empty())
+                    return true;
+                return std::memcmp(v1.data(), v2.data(),
+                                   v1.size() *
+                                       sizeof(typename T::value_type)) == 0;
+            }
+        },
+        vec1);
 }
 
-static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
-    const size_t blocksize = get_blocksize(rd_kw->data_type);
+template <typename T> bool approx_equal(T a, T b, T rel_diff, T abs_diff);
+template <>
+bool approx_equal<float>(float a, float b, float rel_diff, float abs_diff) {
+    return util_float_approx_equal__(a, b, rel_diff, abs_diff);
+}
+template <>
+bool approx_equal<double>(double a, double b, double rel_diff,
+                          double abs_diff) {
+    return util_double_approx_equal__(a, b, rel_diff, abs_diff);
+}
+
+bool rd::KW::approx_equal(const rd::KW &other, double abs_diff,
+                          double rel_diff) const {
+    if (!size_and_type_equal(&other))
+        return false;
+
+    if (!this->data().has_value() || !other.data().has_value())
+        return this->m_data == other.m_data;
+
+    return std::visit(
+        [&](const auto &vec1) {
+            using VecT = std::decay_t<decltype(vec1)>;
+            const auto &vec2 = std::get<VecT>(other.m_data.value());
+
+            if constexpr (std::is_same_v<VecT, std::vector<float>> ||
+                          std::is_same_v<VecT, std::vector<double>>) {
+                using T = typename VecT::value_type;
+                if (vec1.size() != vec2.size())
+                    return false;
+                for (size_t index = 0; index < vec1.size(); index++) {
+                    if (!::approx_equal<T>(vec1[index], vec2[index],
+                                           static_cast<T>(rel_diff),
+                                           static_cast<T>(abs_diff)))
+                        return false;
+                }
+                return true;
+            } else {
+                return vec1 == vec2;
+            }
+        },
+        this->data().value());
+}
+
+static size_t rd_kw_fortio_data_size(const rd::KW *rd_kw) {
+    const size_t blocksize = get_blocksize(rd_kw->data_type());
     const size_t num_blocks =
         rd_kw->size() / blocksize + (rd_kw->size() % blocksize == 0 ? 0 : 1);
 
-    return num_blocks * (4 + 4) + // Fortran fluff for each block
-           rd_kw->size() *
-               rd_type_get_sizeof_iotype(rd_kw->data_type); // Actual data
+    return num_blocks * (4 + 4) +                // Fortran fluff for each block
+           rd_kw->size() * rd_kw->iotype_size(); // Actual data
 }
 
 /**
@@ -461,24 +421,13 @@ static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
    the fortran header and trailer combo.
 */
 
-size_t rd_kw_fortio_size(const rd_kw_type *rd_kw) {
+size_t rd::KW::fortio_size() const {
     size_t size = RD_KW_HEADER_FORTIO_SIZE;
-    size += rd_kw_fortio_data_size(rd_kw);
+    size += rd_kw_fortio_data_size(this);
     return size;
 }
 
-void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
-    if (!rd_kw_size_and_type_equal(target, src))
-        throw std::invalid_argument("type/size mismatch");
-
-    if (target->size() == 0)
-        return;
-    memcpy(target->data, src->data,
-           target->size() * rd_type_get_sizeof_ctype(target->data_type));
-}
-
-/**
-   This function will allocate a new copy of @src, where only the
+/** Create a new  copy of @other, where only the
    elements corresponding to the slice [index1:index2) is included.
 
    The input parameters @index1 and @index2 can to some extent be
@@ -487,21 +436,18 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
        index1 = max( index1 , 0 );
        index2 = min( index2 , size );
 
-   If index1 > index2 it will fail hard; the same applies if stride is
-   <= 0.
-*/
-
-rd_kw_struct::rd_kw_struct(const rd_kw_struct &other, size_t index1,
-                           size_t index2, int stride)
-    : m_size(0), data_type(other.data_type) {
+   If index1 > index2 the result will be empty.
+   Throws invalid_argument for stride == 0 and index1 >= other.size() */
+rd::KW::KW(const rd::KW &other, size_t index1, size_t index2, size_t stride)
+    : m_size(0), m_data_type(other.data_type()) {
     if (index2 > other.size())
         index2 = other.size();
     if (index1 >= other.size())
         throw std::invalid_argument(
             fmt::format("index1={} > size:{}", index1, other.size()));
-    if (stride <= 0)
+    if (stride == 0)
         throw std::invalid_argument(
-            fmt::format("stride:{} completely broken ...", stride));
+            fmt::format("stride:{} must be positive", stride));
 
     size_t src_index = index1;
     /* 1: Determine size of the sliced copy. */
@@ -510,45 +456,29 @@ rd_kw_struct::rd_kw_struct(const rd_kw_struct &other, size_t index1,
         new_size++;
         src_index += stride;
     }
-    if (new_size > 0) {
-        rd_kw_set_header_name(this, other.header);
-        this->m_size = new_size;
-        init_data();
 
-        /* 2: Copy over the elements. */
-        src_index = index1;
-        {
-            size_t target_index = 0;
-            const char *src_ptr = other.data;
-            char *new_ptr = this->data;
-            size_t sizeof_ctype = rd_type_get_sizeof_ctype(other.data_type);
+    this->m_header = other.header();
+    this->m_size = new_size;
 
-            while (src_index < index2) {
-                std::memcpy(&new_ptr[target_index * sizeof_ctype],
-                            &src_ptr[src_index * sizeof_ctype], sizeof_ctype);
-                src_index += stride;
-                target_index += 1;
-            }
-        }
-    }
+    if (other.m_data.has_value())
+        this->m_data = std::visit(
+            [index1, index2, stride](const auto &vec) -> rd::kw_data {
+                using VecT = std::decay_t<decltype(vec)>;
+                VecT result;
+                for (size_t src_index = index1; src_index < index2;
+                     src_index += stride)
+                    result.push_back(vec[src_index]);
+                return result;
+            },
+            other.m_data.value());
 }
 
-void rd_kw_struct::resize(size_t new_size) {
-    if (shared_data)
-        throw std::invalid_argument(
-            "trying to allocate data for rd_kw object which has been declared "
-            "with shared storage");
-
+void rd::KW::resize(size_t new_size) {
     if (new_size != m_size) {
-        size_t old_byte_size = m_size * rd_type_get_sizeof_ctype(data_type);
-        size_t new_byte_size = new_size * rd_type_get_sizeof_ctype(data_type);
-
-        this->data = (char *)util_realloc(this->data, new_byte_size);
-        if (new_byte_size > old_byte_size) {
-            size_t offset = old_byte_size;
-            std::memset(&data[offset], 0, new_byte_size - old_byte_size);
-        }
         m_size = new_size;
+        if (m_data.has_value())
+            std::visit([new_size](auto &vec) { vec.resize(new_size); },
+                       m_data.value());
     }
 }
 
@@ -560,9 +490,9 @@ void rd_kw_struct::resize(size_t new_size) {
    used.
 */
 
-rd_kw_struct::rd_kw_struct(const rd_kw_type &other, const char *new_kw,
-                           size_t offset, size_t count)
-    : m_size(count), data_type(other.data_type) {
+rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
+           size_t offset, size_t count)
+    : m_size(count), m_data_type(other.data_type()) {
     if (offset >= other.size())
         throw std::invalid_argument(
             fmt::format("invalid offset - limits: [{},{})", 0, other.size()));
@@ -570,162 +500,43 @@ rd_kw_struct::rd_kw_struct(const rd_kw_type &other, const char *new_kw,
         throw std::invalid_argument(
             fmt::format("invalid count value: {}", count));
 
-    if (new_kw == NULL)
-        new_kw = other.header;
-    rd_kw_set_header_name(this, new_kw);
-
-    void *src_data = rd_kw_iget_ptr(&other, static_cast<int>(offset));
-    init_data();
-    rd_kw_set_memcpy_data(this, src_data);
-}
-
-static void *rd_kw_iget_ptr_static(const rd_kw_type *rd_kw, int i) {
-    rd_kw_assert_index(rd_kw, i, __func__);
-    return &rd_kw->data[i * rd_type_get_sizeof_ctype(rd_kw->data_type)];
-}
-
-static void rd_kw_iget_static(const rd_kw_type *rd_kw, int i, void *iptr) {
-    memcpy(iptr, rd_kw_iget_ptr_static(rd_kw, i),
-           rd_type_get_sizeof_ctype(rd_kw->data_type));
-}
-
-static void rd_kw_iset_static(rd_kw_type *rd_kw, int i, const void *iptr) {
-    size_t sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    rd_kw_assert_index(rd_kw, i, __func__);
-    memcpy(&rd_kw->data[i * sizeof_ctype], iptr, sizeof_ctype);
-}
-
-/**
-   Will return a double value for underlying data types of double,
-   float and int.
-*/
-double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int index) {
-    if (rd_type_is_float(rd_kw->data_type))
-        return rd_kw_iget_float(
-            rd_kw,
-            index); /* Here the compiler will silently insert a float -> double conversion. */
-    else if (rd_type_is_double(rd_kw->data_type))
-        return rd_kw_iget_double(rd_kw, index);
-    else if (rd_type_is_int(rd_kw->data_type))
-        return rd_kw_iget_int(rd_kw, index); /*  */
+    if (new_kw.has_value())
+        m_header = strip_header(*new_kw);
     else
-        throw std::invalid_argument("cannot be converted to double");
+        m_header = other.header();
+
+    if (other.m_data.has_value())
+        this->m_data = std::visit(
+            [offset, count](const auto &vec) -> rd::kw_data {
+                using VecT = std::decay_t<decltype(vec)>;
+                return VecT(vec.begin() + offset, vec.begin() + offset + count);
+            },
+            other.m_data.value());
 }
 
-#define RD_KW_IGET_TYPED(ctype, RD_TYPE)                                       \
-    ctype rd_kw_iget_##ctype(const rd_kw_type *rd_kw, int i) {                 \
-        ctype value;                                                           \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        rd_kw_iget_static(rd_kw, i, &value);                                   \
-        return value;                                                          \
-    }
-
-RD_KW_IGET_TYPED(double, RD_DOUBLE_TYPE);
-RD_KW_IGET_TYPED(float, RD_FLOAT_TYPE);
-RD_KW_IGET_TYPED(int, RD_INT_TYPE);
-RD_KW_IGET_TYPED(bool, RD_BOOL_TYPE);
-#undef RD_KW_IGET_TYPED
-
-const char *rd_kw_iget_char_ptr(const rd_kw_type *rd_kw, int i) {
-    if (rd_kw_get_type(rd_kw) != RD_CHAR_TYPE)
-        throw std::invalid_argument(
-            fmt::format("Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));
-    return (const char *)rd_kw_iget_ptr(rd_kw, i);
-}
-
-const char *rd_kw_iget_string_ptr(const rd_kw_type *rd_kw, int i) {
-    if (rd_kw_get_type(rd_kw) != RD_STRING_TYPE)
-        throw std::invalid_argument(
-            fmt::format("Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));
-    return (const char *)rd_kw_iget_ptr(rd_kw, i);
-}
-
-/**
-   This will set the elemnts of the rd_kw data storage in index to
-   the value of s8; if s8 is shorter than 8 characters the result will
-   be padded, if s8 is longer than 8 characters the characters from 9
-   and out will be ignored.
-*/
-void rd_kw_iset_string8(rd_kw_type *rd_kw, size_t index, const char *s8) {
-    if (index >= rd_kw->size())
-        throw std::invalid_argument(
-            fmt::format("Invalid index lookup. kw:{} input_index:{}   size:{}",
-                        rd_kw->header, index, rd_kw->size()));
-    char *rd_string =
-        &rd_kw->data[index * rd_type_get_sizeof_ctype(rd_kw->data_type)];
-    if (strlen(s8) >= RD_STRING8_LENGTH) {
-        /* The whole string goes in - possibly loosing content at the end. */
-        for (size_t i = 0; i < RD_STRING8_LENGTH; i++)
-            rd_string[i] = s8[i];
-    } else {
-        /* The string is padded with trailing spaces. */
-        size_t string_length = strlen(s8);
-        for (size_t i = 0; i < string_length; i++)
-            rd_string[i] = s8[i];
-
-        for (size_t i = string_length; i < RD_STRING8_LENGTH; i++)
-            rd_string[i] = ' ';
-    }
-
-    rd_string[RD_STRING8_LENGTH] = '\0';
-}
-
-/**
-   This function will set the string @index in the rd_kw string array
-   to @s. IFF @s is longer than 8 characters, the first part will go
-   in element @index, and then we will continue writing into the next
-   elements. If the resulting index goes beyond the length of the
-   keyword - WhamBang!
-
-   You should know what you are doing when sending in a string of
-   length greater than 8 - maybe the overwriting of consecutive
-   elements is not what you want?
-*/
-void rd_kw_iset_char_ptr(rd_kw_type *rd_kw, size_t index, const char *s) {
-    size_t strings = strlen(s) / RD_STRING8_LENGTH;
-    if ((strlen(s) % RD_STRING8_LENGTH) != 0)
-        strings++;
-    for (size_t sub_index = 0; sub_index < strings; sub_index++)
-        rd_kw_iset_string8(rd_kw, index + sub_index,
-                           &s[sub_index * RD_STRING8_LENGTH]);
-}
-
-/**
- This function will verify that the given string is of approperiate
- length (0 <= lenght <= data_type.element_size). If so, the elements
- of @s will be written to the @rd_kw string array starting at
- @index. If the input string is shorter than the type length the
- string will be padded with trailing spaces.
- */
-void rd_kw_iset_string_ptr(rd_kw_type *rd_kw, int index, const char *s) {
-    if (!rd_type_is_alpha(rd_kw_get_data_type(rd_kw))) {
-        throw std::invalid_argument(
-            fmt::format("Expected alphabetic data type (CHAR, CXXX or MESS), "
-                        "was {}",
-                        rd_type_name(rd_kw_get_data_type(rd_kw))));
-    }
-
-    size_t input_len = strlen(s);
-    size_t type_len = rd_type_get_sizeof_iotype(rd_kw->data_type);
-
-    if (input_len > type_len)
-        throw std::invalid_argument(fmt::format(
-            "String of length {} cannot hold input string of length {}",
-            type_len, input_len));
-
-    {
-        char *rd_string = (char *)rd_kw_iget_ptr(rd_kw, index);
-        size_t i;
-
-        for (i = 0; i < input_len; ++i)
-            rd_string[i] = s[i];
-
-        for (i = input_len; i < type_len; ++i)
-            rd_string[i] = ' ';
-
-        rd_string[type_len] = '\0';
+void rd::KW::zero_init_data() {
+    switch (rd_type_get_type(data_type())) {
+    case RD_INT_TYPE:
+        m_data = std::vector<int>(size(), 0);
+        break;
+    case RD_FLOAT_TYPE:
+        m_data = std::vector<float>(size(), 0.0f);
+        break;
+    case RD_DOUBLE_TYPE:
+        m_data = std::vector<double>(size(), 0.0);
+        break;
+    case RD_BOOL_TYPE:
+        m_data = std::vector<char>(size(), 0);
+        break;
+    case RD_CHAR_TYPE:
+    case RD_STRING_TYPE:
+        m_data = std::vector<std::string>(size());
+        break;
+    default:
+        /* RD_MESS_TYPE carries no element-wise data and is not
+           representable by rd::kw_data. */
+        m_data = std::nullopt;
+        break;
     }
 }
 
@@ -863,12 +674,10 @@ static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
     return OK;
 }
 
-/*
-  This rather painful parsing is because formatted eclipse double
-  format : 0.ddddD+01 - difficult to parse the 'D';
-*/
-/** Should be: NESTED */
+/* This rather painful parsing is because formatted eclipse double
+  format : 0.ddddD+01 - difficult to parse the 'D'.
 
+*/
 static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     int read_count, power;
     double value, arg;
@@ -882,110 +691,177 @@ static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     return value;
 }
 
-static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    bool fmt_file = fortio.fmt_file();
-    if (rd_kw->size() == 0)
-        /* The keyword has zero size - and reading data is trivially OK. */
-        return true;
-    const size_t blocksize = get_blocksize(rd_kw->data_type);
-    if (fmt_file) {
-        const size_t blocks = rd_kw->size() / blocksize +
-                              (rd_kw->size() % blocksize == 0 ? 0 : 1);
-        const std::string read_format = read_fmt(rd_kw->data_type);
-        FILE *stream = fortio.get_FILE();
-        size_t offset = 0;
-        size_t index = 0;
-        for (size_t ib = 0; ib < blocks; ib++) {
-            size_t read_elm =
-                std::min((ib + 1) * blocksize, rd_kw->size()) - ib * blocksize;
-            for (size_t ir = 0; ir < read_elm; ir++) {
-                switch (rd_kw_get_type(rd_kw)) {
-                case (RD_CHAR_TYPE):
-                    rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                         read_format.c_str(), 8, stream);
-                    break;
-                case (RD_STRING_TYPE):
-                    rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                         read_format.c_str(),
-                                         rd_type_get_sizeof_iotype(
-                                             rd_kw_get_data_type(rd_kw)),
-                                         stream);
-                    break;
-                case (RD_INT_TYPE): {
-                    int iread = fscanf(stream, read_format.c_str(),
-                                       (int *)&rd_kw->data[offset]);
-                    if (iread != 1)
-                        throw std::runtime_error(fmt::format(
-                            "after reading {} values reading of keyword:{} "
-                            "from:{} failed",
-                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
-                            rd_kw->header8, fortio.filename_ref()));
-                } break;
-                case (RD_FLOAT_TYPE): {
-                    int iread = fscanf(stream, read_format.c_str(),
-                                       (float *)&rd_kw->data[offset]);
-                    if (iread != 1) {
-                        throw std::runtime_error(fmt::format(
-                            "after reading {} values reading of keyword:{} "
-                            "from:{} failed",
-                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
-                            rd_kw->header8, fortio.filename_ref()));
-                    }
-                } break;
-                case (RD_DOUBLE_TYPE): {
-                    double value =
-                        __fscanf_RD_double(stream, read_format.c_str());
-                    rd_kw_iset(rd_kw, index, &value);
-                } break;
-                case (RD_BOOL_TYPE): {
-                    char bool_char;
-                    if (fscanf(stream, read_format.c_str(), &bool_char) == 1) {
-                        if (bool_char == BOOL_TRUE_CHAR)
-                            rd_kw_iset_bool(rd_kw, index, true);
-                        else if (bool_char == BOOL_FALSE_CHAR)
-                            rd_kw_iset_bool(rd_kw, index, false);
-                        else
-                            throw std::runtime_error(fmt::format(
-                                "Logical value: [{}] not recogniced",
-                                bool_char));
-                    } else
-                        throw std::runtime_error(
-                            "read failed - premature file end?");
-                } break;
-                case (RD_MESS_TYPE):
-                    rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                         read_format.c_str(), 8, stream);
-                    break;
-                default:
-                    throw std::runtime_error(
-                        fmt::format("Internal error: internal "
-                                    "eclipse_type: {} not recognized",
-                                    rd_kw_get_type(rd_kw)));
-                }
-                offset += rd_type_get_sizeof_ctype(rd_kw->data_type);
-                index++;
-            }
-        }
+static char read_formatted_bool(FILE *stream) {
+    char bool_char = '\0';
+    if (fscanf(stream, READ_FMT_BOOL, &bool_char) != 1)
+        throw std::runtime_error("read failed - premature file end?");
+    if (bool_char == BOOL_TRUE_CHAR)
+        return 1;
+    if (bool_char == BOOL_FALSE_CHAR)
+        return 0;
+    throw std::runtime_error(
+        fmt::format("Logical value: [{}] not recogniced", bool_char));
+}
 
-        /* Skip the trailing newline */
-        fortio.fseek(1, SEEK_CUR);
+static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
+                                                      ERT::FortIO &fortio) {
+    const rd_type_enum type = rd_kw->get_type();
+    const size_t size = rd_kw->size();
+    FILE *stream = fortio.get_FILE();
+    const std::string read_format = read_fmt(rd_kw->data_type());
+    std::optional<rd::kw_data> data;
+
+    switch (type) {
+    case RD_INT_TYPE: {
+        std::vector<int> values(size);
+        for (size_t i = 0; i < size; i++) {
+            if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
+                throw std::runtime_error(fmt::format(
+                    "after reading {} values reading of keyword:{} from:{} failed",
+                    i, rd_kw->header(), fortio.filename_ref()));
+        }
+        data = std::move(values);
+    } break;
+    case RD_FLOAT_TYPE: {
+        std::vector<float> values(size);
+        for (size_t i = 0; i < size; i++) {
+            if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
+                throw std::runtime_error(fmt::format(
+                    "after reading {} values reading of keyword:{} from:{} failed",
+                    i, rd_kw->header(), fortio.filename_ref()));
+        }
+        data = std::move(values);
+    } break;
+    case RD_DOUBLE_TYPE: {
+        std::vector<double> values(size);
+        for (size_t i = 0; i < size; i++)
+            values[i] = __fscanf_RD_double(stream, read_format.c_str());
+        data = std::move(values);
+    } break;
+    case RD_BOOL_TYPE: {
+        std::vector<char> values(size);
+        for (size_t i = 0; i < size; i++)
+            values[i] = read_formatted_bool(stream);
+        data = std::move(values);
+    } break;
+    case RD_CHAR_TYPE:
+    case RD_STRING_TYPE: {
+        const size_t width =
+            type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : rd_kw->iotype_size();
+        std::vector<char> buf(width + 1, '\0');
+        std::vector<std::string> values;
+        values.reserve(size);
+        for (size_t i = 0; i < size; i++) {
+            rd_kw_fscanf_qstring(buf.data(), read_format.c_str(),
+                                 static_cast<int>(width), stream);
+            values.emplace_back(buf.data());
+        }
+        data = std::move(values);
+    } break;
+    case RD_MESS_TYPE: {
+        char buf[RD_STRING8_LENGTH + 1];
+        for (size_t i = 0; i < size; i++)
+            rd_kw_fscanf_qstring(buf, read_format.c_str(), RD_STRING8_LENGTH,
+                                 stream);
+        /* leave data as nullopt. */
+    } break;
+    default:
+        throw std::runtime_error(fmt::format(
+            "Internal error: internal eclipse_type: {} not recognized", type));
+    }
+
+    /* Skip the trailing newline */
+    fortio.fseek(1, SEEK_CUR);
+    return data;
+}
+
+static bool read_unformatted_data(rd::KW *rd_kw, ERT::FortIO &fortio,
+                                  std::optional<rd::kw_data> &out) {
+    const rd_type_enum type = rd_kw->get_type();
+    const size_t size = rd_kw->size();
+    const size_t sizeof_iotype = rd_kw->iotype_size();
+    if (sizeof_iotype != 0 &&
+        size > std::numeric_limits<size_t>::max() / sizeof_iotype)
+        throw std::invalid_argument(
+            fmt::format("buffer size overflow: {} * {}", size, sizeof_iotype));
+
+    const size_t record_size = size * sizeof_iotype;
+    if (record_size > std::numeric_limits<int>::max())
+        throw std::invalid_argument(
+            "record size exceeded signed 32 bit integer");
+
+    std::vector<char> buffer(record_size);
+    bool read_ok =
+        fortio.fread_buffer(buffer.data(), static_cast<int>(record_size));
+    if (!read_ok)
+        return false;
+
+    if (RD_ENDIAN_FLIP) {
+        if (rd_type_is_numeric(rd_kw->data_type()) ||
+            rd_type_is_bool(rd_kw->data_type()))
+            util_endian_flip_vector(buffer.data(), sizeof_iotype, size);
+    }
+
+    switch (type) {
+    case RD_INT_TYPE: {
+        std::vector<int> result(size);
+        if (record_size > 0)
+            std::memcpy(result.data(), buffer.data(), record_size);
+        out = std::move(result);
+    } break;
+    case RD_FLOAT_TYPE: {
+        std::vector<float> result(size);
+        if (record_size > 0)
+            std::memcpy(result.data(), buffer.data(), record_size);
+        out = std::move(result);
+    } break;
+    case RD_DOUBLE_TYPE: {
+        std::vector<double> result(size);
+        if (record_size > 0)
+            std::memcpy(result.data(), buffer.data(), record_size);
+        out = std::move(result);
+    } break;
+    case RD_BOOL_TYPE: {
+        std::vector<char> result(size);
+        for (size_t i = 0; i < size; i++) {
+            int int_value;
+            std::memcpy(&int_value, &buffer[i * sizeof_iotype],
+                        sizeof int_value);
+            result[i] = (int_value == RD_BOOL_TRUE_INT) ? 1 : 0;
+        }
+        out = std::move(result);
+    } break;
+    case RD_CHAR_TYPE:
+    case RD_STRING_TYPE: {
+        std::vector<std::string> result;
+        result.reserve(size);
+        for (size_t i = 0; i < size; i++)
+            result.emplace_back(&buffer[i * sizeof_iotype], sizeof_iotype);
+        out = std::move(result);
+    } break;
+    default:
+        /* RD_MESS_TYPE: leave out unset (nullopt). */
+        out = std::nullopt;
+        break;
+    }
+    return true;
+}
+
+bool rd::KW::fread_data(rd::KW *rd_kw, ERT::FortIO &fortio) {
+    if (rd_kw->size() == 0) {
+        /* The keyword has zero size - and reading data is trivially OK. */
+        rd_kw->zero_init_data();
+        return true;
+    }
+
+    if (fortio.fmt_file()) {
+        rd_kw->m_data = read_formatted_data(rd_kw, fortio);
         return true;
     } else {
-        char *buffer = rd_kw_alloc_input_buffer(rd_kw);
-        const size_t sizeof_iotype =
-            rd_type_get_sizeof_iotype(rd_kw->data_type);
-        size_t record_size = rd_kw->size() * sizeof_iotype;
-        if (record_size > std::numeric_limits<int>::max())
-            throw std::invalid_argument(
-                "record size exceeded signed 32 bit integer");
-
-        bool read_ok =
-            fortio.fread_buffer(buffer, static_cast<int>(record_size));
-
+        std::optional<rd::kw_data> out;
+        bool read_ok = read_unformatted_data(rd_kw, fortio, out);
         if (read_ok)
-            rd_kw_load_from_input_buffer(rd_kw, buffer);
-
-        free(buffer);
+            rd_kw->m_data = std::move(out);
         return read_ok;
     }
 }
@@ -996,29 +872,59 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
    offset of the start of the keyword (i.e. its header) in the file,
    as stored by rd_file_kw.
 */
-void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
-                              rd_data_type data_type, int element_count,
-                              const std::vector<int> &index_map,
-                              char *io_buffer) {
+void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
+                                rd_data_type data_type, int element_count,
+                                const std::vector<int> &index_map,
+                                char *io_buffer) {
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
     // For unformatted (binary) files the individual elements have a fixed
     // on-disk size, so we can seek directly to each requested element. For
     // formatted (ASCII) files the elements have a variable text width and
     // direct seeking is not possible; in that case we read the whole
-    // keyword and extract the requested elements afterwards.
+    // keyword via fread() and extract the requested elements from m_data
+    // afterwards.
     if (fortio.fmt_file()) {
         fortio.fseek(kw_offset, SEEK_SET);
-        rd_kw_ptr rd_kw = rd_kw_struct::fread(fortio);
+        std::unique_ptr<rd::KW> rd_kw = rd::KW::fread(fortio);
         if (rd_kw == NULL)
             throw std::runtime_error(fmt::format(
                 "failed to load keyword at offset:{}", (long)kw_offset));
 
-        for (size_t index = 0; index < index_map.size(); index++) {
-            int element_index = index_map[index];
-            memcpy(&io_buffer[index * sizeof_iotype],
-                   rd_kw_iget_ptr(rd_kw.get(), element_index), sizeof_iotype);
-        }
+        if (!rd_kw->m_data.has_value())
+            throw std::runtime_error(fmt::format(
+                "failed to load keyword data at offset:{}", (long)kw_offset));
+
+        std::visit(
+            [&](const auto &vec) {
+                using VecT = std::decay_t<decltype(vec)>;
+                for (size_t index = 0; index < index_map.size(); index++) {
+                    int element_index = index_map[index];
+                    if (element_index < 0 || element_index >= element_count)
+                        throw std::invalid_argument(fmt::format(
+                            "Element index is out of range 0 <= {} < {}",
+                            element_index, element_count));
+                    char *dst = &io_buffer[index * sizeof_iotype];
+                    if constexpr (std::is_same_v<VecT, std::vector<char>>) {
+                        /* RD_BOOL_TYPE, stored as vector<char> with 0/1
+                           values; on-disk representation is a full int. */
+                        int int_value = vec[element_index] ? RD_BOOL_TRUE_INT
+                                                           : RD_BOOL_FALSE_INT;
+                        std::memcpy(dst, &int_value, sizeof_iotype);
+                    } else if constexpr (std::is_same_v<
+                                             VecT, std::vector<std::string>>) {
+                        const std::string &s = vec[element_index];
+                        size_t string_length =
+                            std::min(s.size(), sizeof_iotype);
+                        std::memcpy(dst, s.data(), string_length);
+                        for (size_t j = string_length; j < sizeof_iotype; j++)
+                            dst[j] = ' ';
+                    } else {
+                        std::memcpy(dst, &vec[element_index], sizeof_iotype);
+                    }
+                }
+            },
+            rd_kw->m_data.value());
     } else {
         const size_t block_size = get_blocksize(data_type);
         FILE *stream = fortio.get_FILE();
@@ -1043,19 +949,16 @@ void rd_kw_fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
     }
 }
 
-/**
-   Allocates storage and reads data.
-*/
 bool rd_kw_struct::fskip_data(rd_data_type data_type, const int element_count,
-                        ERT::FortIO &fortio) {
+                              ERT::FortIO &fortio) {
     if (element_count <= 0)
         return true;
 
     bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
         /* Formatted skipping actually involves reading the data - nice ??? */
-        rd_kw_ptr tmp_kw = make_rd_kw("WORK", element_count, data_type);
-        rd_kw_fread_data(tmp_kw.get(), fortio);
+        rd::KW tmp_kw{"WORK", element_count, data_type};
+        fread_data(&tmp_kw, fortio);
     } else {
         size_t num_elements = static_cast<size_t>(element_count);
         const size_t blocksize = get_blocksize(data_type);
@@ -1070,11 +973,6 @@ bool rd_kw_struct::fskip_data(rd_data_type data_type, const int element_count,
     return true;
 }
 
-bool rd_kw_struct::fskip_data(ERT::FortIO &fortio) const{
-    return rd_kw_struct::fskip_data(rd_kw_get_data_type(this), rd_kw_get_size(this),
-                              fortio);
-}
-
 /**
    This function will skip the header part of an rd_kw instance. The
    function will read the file content at the current position, it is
@@ -1083,21 +981,20 @@ bool rd_kw_struct::fskip_data(ERT::FortIO &fortio) const{
    will be complete crash and burn.
 */
 
-void rd_kw_fskip_header(ERT::FortIO &fortio) {
+void rd::KW::fskip_header(ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
-        rd_kw_fread_header(fortio);
+        rd::KW::fread_header(fortio);
     } else
         fortio.fskip_record();
 }
 
-rd_kw_ptr rd_kw_fread_header(ERT::FortIO &fortio) {
+std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
     const char null_char = '\0';
     FILE *stream = fortio.get_FILE();
     bool fmt_file = fortio.fmt_file();
     char header[RD_STRING8_LENGTH + 1];
     char rd_type_str[RD_TYPE_LENGTH + 1];
-    int record_size;
     int size;
 
     if (fmt_file) {
@@ -1115,7 +1012,7 @@ rd_kw_ptr rd_kw_fread_header(ERT::FortIO &fortio) {
     } else {
         header[RD_STRING8_LENGTH] = null_char;
         rd_type_str[RD_TYPE_LENGTH] = null_char;
-        record_size = fortio.init_read();
+        int record_size = fortio.init_read();
 
         if (record_size <= 0)
             return {nullptr};
@@ -1141,27 +1038,14 @@ rd_kw_ptr rd_kw_fread_header(ERT::FortIO &fortio) {
     }
 
     rd_data_type data_type = rd_type_create_from_name(rd_type_str);
-    return make_rd_kw(header, size, data_type);
+    return std::make_unique<rd::KW>(header, size, data_type);
 }
 
-void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
-    rd_kw->header8 = (char *)realloc(rd_kw->header8, RD_STRING8_LENGTH + 1);
-    if (strlen(header) <= 8) {
-        sprintf(rd_kw->header8, "%-8s", header);
-
-        /* Internalizing a header without the trailing spaces as well. */
-        free(rd_kw->header);
-        rd_kw->header = util_alloc_strip_copy(rd_kw->header8);
-    } else {
-        free(rd_kw->header);
-        rd_kw->header = (char *)util_alloc_copy(header, strlen(header) + 1);
-    }
-}
-
-rd_kw_ptr rd_kw_struct::fread(ERT::FortIO &fortio) {
-    if (auto rd_kw = rd_kw_fread_header(fortio)) {
-        if (!rd_kw_fread_data(rd_kw.get(), fortio))
+std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
+    if (auto rd_kw = rd::KW::fread_header(fortio)) {
+        if (!fread_data(rd_kw.get(), fortio))
             return {nullptr};
+
         return rd_kw;
     } else
         return {nullptr};
@@ -1169,10 +1053,10 @@ rd_kw_ptr rd_kw_struct::fread(ERT::FortIO &fortio) {
 
 static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
                                           ERT::FortIO &fortio) {
-    char *iobuffer = rd_kw_alloc_output_buffer(rd_kw);
-    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
+    auto iobuffer = alloc_output_buffer(rd_kw);
+    size_t sizeof_iotype = rd_kw->iotype_size();
     {
-        const size_t blocksize = get_blocksize(rd_kw->data_type);
+        const size_t blocksize = get_blocksize(rd_kw->data_type());
         const size_t num_blocks = rd_kw->size() / blocksize +
                                   (rd_kw->size() % blocksize == 0 ? 0 : 1);
         for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
@@ -1193,99 +1077,95 @@ static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
                 static_cast<int>(record_size));
         }
     }
-    free(iobuffer);
 }
 
-static void rd_kw_fwrite_data_formatted(rd_kw_type *rd_kw,
+static void rd_kw_fwrite_data_formatted(const rd::KW *rd_kw,
                                         ERT::FortIO &fortio) {
-
-    {
-
-        FILE *stream = fortio.get_FILE();
-        const size_t blocksize = get_blocksize(rd_kw->data_type);
-        const size_t columns = get_columns(rd_kw->data_type);
-        const size_t string_width = rd_type_get_sizeof_iotype(rd_kw->data_type);
-        const size_t num_blocks = rd_kw->size() / blocksize +
-                                  (rd_kw->size() % blocksize == 0 ? 0 : 1);
-        for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
-            size_t block_next =
-                std::min((block_nr + 1) * blocksize, rd_kw->size());
-            size_t block_prev = block_nr * blocksize;
-            size_t this_blocksize =
-                block_prev > block_next ? 0 : block_next - block_prev;
-            size_t num_lines = this_blocksize / columns +
-                               (this_blocksize % columns == 0 ? 0 : 1);
-            for (size_t line_nr = 0; line_nr < num_lines; line_nr++) {
-                size_t num_columns =
-                    std::min((line_nr + 1) * columns, this_blocksize) -
-                    columns * line_nr;
-                for (size_t col_nr = 0; col_nr < num_columns; col_nr++) {
-                    size_t data_index =
-                        block_nr * blocksize + line_nr * columns + col_nr;
-                    if (data_index >= rd_kw->size())
-                        throw std::logic_error("Loop exhausted size in "
-                                               "rd_kw_fwrite_data_formatted");
-                    void *data_ptr =
-                        &rd_kw->data[data_index * rd_type_get_sizeof_ctype(
-                                                      rd_kw->data_type)];
-                    std::string element;
-                    switch (rd_kw_get_type(rd_kw)) {
-                    case (RD_CHAR_TYPE):
-                        element = rd::format_kw_element((char *)data_ptr);
-                        break;
-                    case (RD_STRING_TYPE):
-                        element = rd::format_kw_element((char *)data_ptr,
-                                                        string_width);
-                        break;
-                    case (RD_INT_TYPE):
-                        element = rd::format_kw_element(((int *)data_ptr)[0]);
-                        break;
-                    case (RD_BOOL_TYPE):
-                        element = rd::format_kw_element(
-                            ((unsigned char *)data_ptr)[0] != 0);
-                        break;
-                    case (RD_FLOAT_TYPE):
-                        element = rd::format_kw_element(((float *)data_ptr)[0]);
-                        break;
-                    case (RD_DOUBLE_TYPE):
-                        element =
-                            rd::format_kw_element(((double *)data_ptr)[0]);
-                        break;
-                    case (RD_MESS_TYPE):
-                        throw std::runtime_error(
-                            "Internal inconsistency : message type keywords "
-                            "should not have data");
-                        break;
-                    }
-                    fputs(element.c_str(), stream);
-                }
-                fprintf(stream, "\n");
-            }
-        }
+    const auto &m_data = rd_kw->data();
+    if (!m_data.has_value()) {
+        /* RD_MESS_TYPE keywords carry no element-wise data. */
+        if (rd_kw->size() > 0)
+            throw std::runtime_error("Internal inconsistency : message type "
+                                     "keywords should not have data");
+        return;
     }
+
+    FILE *stream = fortio.get_FILE();
+    const size_t blocksize = get_blocksize(rd_kw->data_type());
+    const size_t columns = get_columns(rd_kw->data_type());
+    const size_t string_width = rd_kw->iotype_size();
+    const rd_type_enum type = rd_kw->get_type();
+    const size_t num_blocks =
+        rd_kw->size() / blocksize + (rd_kw->size() % blocksize == 0 ? 0 : 1);
+    std::visit(
+        [&](const auto &vec) {
+            using VecT = std::decay_t<decltype(vec)>;
+            for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
+                size_t block_next =
+                    std::min((block_nr + 1) * blocksize, rd_kw->size());
+                size_t block_prev = block_nr * blocksize;
+                size_t this_blocksize =
+                    block_prev > block_next ? 0 : block_next - block_prev;
+                size_t num_lines = this_blocksize / columns +
+                                   (this_blocksize % columns == 0 ? 0 : 1);
+                for (size_t line_nr = 0; line_nr < num_lines; line_nr++) {
+                    size_t num_columns =
+                        std::min((line_nr + 1) * columns, this_blocksize) -
+                        columns * line_nr;
+                    for (size_t col_nr = 0; col_nr < num_columns; col_nr++) {
+                        size_t data_index =
+                            block_nr * blocksize + line_nr * columns + col_nr;
+                        if (data_index >= vec.size())
+                            throw std::logic_error(
+                                "Loop exhausted size in "
+                                "rd_kw_fwrite_data_formatted");
+                        std::string element;
+                        if constexpr (std::is_same_v<
+                                          VecT, std::vector<std::string>>) {
+                            if (type == RD_CHAR_TYPE)
+                                element = rd::format_kw_element(
+                                    vec[data_index].c_str());
+                            else
+                                element = rd::format_kw_element(
+                                    vec[data_index].c_str(), string_width);
+                        } else if constexpr (std::is_same_v<
+                                                 VecT, std::vector<char>>) {
+                            element =
+                                rd::format_kw_element(vec[data_index] != 0);
+                        } else {
+                            element = rd::format_kw_element(vec[data_index]);
+                        }
+                        fputs(element.c_str(), stream);
+                    }
+                    fprintf(stream, "\n");
+                }
+            }
+        },
+        m_data.value());
 }
 
-void rd_kw_fwrite_data(const rd_kw_type *_rd_kw, ERT::FortIO &fortio) {
-    rd_kw_type *rd_kw = (rd_kw_type *)_rd_kw;
+void rd::KW::fwrite_data(ERT::FortIO &fortio) const {
     bool fmt_file = fortio.fmt_file();
 
     if (fmt_file)
-        rd_kw_fwrite_data_formatted(rd_kw, fortio);
+        rd_kw_fwrite_data_formatted(this, fortio);
     else
-        rd_kw_fwrite_data_unformatted(rd_kw, fortio);
+        rd_kw_fwrite_data_unformatted(this, fortio);
 }
 
 void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     FILE *stream = fortio.get_FILE();
     bool fmt_file = fortio.fmt_file();
-    std::string type_name = rd_type_name(rd_kw->data_type);
+    std::string type_name = rd_type_name(rd_kw->data_type());
 
     if (rd_kw->size() > std::numeric_limits<int>::max())
         throw std::invalid_argument(
             fmt::format("Size of rd_kw exceeds format: {}", rd_kw->size()));
 
+    std::string header8 = fmt::format("{:8.8}", rd_kw->header());
+
     if (fmt_file)
-        fprintf(stream, WRITE_HEADER_FMT, rd_kw->header8,
+        fprintf(stream, WRITE_HEADER_FMT, header8.c_str(),
                 static_cast<int>(rd_kw->size()), type_name.c_str());
     else {
         int size = static_cast<int>(rd_kw->size());
@@ -1294,7 +1174,7 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
 
         fortio.init_write(RD_KW_HEADER_DATA_SIZE);
 
-        fwrite(rd_kw->header8, sizeof(char), RD_STRING8_LENGTH, stream);
+        fwrite(header8.c_str(), sizeof(char), RD_STRING8_LENGTH, stream);
         fwrite(&size, sizeof(int), 1, stream);
         fwrite(type_name.c_str(), sizeof(char), RD_TYPE_LENGTH, stream);
 
@@ -1302,60 +1182,57 @@ void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     }
 }
 
-bool rd_kw_fwrite(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
-    if (strlen(rd_kw_get_header(rd_kw)) > RD_STRING8_LENGTH) {
+bool rd::KW::fwrite(ERT::FortIO &fortio) const {
+    if (this->header().size() > RD_STRING8_LENGTH) {
         fortio.fwrite_error();
         return false;
     }
-    rd_kw_fwrite_header(rd_kw, fortio);
-    rd_kw_fwrite_data(rd_kw, fortio);
+    rd_kw_fwrite_header(this, fortio);
+    this->fwrite_data(fortio);
     return true;
 }
 
-static void *rd_kw_get_data_ref(const rd_kw_type *rd_kw) { return rd_kw->data; }
-
-void *rd_kw_get_ptr(const rd_kw_type *rd_kw) {
-    return rd_kw_get_data_ref(rd_kw);
-}
-
-int rd_kw_get_size(const rd_kw_type *rd_kw) {
+int rd::kw_get_size(const rd::KW *rd_kw) {
     if (rd_kw->size() > std::numeric_limits<int>::max())
         throw std::invalid_argument(
             fmt::format("Size of rd_kw exceeded int max: {}", rd_kw->size()));
     return static_cast<int>(rd_kw->size());
 }
 
-rd_type_enum rd_kw_get_type(const rd_kw_type *rd_kw) {
-    return rd_type_get_type(rd_kw->data_type);
-}
-
-rd_data_type rd_kw_get_data_type(const rd_kw_type *rd_kw) {
-    return rd_kw->data_type;
-}
-
-rd_kw_ptr rd_kw_struct::global_copy(const rd_kw_type *src,
-                                    const rd_kw_type *actnum) {
-    if (rd_kw_get_type(actnum) != RD_INT_TYPE)
+std::unique_ptr<rd::KW> rd::KW::global_copy(const rd::KW *src,
+                                            const rd::KW *actnum) {
+    if (actnum->get_type() != RD_INT_TYPE)
         return NULL;
 
-    const int global_size = rd_kw_get_size(actnum);
-    rd_kw_ptr global_copy =
-        make_rd_kw(rd_kw_get_header(src), global_size, src->data_type);
-    const int *mapping = rd_kw_get_int_ptr(actnum);
-    const int src_size = rd_kw_get_size(src);
-    int src_index = 0;
-    for (int global_index = 0; global_index < global_size; global_index++) {
-        if (mapping[global_index]) {
-            /* We ran through and beyond the size of the src keyword. */
-            if (src_index >= src_size) {
-                global_copy = NULL;
-                break;
+    const size_t global_size = actnum->size();
+    auto global_copy =
+        std::make_unique<rd::KW>(src->header(), global_size, src->data_type());
+    auto &mapping = actnum->get_vector<int>();
+    const size_t src_size = src->size();
+    size_t src_index = 0;
+    bool overflow = false;
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            auto &target_vec = global_copy->get_vector<T>();
+            const auto &src_vec = src->get_vector<T>();
+            for (size_t global_index = 0; global_index < global_size;
+                 global_index++) {
+                if (mapping[global_index]) {
+                    /* We ran through and beyond the size of the src keyword. */
+                    if (src_index >= src_size) {
+                        overflow = true;
+                        break;
+                    }
+                    target_vec[global_index] = src_vec[src_index];
+                    src_index++;
+                }
             }
-            const void *value_ptr = rd_kw_iget_ptr(src, src_index);
-            rd_kw_iset_static(global_copy.get(), global_index, value_ptr);
-            src_index++;
-        }
-    }
+        },
+        global_copy->data().value());
+
+    if (overflow)
+        global_copy.reset(nullptr);
 
     /* Not all the src data was distributed. */
     if (src_index < src_size) {
@@ -1365,721 +1242,89 @@ rd_kw_ptr rd_kw_struct::global_copy(const rd_kw_type *src,
     return global_copy;
 }
 
-#define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \
-    void rd_kw_scalar_set_##ctype(rd_kw_type *rd_kw, ctype value) {            \
-        if (rd_kw_get_type(rd_kw) == RD_TYPE) {                                \
-            ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            for (size_t i = 0; i < rd_kw->size(); i++)                         \
-                data[i] = value;                                               \
-        } else                                                                 \
-            throw std::invalid_argument("wrong type");                         \
-    }
-
-RD_KW_SCALAR_SET_TYPED(int, RD_INT_TYPE)
-RD_KW_SCALAR_SET_TYPED(float, RD_FLOAT_TYPE)
-RD_KW_SCALAR_SET_TYPED(double, RD_DOUBLE_TYPE)
-RD_KW_SCALAR_SET_TYPED(bool, RD_BOOL_TYPE)
-#undef RD_KW_SCALAR_SET_TYPED
-
-void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value) {
-    rd_type_enum rd_type = rd_kw_get_type(rd_kw);
-    if (rd_type == RD_FLOAT_TYPE)
-        rd_kw_scalar_set_float(rd_kw, (float)value);
-    else if (rd_type == RD_DOUBLE_TYPE)
-        rd_kw_scalar_set_double(rd_kw, value);
-    else
-        throw std::invalid_argument("wrong type");
+bool rd::KW::size_and_numeric_type_equal(const rd::KW *kw2) const {
+    return this->size_and_type_equal(kw2) &&
+           rd_type_is_numeric(this->data_type());
 }
 
-#define RD_KW_SCALE_TYPED(ctype, RD_TYPE)                                      \
-    void rd_kw_scale_##ctype(rd_kw_type *rd_kw, ctype scale_factor) {          \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        {                                                                      \
-            ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            for (size_t i = 0; i < rd_kw->size(); i++)                         \
-                data[i] *= scale_factor;                                       \
-        }                                                                      \
-    }
-
-RD_KW_SCALE_TYPED(int, RD_INT_TYPE)
-RD_KW_SCALE_TYPED(float, RD_FLOAT_TYPE)
-RD_KW_SCALE_TYPED(double, RD_DOUBLE_TYPE)
-#undef RD_KW_SCALE_TYPED
-
-void rd_kw_scale_float_or_double(rd_kw_type *rd_kw, double scale_factor) {
-    rd_type_enum rd_type = rd_kw_get_type(rd_kw);
-    if (rd_type == RD_FLOAT_TYPE)
-        rd_kw_scale_float(rd_kw, (float)scale_factor);
-    else if (rd_type == RD_DOUBLE_TYPE)
-        rd_kw_scale_double(rd_kw, scale_factor);
-    else
-        throw std::invalid_argument("wrong type");
+void rd::KW::operator-=(const rd::KW &sub_kw) {
+    std::visit(
+        [&](auto &&target_alt) {
+            using T = typename std::decay_t<decltype(target_alt)>::value_type;
+            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> ||
+                          std::is_same_v<T, double>) {
+                if (!this->size_and_numeric_type_equal(&sub_kw))
+                    throw std::invalid_argument("type/size  mismatch");
+                auto &target_data = this->get_vector<T>();
+                const auto &sub_data = sub_kw.get_vector<T>();
+                for (size_t i = 0; i < target_data.size(); i++)
+                    target_data[i] -= sub_data[i];
+            } else
+                throw std::invalid_argument(
+                    fmt::format("inplace sub not implemented for type:{}",
+                                rd_type_name(this->data_type())));
+        },
+        this->data().value());
 }
 
-#define RD_KW_SHIFT_TYPED(ctype, RD_TYPE)                                      \
-    void rd_kw_shift_##ctype(rd_kw_type *rd_kw, ctype shift_value) {           \
-        if (rd_kw_get_type(rd_kw) != RD_TYPE)                                  \
-            throw std::invalid_argument(fmt::format(                           \
-                "Keyword: {} is wrong type", rd_kw_get_header8(rd_kw)));       \
-        {                                                                      \
-            ctype *data = (ctype *)rd_kw_get_data_ref(rd_kw);                  \
-            for (size_t i = 0; i < rd_kw->size(); i++)                         \
-                data[i] += shift_value;                                        \
-        }                                                                      \
-    }
-
-RD_KW_SHIFT_TYPED(int, RD_INT_TYPE)
-RD_KW_SHIFT_TYPED(float, RD_FLOAT_TYPE)
-RD_KW_SHIFT_TYPED(double, RD_DOUBLE_TYPE)
-#undef RD_KW_SHIFT_TYPED
-
-void rd_kw_shift_float_or_double(rd_kw_type *rd_kw, double shift_value) {
-    rd_type_enum rd_type = rd_kw_get_type(rd_kw);
-    if (rd_type == RD_FLOAT_TYPE)
-        rd_kw_shift_float(rd_kw, (float)shift_value);
-    else if (rd_type == RD_DOUBLE_TYPE)
-        rd_kw_shift_double(rd_kw, shift_value);
-    else
-        throw std::invalid_argument("wrong type");
-}
-
-bool rd_kw_size_and_numeric_type_equal(const rd_kw_type *kw1,
-                                       const rd_kw_type *kw2) {
-    return rd_kw_size_and_type_equal(kw1, kw2) &&
-           rd_type_is_numeric(kw1->data_type);
-}
-
-#define RD_KW_ASSERT_TYPED_BINARY_OP(ctype, RD_TYPE)                           \
-    bool rd_kw_assert_binary_##ctype(const rd_kw_type *kw1,                    \
-                                     const rd_kw_type *kw2) {                  \
-        if (!rd_kw_size_and_numeric_type_equal(kw1, kw2))                      \
-            return false;                                                      \
-        if (rd_kw_get_type(kw1) != RD_TYPE)                                    \
-            return false; /* Type mismatch */                                  \
-        return true;                                                           \
-    }
-
-RD_KW_ASSERT_TYPED_BINARY_OP(int, RD_INT_TYPE)
-RD_KW_ASSERT_TYPED_BINARY_OP(float, RD_FLOAT_TYPE)
-RD_KW_ASSERT_TYPED_BINARY_OP(double, RD_DOUBLE_TYPE)
-#undef RD_KW_ASSERT_TYPED_BINARY_OP
-
-void rd_kw_copy_indexed(rd_kw_type *target_kw,
-                        const std::vector<int> &index_set,
-                        const rd_kw_type *src_kw) {
-    if (!rd_kw_size_and_type_equal(target_kw, src_kw))
-        throw std::invalid_argument("type/size  mismatch");
-    char *target_data = (char *)rd_kw_get_data_ref(target_kw);
-    const char *src_data = (const char *)rd_kw_get_data_ref(src_kw);
-    int sizeof_ctype = rd_type_get_sizeof_ctype(target_kw->data_type);
-    for (const auto index : index_set)
-        memcpy(&target_data[index * sizeof_ctype],
-               &src_data[index * sizeof_ctype], sizeof_ctype);
-}
-
-#define RD_KW_TYPED_INPLACE_ADD_INDEXED(ctype)                                 \
-    static void rd_kw_inplace_add_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
-        const rd_kw_type *add_kw) {                                            \
-        if (!rd_kw_assert_binary_##ctype(target_kw, add_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
-        const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw);     \
-        for (const auto index : index_set)                                     \
-            target_data[index] += add_data[index];                             \
-    }
-
-RD_KW_TYPED_INPLACE_ADD_INDEXED(int)
-RD_KW_TYPED_INPLACE_ADD_INDEXED(double)
-RD_KW_TYPED_INPLACE_ADD_INDEXED(float)
-#undef RD_KW_TYPED_INPLACE_ADD
-
-void rd_kw_inplace_add_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
-                               const rd_kw_type *add_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_add_indexed_float(target_kw, index_set, add_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_add_indexed_double(target_kw, index_set, add_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_add_indexed_int(target_kw, index_set, add_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace add not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_ADD(ctype)                                         \
-    static void rd_kw_inplace_add_##ctype(rd_kw_type *target_kw,               \
-                                          const rd_kw_type *add_kw) {          \
-        if (!rd_kw_assert_binary_##ctype(target_kw, add_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw); \
-            for (size_t i = 0; i < target_kw->size(); i++)                     \
-                target_data[i] += add_data[i];                                 \
-        }                                                                      \
-    }
-RD_KW_TYPED_INPLACE_ADD(int)
-RD_KW_TYPED_INPLACE_ADD(double)
-RD_KW_TYPED_INPLACE_ADD(float)
-
-#undef RD_KW_TYPED_INPLACE_ADD
-
-void rd_kw_inplace_add(rd_kw_type *target_kw, const rd_kw_type *add_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_add_float(target_kw, add_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_add_double(target_kw, add_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_add_int(target_kw, add_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace add not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_ADD_SQUARED(ctype)                                 \
-    static void rd_kw_inplace_add_squared_##ctype(rd_kw_type *target_kw,       \
-                                                  const rd_kw_type *add_kw) {  \
-        if (!rd_kw_assert_binary_##ctype(target_kw, add_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *add_data = (const ctype *)rd_kw_get_data_ref(add_kw); \
-            for (size_t i = 0; i < target_kw->size(); i++)                     \
-                target_data[i] += add_data[i] * add_data[i];                   \
-        }                                                                      \
-    }
-RD_KW_TYPED_INPLACE_ADD_SQUARED(int)
-RD_KW_TYPED_INPLACE_ADD_SQUARED(double)
-RD_KW_TYPED_INPLACE_ADD_SQUARED(float)
-
-#undef RD_KW_TYPED_INPLACE_ADD
-
-void rd_kw_inplace_add_squared(rd_kw_type *target_kw,
-                               const rd_kw_type *add_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_add_squared_float(target_kw, add_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_add_squared_double(target_kw, add_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_add_squared_int(target_kw, add_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace add not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_SUB(ctype)                                         \
-    void rd_kw_inplace_sub_##ctype(rd_kw_type *target_kw,                      \
-                                   const rd_kw_type *sub_kw) {                 \
-        if (!rd_kw_assert_binary_##ctype(target_kw, sub_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *sub_data = (const ctype *)rd_kw_get_data_ref(sub_kw); \
-            for (size_t i = 0; i < target_kw->size(); i++)                     \
-                target_data[i] -= sub_data[i];                                 \
-        }                                                                      \
-    }
-RD_KW_TYPED_INPLACE_SUB(int)
-RD_KW_TYPED_INPLACE_SUB(double)
-RD_KW_TYPED_INPLACE_SUB(float)
-#undef RD_KW_TYPED_INPLACE_SUB
-
-void rd_kw_inplace_sub(rd_kw_type *target_kw, const rd_kw_type *sub_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_sub_float(target_kw, sub_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_sub_double(target_kw, sub_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_sub_int(target_kw, sub_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace sub not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_SUB_INDEXED(ctype)                                 \
-    static void rd_kw_inplace_sub_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
-        const rd_kw_type *sub_kw) {                                            \
-        if (!rd_kw_assert_binary_##ctype(target_kw, sub_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
-        const ctype *sub_data = (const ctype *)rd_kw_get_data_ref(sub_kw);     \
-        for (const auto index : index_set)                                     \
-            target_data[index] -= sub_data[index];                             \
-    }
-
-RD_KW_TYPED_INPLACE_SUB_INDEXED(int)
-RD_KW_TYPED_INPLACE_SUB_INDEXED(double)
-RD_KW_TYPED_INPLACE_SUB_INDEXED(float)
-#undef RD_KW_TYPED_INPLACE_SUB
-
-void rd_kw_inplace_sub_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
-                               const rd_kw_type *sub_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_sub_indexed_float(target_kw, index_set, sub_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_sub_indexed_double(target_kw, index_set, sub_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_sub_indexed_int(target_kw, index_set, sub_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace sub not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_ABS(ctype, abs_func)                               \
-    void rd_kw_inplace_abs_##ctype(rd_kw_type *kw) {                           \
-        ctype *data = (ctype *)rd_kw_get_data_ref(kw);                         \
-        for (size_t i = 0; i < kw->size(); i++)                                \
-            data[i] = abs_func(data[i]);                                       \
-    }
-
-RD_KW_TYPED_INPLACE_ABS(int, abs)
-RD_KW_TYPED_INPLACE_ABS(double, fabs)
-RD_KW_TYPED_INPLACE_ABS(float, fabsf)
-#undef RD_KW_TYPED_INPLACE_ABS
-
-void rd_kw_inplace_abs(rd_kw_type *kw) {
-    rd_type_enum type = rd_kw_get_type(kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_abs_float(kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_abs_double(kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_abs_int(kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace abs not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(kw))));
-    }
-}
-
-static int sqrti(int x) { return static_cast<int>(round(sqrt(x))); }
-
-#define RD_KW_TYPED_INPLACE_SQRT(ctype, sqrt_func)                             \
-    void rd_kw_inplace_sqrt_##ctype(rd_kw_type *kw) {                          \
-        ctype *data = (ctype *)rd_kw_get_data_ref(kw);                         \
-        for (size_t i = 0; i < kw->size(); i++)                                \
-            data[i] = sqrt_func(data[i]);                                      \
-    }
-
-RD_KW_TYPED_INPLACE_SQRT(double, sqrt)
-RD_KW_TYPED_INPLACE_SQRT(float, sqrtf)
-RD_KW_TYPED_INPLACE_SQRT(int, sqrti)
-#undef RD_KW_TYPED_INPLACE_SQRT
-
-void rd_kw_inplace_sqrt(rd_kw_type *kw) {
-    rd_type_enum type = rd_kw_get_type(kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_sqrt_float(kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_sqrt_double(kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_sqrt_int(kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace sqrt not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_MUL(ctype)                                         \
-    void rd_kw_inplace_mul_##ctype(rd_kw_type *target_kw,                      \
-                                   const rd_kw_type *mul_kw) {                 \
-        if (!rd_kw_assert_binary_##ctype(target_kw, mul_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *mul_data = (const ctype *)rd_kw_get_data_ref(mul_kw); \
-            for (size_t i = 0; i < target_kw->size(); i++)                     \
-                target_data[i] *= mul_data[i];                                 \
-        }                                                                      \
-    }
-RD_KW_TYPED_INPLACE_MUL(int)
-RD_KW_TYPED_INPLACE_MUL(double)
-RD_KW_TYPED_INPLACE_MUL(float)
-#undef RD_KW_TYPED_INPLACE_MUL
-
-void rd_kw_inplace_mul(rd_kw_type *target_kw, const rd_kw_type *mul_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_mul_float(target_kw, mul_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_mul_double(target_kw, mul_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_mul_int(target_kw, mul_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace mul not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_MUL_INDEXED(ctype)                                 \
-    static void rd_kw_inplace_mul_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
-        const rd_kw_type *mul_kw) {                                            \
-        if (!rd_kw_assert_binary_##ctype(target_kw, mul_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
-        const ctype *mul_data = (const ctype *)rd_kw_get_data_ref(mul_kw);     \
-        for (const auto index : index_set)                                     \
-            target_data[index] *= mul_data[index];                             \
-    }
-
-RD_KW_TYPED_INPLACE_MUL_INDEXED(int)
-RD_KW_TYPED_INPLACE_MUL_INDEXED(double)
-RD_KW_TYPED_INPLACE_MUL_INDEXED(float)
-#undef RD_KW_TYPED_INPLACE_MUL
-
-void rd_kw_inplace_mul_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
-                               const rd_kw_type *mul_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_mul_indexed_float(target_kw, index_set, mul_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_mul_indexed_double(target_kw, index_set, mul_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_mul_indexed_int(target_kw, index_set, mul_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace mul not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_DIV(ctype)                                         \
-    void rd_kw_inplace_div_##ctype(rd_kw_type *target_kw,                      \
-                                   const rd_kw_type *div_kw) {                 \
-        if (!rd_kw_assert_binary_##ctype(target_kw, div_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        {                                                                      \
-            ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);       \
-            const ctype *div_data = (const ctype *)rd_kw_get_data_ref(div_kw); \
-            for (size_t i = 0; i < target_kw->size(); i++)                     \
-                target_data[i] /= div_data[i];                                 \
-        }                                                                      \
-    }
-RD_KW_TYPED_INPLACE_DIV(int)
-RD_KW_TYPED_INPLACE_DIV(double)
-RD_KW_TYPED_INPLACE_DIV(float)
-#undef RD_KW_TYPED_INPLACE_DIV
-
-void rd_kw_inplace_div(rd_kw_type *target_kw, const rd_kw_type *div_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_div_float(target_kw, div_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_div_double(target_kw, div_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_div_int(target_kw, div_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace div not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-#define RD_KW_TYPED_INPLACE_DIV_INDEXED(ctype)                                 \
-    static void rd_kw_inplace_div_indexed_##ctype(                             \
-        rd_kw_type *target_kw, const std::vector<int> &index_set,              \
-        const rd_kw_type *div_kw) {                                            \
-        if (!rd_kw_assert_binary_##ctype(target_kw, div_kw))                   \
-            throw std::invalid_argument("type/size  mismatch");                \
-        ctype *target_data = (ctype *)rd_kw_get_data_ref(target_kw);           \
-        const ctype *div_data = (const ctype *)rd_kw_get_data_ref(div_kw);     \
-        for (const auto index : index_set)                                     \
-            target_data[index] /= div_data[index];                             \
-    }
-
-RD_KW_TYPED_INPLACE_DIV_INDEXED(int)
-RD_KW_TYPED_INPLACE_DIV_INDEXED(double)
-RD_KW_TYPED_INPLACE_DIV_INDEXED(float)
-#undef RD_KW_TYPED_INPLACE_DIV
-
-void rd_kw_inplace_div_indexed(rd_kw_type *target_kw,
-                               const std::vector<int> &index_set,
-                               const rd_kw_type *div_kw) {
-    rd_type_enum type = rd_kw_get_type(target_kw);
-    switch (type) {
-    case (RD_FLOAT_TYPE):
-        rd_kw_inplace_div_indexed_float(target_kw, index_set, div_kw);
-        break;
-    case (RD_DOUBLE_TYPE):
-        rd_kw_inplace_div_indexed_double(target_kw, index_set, div_kw);
-        break;
-    case (RD_INT_TYPE):
-        rd_kw_inplace_div_indexed_int(target_kw, index_set, div_kw);
-        break;
-    default:
-        throw std::invalid_argument(
-            fmt::format("inplace div not implemented for type:{}",
-                        rd_type_name(rd_kw_get_data_type(target_kw))));
-    }
-}
-
-bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
-    if (rd_kw_get_type(target_kw) != RD_FLOAT_TYPE)
-        return false;
-
-    if (rd_kw_get_type(divisor) != RD_INT_TYPE)
-        return false;
-
-    float *target_data = (float *)rd_kw_get_data_ref(target_kw);
-    const int *div_data = (const int *)rd_kw_get_data_ref(divisor);
-    for (size_t i = 0; i < target_kw->size(); i++) {
-        if (div_data[i] != 0)
-            target_data[i] /= static_cast<float>(div_data[i]);
-    }
-
-    return true;
-}
-
-#define KW_MAX_MIN(type)                                                       \
-    {                                                                          \
-        type *data = (type *)rd_kw_get_data_ref(rd_kw);                        \
-        type max = data[0];                                                    \
-        type min = data[0];                                                    \
-        for (size_t i = 1; i < rd_kw->size(); i++)                             \
-            util_update_##type##_max_min(data[i], &max, &min);                 \
-        memcpy(_max, &max, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
-        memcpy(_min, &min, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
-    }
-
-#define RD_KW_MAX_MIN(ctype)                                                   \
-    void rd_kw_max_min_##ctype(const rd_kw_type *rd_kw, ctype *_max,           \
-                               ctype *_min) {                                  \
-        if (rd_kw->size() < 1)                                                 \
-            throw std::invalid_argument(                                       \
-                "size of zero length array is undefined");                     \
-        KW_MAX_MIN(ctype);                                                     \
-    }
-
-#define RD_KW_MAX(ctype)                                                       \
-    ctype rd_kw_##ctype##_max(const rd_kw_type *rd_kw) {                       \
-        ctype max, min;                                                        \
-        rd_kw_max_min_##ctype(rd_kw, &max, &min);                              \
-        return max;                                                            \
-    }
-
-#define RD_KW_MIN(ctype)                                                       \
-    ctype rd_kw_##ctype##_min(const rd_kw_type *rd_kw) {                       \
-        ctype max, min;                                                        \
-        rd_kw_max_min_##ctype(rd_kw, &max, &min);                              \
-        return min;                                                            \
-    }
-
-RD_KW_MAX_MIN(int)
-RD_KW_MAX_MIN(float)
-RD_KW_MAX_MIN(double)
-
-RD_KW_MAX(int)
-RD_KW_MAX(float)
-RD_KW_MAX(double)
-
-RD_KW_MIN(int)
-RD_KW_MIN(float)
-RD_KW_MIN(double)
-
-#undef RD_KW_MAX
-#undef RD_KW_MIN
-#undef KW_MAX_MIN
-#undef RD_KW_MAX_MIN
-
-#define KW_SUM_INDEXED(type)                                                   \
-    {                                                                          \
-        const type *data = (const type *)rd_kw_get_data_ref(rd_kw);            \
-        type sum = 0;                                                          \
-        for (auto const i : index_list)                                        \
-            sum += data[i];                                                    \
-        memcpy(_sum, &sum, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
-    }
-
-void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
-                               const std::vector<int> &index_list, void *_sum) {
-    switch (rd_kw_get_type(rd_kw)) {
-    case (RD_FLOAT_TYPE):
-        KW_SUM_INDEXED(float);
-        break;
-    case (RD_DOUBLE_TYPE):
-        KW_SUM_INDEXED(double);
-        break;
-    case (RD_INT_TYPE):
-        KW_SUM_INDEXED(int);
-        break;
-    case (RD_BOOL_TYPE): {
-        const bool *data = (const bool *)rd_kw_get_data_ref(rd_kw);
-        int sum = 0;
-        for (const auto i : index_list)
-            sum += (data[i]);
-
-        memcpy(_sum, &sum, sizeof sum);
-    } break;
-    default:
-        throw std::invalid_argument("invalid type for element sum");
-    }
-}
-#undef KW_SUM
-
-#define KW_SUM(type)                                                           \
-    {                                                                          \
-        const type *data = (const type *)rd_kw_get_data_ref(rd_kw);            \
-        type sum = 0;                                                          \
-        for (size_t i = 0; i < rd_kw->size(); i++)                             \
-            sum += data[i];                                                    \
-        memcpy(_sum, &sum, rd_type_get_sizeof_ctype(rd_kw->data_type));        \
-    }
-
-void rd_kw_element_sum(const rd_kw_type *rd_kw, void *_sum) {
-    switch (rd_kw_get_type(rd_kw)) {
-    case (RD_FLOAT_TYPE):
-        KW_SUM(float);
-        break;
-    case (RD_DOUBLE_TYPE):
-        KW_SUM(double);
-        break;
-    case (RD_INT_TYPE):
-        KW_SUM(int);
-        break;
-    default:
-        throw std::invalid_argument("invalid type for element sum");
-    }
-}
-#undef KW_SUM
-
-double rd_kw_element_sum_float(const rd_kw_type *rd_kw) {
-    float float_sum;
-    double double_sum;
-    void *sum_ptr = NULL;
-
-    if (rd_type_is_double(rd_kw->data_type))
-        sum_ptr = &double_sum;
-    else if (rd_type_is_float(rd_kw->data_type))
-        sum_ptr = &float_sum;
-    else
-        throw std::invalid_argument("invalid type:");
-
-    rd_kw_element_sum(rd_kw, sum_ptr);
-
-    if (rd_type_is_double(rd_kw->data_type))
-        return double_sum;
-    else if (rd_type_is_float(rd_kw->data_type))
-        return float_sum;
-    else
-        return 0;
-}
-
-int rd_kw_element_sum_int(const rd_kw_type *rd_kw) {
-    int int_sum;
-    rd_kw_element_sum(rd_kw, &int_sum);
-
-    return int_sum;
-}
-
-static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
-                                      const rd_kw_type *rd_kw2, size_t offset,
-                                      double abs_epsilon, double rel_epsilon) {
+static bool elm_equal_numeric(const rd::KW *rd_kw1, const rd::KW *rd_kw2,
+                              size_t offset, double abs_epsilon,
+                              double rel_epsilon) {
     double v1 = rd_kw1->as_double(offset);
     double v2 = rd_kw2->as_double(offset);
     return util_double_approx_equal__(v1, v2, rel_epsilon, abs_epsilon);
 }
 
-static bool rd_kw_elm_equal__(const rd_kw_type *rd_kw1,
-                              const rd_kw_type *rd_kw2, size_t offset) {
-    size_t data_offset = offset * rd_type_get_sizeof_ctype(rd_kw1->data_type);
-    int cmp = memcmp(&rd_kw1->data[data_offset], &rd_kw2->data[data_offset],
-                     rd_type_get_sizeof_ctype(rd_kw1->data_type));
-    if (cmp == 0)
-        return true;
-    else
-        return false;
-}
-
-size_t rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
-                             size_t offset, double abs_epsilon,
-                             double rel_epsilon) {
-    if (!rd_kw_size_and_type_equal(rd_kw1, rd_kw2))
+size_t rd::KW::first_different(const rd::KW *rd_kw2, size_t offset,
+                               double abs_epsilon, double rel_epsilon) const {
+    if (!size_and_type_equal(rd_kw2))
         throw std::invalid_argument("sorry invalid comparison");
 
-    if (offset >= rd_kw1->size())
+    if (offset >= this->size())
         throw std::invalid_argument(fmt::format(
             "offset value in first_difference exceeded size: {}", offset));
 
-    bool numeric_compare = false;
+    bool numeric_compare =
+        ((abs_epsilon > 0) || (rel_epsilon > 0)) &&
+        ((get_type() == RD_FLOAT_TYPE) || (get_type() == RD_DOUBLE_TYPE));
 
-    if (((abs_epsilon > 0) || (rel_epsilon > 0)) &&
-        ((rd_kw_get_type(rd_kw1) == RD_FLOAT_TYPE) ||
-         (rd_kw_get_type(rd_kw1) == RD_DOUBLE_TYPE)))
-        numeric_compare = true;
-    for (size_t index = offset; index < rd_kw1->size(); index++) {
-        bool equal = (numeric_compare)
-                         ? rd_kw_elm_equal_numeric__(rd_kw1, rd_kw2, index,
-                                                     abs_epsilon, rel_epsilon)
-                         : rd_kw_elm_equal__(rd_kw1, rd_kw2, index);
-        if (!equal)
-            return index;
+    if (numeric_compare) {
+        for (size_t index = offset; index < this->size(); index++)
+            if (!elm_equal_numeric(this, rd_kw2, index, abs_epsilon,
+                                   rel_epsilon))
+                return index;
+        return this->size();
+    } else {
+        auto &vec1 = this->data().value();
+        auto &vec2 = rd_kw2->data().value();
+        return std::visit(
+            [&vec2, offset](const auto &v1) -> size_t {
+                using T = std::decay_t<decltype(v1)>;
+                const T &v2 = std::get<T>(vec2);
+                if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+                    for (size_t index = offset; index < v2.size(); index++)
+                        if (v1[index] != v2[index])
+                            return index;
+                    return v2.size();
+                } else {
+                    // Apply byte-wise comparison for floating points to preserve NaN behavior
+                    using ElemT = typename T::value_type;
+                    auto it1 =
+                        std::mismatch(
+                            v1.begin() + offset, v1.begin() + v1.size(),
+                            v2.begin() + offset,
+                            [](const ElemT &a, const ElemT &b) {
+                                return std::memcmp(&a, &b, sizeof(ElemT)) == 0;
+                            })
+                            .first;
+                    if (it1 == v1.begin() + v1.size()) {
+                        return v1.size(); // No mismatch found
+                    }
+                    return std::distance(v1.begin(), it1);
+                }
+            },
+            vec1);
     }
-    return rd_kw1->size();
 }
 
 /*
@@ -2096,11 +1341,9 @@ size_t rd_kw_first_different(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
       otherwise the value will not be changed. Neighbouring cells with
       value zero are not considered when comparing.
 */
-
-void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
-                             const int *actnum) {
+void rd::KW::fix_uninitialized(int nx, int ny, int nz, const int *actnum) {
     int i, j, k;
-    int *data = (int *)rd_kw_get_ptr(rd_kw);
+    std::vector<int> &data = get_vector<int>();
 
     auto undetermined1 = std::make_unique<std::vector<int>>();
     auto undetermined2 = std::make_unique<std::vector<int>>();
@@ -2197,25 +1440,24 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
     }
 }
 
-rd_kw_ptr rd_kw_struct::make_actnum(const rd_kw_type *porv_kw,
-                                    float porv_limit) {
-    if (!rd_type_is_float(porv_kw->data_type))
+std::unique_ptr<rd::KW> rd::KW::make_actnum(const rd::KW *porv_kw,
+                                            float porv_limit) {
+    if (!rd_type_is_float(porv_kw->data_type()))
         return NULL;
 
-    if (!util_string_equal(PORV_KW, rd_kw_get_header(porv_kw)))
+    if (porv_kw->header() != PORV_KW)
         return NULL;
 
-    const int size = rd_kw_get_size(porv_kw);
-    auto actnum_kw = make_rd_kw(ACTNUM_KW, size, RD_INT);
-    const float *porv_values = rd_kw_get_float_ptr(porv_kw);
-    int *actnum_values = rd_kw_get_int_ptr(actnum_kw.get());
+    const size_t size = porv_kw->size();
+    std::vector<int> actnum_values(size, 0);
+    const std::vector<float> &porv_values = porv_kw->get_vector<float>();
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (porv_values[i] > porv_limit)
             actnum_values[i] = 1;
         else
             actnum_values[i] = 0;
     }
 
-    return actnum_kw;
+    return std::make_unique<rd::KW>(ACTNUM_KW, actnum_values);
 }

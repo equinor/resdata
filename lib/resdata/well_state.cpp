@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -72,38 +73,26 @@ bool WellState::add_rates(rd::FileView *rst_view, int well_nr) {
 }
 
 /** This function assumes that the rd_file state has been restricted
-  to one LGR block.
-
-  Return value -1 means that the well is not found in this LGR at
-  all. */
-int WellState::get_lgr_well_nr(rd::FileView *file_view) {
-    int well_nr = -1;
+  to one LGR block.*/
+std::optional<size_t> WellState::get_lgr_well_nr(rd::FileView *file_view) {
 
     if (file_view->has_kw(ZWEL_KW)) {
         auto header = RSTHead::read(file_view, -1);
-        const rd_kw_type *zwel_kw = file_view->get_kw(ZWEL_KW, 0);
-        int num_wells = header.nwells;
-        well_nr = 0;
-        while (true) {
-            bool found = false;
+        const rd::KW *zwel_kw = file_view->get_kw(ZWEL_KW, 0);
+        if (header.nwells <= 0)
+            return std::nullopt;
+        if (header.nzwelz <= 0)
+            return std::nullopt;
+        size_t num_wells = static_cast<size_t>(header.nwells);
+        size_t nzwelz = static_cast<size_t>(header.nzwelz);
+        for (size_t well_nr = 0; well_nr < num_wells; well_nr++) {
             std::string lgr_well_name =
-                rd_kw_iget_stripped_string(zwel_kw, well_nr * header.nzwelz);
-
+                rd::strip_spaces(zwel_kw->at<std::string>(well_nr * nzwelz));
             if (this->name == lgr_well_name)
-                found = true;
-            else
-                well_nr++;
-
-            if (found)
-                break;
-            else if (well_nr == num_wells) {
-                // The well is not in this LGR at all.
-                well_nr = -1;
-                break;
-            }
+                return well_nr;
         }
     }
-    return well_nr;
+    return std::nullopt;
 }
 
 WellType well_state_translate_rd_type_int(int int_type) {
@@ -197,10 +186,10 @@ void WellState::add_LGR_connections(const rd_grid_type *grid,
            information can also be found in the restart file. */
         if (lgr_view) {
             const char *grid_name = rd_grid_iget_lgr_name(grid, lgr_index);
-            int well_nr = get_lgr_well_nr(lgr_view.get());
-            if (well_nr >= 0)
+            auto well_nr = get_lgr_well_nr(lgr_view.get());
+            if (well_nr.has_value())
                 add_connections(lgr_view.get(), grid_name, lgr_index + 1,
-                                well_nr);
+                                static_cast<int>(*well_nr));
         }
     }
 }
@@ -273,7 +262,7 @@ std::shared_ptr<WellState> WellState::read_wells_in_restart(
 
         const int zwel_offset = global_header.nzwelz * global_well_nr;
         std::string name =
-            rd_kw_iget_stripped_string(global_zwel_kw, zwel_offset);
+            rd::strip_spaces(global_zwel_kw->at<std::string>(zwel_offset));
 
         auto well_state =
             std::make_shared<WellState>(name, global_well_nr, open, type,

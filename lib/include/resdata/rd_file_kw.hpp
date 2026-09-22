@@ -41,9 +41,9 @@ public:
 
         It is the users responsibility that the @offset argument comes
         from the same fortio instance as used when calling get_kw().*/
-    FileKW(const rd_kw_type *rd_kw, offset_type offset)
-        : FileKW(offset, rd_kw_get_data_type(rd_kw), rd_kw_get_size(rd_kw),
-                 rd_kw_get_header(rd_kw)) {}
+    FileKW(const rd::KW *rd_kw, offset_type offset)
+        : FileKW(offset, rd_kw->data_type(), rd::kw_get_size(rd_kw),
+                 rd_kw->header()) {}
     [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
             return false;
