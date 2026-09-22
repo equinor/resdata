@@ -147,7 +147,7 @@ std::unique_ptr<rd::KW> build_xwel(const Dims &d) {
 
 struct NamedKw {
     std::string name;
-    rd_kw_ptr kw;
+    std::unique_ptr<rd::KW> kw;
 };
 
 std::vector<NamedKw> build_all(const Dims &d) {
