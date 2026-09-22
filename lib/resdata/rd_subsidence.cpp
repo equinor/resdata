@@ -76,12 +76,12 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
     const auto &global_index = grid_cache.global_index();
     const size_t size = grid_cache.size();
 
-    rd_kw_type *init_porv_kw =
+    rd::KW *init_porv_kw =
         rd_subsidence->init_file->get_kw(PORV_KW, 0); /*Global indexing*/
-    rd_kw_type *pressure_kw =
+    rd::KW *pressure_kw =
         restart_view->get_kw(PRESSURE_KW, 0); /*Active indexing*/
 
-    rd_kw_type *rporv_kw = nullptr;
+    rd::KW *rporv_kw = nullptr;
     if (restart_view->has_kw(RPORV_KW)) {
         survey->dynamic_porevolume =
             std::vector<double>(rd_subsidence->grid_cache->size(), 0.0);

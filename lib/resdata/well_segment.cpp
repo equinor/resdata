@@ -13,9 +13,9 @@
 #include <resdata/well/well_segment.hpp>
 
 std::shared_ptr<WellSegment>
-WellSegment::from_kw(const rd_kw_type *iseg_kw,
-                     well_rseg_loader_type *rseg_loader, const RSTHead &header,
-                     int well_nr, int segment_index, int segment_id) {
+WellSegment::from_kw(const rd::KW *iseg_kw, well_rseg_loader_type *rseg_loader,
+                     const RSTHead &header, int well_nr, int segment_index,
+                     int segment_id) {
     if (!rseg_loader) {
         throw std::invalid_argument(
             "fatal internal error - tried to create well_segment "

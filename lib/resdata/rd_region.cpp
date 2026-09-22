@@ -53,8 +53,8 @@
    --------
 
    rd_grid_type   * rd_grid;
-   rd_kw_type     * soil;
-   rd_kw_type     * regions;
+   rd::KW     * soil;
+   rd::KW     * regions;
    rd_region_type * rd_region;
 
    // Load grid, soil and regions somehow.
@@ -189,7 +189,7 @@ void rd_region_reset(rd_region_type *rd_region) {
 }
 
 static void rd_region_select_equal__(rd_region_type *region,
-                                     const rd_kw_type *rd_kw, int value,
+                                     const rd::KW *rd_kw, int value,
                                      bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
@@ -216,18 +216,18 @@ static void rd_region_select_equal__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_select_equal(rd_region_type *region, const rd::KW *rd_kw,
                             int value) {
     rd_region_select_equal__(region, rd_kw, value, true);
 }
 
-void rd_region_deselect_equal(rd_region_type *region, const rd_kw_type *rd_kw,
+void rd_region_deselect_equal(rd_region_type *region, const rd::KW *rd_kw,
                               int value) {
     rd_region_select_equal__(region, rd_kw, value, false);
 }
 
 static void rd_region_select_bool_equal__(rd_region_type *region,
-                                          const rd_kw_type *rd_kw, bool value,
+                                          const rd::KW *rd_kw, bool value,
                                           bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
@@ -254,18 +254,17 @@ static void rd_region_select_bool_equal__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw) {
+void rd_region_select_true(rd_region_type *region, const rd::KW *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, true, true);
 }
 
-void rd_region_select_false(rd_region_type *region, const rd_kw_type *rd_kw) {
+void rd_region_select_false(rd_region_type *region, const rd::KW *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, false, true);
 }
 
 static void rd_region_select_in_interval__(rd_region_type *region,
-                                           const rd_kw_type *rd_kw,
-                                           float min_value, float max_value,
-                                           bool select) {
+                                           const rd::KW *rd_kw, float min_value,
+                                           float max_value, bool select) {
     bool global_kw;
     rd_region_assert_kw(region, rd_kw, &global_kw);
     if (!rd_type_is_float(rd_kw->data_type()))
@@ -295,15 +294,13 @@ static void rd_region_select_in_interval__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_in_interval(rd_region_type *region,
-                                  const rd_kw_type *rd_kw, float min_value,
-                                  float max_value) {
+void rd_region_select_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                  float min_value, float max_value) {
     rd_region_select_in_interval__(region, rd_kw, min_value, max_value, true);
 }
 
-void rd_region_deselect_in_interval(rd_region_type *region,
-                                    const rd_kw_type *rd_kw, float min_value,
-                                    float max_value) {
+void rd_region_deselect_in_interval(rd_region_type *region, const rd::KW *rd_kw,
+                                    float min_value, float max_value) {
     rd_region_select_in_interval__(region, rd_kw, min_value, max_value, false);
 }
 
@@ -317,7 +314,7 @@ void rd_region_deselect_in_interval(rd_region_type *region,
   NBNBNBNB: Select >= on float values and select > on integer!!!!!!
 */
 static void rd_region_select_with_limit__(rd_region_type *region,
-                                          const rd_kw_type *rd_kw, float limit,
+                                          const rd::KW *rd_kw, float limit,
                                           bool select_less, bool select) {
     bool global_kw;
     rd_data_type data_type = rd_kw->data_type();
@@ -426,23 +423,23 @@ static void rd_region_select_with_limit__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_select_smaller(rd_region_type *rd_region,
-                              const rd_kw_type *rd_kw, float limit) {
+void rd_region_select_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                              float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, true, true);
 }
 
-void rd_region_deselect_smaller(rd_region_type *rd_region,
-                                const rd_kw_type *rd_kw, float limit) {
+void rd_region_deselect_smaller(rd_region_type *rd_region, const rd::KW *rd_kw,
+                                float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, true, false);
 }
 
-void rd_region_select_larger(rd_region_type *rd_region, const rd_kw_type *rd_kw,
+void rd_region_select_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
                              float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, false, true);
 }
 
-void rd_region_deselect_larger(rd_region_type *rd_region,
-                               const rd_kw_type *rd_kw, float limit) {
+void rd_region_deselect_larger(rd_region_type *rd_region, const rd::KW *rd_kw,
+                               float limit) {
     rd_region_select_with_limit__(rd_region, rd_kw, limit, false, false);
 }
 
@@ -450,9 +447,9 @@ void rd_region_deselect_larger(rd_region_type *rd_region,
     Selection based on comparing two keywords.
 */
 
-static void rd_region_cmp_select__(rd_region_type *region,
-                                   const rd_kw_type *kw1, const rd_kw_type *kw2,
-                                   bool select_less, bool select) {
+static void rd_region_cmp_select__(rd_region_type *region, const rd::KW *kw1,
+                                   const rd::KW *kw2, bool select_less,
+                                   bool select) {
     bool global_kw;
     rd_region_assert_kw(region, kw1, &global_kw);
     if (!rd_type_is_float(kw1->data_type()))
@@ -497,23 +494,23 @@ static void rd_region_cmp_select__(rd_region_type *region,
     rd_region_invalidate_index_list(region);
 }
 
-void rd_region_cmp_select_less(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2) {
+void rd_region_cmp_select_less(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, true, true);
 }
 
-void rd_region_cmp_deselect_less(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2) {
+void rd_region_cmp_deselect_less(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, true, false);
 }
 
-void rd_region_cmp_select_more(rd_region_type *rd_region, const rd_kw_type *kw1,
-                               const rd_kw_type *kw2) {
+void rd_region_cmp_select_more(rd_region_type *rd_region, const rd::KW *kw1,
+                               const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, false, true);
 }
 
-void rd_region_cmp_deselect_more(rd_region_type *rd_region,
-                                 const rd_kw_type *kw1, const rd_kw_type *kw2) {
+void rd_region_cmp_deselect_more(rd_region_type *rd_region, const rd::KW *kw1,
+                                 const rd::KW *kw2) {
     rd_region_cmp_select__(rd_region, kw1, kw2, false, false);
 }
 
@@ -1051,7 +1048,7 @@ void rd_region_subtract(rd_region_type *region,
 }
 
 const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                    const rd_kw_type *rd_kw,
+                                                    const rd::KW *rd_kw,
                                                     bool force_active) {
     int kw_size = rd::kw_get_size(rd_kw);
     int grid_active = rd_grid_get_active_size(rd_region->parent_grid);

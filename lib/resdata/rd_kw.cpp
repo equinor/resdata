@@ -837,8 +837,8 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 /**
    Allocates storage and reads data.
 */
-bool rd_kw_struct::fskip_data(rd_data_type data_type, const int element_count,
-                              ERT::FortIO &fortio) {
+bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
+                        ERT::FortIO &fortio) {
     if (element_count <= 0)
         return true;
 
@@ -937,7 +937,7 @@ std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
         return {nullptr};
 }
 
-static void rd_kw_fwrite_data_unformatted(const rd_kw_type *rd_kw,
+static void rd_kw_fwrite_data_unformatted(const rd::KW *rd_kw,
                                           ERT::FortIO &fortio) {
     auto iobuffer = alloc_output_buffer(rd_kw);
     size_t sizeof_iotype = rd_kw->iotype_size();
@@ -1039,7 +1039,7 @@ void rd::KW::fwrite_data(ERT::FortIO &fortio) const {
         rd_kw_fwrite_data_unformatted(this, fortio);
 }
 
-void rd_kw_fwrite_header(const rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+void rd_kw_fwrite_header(const rd::KW *rd_kw, ERT::FortIO &fortio) {
     std::ostream &stream = fortio.get_ostream();
     bool fmt_file = fortio.fmt_file();
     std::string type_name = rd_type_name(rd_kw->data_type());

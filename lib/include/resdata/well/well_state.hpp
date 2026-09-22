@@ -123,8 +123,8 @@ class WellState {
     std::map<std::string, std::shared_ptr<WellConnection>>
         name_wellhead; // A WellConnection for the wellhead - indexed by lgr_name.
 
-    void add_wellhead(const RSTHead &header, const rd_kw_type *iwel_kw,
-                      int well_nr, const std::string &grid_name, int grid_nr);
+    void add_wellhead(const RSTHead &header, const rd::KW *iwel_kw, int well_nr,
+                      const std::string &grid_name, int grid_nr);
     bool add_rates(rd::FileView *rst_view, int well_nr);
     std::optional<size_t> get_lgr_well_nr(rd::FileView *file_view);
     void add_connections(rd::FileView *rst_view, const std::string &grid_name,

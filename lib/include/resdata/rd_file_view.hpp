@@ -22,7 +22,7 @@
 
 namespace rd {
 
-using inv_map_type = std::unordered_map<const rd_kw_type *, FileKW *>;
+using inv_map_type = std::unordered_map<const rd::KW *, FileKW *>;
 
 struct FileContext {
     ERT::FortIO fortio;
@@ -43,7 +43,7 @@ class FileView {
                                                       size_t ith) const {
         return get_file_kw(kw_index.at(kw).at(ith));
     }
-    [[nodiscard]] rd_kw_type *get_kw(const std::shared_ptr<FileKW> &file_kw);
+    [[nodiscard]] rd::KW *get_kw(const std::shared_ptr<FileKW> &file_kw);
     [[nodiscard]] size_t get_occurence(size_t global_index);
 
     /** Validates the arguments of index_fload_kw and returns the keyword.
@@ -137,8 +137,8 @@ public:
     [[nodiscard]] bool has_kw(const std::string &kw) const {
         return kw_index.find(kw) != kw_index.end();
     }
-    rd_kw_type *get_kw(size_t index) { return get_kw(get_file_kw(index)); }
-    rd_kw_type *get_kw(const std::string &kw, size_t ith) {
+    rd::KW *get_kw(size_t index) { return get_kw(get_file_kw(index)); }
+    rd::KW *get_kw(const std::string &kw, size_t ith) {
         return get_kw(get_file_kw(kw, ith));
     }
 

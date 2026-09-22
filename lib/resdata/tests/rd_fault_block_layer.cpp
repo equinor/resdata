@@ -13,7 +13,7 @@
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/rd_type.hpp>
 
-void test_create(rd_grid_type *grid, rd_kw_type *fault_block_kw) {
+void test_create(rd_grid_type *grid, rd::KW *fault_block_kw) {
     int k = 0;
     int i, j;
 

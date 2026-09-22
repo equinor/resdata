@@ -169,9 +169,8 @@ inline ERT::FortIO make_fortio_writer(const fs::path &filename,
             fmt ? false : RD_ENDIAN_FLIP};
 }
 
-inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd_kw_type *zcorn,
-                                     rd_kw_type *coord,
-                                     rd_kw_type *actnum = nullptr) {
+inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd::KW *zcorn,
+                                     rd::KW *coord, rd::KW *actnum = nullptr) {
     return {rd_grid_alloc_GRDECL_kw(nx, ny, nz, zcorn, coord, actnum, nullptr),
             &rd_grid_free};
 }

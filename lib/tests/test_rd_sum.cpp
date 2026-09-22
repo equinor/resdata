@@ -1359,27 +1359,27 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             auto smspec_in = rd::File::open(case3_path + ".SMSPEC");
             auto sum_in = rd::File::open(case3_path + ".UNSMRY");
 
-            rd_kw_type *keywords = smspec_in->get_kw("KEYWORDS", 0);
+            rd::KW *keywords = smspec_in->get_kw("KEYWORDS", 0);
             keywords->resize(5);
             keywords->set_padded(3, "WTPRWI1");
             keywords->set_padded(4, "BPR");
 
-            rd_kw_type *nums = smspec_in->get_kw("NUMS", 0);
+            rd::KW *nums = smspec_in->get_kw("NUMS", 0);
             nums->resize(5);
             auto &nums_vec = nums->get_vector<int>();
             nums_vec[3] = 5;
             nums_vec[4] = 8;
 
-            rd_kw_type *wgnames = smspec_in->get_kw("WGNAMES", 0);
+            rd::KW *wgnames = smspec_in->get_kw("WGNAMES", 0);
             wgnames->resize(5);
             wgnames->at<std::string>(4) = ":+:+:+:+";
 
-            rd_kw_type *units = smspec_in->get_kw("UNITS", 0);
+            rd::KW *units = smspec_in->get_kw("UNITS", 0);
             units->resize(5);
             units->at<std::string>(4) = rd::pad_spaces("BARS", 8);
 
             for (size_t i = 0; i < sum_in->num_named_kw("PARAMS"); ++i) {
-                rd_kw_type *params_kw = sum_in->get_kw("PARAMS", i);
+                rd::KW *params_kw = sum_in->get_kw("PARAMS", i);
                 params_kw->resize(5);
                 auto &vec = params_kw->get_vector<float>();
                 vec[4] = vec[3];
