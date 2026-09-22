@@ -41,14 +41,14 @@ int main(int argc, char **argv) {
          ++iactive) {
         int iglobal = rd_grid_get_global_index1A(grid.get(), iactive);
         double grid_volume = rd_grid_get_cell_volume1(grid.get(), iglobal);
-        double eclipse_volume = rd_kw_iget_float(porv_kw, iglobal) /
-                                rd_kw_iget_float(poro_kw, iactive);
+        double eclipse_volume =
+            porv_kw->at<float>(iglobal) / poro_kw->at<float>(iactive);
 
         if (NTG)
-            eclipse_volume /= rd_kw_iget_float(NTG, iactive);
+            eclipse_volume /= NTG->at<float>(iactive);
 
         if (multpv)
-            eclipse_volume *= rd_kw_iget_float(multpv, iactive);
+            eclipse_volume *= multpv->at<float>(iactive);
 
         total_volume += grid_volume;
         total_diff += fabs(eclipse_volume - grid_volume);

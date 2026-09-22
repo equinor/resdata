@@ -81,7 +81,7 @@ void WellInfo::add_UNRST_wells(rd::File *rst_file,
                 fmt::format("Could not find restart step: {}", block_nr));
 
         const rd::KW *seqnum_kw = step_view->get_kw(SEQNUM_KW, 0);
-        int report_nr = rd_kw_iget_int(seqnum_kw, 0);
+        int report_nr = seqnum_kw->at<int>(0);
 
         clear_guard clear(rst_view);
         add_wells(step_view.get(), report_nr, load_segment_information);

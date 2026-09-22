@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
             int fracture_index = 0;
 
             for (gi = 0; gi < rd_grid_get_global_size(rd_grid.get()); gi++) {
-                if (rd_kw_iget_int(actnum, gi) & CELL_ACTIVE_MATRIX) {
+                if (actnum->at<int>(gi) & CELL_ACTIVE_MATRIX) {
                     test_assert_int_equal(
                         rd_grid_get_active_index1(rd_grid.get(), gi),
                         matrix_index);
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
                     matrix_index++;
                 }
 
-                if (rd_kw_iget_int(actnum, gi) & CELL_ACTIVE_FRACTURE) {
+                if (actnum->at<int>(gi) & CELL_ACTIVE_FRACTURE) {
                     test_assert_int_equal(
                         rd_grid_get_active_fracture_index1(rd_grid.get(), gi),
                         fracture_index);

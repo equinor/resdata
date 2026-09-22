@@ -31,8 +31,7 @@ int main(int argc, char **argv) {
         well_segment_collection_type *segments =
             well_segment_collection_alloc();
         int seg_well_nr =
-            rd_kw_iget_int(iwel_kw,
-                           iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) -
+            iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) -
             1; // -1: Ordinary well.
         if (seg_well_nr >= 0) {
             int segment_count = 0;

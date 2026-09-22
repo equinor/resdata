@@ -28,8 +28,7 @@ void test_writable(const char *src_file) {
 
         auto rd_file2 = rd::File::open(fname);
         swat = rd_file2->get_kw("SWAT", 0);
-        test_assert_true(
-            util_double_approx_equal(rd_kw_iget_float(swat, 0), 1000));
+        test_assert_true(util_double_approx_equal(swat->at<float>(0), 1000));
     }
 }
 
