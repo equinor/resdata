@@ -122,7 +122,6 @@ public:
                                                float porv_limit);
     static std::unique_ptr<rd::KW> global_copy(const rd::KW *src,
                                                const rd::KW *actnum);
-    static std::unique_ptr<rd::KW> fread_header(ERT::FortIO &);
     [[nodiscard]] size_t size() const { return m_header.size(); }
     [[nodiscard]] rd_data_type data_type() const {
         return m_header.data_type();
