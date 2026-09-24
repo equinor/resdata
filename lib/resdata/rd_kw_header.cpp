@@ -155,47 +155,46 @@ static char read_formatted_bool(std::istream &stream) {
         fmt::format("Logical value: [{}] not recogniced", bool_char));
 }
 
-static std::optional<rd::kw_data>
-read_formatted_data(const rd_data_type data_type, const size_t size,
-                    const std::string &name, ERT::FortIO &fortio) {
+std::optional<rd::kw_data>
+rd::KWHeader::read_formatted_data(ERT::FortIO &fortio) {
     std::istream &stream = fortio.get_istream();
     std::optional<rd::kw_data> data;
 
-    switch (data_type.type) {
+    switch (data_type().type) {
     case RD_INT_TYPE: {
-        std::vector<int> values(size);
-        for (size_t i = 0; i < size; i++)
-            read_formatted_value(stream, values[i], i, name, fortio);
+        std::vector<int> values(size());
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_value(stream, values[i], i, name(), fortio);
         data = std::move(values);
     } break;
     case RD_FLOAT_TYPE: {
-        std::vector<float> values(size);
-        for (size_t i = 0; i < size; i++)
-            read_formatted_value(stream, values[i], i, name, fortio);
+        std::vector<float> values(size());
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_value(stream, values[i], i, name(), fortio);
         data = std::move(values);
     } break;
     case RD_DOUBLE_TYPE: {
-        std::vector<double> values(size);
-        for (size_t i = 0; i < size; i++)
+        std::vector<double> values(size());
+        for (size_t i = 0; i < size(); i++)
             values[i] = parse_double(stream);
         data = std::move(values);
     } break;
     case RD_BOOL_TYPE: {
-        std::vector<char> values(size);
-        for (size_t i = 0; i < size; i++)
+        std::vector<char> values(size());
+        for (size_t i = 0; i < size(); i++)
             values[i] = read_formatted_bool(stream);
         data = std::move(values);
     } break;
     case RD_CHAR_TYPE:
     case RD_STRING_TYPE: {
 
-        size_t iotype_size = rd_type_get_sizeof_iotype(data_type);
+        size_t iotype_size = rd_type_get_sizeof_iotype(data_type());
         const size_t width =
-            data_type.type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : iotype_size;
+            data_type().type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : iotype_size;
         std::vector<char> buf(width + 1);
         std::vector<std::string> values;
-        values.reserve(size);
-        for (size_t i = 0; i < size; i++) {
+        values.reserve(size());
+        for (size_t i = 0; i < size(); i++) {
             read_sized_quoted_string(buf.data(), width, stream);
             values.emplace_back(buf.data());
         }
@@ -203,14 +202,14 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
     } break;
     case RD_MESS_TYPE: {
         char buf[RD_STRING8_LENGTH + 1];
-        for (size_t i = 0; i < size; i++)
+        for (size_t i = 0; i < size(); i++)
             read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
         /* leave data as nullopt. */
     } break;
     default:
         throw std::runtime_error(fmt::format(
             "Internal error: internal eclipse_type: {} not recognized",
-            data_type.type));
+            data_type().type));
     }
 
     /* Skip the trailing newline */
@@ -218,17 +217,16 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
     return data;
 }
 
-static std::optional<rd::kw_data>
-read_unformatted_data(const rd_data_type data_type, const size_t size,
-                      const std::string &name, ERT::FortIO &fortio) {
+std::optional<rd::kw_data>
+rd::KWHeader::read_unformatted_data(ERT::FortIO &fortio) {
     std::optional<rd::kw_data> out;
-    const size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
+    const size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type());
     if (sizeof_iotype != 0 &&
-        size > std::numeric_limits<size_t>::max() / sizeof_iotype)
-        throw std::invalid_argument(
-            fmt::format("buffer size overflow: {} * {}", size, sizeof_iotype));
+        size() > std::numeric_limits<size_t>::max() / sizeof_iotype)
+        throw std::invalid_argument(fmt::format("buffer size overflow: {} * {}",
+                                                size(), sizeof_iotype));
 
-    const size_t record_size = size * sizeof_iotype;
+    const size_t record_size = size() * sizeof_iotype;
     if (record_size > std::numeric_limits<int>::max())
         throw std::invalid_argument(
             "record size exceeded signed 32 bit integer");
@@ -240,32 +238,32 @@ read_unformatted_data(const rd_data_type data_type, const size_t size,
         throw std::runtime_error("Could not read from buffer");
 
     if (RD_ENDIAN_FLIP) {
-        if (rd_type_is_numeric(data_type) || rd_type_is_bool(data_type))
-            util_endian_flip_vector(buffer.data(), sizeof_iotype, size);
+        if (rd_type_is_numeric(data_type()) || rd_type_is_bool(data_type()))
+            util_endian_flip_vector(buffer.data(), sizeof_iotype, size());
     }
 
-    switch (data_type.type) {
+    switch (data_type().type) {
     case RD_INT_TYPE: {
-        std::vector<int> result(size);
+        std::vector<int> result(size());
         if (record_size > 0)
             std::memcpy(result.data(), buffer.data(), record_size);
         out = std::move(result);
     } break;
     case RD_FLOAT_TYPE: {
-        std::vector<float> result(size);
+        std::vector<float> result(size());
         if (record_size > 0)
             std::memcpy(result.data(), buffer.data(), record_size);
         out = std::move(result);
     } break;
     case RD_DOUBLE_TYPE: {
-        std::vector<double> result(size);
+        std::vector<double> result(size());
         if (record_size > 0)
             std::memcpy(result.data(), buffer.data(), record_size);
         out = std::move(result);
     } break;
     case RD_BOOL_TYPE: {
-        std::vector<char> result(size);
-        for (size_t i = 0; i < size; i++) {
+        std::vector<char> result(size());
+        for (size_t i = 0; i < size(); i++) {
             int int_value;
             std::memcpy(&int_value, &buffer[i * sizeof_iotype],
                         sizeof int_value);
@@ -276,8 +274,8 @@ read_unformatted_data(const rd_data_type data_type, const size_t size,
     case RD_CHAR_TYPE:
     case RD_STRING_TYPE: {
         std::vector<std::string> result;
-        result.reserve(size);
-        for (size_t i = 0; i < size; i++)
+        result.reserve(size());
+        for (size_t i = 0; i < size(); i++)
             result.emplace_back(&buffer[i * sizeof_iotype], sizeof_iotype);
         out = std::move(result);
     } break;
@@ -289,20 +287,19 @@ read_unformatted_data(const rd_data_type data_type, const size_t size,
     return out;
 }
 
-std::optional<rd::kw_data> rd::zero_init_data(rd_data_type data_type,
-                                              size_t size) {
-    switch (rd_type_get_type(data_type)) {
+std::optional<rd::kw_data> rd::KWHeader::zero_init_data() {
+    switch (rd_type_get_type(data_type())) {
     case RD_INT_TYPE:
-        return std::vector<int>(size, 0);
+        return std::vector<int>(size(), 0);
     case RD_FLOAT_TYPE:
-        return std::vector<float>(size, 0.0f);
+        return std::vector<float>(size(), 0.0f);
     case RD_DOUBLE_TYPE:
-        return std::vector<double>(size, 0.0);
+        return std::vector<double>(size(), 0.0);
     case RD_BOOL_TYPE:
-        return std::vector<char>(size, 0);
+        return std::vector<char>(size(), 0);
     case RD_CHAR_TYPE:
     case RD_STRING_TYPE:
-        return std::vector<std::string>(size);
+        return std::vector<std::string>(size());
         break;
     default:
         /* RD_MESS_TYPE carries no element-wise data and is not
@@ -311,16 +308,13 @@ std::optional<rd::kw_data> rd::zero_init_data(rd_data_type data_type,
     }
 }
 
-std::optional<rd::kw_data> rd::fread_data(const rd_data_type type,
-                                          const size_t size,
-                                          const std::string &name,
-                                          ERT::FortIO &fortio) {
-    if (size == 0)
-        return zero_init_data(type, size);
+std::optional<rd::kw_data> rd::KWHeader::fread_data(ERT::FortIO &fortio) {
+    if (size() == 0)
+        return zero_init_data();
     else if (fortio.fmt_file())
-        return read_formatted_data(type, size, name, fortio);
+        return read_formatted_data(fortio);
     else
-        return read_unformatted_data(type, size, name, fortio);
+        return read_unformatted_data(fortio);
 }
 
 rd::KWHeader rd::KWHeader::fread(ERT::FortIO &fortio) {
