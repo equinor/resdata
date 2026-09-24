@@ -227,6 +227,58 @@ rd::KWHeader::read_formatted_data(ERT::FortIO &fortio) {
     return data;
 }
 
+bool rd::KWHeader::skip_formatted_data(ERT::FortIO &fortio) {
+    FILE *stream = fortio.get_FILE();
+    const std::string read_format = read_fmt(data_type());
+
+    switch (data_type().type) {
+    case RD_INT_TYPE: {
+        for (size_t i = 0; i < size(); i++) {
+            int value = 0;
+            read_formatted_value(stream, read_format.c_str(), value, i, *this,
+                                 fortio);
+        }
+    } break;
+    case RD_FLOAT_TYPE: {
+        for (size_t i = 0; i < size(); i++) {
+            float value = 0.0f;
+            read_formatted_value(stream, read_format.c_str(), value, i, *this,
+                                 fortio);
+        }
+    } break;
+    case RD_DOUBLE_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            parse_double(stream, read_format.c_str());
+    } break;
+    case RD_BOOL_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_bool(stream);
+    } break;
+    case RD_CHAR_TYPE:
+    case RD_STRING_TYPE: {
+
+        size_t iotype_size = rd_type_get_sizeof_iotype(data_type());
+        const size_t width =
+            data_type().type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : iotype_size;
+        std::vector<char> buf(width + 1, '\0');
+        for (size_t i = 0; i < size(); i++) {
+            rd::read_sized_quoted_string(buf.data(), width, stream);
+        }
+    } break;
+    case RD_MESS_TYPE: {
+        char buf[RD_STRING8_LENGTH + 1];
+        for (size_t i = 0; i < size(); i++)
+            rd::read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
+    } break;
+    default:
+        throw std::runtime_error(fmt::format(
+            "Internal error: internal eclipse_type: {} not recognized",
+            data_type().type));
+    }
+    /* Skip the trailing newline */
+    return fortio.fseek(1, SEEK_CUR);
+}
+
 std::optional<rd::kw_data>
 rd::KWHeader::read_unformatted_data(ERT::FortIO &fortio) {
     std::optional<rd::kw_data> out;
@@ -378,4 +430,23 @@ rd::KWHeader rd::KWHeader::fread(ERT::FortIO &fortio) {
     if (size < 0)
         throw std::runtime_error("Keyword header had negative size");
     return {static_cast<size_t>(size), data_type, name};
+}
+
+void rd::KWHeader::fskip(ERT::FortIO &fortio) {
+    if (fortio.fmt_file())
+        rd::KWHeader::fread(fortio);
+    else
+        fortio.fskip_record();
+}
+
+bool rd::KWHeader::fskip_data(ERT::FortIO &fortio) {
+    if (fortio.fmt_file()) {
+        return skip_formatted_data(fortio);
+    } else {
+        const size_t blocksize = get_blocksize(data_type());
+        const size_t block_count =
+            size() / blocksize + (size() % blocksize != 0);
+        size_t element_size = rd_type_get_sizeof_iotype(data_type());
+        return fortio.data_fskip(element_size, size(), block_count);
+    }
 }

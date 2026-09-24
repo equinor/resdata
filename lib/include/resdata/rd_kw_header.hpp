@@ -30,6 +30,19 @@ using kw_data =
     std::variant<std::vector<int>, std::vector<float>, std::vector<double>,
                  std::vector<std::string>, std::vector<char>>;
 
+/* For some peculiar reason the keyword data is written in blocks, all
+   numeric data is in blocks of 1000 elements, and character data is
+   in blocks of 105 elements. */
+constexpr size_t BLOCKSIZE_NUMERIC = 1000;
+constexpr size_t BLOCKSIZE_CHAR = 105;
+
+inline size_t get_blocksize(rd_data_type data_type) {
+    if (rd_type_is_alpha(data_type))
+        return BLOCKSIZE_CHAR;
+
+    return BLOCKSIZE_NUMERIC;
+}
+
 class KWHeader {
 private:
     size_t m_size;
@@ -38,6 +51,7 @@ private:
 
     static std::string strip_name(const std::string &name);
     std::optional<rd::kw_data> read_formatted_data(ERT::FortIO &fortio);
+    bool skip_formatted_data(ERT::FortIO &fortio);
     std::optional<rd::kw_data> read_unformatted_data(ERT::FortIO &fortio);
 
 public:
@@ -49,6 +63,8 @@ public:
     void set_name(std::string name) { m_name = strip_name(name); }
     void set_size(size_t size) { m_size = size; }
     static KWHeader fread(ERT::FortIO &fortio);
+    static void fskip(ERT::FortIO &fortio);
+    bool fskip_data(ERT::FortIO &fortio);
     std::optional<kw_data> fread_data(ERT::FortIO &fortio);
     std::optional<kw_data> zero_init_data();
 };
