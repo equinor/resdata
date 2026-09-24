@@ -2135,15 +2135,6 @@ def test_that_first_different_compares_alphanumeric_keywords_elementwise(data_ty
     assert lhs.first_different(rhs) == 3
 
 
-def test_that_reading_past_the_end_of_a_file_raises(tmp_path):
-    path = tmp_path / "empty.kw"
-    path.write_bytes(b"")
-
-    with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
-        with openFortIO(str(path)) as fortio:
-            ResdataKW.fread(fortio)
-
-
 @pytest.mark.parametrize(
     "token",
     ["0.10000000000000E+01", "D+01", "0.1000000000000xD+01"],
@@ -2330,6 +2321,17 @@ def test_that_keywords_can_be_loaded_when_the_stream_is_closed_between_reads(tmp
     assert list(rd_file[1]) == [4, 5, 6, 7]
 
 
+def test_that_reading_empty_keyword_raises(tmp_path):
+    path = tmp_path / "empty.kw"
+    path.write_bytes(b"")
+
+    with pytest.raises(
+        ValueError, match="Record had zero size in reading keyword header"
+    ):
+        with openFortIO(str(path)) as fortio:
+            ResdataKW.fread(fortio)
+
+
 def test_that_reading_past_the_last_keyword_fails(tmp_path):
     path = tmp_path / "file"
     _write_two_keywords(path)
@@ -2337,7 +2339,9 @@ def test_that_reading_past_the_last_keyword_fails(tmp_path):
     with openFortIO(str(path)) as fortio:
         ResdataKW.fread(fortio)
         ResdataKW.fread(fortio)
-        with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
+        with pytest.raises(
+            ValueError, match="Record had zero size in reading keyword header"
+        ):
             ResdataKW.fread(fortio)
 
 

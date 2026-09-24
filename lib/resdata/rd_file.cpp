@@ -129,9 +129,14 @@ void rd::File::scan() {
             break;
 
         offset_type current_offset = context->fortio.ftell();
-        auto work_kw = rd::KW::fread_header(context->fortio);
-        if (!work_kw)
+        std::unique_ptr<rd::KW> work_kw;
+        try {
+            work_kw = rd::KW::fread_header(context->fortio);
+        } catch (const std::exception &) {
+            /* A broken/garbage tail is tolerated: stop scanning and keep
+               the keywords indexed so far, see docstring above. */
             break;
+        }
 
         auto file_kw = std::make_shared<FileKW>(work_kw.get(), current_offset);
 

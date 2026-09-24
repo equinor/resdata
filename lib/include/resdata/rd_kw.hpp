@@ -36,15 +36,6 @@ private:
     std::optional<kw_data> m_data;
     void zero_init_data();
     static void fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
-    static std::string strip_name(const std::string &name) {
-        if (name.size() > RD_STRING8_LENGTH)
-            return name;
-        const size_t start = name.find_first_not_of(' ');
-        if (start == std::string::npos)
-            return std::string();
-        const size_t end = name.find_last_not_of(' ');
-        return name.substr(start, end - start + 1);
-    }
 
 public:
     template <typename T> T at(size_t index) const;
@@ -84,9 +75,11 @@ public:
     double as_double(size_t index) const;
 
     KW(rd_data_type data_type) = delete;
+    KW(KWHeader header, std::optional<kw_data> data)
+        : m_header(std::move(header)), m_data(std::move(data)) {}
 
     KW(const std::string &name, size_t size, rd_data_type data_type)
-        : m_header(size, data_type, strip_name(name)) {
+        : m_header(size, data_type, name) {
         zero_init_data();
     }
 
@@ -94,13 +87,13 @@ public:
 
     template <typename T>
     KW(const std::string &name, std::vector<T> data)
-        : m_header(data.size(), datatype<T>::tag, strip_name(name)) {
+        : m_header(data.size(), datatype<T>::tag, name) {
         m_data = std::move(data);
     }
 
     KW(const std::string &name, const std::initializer_list<std::string> &data,
        rd_data_type data_type = RD_CHAR)
-        : m_header(data.size(), data_type, strip_name(name)) {
+        : m_header(data.size(), data_type, name) {
         if (!rd_type_is_alpha(this->data_type()))
             throw std::invalid_argument(
                 "String keyword data requires an alphabetic data type");
@@ -149,7 +142,7 @@ public:
     static void fskip_header(ERT::FortIO &fortio);
     bool fwrite(ERT::FortIO &) const;
     std::string name() const { return m_header.name(); };
-    void set_name(std::string name) { m_header.set_name(strip_name(name)); }
+    void set_name(std::string name) { m_header.set_name(name); }
     [[nodiscard]] const std::optional<kw_data> &data() const { return m_data; }
 
     /* Checks that m_data holds a std::vector<T> and returns a reference to
