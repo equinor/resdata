@@ -17,24 +17,6 @@
 #define RD_KW_HEADER_FORTIO_SIZE RD_KW_HEADER_DATA_SIZE + 8
 
 namespace rd {
-class KWHeader {
-private:
-    size_t m_size;
-    rd_data_type m_data_type;
-    std::string m_name;
-
-    static std::string strip_name(const std::string &name);
-
-public:
-    KWHeader(size_t size, rd_data_type data_type, const std::string &name)
-        : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {}
-    size_t size() const { return m_size; }
-    rd_data_type data_type() const { return m_data_type; }
-    std::string name() const { return m_name; }
-    void set_name(std::string name) { m_name = strip_name(name); }
-    void set_size(size_t size) { m_size = size; }
-    static KWHeader fread(ERT::FortIO &fortio);
-};
 
 /** The data stored in the kw mirror the possible rd_type_enum values that carry
   element-wise data:
@@ -48,7 +30,26 @@ using kw_data =
     std::variant<std::vector<int>, std::vector<float>, std::vector<double>,
                  std::vector<std::string>, std::vector<char>>;
 
-std::optional<kw_data> fread_data(const rd_data_type type, const size_t size,
-                                  const std::string &name, ERT::FortIO &fortio);
-std::optional<kw_data> zero_init_data(rd_data_type data_type, size_t size);
+class KWHeader {
+private:
+    size_t m_size;
+    rd_data_type m_data_type;
+    std::string m_name;
+
+    static std::string strip_name(const std::string &name);
+    std::optional<rd::kw_data> read_formatted_data(ERT::FortIO &fortio);
+    std::optional<rd::kw_data> read_unformatted_data(ERT::FortIO &fortio);
+
+public:
+    KWHeader(size_t size, rd_data_type data_type, const std::string &name)
+        : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {}
+    size_t size() const { return m_size; }
+    rd_data_type data_type() const { return m_data_type; }
+    std::string name() const { return m_name; }
+    void set_name(std::string name) { m_name = strip_name(name); }
+    void set_size(size_t size) { m_size = size; }
+    static KWHeader fread(ERT::FortIO &fortio);
+    std::optional<kw_data> fread_data(ERT::FortIO &fortio);
+    std::optional<kw_data> zero_init_data();
+};
 } // namespace rd
