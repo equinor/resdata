@@ -46,6 +46,11 @@ typedef enum {
 struct rd_type_struct {
     const rd_type_enum type;
     const size_t element_size;
+
+    bool operator==(const rd_type_struct &other) const {
+        return std::tie(type, element_size) ==
+               std::tie(other.type, other.element_size);
+    }
 };
 
 typedef struct rd_type_struct rd_data_type;

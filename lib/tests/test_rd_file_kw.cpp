@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <fstream>
 #include <ios>
@@ -14,6 +16,8 @@
 #include <resdata/rd_type.hpp>
 
 #include "tmpdir.hpp"
+
+using Catch::Matchers::ContainsSubstring;
 
 SCENARIO("A FileKW is constructed from explicit header information") {
     GIVEN("A FileKW created with an offset, type, size and header") {
@@ -266,6 +270,94 @@ SCENARIO_METHOD(Tmpdir, "A FileKW lazily loads its keyword from file") {
     }
 }
 
+SCENARIO_METHOD(Tmpdir, "get_kw reports a detailed mismatch between the cached "
+                        "header and the file") {
+    GIVEN("A keyword written to a fortran formatted file") {
+        auto filename = (dirname / "DATA").string();
+
+        rd::KW kw{"MYKW", std::vector<int>{0, 10, 20, 30}};
+
+        offset_type offset;
+        {
+            ERT::FortIO fortio(filename, std::ios_base::out);
+            offset = fortio.ftell();
+            kw.fwrite(fortio);
+        }
+
+        WHEN("the cached header has the wrong name") {
+            FileKW file_kw(offset, RD_INT, 4, "OTHER");
+            ERT::FortIO fortio(filename, std::ios_base::in);
+
+            THEN("get_kw throws with the expected and actual name, size and "
+                 "type") {
+                REQUIRE_THROWS_WITH(
+                    file_kw.get_kw(fortio),
+                    ContainsSubstring("expected name=\"OTHER\" size=4 "
+                                      "type=INTE") &&
+                        ContainsSubstring(
+                            "got name=\"MYKW\" size=4 type=INTE"));
+            }
+        }
+
+        WHEN("the cached header has the wrong size") {
+            FileKW file_kw(offset, RD_INT, 3, "MYKW");
+            ERT::FortIO fortio(filename, std::ios_base::in);
+
+            THEN("get_kw throws with the expected and actual sizes") {
+                REQUIRE_THROWS_WITH(
+                    file_kw.get_kw(fortio),
+                    ContainsSubstring(
+                        "expected name=\"MYKW\" size=3 type=INTE") &&
+                        ContainsSubstring(
+                            "got name=\"MYKW\" size=4 type=INTE"));
+            }
+        }
+
+        WHEN("the cached header has the wrong type") {
+            FileKW file_kw(offset, RD_FLOAT, 4, "MYKW");
+            ERT::FortIO fortio(filename, std::ios_base::in);
+
+            THEN("get_kw throws with the expected and actual types") {
+                REQUIRE_THROWS_WITH(
+                    file_kw.get_kw(fortio),
+                    ContainsSubstring(
+                        "expected name=\"MYKW\" size=4 type=REAL") &&
+                        ContainsSubstring(
+                            "got name=\"MYKW\" size=4 type=INTE"));
+            }
+        }
+    }
+}
+
+SCENARIO_METHOD(Tmpdir,
+                "get_kw fails to load a keyword when the backing file has "
+                "been detached") {
+    GIVEN("A keyword written to a file, and a FortIO whose stream is closed "
+          "and cannot be reopened") {
+        auto filename = (dirname / "DATA").string();
+
+        rd::KW kw{"MYKW", std::vector<int>{0, 10, 20, 30}};
+        {
+            ERT::FortIO fortio(filename, std::ios_base::out);
+            kw.fwrite(fortio);
+        }
+
+        FileKW file_kw(&kw, 0);
+        ERT::FortIO fortio(filename, std::ios_base::in);
+
+        REQUIRE(fortio.fclose_stream());
+        fs::remove(filename);
+
+        THEN("get_kw throws an ios_base::failure") {
+            REQUIRE_THROWS_AS(file_kw.get_kw(fortio), std::ios_base::failure);
+            REQUIRE_THROWS_WITH(
+                file_kw.get_kw(fortio),
+                ContainsSubstring("trying to load a keyword after the "
+                                  "backing file has been detached"));
+        }
+    }
+}
+
 SCENARIO_METHOD(Tmpdir, "An unloaded FileKW cannot be written back in place") {
     GIVEN("A FileKW whose keyword has not been loaded") {
         FileKW file_kw(0, RD_INT, 10, "TEST_KW");
@@ -282,6 +374,10 @@ SCENARIO_METHOD(Tmpdir, "An unloaded FileKW cannot be written back in place") {
             THEN("A runtime_error is raised") {
                 REQUIRE_THROWS_AS(file_kw.inplace_write(fortio),
                                   std::runtime_error);
+                REQUIRE_THROWS_WITH(
+                    file_kw.inplace_write(fortio),
+                    ContainsSubstring("cannot write FileKW in place: "
+                                      "keyword has not been loaded"));
             }
         }
     }
