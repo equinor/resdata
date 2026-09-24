@@ -196,7 +196,7 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
         std::vector<std::string> values;
         values.reserve(size);
         for (size_t i = 0; i < size; i++) {
-            read_sized_quoted_string(buf.data(), width, stream);
+            rd::read_sized_quoted_string(buf.data(), width, stream);
             values.emplace_back(buf.data());
         }
         data = std::move(values);
@@ -204,7 +204,7 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
     case RD_MESS_TYPE: {
         char buf[RD_STRING8_LENGTH + 1];
         for (size_t i = 0; i < size; i++)
-            read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
+            rd::read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
         /* leave data as nullopt. */
     } break;
     default:
