@@ -45,18 +45,18 @@ class KW {
 private:
     size_t m_size;
     rd_data_type m_data_type;
-    std::string m_header;
+    std::string m_name;
     std::optional<kw_data> m_data;
     void zero_init_data();
     static bool fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
-    static std::string strip_header(const std::string &header) {
-        if (header.size() > RD_STRING8_LENGTH)
-            return header;
-        const size_t start = header.find_first_not_of(' ');
+    static std::string strip_name(const std::string &name) {
+        if (name.size() > RD_STRING8_LENGTH)
+            return name;
+        const size_t start = name.find_first_not_of(' ');
         if (start == std::string::npos)
             return std::string();
-        const size_t end = header.find_last_not_of(' ');
-        return header.substr(start, end - start + 1);
+        const size_t end = name.find_last_not_of(' ');
+        return name.substr(start, end - start + 1);
     }
 
 public:
@@ -98,25 +98,24 @@ public:
 
     KW(rd_data_type data_type) = delete;
 
-    KW(const std::string &header, size_t size, rd_data_type data_type)
-        : m_size(size), m_data_type(data_type), m_header(strip_header(header)) {
+    KW(const std::string &name, size_t size, rd_data_type data_type)
+        : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {
         zero_init_data();
     }
 
-    KW(const std::string &header, int size, rd_data_type data_type);
+    KW(const std::string &name, int size, rd_data_type data_type);
 
     template <typename T>
-    KW(const std::string &header, std::vector<T> data)
+    KW(const std::string &name, std::vector<T> data)
         : m_size(data.size()), m_data_type(datatype<T>::tag),
-          m_header(strip_header(header)) {
+          m_name(strip_name(name)) {
         m_data = std::move(data);
     }
 
-    KW(const std::string &header,
-       const std::initializer_list<std::string> &data,
+    KW(const std::string &name, const std::initializer_list<std::string> &data,
        rd_data_type data_type = RD_CHAR)
         : m_size(data.size()), m_data_type(data_type),
-          m_header(strip_header(header)) {
+          m_name(strip_name(name)) {
         if (!rd_type_is_alpha(m_data_type))
             throw std::invalid_argument(
                 "String keyword data requires an alphabetic data type");
@@ -128,7 +127,7 @@ public:
 
     KW(const KW &other)
         : m_size(other.size()), m_data_type(other.data_type()),
-          m_header(other.header()) {
+          m_name(other.name()) {
         m_data = other.m_data;
     }
     KW(const KW &other, const std::optional<std::string> &new_kw, size_t offset,
@@ -163,10 +162,8 @@ public:
                            ERT::FortIO &fortio);
     static void fskip_header(ERT::FortIO &fortio);
     bool fwrite(ERT::FortIO &) const;
-    std::string header() const { return m_header; };
-    void set_header(std::string header) {
-        this->m_header = strip_header(header);
-    }
+    std::string name() const { return m_name; };
+    void set_name(std::string name) { this->m_name = strip_name(name); }
     [[nodiscard]] const std::optional<kw_data> &data() const { return m_data; }
 
     /* Checks that m_data holds a std::vector<T> and returns a reference to

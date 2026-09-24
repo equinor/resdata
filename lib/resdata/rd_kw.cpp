@@ -42,35 +42,35 @@ namespace {
 
 template <typename T> T rd::KW::at(size_t index) const {
     if (index >= m_size)
-        throw_invalid_index(m_header, index, m_size);
+        throw_invalid_index(m_name, index, m_size);
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_header);
+        throw_wrong_type(m_name);
     return std::get<std::vector<T>>(m_data.value())[index];
 }
 
 template <typename T> T &rd::KW::at(size_t index) {
     if (index >= m_size)
-        throw_invalid_index(m_header, index, m_size);
+        throw_invalid_index(m_name, index, m_size);
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_header);
+        throw_wrong_type(m_name);
     return std::get<std::vector<T>>(m_data.value())[index];
 }
 
 template <> bool rd::KW::at<bool>(size_t index) const {
     if (index >= m_size)
-        throw_invalid_index(m_header, index, m_size);
+        throw_invalid_index(m_name, index, m_size);
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<char>>(m_data.value()))
-        throw_wrong_type(m_header);
+        throw_wrong_type(m_name);
     return std::get<std::vector<char>>(m_data.value())[index] != 0;
 }
 
 template <typename T> const std::vector<T> &rd::KW::get_vector() const {
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_header);
+        throw_wrong_type(m_name);
     return std::get<std::vector<T>>(m_data.value());
 }
 
@@ -89,7 +89,7 @@ INSTANTIATE_KW_ACCESSORS(std::string)
 #undef INSTANTIATE_KW_ACCESSORS
 
 rd::KW::KW(const std::string &header, int size, rd_data_type data_type)
-    : m_data_type(data_type), m_header(strip_header(header)) {
+    : m_data_type(data_type), m_name(strip_name(header)) {
     if (size < 0)
         throw std::invalid_argument(
             fmt::format("rd_kw size was negative: {}", size));
@@ -99,10 +99,10 @@ rd::KW::KW(const std::string &header, int size, rd_data_type data_type)
 
 void rd::KW::set_bool(size_t index, bool value) {
     if (index >= m_size)
-        throw_invalid_index(m_header, index, m_size);
+        throw_invalid_index(m_name, index, m_size);
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<char>>(m_data.value()))
-        throw_wrong_type(m_header);
+        throw_wrong_type(m_name);
     std::get<std::vector<char>>(m_data.value())[index] =
         static_cast<char>(value ? 1 : 0);
 }
@@ -321,8 +321,8 @@ bool rd::KW::size_and_type_equal(const rd::KW *rd_kw2) const {
 }
 
 static bool rd_kw_header_eq(const rd::KW *rd_kw1, const rd::KW *rd_kw2) {
-    return (fmt::format("{:8.8}", rd_kw1->header()) ==
-            fmt::format("{:8.8}", rd_kw2->header())) &&
+    return (fmt::format("{:8.8}", rd_kw1->name()) ==
+            fmt::format("{:8.8}", rd_kw2->name())) &&
            rd_kw1->size_and_type_equal(rd_kw2);
 }
 
@@ -457,7 +457,7 @@ rd::KW::KW(const rd::KW &other, size_t index1, size_t index2, size_t stride)
         src_index += stride;
     }
 
-    this->m_header = other.header();
+    this->m_name = other.name();
     this->m_size = new_size;
 
     if (other.m_data.has_value())
@@ -501,9 +501,9 @@ rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
             fmt::format("invalid count value: {}", count));
 
     if (new_kw.has_value())
-        m_header = strip_header(*new_kw);
+        m_name = strip_name(*new_kw);
     else
-        m_header = other.header();
+        m_name = other.name();
 
     if (other.m_data.has_value())
         this->m_data = std::visit(
@@ -626,7 +626,7 @@ static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
             if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
                 throw std::runtime_error(fmt::format(
                     "after reading {} values reading of keyword:{} from:{} failed",
-                    i, rd_kw->header(), fortio.filename_ref()));
+                    i, rd_kw->name(), fortio.filename_ref()));
         }
         data = std::move(values);
     } break;
@@ -636,7 +636,7 @@ static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
             if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
                 throw std::runtime_error(fmt::format(
                     "after reading {} values reading of keyword:{} from:{} failed",
-                    i, rd_kw->header(), fortio.filename_ref()));
+                    i, rd_kw->name(), fortio.filename_ref()));
         }
         data = std::move(values);
     } break;
@@ -929,7 +929,8 @@ std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
             return {nullptr};
 
         char buffer[RD_KW_HEADER_DATA_SIZE];
-        size_t read_bytes = fread(buffer, 1, RD_KW_HEADER_DATA_SIZE, stream);
+        size_t read_bytes =
+            std::fread(buffer, 1, RD_KW_HEADER_DATA_SIZE, stream);
 
         if (read_bytes != RD_KW_HEADER_DATA_SIZE)
             return {nullptr};
@@ -1073,7 +1074,7 @@ void rd_kw_fwrite_header(const rd::KW *rd_kw, ERT::FortIO &fortio) {
         throw std::invalid_argument(
             fmt::format("Size of rd_kw exceeds format: {}", rd_kw->size()));
 
-    std::string header8 = fmt::format("{:8.8}", rd_kw->header());
+    std::string header8 = fmt::format("{:8.8}", rd_kw->name());
 
     if (fmt_file)
         fprintf(stream, WRITE_HEADER_FMT, header8.c_str(),
@@ -1085,16 +1086,16 @@ void rd_kw_fwrite_header(const rd::KW *rd_kw, ERT::FortIO &fortio) {
 
         fortio.init_write(RD_KW_HEADER_DATA_SIZE);
 
-        fwrite(header8.c_str(), sizeof(char), RD_STRING8_LENGTH, stream);
-        fwrite(&size, sizeof(int), 1, stream);
-        fwrite(type_name.c_str(), sizeof(char), RD_TYPE_LENGTH, stream);
+        std::fwrite(header8.c_str(), sizeof(char), RD_STRING8_LENGTH, stream);
+        std::fwrite(&size, sizeof(int), 1, stream);
+        std::fwrite(type_name.c_str(), sizeof(char), RD_TYPE_LENGTH, stream);
 
         fortio.complete_write(RD_KW_HEADER_DATA_SIZE);
     }
 }
 
 bool rd::KW::fwrite(ERT::FortIO &fortio) const {
-    if (this->header().size() > RD_STRING8_LENGTH) {
+    if (this->name().size() > RD_STRING8_LENGTH) {
         fortio.fwrite_error();
         return false;
     }
@@ -1117,7 +1118,7 @@ std::unique_ptr<rd::KW> rd::KW::global_copy(const rd::KW *src,
 
     const size_t global_size = actnum->size();
     auto global_copy =
-        std::make_unique<rd::KW>(src->header(), global_size, src->data_type());
+        std::make_unique<rd::KW>(src->name(), global_size, src->data_type());
     auto &mapping = actnum->get_vector<int>();
     const size_t src_size = src->size();
     size_t src_index = 0;
@@ -1356,7 +1357,7 @@ std::unique_ptr<rd::KW> rd::KW::make_actnum(const rd::KW *porv_kw,
     if (!rd_type_is_float(porv_kw->data_type()))
         return NULL;
 
-    if (porv_kw->header() != PORV_KW)
+    if (porv_kw->name() != PORV_KW)
         return NULL;
 
     const size_t size = porv_kw->size();

@@ -30,7 +30,7 @@ void FileKW::assert_kw() const {
         throw std::runtime_error(std::string(__func__) +
                                  ": size mismatch between header and file.");
 
-    if (header != kw->header())
+    if (header != kw->name())
         throw std::runtime_error(std::string(__func__) +
                                  ": name mismatch between header and file.");
 }

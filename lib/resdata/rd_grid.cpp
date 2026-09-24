@@ -318,8 +318,8 @@ namespace fs = std::filesystem;
 
         rd::KW *swat = rst_file.get_kw("SWAT", 0);
 
-        snprintf(fracture_kw, 9, "F-%6s", swat->header().c_str());
-        snprintf(matrix_kw, 9, "M-%6s", swat->header().c_str());
+        snprintf(fracture_kw, 9, "F-%6s", swat->name().c_str());
+        snprintf(matrix_kw, 9, "M-%6s", swat->name().c_str());
 
         rd::KW *M = new rd::KW{*swat, matrix_kw, 0, matrix_size};
         rd::KW *F = new rd::KW{*swat, fracture_kw, matrix_size, fracture_size};
