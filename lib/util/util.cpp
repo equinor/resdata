@@ -707,7 +707,7 @@ void util_fskip_lines(FILE *stream, int lines) {
     int line_nr = 0;
     do {
         bool at_eof = false;
-        char c;
+        int c;
         do {
             c = fgetc(stream);
             if (c == EOF)

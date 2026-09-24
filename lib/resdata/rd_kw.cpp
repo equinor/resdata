@@ -999,7 +999,7 @@ static bool rd_kw_qskip(FILE *stream) {
     const char newline = '\n';
     const char tab = '\t';
     bool OK = true;
-    char c;
+    int c;
     bool cont = true;
     while (cont) {
         c = fgetc(stream);
