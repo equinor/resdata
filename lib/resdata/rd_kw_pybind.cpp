@@ -262,10 +262,10 @@ PYBIND11_MODULE(_kw, m) {
     m.def("_fwrite", [](py::handle self, ERT::FortIO &fortio) {
         from_cwrap<rd::KW>(self)->fwrite(fortio);
     });
-    m.def("_get_header",
-          [](py::handle self) { return from_cwrap<rd::KW>(self)->header(); });
-    m.def("_set_header", [](py::handle self, std::string name) {
-        from_cwrap<rd::KW>(self)->set_header(name);
+    m.def("_get_name",
+          [](py::handle self) { return from_cwrap<rd::KW>(self)->name(); });
+    m.def("_set_name", [](py::handle self, std::string name) {
+        from_cwrap<rd::KW>(self)->set_name(name);
     });
     m.def(
         "_get_data_type",

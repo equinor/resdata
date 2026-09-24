@@ -322,7 +322,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
                 auto kw = rd::KW::fread(fortio);
                 if (kw == nullptr)
                     break;
-                if (kw->header() == CORNERS_KW) {
+                if (kw->name() == CORNERS_KW) {
                     first_corners = std::move(kw);
                     break;
                 }

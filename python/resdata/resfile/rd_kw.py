@@ -931,7 +931,7 @@ class ResdataKW(_BaseCClass):
         return self.equal(other)
 
     def __hash__(self):
-        return hash(_kw._get_header(self))
+        return hash(_kw._get_name(self))
 
     def equal_numeric(self, other, epsilon=1e-6, abs_epsilon=None, rel_epsilon=None):
         """Will check if two numerical keywords are ~nearly equal.
@@ -972,11 +972,11 @@ class ResdataKW(_BaseCClass):
             raise ValueError(
                 "Sorry: the name property must be max 8 characters long :-("
             )
-        _kw._set_header(self, name)
+        _kw._set_name(self, name)
 
     @property
     def name(self):
-        n = _kw._get_header(self)
+        n = _kw._get_name(self)
         return str(n) if n else ""
 
     @name.setter
