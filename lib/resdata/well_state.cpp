@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -38,7 +39,7 @@ WellState::WellState(std::string well_name, int global_well_nr, bool open,
         throw std::invalid_argument("Invalid type value for open wells.");
 }
 
-void WellState::add_wellhead(const RSTHead &header, const rd_kw_type *iwel_kw,
+void WellState::add_wellhead(const RSTHead &header, const rd::KW *iwel_kw,
                              int well_nr, const std::string &grid_name,
                              int grid_nr) {
     auto wellhead = WellConnection::read_wellhead(iwel_kw, header, well_nr);
@@ -55,55 +56,40 @@ bool WellState::add_rates(rd::FileView *rst_view, int well_nr) {
 
     bool has_xwel_kw = rst_view->has_kw(XWEL_KW);
     if (has_xwel_kw) {
-        const rd_kw_type *xwel_kw = rst_view->get_kw(XWEL_KW, 0);
+        const rd::KW *xwel_kw = rst_view->get_kw(XWEL_KW, 0);
         auto header = RSTHead::read(rst_view, -1);
         int offset = header.nxwelz * well_nr;
 
         this->unit_system = header.unit_system;
-        this->oil_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_ORAT_ITEM);
-        this->gas_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_GRAT_ITEM);
-        this->water_rate =
-            rd_kw_iget_double(xwel_kw, offset + XWEL_RES_WRAT_ITEM);
-        this->volume_rate = rd_kw_iget_double(xwel_kw, offset + XWEL_RESV_ITEM);
+        this->oil_rate = xwel_kw->at<double>(offset + XWEL_RES_ORAT_ITEM);
+        this->gas_rate = xwel_kw->at<double>(offset + XWEL_RES_GRAT_ITEM);
+        this->water_rate = xwel_kw->at<double>(offset + XWEL_RES_WRAT_ITEM);
+        this->volume_rate = xwel_kw->at<double>(offset + XWEL_RESV_ITEM);
     }
     return has_xwel_kw;
 }
 
 /** This function assumes that the rd_file state has been restricted
-  to one LGR block.
-
-  Return value -1 means that the well is not found in this LGR at
-  all. */
-int WellState::get_lgr_well_nr(rd::FileView *file_view) {
-    int well_nr = -1;
+  to one LGR block.*/
+std::optional<size_t> WellState::get_lgr_well_nr(rd::FileView *file_view) {
 
     if (file_view->has_kw(ZWEL_KW)) {
         auto header = RSTHead::read(file_view, -1);
-        const rd_kw_type *zwel_kw = file_view->get_kw(ZWEL_KW, 0);
-        int num_wells = header.nwells;
-        well_nr = 0;
-        while (true) {
-            bool found = false;
+        const rd::KW *zwel_kw = file_view->get_kw(ZWEL_KW, 0);
+        if (header.nwells <= 0)
+            return std::nullopt;
+        if (header.nzwelz <= 0)
+            return std::nullopt;
+        size_t num_wells = static_cast<size_t>(header.nwells);
+        size_t nzwelz = static_cast<size_t>(header.nzwelz);
+        for (size_t well_nr = 0; well_nr < num_wells; well_nr++) {
             std::string lgr_well_name =
-                rd_kw_iget_stripped_string(zwel_kw, well_nr * header.nzwelz);
-
+                rd::strip_spaces(zwel_kw->at<std::string>(well_nr * nzwelz));
             if (this->name == lgr_well_name)
-                found = true;
-            else
-                well_nr++;
-
-            if (found)
-                break;
-            else if (well_nr == num_wells) {
-                // The well is not in this LGR at all.
-                well_nr = -1;
-                break;
-            }
+                return well_nr;
         }
     }
-    return well_nr;
+    return std::nullopt;
 }
 
 WellType well_state_translate_rd_type_int(int int_type) {
@@ -140,28 +126,28 @@ void WellState::add_connections(rd::FileView *rst_view,
                                 int well_nr) {
 
     auto header = RSTHead::read(rst_view, -1);
-    const rd_kw_type *iwel_kw = rst_view->get_kw(IWEL_KW, 0);
+    const rd::KW *iwel_kw = rst_view->get_kw(IWEL_KW, 0);
 
     add_wellhead(header, iwel_kw, well_nr, grid_name, grid_nr);
 
     if (rst_view->has_kw(ICON_KW)) {
-        const rd_kw_type *icon_kw = rst_view->get_kw(ICON_KW, 0);
+        const rd::KW *icon_kw = rst_view->get_kw(ICON_KW, 0);
         if (!has_grid_connections(grid_name))
             this->connections[grid_name];
 
         {
-            rd_kw_type *scon_kw = nullptr;
+            rd::KW *scon_kw = nullptr;
             if (rst_view->has_kw(SCON_KW))
                 scon_kw = rst_view->get_kw(SCON_KW, 0);
 
-            rd_kw_type *xcon_kw = nullptr;
+            rd::KW *xcon_kw = nullptr;
             if (rst_view->has_kw(XCON_KW)) {
                 xcon_kw = rst_view->get_kw(XCON_KW, 0);
             }
 
             const int iwel_offset = header.niwelz * well_nr;
             int num_connections =
-                rd_kw_iget_int(iwel_kw, iwel_offset + IWEL_CONNECTIONS_INDEX);
+                iwel_kw->at<int>(iwel_offset + IWEL_CONNECTIONS_INDEX);
 
             for (int iconn = 0; iconn < num_connections; iconn++) {
                 try {
@@ -197,10 +183,10 @@ void WellState::add_LGR_connections(const rd_grid_type *grid,
            information can also be found in the restart file. */
         if (lgr_view) {
             const char *grid_name = rd_grid_iget_lgr_name(grid, lgr_index);
-            int well_nr = get_lgr_well_nr(lgr_view.get());
-            if (well_nr >= 0)
+            auto well_nr = get_lgr_well_nr(lgr_view.get());
+            if (well_nr.has_value())
                 add_connections(lgr_view.get(), grid_name, lgr_index + 1,
-                                well_nr);
+                                static_cast<int>(*well_nr));
         }
     }
 }
@@ -217,8 +203,8 @@ bool WellState::add_MSW(rd::FileView *rst_view, int well_nr,
 
     if (rst_view->has_kw(ISEG_KW)) {
         auto rst_head = RSTHead::read(rst_view, -1);
-        const rd_kw_type *iwel_kw = rst_view->get_kw(IWEL_KW, 0);
-        const rd_kw_type *iseg_kw = rst_view->get_kw(ISEG_KW, 0);
+        const rd::KW *iwel_kw = rst_view->get_kw(IWEL_KW, 0);
+        const rd::KW *iseg_kw = rst_view->get_kw(ISEG_KW, 0);
         std::unique_ptr<well_rseg_loader_type, decltype(&well_rseg_loader_free)>
             rseg_loader(nullptr, well_rseg_loader_free);
 
@@ -255,25 +241,25 @@ std::shared_ptr<WellState> WellState::read_wells_in_restart(
     int global_well_nr, bool load_segment_information) {
     if (file_view->has_kw(IWEL_KW)) {
         auto global_header = RSTHead::read(file_view, -1);
-        const rd_kw_type *global_iwel_kw = file_view->get_kw(IWEL_KW, 0);
-        const rd_kw_type *global_zwel_kw = file_view->get_kw(ZWEL_KW, 0);
+        const rd::KW *global_iwel_kw = file_view->get_kw(IWEL_KW, 0);
+        const rd::KW *global_zwel_kw = file_view->get_kw(ZWEL_KW, 0);
 
         const int iwel_offset = global_header.niwelz * global_well_nr;
 
         bool open =
-            rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_STATUS_INDEX) > 0;
+            global_iwel_kw->at<int>(iwel_offset + IWEL_STATUS_INDEX) > 0;
 
         auto type = WellType::ZERO;
 
         {
             int int_type =
-                rd_kw_iget_int(global_iwel_kw, iwel_offset + IWEL_TYPE_INDEX);
+                global_iwel_kw->at<int>(iwel_offset + IWEL_TYPE_INDEX);
             type = well_state_translate_rd_type_int(int_type);
         }
 
         const int zwel_offset = global_header.nzwelz * global_well_nr;
         std::string name =
-            rd_kw_iget_stripped_string(global_zwel_kw, zwel_offset);
+            rd::strip_spaces(global_zwel_kw->at<std::string>(zwel_offset));
 
         auto well_state =
             std::make_shared<WellState>(name, global_well_nr, open, type,

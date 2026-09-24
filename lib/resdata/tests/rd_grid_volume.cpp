@@ -21,10 +21,10 @@ int main(int argc, char **argv) {
 
     std::unique_ptr<rd::File> init = rd::File::open(init_file);
     rd_grid_ptr grid = read_grid(grid_file);
-    const rd_kw_type *poro_kw = init->get_kw("PORO", 0);
-    const rd_kw_type *porv_kw = init->get_kw("PORV", 0);
-    rd_kw_type *multpv = NULL;
-    rd_kw_type *NTG = NULL;
+    const rd::KW *poro_kw = init->get_kw("PORO", 0);
+    const rd::KW *porv_kw = init->get_kw("PORV", 0);
+    rd::KW *multpv = NULL;
+    rd::KW *NTG = NULL;
     bool error_found = false;
 
     double total_volume = 0;
@@ -41,14 +41,14 @@ int main(int argc, char **argv) {
          ++iactive) {
         int iglobal = rd_grid_get_global_index1A(grid.get(), iactive);
         double grid_volume = rd_grid_get_cell_volume1(grid.get(), iglobal);
-        double eclipse_volume = rd_kw_iget_float(porv_kw, iglobal) /
-                                rd_kw_iget_float(poro_kw, iactive);
+        double eclipse_volume =
+            porv_kw->at<float>(iglobal) / poro_kw->at<float>(iactive);
 
         if (NTG)
-            eclipse_volume /= rd_kw_iget_float(NTG, iactive);
+            eclipse_volume /= NTG->at<float>(iactive);
 
         if (multpv)
-            eclipse_volume *= rd_kw_iget_float(multpv, iactive);
+            eclipse_volume *= multpv->at<float>(iactive);
 
         total_volume += grid_volume;
         total_diff += fabs(eclipse_volume - grid_volume);
