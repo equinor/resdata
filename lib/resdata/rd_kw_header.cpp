@@ -131,14 +131,16 @@ static double parse_double(std::istream &stream) {
 /* Reads one formatted numeric value with stream::operator>>, throwing with a
  * helpful message (including how far we got) on failure. */
 template <typename T>
-static void read_formatted_value(std::istream &stream, T &value, size_t index,
-                                 const std::string name, ERT::FortIO &fortio) {
+static T read_formatted_value(std::istream &stream, size_t index,
+                              const std::string name, ERT::FortIO &fortio) {
+    T value;
     stream >> value;
     if (stream.fail())
         throw std::runtime_error(
             fmt::format("after reading {} values reading of keyword:{:8.8} "
                         "from:{} failed",
                         index, name, fortio.filename_ref()));
+    return value;
 }
 
 static char read_formatted_bool(std::istream &stream) {
@@ -164,13 +166,13 @@ rd::KWHeader::read_formatted_data(ERT::FortIO &fortio) {
     case RD_INT_TYPE: {
         std::vector<int> values(size());
         for (size_t i = 0; i < size(); i++)
-            read_formatted_value(stream, values[i], i, name(), fortio);
+            values[i] = read_formatted_value<int>(stream, i, name(), fortio);
         data = std::move(values);
     } break;
     case RD_FLOAT_TYPE: {
         std::vector<float> values(size());
         for (size_t i = 0; i < size(); i++)
-            read_formatted_value(stream, values[i], i, name(), fortio);
+            values[i] = read_formatted_value<float>(stream, i, name(), fortio);
         data = std::move(values);
     } break;
     case RD_DOUBLE_TYPE: {
@@ -215,6 +217,51 @@ rd::KWHeader::read_formatted_data(ERT::FortIO &fortio) {
     /* Skip the trailing newline */
     fortio.fseek(1, SEEK_CUR);
     return data;
+}
+
+bool rd::KWHeader::skip_formatted_data(ERT::FortIO &fortio) {
+    std::istream &stream = fortio.get_istream();
+
+    switch (data_type().type) {
+    case RD_INT_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_value<int>(stream, i, name(), fortio);
+    } break;
+    case RD_FLOAT_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_value<float>(stream, i, name(), fortio);
+    } break;
+    case RD_DOUBLE_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            parse_double(stream);
+    } break;
+    case RD_BOOL_TYPE: {
+        for (size_t i = 0; i < size(); i++)
+            read_formatted_bool(stream);
+    } break;
+    case RD_CHAR_TYPE:
+    case RD_STRING_TYPE: {
+
+        size_t iotype_size = rd_type_get_sizeof_iotype(data_type());
+        const size_t width =
+            data_type().type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : iotype_size;
+        std::vector<char> buf(width + 1);
+        for (size_t i = 0; i < size(); i++) {
+            read_sized_quoted_string(buf.data(), width, stream);
+        }
+    } break;
+    case RD_MESS_TYPE: {
+        char buf[RD_STRING8_LENGTH + 1];
+        for (size_t i = 0; i < size(); i++)
+            read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
+    } break;
+    default:
+        throw std::runtime_error(fmt::format(
+            "Internal error: internal eclipse_type: {} not recognized",
+            data_type().type));
+    }
+    /* Skip the trailing newline */
+    return fortio.fseek(1, SEEK_CUR);
 }
 
 std::optional<rd::kw_data>
@@ -368,4 +415,23 @@ rd::KWHeader rd::KWHeader::fread(ERT::FortIO &fortio) {
     if (size < 0)
         throw std::runtime_error("Keyword header had negative size");
     return {static_cast<size_t>(size), data_type, name};
+}
+
+void rd::KWHeader::fskip(ERT::FortIO &fortio) {
+    if (fortio.fmt_file())
+        rd::KWHeader::fread(fortio);
+    else
+        fortio.fskip_record();
+}
+
+bool rd::KWHeader::fskip_data(ERT::FortIO &fortio) {
+    if (fortio.fmt_file()) {
+        return skip_formatted_data(fortio);
+    } else {
+        const size_t blocksize = get_blocksize(data_type());
+        const size_t block_count =
+            size() / blocksize + (size() % blocksize != 0);
+        size_t element_size = rd_type_get_sizeof_iotype(data_type());
+        return fortio.data_fskip(element_size, size(), block_count);
+    }
 }

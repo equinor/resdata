@@ -128,14 +128,6 @@ double rd::KW::as_double(size_t index) const {
         throw std::invalid_argument("cannot be converted to double");
 }
 
-/* For some peculiar reason the keyword data is written in blocks, all
-   numeric data is in blocks of 1000 elements, and character data is
-   in blocks of 105 elements.
-*/
-
-#define BLOCKSIZE_NUMERIC 1000
-#define BLOCKSIZE_CHAR 105
-
 /* When writing formatted data, the data comes in columns, with a
    certain number of elements in each row, i.e. four columns for float
    data:
@@ -157,13 +149,6 @@ double rd::KW::as_double(size_t index) const {
 
 /* Format string used when writing a formatted header. */
 #define WRITE_HEADER_FMT " '{:<8}' {:11d} '{:<4}'\n"
-
-static size_t get_blocksize(rd_data_type data_type) {
-    if (rd_type_is_alpha(data_type))
-        return BLOCKSIZE_CHAR;
-
-    return BLOCKSIZE_NUMERIC;
-}
 
 static size_t get_columns(const rd_data_type data_type) {
     switch (rd_type_get_type(data_type)) {
@@ -330,7 +315,7 @@ bool rd::KW::approx_equal(const rd::KW &other, double abs_diff,
 }
 
 static size_t rd_kw_fortio_data_size(const rd::KW *rd_kw) {
-    const size_t blocksize = get_blocksize(rd_kw->data_type());
+    const size_t blocksize = rd::get_blocksize(rd_kw->data_type());
     const size_t num_blocks =
         rd_kw->size() / blocksize + (rd_kw->size() % blocksize == 0 ? 0 : 1);
 
@@ -531,23 +516,8 @@ bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
     if (element_count <= 0)
         return true;
 
-    bool fmt_file = fortio.fmt_file();
-    if (fmt_file) {
-        /* Formatted skipping actually involves reading the data - nice ??? */
-        rd::KW tmp_kw{"WORK", element_count, data_type};
-        fread_data(&tmp_kw, fortio);
-    } else {
-        size_t num_elements = static_cast<size_t>(element_count);
-        const size_t blocksize = get_blocksize(data_type);
-        const size_t block_count =
-            num_elements / blocksize + (num_elements % blocksize != 0);
-        size_t element_size = rd_type_get_sizeof_iotype(data_type);
-
-        if (!fortio.data_fskip(element_size, num_elements, block_count))
-            return false;
-    }
-
-    return true;
+    return KWHeader{static_cast<size_t>(element_count), data_type, ""}.fskip_data(
+        fortio);
 }
 
 /**
@@ -558,13 +528,7 @@ bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
    will be complete crash and burn.
 */
 
-void rd::KW::fskip_header(ERT::FortIO &fortio) {
-    bool fmt_file = fortio.fmt_file();
-    if (fmt_file) {
-        rd::KWHeader::fread(fortio);
-    } else
-        fortio.fskip_record();
-}
+void rd::KW::fskip_header(ERT::FortIO &fortio) { KWHeader::fskip(fortio); }
 
 std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
     auto header = rd::KWHeader::fread(fortio);
@@ -583,7 +547,7 @@ static void rd_kw_fwrite_data_unformatted(const rd::KW *rd_kw,
     auto iobuffer = alloc_output_buffer(rd_kw);
     size_t sizeof_iotype = rd_kw->iotype_size();
     {
-        const size_t blocksize = get_blocksize(rd_kw->data_type());
+        const size_t blocksize = rd::get_blocksize(rd_kw->data_type());
         const size_t num_blocks = rd_kw->size() / blocksize +
                                   (rd_kw->size() % blocksize == 0 ? 0 : 1);
         for (size_t block_nr = 0; block_nr < num_blocks; block_nr++) {
@@ -618,7 +582,7 @@ static void rd_kw_fwrite_data_formatted(const rd::KW *rd_kw,
     }
 
     std::ostream &stream = fortio.get_ostream();
-    const size_t blocksize = get_blocksize(rd_kw->data_type());
+    const size_t blocksize = rd::get_blocksize(rd_kw->data_type());
     const size_t columns = get_columns(rd_kw->data_type());
     const size_t string_width = rd_kw->iotype_size();
     const rd_type_enum type = rd_kw->get_type();
