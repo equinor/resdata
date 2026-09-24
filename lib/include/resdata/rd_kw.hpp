@@ -12,7 +12,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 #include <optional>
 
@@ -21,19 +20,9 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
+#include <resdata/rd_kw_header.hpp>
 
 namespace rd {
-/** The data stored in the kw mirror the possible rd_type_enum values that carry
-  element-wise data:
-
-    RD_INT_TYPE    -> std::vector<int>
-    RD_FLOAT_TYPE  -> std::vector<float>
-    RD_DOUBLE_TYPE -> std::vector<double>
-    RD_CHAR_TYPE / RD_STRING_TYPE -> std::vector<std::string>
-    RD_BOOL_TYPE   -> std::vector<char> (0/1 values)*/
-using kw_data =
-    std::variant<std::vector<int>, std::vector<float>, std::vector<double>,
-                 std::vector<std::string>, std::vector<char>>;
 
 /* the rd::KW datastructure is tightly bound to the on-disk binary format
    supplied by Eclipse, and there the number of elements is stored as a signed
@@ -48,7 +37,7 @@ private:
     std::string m_name;
     std::optional<kw_data> m_data;
     void zero_init_data();
-    static bool fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
+    static void fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
     static std::string strip_name(const std::string &name) {
         if (name.size() > RD_STRING8_LENGTH)
             return name;
