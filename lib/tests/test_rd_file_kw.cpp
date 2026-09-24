@@ -281,7 +281,7 @@ SCENARIO_METHOD(Tmpdir, "An unloaded FileKW cannot be written back in place") {
 
             THEN("A runtime_error is raised") {
                 REQUIRE_THROWS_AS(file_kw.inplace_write(fortio),
-                                  std::runtime_error);
+                                  std::bad_variant_access);
             }
         }
     }

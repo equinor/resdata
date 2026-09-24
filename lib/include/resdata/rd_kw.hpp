@@ -133,9 +133,9 @@ public:
     [[nodiscard]] size_t iotype_size() const {
         return rd_type_get_sizeof_iotype(data_type());
     };
+    [[nodiscard]] KWHeader header() const { return m_header; }
     void resize(size_t new_size);
-    static bool fskip_data(rd_data_type data_type, const int element_count,
-                           ERT::FortIO &fortio);
+    bool fskip_data(ERT::FortIO &fortio) const;
     static void fskip_header(ERT::FortIO &fortio);
     bool fwrite(ERT::FortIO &) const;
     std::string name() const { return m_header.name(); };

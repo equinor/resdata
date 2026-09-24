@@ -219,7 +219,7 @@ rd::KWHeader::read_formatted_data(ERT::FortIO &fortio) {
     return data;
 }
 
-bool rd::KWHeader::skip_formatted_data(ERT::FortIO &fortio) {
+bool rd::KWHeader::skip_formatted_data(ERT::FortIO &fortio) const {
     std::istream &stream = fortio.get_istream();
 
     switch (data_type().type) {
@@ -424,7 +424,10 @@ void rd::KWHeader::fskip(ERT::FortIO &fortio) {
         fortio.fskip_record();
 }
 
-bool rd::KWHeader::fskip_data(ERT::FortIO &fortio) {
+bool rd::KWHeader::fskip_data(ERT::FortIO &fortio) const {
+    if (size() == 0)
+        return true;
+
     if (fortio.fmt_file()) {
         return skip_formatted_data(fortio);
     } else {

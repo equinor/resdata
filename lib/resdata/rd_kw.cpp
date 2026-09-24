@@ -511,13 +511,8 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
 /**
    Allocates storage and reads data.
 */
-bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
-                        ERT::FortIO &fortio) {
-    if (element_count <= 0)
-        return true;
-
-    return KWHeader{static_cast<size_t>(element_count), data_type, ""}.fskip_data(
-        fortio);
+bool rd::KW::fskip_data(ERT::FortIO &fortio) const {
+    return m_header.fskip_data(fortio);
 }
 
 /**
