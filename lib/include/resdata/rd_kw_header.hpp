@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdio>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -51,7 +52,7 @@ private:
 
     static std::string strip_name(const std::string &name);
     std::optional<rd::kw_data> read_formatted_data(ERT::FortIO &fortio);
-    bool skip_formatted_data(ERT::FortIO &fortio);
+    bool skip_formatted_data(ERT::FortIO &fortio) const;
     std::optional<rd::kw_data> read_unformatted_data(ERT::FortIO &fortio);
 
 public:
@@ -59,14 +60,20 @@ public:
         : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {}
     size_t size() const { return m_size; }
     rd_data_type data_type() const { return m_data_type; }
-    std::string name() const { return m_name; }
+    const std::string &name() const { return m_name; }
     void set_name(std::string name) { m_name = strip_name(name); }
     void set_size(size_t size) { m_size = size; }
     static KWHeader fread(ERT::FortIO &fortio);
     static void fskip(ERT::FortIO &fortio);
-    bool fskip_data(ERT::FortIO &fortio);
+    bool fskip_data(ERT::FortIO &fortio) const;
     std::optional<kw_data> fread_data(ERT::FortIO &fortio);
     std::optional<kw_data> zero_init_data();
+
+    bool operator==(const KWHeader &other) const {
+        return std::tie(m_size, m_data_type, m_name) ==
+               std::tie(other.m_size, other.m_data_type, other.m_name);
+    }
+    bool operator!=(const KWHeader &other) const { return !(*this == other); }
 };
 
 bool read_sized_quoted_string(char *s, size_t len, FILE *stream);

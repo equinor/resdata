@@ -4,12 +4,14 @@
 #include <memory>
 #include <utility>
 #include <ostream>
+#include <variant>
 #include <vector>
 #include <string>
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_header.hpp>
 #include <resdata/FortIO.hpp>
 #include "resdata/rd_type.hpp"
 
@@ -21,19 +23,13 @@
     open fortio instance and read the rd_kw. */
 class FileKW {
     offset_type file_offset;
-    rd_data_type data_type;
-    int kw_size;
-    std::string header;
-    std::unique_ptr<rd::KW> kw{nullptr};
-
-    void assert_kw() const;
-    void load_kw(ERT::FortIO &fortio);
+    std::variant<rd::KWHeader, rd::KW> kw;
 
 public:
-    FileKW(offset_type file_offset, rd_data_type data_type, int kw_size,
-           std::string header)
-        : file_offset(file_offset), data_type(data_type), kw_size(kw_size),
-          header(std::move(header)) {};
+    FileKW(offset_type file_offset, rd_data_type data_type, size_t kw_size,
+           std::string name)
+        : file_offset(file_offset),
+          kw(rd::KWHeader{kw_size, data_type, std::move(name)}) {};
     /** Create a new FileKW based on header information from
         the input keyword.
 
@@ -48,21 +44,29 @@ public:
         if (file_offset != other.file_offset)
             return false;
 
-        if (kw_size != other.kw_size)
+        if (get_size() != other.get_size())
             return false;
 
-        if (!rd_type_is_equal(data_type, other.data_type))
+        if (!rd_type_is_equal(get_data_type(), other.get_data_type()))
             return false;
 
-        return header == other.header;
+        return get_header() == other.get_header();
     }
-    [[nodiscard]] const std::string &get_header() const { return header; };
-    [[nodiscard]] int get_size() const { return kw_size; };
+    [[nodiscard]] const std::string &get_header() const {
+        return std::visit(
+            [](const auto &kw) -> const std::string & { return kw.name(); },
+            kw);
+    };
+    [[nodiscard]] size_t get_size() const {
+        return std::visit([](auto &kw) { return kw.size(); }, kw);
+    };
     [[nodiscard]] offset_type get_offset() const { return file_offset; };
-    [[nodiscard]] rd_data_type get_data_type() const { return data_type; };
+    [[nodiscard]] rd_data_type get_data_type() const {
+        return std::visit([](auto &kw) { return kw.data_type(); }, kw);
+    };
 
     /** The rd_kw, if one is read, otherwise returns nullptr. */
-    [[nodiscard]] rd::KW *get_kw_ptr() const { return kw.get(); };
+    [[nodiscard]] rd::KW *get_kw_ptr();
 
     /** Return the rd_kw. If it is not loaded, the method will read it
        from @fortio. The kw is then cached. */
