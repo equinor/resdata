@@ -15,6 +15,7 @@
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_header.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_file_kw.hpp>
@@ -129,16 +130,15 @@ void rd::File::scan() {
             break;
 
         offset_type current_offset = context->fortio.ftell();
-        std::unique_ptr<rd::KW> work_kw;
+        std::shared_ptr<FileKW> file_kw;
         try {
-            work_kw = rd::KW::fread_header(context->fortio);
+            file_kw = std::make_shared<FileKW>(
+                rd::KWHeader::fread(context->fortio), current_offset);
         } catch (const std::exception &) {
             /* A broken/garbage tail is tolerated: stop scanning and keep
                the keywords indexed so far, see docstring above. */
             break;
         }
-
-        auto file_kw = std::make_shared<FileKW>(work_kw.get(), current_offset);
 
         if (file_kw->skip_data(context->fortio)) {
             global_view->add_kw(file_kw);

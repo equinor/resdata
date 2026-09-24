@@ -32,16 +32,12 @@ public:
            std::string name)
         : file_offset(file_offset),
           kw(rd::KWHeader{kw_size, data_type, std::move(name)}) {};
-    /** Create a new FileKW based on header information from
-        the input keyword.
-
-        Typically only the header has been loaded from the keyword.
+    /** Create a new FileKW based on a header read from file.
 
         It is the users responsibility that the @offset argument comes
         from the same fortio instance as used when calling get_kw().*/
-    FileKW(const rd::KW *rd_kw, offset_type offset)
-        : FileKW(offset, rd_kw->data_type(), rd::kw_get_size(rd_kw),
-                 rd_kw->name()) {}
+    FileKW(rd::KWHeader header, offset_type offset)
+        : file_offset(offset), kw(std::move(header)) {}
     [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
             return false;

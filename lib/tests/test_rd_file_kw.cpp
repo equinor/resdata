@@ -32,12 +32,12 @@ SCENARIO("A FileKW is constructed from explicit header information") {
     }
 }
 
-SCENARIO("A FileKW is constructed from an rd_kw instance") {
+SCENARIO("A FileKW is constructed from an rd_kw's header") {
     GIVEN("An rd_kw with a known header, size and type") {
         rd::KW kw{"PORO", 5, RD_FLOAT};
 
-        WHEN("A FileKW is created from it with an offset") {
-            FileKW file_kw(&kw, 256);
+        WHEN("A FileKW is created from its header with an offset") {
+            FileKW file_kw(kw.header(), 256);
 
             THEN("The header information is derived from the rd_kw") {
                 REQUIRE(file_kw.get_offset() == 256);
@@ -237,7 +237,7 @@ SCENARIO_METHOD(Tmpdir, "A FileKW lazily loads its keyword from file") {
             kw.fwrite(fortio);
         }
 
-        FileKW file_kw(&kw, offset);
+        FileKW file_kw(kw.header(), offset);
 
         THEN("The keyword is not loaded until requested") {
             REQUIRE(file_kw.get_kw_ptr() == nullptr);

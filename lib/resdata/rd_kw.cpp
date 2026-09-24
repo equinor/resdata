@@ -525,12 +525,6 @@ bool rd::KW::fskip_data(ERT::FortIO &fortio) const {
 
 void rd::KW::fskip_header(ERT::FortIO &fortio) { KWHeader::fskip(fortio); }
 
-std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
-    auto header = rd::KWHeader::fread(fortio);
-    return std::make_unique<rd::KW>(header.name(), header.size(),
-                                    header.data_type());
-}
-
 std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
     auto kw_header = rd::KWHeader::fread(fortio);
     auto data = kw_header.fread_data(fortio);
