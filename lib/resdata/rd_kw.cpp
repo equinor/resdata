@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <cmath>
 
 #include <algorithm>
 #include <ios>
@@ -11,7 +10,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -20,6 +18,7 @@
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_kw_header.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
@@ -164,76 +163,6 @@ double rd::KW::as_double(size_t index) const {
 
 /* Format string used when writing a formatted header. */
 #define WRITE_HEADER_FMT " '%-8s' %11d '%-4s'\n"
-
-/* Format string used when reading and writing formatted
-   files. Observe the following about these format strings:
-
-    1. The format string for reading double contains two '%'
-       identifiers, that is because doubles are read by parsing a
-       prefix and power separately.
-
-    2. For both double and float the write format contains two '%'
-       characters - that is because the values are split in a prefix
-       and a power prior to writing - see the function
-       __fprintf_scientific().
-
-    3. The logical type involves converting back and forth between 'T'
-       and 'F' and internal logical representation. The format strings
-       are therefore for reading/writing a character.
-
-*/
-
-#define READ_FMT_CHAR "%8c"
-#define READ_FMT_FLOAT "%gE"
-#define READ_FMT_INT "%d"
-#define READ_FMT_MESS "%8c"
-#define READ_FMT_BOOL "  %c"
-#define READ_FMT_DOUBLE "%lgD%d"
-
-/* The boolean type is not a native type which can be uniquely
-   identified between Fortran, C, formatted and unformatted
-   files:
-
-    o In the formatted files the characters BOOL_TRUE_CHAR and
-      BOOL_FALSE_CHAR are used to represent true and false values
-      repsectively.
-
-    o In the unformatted files the boolean values are
-      represented as integers with the values RD_BOOL_TRUE_INT and
-      RD_BOOL_FALSE_INT respectively.
-
-   Internally in an rd_kw instance boolean values are represented as
-   char (NOT bool). */
-
-// For formatted files:
-#define BOOL_TRUE_CHAR 'T'
-#define BOOL_FALSE_CHAR 'F'
-
-static std::string read_fmt_string(const rd_data_type rd_type) {
-    return fmt::format("%{}c", rd_type_get_sizeof_iotype(rd_type));
-}
-
-static std::string read_fmt(const rd_data_type data_type) {
-    switch (rd_type_get_type(data_type)) {
-    case (RD_CHAR_TYPE):
-        return READ_FMT_CHAR;
-    case (RD_INT_TYPE):
-        return READ_FMT_INT;
-    case (RD_FLOAT_TYPE):
-        return READ_FMT_FLOAT;
-    case (RD_DOUBLE_TYPE):
-        return READ_FMT_DOUBLE;
-    case (RD_BOOL_TYPE):
-        return READ_FMT_BOOL;
-    case (RD_MESS_TYPE):
-        return READ_FMT_MESS;
-    case (RD_STRING_TYPE):
-        return read_fmt_string(data_type);
-    default:
-        throw std::invalid_argument(
-            fmt::format("invalid rd_type: {}", rd_type_name(data_type)));
-    }
-}
 
 static size_t get_blocksize(rd_data_type data_type) {
     if (rd_type_is_alpha(data_type))
@@ -515,263 +444,12 @@ rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
 }
 
 void rd::KW::zero_init_data() {
-    switch (rd_type_get_type(data_type())) {
-    case RD_INT_TYPE:
-        m_data = std::vector<int>(size(), 0);
-        break;
-    case RD_FLOAT_TYPE:
-        m_data = std::vector<float>(size(), 0.0f);
-        break;
-    case RD_DOUBLE_TYPE:
-        m_data = std::vector<double>(size(), 0.0);
-        break;
-    case RD_BOOL_TYPE:
-        m_data = std::vector<char>(size(), 0);
-        break;
-    case RD_CHAR_TYPE:
-    case RD_STRING_TYPE:
-        m_data = std::vector<std::string>(size());
-        break;
-    default:
-        /* RD_MESS_TYPE carries no element-wise data and is not
-           representable by rd::kw_data. */
-        m_data = std::nullopt;
-        break;
-    }
+    m_data = rd::zero_init_data(data_type(), size());
 }
 
-static bool rd_kw_qskip(FILE *stream) {
-    const char sep = '\'';
-    const char space = ' ';
-    const char newline = '\n';
-    const char tab = '\t';
-    bool OK = true;
-    char c;
-    bool cont = true;
-    while (cont) {
-        c = fgetc(stream);
-        if (c == EOF) {
-            cont = false;
-            OK = false;
-        } else {
-            if (c == space || c == newline || c == tab)
-                cont = true;
-            else if (c == sep)
-                cont = false;
-        }
-    }
-    return OK;
-}
-
-static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
-                                 FILE *stream) {
-    const char null_char = '\0';
-    char last_sep;
-    bool OK;
-    OK = rd_kw_qskip(stream);
-    if (OK) {
-        int read_count = 0;
-        read_count += fscanf(stream, fmt, s);
-        s[len] = null_char;
-        read_count += fscanf(stream, "%c", &last_sep);
-
-        if (read_count != 2)
-            throw std::runtime_error(
-                "reading 'xxxxxxxx' formatted string failed");
-    }
-    return OK;
-}
-
-/* This rather painful parsing is because formatted eclipse double
-  format : 0.ddddD+01 - difficult to parse the 'D'.
-
-*/
-static double __fscanf_RD_double(FILE *stream, const char *fmt) {
-    int read_count, power;
-    double value, arg;
-    read_count = fscanf(stream, fmt, &arg, &power);
-    if (read_count == 2)
-        value = arg * pow(10, power);
-    else {
-        throw std::runtime_error("read failed");
-        value = -1;
-    }
-    return value;
-}
-
-static char read_formatted_bool(FILE *stream) {
-    char bool_char = '\0';
-    if (fscanf(stream, READ_FMT_BOOL, &bool_char) != 1)
-        throw std::runtime_error("read failed - premature file end?");
-    if (bool_char == BOOL_TRUE_CHAR)
-        return 1;
-    if (bool_char == BOOL_FALSE_CHAR)
-        return 0;
-    throw std::runtime_error(
-        fmt::format("Logical value: [{}] not recogniced", bool_char));
-}
-
-static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
-                                                      ERT::FortIO &fortio) {
-    const rd_type_enum type = rd_kw->get_type();
-    const size_t size = rd_kw->size();
-    FILE *stream = fortio.get_FILE();
-    const std::string read_format = read_fmt(rd_kw->data_type());
-    std::optional<rd::kw_data> data;
-
-    switch (type) {
-    case RD_INT_TYPE: {
-        std::vector<int> values(size);
-        for (size_t i = 0; i < size; i++) {
-            if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
-                throw std::runtime_error(fmt::format(
-                    "after reading {} values reading of keyword:{} from:{} failed",
-                    i, rd_kw->name(), fortio.filename_ref()));
-        }
-        data = std::move(values);
-    } break;
-    case RD_FLOAT_TYPE: {
-        std::vector<float> values(size);
-        for (size_t i = 0; i < size; i++) {
-            if (fscanf(stream, read_format.c_str(), &values[i]) != 1)
-                throw std::runtime_error(fmt::format(
-                    "after reading {} values reading of keyword:{} from:{} failed",
-                    i, rd_kw->name(), fortio.filename_ref()));
-        }
-        data = std::move(values);
-    } break;
-    case RD_DOUBLE_TYPE: {
-        std::vector<double> values(size);
-        for (size_t i = 0; i < size; i++)
-            values[i] = __fscanf_RD_double(stream, read_format.c_str());
-        data = std::move(values);
-    } break;
-    case RD_BOOL_TYPE: {
-        std::vector<char> values(size);
-        for (size_t i = 0; i < size; i++)
-            values[i] = read_formatted_bool(stream);
-        data = std::move(values);
-    } break;
-    case RD_CHAR_TYPE:
-    case RD_STRING_TYPE: {
-        const size_t width =
-            type == RD_CHAR_TYPE ? RD_STRING8_LENGTH : rd_kw->iotype_size();
-        std::vector<char> buf(width + 1, '\0');
-        std::vector<std::string> values;
-        values.reserve(size);
-        for (size_t i = 0; i < size; i++) {
-            rd_kw_fscanf_qstring(buf.data(), read_format.c_str(),
-                                 static_cast<int>(width), stream);
-            values.emplace_back(buf.data());
-        }
-        data = std::move(values);
-    } break;
-    case RD_MESS_TYPE: {
-        char buf[RD_STRING8_LENGTH + 1];
-        for (size_t i = 0; i < size; i++)
-            rd_kw_fscanf_qstring(buf, read_format.c_str(), RD_STRING8_LENGTH,
-                                 stream);
-        /* leave data as nullopt. */
-    } break;
-    default:
-        throw std::runtime_error(fmt::format(
-            "Internal error: internal eclipse_type: {} not recognized", type));
-    }
-
-    /* Skip the trailing newline */
-    fortio.fseek(1, SEEK_CUR);
-    return data;
-}
-
-static bool read_unformatted_data(rd::KW *rd_kw, ERT::FortIO &fortio,
-                                  std::optional<rd::kw_data> &out) {
-    const rd_type_enum type = rd_kw->get_type();
-    const size_t size = rd_kw->size();
-    const size_t sizeof_iotype = rd_kw->iotype_size();
-    if (sizeof_iotype != 0 &&
-        size > std::numeric_limits<size_t>::max() / sizeof_iotype)
-        throw std::invalid_argument(
-            fmt::format("buffer size overflow: {} * {}", size, sizeof_iotype));
-
-    const size_t record_size = size * sizeof_iotype;
-    if (record_size > std::numeric_limits<int>::max())
-        throw std::invalid_argument(
-            "record size exceeded signed 32 bit integer");
-
-    std::vector<char> buffer(record_size);
-    bool read_ok =
-        fortio.fread_buffer(buffer.data(), static_cast<int>(record_size));
-    if (!read_ok)
-        return false;
-
-    if (RD_ENDIAN_FLIP) {
-        if (rd_type_is_numeric(rd_kw->data_type()) ||
-            rd_type_is_bool(rd_kw->data_type()))
-            util_endian_flip_vector(buffer.data(), sizeof_iotype, size);
-    }
-
-    switch (type) {
-    case RD_INT_TYPE: {
-        std::vector<int> result(size);
-        if (record_size > 0)
-            std::memcpy(result.data(), buffer.data(), record_size);
-        out = std::move(result);
-    } break;
-    case RD_FLOAT_TYPE: {
-        std::vector<float> result(size);
-        if (record_size > 0)
-            std::memcpy(result.data(), buffer.data(), record_size);
-        out = std::move(result);
-    } break;
-    case RD_DOUBLE_TYPE: {
-        std::vector<double> result(size);
-        if (record_size > 0)
-            std::memcpy(result.data(), buffer.data(), record_size);
-        out = std::move(result);
-    } break;
-    case RD_BOOL_TYPE: {
-        std::vector<char> result(size);
-        for (size_t i = 0; i < size; i++) {
-            int int_value;
-            std::memcpy(&int_value, &buffer[i * sizeof_iotype],
-                        sizeof int_value);
-            result[i] = (int_value == RD_BOOL_TRUE_INT) ? 1 : 0;
-        }
-        out = std::move(result);
-    } break;
-    case RD_CHAR_TYPE:
-    case RD_STRING_TYPE: {
-        std::vector<std::string> result;
-        result.reserve(size);
-        for (size_t i = 0; i < size; i++)
-            result.emplace_back(&buffer[i * sizeof_iotype], sizeof_iotype);
-        out = std::move(result);
-    } break;
-    default:
-        /* RD_MESS_TYPE: leave out unset (nullopt). */
-        out = std::nullopt;
-        break;
-    }
-    return true;
-}
-
-bool rd::KW::fread_data(rd::KW *rd_kw, ERT::FortIO &fortio) {
-    if (rd_kw->size() == 0) {
-        /* The keyword has zero size - and reading data is trivially OK. */
-        rd_kw->zero_init_data();
-        return true;
-    }
-
-    if (fortio.fmt_file()) {
-        rd_kw->m_data = read_formatted_data(rd_kw, fortio);
-        return true;
-    } else {
-        std::optional<rd::kw_data> out;
-        bool read_ok = read_unformatted_data(rd_kw, fortio, out);
-        if (read_ok)
-            rd_kw->m_data = std::move(out);
-        return read_ok;
-    }
+void rd::KW::fread_data(rd::KW *rd_kw, ERT::FortIO &fortio) {
+    rd_kw->m_data = rd::fread_data(rd_kw->data_type(), rd_kw->size(),
+                                   rd_kw->name(), fortio);
 }
 
 /**
@@ -909,14 +587,14 @@ std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
     int size;
 
     if (fmt_file) {
-        if (!rd_kw_fscanf_qstring(header, "%8c", 8, stream))
+        if (!rd::read_sized_quoted_string(header, 8, stream))
             return {nullptr};
 
         int read_count = fscanf(stream, "%d", &size);
         if (read_count != 1)
             return {nullptr};
 
-        if (!rd_kw_fscanf_qstring(rd_type_str, "%4c", 4, stream))
+        if (!rd::read_sized_quoted_string(rd_type_str, 4, stream))
             return {nullptr};
 
         fgetc(stream); /* Reading the trailing newline ... */
@@ -955,9 +633,7 @@ std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
 
 std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
     if (auto rd_kw = rd::KW::fread_header(fortio)) {
-        if (!fread_data(rd_kw.get(), fortio))
-            return {nullptr};
-
+        fread_data(rd_kw.get(), fortio);
         return rd_kw;
     } else
         return {nullptr};

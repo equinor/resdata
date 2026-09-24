@@ -34,6 +34,7 @@ add_library(
   resdata/rd_sum_file_data.cpp
   resdata/rd_util.cpp
   resdata/rd_kw.cpp
+  resdata/rd_kw_header.cpp
   resdata/rd_sum.cpp
   resdata/rd_sum_vector.cpp
   resdata/rd_grid.cpp
