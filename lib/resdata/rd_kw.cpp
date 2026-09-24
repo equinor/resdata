@@ -94,7 +94,7 @@ rd::KW::KW(const std::string &name, int size, rd_data_type data_type)
     if (size < 0)
         throw std::invalid_argument(
             fmt::format("rd_kw size was negative: {}", size));
-    zero_init_data();
+    m_data = m_header.zero_init_data();
 }
 
 void rd::KW::set_bool(size_t index, bool value) {
@@ -433,13 +433,8 @@ rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
             other.m_data.value());
 }
 
-void rd::KW::zero_init_data() {
-    m_data = rd::zero_init_data(data_type(), size());
-}
-
 void rd::KW::fread_data(rd::KW *rd_kw, ERT::FortIO &fortio) {
-    rd_kw->m_data = rd::fread_data(rd_kw->data_type(), rd_kw->size(),
-                                   rd_kw->name(), fortio);
+    rd_kw->m_data = rd_kw->m_header.fread_data(fortio);
 }
 
 /**
@@ -576,8 +571,7 @@ std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
 
 std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
     auto kw_header = rd::KWHeader::fread(fortio);
-    auto data = rd::fread_data(kw_header.data_type(), kw_header.size(),
-                               kw_header.name(), fortio);
+    auto data = kw_header.fread_data(fortio);
     return std::make_unique<rd::KW>(std::move(kw_header), std::move(data));
 }
 

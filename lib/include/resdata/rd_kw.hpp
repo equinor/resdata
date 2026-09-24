@@ -34,7 +34,6 @@ class KW {
 private:
     KWHeader m_header;
     std::optional<kw_data> m_data;
-    void zero_init_data();
     static void fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
 
 public:
@@ -79,9 +78,7 @@ public:
         : m_header(std::move(header)), m_data(std::move(data)) {}
 
     KW(const std::string &name, size_t size, rd_data_type data_type)
-        : m_header(size, data_type, name) {
-        zero_init_data();
-    }
+        : m_header(size, data_type, name), m_data(m_header.zero_init_data()) {}
 
     KW(const std::string &name, int size, rd_data_type data_type);
 
