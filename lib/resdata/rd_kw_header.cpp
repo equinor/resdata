@@ -18,6 +18,16 @@
 
 #include "ert/util/util.hpp"
 
+std::string rd::KWHeader::strip_name(const std::string &name) {
+    if (name.size() > RD_STRING8_LENGTH)
+        return name;
+    const size_t start = name.find_first_not_of(' ');
+    if (start == std::string::npos)
+        return std::string();
+    const size_t end = name.find_last_not_of(' ');
+    return name.substr(start, end - start + 1);
+}
+
 /* The boolean type is not a native type which can be uniquely
    identified between Fortran, C, formatted and unformatted
    files:
@@ -196,7 +206,7 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
         std::vector<std::string> values;
         values.reserve(size);
         for (size_t i = 0; i < size; i++) {
-            rd::read_sized_quoted_string(buf.data(), width, stream);
+            read_sized_quoted_string(buf.data(), width, stream);
             values.emplace_back(buf.data());
         }
         data = std::move(values);
@@ -204,7 +214,7 @@ read_formatted_data(const rd_data_type data_type, const size_t size,
     case RD_MESS_TYPE: {
         char buf[RD_STRING8_LENGTH + 1];
         for (size_t i = 0; i < size; i++)
-            rd::read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
+            read_sized_quoted_string(buf, RD_STRING8_LENGTH, stream);
         /* leave data as nullopt. */
     } break;
     default:
@@ -321,4 +331,57 @@ std::optional<rd::kw_data> rd::fread_data(const rd_data_type type,
         return read_formatted_data(type, size, name, fortio);
     else
         return read_unformatted_data(type, size, name, fortio);
+}
+
+rd::KWHeader rd::KWHeader::fread(ERT::FortIO &fortio) {
+    const char null_char = '\0';
+    FILE *stream = fortio.get_FILE();
+    char name[RD_STRING8_LENGTH + 1];
+    char rd_type_str[RD_TYPE_LENGTH + 1];
+    int size;
+
+    if (fortio.fmt_file()) {
+        if (!read_sized_quoted_string(name, 8, stream))
+            throw std::runtime_error("Could not read name for keyword");
+
+        if (fscanf(stream, "%d", &size) != 1)
+            throw std::runtime_error("Could not read size for keyword");
+
+        if (!read_sized_quoted_string(rd_type_str, 4, stream))
+            throw std::runtime_error("Could not read type for keyword");
+
+        fgetc(stream); /* Reading the trailing newline ... */
+    } else {
+        name[RD_STRING8_LENGTH] = null_char;
+        rd_type_str[RD_TYPE_LENGTH] = null_char;
+        int record_size = fortio.init_read();
+
+        if (record_size <= 0)
+            throw std::runtime_error(
+                "Record had zero size in reading keyword header");
+
+        char buffer[RD_KW_HEADER_DATA_SIZE];
+        if (std::fread(buffer, 1, RD_KW_HEADER_DATA_SIZE, stream) !=
+            RD_KW_HEADER_DATA_SIZE)
+            throw std::runtime_error("Could not read name in keyword header");
+
+        memcpy(name, &buffer[0], RD_STRING8_LENGTH);
+        void *ptr = &buffer[RD_STRING8_LENGTH];
+        size = *((int *)ptr);
+
+        memcpy(rd_type_str, &buffer[RD_STRING8_LENGTH + sizeof(size)],
+               RD_TYPE_LENGTH);
+
+        if (!fortio.complete_read(record_size))
+            throw std::runtime_error(
+                "End record did not match in reading keyword header");
+
+        if (RD_ENDIAN_FLIP)
+            util_endian_flip_vector(&size, sizeof size, 1);
+    }
+
+    rd_data_type data_type = rd_type_create_from_name(rd_type_str);
+    if (size < 0)
+        throw std::runtime_error("Keyword header had negative size");
+    return {static_cast<size_t>(size), data_type, name};
 }
