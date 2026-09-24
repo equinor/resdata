@@ -972,11 +972,11 @@ class ResdataKW(_BaseCClass):
             raise ValueError(
                 "Sorry: the name property must be max 8 characters long :-("
             )
-        _kw._set_header(self, name)
+        _kw._set_name(self, name)
 
     @property
     def name(self):
-        n = _kw._get_header(self)
+        n = _kw._get_name(self)
         return str(n) if n else ""
 
     @name.setter

@@ -43,7 +43,7 @@ public:
         from the same fortio instance as used when calling get_kw().*/
     FileKW(const rd::KW *rd_kw, offset_type offset)
         : FileKW(offset, rd_kw->data_type(), rd::kw_get_size(rd_kw),
-                 rd_kw->header()) {}
+                 rd_kw->name()) {}
     [[nodiscard]] bool operator==(const FileKW &other) const {
         if (file_offset != other.file_offset)
             return false;
