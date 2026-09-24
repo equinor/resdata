@@ -32,9 +32,7 @@ namespace rd {
 
 class KW {
 private:
-    size_t m_size;
-    rd_data_type m_data_type;
-    std::string m_name;
+    KWHeader m_header;
     std::optional<kw_data> m_data;
     void zero_init_data();
     static void fread_data(rd::KW *rd_kw, ERT::FortIO &fortio);
@@ -88,7 +86,7 @@ public:
     KW(rd_data_type data_type) = delete;
 
     KW(const std::string &name, size_t size, rd_data_type data_type)
-        : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {
+        : m_header(size, data_type, strip_name(name)) {
         zero_init_data();
     }
 
@@ -96,27 +94,24 @@ public:
 
     template <typename T>
     KW(const std::string &name, std::vector<T> data)
-        : m_size(data.size()), m_data_type(datatype<T>::tag),
-          m_name(strip_name(name)) {
+        : m_header(data.size(), datatype<T>::tag, strip_name(name)) {
         m_data = std::move(data);
     }
 
     KW(const std::string &name, const std::initializer_list<std::string> &data,
        rd_data_type data_type = RD_CHAR)
-        : m_size(data.size()), m_data_type(data_type),
-          m_name(strip_name(name)) {
-        if (!rd_type_is_alpha(m_data_type))
+        : m_header(data.size(), data_type, strip_name(name)) {
+        if (!rd_type_is_alpha(this->data_type()))
             throw std::invalid_argument(
                 "String keyword data requires an alphabetic data type");
-        m_data = std::vector<std::string>(m_size, "");
+        m_data = std::vector<std::string>(size(), "");
         size_t i = 0;
         for (const auto &v : data)
             set_padded(i++, v);
     }
 
     KW(const KW &other)
-        : m_size(other.size()), m_data_type(other.data_type()),
-          m_name(other.name()) {
+        : m_header(other.size(), other.data_type(), other.name()) {
         m_data = other.m_data;
     }
     KW(const KW &other, const std::optional<std::string> &new_kw, size_t offset,
@@ -138,21 +133,23 @@ public:
     static std::unique_ptr<rd::KW> global_copy(const rd::KW *src,
                                                const rd::KW *actnum);
     static std::unique_ptr<rd::KW> fread_header(ERT::FortIO &);
-    [[nodiscard]] size_t size() const { return m_size; }
-    [[nodiscard]] rd_data_type data_type() const { return m_data_type; }
+    [[nodiscard]] size_t size() const { return m_header.size(); }
+    [[nodiscard]] rd_data_type data_type() const {
+        return m_header.data_type();
+    }
     [[nodiscard]] size_t ctype_size() const {
-        return rd_type_get_sizeof_ctype(m_data_type);
+        return rd_type_get_sizeof_ctype(data_type());
     };
     [[nodiscard]] size_t iotype_size() const {
-        return rd_type_get_sizeof_iotype(m_data_type);
+        return rd_type_get_sizeof_iotype(data_type());
     };
     void resize(size_t new_size);
     static bool fskip_data(rd_data_type data_type, const int element_count,
                            ERT::FortIO &fortio);
     static void fskip_header(ERT::FortIO &fortio);
     bool fwrite(ERT::FortIO &) const;
-    std::string name() const { return m_name; };
-    void set_name(std::string name) { this->m_name = strip_name(name); }
+    std::string name() const { return m_header.name(); };
+    void set_name(std::string name) { m_header.set_name(strip_name(name)); }
     [[nodiscard]] const std::optional<kw_data> &data() const { return m_data; }
 
     /* Checks that m_data holds a std::vector<T> and returns a reference to
@@ -169,8 +166,8 @@ public:
     /* Replaces this keyword's data with a copy of @src's data. Throws
        std::invalid_argument if the size or type doesn't match. */
     void copy_data_from(const rd::KW &src) {
-        if (!rd_type_is_equal(m_data_type, src.data_type()) ||
-            m_size != src.size())
+        if (!rd_type_is_equal(data_type(), src.data_type()) ||
+            size() != src.size())
             throw std::invalid_argument("type/size mismatch");
         m_data = src.m_data;
     }

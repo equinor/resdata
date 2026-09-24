@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -41,36 +42,36 @@ namespace {
 } // namespace
 
 template <typename T> T rd::KW::at(size_t index) const {
-    if (index >= m_size)
-        throw_invalid_index(m_name, index, m_size);
+    if (index >= size())
+        throw_invalid_index(name(), index, size());
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_name);
+        throw_wrong_type(name());
     return std::get<std::vector<T>>(m_data.value())[index];
 }
 
 template <typename T> T &rd::KW::at(size_t index) {
-    if (index >= m_size)
-        throw_invalid_index(m_name, index, m_size);
+    if (index >= size())
+        throw_invalid_index(name(), index, size());
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_name);
+        throw_wrong_type(name());
     return std::get<std::vector<T>>(m_data.value())[index];
 }
 
 template <> bool rd::KW::at<bool>(size_t index) const {
-    if (index >= m_size)
-        throw_invalid_index(m_name, index, m_size);
+    if (index >= size())
+        throw_invalid_index(name(), index, size());
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<char>>(m_data.value()))
-        throw_wrong_type(m_name);
+        throw_wrong_type(name());
     return std::get<std::vector<char>>(m_data.value())[index] != 0;
 }
 
 template <typename T> const std::vector<T> &rd::KW::get_vector() const {
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<T>>(m_data.value()))
-        throw_wrong_type(m_name);
+        throw_wrong_type(name());
     return std::get<std::vector<T>>(m_data.value());
 }
 
@@ -88,21 +89,20 @@ INSTANTIATE_KW_ACCESSORS(char)
 INSTANTIATE_KW_ACCESSORS(std::string)
 #undef INSTANTIATE_KW_ACCESSORS
 
-rd::KW::KW(const std::string &header, int size, rd_data_type data_type)
-    : m_data_type(data_type), m_name(strip_name(header)) {
+rd::KW::KW(const std::string &name, int size, rd_data_type data_type)
+    : m_header(static_cast<size_t>(size), data_type, strip_name(name)) {
     if (size < 0)
         throw std::invalid_argument(
             fmt::format("rd_kw size was negative: {}", size));
-    this->m_size = static_cast<size_t>(size);
     zero_init_data();
 }
 
 void rd::KW::set_bool(size_t index, bool value) {
-    if (index >= m_size)
-        throw_invalid_index(m_name, index, m_size);
+    if (index >= size())
+        throw_invalid_index(name(), index, size());
     if (!m_data.has_value() ||
         !std::holds_alternative<std::vector<char>>(m_data.value()))
-        throw_wrong_type(m_name);
+        throw_wrong_type(name());
     std::get<std::vector<char>>(m_data.value())[index] =
         static_cast<char>(value ? 1 : 0);
 }
@@ -117,11 +117,11 @@ void rd::KW::set_padded(size_t index, const std::string &v) {
 }
 
 double rd::KW::as_double(size_t index) const {
-    if (rd_type_is_float(m_data_type)) {
+    if (rd_type_is_float(data_type())) {
         return static_cast<double>(this->at<float>(index));
-    } else if (rd_type_is_double(m_data_type)) {
+    } else if (rd_type_is_double(data_type())) {
         return this->at<double>(index);
-    } else if (rd_type_is_int(m_data_type)) {
+    } else if (rd_type_is_int(data_type())) {
         return static_cast<double>(this->at<int>(index));
     } else
         throw std::invalid_argument("cannot be converted to double");
@@ -369,7 +369,7 @@ size_t rd::KW::fortio_size() const {
    If index1 > index2 the result will be empty.
    Throws invalid_argument for stride == 0 and index1 >= other.size() */
 rd::KW::KW(const rd::KW &other, size_t index1, size_t index2, size_t stride)
-    : m_size(0), m_data_type(other.data_type()) {
+    : m_header(0, other.data_type(), other.name()) {
     if (index2 > other.size())
         index2 = other.size();
     if (index1 >= other.size())
@@ -387,8 +387,7 @@ rd::KW::KW(const rd::KW &other, size_t index1, size_t index2, size_t stride)
         src_index += stride;
     }
 
-    this->m_name = other.name();
-    this->m_size = new_size;
+    this->m_header.set_size(new_size);
 
     if (other.m_data.has_value())
         this->m_data = std::visit(
@@ -404,8 +403,8 @@ rd::KW::KW(const rd::KW &other, size_t index1, size_t index2, size_t stride)
 }
 
 void rd::KW::resize(size_t new_size) {
-    if (new_size != m_size) {
-        m_size = new_size;
+    if (new_size != size()) {
+        m_header.set_size(new_size);
         if (m_data.has_value())
             std::visit([new_size](auto &vec) { vec.resize(new_size); },
                        m_data.value());
@@ -422,7 +421,7 @@ void rd::KW::resize(size_t new_size) {
 
 rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
            size_t offset, size_t count)
-    : m_size(count), m_data_type(other.data_type()) {
+    : m_header(count, other.data_type(), other.name()) {
     if (offset >= other.size())
         throw std::invalid_argument(
             fmt::format("invalid offset - limits: [{},{})", 0, other.size()));
@@ -431,9 +430,7 @@ rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
             fmt::format("invalid count value: {}", count));
 
     if (new_kw.has_value())
-        m_name = strip_name(*new_kw);
-    else
-        m_name = other.name();
+        m_header.set_name(strip_name(*new_kw));
 
     if (other.m_data.has_value())
         this->m_data = std::visit(

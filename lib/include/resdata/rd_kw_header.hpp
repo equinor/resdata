@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <istream>
+#include <utility>
 #include <variant>
 #include <vector>
 #include <string>
@@ -10,6 +11,22 @@
 #include <resdata/FortIO.hpp>
 
 namespace rd {
+class KWHeader {
+private:
+    size_t m_size;
+    rd_data_type m_data_type;
+    std::string m_name;
+
+public:
+    KWHeader(size_t size, rd_data_type data_type, std::string name)
+        : m_size(size), m_data_type(data_type), m_name(std::move(name)) {}
+    size_t size() const { return m_size; }
+    rd_data_type data_type() const { return m_data_type; }
+    std::string name() const { return m_name; }
+    void set_name(std::string name) { m_name = name; }
+    void set_size(size_t size) { m_size = size; }
+};
+
 /** The data stored in the kw mirror the possible rd_type_enum values that carry
   element-wise data:
 
