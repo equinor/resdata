@@ -10,6 +10,12 @@
 #include <resdata/rd_type.hpp>
 #include <resdata/FortIO.hpp>
 
+/* Character data in restart format files comes as an array of fixed-length
+   string. Each of these strings is 8 characters long. The type name,
+   i.e. 'REAL', 'INTE', ... , come as 4 character strings. */
+#define RD_KW_HEADER_DATA_SIZE RD_STRING8_LENGTH + RD_TYPE_LENGTH + 4
+#define RD_KW_HEADER_FORTIO_SIZE RD_KW_HEADER_DATA_SIZE + 8
+
 namespace rd {
 class KWHeader {
 private:
@@ -17,14 +23,17 @@ private:
     rd_data_type m_data_type;
     std::string m_name;
 
+    static std::string strip_name(const std::string &name);
+
 public:
-    KWHeader(size_t size, rd_data_type data_type, std::string name)
-        : m_size(size), m_data_type(data_type), m_name(std::move(name)) {}
+    KWHeader(size_t size, rd_data_type data_type, const std::string &name)
+        : m_size(size), m_data_type(data_type), m_name(strip_name(name)) {}
     size_t size() const { return m_size; }
     rd_data_type data_type() const { return m_data_type; }
     std::string name() const { return m_name; }
-    void set_name(std::string name) { m_name = name; }
+    void set_name(std::string name) { m_name = strip_name(name); }
     void set_size(size_t size) { m_size = size; }
+    static KWHeader fread(ERT::FortIO &fortio);
 };
 
 /** The data stored in the kw mirror the possible rd_type_enum values that carry
@@ -42,5 +51,4 @@ using kw_data =
 std::optional<kw_data> fread_data(const rd_data_type type, const size_t size,
                                   const std::string &name, ERT::FortIO &fortio);
 std::optional<kw_data> zero_init_data(rd_data_type data_type, size_t size);
-bool read_sized_quoted_string(char *s, size_t len, std::istream &stream);
 } // namespace rd

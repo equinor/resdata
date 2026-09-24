@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -90,7 +91,7 @@ INSTANTIATE_KW_ACCESSORS(std::string)
 #undef INSTANTIATE_KW_ACCESSORS
 
 rd::KW::KW(const std::string &name, int size, rd_data_type data_type)
-    : m_header(static_cast<size_t>(size), data_type, strip_name(name)) {
+    : m_header(static_cast<size_t>(size), data_type, name) {
     if (size < 0)
         throw std::invalid_argument(
             fmt::format("rd_kw size was negative: {}", size));
@@ -126,14 +127,6 @@ double rd::KW::as_double(size_t index) const {
     } else
         throw std::invalid_argument("cannot be converted to double");
 }
-
-/*
-  Character data in restart format files comes as an array of fixed-length
-  string. Each of these strings is 8 characters long. The type name,
-  i.e. 'REAL', 'INTE', ... , come as 4 character strings.
-*/
-#define RD_KW_HEADER_DATA_SIZE RD_STRING8_LENGTH + RD_TYPE_LENGTH + 4
-#define RD_KW_HEADER_FORTIO_SIZE RD_KW_HEADER_DATA_SIZE + 8
 
 /* For some peculiar reason the keyword data is written in blocks, all
    numeric data is in blocks of 1000 elements, and character data is
@@ -430,7 +423,7 @@ rd::KW::KW(const rd::KW &other, const std::optional<std::string> &new_kw,
             fmt::format("invalid count value: {}", count));
 
     if (new_kw.has_value())
-        m_header.set_name(strip_name(*new_kw));
+        m_header.set_name(*new_kw);
 
     if (other.m_data.has_value())
         this->m_data = std::visit(
@@ -573,67 +566,22 @@ bool rd::KW::fskip_data(rd_data_type data_type, const int element_count,
 void rd::KW::fskip_header(ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     if (fmt_file) {
-        rd::KW::fread_header(fortio);
+        rd::KWHeader::fread(fortio);
     } else
         fortio.fskip_record();
 }
 
 std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
-    const char null_char = '\0';
-    std::istream &stream = fortio.get_istream();
-    bool fmt_file = fortio.fmt_file();
-    char header[RD_STRING8_LENGTH + 1];
-    char rd_type_str[RD_TYPE_LENGTH + 1];
-    int size;
-
-    if (fmt_file) {
-        if (!rd::read_sized_quoted_string(header, 8, stream))
-            return {nullptr};
-
-        stream >> size;
-        if (stream.fail())
-            return {nullptr};
-
-        if (!rd::read_sized_quoted_string(rd_type_str, 4, stream))
-            return {nullptr};
-
-        stream.get(); /* Reading the trailing newline ... */
-    } else {
-        header[RD_STRING8_LENGTH] = null_char;
-        rd_type_str[RD_TYPE_LENGTH] = null_char;
-        int record_size = fortio.init_read();
-
-        if (record_size <= 0)
-            return {nullptr};
-
-        char buffer[RD_KW_HEADER_DATA_SIZE];
-        if (!stream.read(buffer, RD_KW_HEADER_DATA_SIZE))
-            return {nullptr};
-
-        memcpy(header, &buffer[0], RD_STRING8_LENGTH);
-        void *ptr = &buffer[RD_STRING8_LENGTH];
-        size = *((int *)ptr);
-
-        memcpy(rd_type_str, &buffer[RD_STRING8_LENGTH + sizeof(size)],
-               RD_TYPE_LENGTH);
-
-        if (!fortio.complete_read(record_size))
-            return {nullptr};
-
-        if (RD_ENDIAN_FLIP)
-            util_endian_flip_vector(&size, sizeof size, 1);
-    }
-
-    rd_data_type data_type = rd_type_create_from_name(rd_type_str);
-    return std::make_unique<rd::KW>(header, size, data_type);
+    auto header = rd::KWHeader::fread(fortio);
+    return std::make_unique<rd::KW>(header.name(), header.size(),
+                                    header.data_type());
 }
 
 std::unique_ptr<rd::KW> rd::KW::fread(ERT::FortIO &fortio) {
-    if (auto rd_kw = rd::KW::fread_header(fortio)) {
-        fread_data(rd_kw.get(), fortio);
-        return rd_kw;
-    } else
-        return {nullptr};
+    auto kw_header = rd::KWHeader::fread(fortio);
+    auto data = rd::fread_data(kw_header.data_type(), kw_header.size(),
+                               kw_header.name(), fortio);
+    return std::make_unique<rd::KW>(std::move(kw_header), std::move(data));
 }
 
 static void rd_kw_fwrite_data_unformatted(const rd::KW *rd_kw,
