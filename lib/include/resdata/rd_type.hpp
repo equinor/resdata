@@ -46,6 +46,11 @@ typedef enum {
 struct rd_type_struct {
     const rd_type_enum type;
     const size_t element_size;
+
+    bool operator==(const rd_type_struct &other) const {
+        return std::tie(type, element_size) ==
+               std::tie(other.type, other.element_size);
+    }
 };
 
 typedef struct rd_type_struct rd_data_type;
@@ -106,6 +111,24 @@ template <> struct iotype<double> {
 
 template <> struct iotype<int> {
     static constexpr rd_type_enum tag = RD_INT_TYPE;
+};
+
+template <typename T> struct datatype {
+    static_assert(always_false<T>,
+                  "Type cannot be read element-wise from a keyword data "
+                  "section; expected float, double or int");
+};
+
+template <> struct datatype<float> {
+    static constexpr rd_data_type tag = RD_FLOAT;
+};
+
+template <> struct datatype<double> {
+    static constexpr rd_data_type tag = RD_DOUBLE;
+};
+
+template <> struct datatype<int> {
+    static constexpr rd_data_type tag = RD_INT;
 };
 
 /** Asserts that the keyword named @kw holds data of type @expected.

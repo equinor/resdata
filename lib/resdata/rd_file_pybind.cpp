@@ -29,7 +29,7 @@
 namespace py = pybind11;
 
 namespace {
-py::object create_kw_reference(rd_kw_type *kw, py::object parent) {
+py::object create_kw_reference(rd::KW *kw, py::object parent) {
     if (!kw)
         return py::none();
     return ResdataKW().attr("createCReference")(to_capsule(kw), parent);
@@ -210,7 +210,7 @@ PYBIND11_MODULE(rd_file, m) {
             "save_kw",
             [](rd::File &self, py::handle kw) {
                 if (self.is_writable()) {
-                    self.save_kw(from_cwrap<rd_kw_type>(kw));
+                    self.save_kw(from_cwrap<rd::KW>(kw));
                 } else {
                     PyErr_SetString(
                         PyExc_OSError,
@@ -610,7 +610,7 @@ PYBIND11_MODULE(rd_file, m) {
                 size_t num_steps = self.num_named_kw("SEQNUM");
                 py::list steps;
                 for (size_t i = 0; i < num_steps; i++)
-                    steps.append(rd_kw_iget_int(self.get_kw("SEQNUM", i), 0));
+                    steps.append((self.get_kw("SEQNUM", i))->at<int>(0));
                 return steps;
             },
             "Will return a list of all report steps.\n"
@@ -634,9 +634,9 @@ PYBIND11_MODULE(rd_file, m) {
                 }
                 if (view->has_kw("INTEHEAD")) {
                     auto intehead = view->get_kw("INTEHEAD", 0);
-                    int year = rd_kw_iget_int(intehead, 66);
-                    int month = rd_kw_iget_int(intehead, 65);
-                    int day = rd_kw_iget_int(intehead, 64);
+                    int year = intehead->at<int>(66);
+                    int month = intehead->at<int>(65);
+                    int day = intehead->at<int>(64);
                     py::object datetime =
                         py::module_::import("datetime").attr("datetime");
                     py::list dates;

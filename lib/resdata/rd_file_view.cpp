@@ -60,8 +60,8 @@ bool FileView::drop_flags(FileMode flag) {
     return flag_set;
 }
 
-rd_kw_type *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
-    rd_kw_type *rd_kw = file_kw->get_kw_ptr();
+rd::KW *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
+    rd::KW *rd_kw = file_kw->get_kw_ptr();
     if (!rd_kw) {
         if (context->fortio.assert_stream_open()) {
             rd_kw = file_kw->get_kw(context->fortio);
@@ -103,8 +103,8 @@ FileView::validate_index_fload_kw(const std::string &kw, int index,
 
 void FileView::write(ERT::FortIO &target, size_t offset) {
     for (size_t index = offset; index < kw_list.size(); index++) {
-        rd_kw_type *rd_kw = get_kw(index);
-        rd_kw_fwrite(rd_kw, target);
+        rd::KW *rd_kw = get_kw(index);
+        rd_kw->fwrite(target);
     }
 }
 
@@ -250,10 +250,10 @@ static time_t rsthead_date(int day, int month, int year) {
     return rd_make_date(day, month, year);
 }
 
-static time_t rd_rsthead_date(const rd_kw_type *intehead_kw) {
-    return rsthead_date(rd_kw_iget_int(intehead_kw, INTEHEAD_DAY_INDEX),
-                        rd_kw_iget_int(intehead_kw, INTEHEAD_MONTH_INDEX),
-                        rd_kw_iget_int(intehead_kw, INTEHEAD_YEAR_INDEX));
+static time_t rd_rsthead_date(const rd::KW *intehead_kw) {
+    return rsthead_date(intehead_kw->at<int>(INTEHEAD_DAY_INDEX),
+                        intehead_kw->at<int>(INTEHEAD_MONTH_INDEX),
+                        intehead_kw->at<int>(INTEHEAD_YEAR_INDEX));
 }
 
 time_t FileView::restart_sim_date(size_t seqnum_index) {
@@ -261,7 +261,7 @@ time_t FileView::restart_sim_date(size_t seqnum_index) {
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
 
     if (seqnum_map) {
-        rd_kw_type *intehead_kw = seqnum_map->get_kw(INTEHEAD_KW, 0);
+        rd::KW *intehead_kw = seqnum_map->get_kw(INTEHEAD_KW, 0);
         return rd_rsthead_date(intehead_kw);
     }
 
@@ -274,8 +274,8 @@ double FileView::restart_sim_days(size_t seqnum_index) {
         blockview(SEQNUM_KW, SEQNUM_KW, seqnum_index);
 
     if (seqnum_map) {
-        rd_kw_type *doubhead_kw = seqnum_map->get_kw(DOUBHEAD_KW, 0);
-        return rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX);
+        rd::KW *doubhead_kw = seqnum_map->get_kw(DOUBHEAD_KW, 0);
+        return doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX);
     }
 
     throw std::out_of_range(
@@ -317,7 +317,7 @@ std::optional<size_t> FileView::find_sim_time(time_t sim_time) {
     if (has_kw(INTEHEAD_KW)) {
         const auto &intehead_index_list = kw_index.at(INTEHEAD_KW);
         for (size_t index = 0; index < intehead_index_list.size(); index++) {
-            const rd_kw_type *intehead_kw = get_kw(intehead_index_list[index]);
+            const rd::KW *intehead_kw = get_kw(intehead_index_list[index]);
             if (rd_rsthead_date(intehead_kw) == sim_time)
                 return index;
         }
@@ -335,8 +335,10 @@ FileView::restart_view_from_seqnum_index(size_t index) {
 }
 std::shared_ptr<FileView>
 FileView::restart_view_from_report_step(int report_step) {
-    auto block = find_block(SEQNUM_KW, [&](const rd_kw_type *seqnum_kw) {
-        return rd_kw_data_equal(seqnum_kw, &report_step);
+    auto block = find_block(SEQNUM_KW, [&](const rd::KW *seqnum_kw) {
+        return seqnum_kw->size() > 0 &&
+               rd_type_is_int(seqnum_kw->data_type()) &&
+               seqnum_kw->at<int>(0) == report_step;
     });
     if (!block.has_value())
         throw std::invalid_argument(
@@ -346,7 +348,7 @@ FileView::restart_view_from_report_step(int report_step) {
 
 std::shared_ptr<FileView>
 FileView::restart_view_from_sim_time(time_t sim_time) {
-    auto block = find_block(INTEHEAD_KW, [&](const rd_kw_type *intehead_kw) {
+    auto block = find_block(INTEHEAD_KW, [&](const rd::KW *intehead_kw) {
         return rd_rsthead_date(intehead_kw) == sim_time;
     });
     if (!block.has_value())
@@ -357,9 +359,9 @@ FileView::restart_view_from_sim_time(time_t sim_time) {
 
 std::shared_ptr<FileView>
 FileView::restart_view_from_sim_days(double sim_days) {
-    auto block = find_block(DOUBHEAD_KW, [&](const rd_kw_type *doubhead_kw) {
+    auto block = find_block(DOUBHEAD_KW, [&](const rd::KW *doubhead_kw) {
         return util_double_approx_equal(
-            sim_days, rd_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX));
+            sim_days, doubhead_kw->at<double>(DOUBHEAD_DAYS_INDEX));
     });
     if (!block.has_value())
         throw std::invalid_argument(
