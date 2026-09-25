@@ -87,7 +87,7 @@ static bool skip_space_until_quote(FILE *stream) {
     const char newline = '\n';
     const char tab = '\t';
     bool OK = true;
-    char c;
+    int c;
     bool cont = true;
     while (cont) {
         c = fgetc(stream);
@@ -95,9 +95,10 @@ static bool skip_space_until_quote(FILE *stream) {
             cont = false;
             OK = false;
         } else {
-            if (c == space || c == newline || c == tab)
+            char cc = static_cast<char>(c);
+            if (cc == space || cc == newline || cc == tab)
                 cont = true;
-            else if (c == sep)
+            else if (cc == sep)
                 cont = false;
         }
     }
