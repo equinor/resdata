@@ -878,6 +878,18 @@ static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     return value;
 }
 
+static char read_formatted_bool(FILE *stream, const std::string &read_format) {
+    char bool_char = '\0';
+    if (fscanf(stream, read_format.c_str(), &bool_char) != 1)
+        throw std::runtime_error("read failed - premature file end?");
+    if (bool_char == BOOL_TRUE_CHAR)
+        return 1;
+    if (bool_char == BOOL_FALSE_CHAR)
+        return 0;
+    throw std::runtime_error(
+        fmt::format("Logical value: [{}] not recogniced", bool_char));
+}
+
 static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     if (rd_kw->size() == 0)
@@ -933,19 +945,8 @@ static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
                     rd_kw_iset(rd_kw, index, &value);
                 } break;
                 case (RD_BOOL_TYPE): {
-                    char bool_char;
-                    if (fscanf(stream, read_format.c_str(), &bool_char) == 1) {
-                        if (bool_char == BOOL_TRUE_CHAR)
-                            rd_kw_iset_bool(rd_kw, index, true);
-                        else if (bool_char == BOOL_FALSE_CHAR)
-                            rd_kw_iset_bool(rd_kw, index, false);
-                        else
-                            throw std::runtime_error(fmt::format(
-                                "Logical value: [{}] not recogniced",
-                                bool_char));
-                    } else
-                        throw std::runtime_error(
-                            "read failed - premature file end?");
+                    rd_kw_iset_bool(rd_kw, index,
+                                    read_formatted_bool(stream, read_format));
                 } break;
                 case (RD_MESS_TYPE):
                     rd_kw_fscanf_qstring(&rd_kw->data[offset],
