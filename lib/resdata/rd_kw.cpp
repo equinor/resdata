@@ -863,12 +863,8 @@ static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
     return OK;
 }
 
-/*
-  This rather painful parsing is because formatted eclipse double
-  format : 0.ddddD+01 - difficult to parse the 'D';
-*/
-/** Should be: NESTED */
-
+/* This rather painful parsing is because formatted eclipse double
+  format : 0.ddddD+01 - difficult to parse the 'D'; */
 static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     int read_count, power;
     double value, arg;
