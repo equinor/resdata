@@ -2331,3 +2331,12 @@ def test_that_reading_past_the_last_keyword_fails(tmp_path):
         ResdataKW.fread(fortio)
         with pytest.raises(ValueError, match="Failed to create ResdataKW instance"):
             ResdataKW.fread(fortio)
+
+
+def test_that_missing_end_quote_raises(tmp_path):
+    (path := tmp_path / "test").write_text("'CHARKW  ' 1 'CHAR' 'E0000     ")
+    with (
+        pytest.raises(RuntimeError, match="reading 'xxxxxxxx' formatted string failed"),
+        openFortIO(str(path), fmt_file=True) as fortio,
+    ):
+        ResdataKW.fread(fortio)

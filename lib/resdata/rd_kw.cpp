@@ -539,7 +539,7 @@ void rd::KW::zero_init_data() {
     }
 }
 
-static bool rd_kw_qskip(FILE *stream) {
+static bool skip_space_until_quote(FILE *stream) {
     const char sep = '\'';
     const char space = ' ';
     const char newline = '\n';
@@ -562,19 +562,20 @@ static bool rd_kw_qskip(FILE *stream) {
     return OK;
 }
 
-static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
-                                 FILE *stream) {
-    const char null_char = '\0';
-    char last_sep;
-    bool OK;
-    OK = rd_kw_qskip(stream);
+static bool read_sized_quoted_string(char *s, const char *fmt, int len,
+                                     FILE *stream) {
+    bool OK = skip_space_until_quote(stream);
     if (OK) {
         int read_count = 0;
-        read_count += fscanf(stream, fmt, s);
-        s[len] = null_char;
+        char last_sep = '\0';
+        if (len > 0) {
+            read_count += fscanf(stream, fmt, s);
+        } else {
+            read_count += 1;
+        }
         read_count += fscanf(stream, "%c", &last_sep);
-
-        if (read_count != 2)
+        s[len] = '\0';
+        if (read_count != 2 || last_sep != '\'')
             throw std::runtime_error(
                 "reading 'xxxxxxxx' formatted string failed");
     }
@@ -656,8 +657,8 @@ static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
         std::vector<std::string> values;
         values.reserve(size);
         for (size_t i = 0; i < size; i++) {
-            rd_kw_fscanf_qstring(buf.data(), read_format.c_str(),
-                                 static_cast<int>(width), stream);
+            read_sized_quoted_string(buf.data(), read_format.c_str(),
+                                     static_cast<int>(width), stream);
             values.emplace_back(buf.data());
         }
         data = std::move(values);
@@ -665,8 +666,8 @@ static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
     case RD_MESS_TYPE: {
         char buf[RD_STRING8_LENGTH + 1];
         for (size_t i = 0; i < size; i++)
-            rd_kw_fscanf_qstring(buf, read_format.c_str(), RD_STRING8_LENGTH,
-                                 stream);
+            read_sized_quoted_string(buf, read_format.c_str(),
+                                     RD_STRING8_LENGTH, stream);
         /* leave data as nullopt. */
     } break;
     default:
@@ -902,14 +903,14 @@ std::unique_ptr<rd::KW> rd::KW::fread_header(ERT::FortIO &fortio) {
     int size;
 
     if (fmt_file) {
-        if (!rd_kw_fscanf_qstring(header, "%8c", 8, stream))
+        if (!read_sized_quoted_string(header, "%8c", 8, stream))
             return {nullptr};
 
         int read_count = fscanf(stream, "%d", &size);
         if (read_count != 1)
             return {nullptr};
 
-        if (!rd_kw_fscanf_qstring(rd_type_str, "%4c", 4, stream))
+        if (!read_sized_quoted_string(rd_type_str, "%4c", 4, stream))
             return {nullptr};
 
         fgetc(stream); /* Reading the trailing newline ... */
