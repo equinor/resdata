@@ -178,7 +178,6 @@ rd_kw_type *rd_kw_alloc_new(const char *, int, rd_data_type, const void *);
 rd_kw_type *rd_kw_alloc_new_shared(const char *, int, rd_data_type, void *);
 rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
                                     const rd_kw_type *actnum);
-void rd_kw_summarize(const rd_kw_type *rd_kw);
 double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,

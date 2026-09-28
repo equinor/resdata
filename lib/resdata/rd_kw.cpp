@@ -1496,12 +1496,6 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
     return global_copy.release();
 }
 
-void rd_kw_summarize(const rd_kw_type *rd_kw) {
-    std::string type_name = rd_type_name(rd_kw->data_type);
-    printf("%8s   %10d:%4s \n", rd_kw_get_header8(rd_kw), rd_kw_get_size(rd_kw),
-           type_name.c_str());
-}
-
 #define RD_KW_SCALAR_SET_TYPED(ctype, RD_TYPE)                                 \
     void rd_kw_scalar_set_##ctype(rd_kw_type *rd_kw, ctype value) {            \
         if (rd_kw_get_type(rd_kw) == RD_TYPE) {                                \
