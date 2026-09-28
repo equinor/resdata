@@ -583,17 +583,14 @@ static bool rd_kw_fscanf_qstring(char *s, const char *fmt, int len,
 
 /* This rather painful parsing is because formatted eclipse double
   format : 0.ddddD+01 - difficult to parse the 'D'; */
-static double __fscanf_RD_double(FILE *stream, const char *fmt) {
-    int read_count, power;
-    double value, arg;
-    read_count = fscanf(stream, fmt, &arg, &power);
-    if (read_count == 2)
-        value = arg * pow(10, power);
+static double parse_double(FILE *stream, const char *fmt) {
+    int power;
+    double arg;
+    if (fscanf(stream, fmt, &arg, &power) == 2)
+        return arg * pow(10, power);
     else {
         throw std::runtime_error("read failed");
-        value = -1;
     }
-    return value;
 }
 
 static char read_formatted_bool(FILE *stream) {
@@ -642,7 +639,7 @@ static std::optional<rd::kw_data> read_formatted_data(rd::KW *rd_kw,
     case RD_DOUBLE_TYPE: {
         std::vector<double> values(size);
         for (size_t i = 0; i < size; i++)
-            values[i] = __fscanf_RD_double(stream, read_format.c_str());
+            values[i] = parse_double(stream, read_format.c_str());
         data = std::move(values);
     } break;
     case RD_BOOL_TYPE: {
