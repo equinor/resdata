@@ -413,8 +413,7 @@ rd::KWHeader rd::KWHeader::fread(ERT::FortIO &fortio) {
             throw std::runtime_error("Could not read name in keyword header");
 
         memcpy(name, &buffer[0], RD_STRING8_LENGTH);
-        void *ptr = &buffer[RD_STRING8_LENGTH];
-        size = *((int *)ptr);
+        memcpy(&size, &buffer[RD_STRING8_LENGTH], sizeof(size));
 
         memcpy(rd_type_str, &buffer[RD_STRING8_LENGTH + sizeof(size)],
                RD_TYPE_LENGTH);
