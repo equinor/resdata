@@ -890,99 +890,104 @@ static char read_formatted_bool(FILE *stream, const std::string &read_format) {
         fmt::format("Logical value: [{}] not recogniced", bool_char));
 }
 
+static bool read_formatted_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+    const size_t blocksize = get_blocksize(rd_kw->data_type);
+    const size_t blocks =
+        rd_kw->size() / blocksize + (rd_kw->size() % blocksize == 0 ? 0 : 1);
+    const std::string read_format = read_fmt(rd_kw->data_type);
+    FILE *stream = fortio.get_FILE();
+    size_t offset = 0;
+    size_t index = 0;
+    for (size_t ib = 0; ib < blocks; ib++) {
+        size_t read_elm =
+            std::min((ib + 1) * blocksize, rd_kw->size()) - ib * blocksize;
+        for (size_t ir = 0; ir < read_elm; ir++) {
+            switch (rd_kw_get_type(rd_kw)) {
+            case (RD_CHAR_TYPE):
+                rd_kw_fscanf_qstring(&rd_kw->data[offset], read_format.c_str(),
+                                     8, stream);
+                break;
+            case (RD_STRING_TYPE):
+                rd_kw_fscanf_qstring(
+                    &rd_kw->data[offset], read_format.c_str(),
+                    rd_type_get_sizeof_iotype(rd_kw_get_data_type(rd_kw)),
+                    stream);
+                break;
+            case (RD_INT_TYPE): {
+                int iread = fscanf(stream, read_format.c_str(),
+                                   (int *)&rd_kw->data[offset]);
+                if (iread != 1)
+                    throw std::runtime_error(fmt::format(
+                        "after reading {} values reading of keyword:{} "
+                        "from:{} failed",
+                        offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
+                        rd_kw->header8, fortio.filename_ref()));
+            } break;
+            case (RD_FLOAT_TYPE): {
+                int iread = fscanf(stream, read_format.c_str(),
+                                   (float *)&rd_kw->data[offset]);
+                if (iread != 1) {
+                    throw std::runtime_error(fmt::format(
+                        "after reading {} values reading of keyword:{} "
+                        "from:{} failed",
+                        offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
+                        rd_kw->header8, fortio.filename_ref()));
+                }
+            } break;
+            case (RD_DOUBLE_TYPE): {
+                double value = __fscanf_RD_double(stream, read_format.c_str());
+                rd_kw_iset(rd_kw, index, &value);
+            } break;
+            case (RD_BOOL_TYPE): {
+                rd_kw_iset_bool(rd_kw, index,
+                                read_formatted_bool(stream, read_format));
+            } break;
+            case (RD_MESS_TYPE):
+                rd_kw_fscanf_qstring(&rd_kw->data[offset], read_format.c_str(),
+                                     8, stream);
+                break;
+            default:
+                throw std::runtime_error(
+                    fmt::format("Internal error: internal "
+                                "eclipse_type: {} not recognized",
+                                rd_kw_get_type(rd_kw)));
+            }
+            offset += rd_type_get_sizeof_ctype(rd_kw->data_type);
+            index++;
+        }
+    }
+
+    /* Skip the trailing newline */
+    fortio.fseek(1, SEEK_CUR);
+    return true;
+}
+
+static bool read_unformatted_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
+    char *buffer = rd_kw_alloc_input_buffer(rd_kw);
+    const size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
+    size_t record_size = rd_kw->size() * sizeof_iotype;
+    if (record_size > std::numeric_limits<int>::max())
+        throw std::invalid_argument(
+            "record size exceeded signed 32 bit integer");
+
+    bool read_ok = fortio.fread_buffer(buffer, static_cast<int>(record_size));
+
+    if (read_ok)
+        rd_kw_load_from_input_buffer(rd_kw, buffer);
+
+    free(buffer);
+    return read_ok;
+}
+
 static bool rd_kw_fread_data(rd_kw_type *rd_kw, ERT::FortIO &fortio) {
     bool fmt_file = fortio.fmt_file();
     if (rd_kw->size() == 0)
         /* The keyword has zero size - and reading data is trivially OK. */
         return true;
-    const size_t blocksize = get_blocksize(rd_kw->data_type);
     if (fmt_file) {
-        const size_t blocks = rd_kw->size() / blocksize +
-                              (rd_kw->size() % blocksize == 0 ? 0 : 1);
-        const std::string read_format = read_fmt(rd_kw->data_type);
-        FILE *stream = fortio.get_FILE();
-        size_t offset = 0;
-        size_t index = 0;
-        for (size_t ib = 0; ib < blocks; ib++) {
-            size_t read_elm =
-                std::min((ib + 1) * blocksize, rd_kw->size()) - ib * blocksize;
-            for (size_t ir = 0; ir < read_elm; ir++) {
-                switch (rd_kw_get_type(rd_kw)) {
-                case (RD_CHAR_TYPE):
-                    rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                         read_format.c_str(), 8, stream);
-                    break;
-                case (RD_STRING_TYPE):
-                    rd_kw_fscanf_qstring(
-                        &rd_kw->data[offset], read_format.c_str(),
-                        rd_type_get_sizeof_iotype(rd_kw_get_data_type(rd_kw)),
-                        stream);
-                    break;
-                case (RD_INT_TYPE): {
-                    int iread = fscanf(stream, read_format.c_str(),
-                                       (int *)&rd_kw->data[offset]);
-                    if (iread != 1)
-                        throw std::runtime_error(fmt::format(
-                            "after reading {} values reading of keyword:{} "
-                            "from:{} failed",
-                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
-                            rd_kw->header8, fortio.filename_ref()));
-                } break;
-                case (RD_FLOAT_TYPE): {
-                    int iread = fscanf(stream, read_format.c_str(),
-                                       (float *)&rd_kw->data[offset]);
-                    if (iread != 1) {
-                        throw std::runtime_error(fmt::format(
-                            "after reading {} values reading of keyword:{} "
-                            "from:{} failed",
-                            offset / rd_type_get_sizeof_ctype(rd_kw->data_type),
-                            rd_kw->header8, fortio.filename_ref()));
-                    }
-                } break;
-                case (RD_DOUBLE_TYPE): {
-                    double value =
-                        __fscanf_RD_double(stream, read_format.c_str());
-                    rd_kw_iset(rd_kw, index, &value);
-                } break;
-                case (RD_BOOL_TYPE): {
-                    rd_kw_iset_bool(rd_kw, index,
-                                    read_formatted_bool(stream, read_format));
-                } break;
-                case (RD_MESS_TYPE):
-                    rd_kw_fscanf_qstring(&rd_kw->data[offset],
-                                         read_format.c_str(), 8, stream);
-                    break;
-                default:
-                    throw std::runtime_error(
-                        fmt::format("Internal error: internal "
-                                    "eclipse_type: {} not recognized",
-                                    rd_kw_get_type(rd_kw)));
-                }
-                offset += rd_type_get_sizeof_ctype(rd_kw->data_type);
-                index++;
-            }
-        }
-
-        /* Skip the trailing newline */
-        fortio.fseek(1, SEEK_CUR);
-        return true;
+        return read_formatted_data(rd_kw, fortio);
     } else {
-        char *buffer = rd_kw_alloc_input_buffer(rd_kw);
-        const size_t sizeof_iotype =
-            rd_type_get_sizeof_iotype(rd_kw->data_type);
-        size_t record_size = rd_kw->size() * sizeof_iotype;
-        if (record_size > std::numeric_limits<int>::max())
-            throw std::invalid_argument(
-                "record size exceeded signed 32 bit integer");
-
-        bool read_ok =
-            fortio.fread_buffer(buffer, static_cast<int>(record_size));
-
-        if (read_ok)
-            rd_kw_load_from_input_buffer(rd_kw, buffer);
-
-        free(buffer);
-        return read_ok;
+        return read_unformatted_data(rd_kw, fortio);
     }
 }
 
