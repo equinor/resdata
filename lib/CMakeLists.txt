@@ -34,6 +34,7 @@ add_library(
   resdata/rd_sum_file_data.cpp
   resdata/rd_util.cpp
   resdata/rd_kw.cpp
+  resdata/rd_kw_header.cpp
   resdata/rd_sum.cpp
   resdata/rd_sum_vector.cpp
   resdata/rd_grid.cpp
@@ -317,10 +318,7 @@ foreach(
   rd_grid_init_fwrite
   rd_grid_reset_actnum
   rd_kw_space_pad
-  rd_kw_cmp_string
-  rd_kw_equal
   rd_kw_fread
-  rd_kw_init
   rd_layer
   rd_nnc_info_test
   rd_nnc_vector
@@ -361,7 +359,7 @@ add_test(
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu4
     ${CMAKE_CURRENT_SOURCE_DIR}/resdata/tests/data/num_cpu5)
 
-foreach(test rdxx_kw rdxx_types)
+foreach(test rdxx_types)
   add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
   add_test(NAME ${test} COMMAND ${test})

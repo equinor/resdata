@@ -16,16 +16,14 @@
 
 static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
                                  UnitSystem output_unit) {
-    rd_kw_type *depth_kw =
-        rd_kw_alloc("DEPTH", rd_grid_get_nactive(grid), RD_FLOAT);
+    rd::KW depth_kw{"DEPTH", rd_grid_get_nactive(grid), RD_FLOAT};
     {
-        float *depth_ptr = (float *)rd_kw_get_ptr(depth_kw);
+        std::vector<float> &depth_ptr = depth_kw.get_vector<float>();
         for (int i = 0; i < rd_grid_get_nactive(grid); i++)
             depth_ptr[i] = rd_grid_get_cdepth1A(grid, i);
     }
-    rd_kw_scale_float(depth_kw, rd_grid_output_scaling(grid, output_unit));
-    rd_kw_fwrite(depth_kw, init_file);
-    rd_kw_free(depth_kw);
+    depth_kw.scale<float>(rd_grid_output_scaling(grid, output_unit));
+    depth_kw.fwrite(init_file);
 }
 
 void test_write_depth(rd_grid_type *grid) {
@@ -36,11 +34,12 @@ void test_write_depth(rd_grid_type *grid) {
     }
     {
         auto init_file = rd::File::open("INIT");
-        rd_kw_type *depth = init_file->get_kw("DEPTH", 0);
+        rd::KW *depth = init_file->get_kw("DEPTH", 0);
 
-        test_assert_int_equal(rd_kw_get_size(depth), rd_grid_get_nactive(grid));
+        test_assert_int_equal(rd::kw_get_size(depth),
+                              rd_grid_get_nactive(grid));
         for (int i = 0; i < rd_grid_get_nactive(grid); i++)
-            test_assert_double_equal(rd_kw_iget_as_double(depth, i),
+            test_assert_double_equal(depth->as_double(i),
                                      rd_grid_get_cdepth1A(grid, i));
     }
 }
@@ -48,14 +47,14 @@ void test_write_depth(rd_grid_type *grid) {
 static void rd_grid_fwrite_dims(const rd_grid_type *grid,
                                 ERT::FortIO &init_file,
                                 UnitSystem output_unit) {
-    rd_kw_type *dx = rd_kw_alloc("DX", rd_grid_get_nactive(grid), RD_FLOAT);
-    rd_kw_type *dy = rd_kw_alloc("DY", rd_grid_get_nactive(grid), RD_FLOAT);
-    rd_kw_type *dz = rd_kw_alloc("DZ", rd_grid_get_nactive(grid), RD_FLOAT);
+    rd::KW dx{"DX", rd_grid_get_nactive(grid), RD_FLOAT};
+    rd::KW dy{"DY", rd_grid_get_nactive(grid), RD_FLOAT};
+    rd::KW dz{"DZ", rd_grid_get_nactive(grid), RD_FLOAT};
     {
         {
-            float *dx_ptr = (float *)rd_kw_get_ptr(dx);
-            float *dy_ptr = (float *)rd_kw_get_ptr(dy);
-            float *dz_ptr = (float *)rd_kw_get_ptr(dz);
+            std::vector<float> &dx_ptr = dx.get_vector<float>();
+            std::vector<float> &dy_ptr = dy.get_vector<float>();
+            std::vector<float> &dz_ptr = dz.get_vector<float>();
 
             for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
                 dx_ptr[i] = rd_grid_get_cell_dx1A(grid, i);
@@ -66,17 +65,14 @@ static void rd_grid_fwrite_dims(const rd_grid_type *grid,
 
         {
             float scale_factor = rd_grid_output_scaling(grid, output_unit);
-            rd_kw_scale_float(dx, scale_factor);
-            rd_kw_scale_float(dy, scale_factor);
-            rd_kw_scale_float(dz, scale_factor);
+            dx.scale<float>(scale_factor);
+            dy.scale<float>(scale_factor);
+            dz.scale<float>(scale_factor);
         }
     }
-    rd_kw_fwrite(dx, init_file);
-    rd_kw_fwrite(dy, init_file);
-    rd_kw_fwrite(dz, init_file);
-    rd_kw_free(dx);
-    rd_kw_free(dy);
-    rd_kw_free(dz);
+    dx.fwrite(init_file);
+    dy.fwrite(init_file);
+    dz.fwrite(init_file);
 }
 
 void test_write_dims(const rd_grid_type *grid) {
@@ -87,19 +83,19 @@ void test_write_dims(const rd_grid_type *grid) {
     }
     {
         auto init_file = rd::File::open("INIT");
-        rd_kw_type *DX = init_file->get_kw("DX", 0);
-        rd_kw_type *DY = init_file->get_kw("DY", 0);
-        rd_kw_type *DZ = init_file->get_kw("DZ", 0);
+        rd::KW *DX = init_file->get_kw("DX", 0);
+        rd::KW *DY = init_file->get_kw("DY", 0);
+        rd::KW *DZ = init_file->get_kw("DZ", 0);
 
-        test_assert_int_equal(rd_kw_get_size(DX), rd_grid_get_nactive(grid));
-        test_assert_int_equal(rd_kw_get_size(DY), rd_grid_get_nactive(grid));
-        test_assert_int_equal(rd_kw_get_size(DZ), rd_grid_get_nactive(grid));
+        test_assert_int_equal(rd::kw_get_size(DX), rd_grid_get_nactive(grid));
+        test_assert_int_equal(rd::kw_get_size(DY), rd_grid_get_nactive(grid));
+        test_assert_int_equal(rd::kw_get_size(DZ), rd_grid_get_nactive(grid));
         for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
-            test_assert_double_equal(rd_kw_iget_as_double(DX, i),
+            test_assert_double_equal(DX->as_double(i),
                                      rd_grid_get_cell_dx1A(grid, i));
-            test_assert_double_equal(rd_kw_iget_as_double(DY, i),
+            test_assert_double_equal(DY->as_double(i),
                                      rd_grid_get_cell_dy1A(grid, i));
-            test_assert_double_equal(rd_kw_iget_as_double(DZ, i),
+            test_assert_double_equal(DZ->as_double(i),
                                      rd_grid_get_cell_dz1A(grid, i));
         }
     }

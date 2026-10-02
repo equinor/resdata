@@ -79,12 +79,12 @@ PYBIND11_MODULE(_fault_block_layer, m) {
     m.def("_scan_keyword", [](py::handle self, py::handle fault_block_kw) {
         return fault_block_layer_scan_kw(
             from_cwrap<fault_block_layer_type>(self),
-            from_cwrap<rd_kw_type>(fault_block_kw));
+            from_cwrap<rd::KW>(fault_block_kw));
     });
     m.def("_load_keyword", [](py::handle self, py::handle fault_block_kw) {
         return fault_block_layer_load_kw(
             from_cwrap<fault_block_layer_type>(self),
-            from_cwrap<rd_kw_type>(fault_block_kw));
+            from_cwrap<rd::KW>(fault_block_kw));
     });
     m.def("_getK", [](py::handle self) {
         return fault_block_layer_get_k(
@@ -104,8 +104,7 @@ PYBIND11_MODULE(_fault_block_layer, m) {
     });
     m.def("_export_kw", [](py::handle self, py::handle kw) {
         return fault_block_layer_export(
-            from_cwrap<fault_block_layer_type>(self),
-            from_cwrap<rd_kw_type>(kw));
+            from_cwrap<fault_block_layer_type>(self), from_cwrap<rd::KW>(kw));
     });
     m.def("_get_layer", [](py::handle self) {
         return Layer().attr("createCReference")(
