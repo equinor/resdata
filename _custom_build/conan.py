@@ -7,12 +7,34 @@ import shutil
 import subprocess
 from pathlib import Path
 
+_CACERT_CONF = "core.net.http:cacert_path"
 
-def _detect_ca_cert() -> None:
-    if "CONAN_CACERT_PATH" not in os.environ:
-        system_cert = Path("/etc/pki/tls/cert.pem")
-        if system_cert.is_file():
-            os.environ["CONAN_CACERT_PATH"] = str(system_cert)
+
+def _conan_cacert_configured(conan: str) -> bool:
+    result = subprocess.run(
+        [conan, "config", "show", _CACERT_CONF],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def _detect_ca_cert(conan: str) -> None:
+    # The requests package used by conan 2 looks for certificates in
+    # REQUESTS_CA_BUNDLE (takes priority) and CURL_CA_BUNDLE environment
+    # variables. Additionally, a certificate can be set in conan's
+    # configuration. If any of these is set, we keep their value assuming they
+    # were set for a reason and return.
+    if os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE"):
+        return
+    if _conan_cacert_configured(conan):
+        return
+    system_cert = Path("/etc/pki/tls/cert.pem")
+    if system_cert.is_file():
+        # We cannot inject the certificate when calling conan. Conan 2 rejects
+        # core.* in -c, so pass the bundle via requests' env var
+        os.environ["REQUESTS_CA_BUNDLE"] = str(system_cert)
 
 
 def _cmake_args_from_preset(build_dir: Path) -> list[str]:
@@ -51,10 +73,10 @@ def _cmake_args_from_preset(build_dir: Path) -> list[str]:
 
 
 def prepare_conan(build_dir: Path, *, generate_user_presets: bool = True) -> list[str]:
-    _detect_ca_cert()
     conan = shutil.which("conan")
     if conan is None:
         raise RuntimeError("The Conan executable is required to build resdata")
+    _detect_ca_cert(conan)
 
     build_dir = build_dir.resolve()
     build_dir.mkdir(parents=True, exist_ok=True)
