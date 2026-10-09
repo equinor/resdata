@@ -88,6 +88,22 @@ bool well_segment_collection_has_segment(
     return lookup_index(segment_collection, segment_id).has_value();
 }
 
+/** Throws if the segments of well @well_nr, laid out as @nsegmx entries of
+    @stride elements per well, do not fit in a keyword of @kw_size elements.
+    Uses division so that no product of file-controlled values can wrap. */
+static void validate_segment_layout(const char *kw_name, size_t kw_size,
+                                    size_t well_nr, size_t nsegmx,
+                                    size_t stride) {
+    if (nsegmx == 0 || stride == 0)
+        return;
+    const size_t wells_that_fit = (kw_size / stride) / nsegmx;
+    if (well_nr >= wells_that_fit)
+        throw std::invalid_argument(fmt::format(
+            "Invalid restart file: segmented well number {} with {} segments "
+            "of {} elements each does not fit in {} which has {} elements",
+            well_nr + 1, nsegmx, stride, kw_name, kw_size));
+}
+
 int well_segment_collection_load_from_kw(
     well_segment_collection_type *segment_collection, size_t well_nr,
     const rd::KW *iwel_kw, const rd::KW *iseg_kw,
@@ -107,6 +123,13 @@ int well_segment_collection_load_from_kw(
                             segment_well_nr + 1, IWEL_KW));
 
         if (load_segments) {
+            validate_segment_layout(
+                ISEG_KW, iseg_kw->size(), static_cast<size_t>(segment_well_nr),
+                rst_head.get_nsegmx(), rst_head.get_nisegz());
+            validate_segment_layout(
+                RSEG_KW, well_rseg_loader_get_size(rseg_loader),
+                static_cast<size_t>(segment_well_nr), rst_head.get_nsegmx(),
+                rst_head.get_nrsegz());
             for (size_t segment_index = 0;
                  segment_index < rst_head.get_nsegmx(); segment_index++) {
                 int segment_id =

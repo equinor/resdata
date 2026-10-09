@@ -1162,6 +1162,35 @@ def test_that_a_negative_segmented_well_number_is_rejected(tmp_path, grid):
         WellInfo(grid, path)
 
 
+INT_MAX = 2**31 - 1
+
+
+@pytest.mark.parametrize(
+    "nsegmx, nrsegz, segmented_well_nr",
+    [
+        pytest.param(INT_MAX, INT_MAX, 9, id="offset wraps around size_t"),
+        pytest.param(INT_MAX, NRSEGZ, 1, id="large nsegmx"),
+        pytest.param(INT_MAX, NRSEGZ, INT_MAX, id="large segmented well number"),
+        pytest.param(5, NRSEGZ, 2, id="segmented well number beyond arrays"),
+    ],
+)
+def test_that_segment_dimensions_exceeding_the_keyword_sizes_are_rejected(
+    tmp_path, grid, nsegmx, nrsegz, segmented_well_nr
+):
+    well = _msw_with_segments([Segment(outlet=0, branch=1, length=1.0)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    intehead[NEGATIVE_INTEHEAD_INDICES["NSEGMX"]] = nsegmx
+    intehead[NEGATIVE_INTEHEAD_INDICES["NRSEGZ"]] = nrsegz
+    iwel[IWEL_SEGMENTED_WELL_NR] = segmented_well_nr
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(ValueError, match="does not fit in"):
+        WellInfo(grid, path)
+
+
 @pytest.mark.parametrize(
     "data_type, type_name",
     [
@@ -1932,7 +1961,7 @@ def test_that_a_rseg_offset_beyond_the_integer_range_is_rejected(tmp_path, grid)
     path = str(tmp_path / "CASE.X0000")
     _fwrite_keywords(path, keywords)
 
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError, match="does not fit in RSEG"):
         WellInfo(grid, path)
 
 

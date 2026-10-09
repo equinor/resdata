@@ -45,6 +45,10 @@ void well_rseg_loader_free(well_rseg_loader_type *loader) {
     delete loader;
 }
 
+size_t well_rseg_loader_get_size(const well_rseg_loader_type *loader) {
+    return loader->rst_view->kw_size(loader->kw, 0);
+}
+
 double *well_rseg_loader_load_values(well_rseg_loader_type *loader,
                                      size_t rseg_offset) {
     loader->absolute_index_map.resize(loader->relative_index_map.size(), 0);
