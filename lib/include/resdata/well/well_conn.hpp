@@ -62,10 +62,10 @@ public:
 
     static std::shared_ptr<WellConnection>
     from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
-                  const rd::KW *xcon_kw, const RSTHead &header, int well_nr,
-                  int conn_nr);
+                  const rd::KW *xcon_kw, const RSTHead &header, size_t well_nr,
+                  size_t conn_nr);
     static std::shared_ptr<WellConnection>
-    read_wellhead(const rd::KW *iwel_kw, const RSTHead &header, int well_nr);
+    read_wellhead(const rd::KW *iwel_kw, const RSTHead &header, size_t well_nr);
     [[nodiscard]] bool is_MSW() const {
         return segment_id != WELL_CONN_NORMAL_WELL_SEGMENT_ID;
     }

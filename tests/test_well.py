@@ -1021,6 +1021,123 @@ def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
     assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
 
 
+def _msw_with_segments(segments, connections=None):
+    return Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=connections or [Connection(i=1, j=1, k=1, segment=1)],
+        segments=segments,
+    )
+
+
+def test_that_inactive_segments_leave_gaps_in_the_segment_ids(tmp_path, grid):
+    well = _msw_with_segments(
+        [
+            Segment(outlet=0, branch=1),
+            Segment(outlet=0, branch=0),
+            Segment(outlet=1, branch=1),
+        ]
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert [segment.id() for segment in well_state.segments()] == [1, 3]
+    assert well_state[1].id() == 3
+    assert well_state[1].outletId() == 1
+
+
+@pytest.mark.parametrize("outlet", [99, -7])
+def test_that_a_segment_with_an_outlet_that_does_not_exist_is_loaded_unlinked(
+    tmp_path, grid, outlet
+):
+    well = _msw_with_segments([Segment(outlet=outlet, branch=1)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segment = WellInfo(grid, path)["MSW"][0].segments()[0]
+
+    assert segment.id() == 1
+    assert segment.linkCount() == 0
+
+
+@pytest.mark.parametrize("segment_id", [500, -500])
+def test_that_a_connection_to_a_segment_that_does_not_exist_does_not_break_loading(
+    tmp_path, grid, segment_id
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1)],
+        connections=[Connection(i=1, j=1, k=1, segment=segment_id)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert [segment.id() for segment in well_state.segments()] == [1]
+    assert len(well_state.globalConnections()) == 1
+
+
+@pytest.mark.parametrize("outlet", [-5, 1_000_000])
+def test_that_an_iseg_outlet_id_without_a_matching_segment_does_not_crash_the_loader(
+    tmp_path, grid, outlet
+):
+    well = _msw_with_segments([Segment(outlet=outlet, branch=2)])
+    path = str(tmp_path / "CASE.UNRST")
+    write_unified_restart(path, [(0, (2020, 1, 1), [well])])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state.isMultiSegmentWell()
+    segment = well_state.segments()[0]
+    assert segment.outletId() == outlet
+    assert segment.linkCount() == 0
+
+
+# INTEHEAD indices (see _intehead_kw) of the dimensions that are used as
+# lengths and strides, and so must be rejected when negative.
+NEGATIVE_INTEHEAD_INDICES = {
+    "NWELLS": 16,
+    "NCWMAX": 17,
+    "NIWELZ": 24,
+    "NZWELZ": 27,
+    "NICONZ": 32,
+    "NSCONZ": 33,
+    "NSEGMX": 176,
+    "NISEGZ": 178,
+    "NRSEGZ": 179,
+}
+
+
+@pytest.mark.parametrize("name", NEGATIVE_INTEHEAD_INDICES)
+def test_that_a_negative_intehead_dimension_is_rejected(tmp_path, grid, name):
+    well = _msw_with_segments([Segment(outlet=0, branch=1, length=1.0)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    intehead[NEGATIVE_INTEHEAD_INDICES[name]] = -1
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Invalid INTEHEAD in restart file: {name} was negative: -1"),
+    ):
+        WellInfo(grid, path)
+
+
+def test_that_a_negative_segmented_well_number_is_rejected(tmp_path, grid):
+    well = _msw_with_segments([Segment(outlet=0, branch=1)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    iwel[IWEL_SEGMENTED_WELL_NR] = -4
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(ValueError, match="Invalid segmented well number -4"):
+        WellInfo(grid, path)
+
+
 @pytest.mark.parametrize(
     "data_type, type_name",
     [
