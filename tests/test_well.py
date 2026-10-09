@@ -507,6 +507,24 @@ def test_that_an_invalid_iwel_type_value_is_rejected(tmp_path, grid):
         WellInfo(grid, path)
 
 
+def test_that_a_negative_iwel_connection_count_is_rejected(tmp_path, grid):
+    well = Well(name="W1", connections=[Connection(1, 1, 1)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    iwel[IWEL_CONNECTIONS] = -1
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Invalid IWEL in restart file: number of connections for well 0 "
+            "was negative: -1"
+        ),
+    ):
+        WellInfo(grid, path)
+
+
 def test_that_an_open_well_with_zero_type_is_rejected(tmp_path, grid):
     # A well type of 0 (IWEL_UNDOCUMENTED_ZERO) is only valid for a shut well;
     # an open well (status > 0) with that type is an error.
@@ -1657,6 +1675,32 @@ def test_that_wells_are_loaded_from_a_restart_file_with_an_lgr(tmp_path):
     assert op1.wellType() == WellType.PRODUCER
     assert op1.hasGlobalConnections()
     assert well_info["OP2"][0].hasGlobalConnections()
+
+
+def test_that_an_lgr_block_with_zero_nzwelz_and_an_empty_zwel_is_ignored(tmp_path):
+    grid = load_egrid_with_single_lgr(
+        str(tmp_path / "CASE.EGRID"), NX, NY, NZ, 2, 2, 2, 5, 5, 5, "LGR1"
+    )
+    global_wells = [
+        Well(name="OP1", headi=6, headj=6, headk=6, connections=[Connection(6, 6, 6)]),
+    ]
+    keywords = _step_keywords(global_wells, (2020, 1, 1))
+    keywords.append(_lgr_marker_kw("LGR1"))
+    for kw in _step_keywords(global_wells, (2020, 1, 1)):
+        name = kw.get_name().strip()
+        if name == "INTEHEAD":
+            kw[16] = 1  # nwells
+            kw[27] = 0  # nzwelz
+        elif name == "ZWEL":
+            kw = _char_kw("ZWEL", 0)
+        keywords.append(kw)
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    well_info = WellInfo(grid, path)
+
+    assert list(well_info.allWellNames()) == ["OP1"]
+    assert well_info["OP1"][0].hasGlobalConnections()
 
 
 def _write_restart_without(path, wells, dropped, date=(2020, 1, 1)):

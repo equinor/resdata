@@ -78,6 +78,8 @@ std::optional<size_t> WellState::get_lgr_well_nr(rd::FileView *file_view) {
         const rd::KW *zwel_kw = file_view->get_kw(ZWEL_KW, 0);
         const size_t num_wells = header.get_nwells();
         const size_t nzwelz = header.get_nzwelz();
+        if (num_wells == 0 || nzwelz == 0)
+            return std::nullopt;
 
         for (size_t well_nr = 0; well_nr < num_wells; well_nr++) {
             if (this->name ==
@@ -143,12 +145,17 @@ void WellState::add_connections(rd::FileView *rst_view,
             }
 
             const size_t iwel_offset = header.get_niwelz() * well_nr;
-            int num_connections =
+            const int raw_num_connections =
                 iwel_kw->at<int>(iwel_offset + IWEL_CONNECTIONS_INDEX);
+            if (raw_num_connections < 0)
+                throw std::invalid_argument(fmt::format(
+                    "Invalid IWEL in restart file: number of connections for "
+                    "well {} was negative: {}",
+                    well_nr, raw_num_connections));
+            const size_t num_connections =
+                static_cast<size_t>(raw_num_connections);
 
-            for (size_t iconn = 0;
-                 iconn < static_cast<size_t>(std::max(num_connections, 0));
-                 iconn++) {
+            for (size_t iconn = 0; iconn < num_connections; iconn++) {
                 try {
                     this->connections[grid_name].push_back(
                         WellConnection::from_keywords(icon_kw, scon_kw, xcon_kw,

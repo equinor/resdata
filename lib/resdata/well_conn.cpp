@@ -75,7 +75,7 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
     /* Set the K value and fracture flag. */
     {
         if (header.dualp) {
-            int geometric_nz = header.nz / 2;
+            const int geometric_nz = static_cast<int>(header.get_nz() / 2);
             if (k >= geometric_nz) {
                 k -= geometric_nz;
                 matrix_connection = false;
@@ -153,7 +153,7 @@ WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
         double connection_factor = -1;
 
         if (header.dualp) {
-            int geometric_nz = header.nz / 2;
+            const int geometric_nz = static_cast<int>(header.get_nz() / 2);
             if (conn_k >= geometric_nz) {
                 conn_k -= geometric_nz;
                 matrix_connection = false;
