@@ -1150,15 +1150,28 @@ def test_that_a_negative_intehead_dimension_is_rejected(tmp_path, grid, name):
         WellInfo(grid, path)
 
 
-def test_that_a_negative_segmented_well_number_is_rejected(tmp_path, grid):
+@pytest.mark.parametrize(
+    "segmented_well_nr",
+    [
+        pytest.param(-4, id="small negative"),
+        pytest.param(-1, id="minus one"),
+        pytest.param(-(2**31) + 1, id="one above int min"),
+        pytest.param(-(2**31), id="int min which would underflow when decremented"),
+    ],
+)
+def test_that_a_negative_segmented_well_number_is_rejected(
+    tmp_path, grid, segmented_well_nr
+):
     well = _msw_with_segments([Segment(outlet=0, branch=1)])
     keywords = _step_keywords([well], (2020, 1, 1))
     iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
-    iwel[IWEL_SEGMENTED_WELL_NR] = -4
+    iwel[IWEL_SEGMENTED_WELL_NR] = segmented_well_nr
     path = str(tmp_path / "CASE.X0000")
     _fwrite_keywords(path, keywords)
 
-    with pytest.raises(ValueError, match="Invalid segmented well number -4"):
+    with pytest.raises(
+        ValueError, match=f"Invalid segmented well number {segmented_well_nr}"
+    ):
         WellInfo(grid, path)
 
 

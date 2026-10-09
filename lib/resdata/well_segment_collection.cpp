@@ -1,4 +1,3 @@
-
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -12,6 +11,7 @@
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
+#include <resdata/rd_kw_magic.hpp>
 
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_segment.hpp>
@@ -108,17 +108,19 @@ int well_segment_collection_load_from_kw(
     well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segments, bool *is_MSW_well) {
     size_t iwel_offset = rst_head.get_niwelz() * well_nr;
-    int segment_well_nr =
-        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
+    const int raw_segment_well_nr =
+        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX);
     int segments_added = 0;
 
-    if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {
+    // The stored number is one-based, with 0 meaning a non-segmented well.
+    if (raw_segment_well_nr != 0) {
         *is_MSW_well = true;
 
-        if (segment_well_nr < 0)
+        if (raw_segment_well_nr < 0)
             throw std::invalid_argument(
                 fmt::format("Invalid segmented well number {} read from {}",
-                            segment_well_nr + 1, IWEL_KW));
+                            raw_segment_well_nr, IWEL_KW));
+        const int segment_well_nr = raw_segment_well_nr - 1;
 
         // Zero segments per well, or zero elements per segment, means
         // there is no segment data to read.
