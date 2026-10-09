@@ -1,11 +1,17 @@
-
+#include <cstddef>
 #include <memory>
+#include <optional>
+#include <stdexcept>
+#include <unordered_map>
 #include <vector>
+
+#include <fmt/format.h>
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
+#include <resdata/rd_kw_magic.hpp>
 
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_segment.hpp>
@@ -15,9 +21,23 @@
 #include <resdata/well/well_rseg_loader.hpp>
 
 struct well_segment_collection_struct {
-    std::vector<int> segment_index_map;
+    /** Maps a segment id onto its position in __segment_storage. Segment ids
+        originate from the ISEG/ICON keywords and are signed values read from
+        file, so they are used as a key rather than as an index. */
+    std::unordered_map<int, size_t> segment_index_map;
     std::vector<std::shared_ptr<WellSegment>> __segment_storage;
 };
+
+namespace {
+std::optional<size_t>
+lookup_index(const well_segment_collection_type *segment_collection,
+             int segment_id) {
+    auto iter = segment_collection->segment_index_map.find(segment_id);
+    if (iter == segment_collection->segment_index_map.end())
+        return std::nullopt;
+    return iter->second;
+}
+} // namespace
 
 well_segment_collection_type *well_segment_collection_alloc() {
     return new well_segment_collection_type();
@@ -28,7 +48,7 @@ void well_segment_collection_free(
     delete segment_collection;
 }
 
-int well_segment_collection_get_size(
+size_t well_segment_collection_get_size(
     const well_segment_collection_type *segment_collection) {
     return segment_collection->__segment_storage.size();
 }
@@ -36,73 +56,93 @@ int well_segment_collection_get_size(
 void well_segment_collection_add(
     well_segment_collection_type *segment_collection,
     std::shared_ptr<WellSegment> segment) {
-    int segment_id = segment->get_id();
-    int current_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        current_index = segment_collection->segment_index_map[segment_id];
-    if (current_index >= 0) {
-        segment_collection->__segment_storage[current_index] = segment;
+    const int segment_id = segment->get_id();
+
+    auto current_index = lookup_index(segment_collection, segment_id);
+    if (current_index) {
+        segment_collection->__segment_storage[*current_index] = segment;
     } else {
-        int new_index = segment_collection->__segment_storage.size();
+        size_t new_index = segment_collection->__segment_storage.size();
         segment_collection->__segment_storage.push_back(segment);
-        if (segment_id >=
-            static_cast<int>(segment_collection->segment_index_map.size()))
-            segment_collection->segment_index_map.resize(segment_id + 1, -1);
         segment_collection->segment_index_map[segment_id] = new_index;
     }
 }
 
 std::shared_ptr<WellSegment> well_segment_collection_iget(
-    const well_segment_collection_type *segment_collection, int index) {
-    return segment_collection->__segment_storage[index];
+    const well_segment_collection_type *segment_collection, size_t index) {
+    return segment_collection->__segment_storage.at(index);
 }
 
 std::shared_ptr<WellSegment> well_segment_collection_get(
     const well_segment_collection_type *segment_collection, int segment_id) {
-    int internal_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        internal_index = segment_collection->segment_index_map[segment_id];
-    if (internal_index >= 0)
-        return well_segment_collection_iget(segment_collection, internal_index);
+    auto internal_index = lookup_index(segment_collection, segment_id);
+    if (internal_index)
+        return well_segment_collection_iget(segment_collection,
+                                            *internal_index);
     else
         return {nullptr};
 }
 
 bool well_segment_collection_has_segment(
     const well_segment_collection_type *segment_collection, int segment_id) {
-    int internal_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        internal_index = segment_collection->segment_index_map[segment_id];
-    if (internal_index >= 0)
-        return true;
-    else
-        return false;
+    return lookup_index(segment_collection, segment_id).has_value();
+}
+
+/** Throws if the segments of well @well_nr, laid out as @nsegmx entries of
+    @stride elements per well, do not fit in a keyword of @kw_size elements.
+    @nsegmx and @stride must be non-zero. */
+static void validate_segment_layout(const char *kw_name, size_t kw_size,
+                                    size_t well_nr, size_t nsegmx,
+                                    size_t stride) {
+    const size_t wells_that_fit = (kw_size / stride) / nsegmx;
+    if (well_nr >= wells_that_fit)
+        throw std::invalid_argument(fmt::format(
+            "Invalid restart file: segmented well number {} with {} segments "
+            "of {} elements each does not fit in {} which has {} elements",
+            well_nr + 1, nsegmx, stride, kw_name, kw_size));
 }
 
 int well_segment_collection_load_from_kw(
-    well_segment_collection_type *segment_collection, int well_nr,
+    well_segment_collection_type *segment_collection, size_t well_nr,
     const rd::KW *iwel_kw, const rd::KW *iseg_kw,
     well_rseg_loader_type *rseg_loader, const RSTHead &rst_head,
     bool load_segments, bool *is_MSW_well) {
-
-    int iwel_offset = rst_head.niwelz * well_nr;
-    int segment_well_nr =
-        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1;
+    size_t iwel_offset = rst_head.get_niwelz() * well_nr;
+    const int raw_segment_well_nr =
+        iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX);
     int segments_added = 0;
 
-    if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {
+    // The stored number is one-based, with 0 meaning a non-segmented well.
+    if (raw_segment_well_nr != 0) {
         *is_MSW_well = true;
 
-        if (load_segments) {
-            for (int segment_index = 0; segment_index < rst_head.nsegmx;
-                 segment_index++) {
-                int segment_id = segment_index + WELL_SEGMENT_OFFSET;
-                auto segment = WellSegment::from_kw(iseg_kw, rseg_loader,
-                                                    rst_head, segment_well_nr,
-                                                    segment_index, segment_id);
+        if (raw_segment_well_nr < 0)
+            throw std::invalid_argument(
+                fmt::format("Invalid segmented well number {} read from {}",
+                            raw_segment_well_nr, IWEL_KW));
+        const int segment_well_nr = raw_segment_well_nr - 1;
+
+        // Zero segments per well, or zero elements per segment, means
+        // there is no segment data to read.
+        const bool has_segment_layout = rst_head.get_nsegmx() > 0 &&
+                                        rst_head.get_nisegz() > 0 &&
+                                        rst_head.get_nrsegz() > 0;
+        if (load_segments && has_segment_layout) {
+            validate_segment_layout(
+                ISEG_KW, iseg_kw->size(), static_cast<size_t>(segment_well_nr),
+                rst_head.get_nsegmx(), rst_head.get_nisegz());
+            validate_segment_layout(
+                RSEG_KW, well_rseg_loader_get_size(rseg_loader),
+                static_cast<size_t>(segment_well_nr), rst_head.get_nsegmx(),
+                rst_head.get_nrsegz());
+            for (size_t segment_index = 0;
+                 segment_index < rst_head.get_nsegmx(); segment_index++) {
+                int segment_id =
+                    static_cast<int>(segment_index) + WELL_SEGMENT_OFFSET;
+                auto segment =
+                    WellSegment::from_kw(iseg_kw, rseg_loader, rst_head,
+                                         static_cast<size_t>(segment_well_nr),
+                                         segment_index, segment_id);
 
                 if (segment->is_active()) {
                     well_segment_collection_add(segment_collection, segment);
@@ -117,11 +157,13 @@ int well_segment_collection_load_from_kw(
 void well_segment_collection_link(
     const well_segment_collection_type *segment_collection) {
     for (const auto &segment : segment_collection->__segment_storage) {
-        int outlet_segment_id = segment->get_outlet_id();
         if (!segment->is_nearest_wellhead()) {
-            auto target_segment = well_segment_collection_get(
-                segment_collection, outlet_segment_id);
-            segment->link(target_segment.get());
+            auto outlet_index =
+                lookup_index(segment_collection, segment->get_outlet_id());
+            segment->link(
+                outlet_index
+                    ? segment_collection->__segment_storage[*outlet_index].get()
+                    : nullptr);
         }
     }
 }
@@ -131,10 +173,11 @@ void well_segment_collection_add_connections(
     const std::vector<std::shared_ptr<WellConnection>> &connections) {
     for (const auto &conn : connections) {
         if (conn->is_MSW()) {
-            int segment_id = conn->get_segment_id();
-            auto segment =
-                well_segment_collection_get(segment_collection, segment_id);
-            segment->add_connection(grid_name, conn);
+            auto index =
+                lookup_index(segment_collection, conn->get_segment_id());
+            if (index)
+                segment_collection->__segment_storage[*index]->add_connection(
+                    grid_name, conn);
         }
     }
 }

@@ -15,11 +15,12 @@ from typing import TypeAlias
 import hypothesis.strategies as st
 import pytest
 from hypothesis import given
-from resdata import ResDataType, UnitSystem
+from resdata import FileMode, ResDataType, UnitSystem
 from resdata.grid import GridGenerator
 from resdata.resfile import FortIO, ResdataKW
 from resdata.resfile.rd_file import ResdataFile
 from resdata.well import (
+    WellConnection,
     WellConnectionDirection,
     WellInfo,
     WellSegment,
@@ -119,6 +120,7 @@ class Connection:
     status: int = 1
     direction: int = ICON_DIR_DEFAULT
     segment: int = 0
+    ic: int | None = None  # ICON_IC, defaults to the 1-based connection number
     rates: tuple | None = None  # (oil, water, gas, resv) connection rates
 
 
@@ -212,7 +214,7 @@ def _step_keywords(
         for i, well in enumerate(wells):
             for j, conn in enumerate(well.connections):
                 off = NICONZ * (ncwmax * i + j)
-                kw[off + ICON_IC] = j + 1
+                kw[off + ICON_IC] = j + 1 if conn.ic is None else conn.ic
                 kw[off + ICON_I] = conn.i
                 kw[off + ICON_J] = conn.j
                 kw[off + ICON_K] = conn.k
@@ -361,7 +363,7 @@ def _step_keywords(
     return keywords
 
 
-def _fwrite_keywords(path, keywords):
+def _fwrite_keywords(path, keywords, formatted=False):
     scratch = path + ".scratch"
     fortio = FortIO(scratch, mode=FortIO.WRITE_MODE)
     for kw in keywords:
@@ -369,7 +371,7 @@ def _fwrite_keywords(path, keywords):
     fortio.close()
 
     rd_file = ResdataFile(scratch)
-    fortio = FortIO(path, mode=FortIO.WRITE_MODE)
+    fortio = FortIO(path, mode=FortIO.WRITE_MODE, fmt_file=formatted)
     rd_file.fwrite(fortio)
     fortio.close()
     os.remove(scratch)
@@ -382,6 +384,7 @@ def write_restart(
     include_icon: bool = True,
     unit_system: UnitSystem = UnitSystem.METRIC,
     dualp: bool = False,
+    formatted: bool = False,
 ):
     """Write a non-unified restart file (``.X#### ``) with a single report step."""
     _fwrite_keywords(
@@ -393,15 +396,18 @@ def write_restart(
             unit_system=unit_system,
             dualp=dualp,
         ),
+        formatted=formatted,
     )
 
 
-def write_unified_restart(path, steps: Iterable[tuple[int, Date, list[Well]]]):
+def write_unified_restart(
+    path, steps: Iterable[tuple[int, Date, list[Well]]], formatted: bool = False
+):
     """Write a unified restart file (``.UNRST``)."""
     keywords = []
     for report_idx, date, wells in steps:
         keywords += _step_keywords(wells, date, seqnum=report_idx)
-    _fwrite_keywords(path, keywords)
+    _fwrite_keywords(path, keywords, formatted=formatted)
 
 
 def _lgr_marker_kw(name: str):
@@ -498,6 +504,24 @@ def test_that_an_invalid_iwel_type_value_is_rejected(tmp_path, grid):
     write_restart(path, [well])
 
     with pytest.raises(ValueError, match="Invalid type value 99"):
+        WellInfo(grid, path)
+
+
+def test_that_a_negative_iwel_connection_count_is_rejected(tmp_path, grid):
+    well = Well(name="W1", connections=[Connection(1, 1, 1)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    iwel[IWEL_CONNECTIONS] = -1
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Invalid IWEL in restart file: number of connections for well 0 "
+            "was negative: -1"
+        ),
+    ):
         WellInfo(grid, path)
 
 
@@ -1021,6 +1045,193 @@ def test_that_segment_geometry_is_read_from_rseg(tmp_path, grid):
     assert str(segment) == "{Segment ID:1   BranchID:1  Length:12.5}"
 
 
+def _msw_with_segments(segments, connections=None):
+    return Well(
+        name="MSW",
+        well_type=IWEL_PRODUCER,
+        connections=connections or [Connection(i=1, j=1, k=1, segment=1)],
+        segments=segments,
+    )
+
+
+def test_that_inactive_segments_leave_gaps_in_the_segment_ids(tmp_path, grid):
+    well = _msw_with_segments(
+        [
+            Segment(outlet=0, branch=1),
+            Segment(outlet=0, branch=0),
+            Segment(outlet=1, branch=1),
+        ]
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert [segment.id() for segment in well_state.segments()] == [1, 3]
+    assert well_state[1].id() == 3
+    assert well_state[1].outletId() == 1
+
+
+@pytest.mark.parametrize("outlet", [99, -7])
+def test_that_a_segment_with_an_outlet_that_does_not_exist_is_loaded_unlinked(
+    tmp_path, grid, outlet
+):
+    well = _msw_with_segments([Segment(outlet=outlet, branch=1)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    segment = WellInfo(grid, path)["MSW"][0].segments()[0]
+
+    assert segment.id() == 1
+    assert segment.linkCount() == 0
+
+
+@pytest.mark.parametrize("segment_id", [500, -500])
+def test_that_a_connection_to_a_segment_that_does_not_exist_does_not_break_loading(
+    tmp_path, grid, segment_id
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1)],
+        connections=[Connection(i=1, j=1, k=1, segment=segment_id)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert [segment.id() for segment in well_state.segments()] == [1]
+    assert len(well_state.globalConnections()) == 1
+
+
+@pytest.mark.parametrize("outlet", [-5, 1_000_000])
+def test_that_an_iseg_outlet_id_without_a_matching_segment_does_not_crash_the_loader(
+    tmp_path, grid, outlet
+):
+    well = _msw_with_segments([Segment(outlet=outlet, branch=2)])
+    path = str(tmp_path / "CASE.UNRST")
+    write_unified_restart(path, [(0, (2020, 1, 1), [well])])
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state.isMultiSegmentWell()
+    segment = well_state.segments()[0]
+    assert segment.outletId() == outlet
+    assert segment.linkCount() == 0
+
+
+# INTEHEAD indices (see _intehead_kw) of the dimensions that are used as
+# lengths and strides, and so must be rejected when negative.
+NEGATIVE_INTEHEAD_INDICES = {
+    "NWELLS": 16,
+    "NCWMAX": 17,
+    "NIWELZ": 24,
+    "NZWELZ": 27,
+    "NICONZ": 32,
+    "NSCONZ": 33,
+    "NSEGMX": 176,
+    "NISEGZ": 178,
+    "NRSEGZ": 179,
+}
+
+
+@pytest.mark.parametrize("name", NEGATIVE_INTEHEAD_INDICES)
+def test_that_a_negative_intehead_dimension_is_rejected(tmp_path, grid, name):
+    well = _msw_with_segments([Segment(outlet=0, branch=1, length=1.0)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    intehead[NEGATIVE_INTEHEAD_INDICES[name]] = -1
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(f"Invalid INTEHEAD in restart file: {name} was negative: -1"),
+    ):
+        WellInfo(grid, path)
+
+
+@pytest.mark.parametrize(
+    "segmented_well_nr",
+    [
+        pytest.param(-4, id="small negative"),
+        pytest.param(-1, id="minus one"),
+        pytest.param(-(2**31) + 1, id="one above int min"),
+        pytest.param(-(2**31), id="int min which would underflow when decremented"),
+    ],
+)
+def test_that_a_negative_segmented_well_number_is_rejected(
+    tmp_path, grid, segmented_well_nr
+):
+    well = _msw_with_segments([Segment(outlet=0, branch=1)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    iwel[IWEL_SEGMENTED_WELL_NR] = segmented_well_nr
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(
+        ValueError, match=f"Invalid segmented well number {segmented_well_nr}"
+    ):
+        WellInfo(grid, path)
+
+
+@pytest.mark.parametrize(
+    "dimensions",
+    [
+        pytest.param({"NSEGMX": 0}, id="zero nsegmx"),
+        pytest.param({"NISEGZ": 0}, id="zero nisegz"),
+        pytest.param({"NRSEGZ": 0}, id="zero nrsegz"),
+        pytest.param({"NISEGZ": 0, "NRSEGZ": 0}, id="zero nisegz and nrsegz"),
+    ],
+)
+def test_that_a_zero_segment_dimension_gives_a_well_without_segments(
+    tmp_path, grid, dimensions
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1, length=1.0), Segment(outlet=1, branch=1)]
+    )
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    for name, value in dimensions.items():
+        intehead[NEGATIVE_INTEHEAD_INDICES[name]] = value
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state.segments() == []
+    assert not well_state.hasSegmentData()
+
+
+INT_MAX = 2**31 - 1
+
+
+@pytest.mark.parametrize(
+    "nsegmx, nrsegz, segmented_well_nr",
+    [
+        pytest.param(INT_MAX, INT_MAX, 9, id="offset wraps around size_t"),
+        pytest.param(INT_MAX, NRSEGZ, 1, id="large nsegmx"),
+        pytest.param(INT_MAX, NRSEGZ, INT_MAX, id="large segmented well number"),
+        pytest.param(5, NRSEGZ, 2, id="segmented well number beyond arrays"),
+    ],
+)
+def test_that_segment_dimensions_exceeding_the_keyword_sizes_are_rejected(
+    tmp_path, grid, nsegmx, nrsegz, segmented_well_nr
+):
+    well = _msw_with_segments([Segment(outlet=0, branch=1, length=1.0)])
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    iwel = next(kw for kw in keywords if kw.get_name().strip() == "IWEL")
+    intehead[NEGATIVE_INTEHEAD_INDICES["NSEGMX"]] = nsegmx
+    intehead[NEGATIVE_INTEHEAD_INDICES["NRSEGZ"]] = nrsegz
+    iwel[IWEL_SEGMENTED_WELL_NR] = segmented_well_nr
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(ValueError, match="does not fit in"):
+        WellInfo(grid, path)
+
+
 @pytest.mark.parametrize(
     "data_type, type_name",
     [
@@ -1534,3 +1745,385 @@ def test_that_wells_are_loaded_from_a_restart_file_with_an_lgr(tmp_path):
     assert op1.wellType() == WellType.PRODUCER
     assert op1.hasGlobalConnections()
     assert well_info["OP2"][0].hasGlobalConnections()
+
+
+def test_that_an_lgr_block_with_zero_nzwelz_and_an_empty_zwel_is_ignored(tmp_path):
+    grid = load_egrid_with_single_lgr(
+        str(tmp_path / "CASE.EGRID"), NX, NY, NZ, 2, 2, 2, 5, 5, 5, "LGR1"
+    )
+    global_wells = [
+        Well(name="OP1", headi=6, headj=6, headk=6, connections=[Connection(6, 6, 6)]),
+    ]
+    keywords = _step_keywords(global_wells, (2020, 1, 1))
+    keywords.append(_lgr_marker_kw("LGR1"))
+    for kw in _step_keywords(global_wells, (2020, 1, 1)):
+        name = kw.get_name().strip()
+        if name == "INTEHEAD":
+            kw[16] = 1  # nwells
+            kw[27] = 0  # nzwelz
+        elif name == "ZWEL":
+            kw = _char_kw("ZWEL", 0)
+        keywords.append(kw)
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    well_info = WellInfo(grid, path)
+
+    assert list(well_info.allWellNames()) == ["OP1"]
+    assert well_info["OP1"][0].hasGlobalConnections()
+
+
+def _write_restart_without(path, wells, dropped, date=(2020, 1, 1)):
+    keywords = [
+        kw for kw in _step_keywords(wells, date) if kw.get_name().strip() not in dropped
+    ]
+    _fwrite_keywords(path, keywords)
+
+
+def _simple_well(name="OP1", **kwargs):
+    return Well(
+        name=name,
+        headi=2,
+        headj=3,
+        headk=1,
+        connections=[Connection(i=2, j=3, k=1), Connection(i=2, j=3, k=2)],
+        **kwargs,
+    )
+
+
+def test_that_a_well_connection_has_a_readable_repr(producer):
+    connection = producer()["OP1"][0].globalConnections()[0]
+
+    assert repr(connection).startswith("WellConnection(")
+    assert "open" in repr(connection)
+    assert "rates = (O:" in repr(connection)
+
+
+def test_that_a_shut_multisegment_fracture_connection_is_described_in_its_repr(
+    tmp_path, grid
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1)],
+        connections=[
+            Connection(i=1, j=1, k=NZ // 2 + 1, status=0, direction=4, segment=1),
+        ],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], dualp=True)
+
+    connection = WellInfo(grid, path)["MSW"][0].globalConnections()[0]
+
+    assert "fracture" in repr(connection)
+    assert "shut" in repr(connection)
+    assert "(multi segment)" in repr(connection)
+
+
+def test_that_a_well_connection_cannot_directly_be_constructed():
+    with pytest.raises(NotImplementedError):
+        WellConnection()
+
+
+def test_that_a_well_state_has_a_readable_repr(producer):
+    assert repr(producer()["OP1"][0]).startswith(
+        'WellState(OP1, number = 0, type = "PRODUCER", state = open)'
+    )
+
+
+def test_that_a_shut_well_is_described_as_shut_in_its_repr(tmp_path, grid):
+    well = _simple_well(status=0)
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    assert "state = shut" in repr(WellInfo(grid, path)["OP1"][0])
+
+
+def test_that_indexing_a_well_state_out_of_range_raises_indexerror(
+    multi_segment_well,
+):
+    well_state = multi_segment_well["MSW"][0]
+
+    with pytest.raises(IndexError, match="Invalid index"):
+        well_state[2]
+    with pytest.raises(IndexError, match="Invalid index"):
+        well_state[-3]
+    with pytest.raises(IndexError, match="Invalid index"):
+        well_state.igetSegment(2)
+
+
+def test_that_a_well_time_line_has_a_name_length_and_repr(producer):
+    time_line = producer()["OP1"]
+
+    assert time_line.getName() == "OP1"
+    assert len(time_line) == 1
+    assert repr(time_line) == "WellTimeLine(name = OP1, size = 1)"
+
+
+def test_that_a_well_time_line_supports_negative_indices_and_rejects_out_of_range(
+    producer,
+):
+    time_line = producer()["OP1"]
+
+    assert time_line[-1].name() == time_line[0].name()
+    with pytest.raises(IndexError, match="Index must be in range"):
+        time_line[1]
+    with pytest.raises(IndexError, match="Index must be in range"):
+        time_line[-2]
+
+
+def test_that_well_info_can_be_indexed_and_iterated(tmp_path, grid):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [_simple_well("OP1"), _simple_well("OP2")])
+
+    well_info = WellInfo(grid, path)
+
+    assert len(well_info) == 2
+    assert repr(well_info) == "WellInfo(well_count = 2)"
+    assert well_info.hasWell("OP2")
+    assert not well_info.hasWell("OP3")
+    assert well_info[0].getName() == well_info.allWellNames()[0]
+    assert [time_line.getName() for time_line in well_info] == ["OP1", "OP2"]
+
+
+@pytest.mark.parametrize("index", [-1, 2])
+def test_that_indexing_well_info_out_of_range_raises_indexerror(tmp_path, grid, index):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [_simple_well("OP1"), _simple_well("OP2")])
+
+    with pytest.raises(IndexError, match="Index must be in range"):
+        WellInfo(grid, path)[index]
+
+
+def test_that_wells_can_be_loaded_from_an_open_resdata_file(tmp_path, grid):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [_simple_well()])
+
+    well_info = WellInfo(grid, ResdataFile(path))
+
+    assert well_info.allWellNames() == ["OP1"]
+
+
+@pytest.mark.parametrize("flags", [FileMode.DEFAULT, FileMode.CLOSE_STREAM])
+def test_that_wells_can_be_loaded_from_an_open_resdata_file_with_any_file_mode(
+    tmp_path, grid, flags
+):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [_simple_well()])
+
+    well_info = WellInfo(grid, ResdataFile(path, flags))
+
+    assert well_info["OP1"][0].hasGlobalConnections()
+
+
+def test_that_wells_from_a_list_of_restart_files_are_collected_into_time_lines(
+    tmp_path, grid
+):
+    paths = [str(tmp_path / f"CASE.X{step:04d}") for step in range(3)]
+    for step, path in enumerate(paths):
+        write_restart(path, [_simple_well()], date=(2020, 1, 1 + step))
+
+    well_info = WellInfo(grid, paths)
+
+    assert len(well_info) == 1
+    assert len(well_info["OP1"]) == 3
+    assert [state.reportNumber() for state in well_info["OP1"]] == [0, 1, 2]
+
+
+def test_that_a_file_that_is_not_a_restart_file_is_rejected(tmp_path, grid):
+    path = str(tmp_path / "CASE.INIT")
+    write_restart(path, [_simple_well()])
+
+    with pytest.raises(ValueError, match="must be a restart file"):
+        WellInfo(grid, path)
+
+
+def test_that_a_restart_without_logihead_is_treated_as_single_porosity(tmp_path, grid):
+    path = str(tmp_path / "CASE.X0000")
+    _write_restart_without(path, [_simple_well()], {"LOGIHEAD"})
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert [c.ijk() for c in well_state.globalConnections()] == [(1, 2, 0), (1, 2, 1)]
+
+
+def test_that_an_intehead_that_is_too_short_to_hold_segment_dimensions_means_no_segments(
+    tmp_path, grid
+):
+    keywords = _step_keywords([_simple_well()], (2020, 1, 1))
+    old = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    short = _int_kw("INTEHEAD", 100)
+    for i in range(100):
+        short[i] = old[i]
+    keywords[keywords.index(old)] = short
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert not well_state.isMultiSegmentWell()
+    assert len(well_state.globalConnections()) == 2
+    assert well_state.hasGlobalConnections()
+
+
+def test_that_a_restart_without_scon_loads_connections_without_connection_factors(
+    tmp_path, grid
+):
+    path = str(tmp_path / "CASE.X0000")
+    _write_restart_without(path, [_simple_well()], {"SCON"})
+
+    connections = WellInfo(grid, path)["OP1"][0].globalConnections()
+
+    assert len(connections) == 2
+    assert all(conn.connectionFactor() == -1.0 for conn in connections)
+
+
+@pytest.mark.parametrize("dropped", [{"ISEG"}, {"RSEG"}, {"ISEG", "RSEG"}])
+def test_that_a_multisegment_well_without_iseg_or_rseg_has_no_segment_data(
+    tmp_path, grid, dropped
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1)],
+        connections=[Connection(i=1, j=1, k=1, segment=1)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    _write_restart_without(path, [well], dropped)
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert not well_state.hasSegmentData()
+    assert len(well_state) == 0
+
+
+def test_that_a_rseg_offset_beyond_the_integer_range_is_rejected(tmp_path, grid):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1), Segment(outlet=1, branch=1)]
+    )
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    intehead[179] = 2**31 - 1
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    with pytest.raises(ValueError, match="does not fit in RSEG"):
+        WellInfo(grid, path)
+
+
+def _full_featured_well():
+    return Well(
+        name="MSW",
+        headi=2,
+        headj=3,
+        headk=1,
+        rates=(1.0, 2.0, 3.0, 4.0),
+        connections=[
+            Connection(2, 3, 1, segment=1, rates=(1.0, 2.0, 3.0, 4.0)),
+            Connection(2, 3, 2, segment=2, rates=(5.0, 6.0, 7.0, 8.0)),
+        ],
+        segments=[
+            Segment(outlet=0, branch=1, length=10.0, depth=100.0),
+            Segment(outlet=1, branch=1, length=20.0, depth=120.0),
+        ],
+    )
+
+
+@pytest.mark.parametrize("extension", ["F0000", "X0000"])
+def test_that_formatted_and_unformatted_restart_files_give_the_same_wells(
+    tmp_path, grid, extension
+):
+    path = str(tmp_path / f"CASE.{extension}")
+    write_restart(path, [_full_featured_well()], formatted=extension.startswith("F"))
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert [seg.length() for seg in well_state.segments()] == [10.0, 20.0]
+    assert [seg.depth() for seg in well_state.segments()] == [100.0, 120.0]
+    assert well_state.oilRate() == 3.0
+    assert [conn.oilRate() for conn in well_state.globalConnections()] == [1.0, 5.0]
+
+
+def test_that_a_formatted_unified_restart_file_builds_a_time_line(tmp_path, grid):
+    path = str(tmp_path / "CASE.FUNRST")
+    write_unified_restart(
+        path,
+        [
+            (0, (2020, 1, 1), [_full_featured_well()]),
+            (1, (2020, 2, 1), [_full_featured_well()]),
+        ],
+        formatted=True,
+    )
+
+    time_line = WellInfo(grid, path)["MSW"]
+
+    assert [state.reportNumber() for state in time_line] == [0, 1]
+    assert all(len(state.segments()) == 2 for state in time_line)
+
+
+@pytest.mark.parametrize(
+    "direction, expected",
+    [
+        (1, WellConnectionDirection.well_conn_dirX),
+        (2, WellConnectionDirection.well_conn_dirY),
+        (3, WellConnectionDirection.well_conn_dirZ),
+    ],
+)
+def test_that_matrix_connection_directions_x_y_and_z_are_read_from_icon(
+    tmp_path, grid, direction, expected
+):
+    well = Well(name="W1", connections=[Connection(1, 1, 1, direction=direction)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well])
+
+    connection = WellInfo(grid, path)["W1"][0].globalConnections()[0]
+
+    assert connection.direction() == expected
+    assert connection.isMatrixConnection()
+
+
+def test_that_a_dual_porosity_wellhead_in_the_fracture_half_is_a_fracture_connection(
+    tmp_path, grid
+):
+    well = Well(
+        name="W1",
+        headi=1,
+        headj=1,
+        headk=NZ // 2 + 2,
+        connections=[Connection(1, 1, NZ // 2 + 2)],
+    )
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], dualp=True)
+
+    well_head = WellInfo(grid, path)["W1"][0].wellHead()
+
+    assert well_head.ijk() == (0, 0, 1)
+    assert well_head.isFractureConnection()
+
+
+def test_that_a_dual_porosity_wellhead_in_the_matrix_half_is_a_matrix_connection(
+    tmp_path, grid
+):
+    well = Well(name="W1", headi=1, headj=1, headk=2, connections=[Connection(1, 1, 2)])
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [well], dualp=True)
+
+    well_head = WellInfo(grid, path)["W1"][0].wellHead()
+
+    assert well_head.ijk() == (0, 0, 1)
+    assert well_head.isMatrixConnection()
+
+
+def test_that_a_restart_without_iwel_has_no_wells(tmp_path, grid):
+    path = str(tmp_path / "CASE.X0000")
+    _write_restart_without(path, [_simple_well()], {"IWEL"})
+
+    well_info = WellInfo(grid, path)
+
+    assert len(well_info) == 0
+
+
+def test_that_a_shut_well_with_zero_type_is_loaded_as_type_zero(tmp_path, grid):
+    path = str(tmp_path / "CASE.X0000")
+    write_restart(path, [_simple_well(well_type=0, status=0)])
+
+    well_state = WellInfo(grid, path)["OP1"][0]
+
+    assert well_state.wellType() == WellType.ZERO
+    assert not well_state.isOpen()

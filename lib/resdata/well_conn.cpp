@@ -48,9 +48,9 @@ WellConnection::WellConnection(int i, int j, int k, double connection_factor,
 std::shared_ptr<WellConnection>
 WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
                               const rd::KW *xcon_kw, const RSTHead &header,
-                              int well_nr, int conn_nr) {
-
-    const int icon_offset = header.niconz * (header.ncwmax * well_nr + conn_nr);
+                              size_t well_nr, size_t conn_nr) {
+    const size_t connection_nr = header.get_ncwmax() * well_nr + conn_nr;
+    const size_t icon_offset = header.get_niconz() * connection_nr;
     int IC = icon_kw->at<int>(icon_offset + ICON_IC_INDEX);
     if (IC <= 0)
         throw InvalidConnection("IC <= 0: Connection not in current LGR");
@@ -75,7 +75,7 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
     /* Set the K value and fracture flag. */
     {
         if (header.dualp) {
-            int geometric_nz = header.nz / 2;
+            const int geometric_nz = static_cast<int>(header.get_nz() / 2);
             if (k >= geometric_nz) {
                 k -= geometric_nz;
                 matrix_connection = false;
@@ -106,8 +106,7 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
     }
 
     if (scon_kw) {
-        const int scon_offset =
-            header.nsconz * (header.ncwmax * well_nr + conn_nr);
+        const size_t scon_offset = header.get_nsconz() * connection_nr;
         connection_factor = scon_kw->as_double(scon_offset + SCON_CF_INDEX);
     }
 
@@ -119,8 +118,7 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
             matrix_connection, header.unit_system);
 
         if (xcon_kw) {
-            const int xcon_offset =
-                header.nxconz * (header.ncwmax * well_nr + conn_nr);
+            const size_t xcon_offset = header.get_nxconz() * connection_nr;
 
             conn->water_rate =
                 xcon_kw->as_double(xcon_offset + XCON_WRAT_INDEX);
@@ -143,8 +141,8 @@ WellConnection::from_keywords(const rd::KW *icon_kw, const rd::KW *scon_kw,
 
 std::shared_ptr<WellConnection>
 WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
-                              int well_nr) {
-    const int iwel_offset = header.niwelz * well_nr;
+                              size_t well_nr) {
+    const size_t iwel_offset = header.get_niwelz() * well_nr;
     int conn_i = iwel_kw->at<int>(iwel_offset + IWEL_HEADI_INDEX) - 1;
 
     if (conn_i >= 0) {
@@ -155,7 +153,7 @@ WellConnection::read_wellhead(const rd::KW *iwel_kw, const RSTHead &header,
         double connection_factor = -1;
 
         if (header.dualp) {
-            int geometric_nz = header.nz / 2;
+            const int geometric_nz = static_cast<int>(header.get_nz() / 2);
             if (conn_k >= geometric_nz) {
                 conn_k -= geometric_nz;
                 matrix_connection = false;

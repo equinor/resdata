@@ -1,5 +1,8 @@
 #include <array>
 #include <cstdlib>
+#include <limits>
+#include <stdexcept>
+#include <string>
 #include <memory>
 #include <vector>
 
@@ -42,12 +45,22 @@ void well_rseg_loader_free(well_rseg_loader_type *loader) {
     delete loader;
 }
 
+size_t well_rseg_loader_get_size(const well_rseg_loader_type *loader) {
+    return loader->rst_view->kw_size(loader->kw, 0);
+}
+
 double *well_rseg_loader_load_values(well_rseg_loader_type *loader,
-                                     int rseg_offset) {
+                                     size_t rseg_offset) {
     loader->absolute_index_map.resize(loader->relative_index_map.size(), 0);
     for (size_t index = 0; index < loader->relative_index_map.size(); index++) {
-        int relative_index = loader->relative_index_map[index];
-        loader->absolute_index_map[index] = relative_index + rseg_offset;
+        size_t absolute_index =
+            static_cast<size_t>(loader->relative_index_map[index]) +
+            rseg_offset;
+        if (absolute_index >
+            static_cast<size_t>(std::numeric_limits<int>::max()))
+            throw std::out_of_range("RSEG index out of range: " +
+                                    std::to_string(absolute_index));
+        loader->absolute_index_map[index] = static_cast<int>(absolute_index);
     }
 
     loader->rst_view->index_fload_kw(loader->kw, 0, loader->absolute_index_map,

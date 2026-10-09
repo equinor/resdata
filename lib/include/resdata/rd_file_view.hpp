@@ -111,6 +111,11 @@ public:
     get_file_kw(size_t global_index) const {
         return kw_list.at(global_index);
     }
+    /** Number of elements in the @ith keyword named @kw, without loading
+        its data. Throws std::out_of_range if there is no such keyword. */
+    [[nodiscard]] size_t kw_size(const std::string &kw, size_t ith) const {
+        return get_file_kw(kw, ith)->get_size();
+    }
     [[nodiscard]] auto begin() { return kw_list.begin(); }
     [[nodiscard]] auto end() { return kw_list.end(); }
     [[nodiscard]] std::vector<std::string> get_distinct_kw() const {
