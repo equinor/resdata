@@ -1162,6 +1162,34 @@ def test_that_a_negative_segmented_well_number_is_rejected(tmp_path, grid):
         WellInfo(grid, path)
 
 
+@pytest.mark.parametrize(
+    "dimensions",
+    [
+        pytest.param({"NSEGMX": 0}, id="zero nsegmx"),
+        pytest.param({"NISEGZ": 0}, id="zero nisegz"),
+        pytest.param({"NRSEGZ": 0}, id="zero nrsegz"),
+        pytest.param({"NISEGZ": 0, "NRSEGZ": 0}, id="zero nisegz and nrsegz"),
+    ],
+)
+def test_that_a_zero_segment_dimension_gives_a_well_without_segments(
+    tmp_path, grid, dimensions
+):
+    well = _msw_with_segments(
+        [Segment(outlet=0, branch=1, length=1.0), Segment(outlet=1, branch=1)]
+    )
+    keywords = _step_keywords([well], (2020, 1, 1))
+    intehead = next(kw for kw in keywords if kw.get_name().strip() == "INTEHEAD")
+    for name, value in dimensions.items():
+        intehead[NEGATIVE_INTEHEAD_INDICES[name]] = value
+    path = str(tmp_path / "CASE.X0000")
+    _fwrite_keywords(path, keywords)
+
+    well_state = WellInfo(grid, path)["MSW"][0]
+
+    assert well_state.segments() == []
+    assert not well_state.hasSegmentData()
+
+
 INT_MAX = 2**31 - 1
 
 

@@ -89,12 +89,11 @@ bool well_segment_collection_has_segment(
 }
 
 /** Throws if the segments of well @well_nr, laid out as @nsegmx entries of
-    @stride elements per well, do not fit in a keyword of @kw_size elements.*/
+    @stride elements per well, do not fit in a keyword of @kw_size elements.
+    @nsegmx and @stride must be non-zero. */
 static void validate_segment_layout(const char *kw_name, size_t kw_size,
                                     size_t well_nr, size_t nsegmx,
                                     size_t stride) {
-    if (nsegmx == 0 || stride == 0)
-        return;
     const size_t wells_that_fit = (kw_size / stride) / nsegmx;
     if (well_nr >= wells_that_fit)
         throw std::invalid_argument(fmt::format(
@@ -121,7 +120,12 @@ int well_segment_collection_load_from_kw(
                 fmt::format("Invalid segmented well number {} read from {}",
                             segment_well_nr + 1, IWEL_KW));
 
-        if (load_segments) {
+        // Zero segments per well, or zero elements per segment, means
+        // there is no segment data to read.
+        const bool has_segment_layout = rst_head.get_nsegmx() > 0 &&
+                                        rst_head.get_nisegz() > 0 &&
+                                        rst_head.get_nrsegz() > 0;
+        if (load_segments && has_segment_layout) {
             validate_segment_layout(
                 ISEG_KW, iseg_kw->size(), static_cast<size_t>(segment_well_nr),
                 rst_head.get_nsegmx(), rst_head.get_nisegz());
