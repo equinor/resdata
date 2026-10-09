@@ -1919,7 +1919,8 @@ def test_that_an_intehead_that_is_too_short_to_hold_segment_dimensions_means_no_
     well_state = WellInfo(grid, path)["OP1"][0]
 
     assert not well_state.isMultiSegmentWell()
-    assert len(well_state.globalConnections()) == 0 or well_state.hasGlobalConnections()
+    assert len(well_state.globalConnections()) == 2
+    assert well_state.hasGlobalConnections()
 
 
 def test_that_a_restart_without_scon_loads_connections_without_connection_factors(

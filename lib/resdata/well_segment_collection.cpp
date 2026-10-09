@@ -89,8 +89,7 @@ bool well_segment_collection_has_segment(
 }
 
 /** Throws if the segments of well @well_nr, laid out as @nsegmx entries of
-    @stride elements per well, do not fit in a keyword of @kw_size elements.
-    Uses division so that no product of file-controlled values can wrap. */
+    @stride elements per well, do not fit in a keyword of @kw_size elements.*/
 static void validate_segment_layout(const char *kw_name, size_t kw_size,
                                     size_t well_nr, size_t nsegmx,
                                     size_t stride) {
