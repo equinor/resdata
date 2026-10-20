@@ -3,7 +3,6 @@ from __future__ import annotations
 import ctypes
 import datetime
 import time
-from typing import TypeAlias
 
 import numpy as np
 
@@ -147,4 +146,4 @@ class CTime:
         return _ctime._timezone()
 
 
-TimeLike: TypeAlias = int | CTime | datetime.datetime | datetime.date | np.datetime64
+type TimeLike = int | CTime | datetime.datetime | datetime.date | np.datetime64

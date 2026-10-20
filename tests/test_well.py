@@ -10,7 +10,6 @@ import os
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import TypeAlias
 
 import hypothesis.strategies as st
 import pytest
@@ -182,10 +181,10 @@ def _char_kw(name, size):
     return kw
 
 
-Year: TypeAlias = int
-Month: TypeAlias = int
-Day: TypeAlias = int
-Date: TypeAlias = tuple[Year, Month, Day]
+type Year = int
+type Month = int
+type Day = int
+type Date = tuple[Year, Month, Day]
 
 
 # LOGIHEAD index that flags a dual-porosity run.
