@@ -33,6 +33,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Physics",
   "Topic :: Software Development :: Libraries",
@@ -120,12 +121,15 @@ format = [
 fork-strategy = "requires-python"
 exclude-newer = "7 days"
 
+[tool.uv.exclude-newer-package]
+resfo-utilities = false # Developed by Equinor
+
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
 testpaths = ["tests"]
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-build = "cp311-* cp312-* cp313-* cp314-*"
+build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_* *-win32"
 
 [tool.cibuildwheel.linux]
