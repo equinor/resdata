@@ -5,7 +5,6 @@ import re
 import shutil
 from dataclasses import dataclass, replace
 from textwrap import dedent
-from typing import TypeAlias
 
 import hypothesis.strategies as st
 import numpy as np
@@ -2668,7 +2667,7 @@ def _boundary_index(summary, history):
     )
 
 
-Name: TypeAlias = str
+type Name = str
 
 
 @dataclass
