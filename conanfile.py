@@ -18,8 +18,7 @@ class ResdataConan(ConanFile):
     def configure(self):
         if self.options.build_tests:
             self.options["catch2"].with_main = True
-        if self.settings.compiler == "clang":
-            self.options["backward-cpp"].stack_details = "backtrace_symbol"
+        self.options["backward-cpp"].stack_details = "backtrace_symbol"
 
     def generate(self):
         tc = CMakeToolchain(self)
