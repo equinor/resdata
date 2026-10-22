@@ -65,6 +65,9 @@ class Summary(_BaseCClass):
         key; with @join_string == ":" the water cut in well OP_1 will
         be available as "WWCT:OP_1".
 
+        Group keys use full names from a matching companion ESMRY file when
+        available, otherwise the names from SMSPEC are used.
+
         If the @include_restart parameter is set to true the summary
         loader will, in the case of a restarted ECLIPSE simulation,
         try to load summary results also from the restarted case.
