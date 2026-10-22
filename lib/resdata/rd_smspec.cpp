@@ -784,7 +784,7 @@ const int *rd_smspec_get_index_map(const rd_smspec_type *smspec) {
  * situations occur in the future, this is a sane starting point for general
  * support.
  */
-static const char *get_active_keyword_alias(rd::File *header,
+static const char *get_active_keyword_alias(const rd::File *header,
                                             const char *keyword) {
     if (strcmp(keyword, WGNAMES_KW) == 0 || strcmp(keyword, NAMES_KW) == 0)
         return header->has_kw(WGNAMES_KW) ? WGNAMES_KW : NAMES_KW;
@@ -800,6 +800,136 @@ static bool rd_smspec_check_header(rd::File *header) {
     }
 
     return OK;
+}
+
+/** Flow writes KEYCHECK and SMSPEC parameters in the same order. Resolve
+ * group names before inserting nodes, since truncated names can collide in
+ * both the general and group-specific indexes. ESMRY is optional metadata:
+ * an absent or incompatible companion must not prevent loading the case.
+ */
+static std::vector<std::string>
+rd_smspec_esmry_group_names(const std::string &header_file,
+                            const rd::File &header, const int grid_dims[3]) {
+    const auto &keywords = *header.get_kw(KEYWORDS_KW, 0);
+    const auto &wgnames =
+        *header.get_kw(get_active_keyword_alias(&header, WGNAMES_KW), 0);
+    const auto &units = *header.get_kw(UNITS_KW, 0);
+    const auto &startdat = *header.get_kw(STARTDAT_KW, 0);
+    fs::path esmry_file{header_file};
+    esmry_file.replace_extension(".ESMRY");
+    try {
+        if (!fs::is_regular_file(esmry_file))
+            return {};
+
+        auto esmry = rd::File::open(esmry_file.string());
+        if (!esmry->has_kw("KEYCHECK") || !esmry->has_kw("UNITS") ||
+            !esmry->has_kw("START"))
+            return {};
+
+        const auto &keys = *esmry->get_kw("KEYCHECK", 0);
+        const auto &esmry_units = *esmry->get_kw("UNITS", 0);
+        const auto &start = *esmry->get_kw("START", 0);
+        if (!rd_type_is_alpha(keys.data_type()) ||
+            !rd_type_is_alpha(esmry_units.data_type()) ||
+            !rd_type_is_int(start.data_type()) || start.size() != 7 ||
+            keys.size() != keywords.size() ||
+            esmry_units.size() != units.size())
+            return {};
+        for (size_t i = 0; i < 3; ++i)
+            if (start.at<int>(i) != startdat.at<int>(i))
+                return {};
+        const int hour = startdat.size() == 6 ? startdat.at<int>(3) : 0;
+        const int minute = startdat.size() == 6 ? startdat.at<int>(4) : 0;
+        const int microsecond = startdat.size() == 6 ? startdat.at<int>(5) : 0;
+        if (start.at<int>(3) != hour || start.at<int>(4) != minute ||
+            start.at<int>(5) != microsecond / 1000000 ||
+            start.at<int>(6) != (microsecond % 1000000) / 1000)
+            return {};
+
+        std::vector<std::string> group_names(keywords.size());
+        for (size_t i = 0; i < keywords.size(); ++i) {
+            const auto kw = rd::strip_spaces(keywords.at<std::string>(i));
+            const auto key = rd::strip_spaces(keys.at<std::string>(i));
+            const auto separator = key.find(':');
+            const auto unit = rd::strip_spaces(units.at<std::string>(i));
+            const auto esmry_unit =
+                rd::strip_spaces(esmry_units.at<std::string>(i));
+            // Flow uses an empty ESMRY unit for YEARS, but writes YEARS in
+            // SMSPEC (SummaryImplementation::configureTimeVector()).
+            if (key.substr(0, separator) != kw ||
+                (esmry_unit != unit &&
+                 !(kw == "YEARS" && unit == "YEARS" && esmry_unit.empty())))
+                return {};
+
+            const auto name = rd::strip_spaces(wgnames.at<std::string>(i));
+            const int num = header.has_kw(NUMS_KW)
+                                ? header.get_kw(NUMS_KW, 0)->at<int>(i)
+                                : SMSPEC_NUMS_INVALID;
+            const auto var_type =
+                rd::smspec_node::valid_type(kw.c_str(), name.c_str(), num);
+            if (var_type == RD_SMSPEC_INVALID_VAR)
+                continue;
+            if (var_type != RD_SMSPEC_GROUP_VAR) {
+                // Reuse the normal key construction, including NUMS/IJK aliases,
+                // to reject companions with a different parameter ordering.
+                std::unique_ptr<rd::smspec_node> node;
+                if (rd_smspec_lgr_var_type(var_type)) {
+                    if (!header.has_kw(LGRS_KW) || !header.has_kw(NUMLX_KW) ||
+                        !header.has_kw(NUMLY_KW) || !header.has_kw(NUMLZ_KW))
+                        return {};
+                    node = std::make_unique<rd::smspec_node>(
+                        static_cast<int>(i), kw.c_str(), name.c_str(), "",
+                        rd::strip_spaces(
+                            header.get_kw(LGRS_KW, 0)->at<std::string>(i))
+                            .c_str(),
+                        header.get_kw(NUMLX_KW, 0)->at<int>(i),
+                        header.get_kw(NUMLY_KW, 0)->at<int>(i),
+                        header.get_kw(NUMLZ_KW, 0)->at<int>(i),
+                        PARAMS_GLOBAL_DEFAULT, ":");
+                } else {
+                    node = std::make_unique<rd::smspec_node>(
+                        static_cast<int>(i), kw.c_str(), name.c_str(), num, "",
+                        grid_dims, PARAMS_GLOBAL_DEFAULT, ":");
+                }
+                auto comparison_key = key;
+                if (var_type == RD_SMSPEC_WELL_VAR ||
+                    var_type == RD_SMSPEC_COMPLETION_VAR ||
+                    var_type == RD_SMSPEC_SEGMENT_VAR) {
+                    if (separator == std::string::npos)
+                        return {};
+                    const auto name_begin = separator + 1;
+                    const auto name_end = key.find(':', name_begin);
+                    const auto full_name =
+                        key.substr(name_begin, name_end == std::string::npos
+                                                   ? std::string::npos
+                                                   : name_end - name_begin);
+                    if (full_name.substr(0, wgnames.iotype_size()) != name)
+                        return {};
+                    // Flow also preserves full well names in KEYCHECK. Only
+                    // normalize that component for comparison: the public
+                    // well names and NUMS/IJK/segment suffixes stay unchanged.
+                    comparison_key.replace(name_begin, full_name.size(), name);
+                }
+                if ((!node->get_gen_key1() ||
+                     comparison_key != node->get_gen_key1()) &&
+                    (!node->get_gen_key2() ||
+                     comparison_key != node->get_gen_key2()))
+                    return {};
+                continue;
+            }
+
+            if (separator == std::string::npos || separator + 1 == key.size())
+                return {};
+            const auto full_name = key.substr(separator + 1);
+            if (full_name.substr(0, wgnames.iotype_size()) != name)
+                return {};
+            group_names[i] = full_name;
+        }
+        return group_names;
+    } catch (const std::exception &) {
+        // Broken or unreadable optional metadata: retain the SMSPEC names.
+        return {};
+    }
 }
 
 static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
@@ -898,6 +1028,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 
         rd_get_file_type(header_file.c_str(), &rd_smspec->formatted, NULL);
 
+        const auto group_names = rd_smspec_esmry_group_names(
+            header_file, *header, rd_smspec->grid_dims);
+
         for (size_t params_index = 0; params_index < wells->size();
              params_index++) {
             float default_value = PARAMS_GLOBAL_DEFAULT;
@@ -916,6 +1049,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             if (var_type == RD_SMSPEC_INVALID_VAR) {
                 continue;
             }
+
+            if (var_type == RD_SMSPEC_GROUP_VAR && !group_names.empty())
+                well = group_names[params_index];
 
             if (rd_smspec_lgr_var_type(var_type) && !rd_smspec->has_lgr) {
                 throw std::invalid_argument(
