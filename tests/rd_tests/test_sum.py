@@ -1689,7 +1689,7 @@ def _smspec_for(keywords, units, wells, nums, **kwargs):
         nx=2,
         ny=2,
         nz=2,
-        restarted_from_step=0,
+        restarted_from_step=kwargs.pop("restarted_from_step", 0),
         num_keywords=len(keywords),
         restart=kwargs.pop("restart", "        "),
         keywords=keywords,
@@ -2056,6 +2056,13 @@ def test_that_numpy_vector_of_a_writer_without_time_steps_is_empty():
     writer.add_variable("FOPT", unit="SM3")
 
     assert len(writer.numpy_vector("FOPT")) == 0
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_first_day_is_the_time_of_the_first_step_in_days():
+    _write_header_case("LATE", _time_and_fopt(), time_values=(3.0, 4.0))
+
+    assert Summary("LATE").first_day == 3.0
 
 
 @pytest.mark.usefixtures("use_tmpdir")
