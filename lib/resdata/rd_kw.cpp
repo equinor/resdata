@@ -471,8 +471,8 @@ void rd::KW::fread_data(rd::KW *rd_kw, ERT::FortIO &fortio) {
    as stored by rd_file_kw.
 */
 void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
-                                rd_data_type data_type, int element_count,
-                                const std::vector<int> &index_map,
+                                rd_data_type data_type, size_t element_count,
+                                const std::vector<size_t> &index_map,
                                 char *io_buffer) {
     size_t sizeof_iotype = rd_type_get_sizeof_iotype(data_type);
 
@@ -497,8 +497,8 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
             [&](const auto &vec) {
                 using VecT = std::decay_t<decltype(vec)>;
                 for (size_t index = 0; index < index_map.size(); index++) {
-                    int element_index = index_map[index];
-                    if (element_index < 0 || element_index >= element_count)
+                    size_t element_index = index_map[index];
+                    if (element_index >= element_count)
                         throw std::invalid_argument(fmt::format(
                             "Element index is out of range 0 <= {} < {}",
                             element_index, element_count));
@@ -529,9 +529,9 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
         offset_type data_offset = kw_offset + RD_KW_HEADER_FORTIO_SIZE;
 
         for (size_t index = 0; index < index_map.size(); index++) {
-            int element_index = index_map[index];
+            size_t element_index = index_map[index];
 
-            if (element_index < 0 || element_index >= element_count)
+            if (element_index >= element_count)
                 throw std::invalid_argument(
                     fmt::format("Element index is out of range 0 <= {} < {}",
                                 element_index, element_count));

@@ -2363,13 +2363,33 @@ def test_that_solve_days_precision_is_unaffected_by_start_date(start_date):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_add_t_step_rejects_negative_report_step():
+def test_that_add_t_step_raises_type_error_on_negative_report_step():
     start_date = datetime.datetime(2000, 1, 1)
     writer = Summary.writer("NEGATIVE_REPORT_STEP", start_date, 5, 5, 5)
     writer.add_variable("FOPT")
 
-    with pytest.raises(ValueError, match="report step cannot be negative"):
+    with pytest.raises(TypeError):
         writer.add_t_step(-1, 1.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda s: s.iget("FOPT", -1),
+        lambda s: s.iget_days(-1),
+        lambda s: s.iget_date(-1),
+        lambda s: s.iget_report(-1),
+        lambda s: s.get_report_time(-1),
+    ],
+)
+def test_that_negative_indices_raise_type_error(call):
+    writer = Summary.writer("NEGATIVE_INDEX", datetime.datetime(2000, 1, 1), 5, 5, 5)
+    writer.add_variable("FOPT")
+    writer.add_t_step(1, 1.0)
+
+    with pytest.raises(TypeError):
+        call(writer)
 
 
 @pytest.mark.usefixtures("use_tmpdir")

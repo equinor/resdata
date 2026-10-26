@@ -53,14 +53,16 @@ struct rd_sum_tstep_struct {
     time_t
         sim_time; /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */
     int ministep; /* The simulator time-step number; one ministep per numerical timestep. */
-    int report_step; /* The report step this time-step is part of - in general there can be many timestep for each report step. */
+    size_t
+        report_step; /* The report step this time-step is part of - in general there can be many timestep for each report step. */
     double sim_seconds; /* Accumulated simulation time up to this ministep. */
     int internal_index; /* Used for lookups of the next / previous ministep based on an existing ministep. */
     const rd_smspec_type *
         smspec; /* The smespec header information for this tstep - must be compatible. */
 };
 
-static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
+static rd_sum_tstep_type *rd_sum_tstep_alloc(size_t report_step,
+                                             int ministep_nr,
                                              const rd_smspec_type *smspec) {
     auto tstep = std::make_unique<rd_sum_tstep_type>();
     UTIL_TYPE_ID_INIT(tstep.get(), RD_SUM_TSTEP_ID);
@@ -138,13 +140,13 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
    the function will return NULL:
 */
 
-rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
+rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(size_t report_step,
                                                 int ministep_nr,
                                                 const rd::KW *params_kw,
                                                 const char *src_file,
                                                 const rd_smspec_type *smspec) {
 
-    int data_size = rd::kw_get_size(params_kw);
+    size_t data_size = params_kw->size();
 
     if (data_size == rd_smspec_get_params_size(smspec)) {
         std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)>
@@ -161,8 +163,8 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
        discarded.
     */
         fprintf(stderr,
-                "** Warning size mismatch between timestep loaded from:%s(%d) "
-                "and header:%s(%d) - timestep discarded.\n",
+                "** Warning size mismatch between timestep loaded from:%s(%zu) "
+                "and header:%s(%zu) - timestep discarded.\n",
                 src_file, data_size, rd_smspec_get_header_file(smspec),
                 rd_smspec_get_params_size(smspec));
         return NULL;
@@ -173,7 +175,7 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
   Should be called in write mode.
 */
 
-rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
+rd_sum_tstep_type *rd_sum_tstep_alloc_new(size_t report_step, int ministep,
                                           float sim_seconds,
                                           const rd_smspec_type *smspec) {
     std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
@@ -188,12 +190,12 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_new(int report_step, int ministep,
         throw std::invalid_argument("Cannot create a new summary timestep for "
                                     "a SMSPEC without a TIME variable");
     rd_sum_tstep_iset(tstep.get(), time->params_index,
-                      sim_seconds / time->seconds_per_unit);
+                      sim_seconds / static_cast<float>(time->seconds_per_unit));
     return tstep.release();
 }
 
-double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, int index) {
-    if ((index >= 0) && (index < (int)ministep->data.size()))
+double rd_sum_tstep_iget(const rd_sum_tstep_type *ministep, size_t index) {
+    if (index < ministep->data.size())
         return ministep->data[index];
     else {
         throw std::out_of_range(
@@ -214,7 +216,7 @@ double rd_sum_tstep_get_sim_seconds(const rd_sum_tstep_type *ministep) {
     return ministep->sim_seconds;
 }
 
-int rd_sum_tstep_get_report(const rd_sum_tstep_type *ministep) {
+size_t rd_sum_tstep_get_report(const rd_sum_tstep_type *ministep) {
     return ministep->report_step;
 }
 
@@ -223,22 +225,21 @@ int rd_sum_tstep_get_ministep(const rd_sum_tstep_type *ministep) {
 }
 
 void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
-                         const int *index_map, int index_map_size,
+                         const std::vector<size_t> &index_map,
                          ERT::FortIO &fortio) {
     rd::KW ministep_kw{MINISTEP_KW, std::vector<int>{ministep->ministep}};
     ministep_kw.fwrite(fortio);
 
-    int compact_size = index_map_size;
-    std::vector<float> data(compact_size);
-    for (int i = 0; i < compact_size; i++)
+    std::vector<float> data(index_map.size());
+    for (size_t i = 0; i < index_map.size(); i++)
         data[i] = ministep->data[index_map[i]];
 
     rd::KW params_kw{PARAMS_KW, data};
     params_kw.fwrite(fortio);
 }
 
-void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
-    if ((index < static_cast<int>(tstep->data.size())) && (index >= 0))
+void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, size_t index, float value) {
+    if (index < tstep->data.size())
         tstep->data[index] = value;
     else
         throw std::out_of_range(
@@ -249,13 +250,13 @@ void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
                                 const rd::smspec_node &smspec_node,
                                 float value) {
-    int data_index = smspec_node.get_params_index();
+    size_t data_index = smspec_node.get_params_index();
     rd_sum_tstep_iset(tstep, data_index, value);
 }
 
 double rd_sum_tstep_get_from_node(const rd_sum_tstep_type *tstep,
                                   const rd::smspec_node &smspec_node) {
-    int data_index = smspec_node.get_params_index();
+    size_t data_index = smspec_node.get_params_index();
     return rd_sum_tstep_iget(tstep, data_index);
 }
 

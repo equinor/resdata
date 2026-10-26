@@ -5,6 +5,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
@@ -58,8 +59,8 @@ struct WriteSpec {
     int nx = 10;
     int ny = 11;
     int nz = 12;
-    int num_report_steps = 5;
-    int num_ministep = 10;
+    size_t num_report_steps = 5;
+    size_t num_ministep = 10;
     double start_seconds = 0.0;
     double ministep_length = 86400.0; // one day in seconds
 };
@@ -82,9 +83,9 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
         rd_sum_add_var(rd_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0f);
 
     double sim_seconds = spec.start_seconds;
-    for (int report_step = 0; report_step < spec.num_report_steps;
+    for (size_t report_step = 0; report_step < spec.num_report_steps;
          ++report_step) {
-        for (int step = 0; step < spec.num_ministep; ++step) {
+        for (size_t step = 0; step < spec.num_ministep; ++step) {
             rd_sum_tstep_type *tstep =
                 rd_sum_add_tstep(rd_sum.get(), report_step + 1, sim_seconds);
             rd_sum_tstep_set_from_node(tstep, *fopt, sim_seconds);
@@ -198,7 +199,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THROWS_AS(
                 rd_sum_iget_report_end(rd_sum.get(), spec.num_report_steps + 1),
                 std::invalid_argument);
-            REQUIRE_THROWS_AS(rd_sum_iget_report_step(rd_sum.get(), -1),
+            REQUIRE_THROWS_AS(rd_sum_iget_report_step(rd_sum.get(), SIZE_MAX),
                               std::invalid_argument);
             REQUIRE_THROWS_AS(
                 rd_sum_iget_report_step(rd_sum.get(), spec.num_report_steps *
@@ -253,8 +254,8 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("iget returns the expected time at every step") {
-            const int n = rd_sum_get_data_length(rd_sum.get());
-            for (int i = 0; i < n; ++i) {
+            const size_t n = rd_sum_get_data_length(rd_sum.get());
+            for (size_t i = 0; i < n; ++i) {
                 const double expected = i * spec.ministep_length;
                 time_t expected_time = spec.start_time;
                 util_inplace_forward_seconds_utc(&expected_time, expected);
@@ -287,8 +288,8 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("iget with out-of-range internal index throws") {
-            const int n = rd_sum_get_data_length(rd_sum.get());
-            REQUIRE_THROWS_AS(rd_sum_iget_sim_time(rd_sum.get(), -1),
+            const size_t n = rd_sum_get_data_length(rd_sum.get());
+            REQUIRE_THROWS_AS(rd_sum_iget_sim_time(rd_sum.get(), SIZE_MAX),
                               std::invalid_argument);
             REQUIRE_THROWS_AS(rd_sum_iget_sim_time(rd_sum.get(), n),
                               std::invalid_argument);
@@ -297,7 +298,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("first_gt returns the first index exceeding the limit") {
-            const int fopt_idx =
+            const size_t fopt_idx =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
 
             REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx, -1.0) == 0);
@@ -311,23 +312,25 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                 (spec.num_report_steps * spec.num_ministep - 1) *
                 spec.ministep_length;
             REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
-                                        last_sim_seconds) == -1);
+                                        last_sim_seconds) == std::nullopt);
 
-            const int bpr_idx =
+            const size_t bpr_idx =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "BPR:567");
             REQUIRE(rd_sum_get_first_gt(rd_sum.get(), bpr_idx,
                                         10.0 * spec.ministep_length) == 2);
         }
 
         THEN("first_lt returns the first index below the limit") {
-            const int fopt_idx =
+            const size_t fopt_idx =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
 
             REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, 1.0) == 0);
-            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, 0.0) == -1);
-            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, -1.0) == -1);
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, 0.0) ==
+                    std::nullopt);
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, -1.0) ==
+                    std::nullopt);
 
-            const int wwct_idx =
+            const size_t wwct_idx =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "WWCT:OP-1");
             REQUIRE(rd_sum_get_first_lt(rd_sum.get(), wwct_idx, 1.0) == 0);
         }
@@ -400,12 +403,11 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                     (size_t)rd_sum_get_data_length(rd_sum.get()));
             REQUIRE(times[0] == spec.start_time);
 
-            const int param_index =
+            const size_t param_index =
                 rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
             auto data =
                 rd_sum_alloc_data_vector(rd_sum.get(), param_index, false);
-            REQUIRE(data.size() ==
-                    static_cast<size_t>(rd_sum_get_data_length(rd_sum.get())));
+            REQUIRE(data.size() == rd_sum_get_data_length(rd_sum.get()));
             REQUIRE_THAT(data[0], WithinAbs(0.0, 1e-6));
 
             REQUIRE_THROWS_AS(
@@ -483,15 +485,19 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
     }
 }
 
-TEST_CASE_METHOD(Tmpdir, "rd_sum_add_tstep rejects negative report steps") {
-    const auto case_path = (dirname / "NEGATIVE_REPORT_STEP").string();
-    auto rd_sum = make_summary_writer(case_path, /*fmt_output=*/false,
-                                      /*unified=*/true, ":",
+TEST_CASE_METHOD(Tmpdir, "first_gt and first_lt find nothing in empty data") {
+    auto rd_sum = make_summary_writer((dirname / "EMPTY").string(),
+                                      /*fmt=*/false, /*unified=*/true, ":",
                                       util_make_date_utc(1, 1, 2010),
-                                      /*time_in_days=*/true, 10, 11, 12);
+                                      /*time_in_days=*/true, 10, 10, 10);
+    const rd::smspec_node *fopt =
+        rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 0.0f);
+    REQUIRE(rd_sum_get_data_length(rd_sum.get()) == 0);
 
-    REQUIRE_THROWS_AS(rd_sum_add_tstep(rd_sum.get(), -1, 0.0),
-                      std::invalid_argument);
+    REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt->get_params_index(), 0.0) ==
+            std::nullopt);
+    REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt->get_params_index(), 0.0) ==
+            std::nullopt);
 }
 
 TEST_CASE_METHOD(Tmpdir,
@@ -603,6 +609,52 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_add_local_var registers LGR smspec nodes") {
     }
 }
 
+TEST_CASE_METHOD(
+    Tmpdir, "report-only vectors skip report steps missing from the data") {
+    const auto case_path = (dirname / "GAPCASE").string();
+    const time_t start_time = util_make_date_utc(1, 1, 2010);
+    auto rd_sum = make_summary_writer(case_path, /*fmt_output=*/false,
+                                      /*unified=*/true, ":", start_time, true,
+                                      10, 10, 10);
+    const rd::smspec_node *fopt =
+        rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 0.0f);
+
+    // Report step 2 is intentionally absent.
+    const size_t report_steps[] = {1, 3};
+    for (size_t i = 0; i < 2; ++i) {
+        const double sim_seconds = 86400.0 * (i + 1);
+        rd_sum_tstep_type *tstep =
+            rd_sum_add_tstep(rd_sum.get(), report_steps[i], sim_seconds);
+        rd_sum_tstep_set_from_node(tstep, *fopt, 10.0 * (i + 1));
+    }
+
+    const size_t params_index =
+        rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
+
+    auto times = rd_sum_alloc_time_vector(rd_sum.get(), true);
+    REQUIRE(times.size() == 2);
+    REQUIRE(times[0] == start_time + 86400);
+    REQUIRE(times[1] == start_time + 2 * 86400);
+
+    auto values = rd_sum_alloc_data_vector(rd_sum.get(), params_index, true);
+    REQUIRE(values.size() == 2);
+    REQUIRE_THAT(values[0], WithinAbs(10.0, 1e-6));
+    REQUIRE_THAT(values[1], WithinAbs(20.0, 1e-6));
+}
+
+TEST_CASE_METHOD(Tmpdir, "adding a tstep with report step SIZE_MAX throws") {
+    const auto case_path = (dirname / "MAXCASE").string();
+    auto rd_sum =
+        make_summary_writer(case_path, /*fmt_output=*/false,
+                            /*unified=*/true, ":",
+                            util_make_date_utc(1, 1, 2010), true, 10, 10, 10);
+    rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 0.0f);
+
+    REQUIRE_THROWS_AS(rd_sum_add_tstep(rd_sum.get(), SIZE_MAX, 0.0),
+                      std::invalid_argument);
+    REQUIRE(rd_sum_get_data_length(rd_sum.get()) == 0);
+}
+
 TEST_CASE_METHOD(Tmpdir, "rd_sum_alloc_group_list returns group names") {
     const auto case_path = (dirname / "GCASE").string();
 
@@ -690,12 +742,12 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
     REQUIRE(rd_sum != nullptr);
     REQUIRE(rd_sum_has_key(rd_sum.get(), "FOPT"));
 
-    const int length = rd_sum_get_data_length(rd_sum.get());
+    const size_t length = rd_sum_get_data_length(rd_sum.get());
     REQUIRE(length > 0);
 
     REQUIRE_THAT(rd_sum_get_general_var(rd_sum.get(), 0, "FOPT"),
                  WithinAbs(child_fopt_value, 1e-3));
-    for (int i = 1; i < length; ++i) {
+    for (size_t i = 1; i < length; ++i) {
         REQUIRE_THAT(
             rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
             WithinAbs(spec.start_seconds + (i - 1) * spec.ministep_length,
@@ -747,8 +799,8 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
         auto base_sum = read_summary(base_name);
         REQUIRE(restart_sum != nullptr);
         REQUIRE(base_sum != nullptr);
-        const int n = rd_sum_get_data_length(base_sum.get());
-        for (int i = 0; i < n; ++i) {
+        const size_t n = rd_sum_get_data_length(base_sum.get());
+        for (size_t i = 0; i < n; ++i) {
             REQUIRE(rd_sum_get_general_var(base_sum.get(), i, "FOPT") ==
                     rd_sum_get_general_var(restart_sum.get(), i, "FOPT"));
         }
@@ -884,9 +936,9 @@ TEST_CASE_METHOD(Tmpdir, "Without extension the newest data files are chosen") {
     fs::rename(dirname / "CASE.SMSPEC.bak", dirname / "CASE.SMSPEC");
 
     SECTION("unified newer than split picks unified") {
-        for (int n = 1; n <= split_spec.num_report_steps; ++n) {
+        for (size_t n = 1; n <= split_spec.num_report_steps; ++n) {
             char ext[8];
-            sprintf(ext, ".S%04d", n);
+            sprintf(ext, ".S%04zu", n);
             make_older(dirname / ("CASE" + std::string(ext)),
                        dirname / "CASE.UNSMRY");
         }
@@ -1269,7 +1321,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
 
         auto check_vector = [](rd_sum_type *sum, const std::string &key,
                                const std::vector<double> &expected) {
-            const int idx =
+            const size_t idx =
                 rd_sum_get_general_var_params_index(sum, key.c_str());
             auto data = rd_sum_alloc_data_vector(sum, idx, false);
             REQUIRE(data.size() == expected.size());
@@ -1328,7 +1380,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                 check_vector(sum.get(), "BPR:1", case2_bpr[0]);
                 check_vector(sum.get(), "BPR:2", case2_bpr[1]);
                 REQUIRE(rd_sum_get_data_length(sum.get()) ==
-                        int(case2_bpr[0].size()));
+                        case2_bpr[0].size());
             }
         }
 
@@ -1340,7 +1392,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                 check_vector(sum.get(), "BPR:2", case3_bpr[1]);
                 check_vector(sum.get(), "BPR:3", case3_bpr[2]);
                 REQUIRE(rd_sum_get_data_length(sum.get()) ==
-                        int(case3_bpr[0].size()));
+                        case3_bpr[0].size());
             }
         }
 
@@ -1704,9 +1756,9 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
             const rd::smspec_node *wopr = rd_sum_add_var(
                 rd_sum.get(), "WOPR", unique_well.c_str(), 0, "SM3/DAY", 0.0f);
             double sim_seconds = spec.start_seconds;
-            for (int report_step = 0; report_step < spec.num_report_steps;
+            for (size_t report_step = 0; report_step < spec.num_report_steps;
                  ++report_step) {
-                for (int step = 0; step < spec.num_ministep; ++step) {
+                for (size_t step = 0; step < spec.num_ministep; ++step) {
                     rd_sum_tstep_type *tstep = rd_sum_add_tstep(
                         rd_sum.get(), report_step + 1, sim_seconds);
                     rd_sum_tstep_set_from_node(tstep, *wopr,
@@ -1750,7 +1802,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                     REQUIRE(rd_sum_get_end_time(guessed.get()) ==
                             rd_sum_get_end_time(explicit_sum.get()));
 
-                    const int n = rd_sum_get_data_length(guessed.get());
+                    const size_t n = rd_sum_get_data_length(guessed.get());
                     REQUIRE(n == rd_sum_get_data_length(explicit_sum.get()));
                     REQUIRE(n == spec.num_report_steps * spec.num_ministep);
 
@@ -1761,7 +1813,7 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                                                         unique_key.c_str())) ==
                             "SM3/DAY");
 
-                    for (int i = 0; i < n; ++i) {
+                    for (size_t i = 0; i < n; ++i) {
                         const double expected =
                             unique_scale * i * spec.ministep_length;
                         REQUIRE_THAT(rd_sum_get_general_var(guessed.get(), i,
@@ -1813,7 +1865,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
                        /*unified=*/true);
     auto rd_sum = read_summary(case_path);
     REQUIRE(rd_sum.get() != nullptr);
-    const int n = rd_sum_get_data_length(rd_sum.get());
+    const size_t n = rd_sum_get_data_length(rd_sum.get());
 
     SECTION("subset of keys with comma separator and ISO date") {
         std::vector<std::string> vars{"FOPT", "BPR:567"};
@@ -1847,7 +1899,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
         REQUIRE(header[2] == "FOPT");
         REQUIRE(header[3] == "BPR:567");
 
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
             const auto cols = split(lines[i + 1], ',');
             REQUIRE(cols.size() == 4);
             REQUIRE_THAT(

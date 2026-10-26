@@ -115,8 +115,8 @@ public:
        the start of the keyword (i.e. its header) in the file, as stored by
        rd_file_kw. */
     static void fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
-                                   rd_data_type data_type, int element_count,
-                                   const std::vector<int> &index_map,
+                                   rd_data_type data_type, size_t element_count,
+                                   const std::vector<size_t> &index_map,
                                    char *io_buffer);
     static std::unique_ptr<rd::KW> make_actnum(const rd::KW *porv_kw,
                                                float porv_limit);

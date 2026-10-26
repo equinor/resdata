@@ -1,4 +1,5 @@
 #include <memory>
+#include <optional>
 #include <vector>
 #include <string>
 
@@ -14,7 +15,7 @@
 
 struct rd_sum_vector_struct {
     UTIL_TYPE_ID_DECLARATION;
-    std::vector<int> node_index_list;
+    std::vector<std::optional<size_t>> node_index_list;
     std::vector<bool> is_rate_list;
     std::vector<std::string> key_list;
     const rd_sum_type *rd_sum;
@@ -29,7 +30,7 @@ UTIL_IS_INSTANCE_FUNCTION(rd_sum_vector, RD_SUM_VECTOR_TYPE_ID)
 static void rd_sum_vector_add_node(rd_sum_vector_type *vector,
                                    const rd::smspec_node *node,
                                    const char *key) {
-    int params_index = node->get_params_index();
+    size_t params_index = node->get_params_index();
     bool is_rate_key = node->is_rate();
 
     vector->node_index_list.push_back(params_index);
@@ -44,7 +45,7 @@ rd_sum_vector_type *rd_sum_vector_alloc(const rd_sum_type *rd_sum,
     rd_sum_vector->rd_sum = rd_sum;
     if (add_keywords) {
         const rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum);
-        for (int i = 0; i < rd_smspec_num_nodes(smspec); i++) {
+        for (size_t i = 0; i < rd_smspec_num_nodes(smspec); i++) {
             const rd::smspec_node &node =
                 rd_smspec_iget_node_w_node_index(smspec, i);
             const char *key = node.get_gen_key1();
@@ -61,7 +62,7 @@ rd_sum_vector_type *rd_sum_vector_alloc(const rd_sum_type *rd_sum,
 
 static void rd_sum_vector_add_invalid_key(rd_sum_vector_type *vector,
                                           const char *key) {
-    vector->node_index_list.push_back(-1);
+    vector->node_index_list.push_back(std::nullopt);
     vector->is_rate_list.push_back(false);
     vector->key_list.push_back(key);
 }
@@ -114,26 +115,26 @@ void rd_sum_vector_add_keys(rd_sum_vector_type *rd_sum_vector,
     }
 }
 
-int rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector) {
+size_t rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector) {
     return rd_sum_vector->node_index_list.size();
 }
 
 bool rd_sum_vector_iget_is_rate(const rd_sum_vector_type *rd_sum_vector,
-                                int index) {
-    return rd_sum_vector->is_rate_list[index];
+                                size_t index) {
+    return rd_sum_vector->is_rate_list.at(index);
 }
 
 bool rd_sum_vector_iget_valid(const rd_sum_vector_type *rd_sum_vector,
-                              int index) {
-    return (rd_sum_vector->node_index_list[index] >= 0);
+                              size_t index) {
+    return rd_sum_vector->node_index_list.at(index).has_value();
 }
 
-int rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
-                                   int index) {
-    return rd_sum_vector->node_index_list[index];
+size_t rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
+                                      size_t index) {
+    return rd_sum_vector->node_index_list.at(index).value();
 }
 
 const char *rd_sum_vector_iget_key(const rd_sum_vector_type *rd_sum_vector,
-                                   int index) {
-    return rd_sum_vector->key_list[index].c_str();
+                                   size_t index) {
+    return rd_sum_vector->key_list.at(index).c_str();
 }

@@ -1526,6 +1526,12 @@ def test_that_an_oversized_index_raises_value_error():
     _write_case("INDEX")
     summary = Summary("INDEX")
 
+    with pytest.raises(TypeError):
+        summary.iget("FOPT", -1)
+    with pytest.raises(TypeError):
+        summary.get_report_time(-1)
+    with pytest.raises(TypeError):
+        summary.get_from_report("FOPT", -1)
     with pytest.raises(ValueError, match="looking up index"):
         summary.iget("FOPT", 10_000)
 
@@ -1544,6 +1550,10 @@ def test_that_a_keyword_vector_can_be_built_from_a_summary_and_copied():
     assert list(summary.get_interp_row(vector, datetime.datetime(2010, 1, 2, 12))) == (
         pytest.approx([15.0, 98.0, 2.0])
     )
+    with pytest.raises(IndexError):
+        vector[len(vector)]
+    with pytest.raises(IndexError):
+        vector[-len(vector) - 1]
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1593,6 +1603,7 @@ def test_that_interpolation_and_report_lookup_at_the_boundaries_are_exact(lazy_l
         (lambda s: s.iget("NOPE", 0), IndexError),
         (lambda s: s.iget("FOPT", 10**6), ValueError),
         (lambda s: s.iiget(10**6, 0), ValueError),
+        (lambda s: s.iiget(0, 10**6), IndexError),
         (lambda s: s.get_report_time(100), ValueError),
         (lambda s: s.get_from_report("FOPT", 100), ValueError),
         (lambda s: s.iget_days(10**6), ValueError),

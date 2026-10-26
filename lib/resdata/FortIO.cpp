@@ -312,9 +312,9 @@ bool FortIO::data_fskip(size_t element_size, size_t element_count,
 }
 
 void FortIO::data_fseek(offset_type data_offset, size_t data_element,
-                        size_t element_size, int element_count,
-                        int block_size) {
-    if (element_count < 0 || data_element >= static_cast<size_t>(element_count))
+                        size_t element_size, size_t element_count,
+                        size_t block_size) {
+    if (data_element >= element_count)
         throw std::invalid_argument(
             fmt::format("Element index is out of range: 0 <= {} < {}",
                         data_element, element_count));
