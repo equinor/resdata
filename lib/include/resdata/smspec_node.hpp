@@ -62,7 +62,8 @@ private:
         rate_variable; /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
     bool total_variable; /* Is this a total variable like WOPT? */
     bool historical;     /* Does the name end with 'H'? */
-    int params_index; /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
+    size_t
+        params_index; /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
     float default_value; /* Default value for this variable. */
 
     static rd_smspec_var_type identify_special_var(const char *var);
@@ -96,28 +97,29 @@ public:
     int cmp(const smspec_node &node2) const;
     static int cmp(const smspec_node &node1, const smspec_node &node2);
 
-    smspec_node(int param_index, const char *keyword, const char *wgname,
+    smspec_node(size_t param_index, const char *keyword, const char *wgname,
                 int num, const char *unit, const int grid_dims[3],
                 float default_value, const char *key_join_string);
 
-    smspec_node(int param_index, const char *keyword, const char *wgname,
+    smspec_node(size_t param_index, const char *keyword, const char *wgname,
                 const char *unit, const char *lgr, int lgr_i, int lgr_j,
                 int lgr_k, float default_value, const char *key_join_string);
 
-    smspec_node(int param_index, const char *keyword, const char *unit,
+    smspec_node(size_t param_index, const char *keyword, const char *unit,
                 float default_value);
-    smspec_node(int param_index, const char *keyword, int num, const char *unit,
-                const int grid_dims[3], float default_value,
+    smspec_node(size_t param_index, const char *keyword, int num,
+                const char *unit, const int grid_dims[3], float default_value,
                 const char *key_join_string);
-    smspec_node(int param_index, const char *keyword, int num, const char *unit,
-                float default_value, const char *key_join_string);
-    smspec_node(int param_index, const char *keyword, const char *wgname,
+    smspec_node(size_t param_index, const char *keyword, int num,
                 const char *unit, float default_value,
                 const char *key_join_string);
-    smspec_node(int param_index, const char *keyword, const char *wgname,
+    smspec_node(size_t param_index, const char *keyword, const char *wgname,
+                const char *unit, float default_value,
+                const char *key_join_string);
+    smspec_node(size_t param_index, const char *keyword, const char *wgname,
                 int num, const char *unit, float default_value,
                 const char *key_join_string);
-    smspec_node(const smspec_node &node, int param_index);
+    smspec_node(const smspec_node &node, size_t param_index);
 
     static rd_smspec_var_type identify_var_type(const char *var);
 
@@ -142,7 +144,7 @@ public:
     [[nodiscard]] bool is_total() const { return total_variable; };
     [[nodiscard]] bool is_historical() const { return historical; };
     [[nodiscard]] bool need_nums() const;
-    [[nodiscard]] int get_params_index() const { return params_index; };
+    [[nodiscard]] size_t get_params_index() const { return params_index; };
     [[nodiscard]] float get_default() const { return default_value; };
     [[nodiscard]] const char *get_lgr_name() const;
     // Will be garbage for smspec_nodes which are not related to an LGR.

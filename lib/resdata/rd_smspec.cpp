@@ -107,9 +107,9 @@ struct rd_smspec_struct {
     std::vector<std::unique_ptr<rd::smspec_node>> smspec_nodes;
     bool write_mode;
     bool need_nums;
-    std::vector<int> index_map;
-    std::map<int, int> inv_index_map;
-    int params_size;
+    std::vector<size_t> index_map;
+    std::map<size_t, size_t> inv_index_map;
+    size_t params_size;
 
     int grid_dims[3]; /* Grid dimensions - in DIMENS[1,2,3] */
     int num_regions;
@@ -213,7 +213,7 @@ const rd::smspec_node *rd_smspec_get_var_node(const node_map &mp,
 
 } //end namespace
 
-int rd_smspec_num_nodes(const rd_smspec_type *smspec) {
+size_t rd_smspec_num_nodes(const rd_smspec_type *smspec) {
     return smspec->smspec_nodes.size();
 }
 
@@ -224,7 +224,7 @@ int rd_smspec_num_nodes(const rd_smspec_type *smspec) {
   params_size member.
 */
 
-int rd_smspec_get_params_size(const rd_smspec_type *smspec) {
+size_t rd_smspec_get_params_size(const rd_smspec_type *smspec) {
     return smspec->params_size;
 }
 
@@ -237,7 +237,7 @@ static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
     rd_smspec->key_join_string = key_join_string;
     rd_smspec->header_file = "";
 
-    rd_smspec->params_size = -1;
+    rd_smspec->params_size = 0;
 
     /*
     The unit system is given as an integer in the INTEHEAD keyword. The INTEHEAD
@@ -253,20 +253,21 @@ static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
     return rd_smspec;
 }
 
-std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
-                                         const rd_smspec_type *other) {
-    int params_size = rd_smspec_get_params_size(self);
-    std::vector<int> mapping(params_size, -1);
+std::vector<std::optional<size_t>>
+rd_smspec_alloc_mapping(const rd_smspec_type *self,
+                        const rd_smspec_type *other) {
+    size_t params_size = rd_smspec_get_params_size(self);
+    std::vector<std::optional<size_t>> mapping(params_size, std::nullopt);
 
-    for (int i = 0; i < rd_smspec_num_nodes(self); i++) {
+    for (size_t i = 0; i < rd_smspec_num_nodes(self); i++) {
         const rd::smspec_node &self_node =
             rd_smspec_iget_node_w_node_index(self, i);
-        int self_index = self_node.get_params_index();
+        size_t self_index = self_node.get_params_index();
         const char *key = self_node.get_gen_key1();
         if (rd_smspec_has_general_var(other, key)) {
             const rd::smspec_node &other_node =
                 rd_smspec_get_general_var_node(other, key);
-            int other_index = other_node.get_params_index();
+            size_t other_index = other_node.get_params_index();
             mapping[self_index] = other_index;
         }
     }
@@ -281,15 +282,16 @@ std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
 */
 
 const rd::smspec_node &
-rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec, int node_index) {
+rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec,
+                                 size_t node_index) {
     const auto &node = smspec->smspec_nodes[node_index];
     return *node.get();
 }
 
 const rd::smspec_node &
 rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
-                                   int params_index) {
-    int node_index = smspec->inv_index_map.at(params_index);
+                                   size_t params_index) {
+    size_t node_index = smspec->inv_index_map.at(params_index);
     return rd_smspec_iget_node_w_node_index(smspec, node_index);
 }
 
@@ -300,7 +302,7 @@ rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
  */
 static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
     size_t max_len = 0;
-    for (int i = 0; i < rd_smspec_num_nodes(smspec); ++i) {
+    for (size_t i = 0; i < rd_smspec_num_nodes(smspec); ++i) {
         const rd::smspec_node &node =
             rd_smspec_iget_node_w_node_index(smspec, i);
         const char *name = node.get_wgname();
@@ -331,7 +333,7 @@ static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
 
 static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
                                     ERT::FortIO &fortio) {
-    int num_nodes = rd_smspec_num_nodes(smspec);
+    int num_nodes = static_cast<int>(rd_smspec_num_nodes(smspec));
     rd::KW dimens_kw{
         DIMENS_KW,
         std::vector<int>{num_nodes, smspec->grid_dims[0], smspec->grid_dims[1],
@@ -357,7 +359,7 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     rd_smspec_fwrite_RESTART(smspec, fortio);
     rd_smspec_fwrite_DIMENS(smspec, fortio);
 
-    int num_nodes = rd_smspec_num_nodes(smspec);
+    size_t num_nodes = rd_smspec_num_nodes(smspec);
     rd::KW keywords_kw{KEYWORDS_KW, num_nodes, RD_CHAR};
     rd::KW units_kw{UNITS_KW, num_nodes, RD_CHAR};
     std::unique_ptr<rd::KW> nums_kw{nullptr};
@@ -371,7 +373,7 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     if (smspec->need_nums)
         nums_kw = std::make_unique<rd::KW>(NUMS_KW, num_nodes, RD_INT);
 
-    for (int i = 0; i < rd_smspec_num_nodes(smspec); i++) {
+    for (size_t i = 0; i < rd_smspec_num_nodes(smspec); i++) {
         const rd::smspec_node &smspec_node =
             rd_smspec_iget_node_w_node_index(smspec, i);
         /*
@@ -393,25 +395,23 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
       ignored when/if this smspec file is read at a later
       stage.
     */
-        size_t ii = static_cast<size_t>(i);
-
         std::string wgname{DUMMY_WELL};
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {
-            keywords_kw.set_padded(ii, "WWCT");
-            units_kw.set_padded(ii, "????????");
-            wgnames_kw.set_padded(ii, wgname);
+            keywords_kw.set_padded(i, "WWCT");
+            units_kw.set_padded(i, "????????");
+            wgnames_kw.set_padded(i, wgname);
         } else {
-            keywords_kw.set_padded(ii, smspec_node.get_keyword());
-            units_kw.set_padded(ii, smspec_node.get_unit());
+            keywords_kw.set_padded(i, smspec_node.get_keyword());
+            units_kw.set_padded(i, smspec_node.get_unit());
             {
                 if (smspec_node.get_wgname())
                     wgname = smspec_node.get_wgname();
-                wgnames_kw.set_padded(ii, wgname);
+                wgnames_kw.set_padded(i, wgname);
             }
         }
 
         if (nums_kw)
-            nums_kw->at<int>(ii) = smspec_node.get_num();
+            nums_kw->at<int>(i) = smspec_node.get_num();
     }
     keywords_kw.fwrite(fortio);
     wgnames_kw.fwrite(fortio);
@@ -669,7 +669,7 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
 static const rd::smspec_node *
 rd_smspec_insert_node(rd_smspec_type *rd_smspec,
                       std::unique_ptr<rd::smspec_node> smspec_node) {
-    int params_index = smspec_node->get_params_index();
+    size_t params_index = smspec_node->get_params_index();
 
     /* This indexing must be used when writing. */
     rd_smspec->index_map.push_back(params_index);
@@ -686,11 +686,10 @@ rd_smspec_insert_node(rd_smspec_type *rd_smspec,
 
     rd_smspec->smspec_nodes.push_back(std::move(smspec_node));
 
-    if (params_index > rd_smspec->params_size)
+    if (params_index >= rd_smspec->params_size)
         rd_smspec->params_size = params_index + 1;
 
-    if (static_cast<int>(rd_smspec->smspec_nodes.size()) >
-        rd_smspec->params_size)
+    if (rd_smspec->smspec_nodes.size() > rd_smspec->params_size)
         rd_smspec->params_size = rd_smspec->smspec_nodes.size();
 
     const auto &node = rd_smspec->smspec_nodes.back();
@@ -701,7 +700,7 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword, int num,
                                           const char *unit,
                                           float default_value) {
-    int params_index = rd_smspec->smspec_nodes.size();
+    size_t params_index = rd_smspec->smspec_nodes.size();
     return rd_smspec_insert_node(
         rd_smspec, std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
                        params_index, keyword, num, unit, rd_smspec->grid_dims,
@@ -711,7 +710,7 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
 //copy given node with a new index
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const rd::smspec_node &node) {
-    int params_index = rd_smspec->smspec_nodes.size();
+    size_t params_index = rd_smspec->smspec_nodes.size();
     return rd_smspec_insert_node(rd_smspec,
                                  std::unique_ptr<rd::smspec_node>(
                                      new rd::smspec_node(node, params_index)));
@@ -720,7 +719,7 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword, const char *unit,
                                           float default_value) {
-    int params_index = rd_smspec->smspec_nodes.size();
+    size_t params_index = rd_smspec->smspec_nodes.size();
     return rd_smspec_insert_node(
         rd_smspec, std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
                        params_index, keyword, unit, default_value)));
@@ -730,7 +729,7 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword,
                                           const char *wgname, const char *unit,
                                           float default_value) {
-    int params_index = rd_smspec->smspec_nodes.size();
+    size_t params_index = rd_smspec->smspec_nodes.size();
     return rd_smspec_insert_node(
         rd_smspec, std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
                        params_index, keyword, wgname, unit, default_value,
@@ -742,7 +741,7 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *wgname, int num,
                                           const char *unit,
                                           float default_value) {
-    int params_index = rd_smspec->smspec_nodes.size();
+    size_t params_index = rd_smspec->smspec_nodes.size();
     return rd_smspec_insert_node(
         rd_smspec,
         std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
@@ -750,11 +749,10 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
             default_value, rd_smspec->key_join_string.c_str())));
 }
 
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          int params_index, const char *keyword,
-                                          const char *wgname, int num,
-                                          const char *unit,
-                                          float default_value) {
+const rd::smspec_node *
+rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
+                   const char *keyword, const char *wgname, int num,
+                   const char *unit, float default_value) {
     return rd_smspec_insert_node(
         rd_smspec,
         std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
@@ -762,12 +760,11 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
             default_value, rd_smspec->key_join_string.c_str())));
 }
 
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          int params_index, const char *keyword,
-                                          const char *wgname, int num,
-                                          const char *unit, const char *lgr,
-                                          int lgr_i, int lgr_j, int lgr_k,
-                                          float default_value) {
+const rd::smspec_node *
+rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
+                   const char *keyword, const char *wgname, int num,
+                   const char *unit, const char *lgr, int lgr_i, int lgr_j,
+                   int lgr_k, float default_value) {
     return rd_smspec_insert_node(
         rd_smspec,
         std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
@@ -775,8 +772,9 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
             default_value, rd_smspec->key_join_string.c_str())));
 }
 
-const int *rd_smspec_get_index_map(const rd_smspec_type *smspec) {
-    return smspec->index_map.data();
+const std::vector<size_t> &
+rd_smspec_get_index_map(const rd_smspec_type *smspec) {
+    return smspec->index_map;
 }
 
 /**
@@ -932,18 +930,18 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                     rd::strip_spaces(lgrs->at<std::string>(params_index));
 
                 rd_smspec_insert_node(
-                    rd_smspec, std::make_unique<rd::smspec_node>(
-                                   static_cast<int>(params_index), kw.c_str(),
-                                   well.c_str(), unit.c_str(), lgr_name.c_str(),
-                                   lgr_i, lgr_j, lgr_k, default_value,
-                                   rd_smspec->key_join_string.c_str()));
-            } else
-                rd_smspec_insert_node(
                     rd_smspec,
                     std::make_unique<rd::smspec_node>(
-                        static_cast<int>(params_index), kw.c_str(),
-                        well.c_str(), num, unit.c_str(), rd_smspec->grid_dims,
-                        default_value, rd_smspec->key_join_string.c_str()));
+                        params_index, kw.c_str(), well.c_str(), unit.c_str(),
+                        lgr_name.c_str(), lgr_i, lgr_j, lgr_k, default_value,
+                        rd_smspec->key_join_string.c_str()));
+            } else
+                rd_smspec_insert_node(rd_smspec,
+                                      std::make_unique<rd::smspec_node>(
+                                          params_index, kw.c_str(),
+                                          well.c_str(), num, unit.c_str(),
+                                          rd_smspec->grid_dims, default_value,
+                                          rd_smspec->key_join_string.c_str()));
         }
 
         rd_smspec->header_file = fs::canonical(header_file).string();
@@ -1002,6 +1000,7 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
                 day_node->get_params_index(), month_node->get_params_index(),
                 year_node->get_params_index()};
         }
+
         return rd_smspec.release();
     } else {
         /** Failed to load from disk. */
@@ -1040,7 +1039,7 @@ bool node_exists(const rd::smspec_node *node_ptr) {
     return false;
 }
 
-int node_valid_index(const rd::smspec_node *node_ptr) {
+size_t node_valid_index(const rd::smspec_node *node_ptr) {
     if (node_ptr)
         return node_ptr->get_params_index();
 
@@ -1049,8 +1048,7 @@ int node_valid_index(const rd::smspec_node *node_ptr) {
 
 } // namespace
 
-/* There is a quite wide range of error which are just returned as
-   "Not found" (i.e. -1). */
+/* A failed lookup throws std::out_of_range. */
 /* Completions not supported yet. */
 
 const rd::smspec_node &
@@ -1064,8 +1062,8 @@ rd_smspec_get_general_var_node(const rd_smspec_type *smspec,
     return *node_ptr;
 }
 
-int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
-                                           const char *lookup_kw) {
+size_t rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
+                                              const char *lookup_kw) {
     const auto node_ptr =
         rd_smspec_get_var_node(rd_smspec->gen_var_index, lookup_kw);
     return node_valid_index(node_ptr);
@@ -1108,9 +1106,9 @@ int rd_smspec_get_restart_step(const rd_smspec_type *rd_smspec) {
     return rd_smspec->restart_step;
 }
 
-int rd_smspec_get_first_step(const rd_smspec_type *rd_smspec) {
+size_t rd_smspec_get_first_step(const rd_smspec_type *rd_smspec) {
     if (rd_smspec->restart_step > 0)
-        return rd_smspec->restart_step + 1;
+        return static_cast<size_t>(rd_smspec->restart_step) + 1;
     else
         return 1;
 }

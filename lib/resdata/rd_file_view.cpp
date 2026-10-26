@@ -75,28 +75,24 @@ rd::KW *FileView::get_kw(const std::shared_ptr<FileKW> &file_kw) {
 }
 
 std::shared_ptr<FileKW>
-FileView::validate_index_fload_kw(const std::string &kw, int index,
+FileView::validate_index_fload_kw(const std::string &kw, size_t index,
                                   rd_type_enum expected, size_t requested_count,
                                   size_t out_count) const {
-    if (index < 0)
-        throw std::invalid_argument(
-            fmt::format("Got negative index in index_fload_kw: {}", index));
-
     if (out_count < requested_count)
         throw std::invalid_argument(fmt::format(
             "Buffer of {} elements is too small for the {} elements requested "
             "from keyword {}",
             out_count, requested_count, kw));
 
-    auto file_kw = get_file_kw(kw, static_cast<size_t>(index));
+    auto file_kw = get_file_kw(kw, index);
 
     if (!file_kw)
         throw std::invalid_argument(std::string("Keyword '") + kw + "' index " +
                                     std::to_string(index) +
                                     " not found in file view");
 
-    assert_kw_data_type(file_kw->get_data_type(), expected, kw,
-                        static_cast<size_t>(index), filename());
+    assert_kw_data_type(file_kw->get_data_type(), expected, kw, index,
+                        filename());
 
     return file_kw;
 }
@@ -369,7 +365,7 @@ FileView::restart_view_from_sim_days(double sim_days) {
     return restart_view_from_seqnum_index(block.value());
 }
 
-std::shared_ptr<FileView> FileView::summary_view(int report_step) {
+std::shared_ptr<FileView> FileView::summary_view(size_t report_step) {
     return blockview(SEQHDR_KW, SEQHDR_KW, report_step);
 }
 

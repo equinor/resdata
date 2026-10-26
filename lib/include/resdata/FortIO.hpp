@@ -78,7 +78,8 @@ public:
     bool data_fskip(size_t element_size, size_t element_count,
                     size_t block_count);
     void data_fseek(offset_type data_offset, size_t data_element,
-                    size_t element_size, int element_count, int block_size);
+                    size_t element_size, size_t element_count,
+                    size_t block_size);
     bool ftruncate(offset_type size);
     int fclean();
     bool fclose_stream();
