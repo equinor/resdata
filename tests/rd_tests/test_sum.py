@@ -2045,6 +2045,21 @@ def test_that_numpy_vector_of_a_writer_without_time_steps_is_empty():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_sim_length_of_a_writer_without_time_steps_is_zero():
+    writer = Summary.writer("WRITER", datetime.datetime(2010, 1, 1), 5, 5, 5)
+
+    assert writer.sim_length == 0.0
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_first_day_of_a_writer_without_time_steps_raises_index_error():
+    writer = Summary.writer("WRITER", datetime.datetime(2010, 1, 1), 5, 5, 5)
+
+    with pytest.raises(IndexError):
+        _ = writer.first_day
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_that_the_case_is_guessed_from_a_lowercase_data_file():
     _write_case("CASE", num_reports=2)
     os.mkdir("run")
