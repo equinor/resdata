@@ -55,12 +55,6 @@ namespace {
 */
 
 struct IndexNode {
-    IndexNode(size_t d, size_t o, size_t l) {
-        this->data_index = d;
-        this->offset = o;
-        this->length = l;
-    }
-
     size_t end() const { return this->offset + this->length; }
 
     size_t data_index;
@@ -77,15 +71,32 @@ struct IndexNode {
 
 class CaseIndex {
 public:
-    IndexNode &add(size_t length) {
-        size_t offset = 0;
-        size_t data_index = this->index.size();
+    /*
+      Adds the data file with index @data_index in the list of data files. If
+      @next_start is given, the data file is truncated to the timesteps before
+      @next_start. Data files which contribute no timesteps are not added, so
+      every node in the index has length > 0.
+    */
+    void add(size_t data_index, const rd::rd_sum_file_data &data,
+             std::optional<time_t> next_start, const rd_smspec_type *smspec) {
+        size_t length =
+            next_start ? data.length_before(*next_start) : data.length();
+        if (length == 0)
+            return;
 
-        if (!this->index.empty())
-            offset = this->index.back().end();
-
-        this->index.emplace_back(data_index, offset, length);
-        return this->index.back();
+        size_t offset = this->index.empty() ? 0 : this->index.back().end();
+        this->index.push_back(IndexNode{
+            data_index,
+            offset,
+            length,
+            data.first_report(),
+            next_start ? data.report_before(*next_start) : data.last_report(),
+            data.get_data_start(),
+            data.get_sim_end(),
+            data.get_days_start(),
+            data.get_sim_length(),
+            rd_smspec_alloc_mapping(smspec, data.smspec()),
+        });
     }
 
     /*
@@ -187,8 +198,6 @@ public:
         throw std::invalid_argument("Internal error when looking up report: " +
                                     std::to_string(report));
     }
-
-    IndexNode &back() { return this->index.back(); }
 
     void clear() { this->index.clear(); }
 
@@ -546,34 +555,11 @@ static void rd_sum_data_build_index(rd_sum_data_type *self) {
 
     self->index.clear();
     for (size_t i = 0; i < self->data_files.size(); i++) {
-        const auto &data = self->data_files[i];
-        bool main_case = (i == (self->data_files.size() - 1));
-        time_t next_start;
+        std::optional<time_t> next_start = std::nullopt;
+        if (i + 1 < self->data_files.size())
+            next_start = self->data_files[i + 1]->get_data_start();
 
-        if (main_case)
-            self->index.add(data->length());
-        else {
-            const auto &next = self->data_files[i + 1];
-            next_start = next->get_data_start();
-            self->index.add(data->length_before(next_start));
-        }
-
-        auto &node = self->index.back();
-        if (node.length > 0) {
-            node.report1 = data->first_report();
-
-            if (main_case)
-                node.report2 = data->last_report();
-            else
-                node.report2 = data->report_before(next_start);
-
-            node.time1 = data->get_data_start();
-            node.time2 = data->get_sim_end();
-            node.days1 = data->get_days_start();
-            node.days2 = data->get_sim_length();
-            node.params_map =
-                rd_smspec_alloc_mapping(self->smspec, data->smspec());
-        }
+        self->index.add(i, *self->data_files[i], next_start, self->smspec);
     }
 }
 
@@ -906,9 +892,6 @@ void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
 
     size_t offset = 0;
     for (const auto &index_node : data->index) {
-        // params_map is only populated for non-empty nodes
-        if (index_node.length == 0)
-            continue;
         const auto &data_file = data->data_files[index_node.data_index];
         const std::optional<size_t> file_params_index =
             index_node.params_map[params_index];
@@ -940,15 +923,12 @@ rd_sum_data_alloc_report_data_vector(const rd_sum_data_type *data,
             .get_default();
 
     std::vector<double> output_data;
-    for (const auto &index_node : data->index) {
-        // params_map is only populated for non-empty nodes
-        if (index_node.length == 0)
-            continue;
+    for (const auto &index_node : data->index)
         data->data_files[index_node.data_index]->get_data_report(
             index_node.params_map[params_index], index_node.length,
             default_value, output_data);
-    }
-    return output_data;}
+    return output_data;
+}
 
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,

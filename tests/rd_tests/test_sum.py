@@ -1864,6 +1864,20 @@ def test_that_a_restart_case_without_header_file_is_ignored():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_report_lookups_ignore_a_case_that_is_superseded_by_its_history():
+    _write_header_case("HIST", _time_and_fopt(), time_values=(0.0, 1.0, 2.0))
+    _write_header_case(
+        "MAIN", _time_and_fopt(restart="HIST"), time_values=(0.0, 5.0, 10.0)
+    )
+
+    summary = Summary("MAIN")
+
+    assert summary.days == [0.0, 1.0, 2.0]
+    assert summary.get_report_time(2) == datetime.date(2010, 1, 2)
+    assert summary.get_report(days=1.0) == 2
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_that_a_writer_with_time_in_hours_round_trips_the_dates():
     writer = Summary.writer(
         "HOURS", datetime.datetime(2010, 1, 1), 5, 5, 5, time_in_days=False
