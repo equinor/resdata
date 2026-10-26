@@ -2037,6 +2037,14 @@ def test_that_variables_cannot_be_added_after_the_first_time_step(add):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_numpy_vector_of_a_writer_without_time_steps_is_empty():
+    writer = Summary.writer("WRITER", datetime.datetime(2010, 1, 1), 5, 5, 5)
+    writer.add_variable("FOPT", unit="SM3")
+
+    assert len(writer.numpy_vector("FOPT")) == 0
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_that_the_case_is_guessed_from_a_lowercase_data_file():
     _write_case("CASE", num_reports=2)
     os.mkdir("run")
