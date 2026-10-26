@@ -906,6 +906,9 @@ void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
 
     size_t offset = 0;
     for (const auto &index_node : data->index) {
+        // params_map is only populated for non-empty nodes
+        if (index_node.length == 0)
+            continue;
         const auto &data_file = data->data_files[index_node.data_index];
         const std::optional<size_t> file_params_index =
             index_node.params_map[params_index];
@@ -937,12 +940,15 @@ rd_sum_data_alloc_report_data_vector(const rd_sum_data_type *data,
             .get_default();
 
     std::vector<double> output_data;
-    for (const auto &index_node : data->index)
+    for (const auto &index_node : data->index) {
+        // params_map is only populated for non-empty nodes
+        if (index_node.length == 0)
+            continue;
         data->data_files[index_node.data_index]->get_data_report(
             index_node.params_map[params_index], index_node.length,
             default_value, output_data);
-    return output_data;
-}
+    }
+    return output_data;}
 
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
