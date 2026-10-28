@@ -836,9 +836,9 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
                 point_mapaxes_invtransform(&point, grid->origo, grid->unit_x,
                                            grid->unit_y);
 
-            corners[3 * c] = point.x;
-            corners[3 * c + 1] = point.y;
-            corners[3 * c + 2] = point.z;
+            corners[3 * c] = static_cast<float>(point.x);
+            corners[3 * c + 1] = static_cast<float>(point.y);
+            corners[3 * c + 2] = static_cast<float>(point.z);
         }
     }
     corners_kw->fwrite(fortio);
@@ -4489,7 +4489,7 @@ float rd_grid_output_scaling(const rd_grid_type *grid, UnitSystem output_unit) {
         if (output_unit == UnitSystem::LAB)
             scale_factor *= METER_TO_CM_SCALE_FACTOR;
 
-        return scale_factor;
+        return static_cast<float>(scale_factor);
     }
 }
 
@@ -4725,13 +4725,18 @@ static bool rd_grid_init_coord_section__(const rd_grid_type *grid, int i, int j,
                 }
 
                 if (coord_float) {
-                    coord_float[coord_offset] = top_point.x;
+                    coord_float[coord_offset] = static_cast<float>(top_point.x);
 
-                    coord_float[coord_offset + 1] = top_point.y;
-                    coord_float[coord_offset + 2] = top_point.z;
-                    coord_float[coord_offset + 3] = bottom_point.x;
-                    coord_float[coord_offset + 4] = bottom_point.y;
-                    coord_float[coord_offset + 5] = bottom_point.z;
+                    coord_float[coord_offset + 1] =
+                        static_cast<float>(top_point.y);
+                    coord_float[coord_offset + 2] =
+                        static_cast<float>(top_point.z);
+                    coord_float[coord_offset + 3] =
+                        static_cast<float>(bottom_point.x);
+                    coord_float[coord_offset + 4] =
+                        static_cast<float>(bottom_point.y);
+                    coord_float[coord_offset + 5] =
+                        static_cast<float>(bottom_point.z);
                 }
 
                 if (coord_double) {
@@ -4833,10 +4838,10 @@ static void rd_grid_init_zcorn_data__(const rd_grid_type *grid,
                              l * 4 * nx * ny;
 
                     if (zcorn_float) {
-                        zcorn_float[z1] = p0.z;
-                        zcorn_float[z2] = p1.z;
-                        zcorn_float[z3] = p2.z;
-                        zcorn_float[z4] = p3.z;
+                        zcorn_float[z1] = static_cast<float>(p0.z);
+                        zcorn_float[z2] = static_cast<float>(p1.z);
+                        zcorn_float[z3] = static_cast<float>(p2.z);
+                        zcorn_float[z4] = static_cast<float>(p3.z);
                     }
 
                     if (zcorn_double) {

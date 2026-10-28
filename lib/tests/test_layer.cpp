@@ -39,12 +39,12 @@ static rd_grid_ptr generate_coordkw_grid(
     for (int j = 0; j < num_y; j++) {
         for (int i = 0; i < num_x; i++) {
             int offset = 6 * (i + j * num_x);
-            coord_data[offset] = i;
-            coord_data[offset + 1] = j;
+            coord_data[offset] = static_cast<float>(i);
+            coord_data[offset + 1] = static_cast<float>(j);
             coord_data[offset + 2] = -1;
 
-            coord_data[offset + 3] = i;
-            coord_data[offset + 4] = j;
+            coord_data[offset + 3] = static_cast<float>(i);
+            coord_data[offset + 4] = static_cast<float>(j);
             coord_data[offset + 5] = -1;
 
             for (int k = 0; k < num_z; k++) {
@@ -54,11 +54,11 @@ static rd_grid_ptr generate_coordkw_grid(
                     size_t zi2 =
                         rd_grid_zcorn_index__(num_x, num_y, i, j, k, c + 4);
 
-                    double z1 = k;
-                    double z2 = k + 1;
+                    double z1 = static_cast<double>(k);
+                    double z2 = static_cast<double>(k + 1);
 
-                    zcorn_data[zi1] = z1;
-                    zcorn_data[zi2] = z2;
+                    zcorn_data[zi1] = static_cast<float>(z1);
+                    zcorn_data[zi2] = static_cast<float>(z2);
                 }
             }
         }
@@ -66,7 +66,7 @@ static rd_grid_ptr generate_coordkw_grid(
 
     for (const auto &[i, j, k, c, z] : z_vector) {
         auto index = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-        zcorn_data[index] = z;
+        zcorn_data[index] = static_cast<float>(z);
     }
 
     rd::KW coord_kw{COORD_KW, std::move(coord_data)};
