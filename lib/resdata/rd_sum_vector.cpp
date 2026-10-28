@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -124,14 +125,10 @@ bool rd_sum_vector_iget_is_rate(const rd_sum_vector_type *rd_sum_vector,
     return rd_sum_vector->is_rate_list.at(index);
 }
 
-bool rd_sum_vector_iget_valid(const rd_sum_vector_type *rd_sum_vector,
-                              size_t index) {
-    return rd_sum_vector->node_index_list.at(index).has_value();
-}
-
-size_t rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
-                                      size_t index) {
-    return rd_sum_vector->node_index_list.at(index).value();
+std::optional<size_t>
+rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
+                               size_t index) {
+    return rd_sum_vector->node_index_list.at(index);
 }
 
 const char *rd_sum_vector_iget_key(const rd_sum_vector_type *rd_sum_vector,

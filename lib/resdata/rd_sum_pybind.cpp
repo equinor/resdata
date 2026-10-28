@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdint>
 #include <ctime>
 #include <optional>
@@ -348,11 +349,13 @@ PYBIND11_MODULE(_rd_sum, m) {
                   throw std::invalid_argument("Incorrect size of buffer");
               for (size_t time_index = 0; time_index < timelen; time_index++) {
                   for (size_t key_index = 0; key_index < keylen; key_index++) {
-                      size_t param_index =
-                          rd_sum_vector_iget_param_index(keyvec, key_index);
                       size_t data_index = key_index + time_index * keylen;
+                      auto param_index =
+                          rd_sum_vector_iget_param_index(keyvec, key_index);
                       out[data_index] =
-                          rd_sum_iget(rd_sum, time_index, param_index);
+                          param_index
+                              ? rd_sum_iget(rd_sum, time_index, *param_index)
+                              : std::nan("");
                   }
               }
           });

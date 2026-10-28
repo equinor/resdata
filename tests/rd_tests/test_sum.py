@@ -1557,6 +1557,36 @@ def test_that_a_keyword_vector_can_be_built_from_a_summary_and_copied():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_frames_from_a_copied_vector_are_nan_for_keys_missing_in_the_case():
+    import resdata.summary._rd_sum as _rd_sum
+
+    _write_case("VEC")
+    writer = Summary.writer("SMALL", datetime.datetime(2010, 1, 1), 5, 5, 5)
+    writer.add_variable("FOPT", unit="SM3")
+    for report in range(1, 3):
+        writer.add_t_step(report, report)["FOPT"] = 10.0 * report
+    writer.fwrite()
+    small = Summary("SMALL")
+
+    layout = SummaryKeyWordVector(Summary("VEC"), add_keywords=True).copy(small)
+    assert list(layout) == ["FOPT", "FOPR", "WOPR:OP1"]
+
+    data = np.zeros([len(small.dates), len(layout)])
+    _rd_sum._init_pandas_frame(small, layout, data)
+    assert not np.isnan(data[:, 0]).any()
+    assert np.isnan(data[:, 1:]).all()
+
+    # Includes times before and after the simulation to cover all branches
+    times = [datetime.datetime(2009, 1, 1), datetime.datetime(2010, 1, 2, 12)]
+    times.append(datetime.datetime(2011, 1, 1))
+    time_points = [CTime(t).value() for t in times]
+    data = np.zeros([len(time_points), len(layout)])
+    _rd_sum._init_pandas_frame_interp(small, layout, time_points, data)
+    assert not np.isnan(data[:, 0]).any()
+    assert np.isnan(data[:, 1:]).all()
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 @pytest.mark.parametrize("lazy_load", [True, False])
 def test_that_solve_dates_and_first_crossing_find_the_same_point(lazy_load):
     _write_case("CROSS", num_reports=2)

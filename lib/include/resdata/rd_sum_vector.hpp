@@ -1,8 +1,10 @@
 #pragma once
-#include <ert/util/type_macros.hpp>
+#include <cstddef>
 #include <memory>
+#include <optional>
 
 #include <resdata/rd_sum.hpp>
+#include <ert/util/type_macros.hpp>
 
 typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
@@ -17,11 +19,12 @@ const char *rd_sum_vector_iget_key(const rd_sum_vector_type *rd_sum_vector,
                                    size_t index);
 bool rd_sum_vector_iget_is_rate(const rd_sum_vector_type *rd_sum_vector,
                                 size_t index);
-size_t rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
-                                      size_t index);
+/** Returns std::nullopt for keys that are not present in the summary case
+ * (see rd_sum_vector_alloc_layout_copy). */
+std::optional<size_t>
+rd_sum_vector_iget_param_index(const rd_sum_vector_type *rd_sum_vector,
+                               size_t index);
 size_t rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector);
-bool rd_sum_vector_iget_valid(const rd_sum_vector_type *rd_sum_vector,
-                              size_t index);
 
 rd_sum_vector_type *
 rd_sum_vector_alloc_layout_copy(const rd_sum_vector_type *src_vector,
