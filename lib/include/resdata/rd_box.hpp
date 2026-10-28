@@ -1,16 +1,14 @@
-#ifndef ERT_RD_BOX_H
-#define ERT_RD_BOX_H
-
+#pragma once
 #include <cstddef>
 #include <vector>
 #include <resdata/rd_grid.hpp>
 
 namespace rd {
 
-class rd_box {
+class box {
 public:
-    rd_box(const rd_grid_type *grid, size_t i1, size_t i2, size_t j1, size_t j2,
-           size_t k1, size_t k2);
+    box(const rd_grid_type *grid, size_t i1, size_t i2, size_t j1, size_t j2,
+        size_t k1, size_t k2);
     const std::vector<size_t> &active_list() const;
 
 private:
@@ -22,4 +20,3 @@ private:
 };
 
 } // namespace rd
-#endif
