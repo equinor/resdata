@@ -411,3 +411,10 @@ def test_that_length_of_grdecl_keywords_are_checked(tmp_path):
 def test_that_grid_file_with_wrongly_sized_mapaxes_is_rejected(tmp_path, mapaxes):
     with pytest.raises(ValueError, match="Invalid size of MAPAXES"):
         load_grid_file_with_mapaxes(tmp_path / "EVIL.GRID", mapaxes)
+
+
+@pytest.mark.parametrize("depth, expected", [(-1.0, -1), (6.0, -2), (100.0, -2)])
+def test_that_locate_depth_outside_the_column_returns_minus_one_or_minus_nz(
+    regular_grid_2x2x2, depth, expected
+):
+    assert regular_grid_2x2x2.locate_depth(depth, 0, 0) == expected

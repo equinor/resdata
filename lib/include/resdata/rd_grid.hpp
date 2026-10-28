@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <memory>
 #include <filesystem>
-#include <optional>
+#include <variant>
 
 #include <ert/util/type_macros.hpp>
 
@@ -20,6 +20,8 @@
 #define RD_GRID_MAINGRID_LGR_NR 0
 
 typedef struct rd_grid_struct rd_grid_type;
+
+enum class OutsideGrid { above, below };
 
 bool rd_grid_have_coarse_cells(const rd_grid_type *main_grid);
 bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
@@ -119,7 +121,8 @@ int rd_grid_get_active_size(const rd_grid_type *rd_grid);
 double rd_grid_get_top1A(const rd_grid_type *grid, int active_index);
 double rd_grid_get_top2(const rd_grid_type *grid, int i, int j);
 double rd_grid_get_bottom2(const rd_grid_type *grid, int i, int j);
-int rd_grid_locate_depth(const rd_grid_type *grid, double depth, int i, int j);
+std::variant<OutsideGrid, int> rd_grid_locate_depth(const rd_grid_type *grid,
+                                                    double depth, int i, int j);
 
 bool rd_grid_cell_invalid1(const rd_grid_type *rd_grid, int global_index);
 
