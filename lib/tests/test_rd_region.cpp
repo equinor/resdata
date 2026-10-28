@@ -139,7 +139,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             rd::KW float_kw{"FLOAT", 1000, RD_FLOAT};
 
             for (size_t i = 0; i < 1000; i++)
-                float_kw.at<float>(i) = i * 0.1f;
+                float_kw.at<float>(i) = static_cast<float>(i) * 0.1f;
 
             SECTION("Select in interval") {
                 rd_region_select_in_interval(region, &float_kw, 10.0, 50.0);

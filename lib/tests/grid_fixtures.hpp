@@ -215,7 +215,9 @@ inline rd_grid_ptr generate_coordkw_grid(
 
     for (int j = 0; j < num_y; j++) {
         for (int i = 0; i < num_x; i++) {
-            set_pillar(coord_data, i + j * num_x, i, j, -1, i, j, -1);
+            const auto fi = static_cast<float>(i);
+            const auto fj = static_cast<float>(j);
+            set_pillar(coord_data, i + j * num_x, fi, fj, -1, fi, fj, -1);
 
             for (int k = 0; k < num_z; k++) {
                 for (int c = 0; c < 4; c++) {
@@ -224,11 +226,11 @@ inline rd_grid_ptr generate_coordkw_grid(
                     size_t zi2 =
                         rd_grid_zcorn_index__(num_x, num_y, i, j, k, c + 4);
 
-                    double z1 = k;
-                    double z2 = k + 1;
+                    double z1 = static_cast<double>(k);
+                    double z2 = static_cast<double>(k + 1);
 
-                    zcorn_data[zi1] = z1;
-                    zcorn_data[zi2] = z2;
+                    zcorn_data[zi1] = static_cast<float>(z1);
+                    zcorn_data[zi2] = static_cast<float>(z2);
                 }
             }
         }
@@ -236,7 +238,7 @@ inline rd_grid_ptr generate_coordkw_grid(
 
     for (const auto &[i, j, k, c, z] : z_vector) {
         auto index = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-        zcorn_data[index] = z;
+        zcorn_data[index] = static_cast<float>(z);
     }
 
     rd::KW coord_kw{COORD_KW, std::move(coord_data)};
@@ -586,15 +588,18 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
             int pillar = i + j * (nx + 1);
             int top = top_corner[i + 2 * j];
             int bot = bot_corner[i + 2 * j];
-            set_pillar(coord_data, pillar, corners[top][0], corners[top][1],
-                       corners[top][2], corners[bot][0], corners[bot][1],
-                       corners[bot][2]);
+            set_pillar(coord_data, pillar, static_cast<float>(corners[top][0]),
+                       static_cast<float>(corners[top][1]),
+                       static_cast<float>(corners[top][2]),
+                       static_cast<float>(corners[bot][0]),
+                       static_cast<float>(corners[bot][1]),
+                       static_cast<float>(corners[bot][2]));
         }
     }
 
     for (int c = 0; c < 8; ++c) {
         size_t zi = rd_grid_zcorn_index__(nx, ny, 0, 0, 0, c);
-        zcorn_data[zi] = corners[c][2];
+        zcorn_data[zi] = static_cast<float>(corners[c][2]);
     }
 
     rd::KW coord_kw{COORD_KW, std::move(coord_data)};

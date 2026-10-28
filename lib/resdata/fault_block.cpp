@@ -48,8 +48,8 @@ void FaultBlock::assert_center() {
             new_yc += y;
         }
 
-        xc = new_xc / index_list.size();
-        yc = new_yc / index_list.size();
+        xc = new_xc / static_cast<double>(index_list.size());
+        yc = new_yc / static_cast<double>(index_list.size());
     }
     valid_center = true;
 }

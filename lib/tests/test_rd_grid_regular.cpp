@@ -52,13 +52,15 @@ TEST_CASE("rd_grid_alloc_GRDECL_kw with explicit ACTNUM", "[unittest]") {
 
     for (int j = 0; j < ny; j++) {
         for (int i = 0; i < nx; i++) {
-            set_pillar(&coord_kw, (i + j * nx), i, j, -1, i, j, -1);
+            const auto fi = static_cast<float>(i);
+            const auto fj = static_cast<float>(j);
+            set_pillar(&coord_kw, (i + j * nx), fi, fj, -1, fi, fj, -1);
             for (int k = 0; k < nz; k++) {
                 for (int c = 0; c < 4; c++) {
                     size_t zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
                     size_t zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
-                    zcorn_data[zi1] = k;
-                    zcorn_data[zi2] = k + 1;
+                    zcorn_data[zi1] = static_cast<float>(k);
+                    zcorn_data[zi2] = static_cast<float>(k + 1);
                 }
             }
         }
@@ -594,7 +596,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             int nactive = rd_grid_get_nactive(grid.get());
             std::vector<float> poro_data(nactive);
             for (int i = 0; i < nactive; i++)
-                poro_data[i] = 0.2f + i * 0.01f;
+                poro_data[i] = 0.2f + static_cast<float>(i) * 0.01f;
             rd::KW kw{"PORO", std::move(poro_data)};
 
             SECTION("column property") {

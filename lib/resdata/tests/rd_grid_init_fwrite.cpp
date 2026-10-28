@@ -20,7 +20,7 @@ static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
     {
         std::vector<float> &depth_ptr = depth_kw.get_vector<float>();
         for (int i = 0; i < rd_grid_get_nactive(grid); i++)
-            depth_ptr[i] = rd_grid_get_cdepth1A(grid, i);
+            depth_ptr[i] = static_cast<float>(rd_grid_get_cdepth1A(grid, i));
     }
     depth_kw.scale<float>(rd_grid_output_scaling(grid, output_unit));
     depth_kw.fwrite(init_file);
@@ -57,9 +57,9 @@ static void rd_grid_fwrite_dims(const rd_grid_type *grid,
             std::vector<float> &dz_ptr = dz.get_vector<float>();
 
             for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
-                dx_ptr[i] = rd_grid_get_cell_dx1A(grid, i);
-                dy_ptr[i] = rd_grid_get_cell_dy1A(grid, i);
-                dz_ptr[i] = rd_grid_get_cell_dz1A(grid, i);
+                dx_ptr[i] = static_cast<float>(rd_grid_get_cell_dx1A(grid, i));
+                dy_ptr[i] = static_cast<float>(rd_grid_get_cell_dy1A(grid, i));
+                dz_ptr[i] = static_cast<float>(rd_grid_get_cell_dz1A(grid, i));
             }
         }
 
