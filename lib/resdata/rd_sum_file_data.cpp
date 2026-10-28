@@ -485,8 +485,7 @@ void rd_sum_file_data::fwrite_multiple(const std::string &rd_case,
          report_step <= this->last_report(); report_step++) {
         if (this->has_report(report_step)) {
             fs::path filename =
-                rd::filename(rd_case, FileType::SUMMARY, fmt_case,
-                             static_cast<int>(report_step));
+                rd::filename(rd_case, FileType::SUMMARY, fmt_case, report_step);
             ERT::FortIO fortio(filename.string(), std::ios_base::out, fmt_case);
 
             fwrite_report(report_step, fortio);

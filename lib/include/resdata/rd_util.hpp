@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include <new>
+#include <cstddef>
 #include <filesystem>
 #include <system_error>
 #include <memory>
@@ -103,8 +104,10 @@ void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);
 namespace rd {
+/// Instantiated for int and size_t.
+template <typename ReportNr = int>
 std::filesystem::path filename(std::filesystem::path path, FileType,
-                               bool fmt_file, int report_nr = -1);
+                               bool fmt_file, ReportNr report_nr = -1);
 
 inline bool try_exists(std::filesystem::path p) noexcept {
     std::error_code ec;
