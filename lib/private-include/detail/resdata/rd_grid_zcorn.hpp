@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <stdexcept>
+
 namespace rd {
 
 /**
@@ -8,8 +11,13 @@ namespace rd {
   convenience function for testing, and should not be used in a tight inner
   loop unrolling the zcorn vector.
 */
-inline int grid_zcorn_index(int nx, int ny, int i, int j, int k, int c) {
-    int zcorn_index = k * 8 * nx * ny + j * 4 * nx + 2 * i;
+inline size_t grid_zcorn_index(size_t nx, size_t ny, size_t i, size_t j,
+                               size_t k, size_t c) {
+    if (c >= 8)
+        throw std::invalid_argument(
+            "grid_zcorn_index: corner must be in [0,8)");
+
+    size_t zcorn_index = k * 8 * nx * ny + j * 4 * nx + 2 * i;
     if ((c % 2) == 1)
         zcorn_index += 1;
 

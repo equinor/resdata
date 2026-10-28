@@ -19,6 +19,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <cstddef>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -38,44 +39,43 @@ TEST_CASE("rd_grid_get_global_index_from_xyz on a single unit cell",
 
     SECTION("Point at the cell center is inside the cell") {
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5) ==
+                0u);
     }
 
     SECTION("Point far from the cell is outside") {
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 100.0, 100.0,
-                                                  100.0, 0) == -1);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), -100.0, -100.0,
-                                                  -100.0, -1) == -1);
+        REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 100.0, 100.0,
+                                                   100.0, 0));
+        REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), -100.0, -100.0,
+                                                   -100.0));
     }
 
     SECTION("Point just above the top of the cell is outside") {
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 2.0,
-                                                  0) == -1);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 2.0,
-                                                  -1) == -1);
+        REQUIRE(
+            !rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 2.0, 0));
+        REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 2.0));
     }
 
     SECTION("Point on the outer max-i face is inside the cell") {
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 2.0, 1.5, 0.5,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 2.0, 1.5, 0.5,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 2.0, 1.5, 0.5) ==
+                0u);
     }
 
     SECTION("Point on the outer top face is inside the cell") {
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 1.0,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 1.0,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 1.0) ==
+                0u);
     }
 
     SECTION("Point on the outer min-i face is inside the cell") {
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.0, 1.5, 0.5,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.0, 1.5, 0.5,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.0, 1.5, 0.5) ==
+                0u);
     }
 }
 
@@ -91,10 +91,8 @@ TEST_CASE("rd_grid_get_global_index_from_xyz on a twisted single cell",
     auto grid = build_single_cell_grid(corners);
 
     // 1.5, 1.5, 0.5 is the barycenter, but the cell is "twisted"
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5, 0) ==
-            -1);
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5, -1) ==
-            -1);
+    REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5, 0));
+    REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.5));
 }
 
 TEST_CASE("rd_grid_get_global_index_from_xyz on a tainted single cell",
@@ -110,10 +108,8 @@ TEST_CASE("rd_grid_get_global_index_from_xyz on a tainted single cell",
 
     // The point at (0.5, 0.5, 0.5) is the barycenter,
     // but the cell is "degenerate"
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 0.5, 0.5, 0.5, 0) ==
-            -1);
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 0.5, 0.5, 0.5, -1) ==
-            -1);
+    REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 0.5, 0.5, 0.5, 0));
+    REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 0.5, 0.5, 0.5));
 }
 
 TEST_CASE("get_global_index_from_xyz on a concave cell", "[unittest]") {
@@ -128,13 +124,11 @@ TEST_CASE("get_global_index_from_xyz on a concave cell", "[unittest]") {
 
     // Point inside the pull-inward plane
     REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.2, 1.2, 0.5, 0) ==
-            0);
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.2, 1.2, 0.5, -1) ==
-            0);
+            0u);
+    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.2, 1.2, 0.5) == 0u);
 
     // Point near the concave notch at the top face
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.8, 1.8, 0.1, 0) ==
-            -1);
+    REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 1.8, 1.8, 0.1, 0));
 }
 
 TEST_CASE("get_global_index_from_xyz on a cell with a collapsed edge",
@@ -152,16 +146,16 @@ TEST_CASE("get_global_index_from_xyz on a cell with a collapsed edge",
         // Midpoint of the segment from corner 2 (1, 2, 0) to the collapsed
         // corners 6/7 at (1.5, 2, 1).
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.25, 2.0, 0.5,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.25, 2.0, 0.5,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.25, 2.0, 0.5) ==
+                0u);
     }
 
     SECTION("Point well inside the wedge is inside the cell") {
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.3, 1.3, 0.5,
-                                                  0) == 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.3, 1.3, 0.5,
-                                                  -1) == 0);
+                                                  0) == 0u);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.3, 1.3, 0.5) ==
+                0u);
     }
 }
 
@@ -178,8 +172,12 @@ TEST_CASE("rd_grid_get_global_index_from_xyz on a flat single cell",
     // A point on the flat sheet would be on the cell boundary of a
     // non-degenerate cell, but here the cell has no volume so considered
     // invalid if inactive
-    REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.0, 0) ==
-            actnum - 1);
+    auto found =
+        rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 1.5, 0.0, 0);
+    if (actnum)
+        REQUIRE(found == 0u);
+    else
+        REQUIRE(!found);
 }
 
 TEST_CASE("rd_grid_get_global_index_from_xyz box search on a larger grid",
@@ -187,28 +185,29 @@ TEST_CASE("rd_grid_get_global_index_from_xyz box search on a larger grid",
     auto grid = make_rectangular_grid(5, 5, 5, 1, 1, 1, nullptr);
 
     SECTION("Point inside the cell named by the start hint is found there") {
-        int cell_100 = rd_grid_get_global_index3(grid.get(), 1, 0, 0);
+        size_t cell_100 = rd_grid_get_global_index3(grid.get(), 1, 0, 0);
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 1.5, 0.5, 0.5,
                                                   cell_100) == cell_100);
     }
 
     SECTION(
         "Point far from the start hint is still found in the correct cell") {
-        int cell_040 = rd_grid_get_global_index3(grid.get(), 0, 4, 0);
-        int cell_404 = rd_grid_get_global_index3(grid.get(), 4, 0, 4);
+        size_t cell_040 = rd_grid_get_global_index3(grid.get(), 0, 4, 0);
+        size_t cell_404 = rd_grid_get_global_index3(grid.get(), 4, 0, 4);
         REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 4.5, 0.5, 4.5,
                                                   cell_040) == cell_404);
     }
 
     SECTION("Point outside the grid is not contained in any cell") {
-        int cell_100 = rd_grid_get_global_index3(grid.get(), 1, 0, 0);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 100.0, 100.0,
-                                                  100.0, cell_100) == -1);
+        int cell_100 =
+            static_cast<int>(rd_grid_get_global_index3(grid.get(), 1, 0, 0));
+        REQUIRE(!rd_grid_get_global_index_from_xyz(grid.get(), 100.0, 100.0,
+                                                   100.0, cell_100));
     }
 
     SECTION("Point is found without a start hint") {
-        int cell_434 = rd_grid_get_global_index3(grid.get(), 4, 3, 4);
-        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 4.5, 3.5, 4.5,
-                                                  -1) == cell_434);
+        size_t cell_434 = rd_grid_get_global_index3(grid.get(), 4, 3, 4);
+        REQUIRE(rd_grid_get_global_index_from_xyz(grid.get(), 4.5, 3.5, 4.5) ==
+                cell_434);
     }
 }

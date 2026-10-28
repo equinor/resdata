@@ -7,6 +7,8 @@
 #include <array>
 #include <cstddef>
 #include <fstream>
+#include <limits>
+#include <stdexcept>
 #include <filesystem>
 #include <initializer_list>
 #include <memory>
@@ -15,15 +17,22 @@
 #include <vector>
 #include <optional>
 
+#include "detail/resdata/rd_grid_zcorn.hpp"
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_type.hpp>
-#include "detail/resdata/rd_grid_zcorn.hpp"
 
 namespace fs = std::filesystem;
+
+// File formats store dimensions as 32 bit ints
+inline int to_file_int(size_t value) {
+    if (value > static_cast<size_t>(std::numeric_limits<int>::max()))
+        throw std::out_of_range("Value does not fit in an int");
+    return static_cast<int>(value);
+}
 
 /*
  * -----------------------------------------------------------------------
@@ -48,13 +57,13 @@ inline void write_egrid_filehead(ERT::FortIO &fortio,
     filehead.fwrite(fortio);
 }
 
-inline void write_egrid_gridhead(ERT::FortIO &fortio, int gnx, int gny, int gnz,
-                                 int grid_nr) {
+inline void write_egrid_gridhead(ERT::FortIO &fortio, size_t gnx, size_t gny,
+                                 size_t gnz, int grid_nr) {
     std::vector<int> gridhead_data(GRIDHEAD_SIZE, 0);
     gridhead_data[GRIDHEAD_TYPE_INDEX] = GRIDHEAD_GRIDTYPE_CORNERPOINT;
-    gridhead_data[GRIDHEAD_NX_INDEX] = gnx;
-    gridhead_data[GRIDHEAD_NY_INDEX] = gny;
-    gridhead_data[GRIDHEAD_NZ_INDEX] = gnz;
+    gridhead_data[GRIDHEAD_NX_INDEX] = to_file_int(gnx);
+    gridhead_data[GRIDHEAD_NY_INDEX] = to_file_int(gny);
+    gridhead_data[GRIDHEAD_NZ_INDEX] = to_file_int(gnz);
     gridhead_data[GRIDHEAD_NUMRES_INDEX] = 1;
     gridhead_data[GRIDHEAD_LGR_INDEX] = grid_nr;
     rd::KW kw{GRIDHEAD_KW, std::move(gridhead_data)};
@@ -71,24 +80,23 @@ inline void write_egrid_grid_body(rd_grid_type *grid, ERT::FortIO &fortio) {
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const char *name,
-                         const int *values, int size) {
+                         const int *values, size_t size) {
     rd::KW kw{name, std::vector<int>(values, values + size)};
     kw.fwrite(fortio);
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const char *name,
                          const std::vector<int> &values) {
-    write_int_kw(fortio, name, values.data(), static_cast<int>(values.size()));
+    write_int_kw(fortio, name, values.data(), values.size());
 }
 
 inline void write_int_kw(ERT::FortIO &fortio, const std::string &name,
                          const std::vector<int> &values) {
-    write_int_kw(fortio, name.c_str(), values.data(),
-                 static_cast<int>(values.size()));
+    write_int_kw(fortio, name.c_str(), values.data(), values.size());
 }
 
 inline void write_float_kw(ERT::FortIO &fortio, const char *name,
-                           const float *values, int size) {
+                           const float *values, size_t size) {
     rd::KW kw{name, std::vector<float>(values, values + size)};
     kw.fwrite(fortio);
 }
@@ -125,7 +133,7 @@ inline void write_lgr_egrid_section(ERT::FortIO &fortio,
                          grid_nr);
     write_egrid_grid_body(lgr.get(), fortio);
 
-    const int lgr_size = rd_grid_get_global_size(lgr.get());
+    const size_t lgr_size = rd_grid_get_global_size(lgr.get());
     std::vector<int> hostnum(lgr_size, host_global);
     write_int_kw(fortio, HOSTNUM_KW, hostnum);
 
@@ -138,8 +146,9 @@ inline constexpr float UNIT_CELL_CORNERS[24] = {
     0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
 };
 
-inline void write_grid_dimens(ERT::FortIO &fortio, int nx, int ny, int nz) {
-    const int dims[3] = {nx, ny, nz};
+inline void write_grid_dimens(ERT::FortIO &fortio, size_t nx, size_t ny,
+                              size_t nz) {
+    const int dims[3] = {to_file_int(nx), to_file_int(ny), to_file_int(nz)};
     write_int_kw(fortio, DIMENS_KW, dims, 3);
 }
 
@@ -155,11 +164,16 @@ inline void write_grid_gridunit(ERT::FortIO &fortio) {
     write_char8_kw(fortio, GRIDUNIT_KW, {"METRES", ""});
 }
 
-inline void write_grid_cell(ERT::FortIO &fortio, int i, int j, int k,
-                            int global_index, int host_cell,
+inline void write_grid_cell(ERT::FortIO &fortio, size_t i, size_t j, size_t k,
+                            size_t global_index, int host_cell,
                             const float corners[24]) {
-    const int coords[7] = {i + 1, j + 1,     k + 1, global_index + 1,
-                           1,     host_cell, 0};
+    const int coords[7] = {to_file_int(i + 1),
+                           to_file_int(j + 1),
+                           to_file_int(k + 1),
+                           to_file_int(global_index + 1),
+                           1,
+                           host_cell,
+                           0};
     write_int_kw(fortio, COORDS_KW, coords, 7);
     write_float_kw(fortio, CORNERS_KW, corners, 24);
 }
@@ -170,15 +184,16 @@ inline ERT::FortIO make_fortio_writer(const fs::path &filename,
             fmt ? false : RD_ENDIAN_FLIP};
 }
 
-inline rd_grid_ptr build_grdecl_grid(int nx, int ny, int nz, rd::KW *zcorn,
-                                     rd::KW *coord, rd::KW *actnum = nullptr) {
+inline rd_grid_ptr build_grdecl_grid(size_t nx, size_t ny, size_t nz,
+                                     rd::KW *zcorn, rd::KW *coord,
+                                     rd::KW *actnum = nullptr) {
     return {rd_grid_alloc_GRDECL_kw(nx, ny, nz, zcorn, coord, actnum, nullptr),
             &rd_grid_free};
 }
 
-inline void set_pillar(std::vector<float> &coord_data, int pillar, float tx,
+inline void set_pillar(std::vector<float> &coord_data, size_t pillar, float tx,
                        float ty, float tz, float bx, float by, float bz) {
-    const int off = 6 * pillar;
+    const size_t off = 6 * pillar;
     coord_data.at(off + 0) = tx;
     coord_data.at(off + 1) = ty;
     coord_data.at(off + 2) = tz;
@@ -187,7 +202,7 @@ inline void set_pillar(std::vector<float> &coord_data, int pillar, float tx,
     coord_data.at(off + 5) = bz;
 }
 
-inline void set_pillar(rd::KW *coord_kw, int pillar, float tx, float ty,
+inline void set_pillar(rd::KW *coord_kw, size_t pillar, float tx, float ty,
                        float tz, float bx, float by, float bz) {
     set_pillar(coord_kw->get_vector<float>(), pillar, tx, ty, tz, bx, by, bz);
 }
@@ -208,20 +223,21 @@ inline void set_pillar(rd::KW *coord_kw, int pillar, float tx, float ty,
  * at i,j,k z value.
  */
 inline rd_grid_ptr generate_coordkw_grid(
-    int num_x, int num_y, int num_z,
-    const std::vector<std::tuple<int, int, int, int, double>> &z_vector) {
+    size_t num_x, size_t num_y, size_t num_z,
+    const std::vector<std::tuple<size_t, size_t, size_t, size_t, double>>
+        &z_vector) {
     std::vector<float> coord_data(RD_GRID_COORD_SIZE(num_x, num_y), 0.0f);
     std::vector<float> zcorn_data(RD_GRID_ZCORN_SIZE(num_x, num_y, num_z),
                                   0.0f);
 
-    for (int j = 0; j < num_y; j++) {
-        for (int i = 0; i < num_x; i++) {
+    for (size_t j = 0; j < num_y; j++) {
+        for (size_t i = 0; i < num_x; i++) {
             const auto fi = static_cast<float>(i);
             const auto fj = static_cast<float>(j);
             set_pillar(coord_data, i + j * num_x, fi, fj, -1, fi, fj, -1);
 
-            for (int k = 0; k < num_z; k++) {
-                for (int c = 0; c < 4; c++) {
+            for (size_t k = 0; k < num_z; k++) {
+                for (size_t c = 0; c < 4; c++) {
                     size_t zi1 = rd::grid_zcorn_index(num_x, num_y, i, j, k, c);
                     size_t zi2 =
                         rd::grid_zcorn_index(num_x, num_y, i, j, k, c + 4);
@@ -255,16 +271,19 @@ inline rd_grid_ptr generate_coordkw_grid(
  * host cell at (host_i, host_j, host_k) of the main grid.
  */
 inline void write_egrid_with_single_lgr(
-    const fs::path &filename, int nx, int ny, int nz, int lgr_nx, int lgr_ny,
-    int lgr_nz, int host_i, int host_j, int host_k, const std::string &lgr_name,
-    const float *mapaxes = nullptr, const std::vector<int> &nncg = {},
-    const std::vector<int> &nncl = {},
-    std::optional<int> hostnum_override = std::nullopt) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz, size_t lgr_nx,
+    size_t lgr_ny, size_t lgr_nz, size_t host_i, size_t host_j, size_t host_k,
+    const std::string &lgr_name, const float *mapaxes = nullptr,
+    const std::vector<int> &nncg = {}, const std::vector<int> &nncl = {},
+    std::optional<int> hostnum_override = std::nullopt, int lgr_grid_nr = 1,
+    int nnc_lgr_nr = 1) {
     auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
-    auto lgr_grid = make_rectangular_grid(lgr_nx, lgr_ny, lgr_nz, 1.0 / lgr_nx,
-                                          1.0 / lgr_ny, 1.0 / lgr_nz, nullptr);
+    auto lgr_grid = make_rectangular_grid(
+        lgr_nx, lgr_ny, lgr_nz, 1.0 / static_cast<double>(lgr_nx),
+        1.0 / static_cast<double>(lgr_ny), 1.0 / static_cast<double>(lgr_nz),
+        nullptr);
 
-    int host_global_index = host_i + host_j * nx + host_k * nx * ny;
+    size_t host_global_index = host_i + host_j * nx + host_k * nx * ny;
 
     if (hostnum_override.has_value())
         host_global_index = hostnum_override.value();
@@ -280,9 +299,9 @@ inline void write_egrid_with_single_lgr(
     write_egrid_grid_body(main_grid.get(), fortio);
     write_empty_kw(fortio, ENDGRID_KW);
 
-    write_lgr_egrid_section(fortio, lgr_name, "", 1, lgr_grid,
+    write_lgr_egrid_section(fortio, lgr_name, "", lgr_grid_nr, lgr_grid,
                             host_global_index + 1);
-    write_nnc_pair_section(fortio, 1, NNCG_KW, NNCL_KW, nncg, nncl);
+    write_nnc_pair_section(fortio, nnc_lgr_nr, NNCG_KW, NNCL_KW, nncg, nncl);
 }
 
 /**
@@ -294,22 +313,25 @@ inline void write_egrid_with_single_lgr(
  * inner_nx*inner_ny*inner_nz cells.
  */
 inline void write_egrid_with_nested_lgr(
-    const fs::path &filename, int nx, int ny, int nz, int host_i, int host_j,
-    int host_k, int outer_nx, int outer_ny, int outer_nz,
-    const std::string &outer_name, int inner_host_i, int inner_host_j,
-    int inner_host_k, int inner_nx, int inner_ny, int inner_nz,
-    const std::string &inner_name) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz, size_t host_i,
+    size_t host_j, size_t host_k, size_t outer_nx, size_t outer_ny,
+    size_t outer_nz, const std::string &outer_name, size_t inner_host_i,
+    size_t inner_host_j, size_t inner_host_k, size_t inner_nx, size_t inner_ny,
+    size_t inner_nz, const std::string &inner_name) {
     auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
-    auto outer_grid =
-        make_rectangular_grid(outer_nx, outer_ny, outer_nz, 1.0 / outer_nx,
-                              1.0 / outer_ny, 1.0 / outer_nz, nullptr);
+    auto outer_grid = make_rectangular_grid(
+        outer_nx, outer_ny, outer_nz, 1.0 / static_cast<double>(outer_nx),
+        1.0 / static_cast<double>(outer_ny),
+        1.0 / static_cast<double>(outer_nz), nullptr);
     auto inner_grid = make_rectangular_grid(
-        inner_nx, inner_ny, inner_nz, 1.0 / (outer_nx * inner_nx),
-        1.0 / (outer_ny * inner_ny), 1.0 / (outer_nz * inner_nz), nullptr);
+        inner_nx, inner_ny, inner_nz,
+        1.0 / static_cast<double>(outer_nx * inner_nx),
+        1.0 / static_cast<double>(outer_ny * inner_ny),
+        1.0 / static_cast<double>(outer_nz * inner_nz), nullptr);
 
-    const int outer_host_global = host_i + host_j * nx + host_k * nx * ny;
-    const int inner_host_global = inner_host_i + inner_host_j * outer_nx +
-                                  inner_host_k * outer_nx * outer_ny;
+    const size_t outer_host_global = host_i + host_j * nx + host_k * nx * ny;
+    const size_t inner_host_global = inner_host_i + inner_host_j * outer_nx +
+                                     inner_host_k * outer_nx * outer_ny;
 
     auto fortio = make_fortio_writer(filename);
 
@@ -331,16 +353,17 @@ inline void write_egrid_with_nested_lgr(
  * lgr1 to cells of lgr2.
  */
 inline void write_egrid_with_two_lgrs_and_amalgamated_nnc(
-    const fs::path &filename, int nx, int ny, int nz,
-    const std::string &lgr1_name, int host1_i, int host1_j, int host1_k,
-    const std::string &lgr2_name, int host2_i, int host2_j, int host2_k,
-    const std::vector<int> &nna1, const std::vector<int> &nna2) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz,
+    const std::string &lgr1_name, size_t host1_i, size_t host1_j,
+    size_t host1_k, const std::string &lgr2_name, size_t host2_i,
+    size_t host2_j, size_t host2_k, const std::vector<int> &nna1,
+    const std::vector<int> &nna2) {
     auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto lgr1_grid = make_rectangular_grid(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
     auto lgr2_grid = make_rectangular_grid(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
 
-    const int host1_global = host1_i + host1_j * nx + host1_k * nx * ny;
-    const int host2_global = host2_i + host2_j * nx + host2_k * nx * ny;
+    const size_t host1_global = host1_i + host1_j * nx + host1_k * nx * ny;
+    const size_t host2_global = host2_i + host2_j * nx + host2_k * nx * ny;
 
     auto fortio = make_fortio_writer(filename);
 
@@ -376,8 +399,9 @@ inline void write_egrid_with_two_lgrs_and_amalgamated_nnc(
  * actnum, if non-null, must also have nx*ny*nz entries. If null, all
  * cells are treated as active.
  */
-inline void write_egrid_with_coarse_groups(const fs::path &filename, int nx,
-                                           int ny, int nz, const int *corsnum,
+inline void write_egrid_with_coarse_groups(const fs::path &filename, size_t nx,
+                                           size_t ny, size_t nz,
+                                           const int *corsnum,
                                            const int *actnum = nullptr) {
     auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, actnum);
 
@@ -395,8 +419,8 @@ inline void write_egrid_with_coarse_groups(const fs::path &filename, int nx,
  * grid. Optionally writes a CORSNUM keyword (coarse cell groups) and/or
  * a NNCHEAD + NNC1 + NNC2 self-NNC section.
  */
-inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
-                                      int nz, const int *actnum,
+inline void write_egrid_dual_porosity(const fs::path &filename, size_t nx,
+                                      size_t ny, size_t nz, const int *actnum,
                                       const std::vector<int> &nnc1 = {},
                                       const std::vector<int> &nnc2 = {},
                                       const int *corsnum = nullptr) {
@@ -412,7 +436,7 @@ inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     auto zcorn = rd_grid_alloc_zcorn_kw(grid.get());
     zcorn->fwrite(fortio);
 
-    const int size = nx * ny * nz;
+    const size_t size = nx * ny * nz;
     write_int_kw(fortio, ACTNUM_KW, actnum, size);
 
     if (corsnum != nullptr)
@@ -427,13 +451,15 @@ inline void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
  * Builds the 24 CORNERS floats for an extruded unit-cube cell at (i,j)
  * with the given z-range [z0, z1], in ZCORN order (z slowest).
  */
-inline std::array<float, 24> extruded_unit_corners(int i, int j, float z0,
+inline std::array<float, 24> extruded_unit_corners(size_t i, size_t j, float z0,
                                                    float z1) {
+    const float x0 = static_cast<float>(i);
+    const float x1 = static_cast<float>(i + 1);
+    const float y0 = static_cast<float>(j);
+    const float y1 = static_cast<float>(j + 1);
     return {{
-        (float)i, (float)j,       z0, (float)(i + 1), (float)j,       z0,
-        (float)i, (float)(j + 1), z0, (float)(i + 1), (float)(j + 1), z0,
-        (float)i, (float)j,       z1, (float)(i + 1), (float)j,       z1,
-        (float)i, (float)(j + 1), z1, (float)(i + 1), (float)(j + 1), z1,
+        x0, y0, z0, x1, y0, z0, x0, y1, z0, x1, y1, z0,
+        x0, y0, z1, x1, y0, z1, x0, y1, z1, x1, y1, z1,
     }};
 }
 
@@ -451,7 +477,7 @@ struct LgrGrid {
     std::string lgr_name;
     std::string parent_name = "";
     bool emit_parent = false;
-    int nx = 1, ny = 1, nz = 1;
+    size_t nx = 1, ny = 1, nz = 1;
     int host_cell = 1;
 };
 
@@ -461,8 +487,8 @@ struct LgrGrid {
  * LGR sections. If mapaxes is non-null a MAPAXES keyword is emitted
  * between MAPUNITS and GRIDUNIT. LGR cells are written as 1x1x1.
  */
-inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
-                                      int nz,
+inline void write_grid_file_with_lgrs(const fs::path &filename, size_t nx,
+                                      size_t ny, size_t nz,
                                       const std::vector<LgrGrid> &lgrs = {},
                                       const float *mapaxes = nullptr) {
     auto fortio = make_fortio_writer(filename);
@@ -474,12 +500,12 @@ inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
     write_grid_gridunit(fortio);
     write_grid_radial_false(fortio);
 
-    int global = 0;
-    for (int k = 0; k < nz; k++)
-        for (int j = 0; j < ny; j++)
-            for (int i = 0; i < nx; i++) {
-                auto corners =
-                    extruded_unit_corners(i, j, (float)k, (float)(k + 1));
+    size_t global = 0;
+    for (size_t k = 0; k < nz; k++)
+        for (size_t j = 0; j < ny; j++)
+            for (size_t i = 0; i < nx; i++) {
+                auto corners = extruded_unit_corners(
+                    i, j, static_cast<float>(k), static_cast<float>(k + 1));
                 write_grid_cell(fortio, i, j, k, global++, 0, corners.data());
             }
 
@@ -491,10 +517,10 @@ inline void write_grid_file_with_lgrs(const fs::path &filename, int nx, int ny,
 
         write_grid_dimens(fortio, lgr.nx, lgr.ny, lgr.nz);
         write_grid_radial_false(fortio);
-        int lgr_global = 0;
-        for (int k = 0; k < lgr.nz; k++)
-            for (int j = 0; j < lgr.ny; j++)
-                for (int i = 0; i < lgr.nx; i++)
+        size_t lgr_global = 0;
+        for (size_t k = 0; k < lgr.nz; k++)
+            for (size_t j = 0; j < lgr.ny; j++)
+                for (size_t i = 0; i < lgr.nx; i++)
                     write_grid_cell(fortio, i, j, k, lgr_global++,
                                     lgr.host_cell, UNIT_CELL_CORNERS);
     }
@@ -575,7 +601,7 @@ inline void write_fegrid_minimal(const fs::path &filename) {
  */
 inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
                                           int actnum_value = 1) {
-    const int nx = 1, ny = 1, nz = 1;
+    const size_t nx = 1, ny = 1, nz = 1;
     std::vector<float> coord_data(RD_GRID_COORD_SIZE(nx, ny), 0.0f);
     std::vector<float> zcorn_data(RD_GRID_ZCORN_SIZE(nx, ny, nz), 0.0f);
 
@@ -583,9 +609,9 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
     // 6*(i + j*(nx+1)).
     static const int top_corner[4] = {0, 1, 2, 3};
     static const int bot_corner[4] = {4, 5, 6, 7};
-    for (int j = 0; j <= 1; ++j) {
-        for (int i = 0; i <= 1; ++i) {
-            int pillar = i + j * (nx + 1);
+    for (size_t j = 0; j <= 1; ++j) {
+        for (size_t i = 0; i <= 1; ++i) {
+            size_t pillar = i + j * (nx + 1);
             int top = top_corner[i + 2 * j];
             int bot = bot_corner[i + 2 * j];
             set_pillar(coord_data, pillar, static_cast<float>(corners[top][0]),
@@ -597,7 +623,7 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
         }
     }
 
-    for (int c = 0; c < 8; ++c) {
+    for (size_t c = 0; c < 8; ++c) {
         size_t zi = rd::grid_zcorn_index(nx, ny, 0, 0, 0, c);
         zcorn_data[zi] = static_cast<float>(corners[c][2]);
     }
@@ -610,10 +636,10 @@ inline rd_grid_ptr build_single_cell_grid(const double corners[8][3],
 }
 
 inline rd_grid_ptr load_egrid_with_single_lgr(
-    const fs::path &filename, int nx, int ny, int nz, int lgr_nx, int lgr_ny,
-    int lgr_nz, int host_i, int host_j, int host_k, const std::string &lgr_name,
-    const float *mapaxes = nullptr, const std::vector<int> &nncg = {},
-    const std::vector<int> &nncl = {}) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz, size_t lgr_nx,
+    size_t lgr_ny, size_t lgr_nz, size_t host_i, size_t host_j, size_t host_k,
+    const std::string &lgr_name, const float *mapaxes = nullptr,
+    const std::vector<int> &nncg = {}, const std::vector<int> &nncl = {}) {
     write_egrid_with_single_lgr(filename, nx, ny, nz, lgr_nx, lgr_ny, lgr_nz,
                                 host_i, host_j, host_k, lgr_name, mapaxes, nncg,
                                 nncl);
@@ -621,11 +647,11 @@ inline rd_grid_ptr load_egrid_with_single_lgr(
 }
 
 inline rd_grid_ptr load_egrid_with_nested_lgr(
-    const fs::path &filename, int nx, int ny, int nz, int host_i, int host_j,
-    int host_k, int outer_nx, int outer_ny, int outer_nz,
-    const std::string &outer_name, int inner_host_i, int inner_host_j,
-    int inner_host_k, int inner_nx, int inner_ny, int inner_nz,
-    const std::string &inner_name) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz, size_t host_i,
+    size_t host_j, size_t host_k, size_t outer_nx, size_t outer_ny,
+    size_t outer_nz, const std::string &outer_name, size_t inner_host_i,
+    size_t inner_host_j, size_t inner_host_k, size_t inner_nx, size_t inner_ny,
+    size_t inner_nz, const std::string &inner_name) {
     write_egrid_with_nested_lgr(filename, nx, ny, nz, host_i, host_j, host_k,
                                 outer_nx, outer_ny, outer_nz, outer_name,
                                 inner_host_i, inner_host_j, inner_host_k,
@@ -634,10 +660,11 @@ inline rd_grid_ptr load_egrid_with_nested_lgr(
 }
 
 inline rd_grid_ptr load_egrid_with_two_lgrs_and_amalgamated_nnc(
-    const fs::path &filename, int nx, int ny, int nz,
-    const std::string &lgr1_name, int host1_i, int host1_j, int host1_k,
-    const std::string &lgr2_name, int host2_i, int host2_j, int host2_k,
-    const std::vector<int> &nna1, const std::vector<int> &nna2) {
+    const fs::path &filename, size_t nx, size_t ny, size_t nz,
+    const std::string &lgr1_name, size_t host1_i, size_t host1_j,
+    size_t host1_k, const std::string &lgr2_name, size_t host2_i,
+    size_t host2_j, size_t host2_k, const std::vector<int> &nna1,
+    const std::vector<int> &nna2) {
     write_egrid_with_two_lgrs_and_amalgamated_nnc(
         filename, nx, ny, nz, lgr1_name, host1_i, host1_j, host1_k, lgr2_name,
         host2_i, host2_j, host2_k, nna1, nna2);
@@ -645,25 +672,25 @@ inline rd_grid_ptr load_egrid_with_two_lgrs_and_amalgamated_nnc(
 }
 
 inline rd_grid_ptr load_egrid_with_coarse_groups(const fs::path &filename,
-                                                 int nx, int ny, int nz,
-                                                 const int *corsnum,
+                                                 size_t nx, size_t ny,
+                                                 size_t nz, const int *corsnum,
                                                  const int *actnum = nullptr) {
     write_egrid_with_coarse_groups(filename, nx, ny, nz, corsnum, actnum);
     return read_grid(filename);
 }
 
-inline rd_grid_ptr load_egrid_dual_porosity(const fs::path &filename, int nx,
-                                            int ny, int nz, const int *actnum,
+inline rd_grid_ptr load_egrid_dual_porosity(const fs::path &filename, size_t nx,
+                                            size_t ny, size_t nz,
+                                            const int *actnum,
                                             const std::vector<int> &nnc1 = {},
                                             const std::vector<int> &nnc2 = {}) {
     write_egrid_dual_porosity(filename, nx, ny, nz, actnum, nnc1, nnc2);
     return read_grid(filename);
 }
 
-inline rd_grid_ptr
-load_egrid_dual_porosity_with_coarse_groups(const fs::path &filename, int nx,
-                                            int ny, int nz, const int *actnum,
-                                            const int *corsnum) {
+inline rd_grid_ptr load_egrid_dual_porosity_with_coarse_groups(
+    const fs::path &filename, size_t nx, size_t ny, size_t nz,
+    const int *actnum, const int *corsnum) {
     write_egrid_dual_porosity(filename, nx, ny, nz, actnum, {}, {}, corsnum);
     return read_grid(filename);
 }
@@ -690,7 +717,8 @@ inline rd_grid_ptr load_grid_file_with_mapaxes(const fs::path &filename,
 }
 
 inline rd_grid_ptr load_grid_file_main_with_lgr(const fs::path &filename,
-                                                int nx, int ny, int nz) {
+                                                size_t nx, size_t ny,
+                                                size_t nz) {
     write_grid_file_with_lgrs(filename, nx, ny, nz,
                               {LgrGrid{"LGR1", "", false, 1, 1, 1, 1}});
     return read_grid(filename);
@@ -758,7 +786,7 @@ inline std::vector<LabeledGrid> build_all_grids(const fs::path &dirname) {
     }
 
     {
-        const int nx = 2, ny = 2, nz = 2;
+        const size_t nx = 2, ny = 2, nz = 2;
         std::vector<int> corsnum(nx * ny * nz, 0);
         corsnum[0] = 1;
         corsnum[1] = 1;
@@ -769,7 +797,7 @@ inline std::vector<LabeledGrid> build_all_grids(const fs::path &dirname) {
     }
 
     {
-        const int nx = 2, ny = 2, nz = 2;
+        const size_t nx = 2, ny = 2, nz = 2;
         std::vector<int> actnum(nx * ny * nz,
                                 CELL_ACTIVE_MATRIX | CELL_ACTIVE_FRACTURE);
         grids.push_back(
@@ -779,8 +807,8 @@ inline std::vector<LabeledGrid> build_all_grids(const fs::path &dirname) {
     }
 
     {
-        const int nx = 2, ny = 2, nz = 2;
-        const int size = nx * ny * nz;
+        const size_t nx = 2, ny = 2, nz = 2;
+        const size_t size = nx * ny * nz;
         std::vector<int> actnum(size,
                                 CELL_ACTIVE_MATRIX | CELL_ACTIVE_FRACTURE);
         std::vector<int> corsnum(size, 0);

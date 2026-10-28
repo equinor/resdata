@@ -15,15 +15,11 @@
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>
 
-template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
-
-    int index;
-    auto iter = find(vec.begin(), vec.end(), value);
-    if (iter == vec.end())
-        index = -1;
-    else
-        index = iter - vec.begin();
-    return index;
+static bool contains(const std::vector<size_t> &vec, int value) {
+    if (value < 0)
+        return false;
+    return std::find(vec.begin(), vec.end(), static_cast<size_t>(value)) !=
+           vec.end();
 }
 
 void test_scan(const char *grid_filename) {
@@ -33,7 +29,7 @@ void test_scan(const char *grid_filename) {
     for (size_t block_nr = 0; block_nr < grid_file->num_named_kw(NNCHEAD_KW);
          block_nr++) {
         rd_grid_type *lgr = rd_grid;
-        int lgr_nr;
+        size_t lgr_nr;
         auto nnc_view = grid_file->blockview(NNCHEAD_KW, block_nr);
         {
             if (block_nr > 0)
@@ -49,16 +45,16 @@ void test_scan(const char *grid_filename) {
                         const int g1 = nnc1_kw->at<int>(i) - 1;
                         const int g2 = nnc2_kw->at<int>(i) - 1;
 
-                        if (g2 <
-                            rd_grid_get_global_size(
-                                lgr)) { // Skipping matrix <-> fracture link in dual poro.
+                        // Skipping matrix <-> fracture link in dual poro.
+                        if (g2 >= 0 && static_cast<size_t>(g2) <
+                                           rd_grid_get_global_size(lgr)) {
                             const nnc_info_type *nnc_info =
-                                rd_grid_get_cell_nnc_info1(lgr, g1);
-                            const std::vector<int> &index_list =
+                                rd_grid_get_cell_nnc_info1(
+                                    lgr, static_cast<size_t>(g1));
+                            const std::vector<size_t> &index_list =
                                 nnc_info_get_grid_index_list(nnc_info, lgr_nr);
                             test_assert_not_NULL(nnc_info);
-                            test_assert_int_not_equal(
-                                -1, vector_util_index<int>(index_list, g2));
+                            test_assert_true(contains(index_list, g2));
                         }
                     }
                 }
@@ -71,21 +67,21 @@ void test_scan(const char *grid_filename) {
                 rd::KW *nnchead_kw = nnc_view->get_kw(NNCHEAD_KW, 0);
                 rd::KW *nncg_kw = nnc_view->get_kw(NNCG_KW, 0);
                 rd::KW *nncl_kw = nnc_view->get_kw(NNCL_KW, 0);
-                int lgr_nr = nnchead_kw->at<int>(NNCHEAD_LGR_INDEX);
+                size_t lgr_nr =
+                    static_cast<size_t>(nnchead_kw->at<int>(NNCHEAD_LGR_INDEX));
                 for (size_t i = 0; i < nncg_kw->size(); i++) {
                     const int g = nncg_kw->at<int>(i) - 1;
                     const int l = nncl_kw->at<int>(i) - 1;
 
-                    const nnc_info_type *nnc_info =
-                        rd_grid_get_cell_nnc_info1(rd_grid, g);
+                    const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(
+                        rd_grid, static_cast<size_t>(g));
                     test_assert_not_NULL(nnc_info);
                     {
-                        const std::vector<int> &index_list =
+                        const std::vector<size_t> &index_list =
                             nnc_info_get_grid_index_list(nnc_info, lgr_nr);
                         test_assert_true(
                             nnc_info_has_grid_index_list(nnc_info, lgr_nr));
-                        test_assert_int_not_equal(
-                            -1, vector_util_index<int>(index_list, l));
+                        test_assert_true(contains(index_list, l));
                     }
                 }
             }
@@ -97,8 +93,10 @@ void test_scan(const char *grid_filename) {
                 rd::KW *nncheada_kw = nnc_view->get_kw(NNCHEADA_KW, 0);
                 rd::KW *nnc1_kw = nnc_view->get_kw(NNA1_KW, 0);
                 rd::KW *nnc2_kw = nnc_view->get_kw(NNA2_KW, 0);
-                int lgr_nr1 = nncheada_kw->at<int>(NNCHEADA_ILOC1_INDEX);
-                int lgr_nr2 = nncheada_kw->at<int>(NNCHEADA_ILOC2_INDEX);
+                size_t lgr_nr1 = static_cast<size_t>(
+                    nncheada_kw->at<int>(NNCHEADA_ILOC1_INDEX));
+                size_t lgr_nr2 = static_cast<size_t>(
+                    nncheada_kw->at<int>(NNCHEADA_ILOC2_INDEX));
 
                 rd_grid_type *lgr1 =
                     rd_grid_get_lgr_from_lgr_nr(rd_grid, lgr_nr1);
@@ -106,13 +104,12 @@ void test_scan(const char *grid_filename) {
                     const int g1 = nnc1_kw->at<int>(i) - 1;
                     const int g2 = nnc2_kw->at<int>(i) - 1;
 
-                    const nnc_info_type *nnc_info =
-                        rd_grid_get_cell_nnc_info1(lgr1, g1);
-                    const std::vector<int> &index_list =
+                    const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(
+                        lgr1, static_cast<size_t>(g1));
+                    const std::vector<size_t> &index_list =
                         nnc_info_get_grid_index_list(nnc_info, lgr_nr2);
                     test_assert_not_NULL(nnc_info);
-                    test_assert_int_not_equal(
-                        -1, vector_util_index<int>(index_list, g2));
+                    test_assert_true(contains(index_list, g2));
                 }
             }
         }

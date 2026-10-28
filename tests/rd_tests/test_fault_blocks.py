@@ -304,7 +304,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(block.get_centroid(), (2.0, 2.0))
 
     def test_fault_block_layer(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             layer = FaultBlockLayer(self.grid, -1)
 
         with self.assertRaises(ValueError):
@@ -718,3 +718,25 @@ def test_that_contains_returns_false_out_of_bounds():
     grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
     layer = FaultBlockLayer(grid, 0)
     assert -1 not in layer
+
+
+def test_that_k_beyond_nz_raises_value_error():
+    grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+    with pytest.raises(ValueError, match="failed to create FaultBlockLayer"):
+        FaultBlockLayer(grid, 1)
+
+
+def test_that_negative_cell_indices_raise_type_error():
+    grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+    block = FaultBlockLayer(grid, 0).add_block(1)
+    with pytest.raises(TypeError):
+        block.add_cell(-1, 0)
+    with pytest.raises(TypeError):
+        block.add_cell(0, -1)
+
+
+def test_that_out_of_range_cell_indices_raise_index_error():
+    grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
+    block = FaultBlockLayer(grid, 0).add_block(1)
+    with pytest.raises(IndexError):
+        block.add_cell(5, 0)

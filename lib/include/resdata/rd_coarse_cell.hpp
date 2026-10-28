@@ -1,7 +1,9 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <vector>
 
 typedef struct rd_coarse_cell_struct rd_coarse_cell_type;
@@ -12,21 +14,33 @@ using rd_coarse_cell_ptr =
 bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
                           const rd_coarse_cell_type *coarse_cell2);
 rd_coarse_cell_ptr rd_coarse_cell_alloc();
-void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, int i, int j,
-                           int k, int global_index);
+void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, size_t i, size_t j,
+                           size_t k, size_t global_index);
 
-const std::vector<int> &
+/* The bounding box of the coarse cell as {i1, i2, j1, j2, k1, k2}. Only valid
+   after rd_coarse_cell_update() has been called at least once. */
+const std::array<size_t, 6> &
+rd_coarse_cell_get_box(const rd_coarse_cell_type *coarse_cell);
+
+size_t rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell);
+
+/* The global indices of all the cells in the coarse group, sorted ascending. */
+const std::vector<size_t> &
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell);
 
 void rd_coarse_cell_reset_active_index(rd_coarse_cell_type *coarse_cell);
 void rd_coarse_cell_update_index(rd_coarse_cell_type *coarse_cell,
-                                 int global_index, int *active_index,
-                                 int *active_fracture_index, int active_value);
-int rd_coarse_cell_get_active_index(const rd_coarse_cell_type *coarse_cell);
-int rd_coarse_cell_get_active_fracture_index(
+                                 size_t global_index, size_t *active_index,
+                                 size_t *active_fracture_index,
+                                 int active_value);
+/* Returns nullopt if the coarse cell has not been assigned an active index. */
+std::optional<size_t>
+rd_coarse_cell_get_active_index(const rd_coarse_cell_type *coarse_cell);
+std::optional<size_t> rd_coarse_cell_get_active_fracture_index(
     const rd_coarse_cell_type *coarse_cell);
-int rd_coarse_cell_iget_active_cell_index(
-    const rd_coarse_cell_type *coarse_cell, int index);
+size_t
+rd_coarse_cell_iget_active_cell_index(const rd_coarse_cell_type *coarse_cell,
+                                      size_t index);
 int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
-                                     int index);
-int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell);
+                                     size_t index);
+size_t rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell);

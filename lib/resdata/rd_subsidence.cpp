@@ -108,16 +108,16 @@ rd_subsidence_survey_eval(const rd_subsidence_survey_type *base_survey,
                           double poisson_ratio) {
 
     const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
-    const int size = grid_cache.size();
+    const size_t size = grid_cache.size();
     std::vector<double> weight(size);
 
     if (monitor_survey) {
-        for (int index = 0; index < size; index++)
+        for (size_t index = 0; index < size; index++)
             weight[index] =
                 base_survey->porv[index] * (base_survey->pressure[index] -
                                             monitor_survey->pressure[index]);
     } else {
-        for (int index = 0; index < size; index++)
+        for (size_t index = 0; index < size; index++)
             weight[index] =
                 base_survey->porv[index] * base_survey->pressure[index];
     }
@@ -136,12 +136,12 @@ static double rd_subsidence_survey_eval_geertsma(
 
     const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
     const auto &cell_volume = grid_cache.volume();
-    const int size = grid_cache.size();
+    const size_t size = grid_cache.size();
     double scale_factor = 1e4 * (1 + poisson_ratio) * (1 - 2 * poisson_ratio) /
                           (4 * M_PI * (1 - poisson_ratio) * youngs_modulus);
     std::vector<double> weight(size);
 
-    for (int index = 0; index < size; index++) {
+    for (size_t index = 0; index < size; index++) {
         if (monitor_survey) {
             weight[index] = scale_factor * cell_volume[index] *
                             (base_survey->pressure[index] -
@@ -164,7 +164,7 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
     double poisson_ratio, double seabed) {
 
     const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
-    const int size = grid_cache.size();
+    const size_t size = grid_cache.size();
     std::vector<double> weight(size);
 
     if (!base_survey->dynamic_porevolume.has_value()) {

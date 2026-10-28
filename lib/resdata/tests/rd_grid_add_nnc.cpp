@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <vector>
 
 #include <vector>
 
@@ -19,21 +20,21 @@ void verify_simple_nnc(const rd_grid_type *grid) {
     {
         const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(grid, 5);
         const nnc_vector_type *nnc_vector = nnc_info_iget_vector(nnc_info, 0);
-        test_assert_int_equal(2, nnc_vector_get_size(nnc_vector));
-        test_assert_int_equal(6, nnc_vector_iget_grid_index(nnc_vector, 0));
-        test_assert_int_equal(7, nnc_vector_iget_grid_index(nnc_vector, 1));
+        test_assert_size_t_equal(2, nnc_vector_get_size(nnc_vector));
+        test_assert_size_t_equal(6, nnc_vector_iget_grid_index(nnc_vector, 0));
+        test_assert_size_t_equal(7, nnc_vector_iget_grid_index(nnc_vector, 1));
 
-        test_assert_int_equal(0, nnc_vector_iget_nnc_index(nnc_vector, 0));
-        test_assert_int_equal(1, nnc_vector_iget_nnc_index(nnc_vector, 1));
+        test_assert_size_t_equal(0, nnc_vector_iget_nnc_index(nnc_vector, 0));
+        test_assert_size_t_equal(1, nnc_vector_iget_nnc_index(nnc_vector, 1));
     }
 
     // Cell 8:
     {
         const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(grid, 8);
         const nnc_vector_type *nnc_vector = nnc_info_iget_vector(nnc_info, 0);
-        test_assert_int_equal(1, nnc_vector_get_size(nnc_vector));
-        test_assert_int_equal(9, nnc_vector_iget_grid_index(nnc_vector, 0));
-        test_assert_int_equal(2, nnc_vector_iget_nnc_index(nnc_vector, 0));
+        test_assert_size_t_equal(1, nnc_vector_get_size(nnc_vector));
+        test_assert_size_t_equal(9, nnc_vector_iget_grid_index(nnc_vector, 0));
+        test_assert_size_t_equal(2, nnc_vector_iget_nnc_index(nnc_vector, 0));
     }
 }
 
@@ -81,11 +82,11 @@ void overwrite_test() {
 
 void list_test() {
     rd_grid_ptr grid0 = make_rectangular_grid(10, 10, 10, 1, 1, 1, NULL);
-    std::vector<int> g1{5, 5, 8};
-    std::vector<int> g2{6, 7, 9};
+    const std::vector<size_t> g1 = {5, 5, 8};
+    const std::vector<size_t> g2 = {6, 7, 9};
 
     for (size_t i = 0; i < g1.size(); i++)
-        rd_grid_add_self_nnc(grid0.get(), g1[i], g2[i], static_cast<int>(i));
+        rd_grid_add_self_nnc(grid0.get(), g1[i], g2[i], i);
 
     verify_simple_nnc(grid0.get());
     {

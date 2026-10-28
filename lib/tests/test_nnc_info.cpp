@@ -8,7 +8,7 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
         std::unique_ptr<nnc_info_type, decltype(&nnc_info_free)>;
 
     GIVEN("An nnc_info") {
-        int lgr_nr = 0;
+        size_t lgr_nr = 0;
         auto nnc_info = nnc_info_ptr(nnc_info_alloc(lgr_nr), &nnc_info_free);
         REQUIRE(nnc_info != nullptr);
 
@@ -55,8 +55,8 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
         }
 
         THEN("Multiple LGR support works") {
-            int lgr_nr_1 = 1;
-            int lgr_nr_2 = 2;
+            size_t lgr_nr_1 = 1;
+            size_t lgr_nr_2 = 2;
 
             nnc_info_add_nnc(nnc_info.get(), lgr_nr, 10, 0);
             nnc_info_add_nnc(nnc_info.get(), lgr_nr_1, 20, 1);
