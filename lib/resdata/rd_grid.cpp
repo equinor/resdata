@@ -3915,11 +3915,13 @@ static double rd_grid_get_bottom3(const rd_grid_type *grid, int i, int j,
     return rd_grid_get_bottom1(grid, global_index);
 }
 
-int rd_grid_locate_depth(const rd_grid_type *grid, double depth, int i, int j) {
+/* Returns OutsideGrid if depth is above the top or below the bottom of the column */
+std::variant<OutsideGrid, int> rd_grid_locate_depth(const rd_grid_type *grid,
+                                                    double depth, int i, int j) {
     if (depth < rd_grid_get_top2(grid, i, j))
-        return -1;
+        return OutsideGrid::above;
     else if (depth >= rd_grid_get_bottom2(grid, i, j))
-        return -1 * grid->nz;
+        return OutsideGrid::below;
     else {
         int k = 0;
         double bottom = rd_grid_get_top3(grid, i, j, k);

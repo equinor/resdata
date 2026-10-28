@@ -309,8 +309,12 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             double bottom2 = rd_grid_get_bottom2(grid.get(), 0, 0);
             REQUIRE(bottom2 == 6.0);
 
-            int k_loc = rd_grid_locate_depth(grid.get(), 1.5, 0, 0);
-            REQUIRE(k_loc == 0);
+            auto k_loc = rd_grid_locate_depth(grid.get(), 1.5, 0, 0);
+            REQUIRE(k_loc == std::variant<OutsideGrid, int>{0});
+            REQUIRE(rd_grid_locate_depth(grid.get(), -1.0, 0, 0) ==
+                    std::variant<OutsideGrid, int>{OutsideGrid::above});
+            REQUIRE(rd_grid_locate_depth(grid.get(), 6.0, 0, 0) ==
+                    std::variant<OutsideGrid, int>{OutsideGrid::below});
         }
 
         SECTION("Cell containment") {

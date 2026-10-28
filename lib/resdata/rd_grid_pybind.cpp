@@ -227,10 +227,16 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_get_bottom", [](py::handle self, int i, int j) {
         return rd_grid_get_bottom2(from_cwrap<rd_grid_type>(self), i, j);
     });
-    m.def("_locate_depth", [](py::handle self, double depth, int i, int j) {
-        return rd_grid_locate_depth(from_cwrap<rd_grid_type>(self), depth, i,
-                                    j);
-    });
+    m.def("_locate_depth",
+          [](py::handle self, double depth, int i, int j) -> py::object {
+              auto *grid = from_cwrap<rd_grid_type>(self);
+              auto result = rd_grid_locate_depth(grid, depth, i, j);
+              if (auto *k = std::get_if<int>(&result))
+                  return py::int_(*k);
+              if (std::get<OutsideGrid>(result) == OutsideGrid::above)
+                  return py::int_(-1);
+              return py::int_(-1) * py::int_(rd_grid_get_nz(grid));
+          });
     m.def("_invalid_cell", [](py::handle self, int index) {
         return rd_grid_cell_invalid1(from_cwrap<rd_grid_type>(self), index);
     });
