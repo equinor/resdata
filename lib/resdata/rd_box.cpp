@@ -3,13 +3,14 @@
 #include <cstring>
 
 #include <algorithm>
+#include <vector>
 
 #include <resdata/rd_box.hpp>
 #include <resdata/rd_grid.hpp>
 
 namespace rd {
-rd_box::rd_box(const rd_grid_type *grid, size_t i1, size_t i2, size_t j1,
-               size_t j2, size_t k1, size_t k2)
+box::box(const rd_grid_type *grid, size_t i1, size_t i2, size_t j1, size_t j2,
+         size_t k1, size_t k2)
     : grid(grid), i1(std::min(i1, i2)), i2(std::max(i1, i2)),
       j1(std::min(j1, j2)), j2(std::max(j1, j2)), k1(std::min(k1, k2)),
       k2(std::max(k1, k2)) {
@@ -25,7 +26,7 @@ rd_box::rd_box(const rd_grid_type *grid, size_t i1, size_t i2, size_t j1,
             }
 }
 
-const std::vector<size_t> &rd_box::active_list() const {
+const std::vector<size_t> &box::active_list() const {
     return this->active_index_list;
 }
 

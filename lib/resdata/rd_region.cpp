@@ -527,7 +527,7 @@ void rd_region_cmp_deselect_more(rd_region_type *rd_region, const rd::KW *kw1,
 */
 
 static void rd_region_select_from_box__(rd_region_type *region,
-                                        const rd::rd_box &rd_box, bool select) {
+                                        const rd::box &rd_box, bool select) {
     for (auto global_index : rd_box.active_list())
         region->active_mask[global_index] = select;
 
@@ -546,7 +546,7 @@ static void rd_region_select_from_box__(rd_region_type *region,
 static void rd_region_select_from_ijkbox__(rd_region_type *region, size_t i1,
                                            size_t i2, size_t j1, size_t j2,
                                            size_t k1, size_t k2, bool select) {
-    rd::rd_box tmp_box(region->parent_grid, i1, i2, j1, j2, k1, k2);
+    rd::box tmp_box(region->parent_grid, i1, i2, j1, j2, k1, k2);
     rd_region_select_from_box__(region, tmp_box, select);
 }
 
