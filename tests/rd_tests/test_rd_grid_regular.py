@@ -9,6 +9,7 @@ from resdata.resfile import ResdataKW
 
 from ._grid_fixtures import (
     generate_coordkw_grid,
+    load_grid_file_with_mapaxes,
     make_rectangular_grid,
     write_fegrid_minimal,
 )
@@ -404,3 +405,9 @@ def test_that_length_of_grdecl_keywords_are_checked(tmp_path):
     (grid_file := tmp_path / "grid.GRDECL").write_text(grdecl_with_invalid_coord_length)
     with pytest.raises(ValueError, match="Invalid size of COORD"):
         Grid.load_from_grdecl(str(grid_file))
+
+
+@pytest.mark.parametrize("mapaxes", [[1.0], [0.0, 1.0, 0.0, 0.0, 1.0], [0.0] * 7])
+def test_that_grid_file_with_wrongly_sized_mapaxes_is_rejected(tmp_path, mapaxes):
+    with pytest.raises(ValueError, match="Invalid size of MAPAXES"):
+        load_grid_file_with_mapaxes(tmp_path / "EVIL.GRID", mapaxes)

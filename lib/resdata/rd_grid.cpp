@@ -2066,6 +2066,10 @@ rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
 }
 
 static const float *rd_grid_get_mapaxes_from_kw__(const rd::KW *mapaxes_kw) {
+    if (mapaxes_kw->size() != 6)
+        throw std::invalid_argument(
+            fmt::format("Invalid size of MAPAXES keyword = {}, expected 6",
+                        mapaxes_kw->size()));
     const std::vector<float> &mapaxes = mapaxes_kw->get_vector<float>();
 
     float x1 = mapaxes[2];
@@ -2153,13 +2157,8 @@ rd_grid_alloc_GRDECL_kw__(rd_grid_type *global_grid, int dualp_flag,
             gtype));
 
     const float *mapaxes = nullptr;
-    if (mapaxes_kw) {
-        if (mapaxes_kw->size() != 6)
-            throw std::invalid_argument(
-                fmt::format("Invalid size of MAPAXES keyword = {}, expected 6",
-                            mapaxes_kw->size()));
+    if (mapaxes_kw)
         mapaxes = rd_grid_get_mapaxes_from_kw__(mapaxes_kw);
-    }
 
     const int *corsnum = nullptr;
     if (corsnum_kw) {
