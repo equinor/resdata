@@ -54,9 +54,11 @@ def test_that_actnum_export_matches_per_cell_active_status(two_groups_grid):
         assert actnum[i] == expected
 
 
-def test_that_non_consecutive_coarse_group_numbers_report_highest_group(tmp_path):
+def test_that_non_consecutive_coarse_group_numbers_report_number_of_distinct_groups(
+    tmp_path,
+):
     # CORSNUM uses groups 1 and 3 but not 2. The grid reports the
-    # highest group number even though group 2 is unused.
+    # number of groups present, not the highest group number.
     nx, ny, nz = 3, 3, 3
     size = nx * ny * nz
     corsnum = [0] * size
@@ -72,7 +74,7 @@ def test_that_non_consecutive_coarse_group_numbers_report_highest_group(tmp_path
         nz,
         corsnum,
     )
-    assert grid.coarse_groups() == 3
+    assert grid.coarse_groups() == 2
 
 
 def test_that_corsnum_with_wrong_size_raises_when_loading_egrid(tmp_path):
