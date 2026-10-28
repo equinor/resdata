@@ -8,12 +8,12 @@
 #include <resdata/nnc_vector.hpp>
 
 struct nnc_vector_struct {
-    int lgr_nr;
-    std::vector<int> grid_index_list;
-    std::vector<int> nnc_index_list;
+    size_t lgr_nr;
+    std::vector<size_t> grid_index_list;
+    std::vector<size_t> nnc_index_list;
 };
 
-nnc_vector_type *nnc_vector_alloc(int lgr_nr) {
+nnc_vector_type *nnc_vector_alloc(size_t lgr_nr) {
     nnc_vector_type *nnc_vector = new nnc_vector_type();
     nnc_vector->lgr_nr = lgr_nr;
     return nnc_vector;
@@ -52,18 +52,18 @@ bool nnc_vector_equal(const nnc_vector_type *nnc_vector1,
 
 void nnc_vector_free(nnc_vector_type *nnc_vector) { delete nnc_vector; }
 
-void nnc_vector_add_nnc(nnc_vector_type *nnc_vector, int global_cell_number,
-                        int nnc_index) {
+void nnc_vector_add_nnc(nnc_vector_type *nnc_vector, size_t global_cell_number,
+                        size_t nnc_index) {
     nnc_vector->grid_index_list.push_back(global_cell_number);
     nnc_vector->nnc_index_list.push_back(nnc_index);
 }
 
-const std::vector<int> &
+const std::vector<size_t> &
 nnc_vector_get_grid_index_list(const nnc_vector_type *nnc_vector) {
     return nnc_vector->grid_index_list;
 }
 
-const std::vector<int> &
+const std::vector<size_t> &
 nnc_vector_get_nnc_index_list(const nnc_vector_type *nnc_vector) {
     return nnc_vector->nnc_index_list;
 }
@@ -72,15 +72,16 @@ size_t nnc_vector_get_size(const nnc_vector_type *nnc_vector) {
     return nnc_vector->grid_index_list.size();
 }
 
-int nnc_vector_get_lgr_nr(const nnc_vector_type *nnc_vector) {
+size_t nnc_vector_get_lgr_nr(const nnc_vector_type *nnc_vector) {
     return nnc_vector->lgr_nr;
 }
 
-int nnc_vector_iget_nnc_index(const nnc_vector_type *nnc_vector, size_t index) {
-    return nnc_vector->nnc_index_list[index];
+size_t nnc_vector_iget_nnc_index(const nnc_vector_type *nnc_vector,
+                                 size_t index) {
+    return nnc_vector->nnc_index_list.at(index);
 }
 
-int nnc_vector_iget_grid_index(const nnc_vector_type *nnc_vector,
-                               size_t index) {
-    return nnc_vector->grid_index_list[index];
+size_t nnc_vector_iget_grid_index(const nnc_vector_type *nnc_vector,
+                                  size_t index) {
+    return nnc_vector->grid_index_list.at(index);
 }

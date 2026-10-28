@@ -5,20 +5,20 @@
 #include <resdata/rd_grid.hpp>
 
 void test_layer(rd_grid_type *grid) {
-    int g;
+    size_t g;
 
     for (g = 0; g < rd_grid_get_global_size(grid); g += 25) {
         double x, y, z;
-        int i, j, k;
+        size_t i, j, k;
 
         rd_grid_get_xyz1(grid, g, &x, &y, &z);
         rd_grid_get_ijk1(grid, g, &i, &j, &k);
         {
-            int find_i, find_j;
+            size_t find_i, find_j;
             test_assert_true(
                 rd_grid_get_ij_from_xy(grid, x, y, k, &find_i, &find_j));
-            test_assert_int_equal(i, find_i);
-            test_assert_int_equal(j, find_j);
+            test_assert_size_t_equal(i, find_i);
+            test_assert_size_t_equal(j, find_j);
         }
     }
 }

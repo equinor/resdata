@@ -16,7 +16,7 @@ typedef struct fault_block_layer_struct fault_block_layer_type;
 /** A single (i,j,k) cell of a FaultBlock, together with its (x,y,z)
     cell-center coordinates. */
 struct FaultBlockCell {
-    int i, j, k;
+    size_t i, j, k;
     double x, y, z;
 };
 
@@ -26,18 +26,19 @@ struct FaultBlockCell {
 class FaultBlock {
     void assert_center();
     [[nodiscard]] bool
-    neighbour_xpolyline(int i1, int j1, int i2, int j2,
+    neighbour_xpolyline(size_t i1, size_t j1, size_t i2, size_t j2,
                         const geo_polygon_collection_type *polylines) const;
     [[nodiscard]] bool
-    connected_neighbour(int i1, int j1, int i2, int j2, bool connected_only,
+    connected_neighbour(size_t i1, size_t j1, size_t i2, size_t j2,
+                        bool connected_only,
                         const geo_polygon_collection_type *polylines) const;
 
     rd_grid_type *grid;
     fault_block_layer_type *parent_layer; // nullptr if detached
-    std::vector<std::tuple<int, int>> index_list;
+    std::vector<std::tuple<size_t, size_t>> index_list;
     std::set<int> regions;
     int block_id;
-    int k;
+    size_t k;
     double xc = 0, yc = 0;
     bool valid_center = false;
 
@@ -58,8 +59,8 @@ public:
     void assign_to_region(int region_id);
     [[nodiscard]] const std::set<int> &get_regions() const { return regions; };
     /** add_cell cannot be called on a detached FaultBlock */
-    void add_cell(int i, int j);
-    [[nodiscard]] const std::vector<int> get_global_index_list() const;
+    void add_cell(size_t i, size_t j);
+    [[nodiscard]] std::vector<size_t> get_global_index_list() const;
     void copy_content(const FaultBlock &src_block);
 
     /** Traces the outer edge of this block and returns the list of
@@ -67,7 +68,7 @@ public:
         where cell_index is the index of the cell at that corner.
 
         Cannot be called on a detached FaultBlock. */
-    [[nodiscard]] std::vector<std::tuple<double, double, int>>
+    [[nodiscard]] std::vector<std::tuple<double, double, size_t>>
     trace_edge() const;
     [[nodiscard]] std::vector<std::shared_ptr<FaultBlock>>
     /** get_neighbours cannot be called on a detached FaultBlock */

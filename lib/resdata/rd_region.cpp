@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 #include <memory>
+#include <utility>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -78,11 +80,11 @@
 struct rd_region_struct {
     std::vector<bool>
         active_mask; /* This marks active|inactive in the region, which is unrelated to active in the grid. */
-    std::vector<int>
+    std::vector<size_t>
         global_index_list; /* This is a list of the cells in the region - irrespective of whether they are active in the grid or not. */
-    std::vector<int>
+    std::vector<size_t>
         active_index_list; /* This means cells in the region which are also active in the grid */
-    std::vector<int>
+    std::vector<size_t>
         global_active_list; /* This is a list of (maximum) nactive elements, where the values are in the [0,..nx*ny*nz) range. */
     bool global_index_list_valid;
     bool active_index_list_valid;
@@ -91,7 +93,7 @@ struct rd_region_struct {
         name; /* User name attached to region will typically be NULL. */
     bool preselect;
     /* Grid properties */
-    int grid_nx, grid_ny, grid_nz, grid_vol, grid_active;
+    size_t grid_nx, grid_ny, grid_nz, grid_vol, grid_active;
     rd_grid_type *parent_grid;
 };
 
@@ -103,8 +105,12 @@ static void rd_region_invalidate_index_list(rd_region_type *region) {
 rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect) {
     auto region = std::make_unique<rd_region_type>();
     region->parent_grid = rd_grid;
-    rd_grid_get_dims(rd_grid, &region->grid_nx, &region->grid_ny,
-                     &region->grid_nz, &region->grid_active);
+    size_t nx, ny, nz, nactive;
+    rd_grid_get_dims(rd_grid, &nx, &ny, &nz, &nactive);
+    region->grid_nx = nx;
+    region->grid_ny = ny;
+    region->grid_nz = nz;
+    region->grid_active = nactive;
     region->grid_vol = region->grid_nx * region->grid_ny * region->grid_nz;
     region->active_mask.resize(region->grid_vol);
     region->preselect = preselect;
@@ -126,7 +132,7 @@ void rd_region_free(rd_region_type *region) { delete region; }
 static void rd_region_assert_global_index_list(rd_region_type *region) {
     if (!region->global_index_list_valid) {
         region->global_index_list.clear();
-        for (int global_index = 0; global_index < region->grid_vol;
+        for (size_t global_index = 0; global_index < region->grid_vol;
              global_index++)
             if (region->active_mask[global_index])
                 region->global_index_list.push_back(global_index);
@@ -139,13 +145,13 @@ static void rd_region_assert_active_index_list(rd_region_type *region) {
     if (!region->active_index_list_valid) {
         region->active_index_list.clear();
         region->global_active_list.clear();
-        for (int global_index = 0; global_index < region->grid_vol;
+        for (size_t global_index = 0; global_index < region->grid_vol;
              global_index++) {
             if (region->active_mask[global_index]) {
-                int active_index = rd_grid_get_active_index1(
+                auto active_index = rd_grid_get_active_index1(
                     region->parent_grid, global_index);
-                if (active_index >= 0) {
-                    region->active_index_list.push_back(active_index);
+                if (active_index) {
+                    region->active_index_list.push_back(*active_index);
                     region->global_active_list.push_back(global_index);
                 }
             }
@@ -154,25 +160,25 @@ static void rd_region_assert_active_index_list(rd_region_type *region) {
     }
 }
 
-const std::vector<int> &rd_region_get_active_list(rd_region_type *region) {
+const std::vector<size_t> &rd_region_get_active_list(rd_region_type *region) {
     rd_region_assert_active_index_list(region);
     return region->active_index_list;
 }
 
-const std::vector<int> &
+const std::vector<size_t> &
 rd_region_get_global_active_list(rd_region_type *region) {
     rd_region_assert_active_index_list(region);
     return region->global_active_list;
 }
 
-const std::vector<int> &rd_region_get_global_list(rd_region_type *region) {
+const std::vector<size_t> &rd_region_get_global_list(rd_region_type *region) {
     rd_region_assert_global_index_list(region);
     return region->global_index_list;
 }
 
 static void rd_region_assert_kw(const rd_region_type *region,
                                 const rd::KW *rd_kw, bool *global_kw) {
-    int kw_size = rd::kw_get_size(rd_kw);
+    size_t kw_size = rd_kw->size();
     if (!(kw_size == region->grid_vol || kw_size == region->grid_active))
         throw std::invalid_argument(
             "size mismatch between rd_kw instance and region->grid");
@@ -183,7 +189,7 @@ static void rd_region_assert_kw(const rd_region_type *region,
 }
 
 void rd_region_reset(rd_region_type *rd_region) {
-    for (int i = 0; i < rd_region->grid_vol; i++)
+    for (size_t i = 0; i < rd_region->grid_vol; i++)
         rd_region->active_mask[i] = rd_region->preselect;
     rd_region_invalidate_index_list(rd_region);
 }
@@ -198,16 +204,16 @@ static void rd_region_select_equal__(rd_region_type *region,
             "select by equality is only supported for integer keywords");
     const auto &kw_data = rd_kw->get_vector<int>();
     if (global_kw) {
-        for (int global_index = 0; global_index < region->grid_vol;
+        for (size_t global_index = 0; global_index < region->grid_vol;
              global_index++) {
             if (kw_data[global_index] == value)
                 region->active_mask[global_index] = select;
         }
     } else {
-        for (int active_index = 0; active_index < region->grid_active;
+        for (size_t active_index = 0; active_index < region->grid_active;
              active_index++) {
             if (kw_data[active_index] == value) {
-                int global_index = rd_grid_get_global_index1A(
+                size_t global_index = rd_grid_get_global_index1A(
                     region->parent_grid, active_index);
                 region->active_mask[global_index] = select;
             }
@@ -235,17 +241,16 @@ static void rd_region_select_bool_equal__(rd_region_type *region,
         throw std::invalid_argument(
             "select by equality is only supported for boolean keywords");
     if (global_kw) {
-        for (size_t global_index = 0;
-             global_index < static_cast<size_t>(region->grid_vol);
+        for (size_t global_index = 0; global_index < region->grid_vol;
              global_index++) {
             if (rd_kw->at<bool>(global_index) == value)
                 region->active_mask[global_index] = select;
         }
     } else {
-        for (int active_index = 0; active_index < region->grid_active;
+        for (size_t active_index = 0; active_index < region->grid_active;
              active_index++) {
             if (rd_kw->at<bool>(active_index) == value) {
-                int global_index = rd_grid_get_global_index1A(
+                size_t global_index = rd_grid_get_global_index1A(
                     region->parent_grid, active_index);
                 region->active_mask[global_index] = select;
             }
@@ -273,18 +278,18 @@ static void rd_region_select_in_interval__(rd_region_type *region,
     {
         const auto &kw_data = rd_kw->get_vector<float>();
         if (global_kw) {
-            for (int global_index = 0; global_index < region->grid_vol;
+            for (size_t global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (kw_data[global_index] >= min_value &&
                     kw_data[global_index] < max_value)
                     region->active_mask[global_index] = select;
             }
         } else {
-            for (int active_index = 0; active_index < region->grid_active;
+            for (size_t active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (kw_data[active_index] >= min_value &&
                     kw_data[active_index] < max_value) {
-                    int global_index = rd_grid_get_global_index1A(
+                    size_t global_index = rd_grid_get_global_index1A(
                         region->parent_grid, active_index);
                     region->active_mask[global_index] = select;
                 }
@@ -327,7 +332,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
         const auto &kw_data = rd_kw->get_vector<float>();
         float float_limit = limit;
         if (global_kw) {
-            for (int global_index = 0; global_index < region->grid_vol;
+            for (size_t global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (select_less) {
                     if (kw_data[global_index] < float_limit)
@@ -338,17 +343,17 @@ static void rd_region_select_with_limit__(rd_region_type *region,
                 }
             }
         } else {
-            for (int active_index = 0; active_index < region->grid_active;
+            for (size_t active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (select_less) {
                     if (kw_data[active_index] < float_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
                 } else {
                     if (kw_data[active_index] >= float_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
@@ -359,7 +364,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
         const auto &kw_data = rd_kw->get_vector<int>();
         int int_limit = (int)limit;
         if (global_kw) {
-            for (int global_index = 0; global_index < region->grid_vol;
+            for (size_t global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (select_less) {
                     if (kw_data[global_index] < int_limit)
@@ -370,17 +375,17 @@ static void rd_region_select_with_limit__(rd_region_type *region,
                 }
             }
         } else {
-            for (int active_index = 0; active_index < region->grid_active;
+            for (size_t active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (select_less) {
                     if (kw_data[active_index] < int_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
                 } else {
                     if (kw_data[active_index] > int_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
@@ -391,7 +396,7 @@ static void rd_region_select_with_limit__(rd_region_type *region,
         const auto &kw_data = rd_kw->get_vector<double>();
         double double_limit = (double)limit;
         if (global_kw) {
-            for (int global_index = 0; global_index < region->grid_vol;
+            for (size_t global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (select_less) {
                     if (kw_data[global_index] < double_limit)
@@ -402,17 +407,17 @@ static void rd_region_select_with_limit__(rd_region_type *region,
                 }
             }
         } else {
-            for (int active_index = 0; active_index < region->grid_active;
+            for (size_t active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (select_less) {
                     if (kw_data[active_index] < double_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
                 } else {
                     if (kw_data[active_index] >= double_limit) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
@@ -461,7 +466,7 @@ static void rd_region_cmp_select__(rd_region_type *region, const rd::KW *kw1,
         const auto &kw2_data = kw2->get_vector<float>();
 
         if (global_kw) {
-            for (int global_index = 0; global_index < region->grid_vol;
+            for (size_t global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (select_less) {
                     if (kw1_data[global_index] < kw2_data[global_index])
@@ -472,17 +477,17 @@ static void rd_region_cmp_select__(rd_region_type *region, const rd::KW *kw1,
                 }
             }
         } else {
-            for (int active_index = 0; active_index < region->grid_active;
+            for (size_t active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (select_less) {
                     if (kw1_data[active_index] < kw2_data[active_index]) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
                 } else {
                     if (kw1_data[active_index] >= kw2_data[active_index]) {
-                        int global_index = rd_grid_get_global_index1A(
+                        size_t global_index = rd_grid_get_global_index1A(
                             region->parent_grid, active_index);
                         region->active_mask[global_index] = select;
                     }
@@ -538,21 +543,35 @@ static void rd_region_select_from_box__(rd_region_type *region,
    Only a thin wrapper around the rd_region_select_from_box() function.
 */
 
-static void rd_region_select_from_ijkbox__(rd_region_type *region, int i1,
-                                           int i2, int j1, int j2, int k1,
-                                           int k2, bool select) {
+static void rd_region_select_from_ijkbox__(rd_region_type *region, size_t i1,
+                                           size_t i2, size_t j1, size_t j2,
+                                           size_t k1, size_t k2, bool select) {
     rd::rd_box tmp_box(region->parent_grid, i1, i2, j1, j2, k1, k2);
     rd_region_select_from_box__(region, tmp_box, select);
 }
 
-void rd_region_select_from_ijkbox(rd_region_type *region, int i1, int i2,
-                                  int j1, int j2, int k1, int k2) {
+void rd_region_select_from_ijkbox(rd_region_type *region, size_t i1, size_t i2,
+                                  size_t j1, size_t j2, size_t k1, size_t k2) {
     rd_region_select_from_ijkbox__(region, i1, i2, j1, j2, k1, k2, true);
 }
 
-void rd_region_deselect_from_ijkbox(rd_region_type *region, int i1, int i2,
-                                    int j1, int j2, int k1, int k2) {
+void rd_region_deselect_from_ijkbox(rd_region_type *region, size_t i1,
+                                    size_t i2, size_t j1, size_t j2, size_t k1,
+                                    size_t k2) {
     rd_region_select_from_ijkbox__(region, i1, i2, j1, j2, k1, k2, false);
+}
+
+/** Clamps the inclusive interval [a,b] to [0,n) and returns the half open
+    interval [lo,hi), which is empty if there is no overlap. */
+static std::pair<size_t, size_t> rd_region_clamp_interval(int a, int b,
+                                                          size_t n) {
+    if (b < 0 || n == 0)
+        return {0, 0};
+    size_t lo = a < 0 ? 0 : static_cast<size_t>(a);
+    size_t hi = std::min(static_cast<size_t>(b), n - 1) + 1;
+    if (lo >= hi)
+        return {0, 0};
+    return {lo, hi};
 }
 
 /**
@@ -568,12 +587,11 @@ static void rd_region_select_i1i2__(rd_region_type *region, int i1, int i2,
                                     bool select) {
     if (i1 > i2)
         throw std::logic_error("i1 > i2");
-    i1 = std::max(0, i1);
-    i2 = std::min(region->grid_nx - 1, i2);
-    for (int k = 0; k < region->grid_nz; k++)
-        for (int j = 0; j < region->grid_ny; j++)
-            for (int i = i1; i <= i2; i++) {
-                int global_index =
+    auto [lo, hi] = rd_region_clamp_interval(i1, i2, region->grid_nx);
+    for (size_t k = 0; k < region->grid_nz; k++)
+        for (size_t j = 0; j < region->grid_ny; j++)
+            for (size_t i = lo; i < hi; i++) {
+                size_t global_index =
                     rd_grid_get_global_index3(region->parent_grid, i, j, k);
                 region->active_mask[global_index] = select;
             }
@@ -602,12 +620,11 @@ static void rd_region_select_j1j2__(rd_region_type *region, int j1, int j2,
     if (j1 > j2)
         throw std::logic_error("j1 > j2");
 
-    j1 = std::max(0, j1);
-    j2 = std::min(region->grid_ny - 1, j2);
-    for (int k = 0; k < region->grid_nz; k++)
-        for (int j = j1; j <= j2; j++)
-            for (int i = 0; i < region->grid_nx; i++) {
-                int global_index =
+    auto [lo, hi] = rd_region_clamp_interval(j1, j2, region->grid_ny);
+    for (size_t k = 0; k < region->grid_nz; k++)
+        for (size_t j = lo; j < hi; j++)
+            for (size_t i = 0; i < region->grid_nx; i++) {
+                size_t global_index =
                     rd_grid_get_global_index3(region->parent_grid, i, j, k);
                 region->active_mask[global_index] = select;
             }
@@ -635,12 +652,11 @@ static void rd_region_select_k1k2__(rd_region_type *region, int k1, int k2,
                                     bool select) {
     if (k1 > k2)
         throw std::logic_error("k1 > k2");
-    k1 = std::max(0, k1);
-    k2 = std::min(region->grid_nz - 1, k2);
-    for (int k = k1; k <= k2; k++)
-        for (int j = 0; j < region->grid_ny; j++)
-            for (int i = 0; i < region->grid_nx; i++) {
-                int global_index =
+    auto [lo, hi] = rd_region_clamp_interval(k1, k2, region->grid_nz);
+    for (size_t k = lo; k < hi; k++)
+        for (size_t j = 0; j < region->grid_ny; j++)
+            for (size_t i = 0; i < region->grid_nx; i++) {
+                size_t global_index =
                     rd_grid_get_global_index3(region->parent_grid, i, j, k);
                 region->active_mask[global_index] = select;
             }
@@ -664,7 +680,7 @@ void rd_region_deselect_k1k2(rd_region_type *region, int k1, int k2) {
 static void rd_region_select_from_depth__(rd_region_type *region,
                                           double depth_limit, bool select_deep,
                                           bool select) {
-    for (int global_index = 0; global_index < region->grid_vol;
+    for (size_t global_index = 0; global_index < region->grid_vol;
          global_index++) {
         double cell_depth =
             rd_grid_get_cdepth1(region->parent_grid, global_index);
@@ -702,7 +718,7 @@ void rd_region_deselect_deep_cells(rd_region_type *region, double depth_limit) {
 static void rd_region_select_from_volume__(rd_region_type *region,
                                            double volum_limit,
                                            bool select_small, bool select) {
-    for (int global_index = 0; global_index < region->grid_vol;
+    for (size_t global_index = 0; global_index < region->grid_vol;
          global_index++) {
         double cell_size =
             rd_grid_get_cell_volume1(region->parent_grid, global_index);
@@ -741,7 +757,7 @@ void rd_region_deselect_large_cells(rd_region_type *rd_region,
 
 static void rd_region_select_from_dz__(rd_region_type *region, double dz_limit,
                                        bool select_thin, bool select) {
-    for (int global_index = 0; global_index < region->grid_vol;
+    for (size_t global_index = 0; global_index < region->grid_vol;
          global_index++) {
         double cell_dz =
             rd_grid_get_cell_thickness1(region->parent_grid, global_index);
@@ -777,7 +793,7 @@ void rd_region_deselect_thick_cells(rd_region_type *rd_region,
 
 static void rd_region_select_active_cells__(rd_region_type *rd_region,
                                             bool select_active, bool select) {
-    for (int global_index = 0; global_index < rd_region->grid_vol;
+    for (size_t global_index = 0; global_index < rd_region->grid_vol;
          global_index++) {
         if (select_active) {
             if (rd_grid_get_active_index1(rd_region->parent_grid,
@@ -823,7 +839,7 @@ static void rd_region_plane_select__(rd_region_type *region, const double n[3],
     /**
      Plane: ax + by + cz + d = 0
   */
-    for (int global_index = 0; global_index < region->grid_vol;
+    for (size_t global_index = 0; global_index < region->grid_vol;
          global_index++) {
         double x, y, z;
         double D;
@@ -880,22 +896,20 @@ static void rd_region_polygon_select__(rd_region_type *region,
                                        const rd::Polygon *polygon,
                                        bool select_inside, bool select) {
 
-    const int define_k = 0; // The k-level where the polygon is checked.
-    const int k1 = 0;       // Selection range in k
-    const int k2 = region->grid_nz;
+    const size_t define_k = 0; // The k-level where the polygon is checked.
 
-    for (int i = 0; i < region->grid_nx; i++) {
-        for (int j = 0; j < region->grid_ny; j++) {
+    for (size_t i = 0; i < region->grid_nx; i++) {
+        for (size_t j = 0; j < region->grid_ny; j++) {
             double x, y, z;
             bool inside;
-            int global_index =
+            size_t global_index =
                 rd_grid_get_global_index3(region->parent_grid, i, j, define_k);
 
             rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
             inside = polygon->contains_point(x, y);
 
             if (select_inside == inside) {
-                for (int k = k1; k < k2; k++) {
+                for (size_t k = 0; k < region->grid_nz; k++) {
                     global_index =
                         rd_grid_get_global_index3(region->parent_grid, i, j, k);
                     region->active_mask[global_index] = select;
@@ -926,11 +940,11 @@ void rd_region_deselect_outside_polygon(rd_region_type *region,
 }
 
 static void rd_region_select_from_layer__(rd_region_type *region,
-                                          const layer_type *layer, int k,
+                                          const layer_type *layer, size_t k,
                                           int layer_value, bool select) {
     auto cells = layer_cells_equal(layer, layer_value);
     for (const auto &[i, j] : cells) {
-        int global_index =
+        size_t global_index =
             rd_grid_get_global_index3(region->parent_grid, i, j, k);
         region->active_mask[global_index] = select;
     }
@@ -939,7 +953,7 @@ static void rd_region_select_from_layer__(rd_region_type *region,
 }
 
 void rd_region_select_from_layer(rd_region_type *region,
-                                 const layer_type *layer, int k,
+                                 const layer_type *layer, size_t k,
                                  int layer_value) {
     rd_region_select_from_layer__(region, layer, k, layer_value, true);
 }
@@ -970,21 +984,21 @@ void rd_region_invert_selection(rd_region_type *region) {
    ijk have zero offset.
 */
 
-bool rd_region_contains_ijk(const rd_region_type *rd_region, int i, int j,
-                            int k) {
-    int global_index =
+bool rd_region_contains_ijk(const rd_region_type *rd_region, size_t i, size_t j,
+                            size_t k) {
+    size_t global_index =
         rd_grid_get_global_index3(rd_region->parent_grid, i, j, k);
     return rd_region->active_mask[global_index];
 }
 
 bool rd_region_contains_global(const rd_region_type *rd_region,
-                               int global_index) {
+                               size_t global_index) {
     return rd_region->active_mask[global_index];
 }
 
 bool rd_region_contains_active(const rd_region_type *rd_region,
-                               int active_index) {
-    int global_index =
+                               size_t active_index) {
+    size_t global_index =
         rd_grid_get_global_index1A(rd_region->parent_grid, active_index);
     return rd_region->active_mask[global_index];
 }
@@ -1047,12 +1061,12 @@ void rd_region_subtract(rd_region_type *region,
         throw std::invalid_argument("The two regions do not share grid");
 }
 
-const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
-                                                    const rd::KW *rd_kw,
-                                                    bool force_active) {
-    int kw_size = rd::kw_get_size(rd_kw);
-    int grid_active = rd_grid_get_active_size(rd_region->parent_grid);
-    int grid_global = rd_grid_get_global_size(rd_region->parent_grid);
+const std::vector<size_t> &
+rd_region_get_kw_index_list(rd_region_type *rd_region, const rd::KW *rd_kw,
+                            bool force_active) {
+    size_t kw_size = rd_kw->size();
+    size_t grid_active = rd_grid_get_active_size(rd_region->parent_grid);
+    size_t grid_global = rd_grid_get_global_size(rd_region->parent_grid);
 
     if (kw_size == grid_active)
         return rd_region_get_active_list(rd_region);
@@ -1069,7 +1083,7 @@ const std::vector<int> &rd_region_get_kw_index_list(rd_region_type *rd_region,
 
 void rd_region_kw_iadd(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *delta_kw, bool force_active) {
-    const std::vector<int> &index_set =
+    const std::vector<size_t> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     if (!rd_kw->size_and_numeric_type_equal(delta_kw))
         throw std::invalid_argument("type/size  mismatch");
@@ -1091,7 +1105,7 @@ void rd_region_kw_iadd(rd_region_type *rd_region, rd::KW *rd_kw,
 
 void rd_region_kw_idiv(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *div_kw, bool force_active) {
-    const std::vector<int> &index_set =
+    const std::vector<size_t> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     if (!rd_kw->size_and_numeric_type_equal(div_kw))
         throw std::invalid_argument("type/size  mismatch");
@@ -1113,7 +1127,7 @@ void rd_region_kw_idiv(rd_region_type *rd_region, rd::KW *rd_kw,
 
 void rd_region_kw_imul(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *mul_kw, bool force_active) {
-    const std::vector<int> &index_set =
+    const std::vector<size_t> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     if (!rd_kw->size_and_numeric_type_equal(mul_kw))
         throw std::invalid_argument("type/size  mismatch");
@@ -1135,7 +1149,7 @@ void rd_region_kw_imul(rd_region_type *rd_region, rd::KW *rd_kw,
 
 void rd_region_kw_isub(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *delta_kw, bool force_active) {
-    const std::vector<int> &index_set =
+    const std::vector<size_t> &index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     if (!rd_kw->size_and_numeric_type_equal(delta_kw))
         throw std::invalid_argument("type/size  mismatch");
@@ -1157,7 +1171,7 @@ void rd_region_kw_isub(rd_region_type *rd_region, rd::KW *rd_kw,
 
 void rd_region_kw_copy(rd_region_type *rd_region, rd::KW *rd_kw,
                        const rd::KW *src_kw, bool force_active) {
-    const std::vector<int> &target_index =
+    const std::vector<size_t> &target_index =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     if (!rd_kw->size_and_type_equal(src_kw))
         throw std::invalid_argument("type/size  mismatch");

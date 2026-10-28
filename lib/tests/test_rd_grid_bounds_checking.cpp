@@ -3,6 +3,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_contains.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <cstddef>
 #include <filesystem>
 #include <resdata/rd_grid.hpp>
 #include <vector>
@@ -58,8 +59,8 @@ TEST_CASE_METHOD(Tmpdir, "Large nncg raises") {
 
 namespace {
 
-void write_egrid_with_sized_mapaxes(const fs::path &filename, int nx, int ny,
-                                    int nz, int mapaxes_size) {
+void write_egrid_with_sized_mapaxes(const fs::path &filename, size_t nx,
+                                    size_t ny, size_t nz, size_t mapaxes_size) {
     auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto fortio = make_fortio_writer(filename);
 
@@ -71,8 +72,8 @@ void write_egrid_with_sized_mapaxes(const fs::path &filename, int nx, int ny,
     write_empty_kw(fortio, ENDGRID_KW);
 }
 
-void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
-                                    int nz, int corsnum_size) {
+void write_egrid_with_sized_corsnum(const fs::path &filename, size_t nx,
+                                    size_t ny, size_t nz, size_t corsnum_size) {
     auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto fortio = make_fortio_writer(filename);
 
@@ -88,7 +89,7 @@ void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
 
 TEST_CASE_METHOD(Tmpdir, "Wrong size MAPAXES raises for EGRID") {
     auto filename = dirname / "BAD_MAPAXES.EGRID";
-    int bad_size = 7;
+    size_t bad_size = 7;
     write_egrid_with_sized_mapaxes(filename, 2, 2, 2, bad_size);
 
     REQUIRE_THROWS_WITH(read_grid(filename),
@@ -97,8 +98,8 @@ TEST_CASE_METHOD(Tmpdir, "Wrong size MAPAXES raises for EGRID") {
 
 TEST_CASE_METHOD(Tmpdir, "Wrong size CORSNUM raises for EGRID") {
     auto filename = dirname / "BAD_CORSNUM.EGRID";
-    const int nx = 2, ny = 2, nz = 2;
-    int bad_size = 7;
+    const size_t nx = 2, ny = 2, nz = 2;
+    size_t bad_size = 7;
     write_egrid_with_sized_corsnum(filename, nx, ny, nz, bad_size);
 
     REQUIRE_THROWS_WITH(read_grid(filename),

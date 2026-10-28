@@ -12,17 +12,26 @@ import numpy as np
 import pytest
 from hypothesis import given
 from resdata import ResDataType, UnitSystem
-from resdata.grid import Grid
+from resdata.grid import Grid, _grid
 from resdata.grid import GridGenerator as GridGen
-from resdata.resfile import ResdataFile, ResdataKW
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
 
 from ._grid_fixtures import (
+    UNIT_CELL_CORNERS,
+    _write_grid_dimens,
+    _write_grid_gridunit,
+    _write_grid_mapunits,
+    _write_grid_radial_false,
     write_dual_porosity_egrid_with_lgr,
     write_dual_porosity_grid_file,
+    write_egrid_dual_porosity,
     write_egrid_with_gridhead_dims,
+    write_egrid_with_single_lgr,
+    write_float_kw,
     write_grid_file_with_lgrs,
+    write_int_kw,
 )
 
 # This dict is used to verify that corners are mapped to the correct
@@ -1291,3 +1300,90 @@ def test_that_saving_egrid_after_loading_with_apply_mapaxes_false_keeps_mapaxes(
     loaded.save_EGRID(str(resaved_file))
 
     assert "MAPAXES" in resaved_file.read_text()
+
+
+def _single_cell_grid_with_lgr(tmp_path, **kwargs):
+    filename = tmp_path / "CASE.EGRID"
+    write_egrid_with_single_lgr(filename, 2, 2, 1, 1, 1, 1, 0, 0, 0, "LGR1", **kwargs)
+    return filename
+
+
+@pytest.mark.parametrize("host_i", [-1, -5])
+def test_that_egrid_lgr_with_non_positive_hostnum_raises(tmp_path, host_i):
+    # host_i=-1 gives HOSTNUM=0 and host_i=-5 gives HOSTNUM=-4
+    filename = tmp_path / "BAD_HOSTNUM.EGRID"
+    write_egrid_with_single_lgr(filename, 2, 2, 1, 1, 1, 1, host_i, 0, 0, "LGR1")
+    with pytest.raises(ValueError, match="HOSTNUM: host cell must be positive"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("bad", [(0, 1), (1, 0), (-3, 1)])
+def test_that_egrid_nnc_with_non_positive_cell_number_raises(tmp_path, bad):
+    filename = _single_cell_grid_with_lgr(tmp_path, nncg=[bad[0]], nncl=[bad[1]])
+    with pytest.raises(ValueError, match="cell numbers are 1-based"):
+        Grid(str(filename))
+
+
+def test_that_egrid_nnc_with_positive_cell_numbers_loads(tmp_path):
+    filename = _single_cell_grid_with_lgr(tmp_path, nncg=[1], nncl=[1])
+    assert Grid(str(filename)).get_num_lgr() == 1
+
+
+@pytest.mark.parametrize("bad", [(0, 1), (1, 0), (-3, 1)])
+def test_that_dual_porosity_egrid_nnc_with_non_positive_cell_number_raises(
+    tmp_path, bad
+):
+    filename = tmp_path / "BAD_NNC.EGRID"
+    write_egrid_dual_porosity(filename, 2, 1, 1, [3, 3], nnc1=[bad[0]], nnc2=[bad[1]])
+    with pytest.raises(ValueError, match="cell numbers are 1-based"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("coords", [[0, 1, 1], [1, 0, 1], [1, 1, 0], [-1, 1, 1]])
+def test_that_grid_file_with_non_positive_coords_index_raises(tmp_path, coords):
+    filename = tmp_path / "BAD_COORDS.GRID"
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_grid_dimens(f, 1, 1, 1)
+        _write_grid_mapunits(f)
+        _write_grid_gridunit(f)
+        _write_grid_radial_false(f)
+        write_int_kw(f, "COORDS", [*coords, 1, 1, 0, 0])
+        write_float_kw(f, "CORNERS", list(UNIT_CELL_CORNERS))
+    with pytest.raises(ValueError, match="invalid COORDS cell index"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize(
+    "func_name", ["_export_volume", "_export_position", "_export_corners"]
+)
+def test_that_exporting_with_negative_global_index_raises(func_name):
+    grid = GridGen.create_rectangular((2, 2, 2), (1, 1, 1), None)
+    index = np.array([0, -1], dtype=np.int32)
+    with pytest.raises(ValueError, match="Grid index must be non-negative, got -1"):
+        getattr(_grid, func_name)(grid, index)
+
+
+def test_that_exporting_with_non_negative_global_index_succeeds():
+    grid = GridGen.create_rectangular((2, 2, 2), (1, 1, 1), None)
+    index = np.array([0, 7], dtype=np.int32)
+    assert _grid._export_volume(grid, index).tolist() == [1.0, 1.0]
+    assert _grid._export_position(grid, index).shape == (2, 3)
+    assert _grid._export_corners(grid, index).shape == (2, 24)
+
+
+def test_that_get_cell_volume_with_negative_index_raises_type_error():
+    grid = GridGen.create_rectangular((2, 2, 2), (1, 1, 1), None)
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        _grid._get_cell_volume(grid, -1)
+
+
+@pytest.mark.parametrize("dims", [(-1, 1, 1), (1, -1, 1), (1, 1, -1)])
+def test_that_create_rectangular_with_negative_dimensions_raises_type_error(dims):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        GridGen.create_rectangular(dims, (1, 1, 1), None)
+
+
+@pytest.mark.parametrize("dims", [(-1, 1, 1), (1, -1, 1), (1, 1, -1)])
+def test_that_grdecl_create_binding_with_negative_dimensions_raises_type_error(dims):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
+        _grid._grdecl_create(*dims, None, None, None, None)

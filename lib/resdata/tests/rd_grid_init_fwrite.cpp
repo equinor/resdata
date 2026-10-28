@@ -19,7 +19,7 @@ static void rd_grid_fwrite_depth(rd_grid_type *grid, ERT::FortIO &init_file,
     rd::KW depth_kw{"DEPTH", rd_grid_get_nactive(grid), RD_FLOAT};
     {
         std::vector<float> &depth_ptr = depth_kw.get_vector<float>();
-        for (int i = 0; i < rd_grid_get_nactive(grid); i++)
+        for (size_t i = 0; i < rd_grid_get_nactive(grid); i++)
             depth_ptr[i] = static_cast<float>(rd_grid_get_cdepth1A(grid, i));
     }
     depth_kw.scale<float>(rd_grid_output_scaling(grid, output_unit));
@@ -36,9 +36,8 @@ void test_write_depth(rd_grid_type *grid) {
         auto init_file = rd::File::open("INIT");
         rd::KW *depth = init_file->get_kw("DEPTH", 0);
 
-        test_assert_int_equal(rd::kw_get_size(depth),
-                              rd_grid_get_nactive(grid));
-        for (int i = 0; i < rd_grid_get_nactive(grid); i++)
+        test_assert_size_t_equal(depth->size(), rd_grid_get_nactive(grid));
+        for (size_t i = 0; i < rd_grid_get_nactive(grid); i++)
             test_assert_double_equal(depth->as_double(i),
                                      rd_grid_get_cdepth1A(grid, i));
     }
@@ -56,7 +55,7 @@ static void rd_grid_fwrite_dims(const rd_grid_type *grid,
             std::vector<float> &dy_ptr = dy.get_vector<float>();
             std::vector<float> &dz_ptr = dz.get_vector<float>();
 
-            for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
+            for (size_t i = 0; i < rd_grid_get_nactive(grid); i++) {
                 dx_ptr[i] = static_cast<float>(rd_grid_get_cell_dx1A(grid, i));
                 dy_ptr[i] = static_cast<float>(rd_grid_get_cell_dy1A(grid, i));
                 dz_ptr[i] = static_cast<float>(rd_grid_get_cell_dz1A(grid, i));
@@ -87,10 +86,10 @@ void test_write_dims(const rd_grid_type *grid) {
         rd::KW *DY = init_file->get_kw("DY", 0);
         rd::KW *DZ = init_file->get_kw("DZ", 0);
 
-        test_assert_int_equal(rd::kw_get_size(DX), rd_grid_get_nactive(grid));
-        test_assert_int_equal(rd::kw_get_size(DY), rd_grid_get_nactive(grid));
-        test_assert_int_equal(rd::kw_get_size(DZ), rd_grid_get_nactive(grid));
-        for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
+        test_assert_size_t_equal(DX->size(), rd_grid_get_nactive(grid));
+        test_assert_size_t_equal(DY->size(), rd_grid_get_nactive(grid));
+        test_assert_size_t_equal(DZ->size(), rd_grid_get_nactive(grid));
+        for (size_t i = 0; i < rd_grid_get_nactive(grid); i++) {
             test_assert_double_equal(DX->as_double(i),
                                      rd_grid_get_cell_dx1A(grid, i));
             test_assert_double_equal(DY->as_double(i),
@@ -102,9 +101,9 @@ void test_write_dims(const rd_grid_type *grid) {
 }
 
 rd_grid_ptr create_grid() {
-    int nx = 10;
-    int ny = 10;
-    int nz = 8;
+    size_t nx = 10;
+    size_t ny = 10;
+    size_t nz = 8;
     std::vector<int> actnum(nx * ny * nz, 1);
 
     return make_rectangular_grid(nx, ny, nz, 1, 1, 1, actnum.data());
