@@ -156,8 +156,6 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
 void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
                           UnitSystem output_unit);
 
-int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c);
-
 std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
 std::unique_ptr<rd::KW> rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid);

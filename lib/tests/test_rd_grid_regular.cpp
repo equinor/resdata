@@ -23,6 +23,7 @@
 
 #include "ert/util/util.hpp"
 #include "grid_fixtures.hpp"
+#include "detail/resdata/rd_grid_zcorn.hpp"
 #include "resdata/nnc_info.hpp"
 #include "resdata/nnc_vector.hpp"
 #include "resdata/rd_type.hpp"
@@ -57,8 +58,8 @@ TEST_CASE("rd_grid_alloc_GRDECL_kw with explicit ACTNUM", "[unittest]") {
             set_pillar(&coord_kw, (i + j * nx), fi, fj, -1, fi, fj, -1);
             for (int k = 0; k < nz; k++) {
                 for (int c = 0; c < 4; c++) {
-                    size_t zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
-                    size_t zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
+                    size_t zi1 = rd::grid_zcorn_index(nx, ny, i, j, k, c);
+                    size_t zi2 = rd::grid_zcorn_index(nx, ny, i, j, k, c + 4);
                     zcorn_data[zi1] = static_cast<float>(k);
                     zcorn_data[zi2] = static_cast<float>(k + 1);
                 }

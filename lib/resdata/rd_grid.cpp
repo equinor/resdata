@@ -1899,30 +1899,6 @@ static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
     }
 }
 
-/**
-  This function will calculate the index of a corner in the the zcorn
-  array.  The corner is given with i,j,k indices of the cell, and
-  corner number [0...8). The function is mainly a convenience function
-  for testing, and should not be used in a tight inner loop unrolling
-  the zcorn vector.
-*/
-int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c) {
-    int zcorn_index = k * 8 * nx * ny + j * 4 * nx + 2 * i;
-    if ((c % 2) == 1)
-        zcorn_index += 1;
-
-    if ((c % 4) == 2)
-        zcorn_index += 2 * nx;
-
-    if ((c % 4) == 3)
-        zcorn_index += 2 * nx;
-
-    if (c >= 4)
-        zcorn_index += 4 * nx * ny;
-
-    return zcorn_index;
-}
-
 static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
                                             const float *zcorn,
                                             const float *coord,

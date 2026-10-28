@@ -7,6 +7,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include "detail/resdata/layer_cxx.hpp"
+#include "detail/resdata/rd_grid_zcorn.hpp"
 #include "resdata/rd_type.hpp"
 
 #include <utility>
@@ -49,10 +50,9 @@ static rd_grid_ptr generate_coordkw_grid(
 
             for (int k = 0; k < num_z; k++) {
                 for (int c = 0; c < 4; c++) {
-                    size_t zi1 =
-                        rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
+                    size_t zi1 = rd::grid_zcorn_index(num_x, num_y, i, j, k, c);
                     size_t zi2 =
-                        rd_grid_zcorn_index__(num_x, num_y, i, j, k, c + 4);
+                        rd::grid_zcorn_index(num_x, num_y, i, j, k, c + 4);
 
                     double z1 = static_cast<double>(k);
                     double z2 = static_cast<double>(k + 1);
@@ -65,7 +65,7 @@ static rd_grid_ptr generate_coordkw_grid(
     }
 
     for (const auto &[i, j, k, c, z] : z_vector) {
-        auto index = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
+        auto index = rd::grid_zcorn_index(num_x, num_y, i, j, k, c);
         zcorn_data[index] = static_cast<float>(z);
     }
 
