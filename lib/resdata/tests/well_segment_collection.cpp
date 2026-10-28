@@ -1,3 +1,4 @@
+#include <climits>
 #include <cstdlib>
 
 #include <ert/util/test_util.hpp>
@@ -64,8 +65,26 @@ int main(int argc, char **argv) {
         test_assert_ptr_equal(well_segment_collection_get(sc, 89), ws);
     }
 
-    free(rseg_data);
+    test_assert_false(well_segment_collection_has_segment(sc, -5));
+    test_assert_NULL(well_segment_collection_get(sc, -5));
+    test_assert_NULL(well_segment_collection_get(sc, INT_MIN));
+
     well_segment_collection_free(sc);
+
+    /* Outlet ids are read from file; ids that match no segment (negative or
+       otherwise) must leave the segment unlinked rather than crash. */
+    for (int outlet_segment_id : {-5, INT_MIN, 1000}) {
+        well_segment_collection_type *linked_sc =
+            well_segment_collection_alloc();
+        well_segment_type *ws =
+            well_segment_alloc(1, outlet_segment_id, 2, rseg_data);
+        well_segment_collection_add(linked_sc, ws);
+        well_segment_collection_link(linked_sc);
+        test_assert_NULL(well_segment_get_outlet(ws));
+        well_segment_collection_free(linked_sc);
+    }
+
+    free(rseg_data);
 
     exit(0);
 }
