@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -725,12 +726,11 @@ rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
                                           &time_index2, &weight1, &weight2);
     std::vector<double> results(num_keywords, missing_value);
     for (size_t i = 0; i < num_keywords; i++) {
-        if (rd_sum_vector_iget_valid(keylist, i)) {
-            size_t params_index = rd_sum_vector_iget_param_index(keylist, i);
+        if (auto params_index = rd_sum_vector_iget_param_index(keylist, i)) {
             bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
             double value = rd_sum_data_vector_iget(
-                data, sim_time, params_index, is_rate, time_index1, time_index2,
-                weight1, weight2);
+                data, sim_time, *params_index, is_rate, time_index1,
+                time_index2, weight1, weight2);
             results[i] = value;
         }
     }
@@ -981,29 +981,37 @@ void rd_sum_data_init_double_frame_interp(
         time_t sim_time = time_points[time_index];
         if (sim_time < start_time) {
             for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
                 size_t data_index =
                     key_index * key_stride + time_index * time_stride;
+                auto param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                if (!param_index) {
+                    output_data[data_index] = std::nan("");
+                    continue;
+                }
                 bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
                 if (is_rate)
                     output_data[data_index] = 0;
                 else
                     output_data[data_index] =
-                        rd_sum_data_iget_first_value(data, param_index);
+                        rd_sum_data_iget_first_value(data, *param_index);
             }
         } else if (sim_time > end_time) {
             for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
                 size_t data_index =
                     key_index * key_stride + time_index * time_stride;
+                auto param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                if (!param_index) {
+                    output_data[data_index] = std::nan("");
+                    continue;
+                }
                 bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
                 if (is_rate)
                     output_data[data_index] = 0;
                 else
                     output_data[data_index] =
-                        rd_sum_data_iget_last_value(data, param_index);
+                        rd_sum_data_iget_last_value(data, *param_index);
             }
         } else {
             double weight1, weight2;
@@ -1013,13 +1021,17 @@ void rd_sum_data_init_double_frame_interp(
                 data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
 
             for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
                 size_t data_index =
                     key_index * key_stride + time_index * time_stride;
+                auto param_index =
+                    rd_sum_vector_iget_param_index(keywords, key_index);
+                if (!param_index) {
+                    output_data[data_index] = std::nan("");
+                    continue;
+                }
                 bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
                 double value = rd_sum_data_vector_iget(
-                    data, sim_time, param_index, is_rate, time_index1,
+                    data, sim_time, *param_index, is_rate, time_index1,
                     time_index2, weight1, weight2);
                 output_data[data_index] = value;
             }
