@@ -336,8 +336,9 @@ namespace rd {
  * the extension. The extension is lower cased whenever the base name is, so
  * that a case named 'simple' gets 'simple.egrid'.
  */
+template <typename ReportNr>
 fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
-                  int report_nr) {
+                  ReportNr report_nr) {
     const std::string base = casepath.filename().string();
 
     std::string ext;
@@ -392,6 +393,9 @@ fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
 
     return casepath.parent_path() / (base + "." + ext);
 }
+
+template fs::path filename<int>(fs::path, FileType, bool, int);
+template fs::path filename<size_t>(fs::path, FileType, bool, size_t);
 } // namespace rd
 /**
    This function assumes that:
