@@ -1,4 +1,5 @@
 
+#include <unordered_map>
 #include <vector>
 
 #include <ert/util/util.hpp>
@@ -15,7 +16,9 @@
 #include <resdata/well/well_branch_collection.hpp>
 
 struct well_segment_collection_struct {
-    std::vector<int> segment_index_map;
+    /* Segment ids originate from the ISEG/ICON keywords and are signed values
+       read from file, so they are used as a key rather than as an index. */
+    std::unordered_map<int, int> segment_index_map;
     std::vector<well_segment_type *> __segment_storage;
 };
 
@@ -39,23 +42,25 @@ int well_segment_collection_get_size(
     return segment_collection->__segment_storage.size();
 }
 
+static int
+well_segment_collection_lookup_index(const well_segment_collection_type *c,
+                                     int segment_id) {
+    auto iter = c->segment_index_map.find(segment_id);
+    return iter == c->segment_index_map.end() ? -1 : iter->second;
+}
+
 void well_segment_collection_add(
     well_segment_collection_type *segment_collection,
     well_segment_type *segment) {
     int segment_id = well_segment_get_id(segment);
-    int current_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        current_index = segment_collection->segment_index_map[segment_id];
+    int current_index =
+        well_segment_collection_lookup_index(segment_collection, segment_id);
     if (current_index >= 0) {
         well_segment_free(segment_collection->__segment_storage[current_index]);
         segment_collection->__segment_storage[current_index] = segment;
     } else {
         int new_index = segment_collection->__segment_storage.size();
         segment_collection->__segment_storage.push_back(segment);
-        if (segment_id >=
-            static_cast<int>(segment_collection->segment_index_map.size()))
-            segment_collection->segment_index_map.resize(segment_id + 1, -1);
         segment_collection->segment_index_map[segment_id] = new_index;
     }
 }
@@ -67,10 +72,8 @@ well_segment_type *well_segment_collection_iget(
 
 well_segment_type *well_segment_collection_get(
     const well_segment_collection_type *segment_collection, int segment_id) {
-    int internal_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        internal_index = segment_collection->segment_index_map[segment_id];
+    int internal_index =
+        well_segment_collection_lookup_index(segment_collection, segment_id);
     if (internal_index >= 0)
         return well_segment_collection_iget(segment_collection, internal_index);
     else
@@ -79,10 +82,8 @@ well_segment_type *well_segment_collection_get(
 
 bool well_segment_collection_has_segment(
     const well_segment_collection_type *segment_collection, int segment_id) {
-    int internal_index = -1;
-    if (segment_id <
-        static_cast<int>(segment_collection->segment_index_map.size()))
-        internal_index = segment_collection->segment_index_map[segment_id];
+    int internal_index =
+        well_segment_collection_lookup_index(segment_collection, segment_id);
     if (internal_index >= 0)
         return true;
     else
@@ -150,7 +151,8 @@ void well_segment_collection_add_connections(
             int segment_id = well_conn_get_segment_id(conn);
             well_segment_type *segment =
                 well_segment_collection_get(segment_collection, segment_id);
-            well_segment_add_connection(segment, grid_name, conn);
+            if (segment)
+                well_segment_add_connection(segment, grid_name, conn);
         }
     }
 }
