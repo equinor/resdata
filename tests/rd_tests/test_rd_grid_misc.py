@@ -9,9 +9,11 @@ from resdata.grid import Grid
 from resdata.resfile import ResdataKW
 
 from ._grid_fixtures import (
+    UNIT_CELL_CORNERS,
     load_egrid_with_single_lgr,
     make_rectangular_grid,
     write_egrid_with_single_lgr,
+    write_grid_file_with_cell_keywords,
 )
 
 
@@ -279,4 +281,22 @@ def test_that_mapaxes_with_wrong_size_raises_when_loading_egrid(tmp_path):
     )
 
     with pytest.raises(ValueError, match="MAPAXES"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize(
+    "coords, corners, keyword",
+    [
+        ([1, 1, 1, 1, 1], [0.0], "CORNERS"),
+        ([1, 1, 1, 1, 1], list(UNIT_CELL_CORNERS) + [0.0], "CORNERS"),
+        ([1, 1], list(UNIT_CELL_CORNERS), "COORDS"),
+    ],
+)
+def test_that_grid_file_with_wrongly_sized_cell_keywords_is_rejected(
+    tmp_path, coords, corners, keyword
+):
+    filename = tmp_path / "BAD_CELL.GRID"
+    write_grid_file_with_cell_keywords(filename, coords, corners)
+
+    with pytest.raises(ValueError, match=f"Invalid size of {keyword}"):
         Grid(str(filename))

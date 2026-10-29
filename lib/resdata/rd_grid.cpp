@@ -2753,6 +2753,22 @@ static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
         const rd::KW *corners_kw =
             rd_file->get_kw(CORNERS_KW, index + cell_offset);
 
+        if (coords_kw->size() != 4 && coords_kw->size() != 5 &&
+            coords_kw->size() != 7)
+            throw std::invalid_argument(
+                fmt::format("Invalid size of COORDS keyword = {}, expected "
+                            "4, 5 or 7",
+                            coords_kw->size()));
+        if (coords_size != -1 &&
+            static_cast<size_t>(coords_size) != coords_kw->size())
+            throw std::invalid_argument(
+                "COORDS keywords of different sizes in GRID file");
+        if (corners_kw->size() != 24)
+            throw std::invalid_argument(
+                fmt::format("Invalid size of CORNERS keyword = {}, expected "
+                            "24",
+                            corners_kw->size()));
+
         coords[index] = coords_kw->get_vector<int>().data();
         corners[index] = corners_kw->get_vector<float>().data();
         coords_size = rd::kw_get_size(coords_kw);
