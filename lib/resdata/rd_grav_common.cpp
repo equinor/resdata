@@ -1,4 +1,7 @@
 #include <cstdlib>
+#include <stdexcept>
+
+#include <fmt/format.h>
 #include <cmath>
 
 #include <ert/util/util.hpp>
@@ -18,6 +21,16 @@
 
 bool *rd_grav_common_alloc_aquifer_cell(const rd::grid_cache &grid_cache,
                                         const rd::File *init_file) {
+    const rd::KW *aquifer_kw = nullptr;
+    if (init_file->has_kw(AQUIFER_KW)) {
+        aquifer_kw = init_file->get_kw(AQUIFER_KW, 0);
+        if (aquifer_kw->size() != grid_cache.size())
+            throw std::invalid_argument(
+                fmt::format("{} keyword has {} elements, but the grid has {} "
+                            "active cells",
+                            AQUIFER_KW, aquifer_kw->size(), grid_cache.size()));
+    }
+
     bool *aquifer_cell =
         (bool *)util_calloc(grid_cache.size(), sizeof *aquifer_cell);
 
@@ -25,8 +38,7 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::grid_cache &grid_cache,
          active_index++)
         aquifer_cell[active_index] = false;
 
-    if (init_file->has_kw(AQUIFER_KW)) {
-        rd::KW *aquifer_kw = init_file->get_kw(AQUIFER_KW, 0);
+    if (aquifer_kw) {
         const std::vector<int> &aquifer_data = aquifer_kw->get_vector<int>();
 
         for (size_t active_index = 0; active_index < grid_cache.size();
