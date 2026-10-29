@@ -552,15 +552,19 @@ void layer_add_interp_barrier(layer_type *layer, size_t c1, size_t c2) {
         size_t c = c1;
 
         while (c != c2) {
-            double dx =
-                distance_to_line(a, -1, b, i_increasing ? i + 1 : i - 1, j);
-            double dy =
-                distance_to_line(a, -1, b, i, j_increasing ? j + 1 : j - 1);
+            // The walk never leaves the box spanned by (i1, j1) and (i2, j2).
+            const size_t next_i = i == i2 ? i : (i_increasing ? i + 1 : i - 1);
+            const size_t next_j = j == j2 ? j : (j_increasing ? j + 1 : j - 1);
 
-            if (dx <= dy)
-                i = i_increasing ? i + 1 : i - 1;
+            const bool step_i =
+                next_j == j ||
+                (next_i != i && distance_to_line(a, -1, b, next_i, j) <=
+                                    distance_to_line(a, -1, b, i, next_j));
+
+            if (step_i)
+                i = next_i;
             else
-                j = j_increasing ? j + 1 : j - 1;
+                j = next_j;
 
             layer_add_barrier(layer, c, i + j * dimx);
             c = i + j * dimx;
