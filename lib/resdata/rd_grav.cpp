@@ -86,11 +86,12 @@ struct rd_grav_survey_struct {
     calculating the gravimetric response from time lapse ECLIPSE
     simulations. */
 struct rd_grav_struct {
-    const rd::File *
-        init_file; /* The init file - a shared reference owned by calling scope. */
-    rd::grid_cache *
-        grid_cache; /* An internal specialized structure to facilitate fast grid lookup. */
-    bool *aquifer_cell; /* Numerical aquifer cells should be ignored. */
+    const rd::File *init_file =
+        nullptr; /* The init file - a shared reference owned by calling scope. */
+    rd::grid_cache *grid_cache =
+        nullptr; /* An internal specialized structure to facilitate fast grid lookup. */
+    bool *aquifer_cell =
+        nullptr; /* Numerical aquifer cells should be ignored. */
 
     std::unordered_map<std::string, std::unique_ptr<rd_grav_survey_struct>>
         surveys;
@@ -556,7 +557,8 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
 */
 
 rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid, const rd::File *init_file) {
-    auto rd_grav = std::make_unique<rd_grav_type>();
+    std::unique_ptr<rd_grav_type, decltype(&rd_grav_free)> rd_grav{
+        new rd_grav_type(), &rd_grav_free};
 
     rd_grav->init_file = init_file;
     rd_grav->grid_cache = new rd::grid_cache(rd_grid);

@@ -526,3 +526,15 @@ class ResdataGravTest(ResdataTest):
                 match=r"RPORV.*elements.*active cells",
             ):
                 grav.add_survey_RPORV("rporv", restart_view)
+
+    def test_that_undersized_aquifer_keyword_raises(self):
+        aquifer = ResdataKW(
+            "AQUIFERN", self.grid.get_num_active() - 1, ResDataType.RD_INT
+        )
+        aquifer.assign(0)
+        kws = [self._float_kw(name) for name in ["PORO", "PORV", "RPORV"]]
+
+        tmpdir = self.tmp_path_factory.mktemp("grav_undersized_aquifer", numbered=True)
+        with self.monkeypatch.context() as mp:
+            with pytest.raises(ValueError, match=r"AQUIFERN.*active cells"):
+                self._all_phase_grav(tmpdir, mp, kws, init_kws=[aquifer])
