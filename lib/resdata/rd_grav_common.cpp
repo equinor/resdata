@@ -16,7 +16,7 @@
   implementation for changes in subsidence.
 */
 
-bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
+bool *rd_grav_common_alloc_aquifer_cell(const rd::grid_cache &grid_cache,
                                         const rd::File *init_file) {
     bool *aquifer_cell =
         (bool *)util_calloc(grid_cache.size(), sizeof *aquifer_cell);
@@ -39,7 +39,7 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::rd_grid_cache &grid_cache,
     return aquifer_cell;
 }
 
-double rd_grav_common_eval_biot_savart(const rd::rd_grid_cache &grid_cache,
+double rd_grav_common_eval_biot_savart(const rd::grid_cache &grid_cache,
                                        rd_region_type *region,
                                        const bool *aquifer,
                                        const double *weight, double utm_x,
@@ -110,7 +110,7 @@ rd_grav_common_eval_geertsma_kernel(size_t index, const double *xpos,
     return displacement;
 }
 
-double rd_grav_common_eval_geertsma(const rd::rd_grid_cache &grid_cache,
+double rd_grav_common_eval_geertsma(const rd::grid_cache &grid_cache,
                                     rd_region_type *region, const bool *aquifer,
                                     const double *weight, double utm_x,
                                     double utm_y, double depth,

@@ -1,14 +1,13 @@
-#ifndef ERT_RD_GRID_CACHE_H
-#define ERT_RD_GRID_CACHE_H
-
+#pragma once
+#include <cstddef>
 #include <vector>
 
 #include <resdata/rd_grid.hpp>
 
 namespace rd {
-class rd_grid_cache {
+class grid_cache {
 public:
-    rd_grid_cache(rd_grid_type *grid);
+    grid_cache(rd_grid_type *grid);
 
     const std::vector<double> &volume() const;
     const std::vector<double> &xpos() const { return this->xp; }
@@ -26,5 +25,3 @@ private:
     mutable std::vector<double> v;
 };
 } // namespace rd
-
-#endif
