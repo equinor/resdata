@@ -2107,7 +2107,7 @@ rd_grid_alloc_GRDECL_kw__(rd_grid_type *global_grid, int dualp_flag,
                           const rd::KW *gridunit_kw, /* Can be NULL */
                           const rd::KW *mapaxes_kw,  /* Can be NULL */
                           const rd::KW *corsnum_kw,  /* Can be NULL */
-                          const int *actnum) {       /* Can be NULL */
+                          const rd::KW *actnum_kw) { /* Can be NULL */
     int gtype, nx, ny, nz;
     UnitSystem unit_system = UnitSystem::METRIC;
     gtype = gridhead_kw->at<int>(GRIDHEAD_TYPE_INDEX);
@@ -2150,6 +2150,16 @@ rd_grid_alloc_GRDECL_kw__(rd_grid_type *global_grid, int dualp_flag,
             fmt::format("Invalid size of ZCORN keyword = {}, expected 8 * "
                         "nx * ny * nz = {}",
                         zcorn_kw->size(), zcorn_size));
+
+    const int *actnum = nullptr;
+    if (actnum_kw) {
+        if (actnum_kw->size() != num_cells)
+            throw std::invalid_argument(
+                fmt::format("Invalid size of ACTNUM keyword = {}, expected nz "
+                            "* nx * ny = {}",
+                            actnum_kw->size(), num_cells));
+        actnum = actnum_kw->get_vector<int>().data();
+    }
 
     /*
     The code used to have this test:
@@ -2241,24 +2251,12 @@ rd_grid_alloc_GRDECL_kw(size_t nx, size_t ny, size_t nz, const rd::KW *zcorn_kw,
         throw std::invalid_argument(fmt::format(
             "Grid dimensions too large: nx={}, ny={}, nz={}", nx, ny, nz));
 
-    const int *actnum_data = NULL;
-    if (actnum_kw) {
-        const size_t actnum_size = nx * ny * nz;
-
-        if (actnum_kw->size() != actnum_size)
-            throw std::invalid_argument(
-                fmt::format("Invalid size of ACTNUM keyword = {}, expected nz "
-                            "* nx * ny = {}",
-                            actnum_kw->size(), actnum_size));
-        actnum_data = actnum_kw->get_vector<int>().data();
-    }
-
     bool apply_mapaxes = true;
     auto gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, 0);
     rd::KW *gridunit_kw = NULL;
     return rd_grid_alloc_GRDECL_kw__(
                NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
-               zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data)
+               zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_kw)
         .release();
 }
 
@@ -2496,25 +2494,8 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
         eclipse_version = main_grid->eclipse_version;
     }
 
-    const int *actnum_data = NULL;
-    if (rd_file->num_named_kw(ACTNUM_KW) > grid_nr) {
+    if (rd_file->num_named_kw(ACTNUM_KW) > grid_nr)
         actnum_kw = rd_file->get_kw(ACTNUM_KW, grid_nr);
-        const int nx = gridhead_kw->at<int>(GRIDHEAD_NX_INDEX);
-        const int ny = gridhead_kw->at<int>(GRIDHEAD_NY_INDEX);
-        const int nz = gridhead_kw->at<int>(GRIDHEAD_NZ_INDEX);
-        // Negative dimensions are rejected when the grid is created.
-        if (nx >= 0 && ny >= 0 && nz >= 0) {
-            const uint64_t actnum_size = static_cast<uint64_t>(nx) *
-                                         static_cast<uint64_t>(ny) *
-                                         static_cast<uint64_t>(nz);
-            if (actnum_kw->size() != actnum_size)
-                throw std::invalid_argument(fmt::format(
-                    "Invalid size of ACTNUM keyword = {}, expected nz "
-                    "* nx * ny = {}",
-                    actnum_kw->size(), actnum_size));
-        }
-        actnum_data = actnum_kw->get_vector<int>().data();
-    }
 
     if (grid_nr == 0) {
         /* MAPAXES and COARSENING only apply to the global grid. */
@@ -2531,7 +2512,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
     {
         auto rd_grid = rd_grid_alloc_GRDECL_kw__(
             main_grid, dualp_flag, apply_mapaxes, gridhead_kw, zcorn_kw,
-            coord_kw, gridunit_kw, mapaxes_kw, corsnum_kw, actnum_data);
+            coord_kw, gridunit_kw, mapaxes_kw, corsnum_kw, actnum_kw);
 
         if (RD_GRID_MAINGRID_LGR_NR != grid_nr) // grid_nr > 0
             rd_grid_set_lgr_name_EGRID(rd_grid.get(), rd_file, grid_nr);
