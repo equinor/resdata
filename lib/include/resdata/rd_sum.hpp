@@ -25,7 +25,6 @@ using rd_sum_ptr = std::unique_ptr<rd_sum_type, decltype(&rd_sum_free)>;
 
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node);
-double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time);
 
 std::optional<size_t> rd_sum_get_report_step_from_time(const rd_sum_type *sum,
                                                        time_t sim_time);
@@ -33,7 +32,6 @@ std::optional<size_t> rd_sum_get_report_step_from_days(const rd_sum_type *sum,
                                                        double sim_days);
 bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time);
 bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days);
-const char *rd_sum_get_unit(const rd_sum_type *sum, const char *gen_key);
 
 double rd_sum_iget(const rd_sum_type *rd_sum, size_t time_index,
                    size_t param_index);
@@ -59,7 +57,6 @@ size_t rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
                                                    const char *lookup_kw);
 bool rd_sum_has_general_var(const rd_sum_type *rd_sum, const char *lookup_kw);
-bool rd_sum_has_key(const rd_sum_type *rd_sum, const char *lookup_kw);
 double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
                                             double sim_days, const char *var);
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,

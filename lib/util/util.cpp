@@ -1413,12 +1413,6 @@ void util_inplace_forward_days_utc(time_t *t, double days) {
     util_inplace_forward_seconds_utc(t, days * 3600 * 24);
 }
 
-/* Is this dst safe ??? */
-double util_difftime_days(time_t start_time, time_t end_time) {
-    double dt = difftime(end_time, start_time);
-    return dt / (24 * 3600);
-}
-
 double util_difftime_seconds(time_t start_time, time_t end_time) {
     double dt = difftime(end_time, start_time);
     return dt;

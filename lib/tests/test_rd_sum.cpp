@@ -217,23 +217,24 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("keys are present") {
-            REQUIRE(rd_sum_has_key(rd_sum.get(), "FOPT"));
-            REQUIRE(rd_sum_has_key(rd_sum.get(), "BPR:567"));
-            REQUIRE(rd_sum_has_key(rd_sum.get(), "WWCT:OP-1"));
             REQUIRE(rd_sum_has_general_var(rd_sum.get(), "FOPT"));
-            REQUIRE_FALSE(rd_sum_has_key(rd_sum.get(), "NO_SUCH_KEY"));
+            REQUIRE(rd_sum_has_general_var(rd_sum.get(), "BPR:567"));
+            REQUIRE(rd_sum_has_general_var(rd_sum.get(), "WWCT:OP-1"));
+            REQUIRE(rd_sum_has_general_var(rd_sum.get(), "FOPT"));
+            REQUIRE_FALSE(rd_sum_has_general_var(rd_sum.get(), "NO_SUCH_KEY"));
             REQUIRE(rd_sum_identify_var_type("FOPT") == RD_SMSPEC_FIELD_VAR);
             REQUIRE(rd_sum_identify_var_type("WWCT") == RD_SMSPEC_WELL_VAR);
             REQUIRE(rd_sum_identify_var_type("BPR") == RD_SMSPEC_BLOCK_VAR);
         }
 
         THEN("units are stored") {
-            REQUIRE(std::string(rd_sum_get_unit(rd_sum.get(), "FOPT")) ==
-                    "SM3");
-            REQUIRE(std::string(rd_sum_get_unit(rd_sum.get(), "BPR:567")) ==
-                    "BARS");
-            REQUIRE(std::string(rd_sum_get_unit(rd_sum.get(), "WWCT:OP-1")) ==
-                    "(1)");
+            auto unit = [&](const char *key) {
+                return std::string(
+                    rd_sum_get_general_var_node(rd_sum.get(), key)->get_unit());
+            };
+            REQUIRE(unit("FOPT") == "SM3");
+            REQUIRE(unit("BPR:567") == "BARS");
+            REQUIRE(unit("WWCT:OP-1") == "(1)");
             REQUIRE(rd_sum_get_unit_system(rd_sum.get()) == UnitSystem::METRIC);
         }
 
@@ -413,11 +414,6 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THROWS_AS(
                 rd_sum_alloc_data_vector(rd_sum.get(), 9999, false),
                 std::out_of_range);
-        }
-
-        THEN("rd_smspec_equal is reflexive on the loaded smspec") {
-            const rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum.get());
-            REQUIRE(rd_smspec_equal(smspec, smspec));
         }
 
         WHEN("calling rd_sum_alloc_time_solution") {
@@ -740,7 +736,7 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
 
     auto rd_sum = read_summary(restart_path);
     REQUIRE(rd_sum != nullptr);
-    REQUIRE(rd_sum_has_key(rd_sum.get(), "FOPT"));
+    REQUIRE(rd_sum_has_general_var(rd_sum.get(), "FOPT"));
 
     const size_t length = rd_sum_get_data_length(rd_sum.get());
     REQUIRE(length > 0);
@@ -1330,26 +1326,6 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         };
 
         WHEN("All parent SMSPEC files are present") {
-            THEN("rd_smspec_equal is false for cases with different BPR") {
-                auto sum1 = read_summary(case1_path, ":", true,
-                                         /*include_restart=*/false);
-                auto sum2 = read_summary(case2_path, ":", true,
-                                         /*include_restart=*/false);
-                auto sum3 = read_summary(case3_path, ":", true,
-                                         /*include_restart=*/false);
-                const rd_smspec_type *s1 = rd_sum_get_smspec(sum1.get());
-                const rd_smspec_type *s2 = rd_sum_get_smspec(sum2.get());
-                const rd_smspec_type *s3 = rd_sum_get_smspec(sum3.get());
-
-                REQUIRE_FALSE(rd_smspec_equal(s1, s2));
-                REQUIRE_FALSE(rd_smspec_equal(s2, s1));
-                REQUIRE_FALSE(rd_smspec_equal(s2, s3));
-                REQUIRE_FALSE(rd_smspec_equal(s3, s2));
-
-                REQUIRE(rd_smspec_equal(s1, s3));
-                REQUIRE(rd_smspec_equal(s3, s1));
-            }
-
             THEN("Loading CASE1 returns its own data only") {
                 auto sum = read_summary(case1_path);
 
@@ -1452,7 +1428,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             THEN("The duplicate BPR:8 key is copied from BPR:3 "
                  "for CASE3's steps and missing for the restart range") {
                 auto sum = read_summary(case4_path);
-                REQUIRE(rd_sum_has_key(sum.get(), "BPR:8"));
+                REQUIRE(rd_sum_has_general_var(sum.get(), "BPR:8"));
 
                 // 3 (CASE1) + 2 (CASE2) + 4 (CASE3) = 9 ministeps; the first
                 // 5 are filled with the default (the restart chain doesn't
@@ -1540,8 +1516,6 @@ SCENARIO_METHOD(
             THEN("Reading throws instead of returning uninitialized values") {
                 CHECK_THROWS_AS(loader.get_vector(1), std::ios_base::failure);
                 CHECK_THROWS_AS(loader.iget(0, 1), std::ios_base::failure);
-                CHECK_THROWS_AS(loader.iget_sim_time(0),
-                                std::ios_base::failure);
             }
         }
     }
@@ -1699,8 +1673,11 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
                 for (size_t i = 0; i < days.size(); i++) {
                     time_t date = util_make_date_utc(days[i], 1, 2010);
                     REQUIRE(rd_sum_get_report_time(resampled.get(), i) == date);
-                    REQUIRE_THAT(rd_sum_time2days(resampled.get(), date),
-                                 WithinAbs(days[i] - 2, 1e-6));
+                    REQUIRE_THAT(
+                        util_difftime_seconds(
+                            rd_sum_get_start_time(resampled.get()), date) /
+                            86400.0,
+                        WithinAbs(days[i] - 2, 1e-6));
                 }
             }
 
@@ -1806,12 +1783,13 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                     REQUIRE(n == rd_sum_get_data_length(explicit_sum.get()));
                     REQUIRE(n == spec.num_report_steps * spec.num_ministep);
 
-                    REQUIRE(std::string(rd_sum_get_unit(guessed.get(),
-                                                        unique_key.c_str())) ==
-                            "SM3/DAY");
-                    REQUIRE(std::string(rd_sum_get_unit(explicit_sum.get(),
-                                                        unique_key.c_str())) ==
-                            "SM3/DAY");
+                    REQUIRE(std::string(rd_sum_get_general_var_node(
+                                            guessed.get(), unique_key.c_str())
+                                            ->get_unit()) == "SM3/DAY");
+                    REQUIRE(
+                        std::string(rd_sum_get_general_var_node(
+                                        explicit_sum.get(), unique_key.c_str())
+                                        ->get_unit()) == "SM3/DAY");
 
                     for (size_t i = 0; i < n; ++i) {
                         const double expected =

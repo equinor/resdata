@@ -93,7 +93,6 @@ void util_inplace_forward_seconds_utc(time_t *t, double seconds);
 void util_inplace_forward_days_utc(time_t *t, double days);
 
 double util_difftime(time_t, time_t, int *, int *, int *, int *);
-double util_difftime_days(time_t, time_t);
 double util_difftime_seconds(time_t start_time, time_t end_time);
 
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);

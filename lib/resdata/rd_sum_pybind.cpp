@@ -161,9 +161,6 @@ PYBIND11_MODULE(_rd_sum, m) {
     m.def("_get_first_day", [](py::handle self) {
         return rd_sum_get_first_day(from_cwrap<rd_sum_type>(self));
     });
-    m.def("_get_unit", [](py::handle self, std::string gen_key) -> std::string {
-        return rd_sum_get_unit(from_cwrap<rd_sum_type>(self), gen_key.c_str());
-    });
     m.def("_get_restart_step", [](py::handle self) {
         return rd_sum_get_restart_step(from_cwrap<rd_sum_type>(self));
     });

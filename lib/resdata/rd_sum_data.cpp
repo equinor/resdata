@@ -819,11 +819,6 @@ rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
     }
 }
 
-double rd_sum_data_time2days(const rd_sum_data_type *data, time_t sim_time) {
-    time_t start_time = rd_smspec_get_start_time(data->smspec);
-    return util_difftime_days(start_time, sim_time);
-}
-
 double rd_sum_data_get_from_sim_days(const rd_sum_data_type *data,
                                      double sim_days,
                                      const rd::smspec_node &smspec_node) {
