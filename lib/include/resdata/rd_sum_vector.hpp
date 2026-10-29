@@ -4,7 +4,6 @@
 #include <optional>
 
 #include <resdata/rd_sum.hpp>
-#include <ert/util/type_macros.hpp>
 
 typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
@@ -29,8 +28,6 @@ size_t rd_sum_vector_get_size(const rd_sum_vector_type *rd_sum_vector);
 rd_sum_vector_type *
 rd_sum_vector_alloc_layout_copy(const rd_sum_vector_type *src_vector,
                                 const rd_sum_type *rd_sum);
-
-UTIL_IS_INSTANCE_HEADER(rd_sum_vector);
 
 using rd_sum_vector_ptr =
     std::unique_ptr<rd_sum_vector_type, decltype(&rd_sum_vector_free)>;
