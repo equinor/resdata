@@ -2477,8 +2477,7 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
 */
 static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
                                          const rd::File *rd_file,
-                                         size_t grid_nr, bool apply_mapaxes,
-                                         const int *ext_actnum) {
+                                         size_t grid_nr, bool apply_mapaxes) {
     rd::KW *gridhead_kw = rd_file->get_kw(GRIDHEAD_KW, grid_nr);
     rd::KW *zcorn_kw = rd_file->get_kw(ZCORN_KW, grid_nr);
     rd::KW *coord_kw = rd_file->get_kw(COORD_KW, grid_nr);
@@ -2497,32 +2496,24 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
         eclipse_version = main_grid->eclipse_version;
     }
 
-    /*
-    If ext_actnum is present that is used as ACTNUM, and the file is not checked
-    for an ACTNUM keyword at all.
-  */
     const int *actnum_data = NULL;
-    if (ext_actnum)
-        actnum_data = ext_actnum;
-    else {
-        if (rd_file->num_named_kw(ACTNUM_KW) > grid_nr) {
-            actnum_kw = rd_file->get_kw(ACTNUM_KW, grid_nr);
-            const int nx = gridhead_kw->at<int>(GRIDHEAD_NX_INDEX);
-            const int ny = gridhead_kw->at<int>(GRIDHEAD_NY_INDEX);
-            const int nz = gridhead_kw->at<int>(GRIDHEAD_NZ_INDEX);
-            // Negative dimensions are rejected when the grid is created.
-            if (nx >= 0 && ny >= 0 && nz >= 0) {
-                const uint64_t actnum_size = static_cast<uint64_t>(nx) *
-                                             static_cast<uint64_t>(ny) *
-                                             static_cast<uint64_t>(nz);
-                if (actnum_kw->size() != actnum_size)
-                    throw std::invalid_argument(fmt::format(
-                        "Invalid size of ACTNUM keyword = {}, expected nz "
-                        "* nx * ny = {}",
-                        actnum_kw->size(), actnum_size));
-            }
-            actnum_data = actnum_kw->get_vector<int>().data();
+    if (rd_file->num_named_kw(ACTNUM_KW) > grid_nr) {
+        actnum_kw = rd_file->get_kw(ACTNUM_KW, grid_nr);
+        const int nx = gridhead_kw->at<int>(GRIDHEAD_NX_INDEX);
+        const int ny = gridhead_kw->at<int>(GRIDHEAD_NY_INDEX);
+        const int nz = gridhead_kw->at<int>(GRIDHEAD_NZ_INDEX);
+        // Negative dimensions are rejected when the grid is created.
+        if (nx >= 0 && ny >= 0 && nz >= 0) {
+            const uint64_t actnum_size = static_cast<uint64_t>(nx) *
+                                         static_cast<uint64_t>(ny) *
+                                         static_cast<uint64_t>(nz);
+            if (actnum_kw->size() != actnum_size)
+                throw std::invalid_argument(fmt::format(
+                    "Invalid size of ACTNUM keyword = {}, expected nz "
+                    "* nx * ny = {}",
+                    actnum_kw->size(), actnum_size));
         }
+        actnum_data = actnum_kw->get_vector<int>().data();
     }
 
     if (grid_nr == 0) {
@@ -2550,8 +2541,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
 }
 
 static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
-                                                 bool apply_mapaxes,
-                                                 const int *ext_actnum) {
+                                                 bool apply_mapaxes) {
     FileType file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
     if (file_type != FileType::EGRID)
@@ -2561,14 +2551,14 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
         auto rd_file = rd::File::open(std::string(grid_file));
         if (rd_file) {
             size_t num_grid = rd_file->num_named_kw(GRIDHEAD_KW);
-            auto main_grid = rd_grid_alloc_EGRID__(nullptr, rd_file.get(), 0,
-                                                   apply_mapaxes, ext_actnum);
+            auto main_grid =
+                rd_grid_alloc_EGRID__(nullptr, rd_file.get(), 0, apply_mapaxes);
 
             for (size_t grid_nr = 1; grid_nr < num_grid; grid_nr++) {
                 // The apply_mapaxes argument is ignored for LGR -
                 //   it inherits from parent anyway.
                 auto lgr_grid = rd_grid_alloc_EGRID__(
-                    main_grid.get(), rd_file.get(), grid_nr, false, NULL);
+                    main_grid.get(), rd_file.get(), grid_nr, false);
                 auto *lgr =
                     rd_grid_add_lgr(main_grid.get(), std::move(lgr_grid));
                 {
@@ -2602,7 +2592,7 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
 
 static rd_grid_ptr rd_grid_alloc_EGRID(const char *grid_file,
                                        bool apply_mapaxes) {
-    return rd_grid_alloc_EGRID_all_grids(grid_file, apply_mapaxes, NULL);
+    return rd_grid_alloc_EGRID_all_grids(grid_file, apply_mapaxes);
 }
 
 static rd_grid_ptr
