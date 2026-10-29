@@ -10,12 +10,8 @@
 #include <resdata/smspec_node.hpp>
 
 #include <ert/util/util.hpp>
-#include <ert/util/type_macros.hpp>
-
-#define RD_SUM_VECTOR_TYPE_ID 8768778
 
 struct rd_sum_vector_struct {
-    UTIL_TYPE_ID_DECLARATION;
     std::vector<std::optional<size_t>> node_index_list;
     std::vector<bool> is_rate_list;
     std::vector<std::string> key_list;
@@ -25,8 +21,6 @@ struct rd_sum_vector_struct {
 void rd_sum_vector_free(rd_sum_vector_type *rd_sum_vector) {
     delete rd_sum_vector;
 }
-
-UTIL_IS_INSTANCE_FUNCTION(rd_sum_vector, RD_SUM_VECTOR_TYPE_ID)
 
 static void rd_sum_vector_add_node(rd_sum_vector_type *vector,
                                    const rd::smspec_node *node,
@@ -42,7 +36,6 @@ static void rd_sum_vector_add_node(rd_sum_vector_type *vector,
 rd_sum_vector_type *rd_sum_vector_alloc(const rd_sum_type *rd_sum,
                                         bool add_keywords) {
     auto rd_sum_vector = std::make_unique<rd_sum_vector_type>();
-    UTIL_TYPE_ID_INIT(rd_sum_vector, RD_SUM_VECTOR_TYPE_ID);
     rd_sum_vector->rd_sum = rd_sum;
     if (add_keywords) {
         const rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum);
