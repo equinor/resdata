@@ -2507,6 +2507,20 @@ static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
     else {
         if (rd_file->num_named_kw(ACTNUM_KW) > grid_nr) {
             actnum_kw = rd_file->get_kw(ACTNUM_KW, grid_nr);
+            const int nx = gridhead_kw->at<int>(GRIDHEAD_NX_INDEX);
+            const int ny = gridhead_kw->at<int>(GRIDHEAD_NY_INDEX);
+            const int nz = gridhead_kw->at<int>(GRIDHEAD_NZ_INDEX);
+            // Negative dimensions are rejected when the grid is created.
+            if (nx >= 0 && ny >= 0 && nz >= 0) {
+                const uint64_t actnum_size = static_cast<uint64_t>(nx) *
+                                             static_cast<uint64_t>(ny) *
+                                             static_cast<uint64_t>(nz);
+                if (actnum_kw->size() != actnum_size)
+                    throw std::invalid_argument(fmt::format(
+                        "Invalid size of ACTNUM keyword = {}, expected nz "
+                        "* nx * ny = {}",
+                        actnum_kw->size(), actnum_size));
+            }
             actnum_data = actnum_kw->get_vector<int>().data();
         }
     }

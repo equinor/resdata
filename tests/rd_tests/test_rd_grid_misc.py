@@ -12,6 +12,7 @@ from ._grid_fixtures import (
     UNIT_CELL_CORNERS,
     load_egrid_with_single_lgr,
     make_rectangular_grid,
+    write_egrid_with_actnum,
     write_egrid_with_single_lgr,
     write_grid_file_with_cell_keywords,
 )
@@ -299,4 +300,13 @@ def test_that_grid_file_with_wrongly_sized_cell_keywords_is_rejected(
     write_grid_file_with_cell_keywords(filename, coords, corners)
 
     with pytest.raises(ValueError, match=f"Invalid size of {keyword}"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("actnum_size", [1, 7, 9])
+def test_that_egrid_with_wrongly_sized_actnum_is_rejected(tmp_path, actnum_size):
+    filename = tmp_path / "BAD_ACTNUM.EGRID"
+    write_egrid_with_actnum(filename, 2, 2, 2, [1] * actnum_size)
+
+    with pytest.raises(ValueError, match="Invalid size of ACTNUM"):
         Grid(str(filename))
