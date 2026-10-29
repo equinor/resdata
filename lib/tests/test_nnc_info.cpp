@@ -15,9 +15,7 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
         THEN("Initially it should be empty") {
             REQUIRE(nnc_info_get_lgr_nr(nnc_info.get()) == lgr_nr);
             REQUIRE(nnc_info_get_size(nnc_info.get()) == 0);
-            REQUIRE(nnc_info_get_total_size(nnc_info.get()) == 0);
             REQUIRE(nnc_info_get_vector(nnc_info.get(), lgr_nr) == nullptr);
-            REQUIRE(!nnc_info_has_grid_index_list(nnc_info.get(), lgr_nr));
         }
 
         THEN("Adding NNC connections updates the NNC info") {
@@ -26,15 +24,13 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
             nnc_info_add_nnc(nnc_info.get(), lgr_nr, 30, 2);
 
             REQUIRE(nnc_info_get_size(nnc_info.get()) == 1);
-            REQUIRE(nnc_info_get_total_size(nnc_info.get()) == 3);
-            REQUIRE(nnc_info_has_grid_index_list(nnc_info.get(), lgr_nr));
 
             auto nnc_vector = nnc_info_get_vector(nnc_info.get(), lgr_nr);
             REQUIRE(nnc_vector != nullptr);
             REQUIRE(nnc_vector_get_size(nnc_vector) == 3);
 
-            const auto &grid_indices =
-                nnc_info_get_grid_index_list(nnc_info.get(), lgr_nr);
+            const auto &grid_indices = nnc_vector_get_grid_index_list(
+                nnc_info_get_vector(nnc_info.get(), lgr_nr));
             REQUIRE(grid_indices.size() == 3);
             REQUIRE(grid_indices[0] == 10);
             REQUIRE(grid_indices[1] == 20);
@@ -49,7 +45,7 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
             REQUIRE(nnc_vector_get_size(self_vector) == 1);
 
             const auto &self_grid_indices =
-                nnc_info_get_self_grid_index_list(nnc_info.get());
+                nnc_vector_get_grid_index_list(self_vector);
             REQUIRE(self_grid_indices.size() == 1);
             REQUIRE(self_grid_indices[0] == 5);
         }
@@ -63,12 +59,6 @@ TEST_CASE("Test NNC info structure", "[unittest]") {
             nnc_info_add_nnc(nnc_info.get(), lgr_nr_2, 30, 2);
 
             REQUIRE(nnc_info_get_size(nnc_info.get()) == 3);
-            REQUIRE(nnc_info_get_total_size(nnc_info.get()) == 3);
-
-            REQUIRE(nnc_info_has_grid_index_list(nnc_info.get(), lgr_nr));
-            REQUIRE(nnc_info_has_grid_index_list(nnc_info.get(), lgr_nr_1));
-            REQUIRE(nnc_info_has_grid_index_list(nnc_info.get(), lgr_nr_2));
-            REQUIRE(!nnc_info_has_grid_index_list(nnc_info.get(), 99));
 
             auto vec0 = nnc_info_get_vector(nnc_info.get(), lgr_nr);
             auto vec1 = nnc_info_get_vector(nnc_info.get(), lgr_nr_1);

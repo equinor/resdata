@@ -37,7 +37,7 @@ PYBIND11_MODULE(_grid, m) {
         "_fread_alloc",
         [](std::string filename, bool apply_mapaxes) {
             return to_capsule(
-                rd_grid_load_case__(filename.c_str(), apply_mapaxes));
+                rd_grid_load_case(filename.c_str(), apply_mapaxes));
         },
         py::return_value_policy::reference);
 

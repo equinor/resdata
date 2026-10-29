@@ -38,10 +38,6 @@ void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, size_t global_index,
 void rd_grid_get_corner_xyz(const rd_grid_type *grid, size_t i, size_t j,
                             size_t k, double *xpos, double *ypos, double *zpos);
 
-double rd_grid_get_cell_dx1A(const rd_grid_type *grid, size_t active_index);
-double rd_grid_get_cell_dy1A(const rd_grid_type *grid, size_t active_index);
-double rd_grid_get_cell_dz1A(const rd_grid_type *grid, size_t active_index);
-
 double rd_grid_get_cell_dx1(const rd_grid_type *grid, size_t global_index);
 double rd_grid_get_cell_dy1(const rd_grid_type *grid, size_t global_index);
 double rd_grid_get_cell_dz1(const rd_grid_type *grid, size_t global_index);
@@ -51,7 +47,6 @@ double rd_grid_get_cell_thickness1(const rd_grid_type *grid,
 void rd_grid_get_distance(rd_grid_type *grid, size_t global_index1,
                           size_t global_index2, double *dx, double *dy,
                           double *dz);
-double rd_grid_get_cdepth1A(rd_grid_type *grid, size_t active_index);
 double rd_grid_get_cdepth1(rd_grid_type *grid, size_t global_index);
 bool rd_grid_cell_contains_xyz1(const rd_grid_type *rd_grid,
                                 size_t global_index, double x, double y,
@@ -92,8 +87,8 @@ rd_grid_type *rd_grid_alloc_GRDECL_kw(size_t nx, size_t ny, size_t nz,
                                       const rd::KW *actnum_kw,
                                       const rd::KW *mapaxes_kw);
 rd_grid_type *rd_grid_alloc(const char *);
-rd_grid_type *rd_grid_load_case(const char *case_input);
-rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes);
+rd_grid_type *rd_grid_load_case(const char *case_input,
+                                bool apply_mapaxes = true);
 rd_grid_type *rd_grid_alloc_rectangular(size_t nx, size_t ny, size_t nz,
                                         double dx, double dy, double dz,
                                         const int *actnum);
@@ -102,8 +97,6 @@ std::unique_ptr<rd::KW> rd_grid_alloc_volume_kw(const rd_grid_type *grid,
 std::optional<std::unique_ptr<rd::KW>>
 rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid);
 std::unique_ptr<rd::KW> rd_grid_alloc_coord_kw(const rd_grid_type *grid);
-
-bool rd_grid_exists(const char *case_input);
 
 void rd_grid_free(rd_grid_type *);
 void rd_grid_get_dims(const rd_grid_type *, size_t *, size_t *, size_t *,
@@ -115,14 +108,10 @@ size_t rd_grid_get_nactive(const rd_grid_type *grid);
 size_t rd_grid_get_nactive_fracture(const rd_grid_type *grid);
 void rd_grid_get_ijk1(const rd_grid_type *, size_t global_index, size_t *,
                       size_t *, size_t *);
-void rd_grid_get_ijk1A(const rd_grid_type *, size_t active_index, size_t *,
-                       size_t *, size_t *);
 void rd_grid_get_xyz3(rd_grid_type *, size_t, size_t, size_t, double *,
                       double *, double *);
 void rd_grid_get_xyz1(rd_grid_type *grid, size_t global_index, double *xpos,
                       double *ypos, double *zpos);
-void rd_grid_get_xyz1A(rd_grid_type *grid, size_t active_index, double *xpos,
-                       double *ypos, double *zpos);
 
 size_t rd_grid_get_global_size(const rd_grid_type *rd_grid);
 bool rd_grid_compare(rd_grid_type *g1, rd_grid_type *g2, bool include_lgr,
@@ -145,7 +134,6 @@ const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
                                           size_t global_index);
 size_t rd_grid_get_num_lgr(const rd_grid_type *main_grid);
 size_t rd_grid_get_lgr_nr(const rd_grid_type *rd_grid);
-size_t rd_grid_get_lgr_nr_from_name(const rd_grid_type *grid, const char *name);
 rd_grid_type *rd_grid_iget_lgr(const rd_grid_type *main_grid, size_t lgr_index);
 rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
                                           size_t lgr_nr);
@@ -171,23 +159,17 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
 
 std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid);
 std::unique_ptr<rd::KW> rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
-rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid);
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid);
 
 bool rd_grid_cell_regular1(rd_grid_type *rd_grid, size_t global_index);
 void rd_grid_init_zcorn_data(const rd_grid_type *grid, float *zcorn);
-void rd_grid_init_zcorn_data_double(const rd_grid_type *grid, double *zcorn);
 size_t rd_grid_get_zcorn_size(const rd_grid_type *grid);
 
 void rd_grid_init_coord_data(const rd_grid_type *grid, float *coord);
-void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord);
 size_t rd_grid_get_coord_size(const rd_grid_type *rd_grid);
 
 void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum);
 bool rd_grid_use_mapaxes(const rd_grid_type *grid);
-void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
-                                      double *mapaxes);
-void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum);
 void rd_grid_compressed_kw_copy(const rd_grid_type *grid, rd::KW *target_kw,
                                 const rd::KW *src_kw);
 void rd_grid_global_kw_copy(const rd_grid_type *grid, rd::KW *target_kw,
@@ -207,6 +189,3 @@ using rd_grid_ptr = std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>;
 rd_grid_ptr make_rectangular_grid(size_t nx, size_t ny, size_t nz, double dx,
                                   double dy, double dz, const int *actnum);
 rd_grid_ptr read_grid(const std::filesystem::path &filename);
-inline rd_grid_ptr copy_grid(const rd_grid_type *src_grid) {
-    return {rd_grid_alloc_copy(src_grid), &rd_grid_free};
-}

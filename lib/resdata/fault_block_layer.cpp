@@ -221,14 +221,6 @@ fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id) {
     return layer->blocks.at(*storage_index);
 }
 
-std::shared_ptr<FaultBlock>
-fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
-    const auto storage_index = layer->get_block(block_id);
-    if (!storage_index.has_value())
-        return fault_block_layer_add_block(layer, block_id);
-    return layer->blocks.at(*storage_index);
-}
-
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
     layer->remove_block(block_id);
 }
@@ -240,10 +232,6 @@ bool fault_block_layer_has_block(const fault_block_layer_type *layer,
     if (static_cast<size_t>(block_id) >= layer->block_map.size())
         return false;
     return layer->block_map[static_cast<size_t>(block_id)].has_value();
-}
-
-int fault_block_layer_get_max_id(const fault_block_layer_type *layer) {
-    return static_cast<int>(layer->block_map.size()) - 1;
 }
 
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer) {

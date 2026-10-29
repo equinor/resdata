@@ -195,10 +195,6 @@ static void rd_coarse_cell_sort(rd_coarse_cell_type *coarse_cell) {
     }
 }
 
-size_t rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->cell_list.size();
-}
-
 const std::vector<size_t> &
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell) {
     rd_coarse_cell_sort(coarse_cell);

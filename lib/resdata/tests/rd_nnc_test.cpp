@@ -52,7 +52,8 @@ void test_scan(const char *grid_filename) {
                                 rd_grid_get_cell_nnc_info1(
                                     lgr, static_cast<size_t>(g1));
                             const std::vector<size_t> &index_list =
-                                nnc_info_get_grid_index_list(nnc_info, lgr_nr);
+                                nnc_vector_get_grid_index_list(
+                                    nnc_info_get_vector(nnc_info, lgr_nr));
                             test_assert_not_NULL(nnc_info);
                             test_assert_true(contains(index_list, g2));
                         }
@@ -78,9 +79,8 @@ void test_scan(const char *grid_filename) {
                     test_assert_not_NULL(nnc_info);
                     {
                         const std::vector<size_t> &index_list =
-                            nnc_info_get_grid_index_list(nnc_info, lgr_nr);
-                        test_assert_true(
-                            nnc_info_has_grid_index_list(nnc_info, lgr_nr));
+                            nnc_vector_get_grid_index_list(
+                                nnc_info_get_vector(nnc_info, lgr_nr));
                         test_assert_true(contains(index_list, l));
                     }
                 }
@@ -107,7 +107,8 @@ void test_scan(const char *grid_filename) {
                     const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(
                         lgr1, static_cast<size_t>(g1));
                     const std::vector<size_t> &index_list =
-                        nnc_info_get_grid_index_list(nnc_info, lgr_nr2);
+                        nnc_vector_get_grid_index_list(
+                            nnc_info_get_vector(nnc_info, lgr_nr2));
                     test_assert_not_NULL(nnc_info);
                     test_assert_true(contains(index_list, g2));
                 }
