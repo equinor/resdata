@@ -2159,3 +2159,25 @@ def test_that_a_params_keyword_which_is_not_single_precision_float_is_rejected(
 
     with pytest.raises(ValueError, match="PARAMS"):
         Summary("WRONGTYPE", lazy_load=lazy_load)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("keyword", ["WOPTH", "GOPTH", "FOPTH", "WOPT", "TCPUH"])
+def test_that_a_local_variable_must_have_a_local_variable_type(keyword):
+    writer = Summary.writer("WRITER", datetime.datetime(2010, 1, 1), 5, 5, 5)
+
+    with pytest.raises(ValueError, match="Should not be here"):
+        writer.add_variable(
+            keyword, wgname="W1", lgr="LGR1", lgr_ijk=(1, 1, 1), unit="UNIT"
+        )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_a_local_well_variable_ending_in_h_is_not_historical():
+    writer = Summary.writer("WRITER", datetime.datetime(2010, 1, 1), 5, 5, 5)
+
+    node = writer.add_variable(
+        "LWOPRH", wgname="W1", lgr="LGR1", lgr_ijk=(1, 1, 1), unit="UNIT"
+    )
+
+    assert not node.is_historical()
