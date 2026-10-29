@@ -823,6 +823,11 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             rd_smspec->has_lgr = false;
 
         {
+            if (startdat->size() < 3)
+                throw std::invalid_argument(fmt::format(
+                    "Invalid size of STARTDAT keyword = {}, expected at "
+                    "least 3",
+                    startdat->size()));
             const std::vector<int> &date = startdat->get_vector<int>();
             int year = date[STARTDAT_YEAR_INDEX];
             int month = date[STARTDAT_MONTH_INDEX];
