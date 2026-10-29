@@ -109,8 +109,8 @@ static void test_identify_total_variable() {
 
 void test_nums_default() {
     rd::smspec_node field_node(0, "FOPT", "UNIT", 0);
-    rd::smspec_node group_node(0, "GOPR", "G1", "UNIT", 0, ":");
-    rd::smspec_node well_node(0, "WOPR", "W1", "UNIT", 0, ":");
+    rd::smspec_node group_node(0, "GOPR", "G1", 0, "UNIT", nullptr, 0, ":");
+    rd::smspec_node well_node(0, "WOPR", "W1", 0, "UNIT", nullptr, 0, ":");
 
     int default_nums = 0;
     /*
@@ -127,11 +127,11 @@ void test_nums_default() {
 void test_cmp_types() {
     const int dims[3] = {10, 10, 10};
     rd::smspec_node field_node(0, "FOPT", "UNIT", 0);
-    rd::smspec_node region_node(0, "RPR", 10, "UNIT", dims, 0, ":");
-    rd::smspec_node group_node(0, "GOPR", "G1", "UNIT", 0, ":");
-    rd::smspec_node well_node(0, "WOPR", "W1", "UNIT", 0, ":");
-    rd::smspec_node block_node(0, "BPR", 10, "UNIT", dims, 0, ":");
-    rd::smspec_node aquifer_node(0, "AAQP", 10, "UNIT", dims, 0, ":");
+    rd::smspec_node region_node(0, "RPR", nullptr, 10, "UNIT", dims, 0, ":");
+    rd::smspec_node group_node(0, "GOPR", "G1", 0, "UNIT", nullptr, 0, ":");
+    rd::smspec_node well_node(0, "WOPR", "W1", 0, "UNIT", nullptr, 0, ":");
+    rd::smspec_node block_node(0, "BPR", nullptr, 10, "UNIT", dims, 0, ":");
+    rd::smspec_node aquifer_node(0, "AAQP", nullptr, 10, "UNIT", dims, 0, ":");
     rd::smspec_node segment_node(0, "SGOR", "W1", 10, "UNIT", dims, 0, ":");
     rd::smspec_node misc_node1(0, "TIME", "UNIT", 0);
     rd::smspec_node misc_node2(0, "TCPU", "UNIT", 0);
@@ -158,10 +158,10 @@ void test_cmp_types() {
 }
 
 void test_cmp_well() {
-    rd::smspec_node well_node1_1(0, "WOPR", "W1", "UNIT", 10, ":");
-    rd::smspec_node well_node1_2(0, "WOPR", "W2", "UNIT", 10, ":");
-    rd::smspec_node well_node2_1(0, "WWCT", "W1", "UNIT", 10, ":");
-    rd::smspec_node well_node2_2(0, "WWWT", "W2", "UNIT", 10, ":");
+    rd::smspec_node well_node1_1(0, "WOPR", "W1", 0, "UNIT", nullptr, 10, ":");
+    rd::smspec_node well_node1_2(0, "WOPR", "W2", 0, "UNIT", nullptr, 10, ":");
+    rd::smspec_node well_node2_1(0, "WWCT", "W1", 0, "UNIT", nullptr, 10, ":");
+    rd::smspec_node well_node2_2(0, "WWWT", "W2", 0, "UNIT", nullptr, 10, ":");
 
     test_assert_int_equal(well_node1_1.cmp(well_node1_1), 0);
     test_assert_int_equal(well_node2_2.cmp(well_node2_2), 0);
@@ -176,10 +176,12 @@ void test_cmp_well() {
 
 void test_cmp_region() {
     const int dims[3] = {10, 10, 10};
-    rd::smspec_node region_node1_1(0, "ROIP", 10, "UNIT", dims, 0, ":");
-    rd::smspec_node region_node1_2(0, "ROIP", 11, "UNIT", dims, 0, ":");
-    rd::smspec_node region_node2_1(0, "RPR", 10, "UNIT", dims, 0, ":");
-    rd::smspec_node region_node2_2(0, "RPR", 12, "UNIT", dims, 0, ":");
+    rd::smspec_node region_node1_1(0, "ROIP", nullptr, 10, "UNIT", dims, 0,
+                                   ":");
+    rd::smspec_node region_node1_2(0, "ROIP", nullptr, 11, "UNIT", dims, 0,
+                                   ":");
+    rd::smspec_node region_node2_1(0, "RPR", nullptr, 10, "UNIT", dims, 0, ":");
+    rd::smspec_node region_node2_2(0, "RPR", nullptr, 12, "UNIT", dims, 0, ":");
 
     test_assert_true(region_node1_1.cmp(region_node1_2) < 0);
     test_assert_true(region_node1_1.cmp(region_node2_1) < 0);

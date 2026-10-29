@@ -93,7 +93,6 @@ void util_inplace_forward_seconds_utc(time_t *t, double seconds);
 void util_inplace_forward_days_utc(time_t *t, double days);
 
 double util_difftime(time_t, time_t, int *, int *, int *, int *);
-double util_difftime_days(time_t, time_t);
 double util_difftime_seconds(time_t start_time, time_t end_time);
 
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);
@@ -156,24 +155,17 @@ void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
 void util_abort_test_set_intercept_function(const char *);
 void util_exit(const char *fmt, ...);
 void util_install_signals(void);
-void util_update_signals(void);
 
 void *util_realloc(void *, size_t);
 void *util_malloc(size_t);
 void *util_calloc(size_t elements, size_t element_size);
-void *util_alloc_copy(const void *, size_t);
 char *util_fread_alloc_file_content(const char *, int *);
 void util_endian_flip_vector(void *data, size_t element_size, size_t elements);
 
 void util_double_vector_max_min(int, const double *, double *, double *);
-void util_update_double_max_min(double, double *, double *);
-void util_update_float_max_min(float, float *, float *);
-void util_update_int_max_min(int, int *, int *);
-void util_fskip_lines(FILE *, int);
 bool util_same_file(const char *, const char *);
 void util_fread(void *, size_t, size_t, FILE *, const char *);
 void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
-int util_fread_int(FILE *);
 void util_fwrite_int(int, FILE *);
 int util_get_current_linenr(FILE *stream);
 bool util_files_equal(const char *file1, const char *file2);
@@ -205,35 +197,6 @@ bool util_access(const char *entry, int mode);
         if (fwrite(&s, sizeof s, 1, stream) != 1)                              \
             util_abort("%s: write failed: %s\n", __func__, strerror(errno));   \
     }
-
-#define UTIL_FREAD_SCALAR(s, stream)                                           \
-    {                                                                          \
-        int fread_return = fread(&s, sizeof s, 1, stream);                     \
-        if (fread_return == 0) {                                               \
-            if (errno == 0)                                                    \
-                util_abort("%s: read failed - premature EOF\n", __func__);     \
-                                                                               \
-            util_abort("%s: read failed: %s\n", __func__, strerror(errno));    \
-        }                                                                      \
-    }
-
-#define UTIL_FWRITE_VECTOR(s, n, stream)                                       \
-    {                                                                          \
-        if (fwrite(s, sizeof s, (n), stream) != (n))                           \
-            util_abort("%s: write failed: %s \n", __func__, strerror(errno));  \
-    }
-#define UTIL_FREAD_VECTOR(s, n, stream)                                        \
-    {                                                                          \
-        if (fread(s, sizeof s, (n), stream) != (n))                            \
-            util_abort("%s: read failed: %s \n", __func__, strerror(errno));   \
-    }
-
-#define CONTAINS_HEADER(TYPE)                                                  \
-    int util_sorted_contains_##TYPE(const TYPE *data, int size, TYPE value)
-CONTAINS_HEADER(int);
-CONTAINS_HEADER(time_t);
-CONTAINS_HEADER(size_t);
-#undef CONTAINS_HEADER
 
 typedef void util_abort_handler_t(const char *filename, int lineno,
                                   const char *function, const char *message,

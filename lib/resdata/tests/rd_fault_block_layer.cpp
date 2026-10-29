@@ -14,11 +14,10 @@
 #include <resdata/rd_type.hpp>
 
 void test_create(rd_grid_type *grid, rd::KW *fault_block_kw) {
-    int k = 0;
-    int i, j;
+    const size_t k = 0;
 
-    for (j = 0; j < rd_grid_get_ny(grid); j++) {
-        for (i = 0; i < rd_grid_get_nx(grid); i++) {
+    for (size_t j = 0; j < rd_grid_get_ny(grid); j++) {
+        for (size_t i = 0; i < rd_grid_get_nx(grid); i++) {
             size_t g = rd_grid_get_global_index3(grid, i, j, k);
             fault_block_kw->at<int>(g) = 9;
         }
@@ -47,9 +46,9 @@ void test_create_invalid(rd_grid_type *grid) {
 }
 
 void test_trace_edge(rd_grid_type *grid) {
-    const int k = 1;
+    const size_t k = 1;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
-    auto block = fault_block_layer_safe_get_block(layer, 99);
+    auto block = fault_block_layer_add_block(layer, 99);
 
     test_assert_true(block->trace_edge().empty());
     block->add_cell(0, 0);
@@ -67,7 +66,7 @@ void test_trace_edge(rd_grid_type *grid) {
     test_assert_double_equal(1, std::get<1>(edge[3]));
 
     for (const auto &corner : edge)
-        test_assert_int_equal(0, std::get<2>(corner));
+        test_assert_size_t_equal(0, std::get<2>(corner));
 
     fault_block_layer_free(layer);
 }
@@ -89,7 +88,7 @@ void test_export(rd_grid_type *grid) {
     test_assert_false(fault_block_layer_export(layer, &rd_kw3));
 
     {
-        int nx = rd_grid_get_nx(grid);
+        size_t nx = rd_grid_get_nx(grid);
 
         test_assert_int_equal(rd_kw1.at<int>(0), 10);
         test_assert_int_equal(rd_kw1.at<int>(1), 10);
@@ -104,7 +103,7 @@ void test_export(rd_grid_type *grid) {
 }
 
 void test_neighbours(rd_grid_type *grid) {
-    const int k = 0;
+    const size_t k = 0;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
     geo_polygon_collection_type *polylines = geo_polygon_collection_alloc();
     std::vector<int> rd_kw_data(rd_grid_get_global_size(grid), 0);

@@ -39,6 +39,8 @@ from resfo_utilities.testing import (
 from tests import ResdataTest, equinor_test
 from tests.util.mock import createSummary
 
+from ._grid_fixtures import write_char_kw, write_float_kw, write_int_kw
+
 
 def test_write_repr():
     """repr(Summary) used to segfault when there is only a startdate"""
@@ -2363,13 +2365,33 @@ def test_that_solve_days_precision_is_unaffected_by_start_date(start_date):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_add_t_step_rejects_negative_report_step():
+def test_that_add_t_step_raises_type_error_on_negative_report_step():
     start_date = datetime.datetime(2000, 1, 1)
     writer = Summary.writer("NEGATIVE_REPORT_STEP", start_date, 5, 5, 5)
     writer.add_variable("FOPT")
 
-    with pytest.raises(ValueError, match="report step cannot be negative"):
+    with pytest.raises(TypeError):
         writer.add_t_step(-1, 1.0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda s: s.iget("FOPT", -1),
+        lambda s: s.iget_days(-1),
+        lambda s: s.iget_date(-1),
+        lambda s: s.iget_report(-1),
+        lambda s: s.get_report_time(-1),
+    ],
+)
+def test_that_negative_indices_raise_type_error(call):
+    writer = Summary.writer("NEGATIVE_INDEX", datetime.datetime(2000, 1, 1), 5, 5, 5)
+    writer.add_variable("FOPT")
+    writer.add_t_step(1, 1.0)
+
+    with pytest.raises(TypeError):
+        call(writer)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -3234,7 +3256,9 @@ def flow_summary(use_tmpdir):
                 (
                     names
                     if kw.strip() == "WGNAMES"
-                    else nums if kw.strip() == "NUMS" else data
+                    else nums
+                    if kw.strip() == "NUMS"
+                    else data
                 ),
             )
             for kw, data in smspec
@@ -3538,3 +3562,20 @@ def test_flow_esmry_long_well_names_reject_incompatible_components(
         np.testing.assert_array_equal(
             summary.numpy_vector(public_key), np.arange(3) + 10 * index
         )
+
+
+@pytest.mark.parametrize("startdat", [[1], [1, 1]])
+def test_that_smspec_with_too_short_startdat_is_rejected(tmp_path, startdat):
+    with openFortIO(str(tmp_path / "CASE.SMSPEC"), mode=FortIO.WRITE_MODE) as f:
+        write_int_kw(f, "DIMENS", [1, 1, 1, 1, 0, -1])
+        write_char_kw(f, "KEYWORDS", ["TIME"])
+        write_char_kw(f, "WGNAMES", [":+:+:+:+"])
+        write_char_kw(f, "UNITS", ["DAYS"])
+        write_int_kw(f, "STARTDAT", startdat)
+    with openFortIO(str(tmp_path / "CASE.UNSMRY"), mode=FortIO.WRITE_MODE) as f:
+        write_int_kw(f, "SEQHDR", [0])
+        write_int_kw(f, "MINISTEP", [0])
+        write_float_kw(f, "PARAMS", [0.0])
+
+    with pytest.raises(ValueError, match="Invalid size of STARTDAT"):
+        Summary.load(str(tmp_path / "CASE.SMSPEC"), str(tmp_path / "CASE.UNSMRY"))

@@ -44,7 +44,7 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
     if (const auto *date = std::get_if<rd::DateParamsIndex>(&this->time_info))
         this->date_index = {{date->day, date->month, date->year}};
     auto file_view = this->file->get_global_view();
-    int length = file_view->num_named_kw(PARAMS_KW);
+    size_t length = file_view->num_named_kw(PARAMS_KW);
 
     if (length > 0) {
         const rd::KW *params_kw = file_view->get_kw(PARAMS_KW, 0);
@@ -62,9 +62,9 @@ unsmry_loader::unsmry_loader(const rd_smspec_type *smspec,
     this->m_length = length;
 }
 
-int unsmry_loader::length() const { return this->m_length; }
+size_t unsmry_loader::length() const { return this->m_length; }
 
-std::vector<double> unsmry_loader::get_vector(int pos) const {
+std::vector<double> unsmry_loader::get_vector(size_t pos) const {
     if (pos >= size)
         throw std::out_of_range(
             "unsmry_loader::get_vector pos: " + std::to_string(pos) +
@@ -73,7 +73,7 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
     std::vector<double> data(this->length());
     std::array<float, 1> value;
 
-    for (int index = 0; index < this->length(); index++) {
+    for (size_t index = 0; index < this->length(); index++) {
         file_view->index_fload_kw(PARAMS_KW, index, {pos}, value);
         data[index] = value[0];
     }
@@ -85,43 +85,15 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
 }
 
 // This is horribly inefficient
-double unsmry_loader::iget(int time_index, int params_index) const {
+double unsmry_loader::iget(size_t time_index, size_t params_index) const {
     std::array<float, 1> value;
     file_view->index_fload_kw(PARAMS_KW, time_index, {params_index}, value);
     return value[0];
 }
 
-time_t unsmry_loader::iget_sim_time(int time_index) const {
-    if (std::holds_alternative<rd::TimeParamsIndex>(this->time_info)) {
-        double sim_seconds = this->iget_sim_seconds(time_index);
-        time_t sim_time = this->sim_start;
-        util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
-        return sim_time;
-    } else {
-        std::array<float, 3> values;
-        file_view->index_fload_kw(
-            PARAMS_KW, time_index,
-            {this->date_index[0], this->date_index[1], this->date_index[2]},
-            values);
-
-        return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
-                            util_roundf(values[2]));
-    }
-}
-
-double unsmry_loader::iget_sim_seconds(int time_index) const {
-    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&this->time_info)) {
-        double raw_time = this->iget(time_index, time->params_index);
-        return raw_time * time->seconds_per_unit;
-    } else {
-        time_t sim_time = this->iget_sim_time(time_index);
-        return util_difftime_seconds(this->sim_start, sim_time);
-    }
-}
-
-std::vector<int> unsmry_loader::report_steps(int offset) const {
-    std::vector<int> report_steps;
-    int current_step = offset;
+std::vector<size_t> unsmry_loader::report_steps(size_t offset) const {
+    std::vector<size_t> report_steps;
+    size_t current_step = offset;
     for (const auto &file_kw : *file_view) {
         if (SEQHDR_KW == file_kw->get_header())
             current_step++;

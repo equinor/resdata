@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-int num_selected(rd_region_type *region) {
+size_t num_selected(rd_region_type *region) {
     return rd_region_get_global_list(region).size();
 }
 
@@ -65,10 +65,10 @@ TEST_CASE("rd_region", "[rd_region]") {
 
         SECTION("Invert selection") {
             rd_region_select_i1i2(region, 0, 4);
-            int initial_size = num_selected(region);
+            size_t initial_size = num_selected(region);
 
             rd_region_invert_selection(region);
-            int inverted_size = num_selected(region);
+            size_t inverted_size = num_selected(region);
             REQUIRE(initial_size + inverted_size == 1000);
         }
 
@@ -93,17 +93,20 @@ TEST_CASE("rd_region", "[rd_region]") {
             }
 
             SECTION("Contains global") {
-                int global_idx = rd_grid_get_global_index3(grid.get(), 2, 0, 0);
+                size_t global_idx =
+                    rd_grid_get_global_index3(grid.get(), 2, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == true);
                 global_idx = rd_grid_get_global_index3(grid.get(), 0, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == false);
             }
 
             SECTION("Contains active") {
-                int active_idx = rd_grid_get_active_index3(grid.get(), 2, 0, 0);
-                REQUIRE(rd_region_contains_active(region, active_idx) == true);
+                auto active_idx =
+                    rd_grid_get_active_index3(grid.get(), 2, 0, 0);
+                REQUIRE(rd_region_contains_active(region, *active_idx) == true);
                 active_idx = rd_grid_get_active_index3(grid.get(), 0, 0, 0);
-                REQUIRE(rd_region_contains_active(region, active_idx) == false);
+                REQUIRE(rd_region_contains_active(region, *active_idx) ==
+                        false);
             }
         }
 
@@ -139,7 +142,7 @@ TEST_CASE("rd_region", "[rd_region]") {
             rd::KW float_kw{"FLOAT", 1000, RD_FLOAT};
 
             for (size_t i = 0; i < 1000; i++)
-                float_kw.at<float>(i) = i * 0.1f;
+                float_kw.at<float>(i) = static_cast<float>(i) * 0.1f;
 
             SECTION("Select in interval") {
                 rd_region_select_in_interval(region, &float_kw, 10.0, 50.0);

@@ -4,21 +4,25 @@
 #include <resdata/rd_sum.hpp>
 
 void has_r2r_key(const rd_sum_type *rd_sum) {
-    test_assert_true(rd_sum_has_key(rd_sum, "RGF:393217"));
-    test_assert_true(rd_sum_has_key(rd_sum, "RGF:1-2"));
-    test_assert_true(rd_sum_has_key(rd_sum, "ROF:524291"));
-    test_assert_true(rd_sum_has_key(rd_sum, "RWF:393222"));
-    test_assert_true(rd_sum_has_key(rd_sum, "RWF:6-2"));
-    test_assert_true(rd_sum_has_key(rd_sum, "ROF:3-6"));
-    test_assert_true(rd_sum_has_key(rd_sum, "RNLF:458753"));
-    test_assert_true(rd_sum_has_key(rd_sum, "RNLF:1-4"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RGF:393217"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RGF:1-2"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "ROF:524291"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RWF:393222"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RWF:6-2"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "ROF:3-6"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RNLF:458753"));
+    test_assert_true(rd_sum_has_general_var(rd_sum, "RNLF:1-4"));
 }
 
 void get_unit(const rd_sum_type *rd_sum) {
-    test_assert_string_equal(rd_sum_get_unit(rd_sum, "RGF:1-2"), "GFLOW");
-    test_assert_string_equal(rd_sum_get_unit(rd_sum, "ROF:3-6"), "OFLOW");
-    test_assert_string_equal(rd_sum_get_unit(rd_sum, "RWF:6-2"), "WFLOW");
-    test_assert_string_equal(rd_sum_get_unit(rd_sum, "RNLF:1-4"), "NLFLOW");
+    test_assert_string_equal(
+        rd_sum_get_general_var_node(rd_sum, "RGF:1-2")->get_unit(), "GFLOW");
+    test_assert_string_equal(
+        rd_sum_get_general_var_node(rd_sum, "ROF:3-6")->get_unit(), "OFLOW");
+    test_assert_string_equal(
+        rd_sum_get_general_var_node(rd_sum, "RWF:6-2")->get_unit(), "WFLOW");
+    test_assert_string_equal(
+        rd_sum_get_general_var_node(rd_sum, "RNLF:1-4")->get_unit(), "NLFLOW");
 }
 
 void get_var_params_index(const rd_sum_type *rd_sum) {

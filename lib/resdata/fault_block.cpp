@@ -22,7 +22,7 @@ FaultBlock::FaultBlock(fault_block_layer_type *parent_layer, int block_id)
 
 int FaultBlock::get_id() const { return block_id; }
 
-void FaultBlock::add_cell(int i, int j) {
+void FaultBlock::add_cell(size_t i, size_t j) {
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot add a cell on a detached fault block");
@@ -40,7 +40,7 @@ void FaultBlock::assert_center() {
         double new_yc = 0;
 
         for (const auto &[i, j] : index_list) {
-            int g = rd_grid_get_global_index3(grid, i, j, k);
+            size_t g = rd_grid_get_global_index3(grid, i, j, k);
             double x, y, z;
 
             rd_grid_get_xyz1(grid, g, &x, &y, &z);
@@ -48,8 +48,8 @@ void FaultBlock::assert_center() {
             new_yc += y;
         }
 
-        xc = new_xc / index_list.size();
-        yc = new_yc / index_list.size();
+        xc = new_xc / static_cast<double>(index_list.size());
+        yc = new_yc / static_cast<double>(index_list.size());
     }
     valid_center = true;
 }
@@ -75,16 +75,16 @@ FaultBlockCell FaultBlock::export_cell(size_t index) const {
     return cell;
 }
 
-const std::vector<int> FaultBlock::get_global_index_list() const {
-    std::vector<int> global_index_list;
+std::vector<size_t> FaultBlock::get_global_index_list() const {
+    std::vector<size_t> global_index_list;
     global_index_list.reserve(index_list.size());
     for (const auto &[i, j] : index_list)
         global_index_list.push_back(rd_grid_get_global_index3(grid, i, j, k));
     return global_index_list;
 }
 
-std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
-    std::vector<std::tuple<double, double, int>> edge;
+std::vector<std::tuple<double, double, size_t>> FaultBlock::trace_edge() const {
+    std::vector<std::tuple<double, double, size_t>> edge;
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot use trace_edge on a detached fault block");
@@ -92,7 +92,7 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
         return edge;
 
     std::vector<int_point2d_type> corner_list;
-    std::vector<int> cell_list;
+    std::vector<size_t> cell_list;
     const auto &[start_i, start_j] = index_list.at(0);
 
     layer_trace_block_edge(fault_block_layer_get_layer(parent_layer), start_i,
@@ -110,10 +110,10 @@ std::vector<std::tuple<double, double, int>> FaultBlock::trace_edge() const {
 }
 
 bool FaultBlock::neighbour_xpolyline(
-    int i1, int j1, int i2, int j2,
+    size_t i1, size_t j1, size_t i2, size_t j2,
     const geo_polygon_collection_type *polylines) const {
-    int g1 = rd_grid_get_global_index3(grid, i1, j1, k);
-    int g2 = rd_grid_get_global_index3(grid, i2, j2, k);
+    size_t g1 = rd_grid_get_global_index3(grid, i1, j1, k);
+    size_t g2 = rd_grid_get_global_index3(grid, i2, j2, k);
     double x1, y1, z1;
     double x2, y2, z2;
 
@@ -130,16 +130,16 @@ bool FaultBlock::neighbour_xpolyline(
 }
 
 bool FaultBlock::connected_neighbour(
-    int i1, int j1, int i2, int j2, bool connected_only,
+    size_t i1, size_t j1, size_t i2, size_t j2, bool connected_only,
     const geo_polygon_collection_type *polylines) const {
     if (this->is_detached())
         throw std::invalid_argument(
             "Cannot use connected_neighbour on a detached fault block");
     const layer_type *layer = fault_block_layer_get_layer(parent_layer);
-    if ((i2 < 0) || (i2 >= layer_get_nx(layer)))
+    if (i2 >= layer_get_nx(layer))
         return false;
 
-    if ((j2 < 0) || (j2 >= layer_get_ny(layer)))
+    if (j2 >= layer_get_ny(layer))
         return false;
 
     /* Inactive cells do "not exist" - can not be connected neighbour
@@ -168,13 +168,15 @@ FaultBlock::get_neighbours(bool connected_only,
     std::set<int> neighbour_ids;
     layer_type *layer = fault_block_layer_get_layer(parent_layer);
     for (const auto &[i, j] : index_list) {
-        if (connected_neighbour(i, j, i - 1, j, connected_only, polylines))
+        if (i > 0 &&
+            connected_neighbour(i, j, i - 1, j, connected_only, polylines))
             neighbour_ids.insert(layer_iget_cell_value(layer, i - 1, j));
 
         if (connected_neighbour(i, j, i + 1, j, connected_only, polylines))
             neighbour_ids.insert(layer_iget_cell_value(layer, i + 1, j));
 
-        if (connected_neighbour(i, j, i, j - 1, connected_only, polylines))
+        if (j > 0 &&
+            connected_neighbour(i, j, i, j - 1, connected_only, polylines))
             neighbour_ids.insert(layer_iget_cell_value(layer, i, j - 1));
 
         if (connected_neighbour(i, j, i, j + 1, connected_only, polylines))

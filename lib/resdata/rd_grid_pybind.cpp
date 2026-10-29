@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -20,6 +21,14 @@ namespace py = pybind11;
 using fmt::format;
 
 namespace {
+/** Grid indices arrive from numpy as int32; reject negative values here. */
+size_t checked_index(int32_t index) {
+    if (index < 0)
+        throw std::invalid_argument(
+            format("Grid index must be non-negative, got {}", index));
+    return static_cast<size_t>(index);
+}
+
 PYBIND11_MODULE(_grid, m) {
     register_exceptions(m);
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
@@ -28,13 +37,13 @@ PYBIND11_MODULE(_grid, m) {
         "_fread_alloc",
         [](std::string filename, bool apply_mapaxes) {
             return to_capsule(
-                rd_grid_load_case__(filename.c_str(), apply_mapaxes));
+                rd_grid_load_case(filename.c_str(), apply_mapaxes));
         },
         py::return_value_policy::reference);
 
     m.def(
         "_grdecl_create",
-        [](int nx, int ny, int nz, py::handle zcorn, py::handle coord,
+        [](size_t nx, size_t ny, size_t nz, py::handle zcorn, py::handle coord,
            std::optional<py::handle> actnum,
            std::optional<py::handle> mapaxes) {
             return to_capsule(rd_grid_alloc_GRDECL_kw(
@@ -45,7 +54,7 @@ PYBIND11_MODULE(_grid, m) {
         py::return_value_policy::reference);
     m.def(
         "_alloc_rectangular",
-        [](int nx, int ny, int nz, double dx, double dy, double dz,
+        [](size_t nx, size_t ny, size_t nz, double dx, double dy, double dz,
            std::optional<std::vector<int>> actnum) {
             if (actnum.has_value())
                 return to_capsule(rd_grid_alloc_rectangular(
@@ -57,7 +66,7 @@ PYBIND11_MODULE(_grid, m) {
         py::return_value_policy::reference);
     m.def(
         "_get_numbered_lgr",
-        [](py::handle self, int lgr_nr) {
+        [](py::handle self, size_t lgr_nr) {
             return to_capsule(rd_grid_get_lgr_from_lgr_nr(
                 from_cwrap<rd_grid_type>(self), lgr_nr));
         },
@@ -71,7 +80,7 @@ PYBIND11_MODULE(_grid, m) {
         py::return_value_policy::reference);
     m.def(
         "_get_cell_lgr",
-        [](py::handle self, int index) {
+        [](py::handle self, size_t index) {
             return to_capsule(
                 rd_grid_get_cell_lgr1(from_cwrap<rd_grid_type>(self), index));
         },
@@ -79,7 +88,7 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_num_coarse_groups", [](py::handle self) {
         return rd_grid_get_num_coarse_groups(from_cwrap<rd_grid_type>(self));
     });
-    m.def("_in_coarse_group1", [](py::handle self, int index) {
+    m.def("_in_coarse_group1", [](py::handle self, size_t index) {
         return rd_grid_cell_in_coarse_group1(from_cwrap<rd_grid_type>(self),
                                              index);
     });
@@ -107,36 +116,42 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_get_name", [](py::handle self) {
         return rd_grid_get_name(from_cwrap<rd_grid_type>(self));
     });
-    m.def("_ijk_valid", [](py::handle self, int i, int j, int k) {
+    m.def("_ijk_valid", [](py::handle self, size_t i, size_t j, size_t k) {
         return rd_grid_ijk_valid(from_cwrap<rd_grid_type>(self), i, j, k);
     });
-    m.def("_get_global_index3", [](py::handle self, int i, int j, int k) {
-        return rd_grid_get_global_index3(from_cwrap<rd_grid_type>(self), i, j,
-                                         k);
+    m.def("_get_global_index3",
+          [](py::handle self, size_t i, size_t j, size_t k) {
+              return rd_grid_get_global_index3(from_cwrap<rd_grid_type>(self),
+                                               i, j, k);
+          });
+    /* The Python API documents -1 for an inactive cell. */
+    m.def("_get_active_index1", [](py::handle self, size_t index) {
+        auto active_index =
+            rd_grid_get_active_index1(from_cwrap<rd_grid_type>(self), index);
+        return active_index ? static_cast<int64_t>(*active_index) : -1;
     });
-    m.def("_get_active_index1", [](py::handle self, int index) {
-        return rd_grid_get_active_index1(from_cwrap<rd_grid_type>(self), index);
-    });
-    m.def("_get_active_fracture_index1", [](py::handle self, int index) {
-        return rd_grid_get_active_fracture_index1(
+    /* The Python API documents -1 for a cell without an active fracture. */
+    m.def("_get_active_fracture_index1", [](py::handle self, size_t index) {
+        auto fracture_index = rd_grid_get_active_fracture_index1(
             from_cwrap<rd_grid_type>(self), index);
+        return fracture_index ? static_cast<int64_t>(*fracture_index) : -1;
     });
-    m.def("_get_global_index1A", [](py::handle self, int index) {
+    m.def("_get_global_index1A", [](py::handle self, size_t index) {
         return rd_grid_get_global_index1A(from_cwrap<rd_grid_type>(self),
                                           index);
     });
-    m.def("_get_global_index1F", [](py::handle self, int index) {
+    m.def("_get_global_index1F", [](py::handle self, size_t index) {
         return rd_grid_get_global_index1F(from_cwrap<rd_grid_type>(self),
                                           index);
     });
-    m.def("_get_ijk1", [](py::handle self, int index) {
-        int i = 0;
-        int j = 0;
-        int k = 0;
+    m.def("_get_ijk1", [](py::handle self, size_t index) {
+        size_t i = 0;
+        size_t j = 0;
+        size_t k = 0;
         rd_grid_get_ijk1(from_cwrap<rd_grid_type>(self), index, &i, &j, &k);
         return std::make_tuple(i, j, k);
     });
-    m.def("_get_xyz1", [](py::handle self, int index) {
+    m.def("_get_xyz1", [](py::handle self, size_t index) {
         double x = 0;
         double y = 0;
         double z = 0;
@@ -144,7 +159,7 @@ PYBIND11_MODULE(_grid, m) {
         return std::make_tuple(x, y, z);
     });
     m.def("_get_cell_corner_xyz1",
-          [](py::handle self, int index, int corner_nr) {
+          [](py::handle self, size_t index, int corner_nr) {
               double x = 0;
               double y = 0;
               double z = 0;
@@ -152,7 +167,7 @@ PYBIND11_MODULE(_grid, m) {
                                            index, corner_nr, &x, &y, &z);
               return std::make_tuple(x, y, z);
           });
-    m.def("_get_corner_xyz", [](py::handle self, int i, int j, int k) {
+    m.def("_get_corner_xyz", [](py::handle self, size_t i, size_t j, size_t k) {
         double x = 0;
         double y = 0;
         double z = 0;
@@ -160,33 +175,33 @@ PYBIND11_MODULE(_grid, m) {
                                &z);
         return std::make_tuple(x, y, z);
     });
-    m.def("_get_ij_xy", [](py::handle self, double x, double y, int k) {
-        int i = 0;
-        int j = 0;
+    m.def("_get_ij_xy", [](py::handle self, double x, double y, size_t k) {
+        size_t i = 0;
+        size_t j = 0;
         bool ok = rd_grid_get_ij_from_xy(from_cwrap<rd_grid_type>(self), x, y,
                                          k, &i, &j);
         if (!ok)
             throw std::domain_error(fmt::format(
-                "Could not find the point:({:g},{:g}) in layer:{:d}", x, y, k));
+                "Could not find the point:({:g},{:g}) in layer:{}", x, y, k));
         return std::make_tuple(i, j);
     });
-    m.def("_get_ijk_xyz",
-          [](py::handle self, double x, double y, double z, int start_index) {
-              return rd_grid_get_global_index_from_xyz(
-                  from_cwrap<rd_grid_type>(self), x, y, z, start_index);
-          });
+    m.def("_get_ijk_xyz", [](py::handle self, double x, double y, double z,
+                             std::optional<size_t> start_index) {
+        return rd_grid_get_global_index_from_xyz(from_cwrap<rd_grid_type>(self),
+                                                 x, y, z, start_index);
+    });
     m.def("_cell_contains",
-          [](py::handle self, int index, double x, double y, double z) {
+          [](py::handle self, size_t index, double x, double y, double z) {
               return rd_grid_cell_contains_xyz1(from_cwrap<rd_grid_type>(self),
                                                 index, x, y, z);
           });
-    m.def("_cell_regular", [](py::handle self, int index) {
+    m.def("_cell_regular", [](py::handle self, size_t index) {
         return rd_grid_cell_regular1(from_cwrap<rd_grid_type>(self), index);
     });
     m.def("_num_lgr", [](py::handle self) {
         return rd_grid_get_num_lgr(from_cwrap<rd_grid_type>(self));
     });
-    m.def("_has_numbered_lgr", [](py::handle self, int lgr_nr) {
+    m.def("_has_numbered_lgr", [](py::handle self, size_t lgr_nr) {
         return rd_grid_has_lgr_nr(from_cwrap<rd_grid_type>(self), lgr_nr);
     });
     m.def("_has_named_lgr", [](py::handle self, std::string lgr_name) {
@@ -194,50 +209,57 @@ PYBIND11_MODULE(_grid, m) {
                                lgr_name.c_str());
     });
     m.def("_grid_value",
-          [](py::handle self, py::handle kw, int i, int j, int k) {
+          [](py::handle self, py::handle kw, size_t i, size_t j, size_t k) {
               return rd_grid_get_property(from_cwrap<rd_grid_type>(self),
                                           from_cwrap<rd::KW>(kw), i, j, k);
           });
-    m.def("_get_cell_volume", [](py::handle self, int index) {
+    m.def("_get_cell_volume", [](py::handle self, size_t index) {
         return rd_grid_get_cell_volume1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_get_cell_thickness", [](py::handle self, int index) {
+    m.def("_get_cell_thickness", [](py::handle self, size_t index) {
         return rd_grid_get_cell_thickness1(from_cwrap<rd_grid_type>(self),
                                            index);
     });
-    m.def("_get_cell_dx", [](py::handle self, int index) {
+    m.def("_get_cell_dx", [](py::handle self, size_t index) {
         return rd_grid_get_cell_dx1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_get_cell_dy", [](py::handle self, int index) {
+    m.def("_get_cell_dy", [](py::handle self, size_t index) {
         return rd_grid_get_cell_dy1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_get_depth", [](py::handle self, int index) {
+    m.def("_get_depth", [](py::handle self, size_t index) {
         return rd_grid_get_cdepth1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_load_column", [](py::handle self, py::handle kw, int i, int j) {
-        return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
-                                           from_cwrap<rd::KW>(kw), i, j);
-    });
-    m.def("_get_top", [](py::handle self, int i, int j) {
+    m.def("_load_column",
+          [](py::handle self, py::handle kw, size_t i, size_t j) {
+              return rd_grid_get_column_property(from_cwrap<rd_grid_type>(self),
+                                                 from_cwrap<rd::KW>(kw), i, j);
+          });
+    m.def("_get_top", [](py::handle self, size_t i, size_t j) {
         return rd_grid_get_top2(from_cwrap<rd_grid_type>(self), i, j);
     });
-    m.def("_get_top1A", [](py::handle self, int index) {
+    m.def("_get_top1A", [](py::handle self, size_t index) {
         return rd_grid_get_top1A(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_get_bottom", [](py::handle self, int i, int j) {
+    m.def("_get_bottom", [](py::handle self, size_t i, size_t j) {
         return rd_grid_get_bottom2(from_cwrap<rd_grid_type>(self), i, j);
     });
-    m.def("_locate_depth", [](py::handle self, double depth, int i, int j) {
-        return rd_grid_locate_depth(from_cwrap<rd_grid_type>(self), depth, i,
-                                    j);
-    });
-    m.def("_invalid_cell", [](py::handle self, int index) {
+    m.def("_locate_depth",
+          [](py::handle self, double depth, size_t i, size_t j) -> py::object {
+              auto *grid = from_cwrap<rd_grid_type>(self);
+              auto result = rd_grid_locate_depth(grid, depth, i, j);
+              if (auto *k = std::get_if<size_t>(&result))
+                  return py::int_(*k);
+              if (std::get<OutsideGrid>(result) == OutsideGrid::above)
+                  return py::int_(-1);
+              return py::int_(-1) * py::int_(rd_grid_get_nz(grid));
+          });
+    m.def("_invalid_cell", [](py::handle self, size_t index) {
         return rd_grid_cell_invalid1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_valid_cell", [](py::handle self, int index) {
+    m.def("_valid_cell", [](py::handle self, size_t index) {
         return rd_grid_cell_valid1(from_cwrap<rd_grid_type>(self), index);
     });
-    m.def("_get_distance", [](py::handle self, int index1, int index2) {
+    m.def("_get_distance", [](py::handle self, size_t index1, size_t index2) {
         double dx = 0;
         double dy = 0;
         double dz = 0;
@@ -282,7 +304,7 @@ PYBIND11_MODULE(_grid, m) {
         "_init_actnum_kw",
         [](py::handle self) {
             auto rd_grid = from_cwrap<rd_grid_type>(self);
-            int size = rd_grid_get_global_size(rd_grid);
+            const size_t size = rd_grid_get_global_size(rd_grid);
             std::unique_ptr<rd::KW> actnum =
                 std::make_unique<rd::KW>("ACTNUM", size, RD_INT);
             rd_grid_init_actnum_data(rd_grid, actnum->get_vector<int>().data());
@@ -353,9 +375,9 @@ PYBIND11_MODULE(_grid, m) {
     });
     m.def("_export_index_frame", [](py::handle self, bool active_only) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
-        ptrdiff_t size = rd_grid_get_global_size(rd_grid);
-        if (active_only)
-            size = rd_grid_get_active_size(rd_grid);
+        ptrdiff_t size = static_cast<ptrdiff_t>(
+            active_only ? rd_grid_get_active_size(rd_grid)
+                        : rd_grid_get_global_size(rd_grid));
 
         py::array_t<int> indx(size);
         py::array_t<int> data(std::vector<ptrdiff_t>{size, 4});
@@ -378,7 +400,7 @@ PYBIND11_MODULE(_grid, m) {
               for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
                   int32_t di = idx_ptr[i];
                   if (di >= 0)
-                      data_ptr[i] = input[di];
+                      data_ptr[i] = input[static_cast<size_t>(di)];
               }
               return data;
           });
@@ -396,7 +418,7 @@ PYBIND11_MODULE(_grid, m) {
               for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
                   int32_t di = idx_ptr[i];
                   if (di >= 0)
-                      data_ptr[i] = rd_kw->as_double(di);
+                      data_ptr[i] = rd_kw->as_double(static_cast<size_t>(di));
               }
               return data;
           });
@@ -410,8 +432,8 @@ PYBIND11_MODULE(_grid, m) {
         auto data_ptr = data.mutable_data();
 
         for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
-            int32_t g = index_ptr[i];
-            data_ptr[i] = rd_grid_get_cell_volume1(rd_grid, g);
+            data_ptr[i] =
+                rd_grid_get_cell_volume1(rd_grid, checked_index(index_ptr[i]));
         }
         return data;
     });
@@ -426,8 +448,8 @@ PYBIND11_MODULE(_grid, m) {
         auto data_ptr = data.mutable_data();
 
         for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
-            int32_t g = index_ptr[i];
-            size_t j = 3 * i;
+            size_t g = checked_index(index_ptr[i]);
+            size_t j = 3 * static_cast<size_t>(i);
             rd_grid_get_xyz1(rd_grid, g, &data_ptr[j], &data_ptr[j + 1],
                              &data_ptr[j + 2]);
         }
@@ -449,8 +471,8 @@ PYBIND11_MODULE(_grid, m) {
         size_t pos = 0;
 
         for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
-            int32_t g = index_ptr[i];
-            rd_grid_export_cell_corners1(rd_grid, g, x, y, z);
+            rd_grid_export_cell_corners1(rd_grid, checked_index(index_ptr[i]),
+                                         x, y, z);
             for (int j = 0; j < 8; j++) {
                 data_ptr[pos++] = x[j];
                 data_ptr[pos++] = y[j];

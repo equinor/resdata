@@ -42,10 +42,6 @@ TEST_CASE_METHOD(Tmpdir, "Basic FortIO operations") {
             else
                 REQUIRE_FALSE(fortio.fseek(0, 2000));
         }
-        THEN("Seeking data with negative count raises") {
-            REQUIRE_THROWS_AS(fortio.data_fseek(0, 1, 1, -1, 1),
-                              std::invalid_argument);
-        }
         THEN("Seeking data beyond count raises") {
             REQUIRE_THROWS_AS(fortio.data_fseek(0, 6, 1, 5, 1),
                               std::invalid_argument);

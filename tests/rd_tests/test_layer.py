@@ -2,6 +2,8 @@
 import time
 from unittest import skipIf
 
+import hypothesis.strategies as st
+from hypothesis import given
 from resdata.geometry import CPolyline
 from resdata.grid import GridGenerator
 from resdata.grid.faults import FaultCollection, Layer
@@ -309,3 +311,19 @@ class LayerTest(ResdataTest):
 
         layer[3, 3] = 3
         self.assertEqual(1, layer.count_equal(3))
+
+
+@st.composite
+def layer_with_corner_indices(draw):
+    nx = draw(st.integers(min_value=1, max_value=50))
+    ny = draw(st.integers(min_value=1, max_value=50))
+    num_corners = (nx + 1) * (ny + 1)
+    c1 = draw(st.integers(min_value=0, max_value=num_corners - 1))
+    c2 = draw(st.integers(min_value=0, max_value=num_corners - 1))
+    return nx, ny, c1, c2
+
+
+@given(layer_with_corner_indices())
+def test_that_add_interp_barrier_terminates_for_any_pair_of_corners(args):
+    nx, ny, c1, c2 = args
+    Layer(nx, ny).add_interp_barrier(c1, c2)

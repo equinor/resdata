@@ -702,80 +702,6 @@ char *util_alloc_rel_path(const char *__root_path, const char *path) {
     }
 }
 
-void util_fskip_lines(FILE *stream, int lines) {
-    bool cont = true;
-    int line_nr = 0;
-    do {
-        bool at_eof = false;
-        int c;
-        do {
-            c = fgetc(stream);
-            if (c == EOF)
-                at_eof = true;
-        } while (c != '\r' && c != '\n' && !at_eof);
-
-        /*
-       If we have read a \r this is quite probably a DOS formatted
-       file, and we read another character in the anticipation that it
-       is a \n character.
-    */
-        if (c == '\r') {
-            c = fgetc(stream);
-            if (c == EOF)
-                at_eof = true;
-            else {
-                if (c != '\n')
-                    util_fseek(stream, -1, SEEK_CUR);
-            }
-        }
-
-        line_nr++;
-        if (line_nr == lines || at_eof)
-            cont = false;
-    } while (cont);
-}
-
-/**
-  This function parses a string literal (hopfully) containing a
-  represantation of a double. The return value is true|false depending
-  on the success of the parse operation, the parsed value is returned
-  by reference.
-
-
-  Example:
-  --------
-  const char * s = "78.92"
-  double value;
-
-  if (util_sscanf_double(s , &value))
-    printf("%s is a valid double\n");
-  else
-    printf("%s is NOT a valid double\n");
-
-*/
-
-bool util_sscanf_double(const char *buffer, double *value) {
-    if (!buffer)
-        return false;
-
-    bool value_OK = false;
-    char *error_ptr;
-
-    double tmp_value = strtod(buffer, &error_ptr);
-    /*
-    Skip trailing white-space
-  */
-    while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
-        error_ptr++;
-
-    if (error_ptr[0] == '\0') {
-        value_OK = true;
-        if (value != NULL)
-            *value = tmp_value;
-    }
-    return value_OK;
-}
-
 /**
    Takes a char buffer as input, and parses it as an integer. Returns
    true if the parsing succeeded, and false otherwise. If parsing
@@ -1413,12 +1339,6 @@ void util_inplace_forward_days_utc(time_t *t, double days) {
     util_inplace_forward_seconds_utc(t, days * 3600 * 24);
 }
 
-/* Is this dst safe ??? */
-double util_difftime_days(time_t start_time, time_t end_time) {
-    double dt = difftime(end_time, start_time);
-    return dt / (24 * 3600);
-}
-
 double util_difftime_seconds(time_t start_time, time_t end_time) {
     double dt = difftime(end_time, start_time);
     return dt;
@@ -1819,26 +1739,6 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
 void util_fwrite_int(int value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
-int util_fread_int(FILE *stream) {
-    int file_value;
-    UTIL_FREAD_SCALAR(file_value, stream);
-    return file_value;
-}
-
-void util_update_int_max_min(int value, int *mx, int *mn) {
-    *mn = std::min(value, *mn);
-    *mx = std::max(value, *mx);
-}
-
-void util_update_float_max_min(float value, float *mx, float *mn) {
-    *mn = std::min(value, *mn);
-    *mx = std::max(value, *mx);
-}
-
-void util_update_double_max_min(double value, double *mx, double *mn) {
-    *mn = std::min(value, *mn);
-    *mx = std::max(value, *mx);
-}
 
 FILE *util_fopen__(const char *filename, const char *mode) {
     return fopen(filename, mode);
@@ -1927,21 +1827,6 @@ void *util_malloc(size_t size) { return util_malloc__(size); }
 
 void *util_calloc(size_t elements, size_t element_size) {
     return util_malloc(elements * element_size);
-}
-
-/**
-   Allocates byte_size bytes of storage, and initializes content with
-   the value found in src.
-*/
-
-void *util_alloc_copy(const void *src, size_t byte_size) {
-    if (byte_size == 0 && src == NULL)
-        return NULL;
-    {
-        void *next = util_malloc(byte_size);
-        memcpy(next, src, byte_size);
-        return next;
-    }
 }
 
 /**
@@ -2041,32 +1926,6 @@ void util_install_signals(void) {
     signal(SIGFPE, util_abort_signal); /* Floating point exception */
 }
 
-/*
-   Will install the util_abort signal handler for all signals which
-   have not been modified from the default state.
-*/
-
-static void update_signal(int signal_nr) {
-
-    sighandler_t current_handler = signal(signal_nr, SIG_DFL);
-    if (current_handler == SIG_DFL)
-        signal(signal_nr, util_abort_signal);
-    else
-        signal(signal_nr, current_handler);
-}
-
-void util_update_signals(void) {
-#ifdef HAVE_SIGBUS
-    update_signal(SIGBUS);
-#endif
-
-    update_signal(SIGSEGV);
-    update_signal(SIGTERM);
-    update_signal(SIGABRT);
-    update_signal(SIGILL);
-    update_signal(SIGFPE);
-}
-
 void util_exit(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -2099,49 +1958,6 @@ int util_get_current_linenr(FILE *stream) {
     }
     return line_nr;
 }
-
-/*
-  Will check if the vector @data contains the element @value. The
-  @data vector should be sorted in increasing order prior to calling
-  this function. If the vector is not correctly sorted this will be
-  crash and burn.
-
-  If the element is found the index is returned, otherwise the value -1
-  is returned.
-*/
-
-#define CONTAINS(TYPE)                                                         \
-    int util_sorted_contains_##TYPE(const TYPE *data, int size, TYPE value) {  \
-        if ((data[0] == value))                                                \
-            return 0;                                                          \
-        else if ((data[size - 1] == value))                                    \
-            return size - 1;                                                   \
-        else if ((value < data[0]) || (value > data[size - 1]))                \
-            return -1;                                                         \
-        else {                                                                 \
-            int index1 = 0;                                                    \
-            int index2 = size - 1;                                             \
-            while (true) {                                                     \
-                int center_index = (index1 + index2) / 2;                      \
-                TYPE center_value = data[center_index];                        \
-                if (center_value == value)                                     \
-                    return center_index;                                       \
-                else {                                                         \
-                    if (value < center_value)                                  \
-                        index2 = center_index;                                 \
-                    else                                                       \
-                        index1 = center_index;                                 \
-                    if ((index2 - index1) == 1)                                \
-                        return -1;                                             \
-                }                                                              \
-            }                                                                  \
-        }                                                                      \
-    }
-
-CONTAINS(int)
-CONTAINS(time_t)
-CONTAINS(size_t)
-#undef CONTAINS
 
 int util_fnmatch(const char *pattern, const char *string) {
 #ifdef HAVE_FNMATCH

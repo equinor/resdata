@@ -118,10 +118,13 @@ class Grid(_BaseCClass):
           >> grid = Grid.create(specgrid_kw, zcorn_kw, coord_kw, actnum_kw)
 
         """
-        return cls._python_object_from_ptr(
-            _grid._grdecl_create(
-                specgrid[0], specgrid[1], specgrid[2], zcorn, coord, actnum, mapaxes
+        nx, ny, nz = specgrid[0], specgrid[1], specgrid[2]
+        if nx < 0 or ny < 0 or nz < 0:
+            raise ValueError(
+                f"Dimensions of grid were negative: nx={nx}, ny={ny}, nz={nz}"
             )
+        return cls._python_object_from_ptr(
+            _grid._grdecl_create(nx, ny, nz, zcorn, coord, actnum, mapaxes)
         )
 
     def __init__(self, filename, apply_mapaxes=True):
@@ -388,10 +391,7 @@ class Grid(_BaseCClass):
 
         Returns None if there is no active_fracture with that index
         """
-        result = _grid._get_global_index1F(self, active_fracture_index)
-        if result == -1:
-            return None
-        return result
+        return _grid._get_global_index1F(self, active_fracture_index)
 
     def cell_invalid(self, ijk=None, global_index=None, active_index=None):
         """Tries to check if a cell is invalid.
@@ -656,14 +656,14 @@ class Grid(_BaseCClass):
         If the location (@x,@y,@z) can not be found in the grid, the
         method will return None.
         """
-        start_index = 0
+        start_index = None
         if start_ijk:
             start_index = self.__global_index(ijk=start_ijk)
 
         global_index = _grid._get_ijk_xyz(self, x, y, z, start_index)
-        if global_index >= 0:
-            return _grid._get_ijk1(self, global_index)
-        return None
+        if global_index is None:
+            return None
+        return _grid._get_ijk1(self, global_index)
 
     def cell_contains(self, x, y, z, active_index=None, global_index=None, ijk=None):
         """

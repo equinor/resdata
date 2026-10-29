@@ -9,9 +9,12 @@ from resdata.grid import Grid
 from resdata.resfile import ResdataKW
 
 from ._grid_fixtures import (
+    UNIT_CELL_CORNERS,
     load_egrid_with_single_lgr,
     make_rectangular_grid,
+    write_egrid_with_actnum,
     write_egrid_with_single_lgr,
+    write_grid_file_with_cell_keywords,
 )
 
 
@@ -150,10 +153,10 @@ def test_that_get_global_index3_with_out_of_range_ijk_raises_index_error(
         _grid._get_global_index3(rectangular_grid, 99, 0, 0)
 
 
-def test_that_get_corner_xyz_with_out_of_range_i_raises_index_error(
+def test_that_get_corner_xyz_with_negative_i_raises_type_error(
     rectangular_grid,
 ):
-    with pytest.raises(IndexError, match="invalid i value"):
+    with pytest.raises(TypeError, match="incompatible function arguments"):
         _grid._get_corner_xyz(rectangular_grid, -1, 0, 0)
 
 
@@ -168,7 +171,7 @@ def test_that_get_corner_xyz_with_out_of_range_k_raises_index_error(
     rectangular_grid,
 ):
     with pytest.raises(IndexError, match="invalid k value"):
-        _grid._get_corner_xyz(rectangular_grid, 0, 0, -1)
+        _grid._get_corner_xyz(rectangular_grid, 0, 0, 100)
 
 
 def test_that_fetching_lgr_through_an_lgr_subgrid_raises_value_error(tmp_path):
@@ -279,4 +282,42 @@ def test_that_mapaxes_with_wrong_size_raises_when_loading_egrid(tmp_path):
     )
 
     with pytest.raises(ValueError, match="MAPAXES"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize(
+    "coords, corners, keyword",
+    [
+        ([1, 1, 1, 1, 1], [0.0], "CORNERS"),
+        ([1, 1, 1, 1, 1], list(UNIT_CELL_CORNERS) + [0.0], "CORNERS"),
+        ([1, 1], list(UNIT_CELL_CORNERS), "COORDS"),
+    ],
+)
+def test_that_grid_file_with_wrongly_sized_cell_keywords_is_rejected(
+    tmp_path, coords, corners, keyword
+):
+    filename = tmp_path / "BAD_CELL.GRID"
+    write_grid_file_with_cell_keywords(filename, coords, corners)
+
+    with pytest.raises(ValueError, match=f"Invalid size of {keyword}"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("actnum_size", [1, 7, 9])
+def test_that_egrid_with_wrongly_sized_actnum_is_rejected(tmp_path, actnum_size):
+    filename = tmp_path / "BAD_ACTNUM.EGRID"
+    write_egrid_with_actnum(filename, 2, 2, 2, [1] * actnum_size)
+
+    with pytest.raises(ValueError, match="Invalid size of ACTNUM"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("hostnum_size", [1, 7])
+def test_that_egrid_with_wrongly_sized_hostnum_is_rejected(tmp_path, hostnum_size):
+    filename = tmp_path / "BAD_HOSTNUM.EGRID"
+    write_egrid_with_single_lgr(
+        filename, 2, 2, 2, 2, 2, 2, 0, 0, 0, "LGR1", hostnum=[1] * hostnum_size
+    )
+
+    with pytest.raises(ValueError, match="Invalid size of HOSTNUM"):
         Grid(str(filename))
