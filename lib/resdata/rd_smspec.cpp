@@ -590,21 +590,6 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
     }
 }
 
-bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other) {
-    if (self->smspec_nodes.size() != other->smspec_nodes.size())
-        return false;
-
-    for (size_t i = 0; i < self->smspec_nodes.size(); i++) {
-        const rd::smspec_node *node1 = self->smspec_nodes[i].get();
-        const rd::smspec_node *node2 = other->smspec_nodes[i].get();
-
-        if (node1->cmp(*node2) != 0)
-            return false;
-    }
-
-    return true;
-}
-
 static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd::File *header) {
     if (!header->has_kw(RESTART_KW))
@@ -696,17 +681,6 @@ rd_smspec_insert_node(rd_smspec_type *rd_smspec,
     return node.get();
 }
 
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          const char *keyword, int num,
-                                          const char *unit,
-                                          float default_value) {
-    size_t params_index = rd_smspec->smspec_nodes.size();
-    return rd_smspec_insert_node(
-        rd_smspec, std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
-                       params_index, keyword, num, unit, rd_smspec->grid_dims,
-                       default_value, rd_smspec->key_join_string.c_str())));
-}
-
 //copy given node with a new index
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const rd::smspec_node &node) {
@@ -727,32 +701,10 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
 
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword,
-                                          const char *wgname, const char *unit,
-                                          float default_value) {
-    size_t params_index = rd_smspec->smspec_nodes.size();
-    return rd_smspec_insert_node(
-        rd_smspec, std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
-                       params_index, keyword, wgname, unit, default_value,
-                       rd_smspec->key_join_string.c_str())));
-}
-
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          const char *keyword,
                                           const char *wgname, int num,
                                           const char *unit,
                                           float default_value) {
     size_t params_index = rd_smspec->smspec_nodes.size();
-    return rd_smspec_insert_node(
-        rd_smspec,
-        std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
-            params_index, keyword, wgname, num, unit, rd_smspec->grid_dims,
-            default_value, rd_smspec->key_join_string.c_str())));
-}
-
-const rd::smspec_node *
-rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
-                   const char *keyword, const char *wgname, int num,
-                   const char *unit, float default_value) {
     return rd_smspec_insert_node(
         rd_smspec,
         std::unique_ptr<rd::smspec_node>(new rd::smspec_node(

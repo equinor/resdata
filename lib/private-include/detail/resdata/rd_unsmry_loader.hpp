@@ -21,8 +21,6 @@ public:
     std::vector<time_t> sim_time() const;
     size_t length() const;
 
-    time_t iget_sim_time(size_t time_index) const;
-    double iget_sim_seconds(size_t time_index) const;
     std::vector<size_t> report_steps(size_t offset) const;
     double iget(size_t time_index, size_t params_index) const;
 

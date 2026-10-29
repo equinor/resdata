@@ -592,10 +592,6 @@ double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
     return rd_sum_data_get_from_sim_time(rd_sum->data.get(), sim_time, *node);
 }
 
-double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time) {
-    return rd_sum_data_time2days(rd_sum->data.get(), sim_time);
-}
-
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
                                                    const char *lookup_kw) {
     const rd::smspec_node &node =
@@ -611,10 +607,6 @@ size_t rd_sum_get_general_var_params_index(const rd_sum_type *rd_sum,
 
 bool rd_sum_has_general_var(const rd_sum_type *rd_sum, const char *lookup_kw) {
     return rd_smspec_has_general_var(rd_sum->smspec.get(), lookup_kw);
-}
-
-bool rd_sum_has_key(const rd_sum_type *rd_sum, const char *lookup_kw) {
-    return rd_sum_has_general_var(rd_sum, lookup_kw);
 }
 
 double rd_sum_get_general_var(const rd_sum_type *rd_sum, size_t time_index,
@@ -760,11 +752,6 @@ double rd_sum_iget(const rd_sum_type *rd_sum, size_t time_index,
 
 rd_smspec_var_type rd_sum_identify_var_type(const char *var) {
     return rd_smspec_identify_var_type(var);
-}
-
-const char *rd_sum_get_unit(const rd_sum_type *rd_sum, const char *gen_key) {
-    const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return node->get_unit();
 }
 
 size_t rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {

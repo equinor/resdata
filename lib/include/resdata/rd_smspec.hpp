@@ -101,36 +101,18 @@ const char *rd_smspec_get_restart_case(const rd_smspec_type *rd_smspec);
 const int *rd_smspec_get_grid_dims(const rd_smspec_type *smspec);
 size_t rd_smspec_get_params_size(const rd_smspec_type *smspec);
 size_t rd_smspec_num_nodes(const rd_smspec_type *smspec);
-bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other);
 UnitSystem rd_smspec_get_unit_system(const rd_smspec_type *smspec);
 
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const rd::smspec_node &node);
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          const char *keyword, int num,
-                                          const char *unit,
-                                          float default_value);
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword, const char *unit,
-                                          float default_value);
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          const char *keyword,
-                                          const char *wgname, const char *unit,
                                           float default_value);
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *keyword,
                                           const char *wgname, int num,
                                           const char *unit,
                                           float default_value);
-const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
-                                          const char *keyword, int num,
-                                          const char *unit,
-                                          float default_value);
-
-const rd::smspec_node *
-rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,
-                   const char *keyword, const char *wgname, int num,
-                   const char *unit, float default_value);
 
 const rd::smspec_node *
 rd_smspec_add_node(rd_smspec_type *rd_smspec, size_t params_index,

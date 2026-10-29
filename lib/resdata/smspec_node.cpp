@@ -845,30 +845,6 @@ rd_smspec_var_type smspec_node::valid_type(const char *keyword,
    rd_smspec_fread_header() functions in addition. UGGGLY
 */
 
-smspec_node::smspec_node(size_t param_index, const char *keyword, int num,
-                         const char *unit, const int grid_dims[3],
-                         float default_value, const char *key_join_string)
-    : smspec_node(param_index, keyword, nullptr, num, unit, grid_dims,
-                  default_value, key_join_string) {}
-
-smspec_node::smspec_node(size_t param_index, const char *keyword, int num,
-                         const char *unit, float default_value,
-                         const char *key_join_string)
-    : smspec_node(param_index, keyword, nullptr, num, unit, nullptr,
-                  default_value, key_join_string) {}
-
-smspec_node::smspec_node(size_t param_index, const char *keyword,
-                         const char *wgname, const char *unit,
-                         float default_value, const char *key_join_string)
-    : smspec_node(param_index, keyword, wgname, nums_unused, unit, nullptr,
-                  default_value, key_join_string) {}
-
-smspec_node::smspec_node(size_t param_index, const char *keyword,
-                         const char *wgname, int num, const char *unit,
-                         float default_value, const char *key_join_string)
-    : smspec_node(param_index, keyword, wgname, num, unit, nullptr,
-                  default_value, key_join_string) {}
-
 smspec_node::smspec_node(size_t param_index, const char *keyword,
                          const char *unit, float default_value)
     : smspec_node(param_index, keyword, nullptr, nums_unused, unit, nullptr,

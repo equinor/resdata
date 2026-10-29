@@ -91,34 +91,6 @@ double unsmry_loader::iget(size_t time_index, size_t params_index) const {
     return value[0];
 }
 
-time_t unsmry_loader::iget_sim_time(size_t time_index) const {
-    if (std::holds_alternative<rd::TimeParamsIndex>(this->time_info)) {
-        double sim_seconds = this->iget_sim_seconds(time_index);
-        time_t sim_time = this->sim_start;
-        util_inplace_forward_seconds_utc(&sim_time, sim_seconds);
-        return sim_time;
-    } else {
-        std::array<float, 3> values;
-        file_view->index_fload_kw(
-            PARAMS_KW, time_index,
-            {this->date_index[0], this->date_index[1], this->date_index[2]},
-            values);
-
-        return rd_make_date(util_roundf(values[0]), util_roundf(values[1]),
-                            util_roundf(values[2]));
-    }
-}
-
-double unsmry_loader::iget_sim_seconds(size_t time_index) const {
-    if (const auto *time = std::get_if<rd::TimeParamsIndex>(&this->time_info)) {
-        double raw_time = this->iget(time_index, time->params_index);
-        return raw_time * time->seconds_per_unit;
-    } else {
-        time_t sim_time = this->iget_sim_time(time_index);
-        return util_difftime_seconds(this->sim_start, sim_time);
-    }
-}
-
 std::vector<size_t> unsmry_loader::report_steps(size_t offset) const {
     std::vector<size_t> report_steps;
     size_t current_step = offset;

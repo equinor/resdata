@@ -25,7 +25,6 @@ bool rd_sum_data_fread(rd_sum_data_type *data,
                        FileMode file_options);
 rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec);
 rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec);
-double rd_sum_data_time2days(const rd_sum_data_type *data, time_t sim_time);
 std::optional<size_t>
 rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
                                       time_t sim_time);

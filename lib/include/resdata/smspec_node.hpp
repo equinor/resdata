@@ -107,18 +107,6 @@ public:
 
     smspec_node(size_t param_index, const char *keyword, const char *unit,
                 float default_value);
-    smspec_node(size_t param_index, const char *keyword, int num,
-                const char *unit, const int grid_dims[3], float default_value,
-                const char *key_join_string);
-    smspec_node(size_t param_index, const char *keyword, int num,
-                const char *unit, float default_value,
-                const char *key_join_string);
-    smspec_node(size_t param_index, const char *keyword, const char *wgname,
-                const char *unit, float default_value,
-                const char *key_join_string);
-    smspec_node(size_t param_index, const char *keyword, const char *wgname,
-                int num, const char *unit, float default_value,
-                const char *key_join_string);
     smspec_node(const smspec_node &node, size_t param_index);
 
     static rd_smspec_var_type identify_var_type(const char *var);
