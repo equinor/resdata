@@ -2575,6 +2575,11 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                     rd_grid_type *host_grid;
                     rd::KW *hostnum_kw =
                         rd_file->get_kw(HOSTNUM_KW, grid_nr - 1);
+                    if (hostnum_kw->size() != lgr->size)
+                        throw std::invalid_argument(fmt::format(
+                            "Invalid size of HOSTNUM keyword = {}, expected "
+                            "nx * ny * nz of the LGR = {}",
+                            hostnum_kw->size(), lgr->size));
                     if (!lgr->parent_name)
                         host_grid = main_grid.get();
                     else
