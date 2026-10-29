@@ -19,15 +19,6 @@ nnc_vector_type *nnc_vector_alloc(size_t lgr_nr) {
     return nnc_vector;
 }
 
-nnc_vector_type *nnc_vector_alloc_copy(const nnc_vector_type *src_vector) {
-    nnc_vector_type *copy_vector = new nnc_vector_type();
-
-    copy_vector->lgr_nr = src_vector->lgr_nr;
-    copy_vector->grid_index_list = src_vector->grid_index_list;
-    copy_vector->nnc_index_list = src_vector->nnc_index_list;
-    return copy_vector;
-}
-
 bool nnc_vector_equal(const nnc_vector_type *nnc_vector1,
                       const nnc_vector_type *nnc_vector2) {
     if (nnc_vector1 == nnc_vector2)

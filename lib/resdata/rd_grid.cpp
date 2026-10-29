@@ -649,26 +649,8 @@ struct rd_cell_struct {
     rd_cell_struct(rd_cell_struct &&) = default;
     rd_cell_struct &operator=(rd_cell_struct &&) = default;
 
-    rd_cell_struct(const rd_cell_struct &other) { *this = other; }
-    rd_cell_struct &operator=(const rd_cell_struct &other) {
-        if (this == &other)
-            return *this;
-        center = other.center;
-        std::copy(std::begin(other.corner_list), std::end(other.corner_list),
-                  std::begin(corner_list));
-        volume = other.volume;
-        active = other.active;
-        active_index[0] = other.active_index[0];
-        active_index[1] = other.active_index[1];
-        lgr = other.lgr;
-        host_cell = other.host_cell;
-        coarse_group = other.coarse_group;
-        cell_flags = other.cell_flags;
-        nnc_info.reset(other.nnc_info
-                           ? nnc_info_alloc_copy(other.nnc_info.get())
-                           : nullptr);
-        return *this;
-    }
+    rd_cell_struct(const rd_cell_struct &) = delete;
+    rd_cell_struct &operator=(const rd_cell_struct &) = delete;
 };
 
 static UnitSystem rd_grid_check_unit_system(const rd::KW *gridunit_kw);
