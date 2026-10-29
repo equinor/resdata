@@ -16,7 +16,6 @@ size_t nnc_vector_iget_nnc_index(const nnc_vector_type *nnc_vector,
 size_t nnc_vector_iget_grid_index(const nnc_vector_type *nnc_vector,
                                   size_t index);
 nnc_vector_type *nnc_vector_alloc(size_t lgr_nr);
-nnc_vector_type *nnc_vector_alloc_copy(const nnc_vector_type *src_vector);
 void nnc_vector_free(nnc_vector_type *nnc_vector);
 void nnc_vector_add_nnc(nnc_vector_type *nnc_vector, size_t global_cell_number,
                         size_t nnc_index);

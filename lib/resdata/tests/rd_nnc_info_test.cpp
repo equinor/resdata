@@ -38,21 +38,6 @@ void test_equal() {
     nnc_info_free(nnc_info2);
 }
 
-void test_copy() {
-    size_t lgr_nr = 1;
-    nnc_info_type *nnc_info1 = nnc_info_alloc(lgr_nr);
-    nnc_info_add_nnc(nnc_info1, lgr_nr + 1, 11, 11);
-    nnc_info_add_nnc(nnc_info1, lgr_nr + 2, 11, 11);
-    nnc_info_add_nnc(nnc_info1, lgr_nr + 1, 111, 111);
-
-    {
-        nnc_info_type *nnc_copy = nnc_info_alloc_copy(nnc_info1);
-        test_assert_true(nnc_info_equal(nnc_info1, nnc_copy));
-        nnc_info_free(nnc_copy);
-    }
-    nnc_info_free(nnc_info1);
-}
-
 void basic_test() {
     size_t lgr_nr = 77;
     nnc_info_type *nnc_info = nnc_info_alloc(lgr_nr);
@@ -95,6 +80,5 @@ void basic_test() {
 int main(int argc, char **argv) {
     basic_test();
     test_equal();
-    test_copy();
     exit(0);
 }

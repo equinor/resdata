@@ -101,15 +101,8 @@ TEST_CASE("NNC Vector", "[unittest]") {
     REQUIRE(nnc_vector_iget_grid_index(nnc_vec.get(), 2) == 30);
     REQUIRE(nnc_vector_iget_nnc_index(nnc_vec.get(), 2) == 300);
 
-    auto nnc_vec_copy =
-        nnc_vector_ptr(nnc_vector_alloc_copy(nnc_vec.get()), &nnc_vector_free);
-    REQUIRE(nnc_vec_copy != nullptr);
-    REQUIRE(nnc_vector_equal(nnc_vec.get(), nnc_vec_copy.get()));
-    REQUIRE(nnc_vector_get_size(nnc_vec_copy.get()) == 3);
-
-    const auto &grid_indices =
-        nnc_vector_get_grid_index_list(nnc_vec_copy.get());
-    const auto &nnc_indices = nnc_vector_get_nnc_index_list(nnc_vec_copy.get());
+    const auto &grid_indices = nnc_vector_get_grid_index_list(nnc_vec.get());
+    const auto &nnc_indices = nnc_vector_get_nnc_index_list(nnc_vec.get());
     REQUIRE(grid_indices.size() == 3);
     REQUIRE(nnc_indices.size() == 3);
     REQUIRE(grid_indices[0] == 10);
@@ -121,7 +114,7 @@ TEST_CASE("NNC Vector", "[unittest]") {
 
     REQUIRE(nnc_vector_equal(nnc_vec.get(), nnc_vec.get()));
     REQUIRE(!nnc_vector_equal(nnc_vec.get(), nullptr));
-    REQUIRE(!nnc_vector_equal(nullptr, nnc_vec_copy.get()));
+    REQUIRE(!nnc_vector_equal(nullptr, nnc_vec.get()));
 
     auto nnc_vec_diff = nnc_vector_ptr(nnc_vector_alloc(1),
                                        &nnc_vector_free); // Different lgr_nr

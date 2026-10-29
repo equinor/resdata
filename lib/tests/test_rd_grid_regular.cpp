@@ -473,36 +473,16 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(rd_grid_get_cell_nnc_info1(grid.get(), 6) == nullptr);
         }
 
-        SECTION("NNC copy and equality") {
-            using nnc_info_ptr =
-                std::unique_ptr<nnc_info_type, decltype(&nnc_info_free)>;
-
+        SECTION("NNC equality") {
             rd_grid_add_self_nnc(grid.get(), 0, 1, 0);
             rd_grid_add_self_nnc(grid.get(), 0, 2, 1);
 
             auto nnc_info_orig = rd_grid_get_cell_nnc_info1(grid.get(), 0);
             REQUIRE(nnc_info_orig != nullptr);
 
-            auto nnc_info_copy = nnc_info_ptr(
-                nnc_info_alloc_copy(nnc_info_orig), &nnc_info_free);
-            REQUIRE(nnc_info_copy != nullptr);
-            REQUIRE(nnc_info_equal(nnc_info_orig, nnc_info_copy.get()));
-
-            REQUIRE(nnc_info_get_lgr_nr(nnc_info_copy.get()) ==
-                    nnc_info_get_lgr_nr(nnc_info_orig));
-            REQUIRE(nnc_info_get_size(nnc_info_copy.get()) ==
-                    nnc_info_get_size(nnc_info_orig));
-
-            auto nnc_vector_orig = nnc_info_get_self_vector(nnc_info_orig);
-            auto nnc_vector_copy =
-                nnc_info_get_self_vector(nnc_info_copy.get());
-            REQUIRE(nnc_vector_get_size(nnc_vector_copy) ==
-                    nnc_vector_get_size(nnc_vector_orig));
-            REQUIRE(nnc_vector_equal(nnc_vector_orig, nnc_vector_copy));
-
-            REQUIRE(nnc_info_equal(nnc_info_orig, nnc_info_copy.get()));
+            REQUIRE(nnc_info_equal(nnc_info_orig, nnc_info_orig));
             REQUIRE(!nnc_info_equal(nnc_info_orig, nullptr));
-            REQUIRE(!nnc_info_equal(nullptr, nnc_info_copy.get()));
+            REQUIRE(!nnc_info_equal(nullptr, nnc_info_orig));
         }
 
         SECTION("NNC with inactive cells") {

@@ -64,9 +64,6 @@ void test_copy() {
     nnc_vector_add_nnc(vector2, 300, 30);
     test_assert_false(nnc_vector_equal(vector1, vector2));
 
-    vector3 = nnc_vector_alloc_copy(vector1);
-    test_assert_true(nnc_vector_equal(vector1, vector3));
-
     nnc_vector_free(vector1);
     nnc_vector_free(vector2);
     nnc_vector_free(vector3);

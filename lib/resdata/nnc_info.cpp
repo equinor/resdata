@@ -34,18 +34,6 @@ nnc_info_type *nnc_info_alloc(size_t lgr_nr) {
     return nnc_info.release();
 }
 
-nnc_info_type *nnc_info_alloc_copy(const nnc_info_type *src_info) {
-    nnc_info_type *copy_info = nnc_info_alloc(src_info->lgr_nr);
-
-    for (const auto &vec : src_info->lgr_list) {
-        nnc_vector_ptr copy_vector{nnc_vector_alloc_copy(vec.get()),
-                                   nnc_vector_free};
-        nnc_info_add_vector(copy_info, std::move(copy_vector));
-    }
-
-    return copy_info;
-}
-
 bool nnc_info_equal(const nnc_info_type *nnc_info1,
                     const nnc_info_type *nnc_info2) {
     if (nnc_info1 == nnc_info2)
