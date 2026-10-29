@@ -48,7 +48,7 @@ void test_create_invalid(rd_grid_type *grid) {
 void test_trace_edge(rd_grid_type *grid) {
     const size_t k = 1;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
-    auto block = fault_block_layer_safe_get_block(layer, 99);
+    auto block = fault_block_layer_add_block(layer, 99);
 
     test_assert_true(block->trace_edge().empty());
     block->add_cell(0, 0);

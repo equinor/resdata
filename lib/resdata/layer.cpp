@@ -572,17 +572,6 @@ void layer_add_interp_barrier(layer_type *layer, size_t c1, size_t c2) {
     }
 }
 
-void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
-    if ((target_layer->nx == src_layer->nx) &&
-        (target_layer->ny == src_layer->ny)) {
-        target_layer->cells.assign(src_layer->cells.begin(),
-                                   src_layer->cells.end());
-        target_layer->cell_sum = src_layer->cell_sum;
-    } else
-        throw std::invalid_argument(
-            "cannot copy elements between layers of different size");
-}
-
 void layer_assign(layer_type *layer, int value) {
     for (size_t j = 0; j < layer->ny; j++) {
         for (size_t i = 0; i < layer->nx; i++) {

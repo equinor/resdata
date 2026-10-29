@@ -265,27 +265,6 @@ TEST_CASE("Layer getters and setters", "[layer]") {
                 REQUIRE_FALSE(layer_cell_contact(layer.get(), 2, 2, 3, 2));
             }
         }
-        AND_GIVEN("A layer of the same size") {
-            auto dst = make_layer(nx, ny);
-
-            WHEN("Source layer has some values set") {
-                layer_iset_cell_value(layer.get(), 1, 1, 10);
-                layer_iset_cell_value(layer.get(), 2, 2, 20);
-                layer_iset_cell_value(layer.get(), 3, 3, 30);
-
-                WHEN("Copying from source to destination") {
-                    layer_memcpy(dst.get(), layer.get());
-
-                    THEN("Destination has the same values") {
-                        REQUIRE(layer_iget_cell_value(dst.get(), 1, 1) == 10);
-                        REQUIRE(layer_iget_cell_value(dst.get(), 2, 2) == 20);
-                        REQUIRE(layer_iget_cell_value(dst.get(), 3, 3) == 30);
-                        REQUIRE(layer_get_cell_sum(dst.get()) ==
-                                layer_get_cell_sum(layer.get()));
-                    }
-                }
-            }
-        }
         AND_GIVEN("Three cells are set to values 7") {
             layer_iset_cell_value(layer.get(), 1, 1, 7);
             layer_iset_cell_value(layer.get(), 2, 2, 7);

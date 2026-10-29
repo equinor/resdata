@@ -182,11 +182,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             size_t global_from_active =
                 rd_grid_get_global_index1A(grid.get(), *active_idx);
             REQUIRE(global_from_active == global_idx);
-
-            rd_grid_get_ijk1A(grid.get(), *active_idx, &i, &j, &k);
-            REQUIRE(i == 0);
-            REQUIRE(j == 0);
-            REQUIRE(k == 0);
         }
 
         SECTION("Cell activity") {
@@ -209,12 +204,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(x == 1.5);
             REQUIRE(y == 1.0);
             REQUIRE(z == 1.5);
-
-            auto active_idx = rd_grid_get_active_index1(grid.get(), 6);
-            rd_grid_get_xyz1A(grid.get(), *active_idx, &x, &y, &z);
-            REQUIRE(x == 0.5);
-            REQUIRE(y == 3.0);
-            REQUIRE(z == 4.5);
 
             rd_grid_get_corner_xyz(grid.get(), 0, 0, 0, &x, &y, &z);
             REQUIRE(x == 0.0);
@@ -270,16 +259,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             double thickness = rd_grid_get_cell_thickness1(grid.get(), 0);
             REQUIRE(thickness == 3.0);
 
-            auto active_idx = rd_grid_get_active_index1(grid.get(), 0);
-            double dx_a = rd_grid_get_cell_dx1A(grid.get(), *active_idx);
-            REQUIRE(dx_a == 1.0);
-
-            double dy_a = rd_grid_get_cell_dy1A(grid.get(), *active_idx);
-            REQUIRE(dy_a == 2.0);
-
-            double dz_a = rd_grid_get_cell_dz1A(grid.get(), *active_idx);
-            REQUIRE(dz_a == 3.0);
-
             double dx_dist, dy_dist, dz_dist;
             rd_grid_get_distance(grid.get(), 0, 1, &dx_dist, &dy_dist,
                                  &dz_dist);
@@ -296,9 +275,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             double volume_a =
                 rd_grid_get_cell_volume1A(grid.get(), *active_idx);
             REQUIRE(volume_a == 6.0);
-
-            double cdepth_a = rd_grid_get_cdepth1A(grid.get(), *active_idx);
-            REQUIRE(cdepth_a == 1.5);
 
             double top_a = rd_grid_get_top1A(grid.get(), *active_idx);
             REQUIRE(top_a == 0.0);
@@ -423,63 +399,14 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             rd_grid_init_zcorn_data(grid.get(), zcorn_data.data());
             REQUIRE(zcorn_data == expected_zcorn);
 
-            std::vector<double> zcorn_data_double(
-                static_cast<size_t>(zcorn_size));
-            rd_grid_init_zcorn_data_double(grid.get(),
-                                           zcorn_data_double.data());
-            REQUIRE(zcorn_data_double ==
-                    std::vector<double>(expected_zcorn.begin(),
-                                        expected_zcorn.end()));
-
             std::vector<float> coord_data(static_cast<size_t>(coord_size));
             rd_grid_init_coord_data(grid.get(), coord_data.data());
             REQUIRE(coord_data == expected_coord);
-
-            std::vector<double> coord_data_double(
-                static_cast<size_t>(coord_size));
-            rd_grid_init_coord_data_double(grid.get(),
-                                           coord_data_double.data());
-            REQUIRE(coord_data_double ==
-                    std::vector<double>(expected_coord.begin(),
-                                        expected_coord.end()));
 
             std::vector<int> actnum(rd_grid_get_global_size(grid.get()));
             rd_grid_init_actnum_data(grid.get(), actnum.data());
             for (size_t i = 0; i < 8; i++)
                 REQUIRE(actnum[i] == actnum_data[i]);
-        }
-
-        SECTION("copy & reset actnum") {
-            auto copy = copy_grid(grid.get());
-            REQUIRE(copy != nullptr);
-            REQUIRE(
-                rd_grid_compare(grid.get(), copy.get(), false, false, false));
-
-            std::vector<int> new_actnum(8, 1);
-            new_actnum[0] = 0;
-            new_actnum[1] = 0;
-            rd_grid_reset_actnum(copy.get(), new_actnum.data());
-
-            REQUIRE(rd_grid_get_nactive(copy.get()) == 6);
-        }
-
-        SECTION("Grid copy with NNCs") {
-            rd_grid_add_self_nnc(grid.get(), 0, 1, 0);
-            rd_grid_add_self_nnc(grid.get(), 0, 2, 1);
-            rd_grid_add_self_nnc(grid.get(), 1, 3, 2);
-
-            auto copy = copy_grid(grid.get());
-            REQUIRE(copy != nullptr);
-
-            auto nnc_info_orig = rd_grid_get_cell_nnc_info1(grid.get(), 0);
-            auto nnc_info_copy = rd_grid_get_cell_nnc_info1(copy.get(), 0);
-            REQUIRE(nnc_info_copy != nullptr);
-            REQUIRE(nnc_info_equal(nnc_info_orig, nnc_info_copy));
-
-            auto nnc_info_orig1 = rd_grid_get_cell_nnc_info1(grid.get(), 1);
-            auto nnc_info_copy1 = rd_grid_get_cell_nnc_info1(copy.get(), 1);
-            REQUIRE(nnc_info_copy1 != nullptr);
-            REQUIRE(nnc_info_equal(nnc_info_orig1, nnc_info_copy1));
         }
 
         SECTION("NNC") {
@@ -508,7 +435,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(nnc_info != nullptr);
             nnc_vector = nnc_info_get_self_vector(nnc_info);
             REQUIRE(nnc_vector_get_size(nnc_vector) == 3);
-            REQUIRE(nnc_info_get_total_size(nnc_info) == 3);
 
             REQUIRE(nnc_vector_iget_grid_index(nnc_vector, 0) == 1);
             REQUIRE(nnc_vector_iget_nnc_index(nnc_vector, 0) == 0);
@@ -518,7 +444,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(nnc_vector_iget_nnc_index(nnc_vector, 2) == 2);
 
             const auto &grid_index_list =
-                nnc_info_get_self_grid_index_list(nnc_info);
+                nnc_vector_get_grid_index_list(nnc_vector);
             REQUIRE(grid_index_list.size() == 3);
             REQUIRE(grid_index_list[0] == 1);
             REQUIRE(grid_index_list[1] == 2);
@@ -536,7 +462,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
 
             auto nnc_info_cell1 = rd_grid_get_cell_nnc_info1(grid.get(), 1);
             REQUIRE(nnc_info_cell1 != nullptr);
-            REQUIRE(nnc_info_get_total_size(nnc_info_cell1) == 2);
 
             auto nnc_vector_cell1 = nnc_info_get_self_vector(nnc_info_cell1);
             REQUIRE(nnc_vector_get_size(nnc_vector_cell1) == 2);
@@ -546,9 +471,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             // cells without NNCs return nullptr
             REQUIRE(rd_grid_get_cell_nnc_info1(grid.get(), 4) == nullptr);
             REQUIRE(rd_grid_get_cell_nnc_info1(grid.get(), 6) == nullptr);
-
-            REQUIRE(nnc_info_has_grid_index_list(nnc_info, 0));
-            REQUIRE(!nnc_info_has_grid_index_list(nnc_info, 1));
         }
 
         SECTION("NNC copy and equality") {
@@ -570,8 +492,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
                     nnc_info_get_lgr_nr(nnc_info_orig));
             REQUIRE(nnc_info_get_size(nnc_info_copy.get()) ==
                     nnc_info_get_size(nnc_info_orig));
-            REQUIRE(nnc_info_get_total_size(nnc_info_copy.get()) ==
-                    nnc_info_get_total_size(nnc_info_orig));
 
             auto nnc_vector_orig = nnc_info_get_self_vector(nnc_info_orig);
             auto nnc_vector_copy =
@@ -801,18 +721,6 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         }
         THEN("the formatted .FEGRID is loaded") {
             load_and_compare(funrst_path, read_fegrid.get());
-        }
-    }
-
-    GIVEN("A basename for which only a formatted .FGRID file exists") {
-        auto fgrid_base = dirname / "ONLYFGRID";
-        auto fgrid_path = dirname / "ONLYFGRID.FGRID";
-        {
-            std::ofstream ofs(fgrid_path);
-            ofs << "stub";
-        }
-        THEN("the FGRID is reported as exists") {
-            REQUIRE(rd_grid_exists(fgrid_base.c_str()));
         }
     }
 

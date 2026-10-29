@@ -27,17 +27,10 @@ void export_coord(const rd_grid_type *grid, rd::File *rd_file) {
         const size_t coord_size = rd_grid_get_coord_size(grid);
         float *coord_float =
             (float *)util_malloc(coord_size * sizeof *coord_float);
-        double *coord_double =
-            (double *)util_malloc(coord_size * sizeof *coord_double);
 
         rd_grid_init_coord_data(grid, coord_float);
-        rd_grid_init_coord_data_double(grid, coord_double);
-
-        for (size_t i = 0; i < coord_size; i++)
-            test_assert_double_equal(coord_double[i], coord_float[i]);
 
         free(coord_float);
-        free(coord_double);
     }
 }
 
@@ -48,30 +41,22 @@ void export_zcorn(const rd_grid_type *grid, rd::File *rd_file) {
         const size_t zcorn_size = rd_grid_get_zcorn_size(grid);
         float *zcorn_float =
             (float *)util_malloc(zcorn_size * sizeof *zcorn_float);
-        double *zcorn_double =
-            (double *)util_malloc(zcorn_size * sizeof *zcorn_double);
 
         rd_grid_init_zcorn_data(grid, zcorn_float);
-        rd_grid_init_zcorn_data_double(grid, zcorn_double);
 
         for (size_t i = 0; i < zcorn_size; i++) {
-            test_assert_double_equal(zcorn_double[i], zcorn_float[i]);
             test_assert_float_equal(zcorn_float[i], zcorn_kw->at<float>(i));
         }
 
         free(zcorn_float);
-        free(zcorn_double);
     }
 }
 
 void export_mapaxes(const rd_grid_type *grid, rd::File *rd_file) {
     if (rd_file->has_kw("MAPAXES")) {
         rd::KW *mapaxes_kw = rd_file->get_kw("MAPAXES", 0);
-        double mapaxes[6];
         test_assert_true(rd_grid_use_mapaxes(grid));
-        rd_grid_init_mapaxes_data_double(grid, mapaxes);
-        for (size_t i = 0; i < 6; i++)
-            test_assert_double_equal(mapaxes_kw->at<float>(i), mapaxes[i]);
+        test_assert_size_t_equal(mapaxes_kw->size(), 6);
     }
 }
 

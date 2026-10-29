@@ -311,11 +311,9 @@ foreach(
   rd_fault_block_layer
   rd_path_access
   rd_grid_add_nnc
-  rd_grid_copy
   rd_grid_unit_system
   rd_grid_export
   rd_grid_init_fwrite
-  rd_grid_reset_actnum
   rd_kw_space_pad
   rd_kw_fread
   rd_layer
@@ -369,7 +367,6 @@ foreach(
   rd_coarse_test
   rd_grid_layer_contains
   rd_restart_test
-  rd_grid_lgr_name
   rd_region
   rd_grid_cell_contains_wellpath
   rd_region2region
@@ -397,7 +394,7 @@ foreach(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 endforeach()
 
-foreach(name rd_grid_layer_contains rd_region rd_grid_copy)
+foreach(name rd_grid_layer_contains rd_region)
   foreach(i RANGE 1 7)
     add_test(NAME ${name}_faarikaal${i}
              COMMAND ${name}
@@ -419,12 +416,6 @@ add_test(NAME rd_coarse_test COMMAND rd_coarse_test
 
 add_test(NAME rd_restart_test COMMAND rd_restart_test
                                       ${_resdatapath}/Gurbat/ECLIPSE.UNRST)
-
-add_test(
-  NAME rd_grid_lgr_name
-  COMMAND
-    rd_grid_lgr_name
-    ${_resdatapath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID)
 
 add_test(
   NAME rd_grid_cell_contains_wellpath1

@@ -78,13 +78,6 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
                 REQUIRE(rd_grid_get_num_lgr(reloaded.get()) == 1);
                 REQUIRE(rd_grid_has_lgr(reloaded.get(), "LGR1"));
             }
-
-            AND_THEN("Copying the grid preserves the LGR") {
-                auto copy = copy_grid(grid.get());
-                REQUIRE(copy != nullptr);
-                REQUIRE(rd_grid_get_num_lgr(copy.get()) == 1);
-                REQUIRE(rd_grid_has_lgr(copy.get(), "LGR1"));
-            }
         }
     }
 }
@@ -151,14 +144,6 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with nested LGRs", "[unittest]") {
             REQUIRE(rd_grid_get_num_lgr(grid.get()) == 2);
             REQUIRE(rd_grid_has_lgr(grid.get(), "OUTER"));
             REQUIRE(rd_grid_has_lgr(grid.get(), "INNER"));
-
-            AND_THEN("Copying the grid preserves both LGRs") {
-                auto copy = copy_grid(grid.get());
-                REQUIRE(copy != nullptr);
-                REQUIRE(rd_grid_get_num_lgr(copy.get()) == 2);
-                REQUIRE(rd_grid_has_lgr(copy.get(), "OUTER"));
-                REQUIRE(rd_grid_has_lgr(copy.get(), "INNER"));
-            }
         }
     }
 }
@@ -225,8 +210,10 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
             std::string main_name = rd_grid_get_lgr_name(grid.get(), 0);
             REQUIRE(main_name == filename.string());
 
-            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "OUTER"));
+            size_t inner_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "INNER"));
             REQUIRE(outer_nr != 0);
             REQUIRE(inner_nr != 0);
             REQUIRE(outer_nr != inner_nr);
@@ -237,16 +224,12 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
             REQUIRE(inner_name == "INNER");
         }
 
-        THEN("rd_grid_get_lgr_nr_from_name returns 0 for the main grid's "
-             "name") {
-            REQUIRE(rd_grid_get_lgr_nr_from_name(grid.get(),
-                                                 filename.c_str()) == 0);
-        }
-
         THEN("rd_grid_has_lgr_nr returns true for each LGR's lgr_nr and "
              "false for an lgr_nr past the end of the map") {
-            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "OUTER"));
+            size_t inner_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "INNER"));
             REQUIRE(rd_grid_has_lgr_nr(grid.get(), outer_nr));
             REQUIRE(rd_grid_has_lgr_nr(grid.get(), inner_nr));
             size_t past_end = std::max(outer_nr, inner_nr) + 1;
@@ -268,27 +251,14 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
 
         THEN("rd_grid_get_lgr_from_lgr_nr resolves each LGR's lgr_nr back to "
              "the same pointer as rd_grid_get_lgr") {
-            size_t outer_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "OUTER");
-            size_t inner_nr = rd_grid_get_lgr_nr_from_name(grid.get(), "INNER");
+            size_t outer_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "OUTER"));
+            size_t inner_nr =
+                rd_grid_get_lgr_nr(rd_grid_get_lgr(grid.get(), "INNER"));
             REQUIRE(rd_grid_get_lgr_from_lgr_nr(grid.get(), outer_nr) ==
                     rd_grid_get_lgr(grid.get(), "OUTER"));
             REQUIRE(rd_grid_get_lgr_from_lgr_nr(grid.get(), inner_nr) ==
                     rd_grid_get_lgr(grid.get(), "INNER"));
-        }
-
-        THEN("rd_grid_alloc_copy preserves the main grid and LGR names") {
-            auto copy = copy_grid(grid.get());
-            REQUIRE(copy != nullptr);
-            REQUIRE(std::string(rd_grid_get_name(copy.get())) ==
-                    filename.string());
-            REQUIRE(rd_grid_has_lgr(copy.get(), "OUTER"));
-            REQUIRE(rd_grid_has_lgr(copy.get(), "INNER"));
-
-            std::string first = rd_grid_iget_lgr_name(copy.get(), 0);
-            std::string second = rd_grid_iget_lgr_name(copy.get(), 1);
-            REQUIRE((first == "OUTER" || first == "INNER"));
-            REQUIRE((second == "OUTER" || second == "INNER"));
-            REQUIRE(first != second);
         }
     }
 }
@@ -376,14 +346,6 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
                 REQUIRE_THAT(corners[i], WithinAbs(expected[i], 0.1f));
         }
 
-        THEN("rd_grid_init_mapaxes_data_double returns mapaxes") {
-            double out[6] = {0};
-            rd_grid_init_mapaxes_data_double(grid.get(), out);
-            for (int i = 0; i < 6; i++)
-                REQUIRE_THAT(out[i],
-                             WithinAbs(static_cast<double>(mapaxes[i]), 0.1));
-        }
-
         THEN("rd_grid_alloc_mapaxes_kw returns kw with mapaxes") {
             auto kw = rd_grid_alloc_mapaxes_kw(grid.get());
             REQUIRE(kw);
@@ -391,19 +353,6 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
             const auto &data = (*kw)->get_vector<float>();
             for (size_t i = 0; i < 6; i++)
                 REQUIRE(data[i] == mapaxes[i]);
-        }
-
-        THEN("rd_grid_alloc_copy preserves the MAPAXES") {
-            auto copy = copy_grid(grid.get());
-            REQUIRE(copy != nullptr);
-            REQUIRE(rd_grid_use_mapaxes(copy.get()));
-
-            double original[6] = {0};
-            double copied[6] = {0};
-            rd_grid_init_mapaxes_data_double(grid.get(), original);
-            rd_grid_init_mapaxes_data_double(copy.get(), copied);
-            for (int i = 0; i < 6; i++)
-                REQUIRE(copied[i] == original[i]);
         }
     }
 
@@ -481,7 +430,6 @@ TEST_CASE_METHOD(Tmpdir, "Dual-porosity EGRID with NNC is loaded",
             const nnc_info_type *info0 =
                 rd_grid_get_cell_nnc_info1(grid.get(), 0);
             REQUIRE(info0 != nullptr);
-            REQUIRE(nnc_info_get_total_size(info0) == 1);
             const nnc_vector_type *self0 = nnc_info_get_self_vector(info0);
             REQUIRE(self0 != nullptr);
             REQUIRE(nnc_vector_iget_grid_index(self0, 0) == 1);

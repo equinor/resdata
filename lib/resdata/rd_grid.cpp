@@ -2007,78 +2007,6 @@ static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
   0---1
 */
 
-static void rd_grid_copy_mapaxes(rd_grid_type *target_grid,
-                                 const rd_grid_type *src_grid) {
-    target_grid->use_mapaxes = src_grid->use_mapaxes;
-    target_grid->mapaxes = src_grid->mapaxes;
-
-    for (int i = 0; i < 2; i++) {
-        target_grid->unit_x[i] = src_grid->unit_x[i];
-        target_grid->unit_y[i] = src_grid->unit_y[i];
-        target_grid->origo[i] = src_grid->origo[i];
-    }
-}
-
-static void rd_grid_copy_content(rd_grid_type *target_grid,
-                                 const rd_grid_type *src_grid) {
-    for (size_t i = 0; i < src_grid->size; i++) {
-        rd_cell_type *target_cell = &target_grid->cells.at(i);
-        const rd_cell_type *src_cell = &src_grid->cells.at(i);
-
-        *target_cell = *src_cell;
-    }
-    rd_grid_copy_mapaxes(target_grid, src_grid);
-
-    target_grid->parent_name = src_grid->parent_name;
-    target_grid->name = src_grid->name;
-
-    target_grid->coarsening_active = src_grid->coarsening_active;
-    rd_grid_init_coarse_cells(target_grid);
-}
-
-static rd_grid_ptr rd_grid_alloc_copy__(const rd_grid_type *src_grid,
-                                        rd_grid_type *main_grid) {
-    auto copy_grid =
-        rd_grid_ptr(rd_grid_alloc_empty(
-                        main_grid, src_grid->unit_system, src_grid->dualp_flag,
-                        rd_grid_get_nx(src_grid), rd_grid_get_ny(src_grid),
-                        rd_grid_get_nz(src_grid), 0, false),
-                    &rd_grid_free);
-    if (copy_grid) {
-        rd_grid_copy_content(
-            copy_grid.get(),
-            src_grid); // This will handle everything except LGR relationships which is established in the calling routine
-        rd_grid_update_index(copy_grid.get());
-    }
-    return copy_grid;
-}
-
-rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
-    auto copy_grid = rd_grid_alloc_copy__(src_grid, NULL);
-
-    for (const auto &src_lgr : src_grid->LGR_list) {
-        // This transfers the storage ownership of the LGR to copy_grid
-        auto copy_lgr = rd_grid_alloc_copy__(src_lgr.get(), copy_grid.get());
-        auto *lgr = rd_grid_add_lgr(copy_grid.get(), std::move(copy_lgr));
-
-        rd_grid_type *host_grid;
-        if (!lgr->parent_name)
-            host_grid = copy_grid.get();
-        else
-            host_grid =
-                rd_grid_get_lgr(copy_grid.get(), lgr->parent_name->c_str());
-
-        for (auto &lgr_cell : lgr->cells) {
-            rd_cell_type &host_cell =
-                host_grid->cells.at(lgr_cell.host_cell.value());
-            host_cell.lgr = lgr;
-        }
-        rd_grid_install_lgr_common(host_grid, lgr);
-    }
-
-    return copy_grid.release();
-}
-
 static const float *rd_grid_get_mapaxes_from_kw__(const rd::KW *mapaxes_kw) {
     if (mapaxes_kw->size() != 6)
         throw std::invalid_argument(
@@ -2992,7 +2920,7 @@ rd_grid_alloc_case_filename(const char *case_input) {
     }
 }
 
-rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes) {
+rd_grid_type *rd_grid_load_case(const char *case_input, bool apply_mapaxes) {
     rd_grid_type *rd_grid = NULL;
     auto grid_file = rd_grid_alloc_case_filename(case_input);
     if (grid_file.has_value() && util_file_exists(grid_file.value().c_str())) {
@@ -3000,15 +2928,6 @@ rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes) {
             rd_grid_alloc__(grid_file.value().c_str(), apply_mapaxes).release();
     }
     return rd_grid;
-}
-
-rd_grid_type *rd_grid_load_case(const char *case_input) {
-    bool apply_mapaxes = true;
-    return rd_grid_load_case__(case_input, apply_mapaxes);
-}
-
-bool rd_grid_exists(const char *case_input) {
-    return rd_grid_alloc_case_filename(case_input).has_value();
 }
 
 static bool rd_grid_compare_coarse_cells(const rd_grid_type *g1,
@@ -3780,18 +3699,6 @@ void rd_grid_get_ijk1(const rd_grid_type *grid, size_t global_index, size_t *i,
     *i = i_index;
 }
 
-/** Converts active_index -> (i,j,k) */
-void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, size_t active_index,
-                       size_t *i, size_t *j, size_t *k) {
-    if (active_index < rd_grid->total_active) {
-        size_t global_index = rd_grid_get_global_index1A(rd_grid, active_index);
-        rd_grid_get_ijk1(rd_grid, global_index, i, j, k);
-    } else
-        throw std::out_of_range(fmt::format(
-            "error active_index:{} invalid - grid has only:{} active cells.",
-            active_index, rd_grid->total_active));
-}
-
 /**
   Functions to get the 'true' (i.e. UTM or whatever) position (x,y,z).
 
@@ -3892,21 +3799,10 @@ void rd_grid_get_corner_xyz(const rd_grid_type *grid, size_t i, size_t j,
     }
 }
 
-void rd_grid_get_xyz1A(rd_grid_type *grid, size_t active_index, double *xpos,
-                       double *ypos, double *zpos) {
-    const size_t global_index = rd_grid_get_global_index1A(grid, active_index);
-    rd_grid_get_xyz1(grid, global_index, xpos, ypos, zpos);
-}
-
 double rd_grid_get_cdepth1(rd_grid_type *grid, size_t global_index) {
     rd_cell_type &cell = grid->cells.at(global_index);
     rd_cell_assert_center(cell);
     return cell.center.z;
-}
-
-double rd_grid_get_cdepth1A(rd_grid_type *grid, size_t active_index) {
-    const size_t global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_cdepth1(grid, global_index);
 }
 
 /** Returns the depth of the top surface of the cell. */
@@ -3997,11 +3893,6 @@ double rd_grid_get_cell_dz1(const rd_grid_type *grid, size_t global_index) {
     return dz * 0.25;
 }
 
-double rd_grid_get_cell_dz1A(const rd_grid_type *grid, size_t active_index) {
-    const size_t global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_cell_dz1(grid, global_index);
-}
-
 double rd_grid_get_cell_thickness1(const rd_grid_type *grid,
                                    size_t global_index) {
     return rd_grid_get_cell_dz1(grid, global_index);
@@ -4020,11 +3911,6 @@ double rd_grid_get_cell_dx1(const rd_grid_type *grid, size_t global_index) {
     dy *= 0.25;
 
     return sqrt(dx * dx + dy * dy);
-}
-
-double rd_grid_get_cell_dx1A(const rd_grid_type *grid, size_t active_index) {
-    const size_t global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_cell_dx1(grid, global_index);
 }
 
 /**
@@ -4056,11 +3942,6 @@ double rd_grid_get_cell_dy1(const rd_grid_type *grid, size_t global_index) {
     dy *= 0.25;
 
     return sqrt(dx * dx + dy * dy);
-}
-
-double rd_grid_get_cell_dy1A(const rd_grid_type *grid, size_t active_index) {
-    const size_t global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_cell_dy1(grid, global_index);
 }
 
 const nnc_info_type *rd_grid_get_cell_nnc_info1(const rd_grid_type *grid,
@@ -4217,17 +4098,6 @@ const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, size_t lgr_nr) {
     {
         size_t lgr_index = rd_grid->lgr_index_map.at(lgr_nr);
         return rd_grid_iget_lgr_name(rd_grid, lgr_index);
-    }
-}
-
-size_t rd_grid_get_lgr_nr_from_name(const rd_grid_type *grid,
-                                    const char *name) {
-    __assert_main_grid(grid);
-    if (strcmp(name, grid->name.c_str()) == 0)
-        return 0;
-    else {
-        const rd_grid_type *lgr = rd_grid_get_lgr(grid, name);
-        return lgr->lgr_nr;
     }
 }
 
@@ -4451,13 +4321,6 @@ bool rd_grid_test_lgr_consistency(const rd_grid_type *rd_grid) {
 */
 
 bool rd_grid_use_mapaxes(const rd_grid_type *grid) { return grid->use_mapaxes; }
-
-void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
-                                      double *mapaxes) {
-    if (grid->mapaxes.has_value())
-        for (size_t i = 0; i < 6; i++)
-            mapaxes[i] = grid->mapaxes.value()[i];
-}
 
 std::optional<std::unique_ptr<rd::KW>>
 rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
@@ -4814,19 +4677,6 @@ void rd_grid_init_coord_data(const rd_grid_type *grid, float *coord) {
     }
 }
 
-void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord) {
-    /*
-    The coord vector contains the points defining the top and bottom
-    of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
-    chunks of data, where each chunk contains the coordinates (x,y,z)
-    f the top and the bottom of the pillar.
-    */
-    for (size_t j = 0; j <= grid->ny; j++) {
-        for (size_t i = 0; i <= grid->nx; i++)
-            rd_grid_init_coord_section(grid, i, j, NULL, coord);
-    }
-}
-
 static void rd_grid_assert_coord_kw(rd_grid_type *grid) {
     if (!grid->coord_kw) {
         grid->coord_kw = std::make_unique<rd::KW>(
@@ -4885,10 +4735,6 @@ static void rd_grid_init_zcorn_data__(const rd_grid_type *grid,
 
 void rd_grid_init_zcorn_data(const rd_grid_type *grid, float *zcorn) {
     rd_grid_init_zcorn_data__(grid, zcorn, NULL);
-}
-
-void rd_grid_init_zcorn_data_double(const rd_grid_type *grid, double *zcorn) {
-    rd_grid_init_zcorn_data__(grid, NULL, zcorn);
 }
 
 std::unique_ptr<rd::KW> rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
@@ -5039,17 +4885,6 @@ rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
         corsnum[i] = cell.coarse_group ? *cell.coarse_group + 1 : 0;
     }
     return std::make_unique<rd::KW>(CORSNUM_KW, corsnum);
-}
-
-void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
-    for (size_t g = 0; g < grid->size; g++) {
-        rd_cell_type &cell = grid->cells.at(g);
-        if (actnum)
-            cell.active = actnum[g];
-        else
-            cell.active = 1;
-    }
-    rd_grid_update_index(grid);
 }
 
 static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,

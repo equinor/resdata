@@ -125,36 +125,10 @@ void nnc_info_add_nnc(nnc_info_type *nnc_info, size_t lgr_nr,
     }
 }
 
-bool nnc_info_has_grid_index_list(const nnc_info_type *nnc_info,
-                                  size_t lgr_nr) {
-    return nnc_info_get_vector(nnc_info, lgr_nr);
-}
-
-const std::vector<size_t> &
-nnc_info_get_grid_index_list(const nnc_info_type *nnc_info, size_t lgr_nr) {
-    nnc_vector_type *nnc_vector = nnc_info_get_vector(nnc_info, lgr_nr);
-    if (!nnc_vector)
-        throw std::invalid_argument(std::string(__func__));
-    return nnc_vector_get_grid_index_list(nnc_vector);
-}
-
-const std::vector<size_t> &
-nnc_info_get_self_grid_index_list(const nnc_info_type *nnc_info) {
-    return nnc_info_get_grid_index_list(nnc_info, nnc_info->lgr_nr);
-}
-
 size_t nnc_info_get_lgr_nr(const nnc_info_type *nnc_info) {
     return nnc_info->lgr_nr;
 }
 
 size_t nnc_info_get_size(const nnc_info_type *nnc_info) {
     return nnc_info->lgr_list.size();
-}
-
-size_t nnc_info_get_total_size(const nnc_info_type *nnc_info) {
-    size_t num_nnc = 0;
-    for (const auto &nnc_vector : nnc_info->lgr_list) {
-        num_nnc += nnc_vector_get_size(nnc_vector.get());
-    }
-    return num_nnc;
 }

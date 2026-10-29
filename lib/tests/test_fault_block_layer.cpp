@@ -51,19 +51,12 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
         THEN("get_next_id returns 1 when empty") {
             REQUIRE(fault_block_layer_get_next_id(layer.get()) == 1);
         }
-        THEN("get_max_id returns -1 when empty") {
-            REQUIRE(fault_block_layer_get_max_id(layer.get()) == -1);
-        }
         THEN("get_layer returns a non-null layer") {
             REQUIRE(fault_block_layer_get_layer(layer.get()) != nullptr);
         }
 
         WHEN("A block with id 4 is added") {
             fault_block_layer_add_block(layer.get(), 4);
-
-            THEN("get_max_id returns 4") {
-                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 4);
-            }
 
             THEN("get_next_id returns 5") {
                 REQUIRE(fault_block_layer_get_next_id(layer.get()) == 5);
@@ -107,25 +100,6 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
         }
 
-        WHEN("safe_get_block is called for a non-existing id") {
-            auto block = fault_block_layer_safe_get_block(layer.get(), 7);
-
-            THEN("The block is created and returned") {
-                REQUIRE(block != nullptr);
-                REQUIRE(fault_block_layer_has_block(layer.get(), 7));
-            }
-        }
-
-        WHEN("safe_get_block is called for an existing id") {
-            fault_block_layer_add_block(layer.get(), 2);
-            auto block = fault_block_layer_safe_get_block(layer.get(), 2);
-
-            THEN("The existing block is returned") {
-                REQUIRE(block != nullptr);
-                REQUIRE(block->get_id() == 2);
-                REQUIRE(fault_block_layer_get_size(layer.get()) == 1);
-            }
-        }
         AND_GIVEN("Two blocks in the layer") {
             fault_block_layer_add_block(layer.get(), 1);
             fault_block_layer_add_block(layer.get(), 2);
@@ -316,10 +290,6 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
 
             THEN("get_block returns NULL for an intermediate id") {
                 REQUIRE(fault_block_layer_get_block(layer.get(), 5) == nullptr);
-            }
-
-            THEN("get_max_id is 10") {
-                REQUIRE(fault_block_layer_get_max_id(layer.get()) == 10);
             }
         }
         AND_GIVEN("three blocks at ids 1, 2, 3") {

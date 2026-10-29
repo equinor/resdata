@@ -30,9 +30,6 @@ fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id);
 std::shared_ptr<FaultBlock>
 fault_block_layer_iget_block(const fault_block_layer_type *layer,
                              int storage_index);
-std::shared_ptr<FaultBlock>
-fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id);
-int fault_block_layer_get_max_id(const fault_block_layer_type *layer);
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer);
 int fault_block_layer_get_size(const fault_block_layer_type *layer);
 bool fault_block_layer_scan_kw(fault_block_layer_type *layer,

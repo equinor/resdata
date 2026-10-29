@@ -49,7 +49,6 @@ void layer_add_interp_barrier(layer_type *layer, size_t c1, size_t c2);
 void layer_add_ijbarrier(layer_type *layer, size_t i1, size_t j1, size_t i2,
                          size_t j2);
 void layer_add_barrier(layer_type *layer, size_t c1, size_t c2);
-void layer_memcpy(layer_type *target_layer, const layer_type *src_layer);
 void layer_update_active(layer_type *layer, const rd_grid_type *grid, size_t k);
 void layer_clear_cells(layer_type *layer);
 void layer_update_connected_cells(layer_type *layer, size_t i, size_t j,

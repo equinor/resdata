@@ -22,8 +22,6 @@ void rd_coarse_cell_update(rd_coarse_cell_type *coarse_cell, size_t i, size_t j,
 const std::array<size_t, 6> &
 rd_coarse_cell_get_box(const rd_coarse_cell_type *coarse_cell);
 
-size_t rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell);
-
 /* The global indices of all the cells in the coarse group, sorted ascending. */
 const std::vector<size_t> &
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell);
