@@ -18,7 +18,7 @@
 */
 
 namespace rd {
-rd_grid_cache::rd_grid_cache(rd_grid_type *grid) : grid(grid) {
+grid_cache::grid_cache(rd_grid_type *grid) : grid(grid) {
     size_t active_size = rd_grid_get_active_size(this->grid);
     for (size_t active_index = 0; active_index < active_size; active_index++) {
         double x, y, z;
@@ -33,7 +33,7 @@ rd_grid_cache::rd_grid_cache(rd_grid_type *grid) : grid(grid) {
     }
 }
 
-const std::vector<double> &rd_grid_cache::volume() const {
+const std::vector<double> &grid_cache::volume() const {
     if (this->v.empty()) {
         for (size_t active_index = 0; active_index < this->size();
              active_index++)

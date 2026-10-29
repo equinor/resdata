@@ -45,7 +45,7 @@ typedef enum {
 
 /** Data structure representing the results from one phase at one survey. */
 struct rd_grav_phase_struct {
-    const rd::rd_grid_cache *grid_cache;
+    const rd::grid_cache *grid_cache;
     const bool *aquifer_cell;
     std::vector<double>
         fluid_mass; /* The total fluid in place (mass) of this phase - for each active cell.*/
@@ -53,7 +53,7 @@ struct rd_grav_phase_struct {
         work; /* Temporary used in the summation over all cells. */
     Phase phase;
 
-    rd_grav_phase_struct(const rd::rd_grid_cache *grid_cache,
+    rd_grav_phase_struct(const rd::grid_cache *grid_cache,
                          const bool *aquifer_cell, Phase phase)
         : grid_cache(grid_cache), aquifer_cell(aquifer_cell),
           fluid_mass(grid_cache->size()), work(0), phase(phase) {}
@@ -63,7 +63,7 @@ typedef struct rd_grav_phase_struct rd_grav_phase_type;
 
 /** Data structure representing one gravimetric survey. */
 struct rd_grav_survey_struct {
-    const rd::rd_grid_cache *grid_cache;
+    const rd::grid_cache *grid_cache;
     const bool *aquifer_cell;
     std::string name; /* Name of the survey - arbitrary string. */
     std::vector<double>
@@ -73,7 +73,7 @@ struct rd_grav_survey_struct {
     std::unordered_map<std::string, rd_grav_phase_type *>
         phase_map; /* The same objects as in the phase_list vector - accessible by the "SWAT", "SGAS" and "SOIL" keys. */
 
-    rd_grav_survey_struct(const rd::rd_grid_cache *grid_cache,
+    rd_grav_survey_struct(const rd::grid_cache *grid_cache,
                           const bool *aquifer_cell, const std::string &name,
                           grav_calc_type calc_type)
         : grid_cache(grid_cache), aquifer_cell(aquifer_cell), name(name) {
@@ -88,7 +88,7 @@ struct rd_grav_survey_struct {
 struct rd_grav_struct {
     const rd::File *
         init_file; /* The init file - a shared reference owned by calling scope. */
-    rd::rd_grid_cache *
+    rd::grid_cache *
         grid_cache; /* An internal specialized structure to facilitate fast grid lookup. */
     bool *aquifer_cell; /* Numerical aquifer cells should be ignored. */
 
@@ -150,7 +150,7 @@ static double rd_grav_phase_eval(rd_grav_phase_type *base_phase,
     rd_grav_phase_ensure_work(base_phase);
     if ((monitor_phase == nullptr) ||
         (base_phase->phase == monitor_phase->phase)) {
-        const rd::rd_grid_cache &grid_cache = *(base_phase->grid_cache);
+        const rd::grid_cache &grid_cache = *(base_phase->grid_cache);
         const bool *aquifer = base_phase->aquifer_cell;
         double *mass_diff = base_phase->work.data();
         double deltag;
@@ -219,7 +219,7 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
                     grav_calc_type calc_type) {
 
     const rd::File *init_file = rd_grav->init_file;
-    const rd::rd_grid_cache *grid_cache = rd_grav->grid_cache;
+    const rd::grid_cache *grid_cache = rd_grav->grid_cache;
     const char *sat_kw_name = rd_get_phase_name(phase);
 
     auto grav_phase = std::make_unique<rd_grav_phase_type>(
@@ -358,7 +358,7 @@ static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
 */
 static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
                                         const rd::File *init_file) {
-    const rd::rd_grid_cache &grid_cache = *(survey->grid_cache);
+    const rd::grid_cache &grid_cache = *(survey->grid_cache);
     size_t active_size = grid_cache.size();
     const rd::KW *init_porv_kw = init_file->get_kw(PORV_KW, 0);
     size_t check_points = std::min<size_t>(100, active_size);
@@ -470,7 +470,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav, rd::FileView *restart_file,
 static rd_grav_survey_type *
 rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav, rd::FileView *restart_file,
                             const std::string &name) {
-    rd::rd_grid_cache &grid_cache = *(rd_grav->grid_cache);
+    rd::grid_cache &grid_cache = *(rd_grav->grid_cache);
     auto survey = std::make_unique<rd_grav_survey_struct>(
         rd_grav->grid_cache, rd_grav->aquifer_cell, name, GRAV_CALC_PORMOD);
 
@@ -559,7 +559,7 @@ rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid, const rd::File *init_file) {
     auto rd_grav = std::make_unique<rd_grav_type>();
 
     rd_grav->init_file = init_file;
-    rd_grav->grid_cache = new rd::rd_grid_cache(rd_grid);
+    rd_grav->grid_cache = new rd::grid_cache(rd_grid);
     rd_grav->aquifer_cell = rd_grav_common_alloc_aquifer_cell(
         *(rd_grav->grid_cache), rd_grav->init_file);
 

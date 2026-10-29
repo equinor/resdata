@@ -244,8 +244,7 @@ PYBIND11_MODULE(_grid, m) {
         return rd_grid_get_bottom2(from_cwrap<rd_grid_type>(self), i, j);
     });
     m.def("_locate_depth",
-          [](py::handle self, double depth, size_t i,
-             size_t j) -> py::object {
+          [](py::handle self, double depth, size_t i, size_t j) -> py::object {
               auto *grid = from_cwrap<rd_grid_type>(self);
               auto result = rd_grid_locate_depth(grid, depth, i, j);
               if (auto *k = std::get_if<size_t>(&result))

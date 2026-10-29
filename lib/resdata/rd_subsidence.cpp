@@ -39,7 +39,7 @@
 struct rd_subsidence_struct {
     const rd::File *
         init_file; /* The init file - a shared reference owned by calling scope. */
-    std::unique_ptr<rd::rd_grid_cache> grid_cache{nullptr};
+    std::unique_ptr<rd::grid_cache> grid_cache{nullptr};
     std::unique_ptr<bool[], decltype(&free)> aquifer_cell{nullptr, &free};
     std::unordered_map<std::string, std::unique_ptr<rd_subsidence_survey_type>>
         surveys; /* A map containing rd_subsidence_survey_type instances;
@@ -48,7 +48,7 @@ struct rd_subsidence_struct {
 
 /** Data structure representing one subsidence survey. */
 struct rd_subsidence_survey_struct {
-    rd::rd_grid_cache *grid_cache = nullptr;
+    rd::grid_cache *grid_cache = nullptr;
     bool *aquifer_cell =
         nullptr; /* Is this cell a numerical aquifer cell - must be disregarded. */
     std::string name;         /* Name of the survey - arbitrary string. */
@@ -72,7 +72,7 @@ rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
 
     auto survey(
         std::make_unique<rd_subsidence_survey_struct>(*rd_subsidence, name));
-    const rd::rd_grid_cache &grid_cache = *(rd_subsidence->grid_cache);
+    const rd::grid_cache &grid_cache = *(rd_subsidence->grid_cache);
     const auto &global_index = grid_cache.global_index();
     const size_t size = grid_cache.size();
 
@@ -107,7 +107,7 @@ rd_subsidence_survey_eval(const rd_subsidence_survey_type *base_survey,
                           double depth, double compressibility,
                           double poisson_ratio) {
 
-    const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
+    const rd::grid_cache &grid_cache = *(base_survey->grid_cache);
     const size_t size = grid_cache.size();
     std::vector<double> weight(size);
 
@@ -134,7 +134,7 @@ static double rd_subsidence_survey_eval_geertsma(
     double utm_x, double utm_y, double depth, double youngs_modulus,
     double poisson_ratio, double seabed) {
 
-    const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
+    const rd::grid_cache &grid_cache = *(base_survey->grid_cache);
     const auto &cell_volume = grid_cache.volume();
     const size_t size = grid_cache.size();
     double scale_factor = 1e4 * (1 + poisson_ratio) * (1 - 2 * poisson_ratio) /
@@ -163,7 +163,7 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
     double utm_x, double utm_y, double depth, double youngs_modulus,
     double poisson_ratio, double seabed) {
 
-    const rd::rd_grid_cache &grid_cache = *(base_survey->grid_cache);
+    const rd::grid_cache &grid_cache = *(base_survey->grid_cache);
     const size_t size = grid_cache.size();
     std::vector<double> weight(size);
 
@@ -207,7 +207,7 @@ rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
                                         const rd::File *init_file) {
     auto rd_subsidence = std::make_unique<rd_subsidence_type>();
     rd_subsidence->init_file = init_file;
-    rd_subsidence->grid_cache = std::make_unique<rd::rd_grid_cache>(rd_grid);
+    rd_subsidence->grid_cache = std::make_unique<rd::grid_cache>(rd_grid);
     rd_subsidence->aquifer_cell.reset(rd_grav_common_alloc_aquifer_cell(
         *(rd_subsidence->grid_cache), init_file));
     return rd_subsidence.release();
