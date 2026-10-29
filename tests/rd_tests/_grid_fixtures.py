@@ -399,6 +399,25 @@ def write_egrid_with_two_lgrs_and_amalgamated_nnc(
             write_int_kw(f, NNA2_KW, list(nna2))
 
 
+def write_egrid_with_actnum(
+    filename: Path,
+    nx: int,
+    ny: int,
+    nz: int,
+    actnum: Sequence[int],
+) -> None:
+    """Write an EGRID of size nx*ny*nz whose
+    ACTNUM has exactly the given values, regardless of the grid size."""
+    body_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0)
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_filehead(f)
+        _write_gridhead(f, nx, ny, nz, 0)
+        body_grid.export_coord().fwrite(f)
+        body_grid.export_zcorn().fwrite(f)
+        write_int_kw(f, ACTNUM_KW, list(actnum))
+        write_empty_kw(f, ENDGRID_KW)
+
+
 def write_egrid_with_coarse_groups(
     filename: Path,
     nx: int,
