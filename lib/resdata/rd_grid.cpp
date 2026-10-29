@@ -2337,6 +2337,11 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
                                    const rd::KW *keyword1,
                                    const rd::KW *keyword2) {
 
+    if (keyword1->size() != keyword2->size())
+        throw std::invalid_argument(fmt::format(
+            "Invalid NNC in grid file: {} has {} elements, but {} has {}",
+            keyword1->name(), keyword1->size(), keyword2->name(),
+            keyword2->size()));
     const auto &grid1_nnc_cells = keyword1->get_vector<int>();
     const auto &grid2_nnc_cells = keyword2->get_vector<int>();
     size_t nnc_count = keyword2->size();
