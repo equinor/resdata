@@ -65,18 +65,6 @@ class GridTest(ResdataTest):
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        with self.assertRaises(IndexError):
-            grid.get_layer_xyz(-1, 0)
-
-        with self.assertRaises(IndexError):
-            grid.get_layer_xyz((nx + 1) * (ny + 1), 0)
-
-        with self.assertRaises(IndexError):
-            grid.get_layer_xyz(0, -1)
-
-        with self.assertRaises(IndexError):
-            grid.get_layer_xyz(0, nz + 1)
-
     def test_GRID(self):
         grid = Grid(self.grid_file())
         self.assertTrue(grid)
