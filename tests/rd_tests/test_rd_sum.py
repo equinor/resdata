@@ -3208,6 +3208,362 @@ def test_that_next_time_advances_a_leap_year_by_incrementing_only_the_year():
     )
 
 
+@pytest.fixture
+def flow_summary(use_tmpdir):
+    """Flow writes KEYCHECK in PARAMS order, including colliding WGNAMES.
+
+    See OPM/opm-common's SummaryImplementation::configureRequestedVectors(),
+    SummaryImplementation::write(), and ExtSmryOutput::write().
+    """
+    keys = [
+        "TIME",
+        "GOPR:ABCDEFGH_ONE",
+        "GOPR:ABCDEFGH_TWO",
+        "GWPR:ABCDEFGH_ONE",
+        "GOPR:SHORT",
+        "WOPR:WELL_123",
+        "FOPT",
+        "BPR:3,2,1",
+        "RPR:2",
+        "COPR:WELL_123:3,2,1",
+        "WOPR:WELL_456",
+    ]
+    values = [[10.0 * i + step for i in range(1, len(keys))] for step in range(3)]
+    create_summary(
+        summary_keys=[key.split(":")[0].ljust(8) for key in keys[1:]],
+        values=values,
+    )
+    smspec = list(resfo.read("TEST.SMSPEC"))
+    names = [
+        ":+:+:+:+",
+        "ABCDEFGH",
+        "ABCDEFGH",
+        "ABCDEFGH",
+        "SHORT   ",
+        "WELL_123",
+        ":+:+:+:+",
+        ":+:+:+:+",
+        ":+:+:+:+",
+        "WELL_123",
+        "WELL_456",
+    ]
+    nums = np.array([-32676, 0, 0, 0, 0, 0, 0, 13, 2, 13, 0], dtype=np.int32)
+    resfo.write(
+        "TEST.SMSPEC",
+        [
+            (
+                kw,
+                (
+                    names
+                    if kw.strip() == "WGNAMES"
+                    else nums
+                    if kw.strip() == "NUMS"
+                    else data
+                ),
+            )
+            for kw, data in smspec
+        ],
+    )
+    esmry = [
+        ("START   ", np.array([1, 1, 2000, 0, 0, 0, 0], dtype=np.int32)),
+        ("KEYCHECK", keys),
+        ("UNITS   ", ["DAYS"] + ["SM3"] * (len(keys) - 1)),
+        ("RSTEP   ", np.array([1, 2, 3], dtype=np.int32)),
+        ("TSTEP   ", np.arange(3, dtype=np.int32)),
+    ]
+    for i in range(len(keys)):
+        vector = range(3) if i == 0 else [row[i - 1] for row in values]
+        esmry.append((f"V{i}".ljust(8), np.array(vector, dtype=np.float32)))
+    resfo.write("TEST.ESMRY", esmry)
+    return esmry
+
+
+@pytest.mark.parametrize("entrypoint", ["lazy", "eager", "smspec", "unsmry", "load"])
+@pytest.mark.parametrize("join_string", [":", "::"])
+def test_flow_esmry_preserves_full_group_names(flow_summary, entrypoint, join_string):
+    if entrypoint == "load":
+        summary = Summary.load(
+            "TEST.SMSPEC", "TEST.UNSMRY", key_join_string=join_string
+        )
+    else:
+        case = {"smspec": "TEST.SMSPEC", "unsmry": "TEST.UNSMRY"}.get(
+            entrypoint, "TEST"
+        )
+        summary = Summary(
+            case, join_string=join_string, lazy_load=entrypoint != "eager"
+        )
+
+    assert set(summary.groups()) == {"ABCDEFGH_ONE", "ABCDEFGH_TWO", "SHORT"}
+    assert summary.groups("*TWO") == ["ABCDEFGH_TWO"]
+    for keyword, group, offset in [
+        ("GOPR", "ABCDEFGH_ONE", 10),
+        ("GOPR", "ABCDEFGH_TWO", 20),
+        ("GWPR", "ABCDEFGH_ONE", 30),
+        ("GOPR", "SHORT", 40),
+    ]:
+        key = f"{keyword}{join_string}{group}"
+        assert summary.smspec_node(key).wgname == group
+        np.testing.assert_array_equal(summary.numpy_vector(key), np.arange(3) + offset)
+    assert not summary.has_key(f"GOPR{join_string}ABCDEFGH")
+    # Only group names change; other variable types retain their SMSPEC names.
+    assert set(summary.wells()) == {"WELL_123", "WELL_456"}
+    np.testing.assert_array_equal(
+        summary.numpy_vector(f"WOPR{join_string}WELL_123"), np.arange(3) + 50
+    )
+    np.testing.assert_array_equal(summary.numpy_vector("FOPT"), np.arange(3) + 60)
+    for key, offset in [
+        ("BPR:13", 70),
+        ("RPR:2", 80),
+        ("COPR:WELL_123:13", 90),
+        ("WOPR:WELL_456", 100),
+    ]:
+        np.testing.assert_array_equal(
+            summary.numpy_vector(key.replace(":", join_string)), np.arange(3) + offset
+        )
+
+
+@pytest.mark.parametrize(
+    "companion",
+    [
+        "absent",
+        "garbage",
+        "truncated",
+        "missing_keys",
+        "wrong_type",
+        "wrong_size",
+        "wrong_keyword",
+        "wrong_name",
+        "wrong_unit",
+        "wrong_date",
+        "wrong_time",
+        "reordered_wells",
+        "wrong_num",
+        "missing_units",
+    ],
+)
+def test_flow_esmry_unavailable_or_incompatible_keeps_smspec_names(
+    flow_summary, companion
+):
+    if companion == "absent":
+        os.remove("TEST.ESMRY")
+    elif companion == "garbage":
+        with open("TEST.ESMRY", "wb") as stream:
+            stream.write(b"invalid optional ESMRY metadata")
+    elif companion == "truncated":
+        with open("TEST.ESMRY", "r+b") as stream:
+            stream.truncate(40)
+    else:
+        esmry = []
+        for keyword, data in flow_summary:
+            if keyword == "KEYCHECK":
+                if companion == "missing_keys":
+                    continue
+                if companion == "wrong_type":
+                    data = np.arange(len(data), dtype=np.int32)
+                elif companion == "wrong_size":
+                    data = data[:-1]
+                else:
+                    data = list(data)
+                    if companion == "wrong_keyword":
+                        data[1] = "GWPR:ABCDEFGH_ONE"
+                    elif companion == "wrong_name":
+                        data[1] = "GOPR:UNRELATED_GROUP"
+                    elif companion == "reordered_wells":
+                        data[5], data[10] = data[10], data[5]
+                    elif companion == "wrong_num":
+                        data[7] = "BPR:4,2,1"
+            elif keyword.strip() == "UNITS" and companion == "missing_units":
+                continue
+            elif keyword.strip() == "UNITS" and companion == "wrong_unit":
+                data = list(data)
+                data[1] = "STB"
+            elif keyword.strip() == "START" and companion in (
+                "wrong_date",
+                "wrong_time",
+            ):
+                data = np.array(
+                    (
+                        [2, 1, 2000, 0, 0, 0, 0]
+                        if companion == "wrong_date"
+                        else [1, 1, 2000, 1, 0, 0, 0]
+                    ),
+                    dtype=np.int32,
+                )
+            esmry.append((keyword, data))
+        resfo.write("TEST.ESMRY", esmry)
+
+    for summary in (Summary("TEST"), Summary.load("TEST.SMSPEC", "TEST.UNSMRY")):
+        assert set(summary.groups()) == {"ABCDEFGH", "SHORT"}
+        assert summary.has_key("GOPR:ABCDEFGH")
+        assert not summary.has_key("GOPR:ABCDEFGH_ONE")
+        np.testing.assert_array_equal(
+            summary.numpy_vector("GWPR:ABCDEFGH"), np.arange(3) + 30
+        )
+        np.testing.assert_array_equal(summary.numpy_vector("FOPT"), np.arange(3) + 60)
+
+
+def test_flow_esmry_names_with_formatted_summary(flow_summary):
+    for extension in ("SMSPEC", "UNSMRY"):
+        data = list(resfo.read(f"TEST.{extension}"))
+        resfo.write(f"TEST.F{extension}", data, fileformat=resfo.Format.FORMATTED)
+        os.remove(f"TEST.{extension}")
+    for summary in (Summary("TEST"), Summary.load("TEST.FSMSPEC", "TEST.FUNSMRY")):
+        assert set(summary.groups()) == {"ABCDEFGH_ONE", "ABCDEFGH_TWO", "SHORT"}
+        np.testing.assert_array_equal(
+            summary.numpy_vector("GOPR:ABCDEFGH_TWO"), np.arange(3) + 20
+        )
+
+
+@pytest.mark.parametrize("smspec_unit", ["YEARS", "SM3"])
+def test_flow_esmry_empty_years_unit_requires_matching_smspec_unit(
+    flow_summary, smspec_unit
+):
+    smspec = list(resfo.read("TEST.SMSPEC"))
+    for keyword, data in smspec:
+        if keyword.strip() == "KEYWORDS":
+            data[6] = b"YEARS   "
+        elif keyword.strip() == "UNITS":
+            data[6] = smspec_unit.ljust(8).encode()
+    resfo.write("TEST.SMSPEC", smspec)
+    for keyword, data in flow_summary:
+        if keyword == "KEYCHECK":
+            data[6] = "YEARS"
+        elif keyword.strip() == "UNITS":
+            data[6] = ""
+    resfo.write("TEST.ESMRY", flow_summary)
+    summary = Summary("TEST")
+    assert ("ABCDEFGH_ONE" in summary.groups()) == (smspec_unit == "YEARS")
+    np.testing.assert_array_equal(summary.numpy_vector("YEARS"), np.arange(3) + 60)
+
+
+def test_flow_esmry_skips_invalid_smspec_slots(flow_summary):
+    smspec = list(resfo.read("TEST.SMSPEC"))
+    for keyword, data in smspec:
+        if keyword.strip() == "WGNAMES":
+            data[10] = b":+:+:+:+"
+    resfo.write("TEST.SMSPEC", smspec)
+    summary = Summary("TEST")
+    assert "ABCDEFGH_ONE" in summary.groups()
+    assert not summary.has_key("WOPR:WELL_456")
+
+
+def test_flow_esmry_missing_lgr_metadata_raises(flow_summary):
+    import subprocess
+    import sys
+
+    smspec = list(resfo.read("TEST.SMSPEC"))
+    for keyword, data in smspec:
+        if keyword.strip() == "KEYWORDS":
+            data[6] = b"LBPR    "
+    resfo.write("TEST.SMSPEC", smspec)
+    for keyword, data in flow_summary:
+        if keyword == "KEYCHECK":
+            data[6] = "LBPR:LGR:1,1,1"
+    resfo.write("TEST.ESMRY", flow_summary)
+    # Keep this malformed-header regression isolated in case of a native crash.
+    result = subprocess.run(
+        [sys.executable, "-c", "from resdata.summary import Summary; Summary('TEST')"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "required LGR metadata keywords are missing" in result.stderr
+
+
+def test_flow_esmry_group_names_with_names_alias(flow_summary):
+    smspec = [
+        ("NAMES   " if kw.strip() == "WGNAMES" else kw, data)
+        for kw, data in resfo.read("TEST.SMSPEC")
+    ]
+    resfo.write("TEST.SMSPEC", smspec)
+    summary = Summary("TEST")
+    assert set(summary.groups()) == {"ABCDEFGH_ONE", "ABCDEFGH_TWO", "SHORT"}
+    np.testing.assert_array_equal(
+        summary.numpy_vector("GOPR:ABCDEFGH_TWO"), np.arange(3) + 20
+    )
+
+
+@pytest.fixture(params=["well", "connection_ijk", "connection_num", "segment"])
+def flow_summary_with_long_well_name(flow_summary, request):
+    variable_type = request.param
+    if variable_type == "well":
+        index, full_key, public_key = 5, "WOPR:WELL_123_LONG_NAME", "WOPR:WELL_123"
+    elif variable_type.startswith("connection"):
+        index = 9
+        suffix = "3,2,1" if variable_type == "connection_ijk" else "13"
+        full_key = f"COPR:WELL_123_LONG_NAME:{suffix}"
+        public_key = "COPR:WELL_123:13"
+    else:
+        index, full_key, public_key = 6, "SOFR:WELL_123_LONG_NAME:3", "SOFR:WELL_123:3"
+        smspec = list(resfo.read("TEST.SMSPEC"))
+        for keyword, data in smspec:
+            if keyword.strip() == "KEYWORDS":
+                data[index] = b"SOFR    "
+            elif keyword.strip() == "WGNAMES":
+                data[index] = b"WELL_123"
+            elif keyword.strip() == "NUMS":
+                data[index] = 3
+        resfo.write("TEST.SMSPEC", smspec)
+    for keyword, data in flow_summary:
+        if keyword == "KEYCHECK":
+            data[index] = full_key
+    resfo.write("TEST.ESMRY", flow_summary)
+    return flow_summary, index, public_key
+
+
+@pytest.mark.parametrize("entrypoint", ["lazy", "eager", "load"])
+@pytest.mark.parametrize("join_string", [":", "::"])
+def test_flow_esmry_long_well_names_keep_full_group_names(
+    flow_summary_with_long_well_name, entrypoint, join_string
+):
+    _, index, public_key = flow_summary_with_long_well_name
+    if entrypoint == "load":
+        summary = Summary.load(
+            "TEST.SMSPEC", "TEST.UNSMRY", key_join_string=join_string
+        )
+    else:
+        summary = Summary(
+            "TEST", join_string=join_string, lazy_load=entrypoint == "lazy"
+        )
+    assert set(summary.groups()) == {"ABCDEFGH_ONE", "ABCDEFGH_TWO", "SHORT"}
+    assert set(summary.wells()) == {"WELL_123", "WELL_456"}
+    key = public_key.replace(":", join_string)
+    assert summary.smspec_node(key).wgname == "WELL_123"
+    assert not summary.has_key(key.replace("WELL_123", "WELL_123_LONG_NAME"))
+    np.testing.assert_array_equal(summary.numpy_vector(key), np.arange(3) + 10 * index)
+    np.testing.assert_array_equal(
+        summary.numpy_vector(f"GOPR{join_string}ABCDEFGH_TWO"), np.arange(3) + 20
+    )
+
+
+@pytest.mark.parametrize("mismatch", ["name", "suffix"])
+def test_flow_esmry_long_well_names_reject_incompatible_components(
+    flow_summary_with_long_well_name, mismatch
+):
+    esmry, index, public_key = flow_summary_with_long_well_name
+    for keyword, data in esmry:
+        if keyword == "KEYCHECK":
+            if mismatch == "name":
+                data[index] = data[index].replace("WELL_123", "WELL_456")
+            elif public_key.startswith("COPR"):
+                data[index] = (
+                    data[index][:-2] + "14"
+                    if data[index].endswith(":13")
+                    else data[index].replace(":3,2,1", ":4,2,1")
+                )
+            elif public_key.startswith("SOFR"):
+                data[index] = data[index][:-1] + "4"
+            else:
+                data[index] += ":4"
+    resfo.write("TEST.ESMRY", esmry)
+    for summary in (Summary("TEST"), Summary.load("TEST.SMSPEC", "TEST.UNSMRY")):
+        assert set(summary.groups()) == {"ABCDEFGH", "SHORT"}
+        np.testing.assert_array_equal(
+            summary.numpy_vector(public_key), np.arange(3) + 10 * index
+        )
+
+
 @pytest.mark.parametrize("startdat", [[1], [1, 1]])
 def test_that_smspec_with_too_short_startdat_is_rejected(tmp_path, startdat):
     with openFortIO(str(tmp_path / "CASE.SMSPEC"), mode=FortIO.WRITE_MODE) as f:
