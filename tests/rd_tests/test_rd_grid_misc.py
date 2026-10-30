@@ -12,9 +12,12 @@ from resdata.resfile import ResdataKW
 from resdata.util.util import DoubleVector
 
 from ._grid_fixtures import (
+    UNIT_CELL_CORNERS,
     load_egrid_with_single_lgr,
     make_rectangular_grid,
+    write_egrid_with_actnum,
     write_egrid_with_single_lgr,
+    write_grid_file_with_cell_keywords,
 )
 
 
@@ -278,4 +281,42 @@ def test_that_mapaxes_with_wrong_size_raises_when_loading_egrid(tmp_path):
     )
 
     with pytest.raises(ValueError, match="MAPAXES"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("actnum_size", [1, 7, 9])
+def test_that_egrid_with_wrongly_sized_actnum_is_rejected(tmp_path, actnum_size):
+    filename = tmp_path / "BAD_ACTNUM.EGRID"
+    write_egrid_with_actnum(filename, 2, 2, 2, [1] * actnum_size)
+
+    with pytest.raises(ValueError, match="Invalid size of ACTNUM"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize("hostnum_size", [1, 7])
+def test_that_egrid_with_wrongly_sized_hostnum_is_rejected(tmp_path, hostnum_size):
+    filename = tmp_path / "BAD_HOSTNUM.EGRID"
+    write_egrid_with_single_lgr(
+        filename, 2, 2, 2, 2, 2, 2, 0, 0, 0, "LGR1", hostnum=[1] * hostnum_size
+    )
+
+    with pytest.raises(ValueError, match="Invalid size of HOSTNUM"):
+        Grid(str(filename))
+
+
+@pytest.mark.parametrize(
+    "coords, corners, keyword",
+    [
+        ([1, 1, 1, 1, 1], [0.0], "CORNERS"),
+        ([1, 1, 1, 1, 1], list(UNIT_CELL_CORNERS) + [0.0], "CORNERS"),
+        ([1, 1], list(UNIT_CELL_CORNERS), "COORDS"),
+    ],
+)
+def test_that_grid_file_with_wrongly_sized_cell_keywords_is_rejected(
+    tmp_path, coords, corners, keyword
+):
+    filename = tmp_path / "BAD_CELL.GRID"
+    write_grid_file_with_cell_keywords(filename, coords, corners)
+
+    with pytest.raises(ValueError, match=f"Invalid size of {keyword}"):
         Grid(str(filename))
