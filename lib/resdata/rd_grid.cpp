@@ -260,7 +260,7 @@ namespace fs = std::filesystem;
     2. The details of a coarse cell is implemented in rd_coarse_cell.c.
 
     3. The rd_grid structure contains a list of rd_coarse_cell
-       instances in the coarse_cells vector.
+       instances in the coarse_cells map, keyed by group number.
 
     4. The introduction of coarse groups makes the concept of active
        cells slightly more complex:
@@ -747,7 +747,12 @@ struct rd_grid_struct {
         *global_grid; /* the global grid - NULL for the main grid. */
 
     bool coarsening_active;
-    std::vector<rd_coarse_cell_ptr> coarse_cells;
+    /* Group numbers are file supplied and may be sparse, so the groups are
+       stored by number rather than in a vector indexed by number. */
+    std::unordered_map<int, rd_coarse_cell_ptr> coarse_cells;
+    /* One more than the largest group number seen so far; this is what
+       rd_grid_get_num_coarse_groups() reports. */
+    int num_coarse_groups = 0;
     /*
     the two fields below are for *storing* lgr grid instances. observe
     that these fields will be NULL for lgr grids, i.e. grids with
@@ -1562,15 +1567,8 @@ static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
      main grid, the inverse active -> global mapping will map to the
      first active cell in the coarse cell.
   */
-    int size = rd_grid_get_num_coarse_groups(rd_grid);
-    for (int coarse_group = 0; coarse_group < size; coarse_group++) {
-        rd_coarse_cell_type *coarse_cell =
-            rd_grid_iget_coarse_group(rd_grid, coarse_group);
-
-        // Coarse cell group numbering is not necessarily in consecutive order
-        if (coarse_cell == NULL) {
-            continue;
-        }
+    for (const auto &entry : rd_grid->coarse_cells) {
+        rd_coarse_cell_type *coarse_cell = entry.second.get();
 
         if (rd_coarse_cell_get_num_active(coarse_cell) > 0) {
             int global_index =
@@ -1639,12 +1637,8 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
         /* 1: Reset the coarse cell active_indices.
           In the involved path rd_coarse_cell_update_index() only updates
           the coarse cells' active_index if it is -1. */
-        for (const auto &coarse_cell : rd_grid->coarse_cells) {
-            // Coarse cell group numbering is not necessarily in consecutive order
-            if (coarse_cell) {
-                rd_coarse_cell_reset_active_index(coarse_cell.get());
-            }
-        }
+        for (const auto &entry : rd_grid->coarse_cells)
+            rd_coarse_cell_reset_active_index(entry.second.get());
 
         /* 2: Go through all the cells and set the active index. In the
           case of coarse cells we only set the common active index of
@@ -1683,15 +1677,8 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
          common value for the coarse cell.
     */
 
-        int size = rd_grid_get_num_coarse_groups(rd_grid);
-        for (int coarse_group = 0; coarse_group < size; coarse_group++) {
-            rd_coarse_cell_type *coarse_cell =
-                rd_grid_iget_coarse_group(rd_grid, coarse_group);
-
-            // Coarse cell group numbering is not necessarily in consecutive order
-            if (coarse_cell == NULL) {
-                continue;
-            }
+        for (const auto &entry : rd_grid->coarse_cells) {
+            rd_coarse_cell_type *coarse_cell = entry.second.get();
 
             if (rd_coarse_cell_get_num_active(coarse_cell) > 0) {
                 int cell_active_index =
@@ -1733,12 +1720,17 @@ static void rd_grid_update_index(rd_grid_type *rd_grid) {
 
 static rd_coarse_cell_type *
 rd_grid_get_or_create_coarse_cell(rd_grid_type *rd_grid, int coarse_nr) {
-    while (static_cast<int>(rd_grid->coarse_cells.size()) <= coarse_nr)
-        rd_grid->coarse_cells.emplace_back(nullptr, &rd_coarse_cell_free);
-    if (!rd_grid->coarse_cells[coarse_nr])
-        rd_grid->coarse_cells[coarse_nr].reset(rd_coarse_cell_alloc());
+    auto it = rd_grid->coarse_cells.find(coarse_nr);
+    if (it == rd_grid->coarse_cells.end()) {
+        it = rd_grid->coarse_cells
+                 .emplace(coarse_nr, rd_coarse_cell_ptr(rd_coarse_cell_alloc(),
+                                                        &rd_coarse_cell_free))
+                 .first;
+        rd_grid->num_coarse_groups =
+            std::max(rd_grid->num_coarse_groups, coarse_nr + 1);
+    }
 
-    return rd_grid->coarse_cells[coarse_nr].get();
+    return it->second.get();
 }
 
 static void rd_grid_init_coarse_cells(rd_grid_type *rd_grid) {
@@ -1760,7 +1752,8 @@ static void rd_grid_init_coarse_cells(rd_grid_type *rd_grid) {
 
 rd_coarse_cell_type *rd_grid_iget_coarse_group(const rd_grid_type *rd_grid,
                                                int coarse_nr) {
-    return rd_grid->coarse_cells[coarse_nr].get();
+    auto it = rd_grid->coarse_cells.find(coarse_nr);
+    return it == rd_grid->coarse_cells.end() ? nullptr : it->second.get();
 }
 
 bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
@@ -3092,21 +3085,20 @@ bool rd_grid_exists(const char *case_input) {
 
 static bool rd_grid_compare_coarse_cells(const rd_grid_type *g1,
                                          const rd_grid_type *g2, bool verbose) {
-    if (g1->coarse_cells.size() == g2->coarse_cells.size()) {
-        bool equal = true;
-
-        for (size_t c = 0; c < g1->coarse_cells.size(); c++) {
-            const rd_coarse_cell_type *coarse_cell1 = g1->coarse_cells[c].get();
-            const rd_coarse_cell_type *coarse_cell2 = g2->coarse_cells[c].get();
-
-            equal = rd_coarse_cell_equal(coarse_cell1, coarse_cell2);
-            if (!equal)
-                if (verbose)
-                    fprintf(stderr, "Difference in coarse cell:%zu \n", c);
-        }
-        return equal;
-    } else
+    if (g1->coarse_cells.size() != g2->coarse_cells.size())
         return false;
+
+    bool equal = true;
+    for (const auto &[c, coarse_cell1] : g1->coarse_cells) {
+        auto it = g2->coarse_cells.find(c);
+        if (it == g2->coarse_cells.end() ||
+            !rd_coarse_cell_equal(coarse_cell1.get(), it->second.get())) {
+            equal = false;
+            if (verbose)
+                fprintf(stderr, "Difference in coarse cell:%d \n", c);
+        }
+    }
+    return equal;
 }
 
 static bool rd_grid_compare_cells(rd_grid_type *g1, rd_grid_type *g2,
@@ -4248,7 +4240,7 @@ bool rd_grid_has_lgr_nr(const rd_grid_type *main_grid, int lgr_nr) {
 }
 
 int rd_grid_get_num_coarse_groups(const rd_grid_type *main_grid) {
-    return main_grid->coarse_cells.size();
+    return main_grid->num_coarse_groups;
 }
 
 bool rd_grid_have_coarse_cells(const rd_grid_type *main_grid) {
