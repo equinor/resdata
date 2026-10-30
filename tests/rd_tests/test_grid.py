@@ -1385,3 +1385,32 @@ def test_that_create_rectangular_with_negative_dimensions_raises_type_error(dims
 def test_that_grdecl_create_binding_with_negative_dimensions_raises_type_error(dims):
     with pytest.raises(TypeError, match="incompatible function arguments"):
         _grid._grdecl_create(*dims, None, None, None, None)
+
+
+NX, NY, NZ = 4, 5, 6
+
+
+@pytest.mark.parametrize(
+    "layer_index, k",
+    [
+        pytest.param((NX + 1) * (NY + 1), 0, id="layer_index_too_large"),
+        pytest.param(0, NZ + 1, id="k_too_large"),
+    ],
+)
+def test_that_get_layer_xyz_with_too_large_argument_raises_index_error(layer_index, k):
+    grid = GridGen.create_rectangular((NX, NY, NZ), (1, 1, 1))
+    with pytest.raises(IndexError):
+        grid.get_layer_xyz(layer_index, k)
+
+
+@pytest.mark.parametrize(
+    "layer_index, k",
+    [
+        pytest.param(-1, 0, id="negative_layer_index"),
+        pytest.param(0, -1, id="negative_k"),
+    ],
+)
+def test_that_get_layer_xyz_with_negative_argument_raises_type_error(layer_index, k):
+    grid = GridGen.create_rectangular((NX, NY, NZ), (1, 1, 1))
+    with pytest.raises(TypeError):
+        grid.get_layer_xyz(layer_index, k)
