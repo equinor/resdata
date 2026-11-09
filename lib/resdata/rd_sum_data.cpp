@@ -693,17 +693,19 @@ static double rd_sum_data_interp_get(const rd_sum_data_type *data,
            rd_sum_data_iget(data, time_index2, params_index) * weight2;
 }
 
+/**
+   Rates use a step function: the value at the ministep ending the interval
+   containing the time, which is @time_index2 as set by
+   rd_sum_data_init_interp_from_sim_time().
+*/
 static double rd_sum_data_vector_iget(const rd_sum_data_type *data,
-                                      time_t sim_time, size_t params_index,
-                                      bool is_rate, size_t time_index1,
-                                      size_t time_index2, double weight1,
-                                      double weight2) {
+                                      size_t params_index, bool is_rate,
+                                      size_t time_index1, size_t time_index2,
+                                      double weight1, double weight2) {
 
     double value = 0.0;
     if (is_rate) {
-        size_t time_index = rd_sum_data_get_index_from_sim_time(data, sim_time);
-        // uses step function since it is a rate
-        value = rd_sum_data_iget(data, time_index, params_index);
+        value = rd_sum_data_iget(data, time_index2, params_index);
     } else {
         // uses interpolation between timesteps
         value = rd_sum_data_interp_get(data, time_index1, time_index2, weight1,
@@ -728,9 +730,9 @@ rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
     for (size_t i = 0; i < num_keywords; i++) {
         if (auto params_index = rd_sum_vector_iget_param_index(keylist, i)) {
             bool is_rate = rd_sum_vector_iget_is_rate(keylist, i);
-            double value = rd_sum_data_vector_iget(
-                data, sim_time, *params_index, is_rate, time_index1,
-                time_index2, weight1, weight2);
+            double value = rd_sum_data_vector_iget(data, *params_index, is_rate,
+                                                   time_index1, time_index2,
+                                                   weight1, weight2);
             results[i] = value;
         }
     }
@@ -954,83 +956,147 @@ void rd_sum_data_init_double_vector_interp(
             double weight1, weight2;
             rd_sum_data_init_interp_from_sim_time(
                 data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
-            value = rd_sum_data_vector_iget(data, sim_time, params_index,
-                                            is_rate, time_index1, time_index2,
-                                            weight1, weight2);
+            value = rd_sum_data_vector_iget(data, params_index, is_rate,
+                                            time_index1, time_index2, weight1,
+                                            weight2);
         }
 
         output_data[time_index] = value;
     }
 }
 
+namespace {
+/**
+   Interpolates the values of a set of keys to a sequence of times.
+
+   The values at the ministeps before (previous) and after (next) the
+   current time are kept between calls to step_to(), so consecutive times in
+   the same or adjacent intervals do not read the values again.
+*/
+class Interpolator {
+public:
+    Interpolator(const rd_sum_data_type *data,
+                 const rd_sum_vector_type *keywords)
+        : data(data), start_time(rd_sum_data_get_data_start(data)),
+          end_time(rd_sum_data_get_sim_end(data)),
+          length(rd_sum_data_get_length(data)) {
+        const size_t num_keywords = rd_sum_vector_get_size(keywords);
+        params_indices.resize(num_keywords);
+        is_rate.resize(num_keywords, false);
+        for (size_t key_index = 0; key_index < num_keywords; key_index++) {
+            params_indices[key_index] =
+                rd_sum_vector_iget_param_index(keywords, key_index);
+            if (params_indices[key_index])
+                is_rate[key_index] =
+                    rd_sum_vector_iget_is_rate(keywords, key_index);
+        }
+        has_keys =
+            std::any_of(params_indices.begin(), params_indices.end(),
+                        [](const auto &index) { return index.has_value(); });
+        previous.values.resize(num_keywords);
+        next.values.resize(num_keywords);
+    }
+
+    void step_to(time_t sim_time) {
+        outside = sim_time < start_time || sim_time > end_time;
+        size_t previous_index = 0;
+        size_t next_index = 0;
+        weight_previous = 1;
+        weight_next = 0;
+        if (sim_time > end_time && has_keys) {
+            if (length == 0)
+                throw std::out_of_range("rd_sum_data_iget_last_value: no data");
+            previous_index = next_index = length - 1;
+        } else if (!outside) {
+            rd_sum_data_init_interp_from_sim_time(
+                data, sim_time, &previous_index, &next_index, &weight_previous,
+                &weight_next);
+        }
+        if (has_keys)
+            move_to(previous_index, next_index);
+    }
+
+    /** The value of the @key_index'th key at the time of the last
+        step_to(), NaN if the key is not in the summary. */
+    double interp(size_t key_index) const {
+        if (!params_indices[key_index])
+            return std::nan("");
+        if (outside)
+            // Rates are zero outside the simulated period, while other
+            // keys keep their first or last value.
+            return is_rate[key_index] ? 0 : next_value(key_index);
+        if (is_rate[key_index])
+            // Rates are a step function, see rd_sum_data_vector_iget()
+            return next_value(key_index);
+        return previous_value(key_index) * weight_previous +
+               next_value(key_index) * weight_next;
+    }
+
+private:
+    /** The values of the keys at one ministep. */
+    struct MinistepValues {
+        std::optional<size_t> time_index;
+        std::vector<double> values;
+    };
+
+    const rd_sum_data_type *data;
+    time_t start_time;
+    time_t end_time;
+    size_t length;
+    std::vector<std::optional<size_t>> params_indices;
+    std::vector<bool> is_rate;
+    bool has_keys = false;
+
+    bool outside = false;
+    double weight_previous = 1;
+    double weight_next = 0;
+    /* Rates only use the next ministep, so previous holds only the
+       values of the other keys. */
+    MinistepValues previous;
+    MinistepValues next;
+
+    double previous_value(size_t key_index) const {
+        return previous.values[key_index];
+    }
+    double next_value(size_t key_index) const { return next.values[key_index]; }
+
+    void load(MinistepValues &ministep, size_t time_index, bool include_rates) {
+        for (size_t key_index = 0; key_index < params_indices.size();
+             key_index++)
+            if (params_indices[key_index] &&
+                (include_rates || !is_rate[key_index]))
+                ministep.values[key_index] = rd_sum_data_iget(
+                    data, time_index, *params_indices[key_index]);
+        ministep.time_index = time_index;
+    }
+
+    void move_to(size_t previous_index, size_t next_index) {
+        if (next.time_index != next_index) {
+            if (next.time_index == previous_index)
+                std::swap(previous, next);
+            load(next, next_index, true);
+        }
+        if (previous.time_index != previous_index) {
+            if (previous_index == next_index)
+                previous = next;
+            else
+                load(previous, previous_index, false);
+        }
+    }
+};
+} // namespace
+
 void rd_sum_data_init_double_frame_interp(
     const rd_sum_data_type *data, const rd_sum_vector_type *keywords,
     const std::vector<time_t> &time_points, double *output_data) {
-    size_t num_keywords = rd_sum_vector_get_size(keywords);
-    size_t time_stride = num_keywords;
-    size_t key_stride = 1;
-    time_t start_time = rd_sum_data_get_data_start(data);
-    time_t end_time = rd_sum_data_get_sim_end(data);
+    const size_t num_keywords = rd_sum_vector_get_size(keywords);
+    Interpolator interpolator(data, keywords);
 
     for (size_t time_index = 0; time_index < time_points.size(); time_index++) {
-        time_t sim_time = time_points[time_index];
-        if (sim_time < start_time) {
-            for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t data_index =
-                    key_index * key_stride + time_index * time_stride;
-                auto param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                if (!param_index) {
-                    output_data[data_index] = std::nan("");
-                    continue;
-                }
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                if (is_rate)
-                    output_data[data_index] = 0;
-                else
-                    output_data[data_index] =
-                        rd_sum_data_iget_first_value(data, *param_index);
-            }
-        } else if (sim_time > end_time) {
-            for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t data_index =
-                    key_index * key_stride + time_index * time_stride;
-                auto param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                if (!param_index) {
-                    output_data[data_index] = std::nan("");
-                    continue;
-                }
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                if (is_rate)
-                    output_data[data_index] = 0;
-                else
-                    output_data[data_index] =
-                        rd_sum_data_iget_last_value(data, *param_index);
-            }
-        } else {
-            double weight1, weight2;
-            size_t time_index1, time_index2;
-
-            rd_sum_data_init_interp_from_sim_time(
-                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
-
-            for (size_t key_index = 0; key_index < num_keywords; key_index++) {
-                size_t data_index =
-                    key_index * key_stride + time_index * time_stride;
-                auto param_index =
-                    rd_sum_vector_iget_param_index(keywords, key_index);
-                if (!param_index) {
-                    output_data[data_index] = std::nan("");
-                    continue;
-                }
-                bool is_rate = rd_sum_vector_iget_is_rate(keywords, key_index);
-                double value = rd_sum_data_vector_iget(
-                    data, sim_time, *param_index, is_rate, time_index1,
-                    time_index2, weight1, weight2);
-                output_data[data_index] = value;
-            }
-        }
+        interpolator.step_to(time_points[time_index]);
+        for (size_t key_index = 0; key_index < num_keywords; key_index++)
+            output_data[time_index * num_keywords + key_index] =
+                interpolator.interp(key_index);
     }
 }
 

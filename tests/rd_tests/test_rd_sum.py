@@ -2869,6 +2869,35 @@ def test_that_generated_restart_chain_is_identical_under_lazy_and_eager_load(cha
     ]
 
 
+@given(chain=restart_chains(), lazy_load=st.booleans(), data=st.data())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_interpolated_pandas_frame_columns_match_interpolated_vectors(
+    chain, lazy_load, data
+):
+    chain.to_files()
+    summary = Summary(chain.name, include_restart=True, lazy_load=lazy_load)
+    dates = summary.dates
+    inside = [
+        *(a + (b - a) / 3 for a, b in itertools.pairwise(dates)),
+        *dates,
+        dates[0],
+    ]
+    outside = [
+        dates[0] - datetime.timedelta(days=1),
+        dates[-1] + datetime.timedelta(days=1),
+    ]
+    time_index = data.draw(st.permutations(inside + outside))
+    frame = summary.pandas_frame(time_index=time_index)
+    for key in frame.columns:
+        np.testing.assert_array_equal(
+            frame[key].values, summary.numpy_vector(key, time_index=time_index)
+        )
+        np.testing.assert_array_equal(
+            frame[key].values[[t in inside for t in time_index]],
+            [summary.get_interp(key, date=t) for t in time_index if t in inside],
+        )
+
+
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_general_var_index():
     create_summary(summary_keys=("FOPR",))
