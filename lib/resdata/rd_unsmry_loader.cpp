@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <ctime>
 #include <memory>
@@ -89,6 +90,14 @@ double unsmry_loader::iget(size_t time_index, size_t params_index) const {
     std::array<float, 1> value;
     file_view->index_fload_kw(PARAMS_KW, time_index, {params_index}, value);
     return value[0];
+}
+
+void unsmry_loader::get_row(size_t time_index,
+                            const std::vector<size_t> &index_map,
+                            double *out) const {
+    std::vector<float> values(index_map.size());
+    file_view->index_fload_kw(PARAMS_KW, time_index, index_map, values);
+    std::copy(values.begin(), values.end(), out);
 }
 
 std::vector<size_t> unsmry_loader::report_steps(size_t offset) const {

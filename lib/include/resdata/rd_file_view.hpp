@@ -148,31 +148,42 @@ public:
     }
 
     /** Reads the elements given by @index_map from the ith=@index keyword
-        named @kw into @out.
+        named @kw into the @out_count elements at @out.
 
         T must match the type the keyword is stored as on file; the keyword
         types of the restart and summary formats are fixed by the format, so
         a mismatch means the file is malformed and throws
         std::invalid_argument, as does an @index_map with more entries than
-        @out has elements.
+        @out_count.
 
         Throws std::ios_base::failure if the underlying file cannot be
         opened; @out is only left unwritten when this function throws. */
-    template <typename T, size_t N>
+    template <typename T>
     void index_fload_kw(const std::string &kw, size_t index,
-                        const std::vector<size_t> &index_map,
-                        std::array<T, N> &out) {
+                        const std::vector<size_t> &index_map, T *out,
+                        size_t out_count) {
         auto file_kw = validate_index_fload_kw(kw, index, iotype<T>::tag,
-                                               index_map.size(), N);
+                                               index_map.size(), out_count);
 
         if (!context->fortio.assert_stream_open())
             throw std::ios_base::failure("Failed to open FortIO file " +
                                          filename());
 
-        rd::KW::fread_indexed_data(context->fortio, file_kw->get_offset(),
-                                   file_kw->get_data_type(),
-                                   file_kw->get_size(), index_map,
-                                   reinterpret_cast<char *>(out.data()));
+        rd::KW::fread_indexed_data(
+            context->fortio, file_kw->get_offset(), file_kw->get_data_type(),
+            file_kw->get_size(), index_map, reinterpret_cast<char *>(out));
+    }
+    template <typename T, size_t N>
+    void index_fload_kw(const std::string &kw, size_t index,
+                        const std::vector<size_t> &index_map,
+                        std::array<T, N> &out) {
+        index_fload_kw(kw, index, index_map, out.data(), N);
+    }
+    template <typename T>
+    void index_fload_kw(const std::string &kw, size_t index,
+                        const std::vector<size_t> &index_map,
+                        std::vector<T> &out) {
+        index_fload_kw(kw, index, index_map, out.data(), out.size());
     }
     void write(ERT::FortIO &target, size_t offset);
 

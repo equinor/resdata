@@ -293,6 +293,18 @@ double rd_sum_file_data::iget(size_t time_index, size_t params_index) const {
     }
 }
 
+void rd_sum_file_data::get_row(size_t time_index,
+                               const std::vector<size_t> &params_indices,
+                               double *out) const {
+    if (this->loader) {
+        this->loader->get_row(time_index, params_indices, out);
+        return;
+    }
+    const rd_sum_tstep_type *ministep_data = iget_ministep(time_index);
+    for (size_t i = 0; i < params_indices.size(); i++)
+        out[i] = rd_sum_tstep_iget(ministep_data, params_indices[i]);
+}
+
 /*
   This function is meant to be called in write mode; and will create a
   new and empty tstep which is appended to the current data. The tstep
