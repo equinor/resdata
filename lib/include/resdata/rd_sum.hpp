@@ -149,6 +149,8 @@ void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const std::vector<time_t> &time_points,
                                      double *data);
+void rd_sum_init_double_frame(const rd_sum_type *rd_sum,
+                              const rd_sum_vector_type *keywords, double *data);
 std::vector<double>
 rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
                          const rd_sum_vector_type *key_words,

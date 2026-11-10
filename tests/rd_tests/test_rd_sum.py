@@ -2869,6 +2869,32 @@ def test_that_generated_restart_chain_is_identical_under_lazy_and_eager_load(cha
     ]
 
 
+@given(chain=restart_chains())
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_chain_frames_are_identical_under_lazy_and_eager_load(chain):
+    chain.to_files()
+    lazy = Summary(chain.name, include_restart=True, lazy_load=True)
+    eager = Summary(chain.name, include_restart=True, lazy_load=False)
+    assert_frame_equal(lazy.pandas_frame(), eager.pandas_frame())
+
+    dates = eager.dates
+    # Before the start, at steps, between steps and after the end
+    time_index = [
+        dates[0] - datetime.timedelta(days=1),
+        *dates,
+        *(a + (b - a) / 2 for a, b in itertools.pairwise(dates)),
+        dates[-1] + datetime.timedelta(days=1),
+    ]
+    assert_frame_equal(
+        lazy.pandas_frame(time_index=time_index),
+        eager.pandas_frame(time_index=time_index),
+    )
+
+    keys = SummaryKeyWordVector(eager, add_keywords=True)
+    for date in dates:
+        assert lazy.get_interp_row(keys, date) == eager.get_interp_row(keys, date)
+
+
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_general_var_index():
     create_summary(summary_keys=("FOPR",))

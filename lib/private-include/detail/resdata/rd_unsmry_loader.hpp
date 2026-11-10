@@ -23,6 +23,10 @@ public:
 
     std::vector<size_t> report_steps(size_t offset) const;
     double iget(size_t time_index, size_t params_index) const;
+    /** Reads the values of the parameters given by @index_map at
+        @time_index into @out, which must hold index_map.size() values. */
+    void get_row(size_t time_index, const std::vector<size_t> &index_map,
+                 double *out) const;
 
 private:
     size_t size; //Number of entries in the smspec index

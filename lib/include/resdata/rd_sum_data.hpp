@@ -91,6 +91,9 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
 void rd_sum_data_init_double_frame_interp(
     const rd_sum_data_type *data, const rd_sum_vector_type *keywords,
     const std::vector<time_t> &time_points, double *output_data);
+void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
+                                   const rd_sum_vector_type *keywords,
+                                   double *output_data);
 
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,

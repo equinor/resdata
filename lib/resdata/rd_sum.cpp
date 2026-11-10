@@ -802,6 +802,12 @@ void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                          time_points, data);
 }
 
+void rd_sum_init_double_frame(const rd_sum_type *rd_sum,
+                              const rd_sum_vector_type *keywords,
+                              double *data) {
+    rd_sum_data_init_double_frame(rd_sum->data.get(), keywords, data);
+}
+
 std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              size_t data_index,
                                              bool report_only) {

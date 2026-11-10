@@ -104,6 +104,11 @@ public:
     time_t get_data_start() const;
     time_t get_sim_end() const;
     double iget(size_t time_index, size_t params_index) const;
+    /** Reads the values of the parameters given by @params_indices at
+        @time_index into @out, which must hold params_indices.size()
+        values. Lazily loaded data is read from file once per call. */
+    void get_row(size_t time_index, const std::vector<size_t> &params_indices,
+                 double *out) const;
     time_t iget_sim_time(size_t time_index) const;
     double iget_sim_days(size_t time_index) const;
     double iget_sim_seconds(size_t time_index) const;
