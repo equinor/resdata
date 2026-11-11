@@ -220,32 +220,101 @@ struct rd_sum_data_struct {
         file_data ownership shared among rd_sum_data. */
     std::vector<std::shared_ptr<rd::rd_sum_file_data>> data_files;
     CaseIndex index;
+
+    /** An internal index resolved to the file holding it, and the index
+        within that file. */
+    struct Located {
+        const IndexNode &node;
+        const rd::rd_sum_file_data &file;
+        size_t local_index;
+    };
+
+    const rd::rd_sum_file_data &file(const IndexNode &node) const {
+        return *this->data_files[node.data_index];
+    }
+
+    Located locate(size_t internal_index) const {
+        const auto &node = this->index.lookup(internal_index);
+        return {node, this->file(node), internal_index - node.offset};
+    }
+
+    double default_value(size_t params_index) const {
+        return rd_smspec_iget_node_w_params_index(this->smspec, params_index)
+            .get_default();
+    }
+
+    double iget(size_t time_index, size_t params_index) const {
+        const auto loc = this->locate(time_index);
+        this->check_params_index(params_index);
+        // nullopt if the file lacks the parameter, so the default value applies
+        const auto file_index = loc.node.params_map[params_index];
+        return file_index ? loc.file.iget(loc.local_index, *file_index)
+                          : this->default_value(params_index);
+    }
+
+    /** Reads the values of @params_indices at @time_index into @out, which
+        must hold params_indices.size() values. Lazily loaded data is read
+        from file once per call, instead of once per value as with iget(). */
+    void iget_row(size_t time_index, const std::vector<size_t> &params_indices,
+                  double *out) const {
+        const auto loc = this->locate(time_index);
+
+        std::vector<size_t> file_indices;
+        std::vector<size_t> positions;
+        file_indices.reserve(params_indices.size());
+        positions.reserve(params_indices.size());
+        if (!params_indices.empty())
+            this->check_params_index(*std::max_element(params_indices.begin(),
+                                                       params_indices.end()));
+        for (size_t i = 0; i < params_indices.size(); i++) {
+            if (const auto file_index =
+                    loc.node.params_map[params_indices[i]]) {
+                file_indices.push_back(*file_index);
+                positions.push_back(i);
+            } else
+                out[i] = this->default_value(params_indices[i]);
+        }
+
+        std::vector<double> values(file_indices.size());
+        loc.file.get_row(loc.local_index, file_indices, values.data());
+        for (size_t j = 0; j < positions.size(); j++)
+            out[positions[j]] = values[j];
+    }
+
+    double iget_sim_seconds(size_t internal_index) const {
+        const auto loc = this->locate(internal_index);
+        return loc.file.iget_sim_seconds(loc.local_index);
+    }
+
+    void build_index() {
+        std::sort(this->data_files.begin(), this->data_files.end(),
+                  [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
+                     const std::shared_ptr<rd::rd_sum_file_data> &case2) {
+                      return case1->get_data_start() < case2->get_data_start();
+                  });
+
+        this->index.clear();
+        for (size_t i = 0; i < this->data_files.size(); i++) {
+            std::optional<time_t> next_start = std::nullopt;
+            if (i + 1 < this->data_files.size())
+                next_start = this->data_files[i + 1]->get_data_start();
+
+            this->index.add(i, *this->data_files[i], next_start, this->smspec);
+        }
+    }
+
+private:
+    void check_params_index(size_t params_index) const {
+        const size_t params_size = rd_smspec_get_params_size(this->smspec);
+        if (params_index >= params_size)
+            throw std::out_of_range(
+                fmt::format("params_index:{} is out of range - valid range: "
+                            "[0, {})",
+                            params_index, params_size));
+    }
 };
 
 namespace {
-void build_index(rd_sum_data_type *self) {
-    std::sort(self->data_files.begin(), self->data_files.end(),
-              [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
-                 const std::shared_ptr<rd::rd_sum_file_data> &case2) {
-                  return case1->get_data_start() < case2->get_data_start();
-              });
-
-    self->index.clear();
-    for (size_t i = 0; i < self->data_files.size(); i++) {
-        std::optional<time_t> next_start = std::nullopt;
-        if (i + 1 < self->data_files.size())
-            next_start = self->data_files[i + 1]->get_data_start();
-
-        self->index.add(i, *self->data_files[i], next_start, self->smspec);
-    }
-}
-
-double iget_sim_seconds(const rd_sum_data_type *data, size_t internal_index) {
-    const auto index_node = data->index.lookup(internal_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_seconds(internal_index - index_node.offset);
-}
-
 void fwrite_unified(const rd_sum_data_type *data, const fs::path &rd_case,
                     bool fmt_case) {
     std::string filename =
@@ -354,43 +423,6 @@ Interp interp_from_sim_time(const rd_sum_data_type *data, time_t sim_time) {
     return {idx - 1, idx, time_dist2 / time_diff, time_dist1 / time_diff};
 }
 
-/** Reads the values of @params_indices at @time_index into @out, which must
-    hold params_indices.size() values. Lazily loaded data is read from file
-    once per call, instead of once per value as with rd_sum_data_iget(). */
-void iget_row(const rd_sum_data_type *data, size_t time_index,
-              const std::vector<size_t> &params_indices, double *out) {
-    const size_t params_size = rd_smspec_get_params_size(data->smspec);
-    const auto &index_node = data->index.lookup(time_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto &params_map = index_node.params_map;
-
-    std::vector<size_t> file_indices;
-    std::vector<size_t> positions;
-    file_indices.reserve(params_indices.size());
-    positions.reserve(params_indices.size());
-    for (size_t i = 0; i < params_indices.size(); i++) {
-        const size_t params_index = params_indices[i];
-        if (params_index >= params_size)
-            throw std::out_of_range(
-                fmt::format("params_index:{} is out of range - valid range: "
-                            "[0, {})",
-                            params_index, params_size));
-        if (params_map[params_index]) {
-            file_indices.push_back(*params_map[params_index]);
-            positions.push_back(i);
-        } else
-            out[i] =
-                rd_smspec_iget_node_w_params_index(data->smspec, params_index)
-                    .get_default();
-    }
-
-    std::vector<double> values(file_indices.size());
-    file_data->get_row(time_index - index_node.offset, file_indices,
-                       values.data());
-    for (size_t j = 0; j < positions.size(); j++)
-        out[positions[j]] = values[j];
-}
-
 /** The value of @params_index at @sim_time given by @interp; only the ministeps
     needed (index2 alone for rates) are read. */
 double interp_get(const rd_sum_data_type *data, const Interp &interp,
@@ -428,7 +460,7 @@ struct RowCache {
         if (time_index == new_time_index)
             return;
         values.resize(params_indices.size());
-        iget_row(data, new_time_index, params_indices, values.data());
+        data->iget_row(new_time_index, params_indices, values.data());
         time_index = new_time_index;
     }
 
@@ -451,15 +483,14 @@ rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
 
 double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
                                  size_t internal_index) {
-    const auto index_node = data->index.lookup(internal_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_days(internal_index - index_node.offset);
+    const auto loc = data->locate(internal_index);
+    return loc.file.iget_sim_days(loc.local_index);
 }
 
 rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
     rd_sum_data_type *data = rd_sum_data_alloc(smspec);
     data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
-    build_index(data);
+    data->build_index();
     return data;
 }
 
@@ -552,8 +583,8 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
         if (!contained)
             continue;
 
-        double prev_time = iget_sim_seconds(data, prev_index);
-        double time = iget_sim_seconds(data, index);
+        double prev_time = data->iget_sim_seconds(prev_index);
+        double time = data->iget_sim_seconds(index);
 
         if (node.is_rate()) {
             solution.push_back(rates_clamp_lower ? prev_time + 1 : time);
@@ -576,7 +607,7 @@ rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
     const auto &file_data = data->data_files.back();
     rd_sum_tstep_type *tstep =
         file_data->add_new_tstep(report_step, sim_seconds);
-    build_index(data);
+    data->build_index();
     return tstep;
 }
 
@@ -585,7 +616,7 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
     for (auto &other_file : other->data_files)
         self->data_files.push_back(other_file);
 
-    build_index(self);
+    self->build_index();
 }
 
 /** Loads the summary files in @filelist and appends them to the data. The
@@ -597,7 +628,7 @@ bool rd_sum_data_fread(rd_sum_data_type *data,
     auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
     if (file_data->fread(filelist, lazy_load, file_options)) {
         data->data_files.push_back(file_data);
-        build_index(data);
+        data->build_index();
         return true;
     }
     return false;
@@ -608,8 +639,8 @@ bool rd_sum_data_fread(rd_sum_data_type *data,
 size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
                                    size_t report_step) {
     const auto &index_node = data->index.lookup_report(report_step);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto range = file_data->report_range(report_step);
+    auto &file_data = data->file(index_node);
+    const auto range = file_data.report_range(report_step);
     if (!range)
         throw std::invalid_argument("Could not locate report step " +
                                     std::to_string(report_step) +
@@ -624,7 +655,7 @@ size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
         end = index_node.length - 1;
     }
 
-    if (file_data->iget_report(end) != report_step)
+    if (file_data.iget_report(end) != report_step)
         throw std::invalid_argument(
             "Could not locate report step " + std::to_string(report_step) +
             " within the retained range of its summary file");
@@ -634,9 +665,8 @@ size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
 
 size_t rd_sum_data_iget_report_step(const rd_sum_data_type *data,
                                     size_t internal_index) {
-    const auto &index_node = data->index.lookup(internal_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    return file_data->iget_report(internal_index - index_node.offset);
+    const auto loc = data->locate(internal_index);
+    return loc.file.iget_report(loc.local_index);
 }
 
 /** This will look up a value based on an internal index. The internal
@@ -644,23 +674,7 @@ size_t rd_sum_data_iget_report_step(const rd_sum_data_type *data,
     any holes. */
 double rd_sum_data_iget(const rd_sum_data_type *data, size_t time_index,
                         size_t params_index) {
-    if (params_index >= rd_smspec_get_params_size(data->smspec))
-        throw std::out_of_range(
-            fmt::format("params_index:{} is out of range - valid range: "
-                        "[0, {})",
-                        params_index, rd_smspec_get_params_size(data->smspec)));
-
-    const auto &index_node = data->index.lookup(time_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto &params_map = index_node.params_map;
-    if (params_map[params_index])
-        return file_data->iget(time_index - index_node.offset,
-                               *params_map[params_index]);
-    else {
-        const rd::smspec_node &smspec_node =
-            rd_smspec_iget_node_w_params_index(data->smspec, params_index);
-        return smspec_node.get_default();
-    }
+    return data->iget(time_index, params_index);
 }
 
 /** If the keylist contains invalid indices the corresponding element in the
@@ -723,8 +737,7 @@ rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
         if (files.first != files.second)
             return std::nullopt;
 
-        const auto &data_file = data->data_files[files.first->data_index];
-        return data_file->report_step_from_days(sim_days);
+        return data->file(*files.first).report_step_from_days(sim_days);
     }
 }
 
@@ -754,8 +767,7 @@ rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
         if (files.first != files.second)
             return std::nullopt;
 
-        const auto &data_file = data->data_files[files.first->data_index];
-        return data_file->report_step_from_time(sim_time);
+        return data->file(*files.first).report_step_from_time(sim_time);
     }
 }
 
@@ -769,9 +781,8 @@ double rd_sum_data_get_from_sim_days(const rd_sum_data_type *data,
 
 time_t rd_sum_data_iget_sim_time(const rd_sum_data_type *data,
                                  size_t ministep_index) {
-    const auto &index_node = data->index.lookup(ministep_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_time(ministep_index - index_node.offset);
+    const auto loc = data->locate(ministep_index);
+    return loc.file.iget_sim_time(loc.local_index);
 }
 
 time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,
@@ -800,8 +811,8 @@ rd_sum_data_alloc_time_vector(const rd_sum_data_type *data) {
 
     size_t offset = 0;
     for (const auto &index_node : data->index) {
-        data->data_files[index_node.data_index]->get_time(index_node.length,
-                                                          &output_data[offset]);
+        data->file(index_node)
+            .get_time(index_node.length, &output_data[offset]);
         offset += index_node.length;
     }
     return output_data;
@@ -811,8 +822,7 @@ std::vector<time_t>
 rd_sum_data_alloc_report_time_vector(const rd_sum_data_type *data) {
     std::vector<time_t> output_data;
     for (const auto &index_node : data->index)
-        data->data_files[index_node.data_index]->get_time_report(
-            index_node.length, output_data);
+        data->file(index_node).get_time_report(index_node.length, output_data);
     return output_data;
 }
 
@@ -821,19 +831,17 @@ void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
     if (params_index >= rd_smspec_get_params_size(data->smspec))
         throw std::out_of_range("Out of range");
 
-    const double default_value =
-        rd_smspec_iget_node_w_params_index(data->smspec, params_index)
-            .get_default();
+    const double default_value = data->default_value(params_index);
 
     size_t offset = 0;
     for (const auto &index_node : data->index) {
-        const auto &data_file = data->data_files[index_node.data_index];
+        auto &data_file = data->file(index_node);
         const std::optional<size_t> file_params_index =
             index_node.params_map[params_index];
 
         if (file_params_index)
-            data_file->get_data(*file_params_index, index_node.length,
-                                &output_data[offset]);
+            data_file.get_data(*file_params_index, index_node.length,
+                               &output_data[offset]);
         else
             std::fill_n(&output_data[offset], index_node.length, default_value);
         offset += index_node.length;
@@ -853,15 +861,13 @@ rd_sum_data_alloc_report_data_vector(const rd_sum_data_type *data,
     if (params_index >= rd_smspec_get_params_size(data->smspec))
         throw std::out_of_range("Out of range");
 
-    const double default_value =
-        rd_smspec_iget_node_w_params_index(data->smspec, params_index)
-            .get_default();
+    const double default_value = data->default_value(params_index);
 
     std::vector<double> output_data;
     for (const auto &index_node : data->index)
-        data->data_files[index_node.data_index]->get_data_report(
-            index_node.params_map[params_index], index_node.length,
-            default_value, output_data);
+        data->file(index_node)
+            .get_data_report(index_node.params_map[params_index],
+                             index_node.length, default_value, output_data);
     return output_data;
 }
 
@@ -955,7 +961,7 @@ void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
     for (size_t time_index = 0; time_index < length; time_index++) {
         double *output_row = output_data + time_index * num_keywords;
         std::fill(output_row, output_row + num_keywords, std::nan(""));
-        iget_row(data, time_index, params_indices, values.data());
+        data->iget_row(time_index, params_indices, values.data());
         for (size_t j = 0; j < key_indices.size(); j++)
             output_row[key_indices[j]] = values[j];
     }
