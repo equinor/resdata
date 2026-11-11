@@ -333,7 +333,7 @@ rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(size_t report_step,
     /*
     In the simple case that we just add another timestep to the
     currently active report_step, we do a limited update of the
-    index, otherwise we call rd_sum_data_build_index() to get a
+    index, otherwise we call build_index() to get a
     full recalculation of the index.
   */
     if (!prev_tstep)

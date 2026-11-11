@@ -34,26 +34,22 @@
 
 namespace fs = std::filesystem;
 
-/*
-  This file implements the struct rd_sum_data which manages the actual simulated
-  values from a summary file, including all time-related information. In the
-  case of restarted simulations the different summary cases will be internalized
-  as separate rd_sum_file_data instances. The rd_sum_file_data class is an
-  internal implementation detail which is not exported. More details about the
-  internal storage of summary data can be found in that file.
-
-  For this file the implementation mainly consists of maintaining an ordered
-  list of rd_sum_file_data instances and dispatching method calls to the right
-  rd_sum_file_data instance.
-*/
+// This file implements the struct rd_sum_data which manages the actual simulated
+// values from a summary file, including all time-related information. In the
+// case of restarted simulations the different summary cases will be internalized
+// as separate rd_sum_file_data instances. The rd_sum_file_data class is an
+// internal implementation detail which is not exported. More details about the
+// internal storage of summary data can be found in that file.
+//
+// For this file the implementation mainly consists of maintaining an ordered
+// list of rd_sum_file_data instances and dispatching method calls to the right
+// rd_sum_file_data instance.
 
 namespace {
 
-/*
-  The class CaseIndex and the struct IndexNode are used to maintain a list of
-  the rd_sum_file_data instances, and lookup the correct one based one various
-  time related arguments.
-*/
+// The class CaseIndex and the struct IndexNode are used to maintain a list of
+// the rd_sum_file_data instances, and lookup the correct one based one various
+// time related arguments.
 
 struct IndexNode {
     size_t end() const { return this->offset + this->length; }
@@ -72,12 +68,10 @@ struct IndexNode {
 
 class CaseIndex {
 public:
-    /*
-      Adds the data file with index @data_index in the list of data files. If
-      @next_start is given, the data file is truncated to the timesteps before
-      @next_start. Data files which contribute no timesteps are not added, so
-      every node in the index has length > 0.
-    */
+    /** Adds the data file with index @data_index in the list of data files. If
+        @next_start is given, the data file is truncated to the timesteps before
+        @next_start. Data files which contribute no timesteps are not added, so
+        every node in the index has length > 0. */
     void add(size_t data_index, const rd::rd_sum_file_data &data,
              std::optional<time_t> next_start, const rd_smspec_type *smspec) {
         size_t length =
@@ -100,24 +94,21 @@ public:
         });
     }
 
-    /*
-  The lookup_time() and lookup_report() methods will lookup which file_data
-  instance corresponds to the time/report argument. The methods will return two
-  pointers to file_data instances, if the argument is inside one file_data
-  instance the pointers will be equal - otherwise they will point to the
-  file_data instance before and after the argument:
+    /** The lookup_time() methods will lookup which file_data
+        instance corresponds to the time argument. The methods will return two
+        pointers to file_data instances, if the argument is inside one file_data
+        instance the pointers will be equal - otherwise they will point to the
+        file_data instance before and after the argument:
 
-  File 1                     File 2
-  |------|-----|------|      |----|----------|---|
-      /|\                /|\
-       |                  |
-       |                  |
-       A                  B
+        File 1                     File 2
+        |------|-----|------|      |----|----------|---|
+             ^                  ^
+             |                  |
+             |                  |
+             A                  B
 
-  For time A the lookup_time function will return <file1,file1> whereas for time
-  B the function will return <file1,file2>.
- */
-
+        For time A the lookup_time function will return <file1,file1> whereas for time
+        B the function will return <file1,file2>. */
     std::pair<const IndexNode *, const IndexNode *>
     lookup_time(time_t sim_time) const {
         if (this->index.empty())
@@ -150,6 +141,7 @@ public:
         }
     }
 
+    /** Same as lookup_time, but for number of days */
     std::pair<const IndexNode *, const IndexNode *>
     lookup_days(double days) const {
         if (this->index.empty())
@@ -224,73 +216,38 @@ private:
 
 struct rd_sum_data_struct {
     const rd_smspec_type *smspec;
-    std::vector<std::shared_ptr<rd::rd_sum_file_data>>
-        data_files; /** These data files are shared_ptr
-                       as rd_sum_data_add_case makes file_data
-                       ownership shared among rd_sum_data. */
+    /** These data files are shared_ptr as rd_sum_data_add_case makes
+        file_data ownership shared among rd_sum_data. */
+    std::vector<std::shared_ptr<rd::rd_sum_file_data>> data_files;
     CaseIndex index;
 };
 
-static void rd_sum_data_build_index(rd_sum_data_type *self);
-static double rd_sum_data_iget_sim_seconds(const rd_sum_data_type *data,
-                                           size_t internal_index);
+namespace {
+void build_index(rd_sum_data_type *self) {
+    std::sort(self->data_files.begin(), self->data_files.end(),
+              [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
+                 const std::shared_ptr<rd::rd_sum_file_data> &case2) {
+                  return case1->get_data_start() < case2->get_data_start();
+              });
 
-void rd_sum_data_free(rd_sum_data_type *data) {
-    if (!data)
-        throw std::invalid_argument(__func__ + std::string(": invalid delete"));
+    self->index.clear();
+    for (size_t i = 0; i < self->data_files.size(); i++) {
+        std::optional<time_t> next_start = std::nullopt;
+        if (i + 1 < self->data_files.size())
+            next_start = self->data_files[i + 1]->get_data_start();
 
-    delete data;
+        self->index.add(i, *self->data_files[i], next_start, self->smspec);
+    }
 }
 
-rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
-    rd_sum_data_type *data = new rd_sum_data_type();
-    data->smspec = smspec;
-    return data;
-}
-
-/**
-   This function will take a report as input , and update the two
-   pointers ministep1 and ministep2 with the range of the report step
-   (in terms of ministeps).
-
-   Calling this function with report_step == 2 for the example
-   documented at the top of the file will yield: *ministep1 = 3 and
-   *ministep2 = 7. If you are only interested in one of the limits you
-   can pass in NULL for the other limit, i.e.
-
-      xxx(data , report_step , NULL , &ministep2);
-
-   to get the last step.
-
-   If the supplied report_step is invalid the function will set both
-   return values to -1 (the return value from safe_iget). In that case
-   it is the responsability of the calling scope to check the return
-   values.
-*/
-
-static double rd_sum_data_iget_sim_seconds(const rd_sum_data_type *data,
-                                           size_t internal_index) {
+double iget_sim_seconds(const rd_sum_data_type *data, size_t internal_index) {
     const auto index_node = data->index.lookup(internal_index);
     const auto data_file = data->data_files[index_node.data_index];
     return data_file->iget_sim_seconds(internal_index - index_node.offset);
 }
 
-double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
-                                 size_t internal_index) {
-    const auto index_node = data->index.lookup(internal_index);
-    const auto data_file = data->data_files[index_node.data_index];
-    return data_file->iget_sim_days(internal_index - index_node.offset);
-}
-
-rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
-    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
-    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
-    rd_sum_data_build_index(data);
-    return data;
-}
-
-static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
-                                       const fs::path &rd_case, bool fmt_case) {
+void fwrite_unified(const rd_sum_data_type *data, const fs::path &rd_case,
+                    bool fmt_case) {
     std::string filename =
         rd::filename(rd_case, FileType::UNIFIED_SUMMARY, fmt_case, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_case);
@@ -299,123 +256,34 @@ static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
         data_file->fwrite_unified(fortio);
 }
 
-static void rd_sum_data_fwrite_multiple(const rd_sum_data_type *data,
-                                        const fs::path &rd_case,
-                                        bool fmt_case) {
-
+void fwrite_multiple(const rd_sum_data_type *data, const fs::path &rd_case,
+                     bool fmt_case) {
     for (auto &data_file : data->data_files)
         data_file->fwrite_multiple(rd_case.string(), fmt_case);
 }
 
-void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
-                        bool fmt_case, bool unified) {
-    fs::path case_path(rd_case);
-    if (unified)
-        rd_sum_data_fwrite_unified(data, case_path, fmt_case);
-    else
-        rd_sum_data_fwrite_multiple(data, case_path, fmt_case);
-}
+/** The internal index of the ministep corresponding to @sim_time. Throws
+    std::out_of_range if @sim_time is before the start or after the end of the
+    data; use check_sim_time() to test for this beforehand.
 
-bool rd_sum_data_can_write(const rd_sum_data_type *data) {
-    bool can_write = true;
-    for (const auto &file_ptr : data->data_files)
-        can_write &= file_ptr->can_write();
+    Observe that if there are holes in the time-domain, i.e. if RPTONLY has
+    been used, the returned ministep need not cover @sim_time:
 
-    return can_write;
-}
-
-time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
-    if (data->data_files.empty())
-        throw std::out_of_range("rd_sum_data_get_sim_end: data_files empty");
-
-    const auto &file_data = data->data_files.back();
-    return file_data->get_sim_end();
-}
-
-time_t rd_sum_data_get_data_start(const rd_sum_data_type *data) {
-    if (data->data_files.empty())
-        throw std::out_of_range("rd_sum_data_get_data_start: data_files empty");
-    const auto &file_data = data->data_files[0];
-    return file_data->get_data_start();
-}
-
-double rd_sum_data_get_first_day(const rd_sum_data_type *data) {
-    const auto &file_data = data->data_files[0];
-    return file_data->get_days_start();
-}
-
-/**
-   Returns the number of simulations days from the start of the
-   simulation (irrespective of whether the that summary data has
-   actually been loaded) to the last loaded simulation step.
-*/
-
-double rd_sum_data_get_sim_length(const rd_sum_data_type *data) {
-    const auto &file_data = data->data_files.back();
-    return file_data->get_sim_length();
-}
-
-/**
-   The check_sim_time() and check_sim_days() routines check if you
-   have summary data for the requested date/days value. In the case of
-   a restarted case, where the original case is missing - this will
-   return false if the input values are in the region after simulation
-   start with no data.
-*/
-
-bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time) {
-    if (sim_time < rd_sum_data_get_data_start(data))
-        return false;
-
-    if (sim_time > rd_sum_data_get_sim_end(data))
-        return false;
-
-    return true;
-}
-
-bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days) {
-    return sim_days >= rd_sum_data_get_first_day(data) &&
-           sim_days <= rd_sum_data_get_sim_length(data);
-}
-
-/**
-   This function will return the ministep corresponding to a time_t
-   instance 'sim_time'. The function will fail hard if the time_t is
-   before the simulation start, or after the end of the
-   simulation. Check with
-
-       rd_smspec_get_start_time() and rd_sum_data_get_sim_end()
-
-   first.
-
-   See the documentation about report steps, ministeps and rates at
-   the top of this file for how the sim_time relates to to the
-   returned ministep_nr.
-
-   The indices used in this function are the internal indices, and not
-   ministep numbers. Observe that if there are holes in the
-   time-domain, i.e. if RPTONLY has been used, the function can return
-   a ministep index which does NOT cover the input time:
-
-     The 'X' should represent report times - the dashed lines
-     represent the temporal extent of two ministeps. Outside the '--'
-     area we do not have any results. The two ministeps we actually
-     have are M15 and M25, i.e. there is a hole.
+      The 'X' should represent report times - the dashed lines
+      represent the temporal extent of two ministeps. Outside the '--'
+      area we do not have any results. The two ministeps we actually
+      have are M15 and M25, i.e. there is a hole.
 
 
-      X      .      +-----X            +----X
-            /|\        M15               M25
-             |
-             |
+       X      .      +-----X            +----X
+             /|\        M15               M25
+              |
+              |
 
-     When asking for the ministep number at the location of the arrow,
-     the function will return '15', i.e. the valid ministep following
-     the sim_time. Of course - the ideal situation is if the time
-     sequence has no holes.
-*/
-
-static size_t rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
-                                                  time_t sim_time) {
+      When asking for the ministep at the location of the arrow, the function
+      returns the index of M15, i.e. the valid ministep following @sim_time.
+      Of course - the ideal situation is if the time sequence has no holes. */
+size_t get_index_from_sim_time(const rd_sum_data_type *data, time_t sim_time) {
     if (!rd_sum_data_check_sim_time(data, sim_time)) {
         time_t start_time = rd_sum_data_get_data_start(data);
         time_t end_time = rd_sum_data_get_sim_end(data);
@@ -425,12 +293,10 @@ static size_t rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
             rd_smspec_get_start_time(data->smspec)));
     }
 
-    /*
-     The moment we have passed the intial test we MUST find a valid
-     ministep index, however care should be taken that there can
-     perfectly well be 'holes' in the time domain, because of e.g. the
-     RPTONLY keyword.
-  */
+    // The moment we have passed the intial test we MUST find a valid
+    // ministep index, however care should be taken that there can
+    // perfectly well be 'holes' in the time domain, because of e.g. the
+    // RPTONLY keyword.
     const size_t length = rd_sum_data_get_length(data);
     if (length == 0)
         throw std::logic_error("reached found time_t in empty data");
@@ -455,9 +321,7 @@ static size_t rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
 }
 
 /** The two ministeps bracketing a time, with the weights to interpolate
-    between them. For further explanation (in particular for which keywords
-    interpolation should be used), consult documentation at the top of this
-    file. */
+    between them. Rates are not interpolated; see interp_get(). */
 struct Interp {
     size_t index1;
     size_t index2;
@@ -471,9 +335,8 @@ struct Interp {
     }
 };
 
-static Interp rd_sum_data_interp_from_sim_time(const rd_sum_data_type *data,
-                                               time_t sim_time) {
-    const size_t idx = rd_sum_data_get_index_from_sim_time(data, sim_time);
+Interp interp_from_sim_time(const rd_sum_data_type *data, time_t sim_time) {
+    const size_t idx = get_index_from_sim_time(data, sim_time);
 
     // if sim_time is first date, idx=0 and then we cannot interpolate, so we give
     // weight 1 to index1=index2=0.
@@ -491,179 +354,11 @@ static Interp rd_sum_data_interp_from_sim_time(const rd_sum_data_type *data,
     return {idx - 1, idx, time_dist2 / time_diff, time_dist1 / time_diff};
 }
 
-std::vector<double>
-rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
-                                   const rd::smspec_node &node,
-                                   double cmp_value, bool rates_clamp_lower) {
-    std::vector<double> solution;
-    const size_t param_index = node.get_params_index();
-    const size_t size = rd_sum_data_get_length(data);
-
-    if (size <= 1)
-        return solution;
-
-    for (size_t index = 0; index < size; ++index) {
-        size_t prev_index = (index == 0) ? 0 : index - 1;
-        double value = rd_sum_data_iget(data, index, param_index);
-        double prev_value = rd_sum_data_iget(data, prev_index, param_index);
-
-        // cmp_value in interval value (closed) and prev_value (open)
-        bool contained = (value == cmp_value);
-        contained |= (std::min(prev_value, value) < cmp_value) &&
-                     (cmp_value < std::max(prev_value, value));
-
-        if (!contained)
-            continue;
-
-        double prev_time = rd_sum_data_iget_sim_seconds(data, prev_index);
-        double time = rd_sum_data_iget_sim_seconds(data, index);
-
-        if (node.is_rate()) {
-            solution.push_back(rates_clamp_lower ? prev_time + 1 : time);
-        } else {
-            double slope = (value - prev_value) / (time - prev_time);
-            double seconds = (cmp_value - prev_value) / slope + prev_time;
-            solution.push_back(seconds);
-        }
-    }
-    return solution;
-}
-
-static void rd_sum_data_build_index(rd_sum_data_type *self) {
-    std::sort(self->data_files.begin(), self->data_files.end(),
-              [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
-                 const std::shared_ptr<rd::rd_sum_file_data> &case2) {
-                  return case1->get_data_start() < case2->get_data_start();
-              });
-
-    self->index.clear();
-    for (size_t i = 0; i < self->data_files.size(); i++) {
-        std::optional<time_t> next_start = std::nullopt;
-        if (i + 1 < self->data_files.size())
-            next_start = self->data_files[i + 1]->get_data_start();
-
-        self->index.add(i, *self->data_files[i], next_start, self->smspec);
-    }
-}
-
-/*
-  This function is meant to be called in write mode; and will create a
-  new and empty tstep which is appended to the current data. The tstep
-  will also be returned, so the calling scope can call
-  rd_sum_tstep_iset() to set elements in the tstep.
-*/
-
-rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
-                                             size_t report_step,
-                                             double sim_seconds) {
-    const auto &file_data = data->data_files.back();
-    rd_sum_tstep_type *tstep =
-        file_data->add_new_tstep(report_step, sim_seconds);
-    rd_sum_data_build_index(data);
-    return tstep;
-}
-
-void rd_sum_data_add_case(rd_sum_data_type *self,
-                          const rd_sum_data_type *other) {
-    for (auto &other_file : other->data_files)
-        self->data_files.push_back(other_file);
-
-    rd_sum_data_build_index(self);
-}
-
-/*
-  Observe that this can be called several times (but not with the same
-  data - that will die).
-
-  Warning: The index information of the rd_sum_data instance has
-  __NOT__ been updated when leaving this function. That is done with a
-  call to rd_sum_data_build_index().
-*/
-
-bool rd_sum_data_fread(rd_sum_data_type *data,
-                       const std::vector<std::string> &filelist, bool lazy_load,
-                       FileMode file_options) {
-    auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
-    if (file_data->fread(filelist, lazy_load, file_options)) {
-        data->data_files.push_back(file_data);
-        rd_sum_data_build_index(data);
-        return true;
-    }
-    return false;
-}
-
-/** The last index included in report step @report_step. If the dataset does
-    not contain @report_step, the function will raise std::invalid_argument. */
-size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
-                                   size_t report_step) {
-    const auto &index_node = data->index.lookup_report(report_step);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto range = file_data->report_range(report_step);
-    if (!range)
-        throw std::invalid_argument("Could not locate report step " +
-                                    std::to_string(report_step) +
-                                    " within its summary file");
-
-    size_t end = range->last;
-    if (end >= index_node.length) {
-        /* report_range() returns the report's extent within the file, but
-           if the time of steps overlap between files, the final timesteps are
-           truncated because the next file takes over, so we use the last step
-           in the file. */
-        end = index_node.length - 1;
-    }
-
-    if (file_data->iget_report(end) != report_step)
-        throw std::invalid_argument(
-            "Could not locate report step " + std::to_string(report_step) +
-            " within the retained range of its summary file");
-
-    return end + index_node.offset;
-}
-
-size_t rd_sum_data_iget_report_step(const rd_sum_data_type *data,
-                                    size_t internal_index) {
-    const auto &index_node = data->index.lookup(internal_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    return file_data->iget_report(internal_index - index_node.offset);
-}
-
-/**
-    This will look up a value based on an internal index. The internal
-    index will ALWAYS run in the interval [0,num_ministep), without
-    any holes.
-*/
-
-double rd_sum_data_iget(const rd_sum_data_type *data, size_t time_index,
-                        size_t params_index) {
-    if (params_index >= rd_smspec_get_params_size(data->smspec))
-        throw std::out_of_range(
-            fmt::format("params_index:{} is out of range - valid range: "
-                        "[0, {})",
-                        params_index, rd_smspec_get_params_size(data->smspec)));
-
-    const auto &index_node = data->index.lookup(time_index);
-    const auto &file_data = data->data_files[index_node.data_index];
-    const auto &params_map = index_node.params_map;
-    if (params_map[params_index])
-        return file_data->iget(time_index - index_node.offset,
-                               *params_map[params_index]);
-    else {
-        const rd::smspec_node &smspec_node =
-            rd_smspec_iget_node_w_params_index(data->smspec, params_index);
-        return smspec_node.get_default();
-    }
-}
-
-/**
-   Reads the values of @params_indices at @time_index into @out, which must
-   hold params_indices.size() values. Lazily loaded data is read from file
-   once per call, instead of once per value as with rd_sum_data_iget().
-*/
-static void rd_sum_data_iget_row(const rd_sum_data_type *data,
-                                 size_t time_index,
-                                 const std::vector<size_t> &params_indices,
-                                 double *out) {
+/** Reads the values of @params_indices at @time_index into @out, which must
+    hold params_indices.size() values. Lazily loaded data is read from file
+    once per call, instead of once per value as with rd_sum_data_iget(). */
+void iget_row(const rd_sum_data_type *data, size_t time_index,
+              const std::vector<size_t> &params_indices, double *out) {
     const size_t params_size = rd_smspec_get_params_size(data->smspec);
     const auto &index_node = data->index.lookup(time_index);
     const auto &file_data = data->data_files[index_node.data_index];
@@ -698,9 +393,8 @@ static void rd_sum_data_iget_row(const rd_sum_data_type *data,
 
 /** The value of @params_index at @sim_time given by @interp; only the ministeps
     needed (index2 alone for rates) are read. */
-static double rd_sum_data_interp_get(const rd_sum_data_type *data,
-                                     const Interp &interp, size_t params_index,
-                                     bool is_rate) {
+double interp_get(const rd_sum_data_type *data, const Interp &interp,
+                  size_t params_index, bool is_rate) {
     if (is_rate)
         return rd_sum_data_iget(data, interp.index2, params_index);
     return interp.interpolate(
@@ -710,8 +404,8 @@ static double rd_sum_data_interp_get(const rd_sum_data_type *data,
 
 /** The params indices of the keys of @keywords present in the summary, and
     the indices of those keys in @keywords. */
-static std::pair<std::vector<size_t>, std::vector<size_t>>
-rd_sum_data_present_keywords(const rd_sum_vector_type *keywords) {
+std::pair<std::vector<size_t>, std::vector<size_t>>
+present_keywords(const rd_sum_vector_type *keywords) {
     std::vector<size_t> params_indices;
     std::vector<size_t> key_indices;
     const size_t num_keywords = rd_sum_vector_get_size(keywords);
@@ -723,11 +417,8 @@ rd_sum_data_present_keywords(const rd_sum_vector_type *keywords) {
     return {std::move(params_indices), std::move(key_indices)};
 }
 
-namespace {
-/**
-   The values of the keywords present in the summary at one ministep, read
-   with a single rd_sum_data_iget_row() call.
-*/
+/** The values of the keywords present in the summary at one ministep, read
+    with a single iget_row() call. */
 struct RowCache {
     std::optional<size_t> time_index;
     std::vector<double> values;
@@ -737,8 +428,7 @@ struct RowCache {
         if (time_index == new_time_index)
             return;
         values.resize(params_indices.size());
-        rd_sum_data_iget_row(data, new_time_index, params_indices,
-                             values.data());
+        iget_row(data, new_time_index, params_indices, values.data());
         time_index = new_time_index;
     }
 
@@ -746,17 +436,243 @@ struct RowCache {
 };
 } // namespace
 
+void rd_sum_data_free(rd_sum_data_type *data) {
+    if (!data)
+        throw std::invalid_argument(__func__ + std::string(": invalid delete"));
+
+    delete data;
+}
+
+rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
+    rd_sum_data_type *data = new rd_sum_data_type();
+    data->smspec = smspec;
+    return data;
+}
+
+double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
+                                 size_t internal_index) {
+    const auto index_node = data->index.lookup(internal_index);
+    const auto data_file = data->data_files[index_node.data_index];
+    return data_file->iget_sim_days(internal_index - index_node.offset);
+}
+
+rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
+    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
+    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
+    build_index(data);
+    return data;
+}
+
+void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
+                        bool fmt_case, bool unified) {
+    fs::path case_path(rd_case);
+    if (unified)
+        fwrite_unified(data, case_path, fmt_case);
+    else
+        fwrite_multiple(data, case_path, fmt_case);
+}
+
+bool rd_sum_data_can_write(const rd_sum_data_type *data) {
+    bool can_write = true;
+    for (const auto &file_ptr : data->data_files)
+        can_write &= file_ptr->can_write();
+
+    return can_write;
+}
+
+time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
+    if (data->data_files.empty())
+        throw std::out_of_range("rd_sum_data_get_sim_end: data_files empty");
+
+    const auto &file_data = data->data_files.back();
+    return file_data->get_sim_end();
+}
+
+time_t rd_sum_data_get_data_start(const rd_sum_data_type *data) {
+    if (data->data_files.empty())
+        throw std::out_of_range("rd_sum_data_get_data_start: data_files empty");
+    const auto &file_data = data->data_files[0];
+    return file_data->get_data_start();
+}
+
+double rd_sum_data_get_first_day(const rd_sum_data_type *data) {
+    const auto &file_data = data->data_files[0];
+    return file_data->get_days_start();
+}
+
+/** Returns the number of simulations days from the start of the
+    simulation (irrespective of whether the that summary data has
+    actually been loaded) to the last loaded simulation step. */
+double rd_sum_data_get_sim_length(const rd_sum_data_type *data) {
+    const auto &file_data = data->data_files.back();
+    return file_data->get_sim_length();
+}
+
+/** The check_sim_time() and check_sim_days() functions check if you
+    have summary data for the requested date/days value. In the case of
+    a restarted case, where the original case is missing - this will
+    return false if the input values are in the region after simulation
+    start with no data. */
+bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time) {
+    if (sim_time < rd_sum_data_get_data_start(data))
+        return false;
+
+    if (sim_time > rd_sum_data_get_sim_end(data))
+        return false;
+
+    return true;
+}
+
+bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days) {
+    return sim_days >= rd_sum_data_get_first_day(data) &&
+           sim_days <= rd_sum_data_get_sim_length(data);
+}
+
+std::vector<double>
+rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
+                                   const rd::smspec_node &node,
+                                   double cmp_value, bool rates_clamp_lower) {
+    std::vector<double> solution;
+    const size_t param_index = node.get_params_index();
+    const size_t size = rd_sum_data_get_length(data);
+
+    if (size <= 1)
+        return solution;
+
+    for (size_t index = 0; index < size; ++index) {
+        size_t prev_index = (index == 0) ? 0 : index - 1;
+        double value = rd_sum_data_iget(data, index, param_index);
+        double prev_value = rd_sum_data_iget(data, prev_index, param_index);
+
+        // cmp_value in interval value (closed) and prev_value (open)
+        bool contained = (value == cmp_value);
+        contained |= (std::min(prev_value, value) < cmp_value) &&
+                     (cmp_value < std::max(prev_value, value));
+
+        if (!contained)
+            continue;
+
+        double prev_time = iget_sim_seconds(data, prev_index);
+        double time = iget_sim_seconds(data, index);
+
+        if (node.is_rate()) {
+            solution.push_back(rates_clamp_lower ? prev_time + 1 : time);
+        } else {
+            double slope = (value - prev_value) / (time - prev_time);
+            double seconds = (cmp_value - prev_value) / slope + prev_time;
+            solution.push_back(seconds);
+        }
+    }
+    return solution;
+}
+
+/** This function is meant to be called in write mode; and will create a
+    new and empty tstep which is appended to the current data. The tstep
+    will also be returned, so the calling scope can call
+    rd_sum_tstep_iset() to set elements in the tstep. */
+rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
+                                             size_t report_step,
+                                             double sim_seconds) {
+    const auto &file_data = data->data_files.back();
+    rd_sum_tstep_type *tstep =
+        file_data->add_new_tstep(report_step, sim_seconds);
+    build_index(data);
+    return tstep;
+}
+
+void rd_sum_data_add_case(rd_sum_data_type *self,
+                          const rd_sum_data_type *other) {
+    for (auto &other_file : other->data_files)
+        self->data_files.push_back(other_file);
+
+    build_index(self);
+}
+
+/** Loads the summary files in @filelist and appends them to the data. The
+    index is rebuilt on success. Returns false, leaving the data unchanged, if
+    the files could not be read. */
+bool rd_sum_data_fread(rd_sum_data_type *data,
+                       const std::vector<std::string> &filelist, bool lazy_load,
+                       FileMode file_options) {
+    auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
+    if (file_data->fread(filelist, lazy_load, file_options)) {
+        data->data_files.push_back(file_data);
+        build_index(data);
+        return true;
+    }
+    return false;
+}
+
+/** The last index included in report step @report_step. If the dataset does
+    not contain @report_step, the function will raise std::invalid_argument. */
+size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
+                                   size_t report_step) {
+    const auto &index_node = data->index.lookup_report(report_step);
+    const auto &file_data = data->data_files[index_node.data_index];
+    const auto range = file_data->report_range(report_step);
+    if (!range)
+        throw std::invalid_argument("Could not locate report step " +
+                                    std::to_string(report_step) +
+                                    " within its summary file");
+
+    size_t end = range->last;
+    if (end >= index_node.length) {
+        // report_range() returns the report's extent within the file, but
+        // if the time of steps overlap between files, the final timesteps are
+        // truncated because the next file takes over, so we use the last step
+        // in the file.
+        end = index_node.length - 1;
+    }
+
+    if (file_data->iget_report(end) != report_step)
+        throw std::invalid_argument(
+            "Could not locate report step " + std::to_string(report_step) +
+            " within the retained range of its summary file");
+
+    return end + index_node.offset;
+}
+
+size_t rd_sum_data_iget_report_step(const rd_sum_data_type *data,
+                                    size_t internal_index) {
+    const auto &index_node = data->index.lookup(internal_index);
+    const auto &file_data = data->data_files[index_node.data_index];
+    return file_data->iget_report(internal_index - index_node.offset);
+}
+
+/** This will look up a value based on an internal index. The internal
+    index will ALWAYS run in the interval [0,num_ministep), without
+    any holes. */
+double rd_sum_data_iget(const rd_sum_data_type *data, size_t time_index,
+                        size_t params_index) {
+    if (params_index >= rd_smspec_get_params_size(data->smspec))
+        throw std::out_of_range(
+            fmt::format("params_index:{} is out of range - valid range: "
+                        "[0, {})",
+                        params_index, rd_smspec_get_params_size(data->smspec)));
+
+    const auto &index_node = data->index.lookup(time_index);
+    const auto &file_data = data->data_files[index_node.data_index];
+    const auto &params_map = index_node.params_map;
+    if (params_map[params_index])
+        return file_data->iget(time_index - index_node.offset,
+                               *params_map[params_index]);
+    else {
+        const rd::smspec_node &smspec_node =
+            rd_smspec_iget_node_w_params_index(data->smspec, params_index);
+        return smspec_node.get_default();
+    }
+}
+
 /** If the keylist contains invalid indices the corresponding element in the
-  results vector will be set to missing_value. */
+    results vector will be set to missing_value. */
 std::vector<double>
 rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
                               const rd_sum_vector_type *keylist,
                               double missing_value) {
     const size_t num_keywords = rd_sum_vector_get_size(keylist);
-    const Interp interp = rd_sum_data_interp_from_sim_time(data, sim_time);
+    const Interp interp = interp_from_sim_time(data, sim_time);
 
-    const auto [params_indices, key_indices] =
-        rd_sum_data_present_keywords(keylist);
+    const auto [params_indices, key_indices] = present_keywords(keylist);
 
     RowCache row1, row2;
     row1.load(data, interp.index1, params_indices);
@@ -776,26 +692,23 @@ double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
                                      const rd::smspec_node &smspec_node) {
     size_t params_index = smspec_node.get_params_index();
     if (smspec_node.is_rate()) {
-        /*
-      In general the mapping from sim_time to index is based on half
-      open intervals, which are closed in the upper end:
-
-          []<------------]<--------------]<-----------]
-          t0             t1             t2           t3
-
-       However - as indicated on the figure above there is a zero
-       measure point right at the start which corresponds to
-       time_index == 0; this is to ensure that there is correspondence
-       with the simulator results if you ask for a value interpolated to
-       the starting time.
-    */
-        size_t time_index = rd_sum_data_get_index_from_sim_time(data, sim_time);
+        // In general the mapping from sim_time to index is based on half
+        // open intervals, which are closed in the upper end:
+        //
+        //     []<------------]<--------------]<-----------]
+        //     t0             t1             t2           t3
+        //
+        //  However - as indicated on the figure above there is a zero
+        //  measure point right at the start which corresponds to
+        //  time_index == 0; this is to ensure that there is correspondence
+        //  with the simulator results if you ask for a value interpolated to
+        //  the starting time.
+        size_t time_index = get_index_from_sim_time(data, sim_time);
         return rd_sum_data_iget(data, time_index, params_index);
     } else {
-        /* Interpolated lookup based on two (hopefully) consecutive ministeps. */
-        return rd_sum_data_interp_get(
-            data, rd_sum_data_interp_from_sim_time(data, sim_time),
-            params_index, false);
+        // Interpolated lookup based on two (hopefully) consecutive ministeps.
+        return interp_get(data, interp_from_sim_time(data, sim_time),
+                          params_index, false);
     }
 }
 
@@ -815,25 +728,22 @@ rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
     }
 }
 
-/**
-   Will go through the data and find the report step which EXACTLY
-   matches the input sim_time. If no report step matches exactly the
-   function will return -1.
+/** Will go through the data and find the report step which EXACTLY
+    matches the input sim_time. If no report step matches exactly the
+    function will return std::nullopt.
 
-   Observe that by default the report steps consist of half-open time
-   intervals like this: (t1, t2]. However the first report step
-   (i.e. report step 1, is a fully inclusive interval: [t0 , t1] where
-   t0 is the simulation start time. That is not implemented here;
-   meaning that if you supply the start time as @sim_time argument you
-   will get -1 and not 0 as you might expect.
+    Observe that by default the report steps consist of half-open time
+    intervals like this: (t1, t2]. However the first report step
+    (i.e. report step 1, is a fully inclusive interval: [t0 , t1] where
+    t0 is the simulation start time. That is not implemented here;
+    meaning that if you supply the start time as @sim_time argument you
+    will get std::nullopt and not 0 as you might expect.
 
-   It would certainly be possible to detect the start_time input
-   argument and special case the return, but the opposite would be
-   'impossible' - you would never get anything sensible out when using
-   report_step == 0 as input to one of the functions expecting
-   report_step input.
-*/
-
+    It would certainly be possible to detect the start_time input
+    argument and special case the return, but the opposite would be
+    'impossible' - you would never get anything sensible out when using
+    report_step == 0 as input to one of the functions expecting
+    report_step input. */
 std::optional<size_t>
 rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
                                       time_t sim_time) {
@@ -980,9 +890,8 @@ void rd_sum_data_init_double_vector_interp(
             value = end_value;
 
         else {
-            value = rd_sum_data_interp_get(
-                data, rd_sum_data_interp_from_sim_time(data, sim_time),
-                params_index, is_rate);
+            value = interp_get(data, interp_from_sim_time(data, sim_time),
+                               params_index, is_rate);
         }
 
         output_data[time_index] = value;
@@ -996,8 +905,7 @@ void rd_sum_data_init_double_frame_interp(
     const time_t start_time = rd_sum_data_get_data_start(data);
     const time_t end_time = rd_sum_data_get_sim_end(data);
     const size_t length = rd_sum_data_get_length(data);
-    const auto [params_indices, key_indices] =
-        rd_sum_data_present_keywords(keywords);
+    const auto [params_indices, key_indices] = present_keywords(keywords);
     std::vector<bool> is_rate(key_indices.size());
     for (size_t j = 0; j < key_indices.size(); j++)
         is_rate[j] = rd_sum_vector_iget_is_rate(keywords, key_indices[j]);
@@ -1022,8 +930,7 @@ void rd_sum_data_init_double_frame_interp(
             for (size_t j = 0; j < key_indices.size(); j++)
                 output_row[key_indices[j]] = is_rate[j] ? 0 : next_row[j];
         } else {
-            const Interp interp =
-                rd_sum_data_interp_from_sim_time(data, sim_time);
+            const Interp interp = interp_from_sim_time(data, sim_time);
             if (next_row.time_index == interp.index1 &&
                 prev_row.time_index != interp.index1)
                 std::swap(prev_row, next_row);
@@ -1042,25 +949,21 @@ void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
                                    double *output_data) {
     const size_t num_keywords = rd_sum_vector_get_size(keywords);
     const size_t length = rd_sum_data_get_length(data);
-    const auto [params_indices, key_indices] =
-        rd_sum_data_present_keywords(keywords);
+    const auto [params_indices, key_indices] = present_keywords(keywords);
     std::vector<double> values(params_indices.size());
 
     for (size_t time_index = 0; time_index < length; time_index++) {
         double *output_row = output_data + time_index * num_keywords;
         std::fill(output_row, output_row + num_keywords, std::nan(""));
-        rd_sum_data_iget_row(data, time_index, params_indices, values.data());
+        iget_row(data, time_index, params_indices, values.data());
         for (size_t j = 0; j < key_indices.size(); j++)
             output_row[key_indices[j]] = values[j];
     }
 }
 
-/**
-   This function will return the total number of ministeps in the
-   current rd_sum_data instance; but observe that actual series of
-   ministeps can have non-zero offset and also "holes" in the series.
-*/
-
+/** This function will return the total number of ministeps in the
+    current rd_sum_data instance; but observe that actual series of
+    ministeps can have non-zero offset and also "holes" in the series. */
 size_t rd_sum_data_get_length(const rd_sum_data_type *data) {
     return data->index.length();
 }
