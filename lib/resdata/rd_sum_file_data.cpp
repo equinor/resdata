@@ -400,13 +400,13 @@ void rd_sum_file_data::build_index() {
     }
 }
 
-void rd_sum_file_data::get_time(size_t length, time_t *data) {
+void rd_sum_file_data::get_time(size_t length, time_t *data) const {
     for (size_t time_index = 0; time_index < length; time_index++)
         data[time_index] = this->iget_sim_time(time_index);
 }
 
 void rd_sum_file_data::get_time_report(size_t end_index,
-                                       std::vector<time_t> &data) {
+                                       std::vector<time_t> &data) const {
     for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         const auto range = this->report_range(report_step);
@@ -421,7 +421,7 @@ void rd_sum_file_data::get_time_report(size_t end_index,
 }
 
 void rd_sum_file_data::get_data(size_t params_index, size_t length,
-                                double *data) {
+                                double *data) const {
     if (this->loader) {
         const auto tmp_data = loader->get_vector(params_index);
         memcpy(data, tmp_data.data(), length * sizeof data);
@@ -433,7 +433,7 @@ void rd_sum_file_data::get_data(size_t params_index, size_t length,
 
 void rd_sum_file_data::get_data_report(std::optional<size_t> params_index,
                                        size_t end_index, double default_value,
-                                       std::vector<double> &data) {
+                                       std::vector<double> &data) const {
     for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         const auto range = this->report_range(report_step);
