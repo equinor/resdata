@@ -173,7 +173,7 @@ size_t validate_non_negative(int value, const char *what) {
    of 'X' on the timeline, i.e. in the middle of ministep M3. If we
    are interested in the rate at this time the function:
 
-        rd_sum_data_get_from_sim_time()
+        SumData::get_from_sim_time()
 
    will just return the M3 value, whereas if you are interested in
    e.g. pressure at this time the function will return a weighted
@@ -197,11 +197,11 @@ size_t validate_non_negative(int value, const char *what) {
    functions like rd_sum_get_general_var() expect the time direction
    to be given as a ministep; however it is also possible to get the
    data by giving an internal (not that internal ...) index. In
-   rd_sum_data.c the latter functions have _iget():
+   rd::SumData the latter functions have iget_:
 
 
-      rd_sum_data_get_xxx : Expects the time direction given as a ministep_nr.
-      rd_sum_data_iget_xxx: Expects the time direction given as an internal index.
+      SumData::get_xxx : Expects the time direction given as a ministep_nr.
+      SumData::iget_xxx: Expects the time direction given as an internal index.
 
 */
 
@@ -256,7 +256,8 @@ size_t rd_sum_file_data::last_report() const {
 
 time_t rd_sum_file_data::get_data_start() const {
     if (this->index.size() == 0)
-        throw std::out_of_range("rd_sum_data_get_sim_end: index empty");
+        throw std::out_of_range(
+            "rd_sum_file_data::get_data_start: index empty");
     const auto &node = this->index[0];
     return node.sim_time;
 }
