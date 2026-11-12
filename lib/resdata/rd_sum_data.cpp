@@ -389,7 +389,7 @@ present_keywords(const rd_sum_vector_type *keywords) {
 /** The values of the keywords present in the summary at one ministep, read
     with a single iget_row() call. */
 struct SumData::RowCache {
-    std::optional<size_t> time_index;
+    std::optional<size_t> time_index = std::nullopt;
     std::vector<double> values;
 
     void load(const SumData &data, size_t new_time_index,
