@@ -91,7 +91,7 @@ struct rd_sum_struct {
     rd_smspec_ptr smspec{
         nullptr,
         &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
-    rd_sum_data_ptr data{nullptr, &rd_sum_data_free};
+    std::unique_ptr<rd::SumData> data;
     rd_sum_ptr restart_case{nullptr, &rd_sum_free};
 
     bool fmt_case;
@@ -154,7 +154,7 @@ static rd_sum_ptr rd_sum_alloc__(std::string input_arg,
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
                               const std::vector<std::string> &data_files,
                               bool lazy_load, FileMode file_options) {
-    rd_sum->data.reset(rd_sum_data_alloc(rd_sum->smspec.get()));
+    rd_sum->data = std::make_unique<rd::SumData>(rd_sum->smspec.get());
     return rd_sum->data->fread(data_files, lazy_load, file_options);
 }
 
@@ -172,8 +172,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
         rd_sum->restart_case = std::move(restart_case);
-        rd_sum_data_add_case(rd_sum->data.get(),
-                             rd_sum->restart_case->data.get());
+        rd_sum->data->add_case(*rd_sum->restart_case->data);
     }
 }
 
@@ -534,7 +533,7 @@ rd_sum_ptr make_summary_writer(std::string rd_case, bool fmt_output,
             rd_sum->smspec.reset(rd_smspec_alloc_writer(
                 key_join_string.c_str(), sim_start, time_in_days, nx, ny, nz));
 
-        rd_sum->data.reset(rd_sum_data_alloc_writer(rd_sum->smspec.get()));
+        rd_sum->data = rd::SumData::make_writer(rd_sum->smspec.get());
     }
     return rd_sum;
 }
