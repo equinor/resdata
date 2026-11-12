@@ -7,7 +7,6 @@
 #include <optional>
 #include <vector>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include <resdata/rd_smspec.hpp>
@@ -172,65 +171,3 @@ private:
     void check_params_index(size_t params_index) const;
 };
 } // namespace rd
-
-typedef rd::SumData rd_sum_data_type;
-
-// Temporary shims for the old C style interface; removed once all call sites
-// use the rd::SumData members directly.
-inline rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
-    return rd::SumData::make_writer(smspec).release();
-}
-inline rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
-    return new rd::SumData(smspec);
-}
-inline void rd_sum_data_free(rd_sum_data_type *data) { delete data; }
-inline void rd_sum_data_add_case(rd_sum_data_type *self,
-                                 const rd_sum_data_type *other) {
-    self->add_case(*other);
-}
-
-#define RD_SUM_DATA_SHIM(name)                                                 \
-    template <class Data, class... Args>                                       \
-    decltype(auto) rd_sum_data_##name(Data *data, Args &&...args) {            \
-        return data->name(std::forward<Args>(args)...);                        \
-    }
-
-RD_SUM_DATA_SHIM(fwrite)
-RD_SUM_DATA_SHIM(can_write)
-RD_SUM_DATA_SHIM(fread)
-RD_SUM_DATA_SHIM(get_report_step_from_time)
-RD_SUM_DATA_SHIM(get_report_step_from_days)
-RD_SUM_DATA_SHIM(check_sim_time)
-RD_SUM_DATA_SHIM(check_sim_days)
-RD_SUM_DATA_SHIM(alloc_data_vector)
-RD_SUM_DATA_SHIM(alloc_report_data_vector)
-RD_SUM_DATA_SHIM(alloc_time_vector)
-RD_SUM_DATA_SHIM(alloc_report_time_vector)
-RD_SUM_DATA_SHIM(get_data_start)
-RD_SUM_DATA_SHIM(get_report_time)
-RD_SUM_DATA_SHIM(get_first_day)
-RD_SUM_DATA_SHIM(get_sim_end)
-RD_SUM_DATA_SHIM(get_sim_length)
-RD_SUM_DATA_SHIM(iget)
-RD_SUM_DATA_SHIM(iget_sim_days)
-RD_SUM_DATA_SHIM(iget_sim_time)
-RD_SUM_DATA_SHIM(get_interp_vector)
-RD_SUM_DATA_SHIM(get_last_report_step)
-RD_SUM_DATA_SHIM(get_first_report_step)
-RD_SUM_DATA_SHIM(get_from_sim_time)
-RD_SUM_DATA_SHIM(get_from_sim_days)
-RD_SUM_DATA_SHIM(get_length)
-RD_SUM_DATA_SHIM(iget_report_step)
-RD_SUM_DATA_SHIM(iget_report_end)
-RD_SUM_DATA_SHIM(add_new_tstep)
-RD_SUM_DATA_SHIM(iget_last_value)
-RD_SUM_DATA_SHIM(iget_first_value)
-RD_SUM_DATA_SHIM(init_double_vector)
-RD_SUM_DATA_SHIM(alloc_seconds_solution)
-RD_SUM_DATA_SHIM(init_double_frame_interp)
-RD_SUM_DATA_SHIM(init_double_frame)
-RD_SUM_DATA_SHIM(init_double_vector_interp)
-#undef RD_SUM_DATA_SHIM
-
-using rd_sum_data_ptr =
-    std::unique_ptr<rd_sum_data_type, decltype(&rd_sum_data_free)>;
