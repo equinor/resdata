@@ -20,7 +20,7 @@
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_smspec.hpp>
-#include <resdata/rd_sum_data.hpp>
+#include "detail/resdata/rd_sum_data.hpp"
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_kw.hpp>
@@ -34,7 +34,7 @@
 
 namespace fs = std::filesystem;
 
-// This file implements the struct rd_sum_data which manages the actual simulated
+// This file implements the class rd::SumData which manages the actual simulated
 // values from a summary file, including all time-related information. In the
 // case of restarted simulations the different summary cases will be internalized
 // as separate rd_sum_file_data instances. The rd_sum_file_data class is an
@@ -45,274 +45,224 @@ namespace fs = std::filesystem;
 // list of rd_sum_file_data instances and dispatching method calls to the right
 // rd_sum_file_data instance.
 
-namespace {
+namespace rd {
 
-// The class CaseIndex and the struct IndexNode are used to maintain a list of
-// the rd_sum_file_data instances, and lookup the correct one based one various
-// time related arguments.
+/** Adds the data file with index @data_index in the list of data files. If
+    @next_start is given, the data file is truncated to the timesteps before
+    @next_start. Data files which contribute no timesteps are not added, so
+    every node in the index has length > 0. */
+void SumData::CaseIndex::add(size_t data_index, const rd_sum_file_data &data,
+                             std::optional<time_t> next_start,
+                             const rd_smspec_type *smspec) {
+    size_t length =
+        next_start ? data.length_before(*next_start) : data.length();
+    if (length == 0)
+        return;
 
-struct IndexNode {
-    size_t end() const { return this->offset + this->length; }
+    size_t offset = this->index.empty() ? 0 : this->index.back().end();
+    this->index.push_back(IndexNode{
+        data_index,
+        offset,
+        length,
+        data.first_report(),
+        next_start ? data.report_before(*next_start) : data.last_report(),
+        data.get_data_start(),
+        data.get_sim_end(),
+        data.get_days_start(),
+        data.get_sim_length(),
+        rd_smspec_alloc_mapping(smspec, data.smspec()),
+    });
+}
 
-    size_t data_index;
-    size_t offset;
-    size_t length;
-    size_t report1;
-    size_t report2;
-    time_t time1;
-    time_t time2;
-    double days1;
-    double days2;
-    std::vector<std::optional<size_t>> params_map;
-};
+/** The lookup_time() methods will lookup which file_data
+    instance corresponds to the time argument. The methods will return two
+    pointers to file_data instances, if the argument is inside one file_data
+    instance the pointers will be equal - otherwise they will point to the
+    file_data instance before and after the argument:
 
-class CaseIndex {
-public:
-    /** Adds the data file with index @data_index in the list of data files. If
-        @next_start is given, the data file is truncated to the timesteps before
-        @next_start. Data files which contribute no timesteps are not added, so
-        every node in the index has length > 0. */
-    void add(size_t data_index, const rd::rd_sum_file_data &data,
-             std::optional<time_t> next_start, const rd_smspec_type *smspec) {
-        size_t length =
-            next_start ? data.length_before(*next_start) : data.length();
-        if (length == 0)
-            return;
+    File 1                     File 2
+    |------|-----|------|      |----|----------|---|
+         ^                  ^
+         |                  |
+         |                  |
+         A                  B
 
-        size_t offset = this->index.empty() ? 0 : this->index.back().end();
-        this->index.push_back(IndexNode{
-            data_index,
-            offset,
-            length,
-            data.first_report(),
-            next_start ? data.report_before(*next_start) : data.last_report(),
-            data.get_data_start(),
-            data.get_sim_end(),
-            data.get_days_start(),
-            data.get_sim_length(),
-            rd_smspec_alloc_mapping(smspec, data.smspec()),
-        });
-    }
+    For time A the lookup_time function will return <file1,file1> whereas for time
+    B the function will return <file1,file2>. */
+std::pair<const SumData::IndexNode *, const SumData::IndexNode *>
+SumData::CaseIndex::lookup_time(time_t sim_time) const {
+    if (this->index.empty())
+        throw std::invalid_argument("Simulation time out of range");
 
-    /** The lookup_time() methods will lookup which file_data
-        instance corresponds to the time argument. The methods will return two
-        pointers to file_data instances, if the argument is inside one file_data
-        instance the pointers will be equal - otherwise they will point to the
-        file_data instance before and after the argument:
+    auto iter = this->index.begin();
+    auto next = this->index.begin();
+    if (sim_time < iter->time1)
+        throw std::invalid_argument("Simulation time out of range");
 
-        File 1                     File 2
-        |------|-----|------|      |----|----------|---|
-             ^                  ^
-             |                  |
-             |                  |
-             A                  B
+    ++next;
+    while (true) {
+        time_t t1 = iter->time1;
+        time_t t2 = iter->time2;
 
-        For time A the lookup_time function will return <file1,file1> whereas for time
-        B the function will return <file1,file2>. */
-    std::pair<const IndexNode *, const IndexNode *>
-    lookup_time(time_t sim_time) const {
-        if (this->index.empty())
-            throw std::invalid_argument("Simulation time out of range");
+        if (sim_time >= t1) {
+            if (sim_time <= t2)
+                return std::make_pair<const IndexNode *, const IndexNode *>(
+                    &(*iter), &(*iter));
 
-        auto iter = this->index.begin();
-        auto next = this->index.begin();
-        if (sim_time < iter->time1)
-            throw std::invalid_argument("Simulation time out of range");
+            if (next == this->index.end())
+                throw std::invalid_argument("Simulation days out of range");
 
+            if (sim_time < next->time1)
+                return std::make_pair<const IndexNode *, const IndexNode *>(
+                    &(*iter), &(*next));
+        }
         ++next;
-        while (true) {
-            time_t t1 = iter->time1;
-            time_t t2 = iter->time2;
-
-            if (sim_time >= t1) {
-                if (sim_time <= t2)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*iter));
-
-                if (next == this->index.end())
-                    throw std::invalid_argument("Simulation days out of range");
-
-                if (sim_time < next->time1)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*next));
-            }
-            ++next;
-            ++iter;
-        }
+        ++iter;
     }
+}
 
-    /** Same as lookup_time, but for number of days */
-    std::pair<const IndexNode *, const IndexNode *>
-    lookup_days(double days) const {
-        if (this->index.empty())
-            throw std::invalid_argument("Simulation days out of range");
+/** Same as lookup_time, but for number of days */
+std::pair<const SumData::IndexNode *, const SumData::IndexNode *>
+SumData::CaseIndex::lookup_days(double days) const {
+    if (this->index.empty())
+        throw std::invalid_argument("Simulation days out of range");
 
-        auto iter = this->index.begin();
-        auto next = this->index.begin();
-        if (days < iter->days1)
-            throw std::invalid_argument("Simulation days out of range");
+    auto iter = this->index.begin();
+    auto next = this->index.begin();
+    if (days < iter->days1)
+        throw std::invalid_argument("Simulation days out of range");
 
+    ++next;
+    while (true) {
+        double d1 = iter->days1;
+        double d2 = iter->days2;
+
+        if (days >= d1) {
+            if (days <= d2)
+                return std::make_pair<const IndexNode *, const IndexNode *>(
+                    &(*iter), &(*iter));
+
+            if (next == this->index.end())
+                throw std::invalid_argument("Simulation days out of range");
+
+            if (days < next->days1)
+                return std::make_pair<const IndexNode *, const IndexNode *>(
+                    &(*iter), &(*next));
+        }
         ++next;
-        while (true) {
-            double d1 = iter->days1;
-            double d2 = iter->days2;
+        ++iter;
+    }
+}
 
-            if (days >= d1) {
-                if (days <= d2)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*iter));
+const SumData::IndexNode &
+SumData::CaseIndex::lookup(size_t internal_index) const {
+    for (const auto &node : this->index)
+        if (internal_index >= node.offset && internal_index < node.end())
+            return node;
 
-                if (next == this->index.end())
-                    throw std::invalid_argument("Simulation days out of range");
+    throw std::invalid_argument("Internal error when looking up index: " +
+                                std::to_string(internal_index));
+}
 
-                if (days < next->days1)
-                    return std::make_pair<const IndexNode *, const IndexNode *>(
-                        &(*iter), &(*next));
-            }
-            ++next;
-            ++iter;
-        }
+const SumData::IndexNode &
+SumData::CaseIndex::lookup_report(size_t report) const {
+    for (const auto &node : this->index)
+        if (node.report1 <= report && node.report2 >= report)
+            return node;
+
+    throw std::invalid_argument("Internal error when looking up report: " +
+                                std::to_string(report));
+}
+
+std::unique_ptr<SumData> SumData::make_writer(const rd_smspec_type *smspec) {
+    auto data = std::make_unique<SumData>(smspec);
+    data->data_files.push_back(std::make_shared<rd_sum_file_data>(smspec));
+    data->build_index();
+    return data;
+}
+
+const rd_sum_file_data &SumData::file(const IndexNode &node) const {
+    return *this->data_files[node.data_index];
+}
+
+SumData::Located SumData::locate(size_t internal_index) const {
+    const auto &node = this->index.lookup(internal_index);
+    return {node, this->file(node), internal_index - node.offset};
+}
+
+double SumData::default_value(size_t params_index) const {
+    return rd_smspec_iget_node_w_params_index(this->smspec, params_index)
+        .get_default();
+}
+
+double SumData::iget(size_t time_index, size_t params_index) const {
+    const auto loc = this->locate(time_index);
+    this->check_params_index(params_index);
+    // nullopt if the file lacks the parameter, so the default value applies
+    const auto file_index = loc.node.params_map[params_index];
+    return file_index ? loc.file.iget(loc.local_index, *file_index)
+                      : this->default_value(params_index);
+}
+
+void SumData::iget_row(size_t time_index,
+                       const std::vector<size_t> &params_indices,
+                       double *out) const {
+    const auto loc = this->locate(time_index);
+
+    std::vector<size_t> file_indices;
+    std::vector<size_t> positions;
+    file_indices.reserve(params_indices.size());
+    positions.reserve(params_indices.size());
+    if (!params_indices.empty())
+        this->check_params_index(
+            *std::max_element(params_indices.begin(), params_indices.end()));
+    for (size_t i = 0; i < params_indices.size(); i++) {
+        if (const auto file_index = loc.node.params_map[params_indices[i]]) {
+            file_indices.push_back(*file_index);
+            positions.push_back(i);
+        } else
+            out[i] = this->default_value(params_indices[i]);
     }
 
-    const IndexNode &lookup(size_t internal_index) const {
-        for (const auto &node : this->index)
-            if (internal_index >= node.offset && internal_index < node.end())
-                return node;
+    std::vector<double> values(file_indices.size());
+    loc.file.get_row(loc.local_index, file_indices, values.data());
+    for (size_t j = 0; j < positions.size(); j++)
+        out[positions[j]] = values[j];
+}
 
-        throw std::invalid_argument("Internal error when looking up index: " +
-                                    std::to_string(internal_index));
+double SumData::iget_sim_seconds(size_t internal_index) const {
+    const auto loc = this->locate(internal_index);
+    return loc.file.iget_sim_seconds(loc.local_index);
+}
+
+void SumData::build_index() {
+    std::sort(this->data_files.begin(), this->data_files.end(),
+              [](const std::shared_ptr<rd_sum_file_data> &case1,
+                 const std::shared_ptr<rd_sum_file_data> &case2) {
+                  return case1->get_data_start() < case2->get_data_start();
+              });
+
+    this->index.clear();
+    for (size_t i = 0; i < this->data_files.size(); i++) {
+        std::optional<time_t> next_start = std::nullopt;
+        if (i + 1 < this->data_files.size())
+            next_start = this->data_files[i + 1]->get_data_start();
+
+        this->index.add(i, *this->data_files[i], next_start, this->smspec);
     }
+}
 
-    const IndexNode &lookup_report(size_t report) const {
-        for (const auto &node : this->index)
-            if (node.report1 <= report && node.report2 >= report)
-                return node;
+void SumData::check_params_index(size_t params_index) const {
+    const size_t params_size = rd_smspec_get_params_size(this->smspec);
+    if (params_index >= params_size)
+        throw std::out_of_range(
+            fmt::format("params_index:{} is out of range - valid range: "
+                        "[0, {})",
+                        params_index, params_size));
+}
+} // namespace rd
 
-        throw std::invalid_argument("Internal error when looking up report: " +
-                                    std::to_string(report));
-    }
-
-    void clear() { this->index.clear(); }
-
-    size_t length() const {
-        if (this->index.empty())
-            return 0;
-        return this->index.back().end();
-    }
-
-    std::vector<IndexNode>::const_iterator begin() const {
-        return this->index.begin();
-    }
-
-    std::vector<IndexNode>::const_iterator end() const {
-        return this->index.end();
-    }
-
-private:
-    std::vector<IndexNode> index;
-};
-
-} // namespace
-
-struct rd_sum_data_struct {
-    const rd_smspec_type *smspec;
-    /** These data files are shared_ptr as rd_sum_data_add_case makes
-        file_data ownership shared among rd_sum_data. */
-    std::vector<std::shared_ptr<rd::rd_sum_file_data>> data_files;
-    CaseIndex index;
-
-    /** An internal index resolved to the file holding it, and the index
-        within that file. */
-    struct Located {
-        const IndexNode &node;
-        const rd::rd_sum_file_data &file;
-        size_t local_index;
-    };
-
-    const rd::rd_sum_file_data &file(const IndexNode &node) const {
-        return *this->data_files[node.data_index];
-    }
-
-    Located locate(size_t internal_index) const {
-        const auto &node = this->index.lookup(internal_index);
-        return {node, this->file(node), internal_index - node.offset};
-    }
-
-    double default_value(size_t params_index) const {
-        return rd_smspec_iget_node_w_params_index(this->smspec, params_index)
-            .get_default();
-    }
-
-    double iget(size_t time_index, size_t params_index) const {
-        const auto loc = this->locate(time_index);
-        this->check_params_index(params_index);
-        // nullopt if the file lacks the parameter, so the default value applies
-        const auto file_index = loc.node.params_map[params_index];
-        return file_index ? loc.file.iget(loc.local_index, *file_index)
-                          : this->default_value(params_index);
-    }
-
-    /** Reads the values of @params_indices at @time_index into @out, which
-        must hold params_indices.size() values. Lazily loaded data is read
-        from file once per call, instead of once per value as with iget(). */
-    void iget_row(size_t time_index, const std::vector<size_t> &params_indices,
-                  double *out) const {
-        const auto loc = this->locate(time_index);
-
-        std::vector<size_t> file_indices;
-        std::vector<size_t> positions;
-        file_indices.reserve(params_indices.size());
-        positions.reserve(params_indices.size());
-        if (!params_indices.empty())
-            this->check_params_index(*std::max_element(params_indices.begin(),
-                                                       params_indices.end()));
-        for (size_t i = 0; i < params_indices.size(); i++) {
-            if (const auto file_index =
-                    loc.node.params_map[params_indices[i]]) {
-                file_indices.push_back(*file_index);
-                positions.push_back(i);
-            } else
-                out[i] = this->default_value(params_indices[i]);
-        }
-
-        std::vector<double> values(file_indices.size());
-        loc.file.get_row(loc.local_index, file_indices, values.data());
-        for (size_t j = 0; j < positions.size(); j++)
-            out[positions[j]] = values[j];
-    }
-
-    double iget_sim_seconds(size_t internal_index) const {
-        const auto loc = this->locate(internal_index);
-        return loc.file.iget_sim_seconds(loc.local_index);
-    }
-
-    void build_index() {
-        std::sort(this->data_files.begin(), this->data_files.end(),
-                  [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
-                     const std::shared_ptr<rd::rd_sum_file_data> &case2) {
-                      return case1->get_data_start() < case2->get_data_start();
-                  });
-
-        this->index.clear();
-        for (size_t i = 0; i < this->data_files.size(); i++) {
-            std::optional<time_t> next_start = std::nullopt;
-            if (i + 1 < this->data_files.size())
-                next_start = this->data_files[i + 1]->get_data_start();
-
-            this->index.add(i, *this->data_files[i], next_start, this->smspec);
-        }
-    }
-
-private:
-    void check_params_index(size_t params_index) const {
-        const size_t params_size = rd_smspec_get_params_size(this->smspec);
-        if (params_index >= params_size)
-            throw std::out_of_range(
-                fmt::format("params_index:{} is out of range - valid range: "
-                            "[0, {})",
-                            params_index, params_size));
-    }
-};
+using rd::SumData;
 
 namespace {
 void fwrite_unified(const rd_sum_data_type *data, const fs::path &rd_case,
@@ -468,30 +418,10 @@ struct RowCache {
 };
 } // namespace
 
-void rd_sum_data_free(rd_sum_data_type *data) {
-    if (!data)
-        throw std::invalid_argument(__func__ + std::string(": invalid delete"));
-
-    delete data;
-}
-
-rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
-    rd_sum_data_type *data = new rd_sum_data_type();
-    data->smspec = smspec;
-    return data;
-}
-
 double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
                                  size_t internal_index) {
     const auto loc = data->locate(internal_index);
     return loc.file.iget_sim_days(loc.local_index);
-}
-
-rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
-    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
-    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
-    data->build_index();
-    return data;
 }
 
 void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,

@@ -31,7 +31,7 @@
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
-#include <resdata/rd_sum_data.hpp>
+#include "detail/resdata/rd_sum_data.hpp"
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_file_flag.hpp>

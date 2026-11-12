@@ -43,7 +43,7 @@ size_t validate_non_negative(int value, const char *what) {
 } // namespace
 
 /*
-  This file implements the type rd_sum_data_type. The data structure
+  This file implements the class rd_sum_file_data. The data structure
   is involved with holding all the actual summary data (the
   PARAMS vectors), in addition the time-information
   with MINISTEPS / REPORT_STEPS and so on is implemented here.
