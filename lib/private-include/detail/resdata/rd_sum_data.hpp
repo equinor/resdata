@@ -1,11 +1,13 @@
 #pragma once
 #include <cstdio>
+#include <filesystem>
 #include <ctime>
 
 #include <memory>
 #include <optional>
 #include <vector>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include <resdata/rd_smspec.hpp>
@@ -21,7 +23,9 @@ class rd_sum_file_data;
     related information. In the case of restarted simulations the different
     summary cases are internalized as separate rd_sum_file_data instances. */
 class SumData {
-public:
+    struct Interp;
+    struct RowCache;
+
     // The class CaseIndex and the struct IndexNode are used to maintain a list
     // of the rd_sum_file_data instances, and lookup the correct one based one
     // various time related arguments.
@@ -76,6 +80,7 @@ public:
         size_t local_index;
     };
 
+public:
     explicit SumData(const rd_smspec_type *smspec) : smspec(smspec) {}
 
     // Copies would share the mutable file data with the original. Declaring
@@ -86,16 +91,67 @@ public:
     /** A SumData with a single empty file_data, ready for add_new_tstep(). */
     static std::unique_ptr<SumData> make_writer(const rd_smspec_type *smspec);
 
+    void add_case(const SumData &other);
+    void fwrite(const char *rd_case, bool fmt_case, bool unified) const;
+    bool can_write() const;
+    bool fread(const std::vector<std::string> &filelist, bool lazy_load,
+               FileMode file_options);
+    std::optional<size_t> get_report_step_from_time(time_t sim_time) const;
+    std::optional<size_t> get_report_step_from_days(double days) const;
+    bool check_sim_time(time_t sim_time) const;
+    bool check_sim_days(double sim_days) const;
+    /** One value per time step. Throws std::out_of_range for an invalid index. */
+    std::vector<double> alloc_data_vector(size_t params_index) const;
+    /** One value per report step present in the data. */
+    std::vector<double> alloc_report_data_vector(size_t params_index) const;
+    std::vector<time_t> alloc_time_vector() const;
+    std::vector<time_t> alloc_report_time_vector() const;
+    time_t get_data_start() const;
+    time_t get_report_time(size_t report_step) const;
+    double get_first_day() const;
+    time_t get_sim_end() const;
+    double get_sim_length() const;
+    double iget(size_t internal_index, size_t params_index) const;
+    double iget_sim_days(size_t internal_index) const;
+    time_t iget_sim_time(size_t internal_index) const;
+    std::vector<double> get_interp_vector(time_t sim_time,
+                                          const rd_sum_vector_type *keylist,
+                                          double missing_value) const;
+    size_t get_last_report_step() const;
+    size_t get_first_report_step() const;
+    double get_from_sim_time(time_t sim_time,
+                             const rd::smspec_node &smspec_node) const;
+    double get_from_sim_days(double sim_days,
+                             const rd::smspec_node &smspec_node) const;
+    size_t get_length() const;
+    size_t iget_report_step(size_t internal_index) const;
+    size_t iget_report_end(size_t report_step) const;
+    rd_sum_tstep_type *add_new_tstep(size_t report_step, double sim_seconds);
+    double iget_last_value(size_t param_index) const;
+    double iget_first_value(size_t param_index) const;
+    void init_double_vector(size_t params_index, double *output_data) const;
+    std::vector<double> alloc_seconds_solution(const rd::smspec_node &node,
+                                               double value,
+                                               bool rates_clamp_lower) const;
+    void init_double_frame_interp(const rd_sum_vector_type *keywords,
+                                  const std::vector<time_t> &time_points,
+                                  double *output_data) const;
+    void init_double_frame(const rd_sum_vector_type *keywords,
+                           double *output_data) const;
+    void init_double_vector_interp(const rd::smspec_node &smspec_node,
+                                   const std::vector<time_t> &time_points,
+                                   double *output_data) const;
+
+private:
     const rd_smspec_type *smspec;
-    /** These data files are shared_ptr as rd_sum_data_add_case makes
-        file_data ownership shared among rd_sum_data. */
+    /** These data files are shared_ptr as add_case() makes file_data
+        ownership shared among SumData instances. */
     std::vector<std::shared_ptr<rd_sum_file_data>> data_files;
     CaseIndex index;
 
     const rd_sum_file_data &file(const IndexNode &node) const;
     Located locate(size_t internal_index) const;
     double default_value(size_t params_index) const;
-    double iget(size_t time_index, size_t params_index) const;
 
     /** Reads the values of @params_indices at @time_index into @out, which
         must hold params_indices.size() values. Lazily loaded data is read
@@ -104,101 +160,77 @@ public:
                   double *out) const;
     double iget_sim_seconds(size_t internal_index) const;
     void build_index();
+    void fwrite_unified(const std::filesystem::path &rd_case,
+                        bool fmt_case) const;
+    void fwrite_multiple(const std::filesystem::path &rd_case,
+                         bool fmt_case) const;
+    size_t get_index_from_sim_time(time_t sim_time) const;
+    Interp interp_from_sim_time(time_t sim_time) const;
+    double interp_get(const Interp &interp, size_t params_index,
+                      bool is_rate) const;
 
-private:
     void check_params_index(size_t params_index) const;
 };
 } // namespace rd
 
 typedef rd::SumData rd_sum_data_type;
 
-void rd_sum_data_add_case(rd_sum_data_type *self,
-                          const rd_sum_data_type *other);
-void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
-                        bool fmt_case, bool unified);
-bool rd_sum_data_can_write(const rd_sum_data_type *data);
-bool rd_sum_data_fread(rd_sum_data_type *data,
-                       const std::vector<std::string> &filelist, bool lazy_load,
-                       FileMode file_options);
+// Temporary shims for the old C style interface; removed once all call sites
+// use the rd::SumData members directly.
 inline rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
     return rd::SumData::make_writer(smspec).release();
 }
 inline rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
     return new rd::SumData(smspec);
 }
-std::optional<size_t>
-rd_sum_data_get_report_step_from_time(const rd_sum_data_type *data,
-                                      time_t sim_time);
-std::optional<size_t>
-rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
-                                      double days);
-bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time);
-bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days);
-/** One value per time step. Throws std::out_of_range for an invalid index. */
-std::vector<double> rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
-                                                  size_t params_index);
-/** One value per report step present in the data. */
-std::vector<double>
-rd_sum_data_alloc_report_data_vector(const rd_sum_data_type *data,
-                                     size_t params_index);
-std::vector<time_t> rd_sum_data_alloc_time_vector(const rd_sum_data_type *data);
-std::vector<time_t>
-rd_sum_data_alloc_report_time_vector(const rd_sum_data_type *data);
-time_t rd_sum_data_get_data_start(const rd_sum_data_type *data);
-time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,
-                                   size_t report_step);
-double rd_sum_data_get_first_day(const rd_sum_data_type *data);
-time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data);
-double rd_sum_data_get_sim_length(const rd_sum_data_type *data);
-double rd_sum_data_iget(const rd_sum_data_type *data, size_t internal_index,
-                        size_t params_index);
-
-double rd_sum_data_iget_sim_days(const rd_sum_data_type *, size_t);
-time_t rd_sum_data_iget_sim_time(const rd_sum_data_type *, size_t);
-std::vector<double>
-rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
-                              const rd_sum_vector_type *keylist,
-                              double missing_value);
-
 inline void rd_sum_data_free(rd_sum_data_type *data) { delete data; }
-size_t rd_sum_data_get_last_report_step(const rd_sum_data_type *data);
-size_t rd_sum_data_get_first_report_step(const rd_sum_data_type *data);
+inline void rd_sum_data_add_case(rd_sum_data_type *self,
+                                 const rd_sum_data_type *other) {
+    self->add_case(*other);
+}
 
-double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
-                                     time_t sim_time,
-                                     const rd::smspec_node &smspec_node);
-double rd_sum_data_get_from_sim_days(const rd_sum_data_type *data,
-                                     double sim_days,
-                                     const rd::smspec_node &smspec_node);
+#define RD_SUM_DATA_SHIM(name)                                                 \
+    template <class Data, class... Args>                                       \
+    decltype(auto) rd_sum_data_##name(Data *data, Args &&...args) {            \
+        return data->name(std::forward<Args>(args)...);                        \
+    }
 
-size_t rd_sum_data_get_length(const rd_sum_data_type *data);
-size_t rd_sum_data_iget_report_step(const rd_sum_data_type *data,
-                                    size_t internal_index);
-size_t rd_sum_data_iget_report_end(const rd_sum_data_type *data,
-                                   size_t report_step);
-rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
-                                             size_t report_step,
-                                             double sim_seconds);
-double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
-                                   size_t param_index);
-double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
-                                    size_t param_index);
-void rd_sum_data_init_double_vector(const rd_sum_data_type *data,
-                                    size_t params_index, double *output_data);
-std::vector<double>
-rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
-                                   const rd::smspec_node &node, double value,
-                                   bool rates_clamp_lower);
-void rd_sum_data_init_double_frame_interp(
-    const rd_sum_data_type *data, const rd_sum_vector_type *keywords,
-    const std::vector<time_t> &time_points, double *output_data);
-void rd_sum_data_init_double_frame(const rd_sum_data_type *data,
-                                   const rd_sum_vector_type *keywords,
-                                   double *output_data);
-
-void rd_sum_data_init_double_vector_interp(
-    const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
-    const std::vector<time_t> &time_points, double *output_data);
+RD_SUM_DATA_SHIM(fwrite)
+RD_SUM_DATA_SHIM(can_write)
+RD_SUM_DATA_SHIM(fread)
+RD_SUM_DATA_SHIM(get_report_step_from_time)
+RD_SUM_DATA_SHIM(get_report_step_from_days)
+RD_SUM_DATA_SHIM(check_sim_time)
+RD_SUM_DATA_SHIM(check_sim_days)
+RD_SUM_DATA_SHIM(alloc_data_vector)
+RD_SUM_DATA_SHIM(alloc_report_data_vector)
+RD_SUM_DATA_SHIM(alloc_time_vector)
+RD_SUM_DATA_SHIM(alloc_report_time_vector)
+RD_SUM_DATA_SHIM(get_data_start)
+RD_SUM_DATA_SHIM(get_report_time)
+RD_SUM_DATA_SHIM(get_first_day)
+RD_SUM_DATA_SHIM(get_sim_end)
+RD_SUM_DATA_SHIM(get_sim_length)
+RD_SUM_DATA_SHIM(iget)
+RD_SUM_DATA_SHIM(iget_sim_days)
+RD_SUM_DATA_SHIM(iget_sim_time)
+RD_SUM_DATA_SHIM(get_interp_vector)
+RD_SUM_DATA_SHIM(get_last_report_step)
+RD_SUM_DATA_SHIM(get_first_report_step)
+RD_SUM_DATA_SHIM(get_from_sim_time)
+RD_SUM_DATA_SHIM(get_from_sim_days)
+RD_SUM_DATA_SHIM(get_length)
+RD_SUM_DATA_SHIM(iget_report_step)
+RD_SUM_DATA_SHIM(iget_report_end)
+RD_SUM_DATA_SHIM(add_new_tstep)
+RD_SUM_DATA_SHIM(iget_last_value)
+RD_SUM_DATA_SHIM(iget_first_value)
+RD_SUM_DATA_SHIM(init_double_vector)
+RD_SUM_DATA_SHIM(alloc_seconds_solution)
+RD_SUM_DATA_SHIM(init_double_frame_interp)
+RD_SUM_DATA_SHIM(init_double_frame)
+RD_SUM_DATA_SHIM(init_double_vector_interp)
+#undef RD_SUM_DATA_SHIM
 
 using rd_sum_data_ptr =
     std::unique_ptr<rd_sum_data_type, decltype(&rd_sum_data_free)>;
