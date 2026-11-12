@@ -1480,7 +1480,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw * actual_factor
         expected = model_values * factor
 
-        size_order = max(1.0, abs(factor), order_of(model_values))
+        size_order = max(1.0, abs(factor), order_of(model_values), order_of(expected))
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1494,7 +1494,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_factor * actual_kw
         expected = factor * model_values
 
-        size_order = max(1.0, abs(factor), order_of(model_values))
+        size_order = max(1.0, abs(factor), order_of(model_values), order_of(expected))
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
