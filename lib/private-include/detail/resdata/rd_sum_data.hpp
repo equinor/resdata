@@ -164,9 +164,6 @@ private:
     void fwrite_multiple(const std::filesystem::path &rd_case,
                          bool fmt_case) const;
     size_t get_index_from_sim_time(time_t sim_time) const;
-    Interp interp_from_sim_time(time_t sim_time) const;
-    double interp_get(const Interp &interp, size_t params_index,
-                      bool is_rate) const;
 
     void check_params_index(size_t params_index) const;
 };
