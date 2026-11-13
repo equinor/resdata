@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import resfo
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, open_rd_file, openFortIO
 from resdata.summary import (
@@ -64,12 +64,10 @@ def test_that_year2263_through_pandas_works():
         ).set_index("DATE"),
     )
     assert eclsum.numpy_dates[0] == np.datetime64("2000-01-01T00:00:00.000")
-
-    # (This is hit by a round-off error due to 32-bit floats):
-    assert eclsum.numpy_dates[1] == np.datetime64("2262-12-31T23:57:52.000")
+    assert eclsum.numpy_dates[1] == np.datetime64("2263-01-01T00:00:00.000")
 
     # Roundtrip:
-    assert eclsum.pandas_frame().index[1] == datetime.datetime(2262, 12, 31, 23, 57, 52)
+    assert eclsum.pandas_frame().index[1] == datetime.datetime(2263, 1, 1)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -257,6 +255,44 @@ class SummaryTest(ResdataTest):
     ids=["unformatted", "formatted"],
 )
 @given(summaries())
+# 261.7109375 days is exact in float32, but would be 22611825 in seconds which
+# is not exact in float32 (it rounds to 22611824). The step lands on
+# 1969-12-20, so rtol on the timestamps (nanoseconds since 1970) is below one
+# second.
+@example(
+    summary=(
+        Smspec(
+            nx=1,
+            ny=1,
+            nz=1,
+            restarted_from_step=0,
+            num_keywords=2,
+            restart="        ",
+            keywords=["TIME    ", "FOPR    "],
+            well_names=[":+:+:+:+", ":+:+:+:+"],
+            region_numbers=[0, 0],
+            units=["DAYS    ", "SM3/DAY "],
+            start_date=Date(
+                day=3, month=4, year=1969, hour=0, minutes=0, micro_seconds=0
+            ),
+            intehead=SmspecIntehead(
+                unit=UnitSystem.METRIC, simulator=Simulator.ECLIPSE_100
+            ),
+        ),
+        Unsmry(
+            steps=[
+                SummaryStep(
+                    seqnum=0,
+                    ministeps=[SummaryMiniStep(mini_step=0, params=[0.0, 1.0])],
+                ),
+                SummaryStep(
+                    seqnum=1,
+                    ministeps=[SummaryMiniStep(mini_step=1, params=[261.7109375, 1.0])],
+                ),
+            ]
+        ),
+    )
+)
 @pytest.mark.usefixtures("use_tmpdir")
 def test_to_from_pandas(
     lazy_load, file_format, smspec_extension, unsmry_extension, summary
