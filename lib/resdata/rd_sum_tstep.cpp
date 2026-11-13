@@ -176,7 +176,7 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(size_t report_step,
 */
 
 rd_sum_tstep_type *rd_sum_tstep_alloc_new(size_t report_step, int ministep,
-                                          float sim_seconds,
+                                          double sim_seconds,
                                           const rd_smspec_type *smspec) {
     std::unique_ptr<rd_sum_tstep_type, decltype(&rd_sum_tstep_free)> tstep(
         rd_sum_tstep_alloc(report_step, ministep, smspec), &rd_sum_tstep_free);
@@ -190,7 +190,7 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_new(size_t report_step, int ministep,
         throw std::invalid_argument("Cannot create a new summary timestep for "
                                     "a SMSPEC without a TIME variable");
     rd_sum_tstep_iset(tstep.get(), time->params_index,
-                      sim_seconds / static_cast<float>(time->seconds_per_unit));
+                      static_cast<float>(sim_seconds / time->seconds_per_unit));
     return tstep.release();
 }
 

@@ -20,7 +20,7 @@ rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(size_t report_step,
                                                 const rd_smspec_type *smspec);
 
 rd_sum_tstep_type *rd_sum_tstep_alloc_new(size_t report_step, int ministep,
-                                          float sim_seconds,
+                                          double sim_seconds,
                                           const rd_smspec_type *smspec);
 
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,

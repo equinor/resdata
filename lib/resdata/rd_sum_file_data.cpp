@@ -318,10 +318,9 @@ rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(size_t report_step,
     if (report_step == std::numeric_limits<size_t>::max())
         throw std::invalid_argument("report step is too large");
     int ministep_nr = static_cast<int>(data.size());
-    rd_sum_tstep_ptr tstep(
-        rd_sum_tstep_alloc_new(report_step, ministep_nr,
-                               static_cast<float>(sim_seconds), rd_smspec),
-        &rd_sum_tstep_free);
+    rd_sum_tstep_ptr tstep(rd_sum_tstep_alloc_new(report_step, ministep_nr,
+                                                  sim_seconds, rd_smspec),
+                           &rd_sum_tstep_free);
     rd_sum_tstep_type *prev_tstep = NULL;
 
     if (!data.empty())
