@@ -454,59 +454,41 @@ static size_t rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
                                                                   : high_index;
 }
 
-/**
-   This function will take a true time 'sim_time' as input. The
-   ministep indices bracketing this sim_time are identified, and the
-   corresponding weights are calculated.
+/** The two ministeps bracketing a time, with the weights to interpolate
+    between them. For further explanation (in particular for which keywords
+    interpolation should be used), consult documentation at the top of this
+    file. */
+struct Interp {
+    size_t index1;
+    size_t index2;
+    double weight1;
+    double weight2;
 
-   The actual value we are interested in can then be computed with the
-   rd_sum_data_interp_get() function:
+    /** Weighted average of the values at index1 and index2; rates use a step
+        function, i.e. the value at index2, the ministep at or after the time. */
+    double interpolate(double value1, double value2, bool is_rate) const {
+        return is_rate ? value2 : value1 * weight1 + value2 * weight2;
+    }
+};
 
-
-   int    param_index;
-   time_t sim_time;
-   {
-      int    ministep1 , ministep2;
-      double weight1   , weight2;
-
-      rd_sum_data_init_interp_from_sim_time( data , sim_time , &ministep1 , &ministep2 , &weight1 , &weight2);
-      return rd_sum_data_interp_get( data , ministep1 , ministep2 , weight1 , weight2 , param_index );
-   }
-
-
-   For further explanation (in particular for which keywords the
-   function should be used), consult documentation at the top of this
-   file.
-*/
-
-static void rd_sum_data_init_interp_from_sim_time(
-    const rd_sum_data_type *data, time_t sim_time, size_t *index1,
-    size_t *index2, double *weight1, double *weight2) {
-    size_t idx = rd_sum_data_get_index_from_sim_time(data, sim_time);
+static Interp rd_sum_data_interp_from_sim_time(const rd_sum_data_type *data,
+                                               time_t sim_time) {
+    const size_t idx = rd_sum_data_get_index_from_sim_time(data, sim_time);
 
     // if sim_time is first date, idx=0 and then we cannot interpolate, so we give
     // weight 1 to index1=index2=0.
-    if (idx == 0) {
-        *index1 = 0;
-        *index2 = 0;
-        *weight1 = 1;
-        *weight2 = 0;
-        return;
-    }
+    if (idx == 0)
+        return {0, 0, 1, 0};
 
-    time_t sim_time1 = rd_sum_data_iget_sim_time(data, idx - 1);
-    time_t sim_time2 = rd_sum_data_iget_sim_time(data, idx);
-
-    *index1 = idx - 1;
-    *index2 = idx;
+    const time_t sim_time1 = rd_sum_data_iget_sim_time(data, idx - 1);
+    const time_t sim_time2 = rd_sum_data_iget_sim_time(data, idx);
 
     // weights the interpolation each of the ministeps according to distance from sim_time
-    double time_diff = static_cast<double>(sim_time2 - sim_time1);
-    double time_dist1 = static_cast<double>(sim_time - sim_time1);
-    double time_dist2 = -static_cast<double>(sim_time - sim_time2);
+    const double time_diff = static_cast<double>(sim_time2 - sim_time1);
+    const double time_dist1 = static_cast<double>(sim_time - sim_time1);
+    const double time_dist2 = -static_cast<double>(sim_time - sim_time2);
 
-    *weight1 = time_dist2 / time_diff;
-    *weight2 = time_dist1 / time_diff;
+    return {idx - 1, idx, time_dist2 / time_diff, time_dist1 / time_diff};
 }
 
 std::vector<double>
@@ -714,43 +696,16 @@ static void rd_sum_data_iget_row(const rd_sum_data_type *data,
         out[positions[j]] = values[j];
 }
 
-/**
-   This function will form a weight average of the two ministeps
-   @ministep1 and @ministep2. The weights and the ministep indices
-   should (typically) be determined by the
-
-      rd_sum_data_init_interp_from_sim_xxx()
-
-   functions. The function will typically the last function called
-   when we seek a reservoir state variable at an intermediate time
-   between two ministeps.
-*/
-
+/** The value of @params_index at @sim_time given by @interp; only the ministeps
+    needed (index2 alone for rates) are read. */
 static double rd_sum_data_interp_get(const rd_sum_data_type *data,
-                                     size_t time_index1, size_t time_index2,
-                                     double weight1, double weight2,
-                                     size_t params_index) {
-    return rd_sum_data_iget(data, time_index1, params_index) * weight1 +
-           rd_sum_data_iget(data, time_index2, params_index) * weight2;
-}
-
-static double rd_sum_data_vector_iget(const rd_sum_data_type *data,
-                                      size_t params_index, bool is_rate,
-                                      size_t time_index1, size_t time_index2,
-                                      double weight1, double weight2) {
-
-    double value = 0.0;
-    if (is_rate) {
-        // uses step function since it is a rate; time_index2 is the
-        // ministep at or after sim_time, see
-        // rd_sum_data_init_interp_from_sim_time()
-        value = rd_sum_data_iget(data, time_index2, params_index);
-    } else {
-        // uses interpolation between timesteps
-        value = rd_sum_data_interp_get(data, time_index1, time_index2, weight1,
-                                       weight2, params_index);
-    }
-    return value;
+                                     const Interp &interp, size_t params_index,
+                                     bool is_rate) {
+    if (is_rate)
+        return rd_sum_data_iget(data, interp.index2, params_index);
+    return interp.interpolate(
+        rd_sum_data_iget(data, interp.index1, params_index),
+        rd_sum_data_iget(data, interp.index2, params_index), false);
 }
 
 /** The params indices of the keys of @keywords present in the summary, and
@@ -798,27 +753,20 @@ rd_sum_data_get_interp_vector(const rd_sum_data_type *data, time_t sim_time,
                               const rd_sum_vector_type *keylist,
                               double missing_value) {
     const size_t num_keywords = rd_sum_vector_get_size(keylist);
-    double weight1, weight2;
-    size_t time_index1, time_index2;
-
-    rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
-                                          &time_index2, &weight1, &weight2);
+    const Interp interp = rd_sum_data_interp_from_sim_time(data, sim_time);
 
     const auto [params_indices, key_indices] =
         rd_sum_data_present_keywords(keylist);
 
     RowCache row1, row2;
-    row1.load(data, time_index1, params_indices);
-    row2.load(data, time_index2, params_indices);
+    row1.load(data, interp.index1, params_indices);
+    row2.load(data, interp.index2, params_indices);
 
     std::vector<double> results(num_keywords, missing_value);
     for (size_t j = 0; j < key_indices.size(); j++) {
         const size_t i = key_indices[j];
-        if (rd_sum_vector_iget_is_rate(keylist, i))
-            // uses step function since it is a rate
-            results[i] = row2[j];
-        else
-            results[i] = row1[j] * weight1 + row2[j] * weight2;
+        results[i] = interp.interpolate(row1[j], row2[j],
+                                        rd_sum_vector_iget_is_rate(keylist, i));
     }
     return results;
 }
@@ -845,13 +793,9 @@ double rd_sum_data_get_from_sim_time(const rd_sum_data_type *data,
         return rd_sum_data_iget(data, time_index, params_index);
     } else {
         /* Interpolated lookup based on two (hopefully) consecutive ministeps. */
-        double weight1, weight2;
-        size_t time_index1, time_index2;
-
-        rd_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1,
-                                              &time_index2, &weight1, &weight2);
-        return rd_sum_data_interp_get(data, time_index1, time_index2, weight1,
-                                      weight2, params_index);
+        return rd_sum_data_interp_get(
+            data, rd_sum_data_interp_from_sim_time(data, sim_time),
+            params_index, false);
     }
 }
 
@@ -1036,13 +980,9 @@ void rd_sum_data_init_double_vector_interp(
             value = end_value;
 
         else {
-            size_t time_index1, time_index2;
-            double weight1, weight2;
-            rd_sum_data_init_interp_from_sim_time(
-                data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
-            value = rd_sum_data_vector_iget(data, params_index, is_rate,
-                                            time_index1, time_index2, weight1,
-                                            weight2);
+            value = rd_sum_data_interp_get(
+                data, rd_sum_data_interp_from_sim_time(data, sim_time),
+                params_index, is_rate);
         }
 
         output_data[time_index] = value;
@@ -1082,22 +1022,17 @@ void rd_sum_data_init_double_frame_interp(
             for (size_t j = 0; j < key_indices.size(); j++)
                 output_row[key_indices[j]] = is_rate[j] ? 0 : next_row[j];
         } else {
-            double prev_weight, next_weight;
-            size_t prev_time_index, next_time_index;
-            rd_sum_data_init_interp_from_sim_time(
-                data, sim_time, &prev_time_index, &next_time_index,
-                &prev_weight, &next_weight);
-            if (next_row.time_index == prev_time_index &&
-                prev_row.time_index != prev_time_index)
+            const Interp interp =
+                rd_sum_data_interp_from_sim_time(data, sim_time);
+            if (next_row.time_index == interp.index1 &&
+                prev_row.time_index != interp.index1)
                 std::swap(prev_row, next_row);
-            prev_row.load(data, prev_time_index, params_indices);
-            next_row.load(data, next_time_index, params_indices);
+            prev_row.load(data, interp.index1, params_indices);
+            next_row.load(data, interp.index2, params_indices);
 
             for (size_t j = 0; j < key_indices.size(); j++)
                 output_row[key_indices[j]] =
-                    is_rate[j]
-                        ? next_row[j]
-                        : prev_row[j] * prev_weight + next_row[j] * next_weight;
+                    interp.interpolate(prev_row[j], next_row[j], is_rate[j]);
         }
     }
 }
