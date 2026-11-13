@@ -325,67 +325,6 @@ size_t SumData::get_index_from_sim_time(time_t sim_time) const {
     return sim_time <= this->iget_sim_time(low_index) ? low_index : high_index;
 }
 
-/** The two ministeps bracketing a time, with the weights to interpolate
-    between them. Rates are not interpolated; see interp_get(). */
-struct SumData::Interp {
-    size_t index1;
-    size_t index2;
-    double weight1;
-    double weight2;
-
-    /** Weighted average of the values at index1 and index2; rates use a step
-        function, i.e. the value at index2, the ministep at or after the time. */
-    double interpolate(double value1, double value2, bool is_rate) const {
-        return is_rate ? value2 : value1 * weight1 + value2 * weight2;
-    }
-};
-
-SumData::Interp SumData::interp_from_sim_time(time_t sim_time) const {
-    const size_t idx = this->get_index_from_sim_time(sim_time);
-
-    // if sim_time is first date, idx=0 and then we cannot interpolate, so we give
-    // weight 1 to index1=index2=0.
-    if (idx == 0)
-        return {0, 0, 1, 0};
-
-    const time_t sim_time1 = this->iget_sim_time(idx - 1);
-    const time_t sim_time2 = this->iget_sim_time(idx);
-
-    // weights the interpolation each of the ministeps according to distance from sim_time
-    const double time_diff = static_cast<double>(sim_time2 - sim_time1);
-    const double time_dist1 = static_cast<double>(sim_time - sim_time1);
-    const double time_dist2 = -static_cast<double>(sim_time - sim_time2);
-
-    return {idx - 1, idx, time_dist2 / time_diff, time_dist1 / time_diff};
-}
-
-/** The value of @params_index at @sim_time given by @interp; only the ministeps
-    needed (index2 alone for rates) are read. */
-double SumData::interp_get(const Interp &interp, size_t params_index,
-                           bool is_rate) const {
-    if (is_rate)
-        return this->iget(interp.index2, params_index);
-    return interp.interpolate(this->iget(interp.index1, params_index),
-                              this->iget(interp.index2, params_index), false);
-}
-
-namespace {
-/** The params indices of the keys of @keywords present in the summary, and
-    the indices of those keys in @keywords. */
-std::pair<std::vector<size_t>, std::vector<size_t>>
-present_keywords(const rd_sum_vector_type *keywords) {
-    std::vector<size_t> params_indices;
-    std::vector<size_t> key_indices;
-    const size_t num_keywords = rd_sum_vector_get_size(keywords);
-    for (size_t i = 0; i < num_keywords; i++)
-        if (auto params_index = rd_sum_vector_iget_param_index(keywords, i)) {
-            params_indices.push_back(*params_index);
-            key_indices.push_back(i);
-        }
-    return {std::move(params_indices), std::move(key_indices)};
-}
-} // namespace
-
 /** The values of the keywords present in the summary at one ministep, read
     with a single iget_row() call. */
 struct SumData::RowCache {
@@ -403,6 +342,89 @@ struct SumData::RowCache {
 
     double operator[](size_t i) const { return values[i]; }
 };
+
+/** The two ministeps bracketing a time, with the weights to interpolate
+    between them, and the values of the requested parameters at them.
+
+    The mapping from sim_time to index is based on half open intervals, which
+    are closed in the upper end:
+
+        []<------------]<--------------]<-----------]
+        t0             t1             t2           t3
+
+    However - as indicated on the figure above there is a zero measure point
+    right at the start which corresponds to time_index == 0; this is to ensure
+    that there is correspondence with the simulator results if you ask for a
+    value interpolated to the starting time. */
+struct SumData::Interp {
+    size_t index1 = 0;
+    size_t index2 = 0;
+    double weight1 = 1;
+    double weight2 = 0;
+    RowCache row1;
+    RowCache row2;
+
+    /** Finds the ministeps bracketing @sim_time and loads the values of
+        @params_indices at them, reusing rows already loaded by a previous
+        call with the same @params_indices. */
+    void seek(const SumData &data, time_t sim_time,
+              const std::vector<size_t> &params_indices) {
+        const size_t idx = data.get_index_from_sim_time(sim_time);
+
+        if (idx == 0) {
+            // if sim_time is first date we cannot interpolate, so we give
+            // weight 1 to index1=index2=0.
+            index1 = 0;
+            index2 = 0;
+            weight1 = 1;
+            weight2 = 0;
+        } else {
+            const time_t sim_time1 = data.iget_sim_time(idx - 1);
+            const time_t sim_time2 = data.iget_sim_time(idx);
+
+            // weights the interpolation each of the ministeps according to
+            // distance from sim_time
+            const double time_diff = static_cast<double>(sim_time2 - sim_time1);
+            const double time_dist1 = static_cast<double>(sim_time - sim_time1);
+            const double time_dist2 =
+                -static_cast<double>(sim_time - sim_time2);
+
+            index1 = idx - 1;
+            index2 = idx;
+            weight1 = time_dist2 / time_diff;
+            weight2 = time_dist1 / time_diff;
+        }
+
+        if (row2.time_index == index1 && row1.time_index != index1)
+            std::swap(row1, row2);
+        row1.load(data, index1, params_indices);
+        row2.load(data, index2, params_indices);
+    }
+
+    /** The value of the j'th of the params_indices given to seek(). Rates use
+        a step function, i.e. the value at index2, the ministep at or after
+        the time; other values are interpolated. */
+    double value(size_t j, bool is_rate) const {
+        return is_rate ? row2[j] : row1[j] * weight1 + row2[j] * weight2;
+    }
+};
+
+namespace {
+/** The params indices of the keys of @keywords present in the summary, and
+    the indices of those keys in @keywords. */
+std::pair<std::vector<size_t>, std::vector<size_t>>
+present_keywords(const rd_sum_vector_type *keywords) {
+    std::vector<size_t> params_indices;
+    std::vector<size_t> key_indices;
+    const size_t num_keywords = rd_sum_vector_get_size(keywords);
+    for (size_t i = 0; i < num_keywords; i++)
+        if (auto params_index = rd_sum_vector_iget_param_index(keywords, i)) {
+            params_indices.push_back(*params_index);
+            key_indices.push_back(i);
+        }
+    return {std::move(params_indices), std::move(key_indices)};
+}
+} // namespace
 
 double SumData::iget_sim_days(size_t internal_index) const {
     const auto loc = this->locate(internal_index);
@@ -595,45 +617,24 @@ std::vector<double>
 SumData::get_interp_vector(time_t sim_time, const rd_sum_vector_type *keylist,
                            double missing_value) const {
     const size_t num_keywords = rd_sum_vector_get_size(keylist);
-    const Interp interp = this->interp_from_sim_time(sim_time);
-
     const auto [params_indices, key_indices] = present_keywords(keylist);
 
-    RowCache row1, row2;
-    row1.load(*this, interp.index1, params_indices);
-    row2.load(*this, interp.index2, params_indices);
+    Interp interp;
+    interp.seek(*this, sim_time, params_indices);
 
     std::vector<double> results(num_keywords, missing_value);
     for (size_t j = 0; j < key_indices.size(); j++) {
         const size_t i = key_indices[j];
-        results[i] = interp.interpolate(row1[j], row2[j],
-                                        rd_sum_vector_iget_is_rate(keylist, i));
+        results[i] = interp.value(j, rd_sum_vector_iget_is_rate(keylist, i));
     }
     return results;
 }
 
 double SumData::get_from_sim_time(time_t sim_time,
                                   const rd::smspec_node &smspec_node) const {
-    size_t params_index = smspec_node.get_params_index();
-    if (smspec_node.is_rate()) {
-        // In general the mapping from sim_time to index is based on half
-        // open intervals, which are closed in the upper end:
-        //
-        //     []<------------]<--------------]<-----------]
-        //     t0             t1             t2           t3
-        //
-        //  However - as indicated on the figure above there is a zero
-        //  measure point right at the start which corresponds to
-        //  time_index == 0; this is to ensure that there is correspondence
-        //  with the simulator results if you ask for a value interpolated to
-        //  the starting time.
-        size_t time_index = this->get_index_from_sim_time(sim_time);
-        return this->iget(time_index, params_index);
-    } else {
-        // Interpolated lookup based on two (hopefully) consecutive ministeps.
-        return this->interp_get(this->interp_from_sim_time(sim_time),
-                                params_index, false);
-    }
+    Interp interp;
+    interp.seek(*this, sim_time, {smspec_node.get_params_index()});
+    return interp.value(0, smspec_node.is_rate());
 }
 
 std::optional<size_t>
@@ -777,8 +778,10 @@ void SumData::init_double_vector_interp(const rd::smspec_node &smspec_node,
                                         double *output_data) const {
     bool is_rate = smspec_node.is_rate();
     size_t params_index = smspec_node.get_params_index();
+    const std::vector<size_t> params_indices{params_index};
     time_t start_time = this->get_data_start();
     time_t end_time = this->get_sim_end();
+    Interp interp;
     double start_value = 0;
     double end_value = 0;
 
@@ -797,8 +800,8 @@ void SumData::init_double_vector_interp(const rd::smspec_node &smspec_node,
             value = end_value;
 
         else {
-            value = this->interp_get(this->interp_from_sim_time(sim_time),
-                                     params_index, is_rate);
+            interp.seek(*this, sim_time, params_indices);
+            value = interp.value(0, is_rate);
         }
 
         output_data[time_index] = value;
@@ -817,7 +820,7 @@ void SumData::init_double_frame_interp(const rd_sum_vector_type *keywords,
     for (size_t j = 0; j < key_indices.size(); j++)
         is_rate[j] = rd_sum_vector_iget_is_rate(keywords, key_indices[j]);
 
-    RowCache prev_row, next_row;
+    Interp interp;
 
     for (size_t time_index = 0; time_index < time_points.size(); time_index++) {
         const time_t sim_time = time_points[time_index];
@@ -827,27 +830,20 @@ void SumData::init_double_frame_interp(const rd_sum_vector_type *keywords,
             continue;
 
         if (sim_time < start_time) {
-            prev_row.load(*this, 0, params_indices);
+            interp.row1.load(*this, 0, params_indices);
             for (size_t j = 0; j < key_indices.size(); j++)
-                output_row[key_indices[j]] = is_rate[j] ? 0 : prev_row[j];
+                output_row[key_indices[j]] = is_rate[j] ? 0 : interp.row1[j];
         } else if (sim_time > end_time) {
             if (length == 0)
                 throw std::out_of_range(
                     "SumData::init_double_frame_interp: no data");
-            next_row.load(*this, length - 1, params_indices);
+            interp.row2.load(*this, length - 1, params_indices);
             for (size_t j = 0; j < key_indices.size(); j++)
-                output_row[key_indices[j]] = is_rate[j] ? 0 : next_row[j];
+                output_row[key_indices[j]] = is_rate[j] ? 0 : interp.row2[j];
         } else {
-            const Interp interp = this->interp_from_sim_time(sim_time);
-            if (next_row.time_index == interp.index1 &&
-                prev_row.time_index != interp.index1)
-                std::swap(prev_row, next_row);
-            prev_row.load(*this, interp.index1, params_indices);
-            next_row.load(*this, interp.index2, params_indices);
-
+            interp.seek(*this, sim_time, params_indices);
             for (size_t j = 0; j < key_indices.size(); j++)
-                output_row[key_indices[j]] =
-                    interp.interpolate(prev_row[j], next_row[j], is_rate[j]);
+                output_row[key_indices[j]] = interp.value(j, is_rate[j]);
         }
     }
 }
