@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <memory>
-#include <cstring>
 #include <filesystem>
 #include <string>
 #include <utility>
@@ -424,7 +423,11 @@ void rd_sum_file_data::get_data(size_t params_index, size_t length,
                                 double *data) {
     if (this->loader) {
         const auto tmp_data = loader->get_vector(params_index);
-        memcpy(data, tmp_data.data(), length * sizeof data);
+        if (length > tmp_data.size())
+            throw std::out_of_range("rd_sum_file_data::get_data: length " +
+                                    std::to_string(length) + " exceeds " +
+                                    std::to_string(tmp_data.size()));
+        std::copy_n(tmp_data.begin(), length, data);
     } else {
         for (size_t time_index = 0; time_index < length; time_index++)
             data[time_index] = this->iget(time_index, params_index);
