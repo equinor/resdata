@@ -43,7 +43,7 @@ size_t validate_non_negative(int value, const char *what) {
 } // namespace
 
 /*
-  This file implements the type rd_sum_data_type. The data structure
+  This file implements the class rd_sum_file_data. The data structure
   is involved with holding all the actual summary data (the
   PARAMS vectors), in addition the time-information
   with MINISTEPS / REPORT_STEPS and so on is implemented here.
@@ -173,7 +173,7 @@ size_t validate_non_negative(int value, const char *what) {
    of 'X' on the timeline, i.e. in the middle of ministep M3. If we
    are interested in the rate at this time the function:
 
-        rd_sum_data_get_from_sim_time()
+        SumData::get_from_sim_time()
 
    will just return the M3 value, whereas if you are interested in
    e.g. pressure at this time the function will return a weighted
@@ -197,11 +197,11 @@ size_t validate_non_negative(int value, const char *what) {
    functions like rd_sum_get_general_var() expect the time direction
    to be given as a ministep; however it is also possible to get the
    data by giving an internal (not that internal ...) index. In
-   rd_sum_data.c the latter functions have _iget():
+   rd::SumData the latter functions have iget_:
 
 
-      rd_sum_data_get_xxx : Expects the time direction given as a ministep_nr.
-      rd_sum_data_iget_xxx: Expects the time direction given as an internal index.
+      SumData::get_xxx : Expects the time direction given as a ministep_nr.
+      SumData::iget_xxx: Expects the time direction given as an internal index.
 
 */
 
@@ -256,7 +256,8 @@ size_t rd_sum_file_data::last_report() const {
 
 time_t rd_sum_file_data::get_data_start() const {
     if (this->index.size() == 0)
-        throw std::out_of_range("rd_sum_data_get_sim_end: index empty");
+        throw std::out_of_range(
+            "rd_sum_file_data::get_data_start: index empty");
     const auto &node = this->index[0];
     return node.sim_time;
 }
@@ -333,7 +334,7 @@ rd_sum_tstep_type *rd_sum_file_data::add_new_tstep(size_t report_step,
     /*
     In the simple case that we just add another timestep to the
     currently active report_step, we do a limited update of the
-    index, otherwise we call rd_sum_data_build_index() to get a
+    index, otherwise we call build_index() to get a
     full recalculation of the index.
   */
     if (!prev_tstep)
@@ -400,13 +401,13 @@ void rd_sum_file_data::build_index() {
     }
 }
 
-void rd_sum_file_data::get_time(size_t length, time_t *data) {
+void rd_sum_file_data::get_time(size_t length, time_t *data) const {
     for (size_t time_index = 0; time_index < length; time_index++)
         data[time_index] = this->iget_sim_time(time_index);
 }
 
 void rd_sum_file_data::get_time_report(size_t end_index,
-                                       std::vector<time_t> &data) {
+                                       std::vector<time_t> &data) const {
     for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         const auto range = this->report_range(report_step);
@@ -421,7 +422,7 @@ void rd_sum_file_data::get_time_report(size_t end_index,
 }
 
 void rd_sum_file_data::get_data(size_t params_index, size_t length,
-                                double *data) {
+                                double *data) const {
     if (this->loader) {
         const auto tmp_data = loader->get_vector(params_index);
         memcpy(data, tmp_data.data(), length * sizeof data);
@@ -433,7 +434,7 @@ void rd_sum_file_data::get_data(size_t params_index, size_t length,
 
 void rd_sum_file_data::get_data_report(std::optional<size_t> params_index,
                                        size_t end_index, double default_value,
-                                       std::vector<double> &data) {
+                                       std::vector<double> &data) const {
     for (size_t report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         const auto range = this->report_range(report_step);

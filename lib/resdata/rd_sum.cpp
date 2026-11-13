@@ -31,7 +31,7 @@
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_sum_vector.hpp>
-#include <resdata/rd_sum_data.hpp>
+#include "detail/resdata/rd_sum_data.hpp"
 #include <resdata/rd_smspec.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_file_flag.hpp>
@@ -91,7 +91,7 @@ struct rd_sum_struct {
     rd_smspec_ptr smspec{
         nullptr,
         &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
-    rd_sum_data_ptr data{nullptr, &rd_sum_data_free};
+    std::unique_ptr<rd::SumData> data;
     rd_sum_ptr restart_case{nullptr, &rd_sum_free};
 
     bool fmt_case;
@@ -154,9 +154,8 @@ static rd_sum_ptr rd_sum_alloc__(std::string input_arg,
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
                               const std::vector<std::string> &data_files,
                               bool lazy_load, FileMode file_options) {
-    rd_sum->data.reset(rd_sum_data_alloc(rd_sum->smspec.get()));
-    return rd_sum_data_fread(rd_sum->data.get(), data_files, lazy_load,
-                             file_options);
+    rd_sum->data = std::make_unique<rd::SumData>(rd_sum->smspec.get());
+    return rd_sum->data->fread(data_files, lazy_load, file_options);
 }
 
 static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
@@ -173,8 +172,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
         rd_sum->restart_case = std::move(restart_case);
-        rd_sum_data_add_case(rd_sum->data.get(),
-                             rd_sum->restart_case->data.get());
+        rd_sum->data->add_case(*rd_sum->restart_case->data);
     }
 }
 
@@ -468,7 +466,7 @@ rd_sum_type *rd_sum_fread_alloc(const char *header_file,
 const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
                                       const char *wgname, int num,
                                       const char *unit, float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
+    if (rd_sum->data->get_length() > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -482,7 +480,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
                                             const char *unit, const char *lgr,
                                             int lgr_i, int lgr_j, int lgr_k,
                                             float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
+    if (rd_sum->data->get_length() > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -512,7 +510,7 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
 rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, size_t report_step,
                                     double sim_seconds) {
     rd_sum_tstep_type *new_tstep =
-        rd_sum_data_add_new_tstep(rd_sum->data.get(), report_step, sim_seconds);
+        rd_sum->data->add_new_tstep(report_step, sim_seconds);
     return new_tstep;
 }
 
@@ -535,7 +533,7 @@ rd_sum_ptr make_summary_writer(std::string rd_case, bool fmt_output,
             rd_sum->smspec.reset(rd_smspec_alloc_writer(
                 key_join_string.c_str(), sim_start, time_in_days, nx, ny, nz));
 
-        rd_sum->data.reset(rd_sum_data_alloc_writer(rd_sum->smspec.get()));
+        rd_sum->data = rd::SumData::make_writer(rd_sum->smspec.get());
     }
     return rd_sum;
 }
@@ -543,12 +541,12 @@ rd_sum_ptr make_summary_writer(std::string rd_case, bool fmt_output,
 void rd_sum_fwrite(const rd_sum_type *rd_sum) {
     rd_smspec_fwrite(rd_sum->smspec.get(), rd_sum->rd_case.c_str(),
                      rd_sum->fmt_case);
-    rd_sum_data_fwrite(rd_sum->data.get(), rd_sum->rd_case.c_str(),
-                       rd_sum->fmt_case, rd_sum->unified);
+    rd_sum->data->fwrite(rd_sum->rd_case.c_str(), rd_sum->fmt_case,
+                         rd_sum->unified);
 }
 
 bool rd_sum_can_write(const rd_sum_type *rd_sum) {
-    return rd_sum_data_can_write(rd_sum->data.get());
+    return rd_sum->data->can_write();
 }
 
 void rd_sum_free(rd_sum_type *rd_sum) { delete rd_sum; }
@@ -589,7 +587,7 @@ rd_sum_type *rd_sum_fread_alloc_case(const char *input_file,
 
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node) {
-    return rd_sum_data_get_from_sim_time(rd_sum->data.get(), sim_time, *node);
+    return rd_sum->data->get_from_sim_time(sim_time, *node);
 }
 
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
@@ -613,15 +611,14 @@ double rd_sum_get_general_var(const rd_sum_type *rd_sum, size_t time_index,
                               const char *lookup_kw) {
     size_t params_index =
         rd_sum_get_general_var_params_index(rd_sum, lookup_kw);
-    return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
+    return rd_sum->data->iget(time_index, params_index);
 }
 
 std::vector<double>
 rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
                          const rd_sum_vector_type *key_words,
                          double missing_value) {
-    return rd_sum_data_get_interp_vector(rd_sum->data.get(), sim_time,
-                                         key_words, missing_value);
+    return rd_sum->data->get_interp_vector(sim_time, key_words, missing_value);
 }
 
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
@@ -633,7 +630,7 @@ double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
 double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
                                             double sim_days, const char *var) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, var);
-    return rd_sum_data_get_from_sim_days(rd_sum->data.get(), sim_days, *node);
+    return rd_sum->data->get_from_sim_days(sim_days, *node);
 }
 
 rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
@@ -706,8 +703,8 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
-                    value = rd_sum_data_iget_first_value(
-                        rd_sum->data.get(), node.get_params_index());
+                    value =
+                        rd_sum->data->iget_first_value(node.get_params_index());
                 data[i - 1] = value;
             }
         } else if (input_t > end_time) {
@@ -718,8 +715,8 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
                 const rd::smspec_node &node =
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
-                    value = rd_sum_data_iget_last_value(
-                        rd_sum->data.get(), node.get_params_index());
+                    value =
+                        rd_sum->data->iget_last_value(node.get_params_index());
                 data[i - 1] = value;
             }
         } else {
@@ -747,7 +744,7 @@ rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
 
 double rd_sum_iget(const rd_sum_type *rd_sum, size_t time_index,
                    size_t param_index) {
-    return rd_sum_data_iget(rd_sum->data.get(), time_index, param_index);
+    return rd_sum->data->iget(time_index, param_index);
 }
 
 rd_smspec_var_type rd_sum_identify_var_type(const char *var) {
@@ -755,33 +752,32 @@ rd_smspec_var_type rd_sum_identify_var_type(const char *var) {
 }
 
 size_t rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_last_report_step(rd_sum->data.get());
+    return rd_sum->data->get_last_report_step();
 }
 
 size_t rd_sum_get_first_report_step(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_first_report_step(rd_sum->data.get());
+    return rd_sum->data->get_first_report_step();
 }
 
 size_t rd_sum_iget_report_end(const rd_sum_type *rd_sum, size_t report_step) {
-    return rd_sum_data_iget_report_end(rd_sum->data.get(), report_step);
+    return rd_sum->data->iget_report_end(report_step);
 }
 
 size_t rd_sum_iget_report_step(const rd_sum_type *rd_sum,
                                size_t internal_index) {
-    return rd_sum_data_iget_report_step(rd_sum->data.get(), internal_index);
+    return rd_sum->data->iget_report_step(internal_index);
 }
 
 std::vector<time_t> rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only) {
-    return report_only
-               ? rd_sum_data_alloc_report_time_vector(rd_sum->data.get())
-               : rd_sum_data_alloc_time_vector(rd_sum->data.get());
+    return report_only ? rd_sum->data->alloc_report_time_vector()
+                       : rd_sum->data->alloc_time_vector();
 }
 
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
                                double *data) {
     size_t params_index = rd_sum_get_general_var_params_index(rd_sum, gen_key);
-    rd_sum_data_init_double_vector(rd_sum->data.get(), params_index, data);
+    rd_sum->data->init_double_vector(params_index, data);
 }
 
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
@@ -790,31 +786,27 @@ void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       double *data) {
     const rd::smspec_node &node =
         rd_smspec_get_general_var_node(rd_sum->smspec.get(), gen_key);
-    rd_sum_data_init_double_vector_interp(rd_sum->data.get(), node, time_points,
-                                          data);
+    rd_sum->data->init_double_vector_interp(node, time_points, data);
 }
 
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const std::vector<time_t> &time_points,
                                      double *data) {
-    rd_sum_data_init_double_frame_interp(rd_sum->data.get(), keywords,
-                                         time_points, data);
+    rd_sum->data->init_double_frame_interp(keywords, time_points, data);
 }
 
 void rd_sum_init_double_frame(const rd_sum_type *rd_sum,
                               const rd_sum_vector_type *keywords,
                               double *data) {
-    rd_sum_data_init_double_frame(rd_sum->data.get(), keywords, data);
+    rd_sum->data->init_double_frame(keywords, data);
 }
 
 std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              size_t data_index,
                                              bool report_only) {
-    return report_only
-               ? rd_sum_data_alloc_report_data_vector(rd_sum->data.get(),
-                                                      data_index)
-               : rd_sum_data_alloc_data_vector(rd_sum->data.get(), data_index);
+    return report_only ? rd_sum->data->alloc_report_data_vector(data_index)
+                       : rd_sum->data->alloc_data_vector(data_index);
 }
 
 /**
@@ -832,10 +824,9 @@ std::vector<double> rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
 static std::optional<size_t> rd_sum_get_limiting(const rd_sum_type *rd_sum,
                                                  size_t smspec_index,
                                                  double limit, bool gt) {
-    const size_t length = rd_sum_data_get_length(rd_sum->data.get());
+    const size_t length = rd_sum->data->get_length();
     for (size_t internal_index = 0; internal_index < length; internal_index++) {
-        double value =
-            rd_sum_data_iget(rd_sum->data.get(), internal_index, smspec_index);
+        double value = rd_sum->data->iget(internal_index, smspec_index);
         if (gt ? value > limit : value < limit)
             return internal_index;
     }
@@ -853,15 +844,15 @@ std::optional<size_t> rd_sum_get_first_lt(const rd_sum_type *rd_sum,
 }
 
 time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, size_t report_step) {
-    return rd_sum_data_get_report_time(rd_sum->data.get(), report_step);
+    return rd_sum->data->get_report_time(report_step);
 }
 
 time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, size_t index) {
-    return rd_sum_data_iget_sim_time(rd_sum->data.get(), index);
+    return rd_sum->data->iget_sim_time(index);
 }
 
 time_t rd_sum_get_data_start(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_data_start(rd_sum->data.get());
+    return rd_sum->data->get_data_start();
 }
 
 time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
@@ -870,14 +861,14 @@ time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
 
 time_t rd_sum_get_end_time(const rd_sum_type *rd_sum) {
     try {
-        return rd_sum_data_get_sim_end(rd_sum->data.get());
+        return rd_sum->data->get_sim_end();
     } catch (std::out_of_range const &) {
         return rd_smspec_get_start_time(rd_sum->smspec.get());
     }
 }
 
 double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, size_t index) {
-    return rd_sum_data_iget_sim_days(rd_sum->data.get(), index);
+    return rd_sum->data->iget_sim_days(index);
 }
 
 /*#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
@@ -1032,36 +1023,36 @@ std::vector<std::string> rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
 }
 
 double rd_sum_get_first_day(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_first_day(rd_sum->data.get());
+    return rd_sum->data->get_first_day();
 }
 
 double rd_sum_get_sim_length(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_sim_length(rd_sum->data.get());
+    return rd_sum->data->get_sim_length();
 }
 
 /**
    Will return the number of data blocks.
 */
 size_t rd_sum_get_data_length(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_length(rd_sum->data.get());
+    return rd_sum->data->get_length();
 }
 
 bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time) {
-    return rd_sum_data_check_sim_time(sum->data.get(), sim_time);
+    return sum->data->check_sim_time(sim_time);
 }
 
 bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days) {
-    return rd_sum_data_check_sim_days(sum->data.get(), sim_days);
+    return sum->data->check_sim_days(sim_days);
 }
 
 std::optional<size_t> rd_sum_get_report_step_from_time(const rd_sum_type *sum,
                                                        time_t sim_time) {
-    return rd_sum_data_get_report_step_from_time(sum->data.get(), sim_time);
+    return sum->data->get_report_step_from_time(sim_time);
 }
 
 std::optional<size_t> rd_sum_get_report_step_from_days(const rd_sum_type *sum,
                                                        double sim_days) {
-    return rd_sum_data_get_report_step_from_days(sum->data.get(), sim_days);
+    return sum->data->get_report_step_from_days(sim_days);
 }
 
 rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum) {
@@ -1078,8 +1069,8 @@ static std::vector<double>
 rd_sum_alloc_seconds_solution(const rd_sum_type *rd_sum, const char *gen_key,
                               double cmp_value, bool rates_clamp_lower) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_alloc_seconds_solution(rd_sum->data.get(), *node,
-                                              cmp_value, rates_clamp_lower);
+    return rd_sum->data->alloc_seconds_solution(*node, cmp_value,
+                                                rates_clamp_lower);
 }
 
 std::vector<double> rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
@@ -1117,15 +1108,13 @@ UnitSystem rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
 double rd_sum_get_last_value_gen_key(const rd_sum_type *rd_sum,
                                      const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_iget_last_value(rd_sum->data.get(),
-                                       node->get_params_index());
+    return rd_sum->data->iget_last_value(node->get_params_index());
 }
 
 double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
                                       const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_iget_first_value(rd_sum->data.get(),
-                                        node->get_params_index());
+    return rd_sum->data->iget_first_value(node->get_params_index());
 }
 
 rd_sum_ptr read_summary(const std::string &filename,

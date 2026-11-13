@@ -98,8 +98,8 @@ public:
     const rd_smspec_type *smspec() const;
 
     size_t length_before(time_t end_time) const;
-    void get_time(size_t length, time_t *data);
-    void get_data(size_t params_index, size_t length, double *data);
+    void get_time(size_t length, time_t *data) const;
+    void get_data(size_t params_index, size_t length, double *data) const;
     size_t length() const;
     time_t get_data_start() const;
     time_t get_sim_end() const;
@@ -122,9 +122,9 @@ public:
     /** Returns the last report step strictly before @end_time */
     size_t report_before(time_t end_time) const;
     /** Appends one value per present report with time index below @end_index */
-    void get_time_report(size_t end_index, std::vector<time_t> &data);
+    void get_time_report(size_t end_index, std::vector<time_t> &data) const;
     void get_data_report(std::optional<size_t> params_index, size_t end_index,
-                         double default_value, std::vector<double> &data);
+                         double default_value, std::vector<double> &data) const;
     size_t first_report() const;
     size_t last_report() const;
     size_t iget_report(size_t time_index) const;
