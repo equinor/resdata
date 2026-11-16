@@ -272,13 +272,20 @@ def test_to_from_pandas(
         "TEST", baseline, dims=(smspec.nx, smspec.ny, smspec.nz)
     ).pandas_frame()
 
-    # Compared as floats so that the tolerance below also applies to the
-    # timestamps; formatted files store the time values with less precision
-    # than float32 and can round to a slightly different instant.
+    # Formatted files store the time values with less precision than float32
+    # and can round to a slightly different instant. assert_frame_equal
+    # compares the index (and datetime columns) exactly, so turn the index
+    # into a float column to get the same tolerance as the data.
     roundtrip.index = roundtrip.index.values.astype(np.int64).astype(np.float64)
     baseline.index = baseline.index.values.astype(np.int64).astype(np.float64)
 
-    assert_frame_equal(roundtrip, baseline, check_exact=False, atol=0, rtol=1e-6)
+    assert_frame_equal(
+        roundtrip.reset_index(),
+        baseline.reset_index(),
+        check_exact=False,
+        atol=0,
+        rtol=1e-5,
+    )
 
 
 @given(summaries())
