@@ -255,34 +255,32 @@ static int length_of_comment(const char *buffer_position,
     return length;
 }
 
-static std::unique_ptr<char[], void (*)(void *)>
-alloc_quoted_token(const char *buffer, int length, bool strip_quote_marks) {
-    if (!strip_quote_marks) {
-        auto token = rd::checked_calloc<char>(length + 1);
-        memmove(token.get(), &buffer[0], length * sizeof(char));
-        token[length] = '\0';
-        return token;
-    } else {
-        auto token = rd::checked_calloc<char>(length - 1);
-        memmove(token.get(), &buffer[1], (length - 1) * sizeof(char));
-        token[length - 2] = '\0';
-        /* Removed escape char before any escaped quotation starts. */
-        {
-            char expr[3];
-            char subs[2];
-            expr[0] = PARSER_ESCAPE_CHAR;
-            expr[1] = buffer[0];
-            expr[2] = '\0';
-            subs[0] = buffer[0];
-            subs[1] = '\0';
-            /* The substitution is shorter than the expression, so the
-               buffer is never reallocated. */
-            char *token_buffer = token.get();
-            util_string_replace_inplace(&token_buffer, expr, subs);
-        }
-        return token;
+namespace {
+
+/* Replaces all occurrences of expr in string with subs. */
+void replace_all(std::string &string, std::string_view expr,
+                 std::string_view subs) {
+    size_t offset = 0;
+    while ((offset = string.find(expr, offset)) != std::string::npos) {
+        string.replace(offset, expr.size(), subs);
+        offset += subs.size();
     }
 }
+
+std::string quoted_token(const char *buffer, int length,
+                         bool strip_quote_marks) {
+    if (!strip_quote_marks)
+        return std::string(buffer, length);
+
+    std::string token(&buffer[1], length - 2);
+    /* Removed escape char before any escaped quotation starts. */
+    const char expr[] = {PARSER_ESCAPE_CHAR, buffer[0]};
+    replace_all(token, std::string_view(expr, 2),
+                std::string_view(&buffer[0], 1));
+    return token;
+}
+
+} // namespace
 
 /**
     This does not care about the possible occurence of characters in
@@ -393,9 +391,8 @@ basic_parser_tokenize_buffer(const basic_parser_type *parser,
         if (is_in_quoters(static_cast<unsigned char>(buffer[position]),
                           parser)) {
             int length = length_of_quotation(&buffer[position]);
-            auto token = alloc_quoted_token(&buffer[position], length,
-                                            strip_quote_marks);
-            tokens.emplace_back(token.get());
+            tokens.push_back(
+                quoted_token(&buffer[position], length, strip_quote_marks));
             position += length;
             continue;
         }
