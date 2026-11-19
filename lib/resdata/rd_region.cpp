@@ -48,8 +48,8 @@
 
    For the functions which take rd_kw input, the rd_kw instance must
    have either nx*ny*nz elements, or nactive(from the grid)
-   elements. This is checked, and the program will fail hard if it is
-   not satisfied.
+   elements. This is checked, and std::invalid_argument is thrown if
+   it is not satisfied.
 
    Example:
    --------
@@ -1005,9 +1005,9 @@ bool rd_region_contains_active(const rd_region_type *rd_region,
 
 /**
    Will update the selection in @region to ONLY contain the elements
-   which are also present in @new_region. Will FAIL hard if the two
-   regions do not share the same grid instance (checked by pointer
-   equality).
+   which are also present in @new_region. Throws std::invalid_argument
+   if the two regions do not share the same grid instance (checked by
+   pointer equality).
 
    A &= B
 */

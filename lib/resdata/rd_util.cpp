@@ -204,8 +204,9 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
             return RD_DATA_PATTERN;
             break;
         default:
-            util_abort("%s: No pattern defined for til_type:%d \n", __func__,
-                       file_type);
+            throw std::invalid_argument(
+                fmt::format("{}: No pattern defined for file_type:{}", __func__,
+                            static_cast<int>(file_type)));
         }
     } else {
         switch (file_type) {
@@ -234,8 +235,9 @@ static const char *rd_get_file_pattern(FileType file_type, bool fmt_file) {
             return RD_DATA_PATTERN;
             break;
         default:
-            util_abort("%s: No pattern defined for til_type:%d \n", __func__,
-                       file_type);
+            throw std::invalid_argument(
+                fmt::format("{}: No pattern defined for file_type:{}", __func__,
+                            static_cast<int>(file_type)));
         }
     }
 }
@@ -403,9 +405,8 @@ template fs::path filename<size_t>(fs::path, FileType, bool, size_t);
     o Both files are of the same type (i.e. both summary files) (this
       is not checked for).
 
-    o Both files are of type WITH a nnnn number at the end, the
-      function will fail hard in rd_filename_report_nr() if
-      this is not the case.
+    o Both files are of type WITH a nnnn number at the end,
+      rd_filename_report_nr() returns -1 if this is not the case.
 
 */
 
@@ -754,8 +755,8 @@ static int rd_get_month_nr__(const char *month_name_) {
 static int rd_get_month_nr(const char *month_name) {
     int month_nr = rd_get_month_nr__(month_name);
     if (month_nr < 0)
-        util_abort("%s: %s not a valid month name - aborting \n", __func__,
-                   month_name);
+        throw std::invalid_argument(
+            fmt::format("{}: {} not a valid month name", __func__, month_name));
 
     return month_nr;
 }
@@ -779,8 +780,8 @@ time_t rd_get_start_date(const char *data_file) {
 
     if (!basic_parser_fseek_string(parser.get(), stream.get(), "START", true,
                                    true)) /* Seeks case insensitive. */
-        util_abort("%s: sorry - could not find START in DATA file %s \n",
-                   __func__, data_file);
+        throw std::invalid_argument(fmt::format(
+            "{}: could not find START in DATA file {}", __func__, data_file));
 
     {
         offset_type start_pos = util_ftell(stream.get());
@@ -788,9 +789,10 @@ time_t rd_get_start_date(const char *data_file) {
         /* Look for terminating '/' */
         if (!basic_parser_fseek_string(parser.get(), stream.get(), "/", false,
                                        true))
-            util_abort("%s: sorry - could not find \"/\" termination of START "
-                       "keyword in data_file: \n",
-                       __func__, data_file);
+            throw std::invalid_argument(
+                fmt::format("{}: could not find \"/\" termination of START "
+                            "keyword in data_file: {}",
+                            __func__, data_file));
 
         size_t buffer_size =
             static_cast<size_t>(util_ftell(stream.get()) - start_pos);
@@ -809,8 +811,9 @@ time_t rd_get_start_date(const char *data_file) {
             month_nr = rd_get_month_nr(tokens.at(1).c_str());
             start_date = rd_make_date(day, month_nr, year);
         } else
-            util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",
-                       __func__, buffer.data());
+            throw std::invalid_argument(
+                fmt::format("{}: failed to parse DAY MONTH YEAR from : \"{}\"",
+                            __func__, buffer.data()));
     }
 
     return start_date;
@@ -824,9 +827,10 @@ static int rd_get_num_parallel_cpu__(basic_parser_type *parser, FILE *stream,
 
     /* Look for terminating '/' */
     if (!basic_parser_fseek_string(parser, stream, "/", false, true))
-        util_abort("%s: sorry - could not find \"/\" termination of PARALLEL "
-                   "keyword in data_file: \n",
-                   __func__, data_file);
+        throw std::invalid_argument(
+            fmt::format("{}: could not find \"/\" termination of PARALLEL "
+                        "keyword in data_file: {}",
+                        __func__, data_file));
 
     size_t buffer_size = static_cast<size_t>(util_ftell(stream) - start_pos);
     buffer.assign(buffer_size + 1, '\0');
@@ -861,22 +865,23 @@ static int rd_get_num_slave_cpu__(basic_parser_type *parser, FILE *stream,
         true); /* Go to next line after the SLAVES keyword*/
 
     while (true) {
-        char *buffer = util_fscanf_alloc_line(stream, NULL);
+        std::unique_ptr<char, decltype(&std::free)> buffer{
+            util_fscanf_alloc_line(stream, NULL), &std::free};
         ++linecount;
         if (linecount > 10)
-            util_abort("%s: Did not find ending \"/\" character after SLAVES "
-                       "keyword, aborting \n",
-                       __func__);
+            throw std::invalid_argument(
+                fmt::format("{}: Did not find ending \"/\" character after "
+                            "SLAVES keyword in data_file: {}",
+                            __func__, data_file));
 
         {
             std::vector<std::string> tokens =
-                basic_parser_tokenize_buffer(parser, buffer, true);
+                basic_parser_tokenize_buffer(parser, buffer.get(), true);
             if (tokens.size() > 0) {
 
                 const std::string &first_item = tokens.at(0);
 
                 if (first_item[0] == '/') {
-                    free(buffer);
                     break;
                 } else {
                     size_t no_of_tokens = tokens.size();
@@ -890,13 +895,13 @@ static int rd_get_num_slave_cpu__(basic_parser_type *parser, FILE *stream,
                 }
             }
         }
-
-        free(buffer);
     }
 
     if (0 == num_cpu)
-        util_abort("%s: Did not any CPUs after SLAVES keyword, aborting \n",
-                   __func__);
+        throw std::invalid_argument(
+            fmt::format("{}: Did not find any CPUs after SLAVES keyword in "
+                        "data_file: {}",
+                        __func__, data_file));
     return num_cpu;
 }
 

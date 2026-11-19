@@ -53,8 +53,8 @@ bool WellSegment::link(WellSegment *outlet_segment) {
         }
         return true;
     } else
-        /* This is a quite fatal topological error - and aborting is probaly the wisest
-           thing to do. */
+        /* This is a quite fatal topological error - it is reported to the
+           caller by returning false. */
         return false;
 }
 

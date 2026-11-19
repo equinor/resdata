@@ -9,7 +9,6 @@
 #include <resdata/well/well_const.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
     const double depth = 100;
     const double length = 20;
     const double total_length = 200;

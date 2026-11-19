@@ -1100,7 +1100,7 @@ These two functions will return the index of the first "time" where
 the summary vector corresponding to key goes above (first_gt()) or
 falls below a limit (first_lt).  If the limit is not reached the
 function will return -1; if the -1 is used as index in a subsequent
-call to an Summary method, it will fail hard.
+call to an Summary method, it will raise TypeError.
 
 .. code:: python
 

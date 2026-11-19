@@ -3,8 +3,7 @@
     "requires": [
         "pybind11/3.0.1#81ed7e3cc5c945080013ca4c5c3abbbb%1756292333.72",
         "fmt/8.0.1#bad247d83ce5414b845a8b2f33f1042d%1785754545.139",
-        "catch2/3.14.0#d82340ec56a54afe1932f1aa9c9d490c%1775578807.348",
-        "backward-cpp/1.6#2bf34ae4e4b236f8a0ac358b948c189e%1741792762.016"
+        "catch2/3.14.0#d82340ec56a54afe1932f1aa9c9d490c%1775578807.348"
     ],
     "build_requires": [
         "cmake/4.4.4#fec9c7048fae91e03c31e59977cd9c12%1791276141.315"

@@ -8,7 +8,6 @@
 #include <resdata/well/well_segment.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
 
     well_segment_collection_type *sc = well_segment_collection_alloc();
     test_assert_not_NULL(sc);

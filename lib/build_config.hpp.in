@@ -12,7 +12,6 @@
 #cmakedefine HAVE_TZNAME 1
 #cmakedefine HAVE_ROUND 1
 #cmakedefine HAVE_VA_COPY 1
-#cmakedefine HAVE_SIGBUS 1
 #cmakedefine HAVE_PTHREAD 1
 #cmakedefine HAVE_PID_T 1
 #cmakedefine HAVE_EXECINFO 1
@@ -27,7 +26,6 @@
 #cmakedefine HAVE_CXX_SHARED_PTR 1
 #cmakedefine HAVE_POSIX_UNLINK 1
 #cmakedefine HAVE_WINDOWS_UNLINK 1
-#cmakedefine HAVE_SIGHANDLER_T 1
 
 #cmakedefine HAVE_POSIX_ACCESS 1
 #cmakedefine HAVE_WINDOWS__ACCESS 1

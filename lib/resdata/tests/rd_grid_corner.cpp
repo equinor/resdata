@@ -1,18 +1,15 @@
 #include <cstdlib>
+#include <stdexcept>
 
 #include <ert/util/test_util.hpp>
 
 #include <resdata/rd_grid.hpp>
 
-void invalid_call1(void *arg) {
-    rd_grid_type *grid = rd_grid_safe_cast(arg);
+void test_invalid(rd_grid_type *grid) {
     double x, y, z;
 
-    rd_grid_get_corner_xyz(grid, 10, 10, 11, &x, &y, &z);
-}
-
-void test_invalid(rd_grid_type *grid) {
-    test_assert_util_abort("rd_grid_get_corner_xyz", invalid_call1, grid);
+    test_assert_throw(rd_grid_get_corner_xyz(grid, 10, 10, 11, &x, &y, &z),
+                      std::out_of_range);
 }
 
 void test_OK(const rd_grid_type *grid) {

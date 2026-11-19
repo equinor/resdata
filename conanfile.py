@@ -8,7 +8,6 @@ class ResdataConan(ConanFile):
     default_options = {"build_tests": False}
 
     def requirements(self):
-        self.requires("backward-cpp/1.6")
         self.requires("fmt/8.0.1")
         self.requires("pybind11/3.0.1")
 
@@ -18,7 +17,6 @@ class ResdataConan(ConanFile):
     def configure(self):
         if self.options.build_tests:
             self.options["catch2"].with_main = True
-        self.options["backward-cpp"].stack_details = "backtrace_symbol"
 
     def generate(self):
         tc = CMakeToolchain(self)

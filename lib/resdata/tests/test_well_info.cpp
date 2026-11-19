@@ -8,7 +8,6 @@
 #include <resdata/well/well_info.hpp>
 
 int main(int argc, char **argv) {
-    util_install_signals();
     rd_grid_ptr grid = read_grid(argv[1]);
     test_assert_not_NULL(grid.get());
 

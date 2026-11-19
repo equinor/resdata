@@ -71,9 +71,6 @@ jobs:
     - name: Run tests
       run: |
         ctest --preset conan-release --output-on-failure
-      env:
-        RD_SKIP_SIGNAL: 1
-        ERT_SHOW_BACKTRACE: 1
 
   build-test-wheel:
     name: Python ${{ matrix.os }}

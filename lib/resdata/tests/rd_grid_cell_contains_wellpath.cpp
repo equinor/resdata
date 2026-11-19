@@ -77,7 +77,6 @@ void test_well_point(rd_grid_type *grid, const point_type *expected) {
 }
 
 int main(int argc, char **argv) {
-    util_install_signals();
     {
         rd_grid_ptr grid = read_grid(argv[1]);
         auto expected = load_expected(grid.get(), argv[2]);

@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -30,9 +31,9 @@ struct basic_parser_struct {
 
 static void __verify_string_length(const char *s) {
     if ((s != NULL) && (strlen(s) == 0))
-        util_abort("%s: invalid input to parser_set_xxx function - zero length "
-                   "string.\n",
-                   __func__);
+        throw std::invalid_argument(
+            std::string(__func__) +
+            ": invalid input to parser_set_xxx function - zero length string.");
 }
 
 static void basic_parser_set_splitters(basic_parser_type *parser,
@@ -83,8 +84,9 @@ basic_parser_type *basic_parser_alloc(
         *comment_start,      /** Set to NULL if not interessting.            */
     const char *comment_end) /** Set to NULL  if not interessting.           */
 {
-    basic_parser_type *parser =
-        (basic_parser_type *)util_malloc(sizeof *parser);
+    parser_ptr parser_owner{
+        (basic_parser_type *)util_malloc(sizeof(basic_parser_type))};
+    basic_parser_type *parser = parser_owner.get();
     parser->splitters = NULL;
     parser->delete_set = NULL;
     parser->quoters = NULL;
@@ -100,13 +102,15 @@ basic_parser_type *basic_parser_alloc(
     basic_parser_set_comment_end(parser, comment_end);
 
     if (comment_start == NULL && comment_end != NULL)
-        util_abort("%s: Need to have comment_start when comment_end is set.\n",
-                   __func__);
+        throw std::invalid_argument(
+            std::string(__func__) +
+            ": Need to have comment_start when comment_end is set.");
     if (comment_start != NULL && comment_end == NULL)
-        util_abort("%s: Need to have comment_end when comment_start is set.\n",
-                   __func__);
+        throw std::invalid_argument(
+            std::string(__func__) +
+            ": Need to have comment_end when comment_start is set.");
 
-    return parser;
+    return parser_owner.release();
 }
 
 void basic_parser_free(basic_parser_type *parser) {
@@ -181,8 +185,8 @@ static bool is_in_delete_set(const char c, const basic_parser_type *parser) {
 
   should return 4.
 
-  If the character can not be found, the function will fail with
-  util_abort() - all quotation should be terminated (Joakim - WITH
+  If the character can not be found, the function throws
+  std::invalid_argument - all quotation should be terminated (Joakim - WITH
   moustache ...). Observe that this function does not allow for mixed
   quotations, i.e. both ' and " might be vald as quaotation
   characters; but one quoted string must be wholly quoted with EITHER
@@ -210,9 +214,10 @@ static int length_of_quotation(const char *buffer) {
         length += 1;
 
         if (current ==
-            '\0') /* We ran through the whole string without finding the end of the quotation - abort HARD. */
-            util_abort("%s: could not find quotation closing on %s \n",
-                       __func__, buffer);
+            '\0') /* We ran through the whole string without finding the end of the quotation. */
+            throw std::invalid_argument(
+                std::string(__func__) +
+                ": could not find quotation closing on " + buffer);
 
         return length;
     }
@@ -250,16 +255,16 @@ static int length_of_comment(const char *buffer_position,
     return length;
 }
 
-static char *alloc_quoted_token(const char *buffer, int length,
-                                bool strip_quote_marks) {
-    char *token;
+static std::unique_ptr<char[], void (*)(void *)>
+alloc_quoted_token(const char *buffer, int length, bool strip_quote_marks) {
     if (!strip_quote_marks) {
-        token = (char *)util_calloc((length + 1), sizeof *token);
-        memmove(token, &buffer[0], length * sizeof *token);
+        auto token = rd::checked_calloc<char>(length + 1);
+        memmove(token.get(), &buffer[0], length * sizeof(char));
         token[length] = '\0';
+        return token;
     } else {
-        token = (char *)util_calloc((length - 1), sizeof *token);
-        memmove(token, &buffer[1], (length - 1) * sizeof *token);
+        auto token = rd::checked_calloc<char>(length - 1);
+        memmove(token.get(), &buffer[1], (length - 1) * sizeof(char));
         token[length - 2] = '\0';
         /* Removed escape char before any escaped quotation starts. */
         {
@@ -270,10 +275,13 @@ static char *alloc_quoted_token(const char *buffer, int length,
             expr[2] = '\0';
             subs[0] = buffer[0];
             subs[1] = '\0';
-            util_string_replace_inplace(&token, expr, subs);
+            /* The substitution is shorter than the expression, so the
+               buffer is never reallocated. */
+            char *token_buffer = token.get();
+            util_string_replace_inplace(&token_buffer, expr, subs);
         }
+        return token;
     }
-    return token;
 }
 
 /**
@@ -385,10 +393,8 @@ basic_parser_tokenize_buffer(const basic_parser_type *parser,
         if (is_in_quoters(static_cast<unsigned char>(buffer[position]),
                           parser)) {
             int length = length_of_quotation(&buffer[position]);
-            std::unique_ptr<char[], decltype(&std::free)> token{
-                alloc_quoted_token(&buffer[position], length,
-                                   strip_quote_marks),
-                std::free};
+            auto token = alloc_quoted_token(&buffer[position], length,
+                                            strip_quote_marks);
             tokens.emplace_back(token.get());
             position += length;
             continue;
@@ -478,9 +484,9 @@ bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
     bool cont = true;
 
     if (string.find(parser->comment_start) != std::string_view::npos)
-        util_abort("%s: sorry the string contains a comment start - will "
-                   "never find it ... \n",
-                   __func__); /* A bit harsh ?? */
+        throw std::invalid_argument(
+            std::string(__func__) +
+            ": the string contains a comment start - will never find it");
 
     /* An empty string matches at the first position
        after any leading quotation or comment has been skipped. */

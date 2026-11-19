@@ -551,8 +551,9 @@ void rd::KW::fread_indexed_data(ERT::FortIO &fortio, offset_type kw_offset,
    This function will skip the header part of an rd_kw instance. The
    function will read the file content at the current position, it is
    therefore essential that the file pointer is positioned at the
-   beginning of a keyword when this function is called; otherwise it
-   will be complete crash and burn.
+   beginning of a keyword when this function is called; otherwise a
+   formatted file throws std::runtime_error, and for an unformatted
+   file an arbitrary number of bytes is skipped.
 */
 
 void rd::KW::fskip_header(ERT::FortIO &fortio) { KWHeader::fskip(fortio); }

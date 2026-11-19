@@ -3,9 +3,8 @@
 
 #include <ert/util/util.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdexcept>
+#include <string>
 
 /**
 
@@ -34,7 +33,7 @@ extern "C" {
 
     UTIL_SAFE_CAST_FUNCTION: This is similar to
       UTIL_IS_INSTANCE_FUNCTION, but it will return (type *) if the
-      cast succeeds, and fail hard if it fails. There is also a _CONST
+      cast succeeds, and throw std::invalid_argument if it fails. There is also a _CONST
       variety of this function.
 
 */
@@ -56,44 +55,38 @@ extern "C" {
 
 #define UTIL_SAFE_CAST_FUNCTION(type, TYPE_ID)                                 \
     type##_type *type##_safe_cast(void *__arg) {                               \
-        if (__arg == NULL) {                                                   \
-            util_abort(                                                        \
-                "%s: runtime cast failed - tried to dereference NULL\n",       \
-                __func__);                                                     \
-            return NULL;                                                       \
-        }                                                                      \
+        if (__arg == NULL)                                                     \
+            throw std::invalid_argument(                                       \
+                std::string(__func__) +                                        \
+                ": runtime cast failed - tried to dereference NULL");          \
         {                                                                      \
             type##_type *arg = (type##_type *)__arg;                           \
             if (arg->__type_id == TYPE_ID)                                     \
                 return arg;                                                    \
-            else {                                                             \
-                util_abort(                                                    \
-                    "%s: runtime cast failed: Got ID:%d  Expected ID:%d \n",   \
-                    __func__, arg->__type_id, TYPE_ID);                        \
-                return NULL;                                                   \
-            }                                                                  \
+            else                                                               \
+                throw std::invalid_argument(                                   \
+                    std::string(__func__) + ": runtime cast failed: Got ID:" + \
+                    std::to_string(arg->__type_id) +                           \
+                    "  Expected ID:" + std::to_string(TYPE_ID));               \
         }                                                                      \
     }
 #define UTIL_SAFE_CAST_HEADER(type) type##_type *type##_safe_cast(void *__arg)
 
 #define UTIL_SAFE_CAST_FUNCTION_CONST(type, TYPE_ID)                           \
     const type##_type *type##_safe_cast_const(const void *__arg) {             \
-        if (__arg == NULL) {                                                   \
-            util_abort(                                                        \
-                "%s: runtime cast failed - tried to dereference NULL\n",       \
-                __func__);                                                     \
-            return NULL;                                                       \
-        }                                                                      \
+        if (__arg == NULL)                                                     \
+            throw std::invalid_argument(                                       \
+                std::string(__func__) +                                        \
+                ": runtime cast failed - tried to dereference NULL");          \
         {                                                                      \
             const type##_type *arg = (const type##_type *)__arg;               \
             if (arg->__type_id == TYPE_ID)                                     \
                 return arg;                                                    \
-            else {                                                             \
-                util_abort(                                                    \
-                    "%s: runtime cast failed: Got ID:%d  Expected ID:%d \n",   \
-                    __func__, arg->__type_id, TYPE_ID);                        \
-                return NULL;                                                   \
-            }                                                                  \
+            else                                                               \
+                throw std::invalid_argument(                                   \
+                    std::string(__func__) + ": runtime cast failed: Got ID:" + \
+                    std::to_string(arg->__type_id) +                           \
+                    "  Expected ID:" + std::to_string(TYPE_ID));               \
         }                                                                      \
     }
 #define UTIL_SAFE_CAST_HEADER_CONST(type)                                      \
@@ -131,7 +124,4 @@ extern "C" {
 #define UTIL_TYPE_ID_DECLARATION int __type_id
 #define UTIL_TYPE_ID_INIT(var, TYPE_ID) var->__type_id = TYPE_ID;
 
-#ifdef __cplusplus
-}
-#endif
 #endif

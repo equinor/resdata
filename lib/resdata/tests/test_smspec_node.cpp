@@ -234,7 +234,6 @@ void test_history_vectors() {
 }
 
 int main(int argc, char **argv) {
-    util_install_signals();
     test_cmp_types();
     test_cmp_well();
     test_cmp_region();

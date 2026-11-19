@@ -9,7 +9,11 @@
 */
 
 #include <algorithm>
+#include <ios>
+#include <new>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <cassert>
 #include <cstring>
@@ -31,7 +35,6 @@
 #include <cstdint>
 #include <cctype>
 #include <cstdlib>
-#include <csignal>
 #include <string_view>
 #include <sys/stat.h>
 
@@ -76,6 +79,8 @@
 #include <cstdint>
 
 #include <ert/util/util.hpp>
+
+#include <memory>
 
 /* The endian_convert() overloads produce the byte reversed value of a fixed
    width unsigned integer, and flip_elements() applies one of them to every
@@ -252,6 +257,39 @@ bool util_double_approx_equal(double d1, double d2) {
     return util_double_approx_equal__(d1, d2, epsilon, 0.0);
 }
 
+namespace {
+
+/* Owner of a malloc() allocated list of malloc() allocated strings, as
+   created by util_path_split(). */
+struct StringList {
+    char **list = nullptr;
+    int size = 0;
+
+    StringList() = default;
+    StringList(const StringList &) = delete;
+    StringList &operator=(const StringList &) = delete;
+
+    ~StringList() { util_free_stringlist(list, size); }
+
+    char **release() noexcept {
+        char **released = list;
+        list = nullptr;
+        size = 0;
+        return released;
+    }
+};
+
+} // namespace
+
+/* Reallocates the memory owned by @ptr; if the reallocation throws @ptr
+   still owns the original memory. */
+static void realloc_owned(std::unique_ptr<char, decltype(&std::free)> &ptr,
+                          size_t new_size) {
+    char *new_ptr = (char *)util_realloc(ptr.get(), new_size);
+    ptr.release();
+    ptr.reset(new_ptr);
+}
+
 char *util_alloc_string_copy(const char *src) {
     if (src != NULL) {
         int byte_size = (strlen(src) + 1) * sizeof *src;
@@ -374,9 +412,8 @@ bool util_fseek_string(FILE *stream, std::string_view string, bool skip_string,
     return string_found;
 }
 
-static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
+char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
     int init_pos = util_ftell(stream);
-    char *new_line;
     int len;
     int end_char;
     bool cont;
@@ -405,12 +442,13 @@ static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
     }
 
     if (util_fseek(stream, init_pos, SEEK_SET) != 0)
-        util_abort("%s: fseek failed: %d/%s \n", __func__, errno,
-                   strerror(errno));
+        throw std::ios_base::failure(fmt::format(
+            "{}: fseek failed: {}/{}", __func__, errno, strerror(errno)));
 
-    new_line = (char *)util_realloc(line, len + 1);
-    util_fread(new_line, sizeof *new_line, len, stream, __func__);
-    new_line[len] = '\0';
+    std::unique_ptr<char, decltype(&std::free)> new_line{
+        (char *)util_malloc(len + 1), &std::free};
+    util_fread(new_line.get(), sizeof(char), len, stream, __func__);
+    new_line.get()[len] = '\0';
 
     /*
     Skipping the end of line marker(s).
@@ -427,17 +465,7 @@ static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
             *at_eof = false;
     }
 
-    if (new_line != NULL) {
-        char *strip_line = util_alloc_strip_copy(new_line);
-        free(new_line);
-
-        return strip_line;
-    } else
-        return NULL;
-}
-
-char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
-    return util_fscanf_alloc_line__(stream, at_eof, NULL);
+    return util_alloc_strip_copy(new_line.get());
 }
 
 static char *util_getcwd(char *buffer, int size) {
@@ -469,12 +497,12 @@ static char *util_alloc_cwd_abs_path(const char *path) {
     if (util_is_abs_path(path))
         return util_alloc_string_copy(path);
     else {
-        char *cwd = util_alloc_cwd();
-        char *abs_path =
-            (char *)util_realloc(cwd, strlen(cwd) + 1 + strlen(path) + 1);
-        strcat(abs_path, UTIL_PATH_SEP_STRING);
-        strcat(abs_path, path);
-        return abs_path;
+        std::unique_ptr<char, decltype(&std::free)> abs_path{util_alloc_cwd(),
+                                                             &std::free};
+        realloc_owned(abs_path, strlen(abs_path.get()) + 1 + strlen(path) + 1);
+        strcat(abs_path.get(), UTIL_PATH_SEP_STRING);
+        strcat(abs_path.get(), path);
+        return abs_path.release();
     }
 }
 
@@ -488,19 +516,20 @@ static char *util_alloc_cwd_abs_path(const char *path) {
 #define CURRENT "."
 
 char *util_alloc_realpath__(const char *input_path) {
-    char *abs_path = util_alloc_cwd_abs_path(input_path);
-    char *real_path = (char *)util_malloc(strlen(abs_path) + 2);
+    std::unique_ptr<char, decltype(&std::free)> abs_path{
+        util_alloc_cwd_abs_path(input_path), &std::free};
+    std::unique_ptr<char, decltype(&std::free)> real_path_owner{
+        (char *)util_malloc(strlen(abs_path.get()) + 2), &std::free};
+    char *real_path = real_path_owner.get();
     real_path[0] = '\0';
 
     {
-        char **path_list;
-        const char **path_stack;
-        int path_len;
-
-        util_path_split(abs_path, &path_len, &path_list);
-        path_stack = (const char **)util_malloc(path_len * sizeof *path_stack);
-        for (int i = 0; i < path_len; i++)
-            path_stack[i] = NULL;
+        StringList path_parts;
+        util_path_split(abs_path.get(), &path_parts.size, &path_parts.list);
+        char **path_list = path_parts.list;
+        const int path_len = path_parts.size;
+        std::vector<const char *> path_stack_owner(path_len + 1, nullptr);
+        const char **path_stack = path_stack_owner.data();
 
         {
             int stack_size = 0;
@@ -553,47 +582,43 @@ char *util_alloc_realpath__(const char *input_path) {
                 }
             }
         }
-        free(path_stack);
-        util_free_stringlist(path_list, path_len);
     }
 
-    free(abs_path);
-    return real_path;
+    return real_path_owner.release();
 }
 
 #undef BACKREF
 #undef CURRENT
 
 /**
-   The util_alloc_realpath() will fail hard if the @input_path does
-   not exist. If the path might-not-exist you should use
+   The util_alloc_realpath() throws std::ios_base::failure if the
+   @input_path does not exist. If the path might-not-exist you should use
    util_alloc_abs_path() instead.
 */
 
 char *util_alloc_realpath(const char *input_path) {
 #ifdef HAVE_REALPATH
-    char *buffer = (char *)util_calloc(PATH_MAX + 1, sizeof *buffer);
-    char *new_path = NULL;
+    std::unique_ptr<char, decltype(&std::free)> buffer{
+        (char *)util_calloc(PATH_MAX + 1, sizeof(char)), &std::free};
 
-    new_path = realpath(input_path, buffer);
-    if (new_path == NULL)
-        util_abort("%s: input_path:%s - failed: %s(%d) \n", __func__,
-                   input_path, strerror(errno), errno);
-    else
-        new_path = (char *)util_realloc(new_path, strlen(new_path) + 1);
+    if (realpath(input_path, buffer.get()) == NULL)
+        throw std::ios_base::failure(
+            fmt::format("{}: input_path:{} - failed: {}({})", __func__,
+                        input_path, strerror(errno), errno));
 
-    return new_path;
+    realloc_owned(buffer, strlen(buffer.get()) + 1);
+    return buffer.release();
 #else
     /* We do not have the realpath() implementation. Must first check if
-     the entry exists; and if not we abort. If the entry indeed exists
+     the entry exists; and if not we throw. If the entry indeed exists
      we call the util_alloc_cwd_abs_path() function: */
 #ifdef ERT_HAVE_SYMLINK
     ERROR - Have symlinks and not realpath()
         ?
 #endif
-        if (!util_entry_exists(input_path))
-            util_abort("%s: input_path:%s does not exist - failed.\n", __func__,
-                       input_path);
+        if (!util_entry_exists(input_path)) throw std::ios_base::failure(
+            fmt::format("{}: input_path:{} does not exist", __func__,
+                        input_path));
 
     return util_alloc_realpath__(input_path);
 #endif
@@ -632,72 +657,58 @@ char *util_alloc_abs_path(const char *path) {
 */
 
 char *util_alloc_rel_path(const char *__root_path, const char *path) {
-    char *root_path;
-    if (__root_path == NULL)
-        root_path = util_alloc_cwd();
-    else
-        root_path = util_alloc_string_copy(__root_path);
+    std::unique_ptr<char, decltype(&std::free)> root_path{
+        __root_path == NULL ? util_alloc_cwd()
+                            : util_alloc_string_copy(__root_path),
+        &std::free};
 
-    if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
+    if (util_is_abs_path(root_path.get()) && util_is_abs_path(path)) {
         const char *back_path = "..";
-        char *rel_path = util_alloc_string_copy(
-            ""); // In case strcmp(root_path , path) == 0 the empty string "" will be returned
-        char **root_path_list;
-        char **path_list;
-        int root_path_length, path_length, back_length;
+        // In case strcmp(root_path , path) == 0 the empty string "" will be returned
+        std::string rel_path;
+        StringList root_path_list;
+        StringList path_list;
 
         /* 1. Split both input paths into list of path elements. */
-        util_path_split(root_path, &root_path_length, &root_path_list);
-        util_path_split(path, &path_length, &path_list);
+        util_path_split(root_path.get(), &root_path_list.size,
+                        &root_path_list.list);
+        util_path_split(path, &path_list.size, &path_list.list);
 
         {
             /* 2: Determine the number of common leading path elements. */
             int common_length = 0;
             while (true) {
-                if (strcmp(root_path_list[common_length],
-                           path_list[common_length]) == 0)
+                if (strcmp(root_path_list.list[common_length],
+                           path_list.list[common_length]) == 0)
                     common_length++;
                 else
                     break;
 
-                if (common_length == std::min(root_path_length, path_length))
+                if (common_length ==
+                    std::min(root_path_list.size, path_list.size))
                     break;
             }
 
             /* 3: Start building up the relative path with leading ../ elements. */
-            back_length = root_path_length - common_length;
-            if (back_length > 0) {
-                int i;
-                for (i = 0; i < back_length; i++) {
-                    rel_path = util_strcat_realloc(rel_path, back_path);
-                    rel_path =
-                        util_strcat_realloc(rel_path, UTIL_PATH_SEP_STRING);
-                }
+            for (int i = common_length; i < root_path_list.size; i++) {
+                rel_path += back_path;
+                rel_path += UTIL_PATH_SEP_STRING;
             }
 
             /* 4: Add the remaining elements from the input path. */
-            {
-                int i;
-                for (i = common_length; i < path_length; i++) {
-                    rel_path = util_strcat_realloc(rel_path, path_list[i]);
-                    if (i != (path_length - 1))
-                        rel_path =
-                            util_strcat_realloc(rel_path, UTIL_PATH_SEP_STRING);
-                }
+            for (int i = common_length; i < path_list.size; i++) {
+                rel_path += path_list.list[i];
+                if (i != (path_list.size - 1))
+                    rel_path += UTIL_PATH_SEP_STRING;
             }
         }
 
-        util_free_stringlist(root_path_list, root_path_length);
-        util_free_stringlist(path_list, path_length);
-        free(root_path);
-
-        return rel_path;
+        return util_alloc_string_copy(rel_path.c_str());
     } else {
         /*
        One or both the input arguments do not correspond to an
        absolute path; just return a copy of the input back.
     */
-        free(root_path);
         return util_alloc_string_copy(path);
     }
 }
@@ -752,22 +763,23 @@ bool util_string_equal(const char *s1, const char *s2) {
 
 char *util_fread_alloc_file_content(const char *filename, int *buffer_size) {
     size_t file_size = util_file_size(filename);
-    char *buffer = (char *)util_calloc(file_size + 1, sizeof *buffer);
+    std::unique_ptr<char, decltype(&std::free)> buffer{
+        (char *)util_calloc(file_size + 1, sizeof(char)), &std::free};
     {
-        FILE *stream = util_fopen(filename, "r");
-        util_fread(buffer, 1, file_size, stream, __func__);
-        fclose(stream);
+        std::unique_ptr<FILE, void (*)(FILE *)> stream{
+            util_fopen(filename, "r"), [](FILE *f) { fclose(f); }};
+        util_fread(buffer.get(), 1, file_size, stream.get(), __func__);
     }
     if (buffer_size != NULL)
         *buffer_size = file_size;
 
-    buffer[file_size] = '\0';
-    return buffer;
+    buffer.get()[file_size] = '\0';
+    return buffer.release();
 }
 
 /**
-   If abort_on_error = true the function will abort if the read/write
-   fails (although the write will try the disk_full workaround). If
+   If abort_on_error = true the function throws std::ios_base::failure
+   if the read/write fails. If
    abort_on_error == false the function will just return false if the
    write fails, in this case the calling scope must do the right
    thing.
@@ -783,9 +795,8 @@ static bool util_copy_stream(FILE *src_stream, FILE *target_stream,
 
         if (bytes_read < buffer_size && !feof(src_stream)) {
             if (abort_on_error)
-                util_abort(
-                    "%s: error when reading from src_stream - aborting \n",
-                    __func__);
+                throw std::ios_base::failure(fmt::format(
+                    "{}: error when reading from src_stream", __func__));
             else
                 return false;
         }
@@ -811,13 +822,16 @@ bool util_copy_file__(const char *src_file, const char *target_file,
         return false;
     } else {
         {
-            FILE *src_stream = util_fopen(src_file, "r");
-            FILE *target_stream = util_fopen(target_file, "w");
-            bool result = util_copy_stream(src_stream, target_stream,
-                                           buffer_size, buffer, abort_on_error);
+            std::unique_ptr<FILE, void (*)(FILE *)> src_stream{
+                util_fopen(src_file, "r"), [](FILE *f) { fclose(f); }};
+            std::unique_ptr<FILE, void (*)(FILE *)> target_stream{
+                util_fopen(target_file, "w"), [](FILE *f) { fclose(f); }};
+            bool result =
+                util_copy_stream(src_stream.get(), target_stream.get(),
+                                 buffer_size, buffer, abort_on_error);
 
-            fclose(src_stream);
-            fclose(target_stream);
+            src_stream.reset();
+            target_stream.reset();
 
 #ifdef HAVE_CHMOD
 #ifdef HAVE_MODE_T
@@ -839,26 +853,22 @@ bool util_copy_file__(const char *src_file, const char *target_file,
 
 bool util_copy_file(const char *src_file, const char *target_file) {
     const bool abort_on_error = true;
-    void *buffer = NULL;
+    std::unique_ptr<void, decltype(&std::free)> buffer{nullptr, &std::free};
     size_t buffer_size = std::max<size_t>(
         32,
         util_file_size(
             src_file)); /* The copy stream function will hang if buffer size == 0 */
     do {
-        buffer = malloc(buffer_size);
-        if (buffer == NULL)
+        buffer.reset(malloc(buffer_size));
+        if (!buffer)
             buffer_size /= 2;
-    } while ((buffer == NULL) && (buffer_size > 0));
+    } while (!buffer && (buffer_size > 0));
 
     if (buffer_size == 0)
-        util_abort("%s: failed to allocate any memory ?? \n", __func__);
+        throw std::bad_alloc{};
 
-    {
-        bool result = util_copy_file__(src_file, target_file, buffer_size,
-                                       buffer, abort_on_error);
-        free(buffer);
-        return result;
-    }
+    return util_copy_file__(src_file, target_file, buffer_size, buffer.get(),
+                            abort_on_error);
 }
 
 /**
@@ -868,11 +878,17 @@ bool util_copy_file(const char *src_file, const char *target_file) {
 bool util_files_equal(const char *file1, const char *file2) {
     bool equal = true;
     const int buffer_size = 4096;
-    char *buffer1 = (char *)util_calloc(buffer_size, sizeof *buffer1);
-    char *buffer2 = (char *)util_calloc(buffer_size, sizeof *buffer2);
+    std::vector<char> buffer1_owner(buffer_size);
+    std::vector<char> buffer2_owner(buffer_size);
+    char *buffer1 = buffer1_owner.data();
+    char *buffer2 = buffer2_owner.data();
 
-    FILE *stream1 = util_fopen(file1, "r");
-    FILE *stream2 = util_fopen(file2, "r");
+    std::unique_ptr<FILE, void (*)(FILE *)> stream1_owner{
+        util_fopen(file1, "r"), [](FILE *f) { fclose(f); }};
+    std::unique_ptr<FILE, void (*)(FILE *)> stream2_owner{
+        util_fopen(file2, "r"), [](FILE *f) { fclose(f); }};
+    FILE *stream1 = stream1_owner.get();
+    FILE *stream2 = stream2_owner.get();
 
     do {
         int count1 = fread(buffer1, 1, buffer_size, stream1);
@@ -892,11 +908,6 @@ bool util_files_equal(const char *file1, const char *file2) {
                 equal = false;
         }
     } while (equal);
-    fclose(stream1);
-    fclose(stream2);
-
-    free(buffer1);
-    free(buffer2);
     return equal;
 }
 
@@ -947,7 +958,8 @@ bool util_entry_exists(const char *entry) { return util_access(entry, F_OK); }
    2. If stat() has succeeded check the type of the entry, and return
       true|false if it is of the wanted type.
 
-   3. If stat() fails with error != ENOENT => util_abort().
+   3. If stat() fails with error != ENOENT => throws
+      std::ios_base::failure.
 
 */
 
@@ -959,10 +971,9 @@ bool util_is_directory(const char *path) {
     else if (errno == ENOENT)
         /*Path does not exist at all. */
         return false;
-    else {
-        util_abort("%s: stat(%s) failed: %s \n", __func__, path,
-                   strerror(errno));
-    }
+    else
+        throw std::ios_base::failure(fmt::format(
+            "{}: stat({}) failed: {}", __func__, path, strerror(errno)));
 }
 
 bool util_is_file(const char *path) {
@@ -973,10 +984,9 @@ bool util_is_file(const char *path) {
     else if (errno == ENOENT)
         /*Path does not exist at all. */
         return false;
-    else {
-        util_abort("%s: stat(%s) failed: %s \n", __func__, path,
-                   strerror(errno));
-    }
+    else
+        throw std::ios_base::failure(fmt::format(
+            "{}: stat({}) failed: {}", __func__, path, strerror(errno)));
 }
 
 static size_t util_get_path_length(const char *file) {
@@ -1079,9 +1089,9 @@ static int util_get_base_length(const char *file) {
 
 void util_alloc_file_components(const char *file, char **_path,
                                 char **_basename, char **_extension) {
-    char *path = NULL;
-    char *basename = NULL;
-    char *extension = NULL;
+    std::unique_ptr<char, decltype(&std::free)> path{nullptr, &std::free};
+    std::unique_ptr<char, decltype(&std::free)> basename{nullptr, &std::free};
+    std::unique_ptr<char, decltype(&std::free)> extension{nullptr, &std::free};
 
     int path_length = util_get_path_length(file);
     int base_length = util_get_base_length(file);
@@ -1089,33 +1099,27 @@ void util_alloc_file_components(const char *file, char **_path,
     int slash_length = 1;
 
     if (path_length > 0)
-        path = util_alloc_substring_copy(file, 0, path_length);
+        path.reset(util_alloc_substring_copy(file, 0, path_length));
     else
         slash_length = 0;
 
     if (base_length > 0)
-        basename = util_alloc_substring_copy(file, path_length + slash_length,
-                                             base_length);
+        basename.reset(util_alloc_substring_copy(
+            file, path_length + slash_length, base_length));
 
     ext_length = strlen(file) - (path_length + base_length + 1);
     if (ext_length > 0)
-        extension = util_alloc_substring_copy(
-            file, (path_length + slash_length + base_length + 1), ext_length);
+        extension.reset(util_alloc_substring_copy(
+            file, (path_length + slash_length + base_length + 1), ext_length));
 
     if (_extension != NULL)
-        *_extension = extension;
-    else if (extension != NULL)
-        free(extension);
+        *_extension = extension.release();
 
     if (_basename != NULL)
-        *_basename = basename;
-    else if (basename != NULL)
-        free(basename);
+        *_basename = basename.release();
 
     if (_path != NULL)
-        *_path = path;
-    else if (path != NULL)
-        free(path);
+        *_path = path.release();
 }
 
 size_t util_file_size(const char *file) {
@@ -1124,8 +1128,8 @@ size_t util_file_size(const char *file) {
     {
         int fildes = open(file, O_RDONLY);
         if (fildes == -1)
-            util_abort("%s: failed to open:%s - %s \n", __func__, file,
-                       strerror(errno));
+            throw std::ios_base::failure(fmt::format(
+                "{}: failed to open:{} - {}", __func__, file, strerror(errno)));
 
         file_size = util_fd_size(fildes);
         close(fildes);
@@ -1210,18 +1214,17 @@ static bool util_fmt_bit8_stream(FILE *stream) {
         double bit8set_fraction;
         int N_bit8set = 0;
         int elm_read, i;
-        char *buffer = (char *)util_calloc(buffer_size, sizeof *buffer);
+        std::vector<char> buffer(buffer_size);
 
-        elm_read = fread(buffer, 1, buffer_size, stream);
+        elm_read = fread(buffer.data(), 1, buffer_size, stream);
         if (elm_read < min_read)
-            util_abort("%s: file is too small to automatically determine "
-                       "formatted/unformatted status \n",
-                       __func__);
+            throw std::invalid_argument(
+                fmt::format("{}: file is too small to automatically determine "
+                            "formatted/unformatted status",
+                            __func__));
 
         for (i = 0; i < elm_read; i++)
             N_bit8set += (buffer[i] & (1 << 7)) >> 7;
-
-        free(buffer);
 
         bit8set_fraction = 1.0 * N_bit8set / elm_read;
         if (bit8set_fraction < bit8set_limit)
@@ -1234,18 +1237,13 @@ static bool util_fmt_bit8_stream(FILE *stream) {
 }
 
 bool util_fmt_bit8(const char *filename) {
-    FILE *stream;
-    bool fmt_file = true;
+    if (!util_file_exists(filename))
+        throw std::ios_base::failure(
+            fmt::format("{}: could not find file: {}", __func__, filename));
 
-    if (util_file_exists(filename)) {
-        stream = fopen(filename, "r");
-        fmt_file = util_fmt_bit8_stream(stream);
-        fclose(stream);
-    } else
-        util_abort("%s: could not find file: %s - aborting \n", __func__,
-                   filename);
-
-    return fmt_file;
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(filename, "r"),
+                                                   [](FILE *f) { fclose(f); }};
+    return util_fmt_bit8_stream(stream.get());
 }
 
 /*
@@ -1482,7 +1480,7 @@ static void util_split_string(const char *line, const char *sep_set,
                               int *_tokens, char ***_token_list) {
     int offset;
     int tokens, token, token_length;
-    char **token_list;
+    StringList token_list;
 
     offset = strspn(line, sep_set);
     tokens = 0;
@@ -1501,26 +1499,26 @@ static void util_split_string(const char *line, const char *sep_set,
     } while (line[offset] != '\0');
 
     if (tokens > 0) {
-        token_list = (char **)util_calloc(tokens, sizeof *token_list);
+        token_list.list = (char **)util_calloc(tokens, sizeof(char *));
+        std::fill_n(token_list.list, tokens, nullptr);
+        token_list.size = tokens;
         offset = strspn(line, sep_set);
         token = 0;
         do {
             token_length = strcspn(&line[offset], sep_set);
             if (token_length > 0) {
-                token_list[token] =
+                token_list.list[token] =
                     util_alloc_substring_copy(line, offset, token_length);
                 token++;
-            } else
-                token_list[token] = NULL;
+            }
 
             offset += token_length;
             offset += strspn(&line[offset], sep_set);
         } while (line[offset] != '\0');
-    } else
-        token_list = NULL;
+    }
 
     *_tokens = tokens;
-    *_token_list = token_list;
+    *_token_list = token_list.release();
 }
 
 void util_free_stringlist(char **list, int N) {
@@ -1587,9 +1585,10 @@ char *util_strcat_realloc(char *s1, const char *s2) {
 void util_binary_split_string(const char *__src, const char *sep_set,
                               bool split_on_first, char **__first_part,
                               char **__second_part) {
-    char *first_part = NULL;
-    char *second_part = NULL;
-    char *src;
+    std::unique_ptr<char, decltype(&std::free)> first_part{nullptr, &std::free};
+    std::unique_ptr<char, decltype(&std::free)> second_part{nullptr,
+                                                            &std::free};
+    std::unique_ptr<char, decltype(&std::free)> src_owner{nullptr, &std::free};
 
     if (__src != NULL) {
         size_t offset = 0;
@@ -1606,9 +1605,9 @@ void util_binary_split_string(const char *__src, const char *sep_set,
                 tail_pos--;
             len = 1 + tail_pos - offset;
 
-            src = util_alloc_substring_copy(__src, offset, len);
-        } else
-            src = NULL;
+            src_owner.reset(util_alloc_substring_copy(__src, offset, len));
+        }
+        const char *src = src_owner.get();
 
         /*
        OK - we have removed all leading (or trailing) separators, and we have
@@ -1636,8 +1635,8 @@ void util_binary_split_string(const char *__src, const char *sep_set,
       */
             if (pos == end_pos) {
                 /* There was no split. */
-                first_part = util_alloc_string_copy(src);
-                second_part = NULL;
+                first_part.reset(util_alloc_string_copy(src));
+                second_part.reset();
             } else {
                 int sep_start = 0;
                 int sep_end = 0;
@@ -1651,30 +1650,33 @@ void util_binary_split_string(const char *__src, const char *sep_set,
 
                 if (split_on_first) {
                     sep_end = pos;
-                    first_part = util_alloc_substring_copy(src, 0, sep_start);
+                    first_part.reset(
+                        util_alloc_substring_copy(src, 0, sep_start));
 
                     if (sep_end == end_pos)
-                        second_part = NULL;
+                        second_part.reset();
                     else
-                        second_part = util_alloc_string_copy(&src[sep_end]);
+                        second_part.reset(
+                            util_alloc_string_copy(&src[sep_end]));
                 } else {
                     sep_start = pos;
                     if (sep_start == end_pos) {
                         // ":String" => (NULL , "String")
-                        first_part = NULL;
-                        second_part = util_alloc_string_copy(&src[sep_end + 1]);
+                        first_part.reset();
+                        second_part.reset(
+                            util_alloc_string_copy(&src[sep_end + 1]));
                     } else {
-                        first_part =
-                            util_alloc_substring_copy(src, 0, sep_start + 1);
-                        second_part = util_alloc_string_copy(&src[sep_end + 1]);
+                        first_part.reset(
+                            util_alloc_substring_copy(src, 0, sep_start + 1));
+                        second_part.reset(
+                            util_alloc_string_copy(&src[sep_end + 1]));
                     }
                 }
             }
-            free(src);
         }
     }
-    *__first_part = first_part;
-    *__second_part = second_part;
+    *__first_part = first_part.release();
+    *__second_part = second_part.release();
 }
 
 /**
@@ -1712,6 +1714,7 @@ int static util_string_replace_inplace__(char **_buffer, const char *expr,
                 if (new_size >= (buffer_size - 1)) {
                     buffer_size += buffer_size + 2 * len_subs;
                     buffer = (char *)util_realloc(buffer, buffer_size);
+                    *_buffer = buffer;
                 }
                 {
                     char *target = &buffer[target_offset];
@@ -1737,7 +1740,9 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
 }
 
 void util_fwrite_int(int value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
+    if (fwrite(&value, sizeof value, 1, stream) != 1)
+        throw std::ios_base::failure(
+            fmt::format("{}: write failed: {}", __func__, strerror(errno)));
 }
 
 FILE *util_fopen__(const char *filename, const char *mode) {
@@ -1747,8 +1752,9 @@ FILE *util_fopen__(const char *filename, const char *mode) {
 FILE *util_fopen(const char *filename, const char *mode) {
     FILE *stream = util_fopen__(filename, mode);
     if (stream == NULL)
-        util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s(%d) \n",
-                   __func__, filename, mode, strerror(errno), errno);
+        throw std::ios_base::failure(
+            fmt::format("{}: failed to open:{} with mode:'{}' - error:{}({})",
+                        __func__, filename, mode, strerror(errno), errno));
 
     return stream;
 }
@@ -1759,23 +1765,24 @@ void util_fwrite(const void *ptr, size_t element_size, size_t items,
         return;
     size_t items_written = fwrite(ptr, element_size, items, stream);
     if (items_written != items)
-        util_abort(
-            "%s/%s: only wrote %d/%d items to disk - aborting: %s(%d) .\n",
-            caller, __func__, items_written, items, strerror(errno), errno);
+        throw std::ios_base::failure(fmt::format(
+            "{}/{}: only wrote {}/{} items to disk: {}({})", caller, __func__,
+            items_written, items, strerror(errno), errno));
 }
 
 void util_fread(void *ptr, size_t element_size, size_t items, FILE *stream,
                 const char *caller) {
     size_t items_read = fread(ptr, element_size, items, stream);
     if (items_read != items)
-        util_abort(
-            "%s/%s: only read %d/%d items from disk - aborting.\n %s(%d) \n",
-            caller, __func__, items_read, items, strerror(errno), errno);
+        throw std::ios_base::failure(fmt::format(
+            "{}/{}: only read {}/{} items from disk: {}({})", caller, __func__,
+            items_read, items, strerror(errno), errno));
 }
 
-#undef ABORT_READ
-#undef ABORT_WRITE
-
+/**
+   If the reallocation fails std::bad_alloc is thrown and @old_ptr is
+   left untouched, i.e. it is still owned by the calling scope.
+*/
 void *util_realloc(void *old_ptr, size_t new_size) {
     /* The realloc documentation as ambigous regarding realloc() with size 0 - WE return NULL. */
     if (new_size == 0) {
@@ -1785,8 +1792,7 @@ void *util_realloc(void *old_ptr, size_t new_size) {
     } else {
         void *tmp = realloc(old_ptr, new_size);
         if (tmp == NULL)
-            util_abort("%s: failed to realloc %zu bytes - aborting \n",
-                       __func__, new_size);
+            throw std::bad_alloc{};
         return tmp;
     }
 }
@@ -1794,7 +1800,7 @@ void *util_realloc(void *old_ptr, size_t new_size) {
 /**
    This function is a super-thin wrapper around malloc. It allocates
    the number of bytes you ask for. If the return value from malloc()
-   is NULL the routine will abort().
+   is NULL the routine throws std::bad_alloc.
 
    If you are actually interested in handling malloc() failures in a
    decent way, you should not use this routine.
@@ -1811,8 +1817,7 @@ static void *util_malloc__(size_t size) {
     else {
         data = malloc(size);
         if (data == NULL)
-            util_abort("%s: failed to allocate %zu bytes - aborting \n",
-                       __func__, size);
+            throw std::bad_alloc{};
 
         /*
        Initializing with something different from zero - hopefully
@@ -1853,6 +1858,7 @@ char *util_alloc_sprintf_va(const char *fmt, va_list ap) {
     UTIL_VA_COPY(tmp_va, ap);
 
     length = vsnprintf(NULL, 0, fmt, tmp_va);
+    va_end(tmp_va);
     s = (char *)util_calloc(length + 1, sizeof *s);
     vsnprintf(s, length + 1, fmt, ap);
     return s;
@@ -1862,68 +1868,14 @@ char *util_alloc_sprintf(const char *fmt, ...) {
     char *s;
     va_list ap;
     va_start(ap, fmt);
-    s = util_alloc_sprintf_va(fmt, ap);
+    try {
+        s = util_alloc_sprintf_va(fmt, ap);
+    } catch (...) {
+        va_end(ap);
+        throw;
+    }
     va_end(ap);
     return s;
-}
-
-/**
-  This function is intended to be installed as a signal
-  handler, so we can get a traceback from signals like SIGSEGV.
-
-  To install the signal handler:
-
-  #include <csignal>
-  ....
-  ....
-  signal(SIGSEGV , util_abort_signal);
-
-
-  The various signals can be found in: /usr/include/bits/signum.h
-*/
-
-/* Redefining sighandler_t in case it isn't defined (Windows).*/
-
-#ifndef HAVE_SIGHANDLER_T
-typedef void (*sighandler_t)(int);
-#endif
-
-/* When installing our abort handler, remeber if there was a previous one,
- * so we can call that afterwards */
-
-static sighandler_t previous_abort_handler = SIG_IGN;
-
-[[noreturn]] void util_abort_signal(int the_signal) {
-    if (previous_abort_handler == SIG_IGN) {
-        signal(SIGABRT, SIG_DFL);
-    } else {
-        signal(SIGABRT, previous_abort_handler);
-    }
-    util_abort("Program received signal:%d\n", the_signal);
-}
-
-void util_install_signals(void) {
-#ifdef HAVE_SIGBUS
-    signal(SIGBUS, util_abort_signal);
-#endif
-
-    signal(
-        SIGSEGV,
-        util_abort_signal); /* Segmentation violation, i.e. overwriting memory ... */
-    signal(
-        SIGTERM,
-        util_abort_signal); /* If killing the enkf program with SIGTERM (the default kill signal) you will get a backtrace.
-                                             Killing with SIGKILL (-9) will not give a backtrace.*/
-
-    sighandler_t previous_abort =
-        signal(SIGABRT, util_abort_signal); /* Signal abort. */
-    if (previous_abort != util_abort_signal) {
-        /* Let previously installed abort handler (i.e. python faulthandler) be called in the end */
-        previous_abort_handler = previous_abort;
-    }
-
-    signal(SIGILL, util_abort_signal); /* Signal illegal instruction. */
-    signal(SIGFPE, util_abort_signal); /* Floating point exception */
 }
 
 void util_exit(const char *fmt, ...) {
@@ -2033,7 +1985,6 @@ static int util_mkdir(const char *path) {
 */
 
 bool util_mkdir_p(const char *_path) {
-    char *active_path;
     char *path = (char *)_path;
     int current_pos = 0;
 
@@ -2043,7 +1994,9 @@ bool util_mkdir_p(const char *_path) {
     bool success = true;
 
     int i = 0;
-    active_path = (char *)util_calloc(strlen(path) + 1, sizeof *active_path);
+    std::unique_ptr<char, decltype(&std::free)> active_path_owner{
+        (char *)util_calloc(strlen(path) + 1, sizeof(char)), &std::free};
+    char *active_path = active_path_owner.get();
     do {
         size_t n = strcspn(path, UTIL_PATH_SEP_STRING);
         if (n < strlen(path))
@@ -2063,15 +2016,15 @@ bool util_mkdir_p(const char *_path) {
 
     } while (strlen(active_path) < strlen(_path));
 
-    free(active_path);
     return success;
 }
 
 void util_make_path(const char *path) {
     bool mkdir_ok = util_mkdir_p(path);
     if (!mkdir_ok)
-        util_abort("%s: failed to make directory:%s - aborting\n: %s(%d) \n",
-                   __func__, path, strerror(errno), errno);
+        throw std::ios_base::failure(
+            fmt::format("{}: failed to make directory:{}: {}({})", __func__,
+                        path, strerror(errno), errno));
 }
 
 /**
@@ -2112,21 +2065,19 @@ char *util_alloc_filename(const char *path, const char *basename,
 }
 
 char *util_split_alloc_filename(const char *input_path) {
-    char *filename = NULL;
-    {
-        char *basename;
-        char *extension;
+    char *basename_raw = NULL;
+    char *extension_raw = NULL;
 
-        util_alloc_file_components(input_path, NULL, &basename, &extension);
+    util_alloc_file_components(input_path, NULL, &basename_raw, &extension_raw);
+    std::unique_ptr<char, decltype(&std::free)> basename{basename_raw,
+                                                         &std::free};
+    std::unique_ptr<char, decltype(&std::free)> extension{extension_raw,
+                                                          &std::free};
 
-        if (basename)
-            filename = util_alloc_filename(NULL, basename, extension);
+    if (basename)
+        return util_alloc_filename(NULL, basename.get(), extension.get());
 
-        free(basename);
-        free(extension);
-    }
-
-    return filename;
+    return NULL;
 }
 
 void util_path_split(const char *line, int *_tokens, char ***_token_list) {
@@ -2134,55 +2085,53 @@ void util_path_split(const char *line, int *_tokens, char ***_token_list) {
 }
 
 char *util_alloc_parent_path(const char *path) {
-    int path_ncomp;
-    char **path_component_list;
-    char *parent_path = NULL;
+    std::unique_ptr<char, decltype(&std::free)> parent_path{nullptr,
+                                                            &std::free};
 
     if (path) {
         bool is_abs = util_is_abs_path(path);
-        char *work_path;
+        std::unique_ptr<char, decltype(&std::free)> work_path{nullptr,
+                                                              &std::free};
 
         if (strstr(path, "..")) {
             if (is_abs)
-                work_path = util_alloc_realpath__(path);
+                work_path.reset(util_alloc_realpath__(path));
             else {
-                char *abs_path = util_alloc_realpath__(path);
-                char *cwd = util_alloc_cwd();
-                work_path = util_alloc_rel_path(cwd, abs_path);
-                free(abs_path);
-                free(cwd);
+                std::unique_ptr<char, decltype(&std::free)> abs_path{
+                    util_alloc_realpath__(path), &std::free};
+                std::unique_ptr<char, decltype(&std::free)> cwd{
+                    util_alloc_cwd(), &std::free};
+                work_path.reset(util_alloc_rel_path(cwd.get(), abs_path.get()));
             }
         } else
-            work_path = util_alloc_string_copy(path);
+            work_path.reset(util_alloc_string_copy(path));
 
-        util_path_split(work_path, &path_ncomp, &path_component_list);
-        if (path_ncomp > 0) {
+        StringList path_components;
+        util_path_split(work_path.get(), &path_components.size,
+                        &path_components.list);
+        if (path_components.size > 0) {
             int current_length = 4;
             int ip;
 
-            parent_path = (char *)util_realloc(
-                parent_path, current_length * sizeof *parent_path);
-            parent_path[0] = '\0';
+            realloc_owned(parent_path, current_length);
+            parent_path.get()[0] = '\0';
 
-            for (ip = 0; ip < path_ncomp - 1; ip++) {
-                const char *ipath = path_component_list[ip];
-                int min_length = strlen(parent_path) + strlen(ipath) + 1;
+            for (ip = 0; ip < path_components.size - 1; ip++) {
+                const char *ipath = path_components.list[ip];
+                int min_length = strlen(parent_path.get()) + strlen(ipath) + 1;
 
                 if (min_length >= current_length) {
                     current_length = 2 * min_length;
-                    parent_path = (char *)util_realloc(
-                        parent_path, current_length * sizeof *parent_path);
+                    realloc_owned(parent_path, current_length);
                 }
 
                 if (is_abs || (ip > 0))
-                    strcat(parent_path, UTIL_PATH_SEP_STRING);
-                strcat(parent_path, ipath);
+                    strcat(parent_path.get(), UTIL_PATH_SEP_STRING);
+                strcat(parent_path.get(), ipath);
             }
         }
-        util_free_stringlist(path_component_list, path_ncomp);
-        free(work_path);
     }
-    return parent_path;
+    return parent_path.release();
 }
 
 #ifdef ERT_HAVE_UNISTD
