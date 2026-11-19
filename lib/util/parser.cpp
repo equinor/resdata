@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 #include <string>
@@ -18,15 +19,15 @@
 #define PARSER_ESCAPE_CHAR '\\'
 
 struct basic_parser_struct {
-    char *splitters =
-        nullptr; /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
-    char *specials =
-        nullptr; /* This exactly like the splitters - but these characters are retained as tokens. */
-    char *delete_set =
-        nullptr; /* The chracters are just plain removed - but without any splitting on them. */
-    char *quoters = nullptr;
-    char *comment_start = nullptr;
-    char *comment_end = nullptr;
+    std::optional<std::string>
+        splitters; /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
+    std::optional<std::string>
+        specials; /* This exactly like the splitters - but these characters are retained as tokens. */
+    std::optional<std::string>
+        delete_set; /* The chracters are just plain removed - but without any splitting on them. */
+    std::optional<std::string> quoters;
+    std::optional<std::string> comment_start;
+    std::optional<std::string> comment_end;
 };
 
 static void __verify_string_length(const char *s) {
@@ -36,43 +37,11 @@ static void __verify_string_length(const char *s) {
             ": invalid input to parser_set_xxx function - zero length string.");
 }
 
-static void basic_parser_set_splitters(basic_parser_type *parser,
-                                       const char *splitters) {
-    __verify_string_length(splitters);
-    parser->splitters = util_realloc_string_copy(parser->splitters, splitters);
-}
-
-static void basic_parser_set_quoters(basic_parser_type *parser,
-                                     const char *quoters) {
-    __verify_string_length(quoters);
-    parser->quoters = util_realloc_string_copy(parser->quoters, quoters);
-}
-
-static void basic_parser_set_specials(basic_parser_type *parser,
-                                      const char *specials) {
-    __verify_string_length(specials);
-    parser->specials = util_realloc_string_copy(parser->specials, specials);
-}
-
-static void basic_parser_set_delete_set(basic_parser_type *parser,
-                                        const char *delete_set) {
-    __verify_string_length(delete_set);
-    parser->delete_set =
-        util_realloc_string_copy(parser->delete_set, delete_set);
-}
-
-static void basic_parser_set_comment_start(basic_parser_type *parser,
-                                           const char *comment_start) {
-    __verify_string_length(comment_start);
-    parser->comment_start =
-        util_realloc_string_copy(parser->comment_start, comment_start);
-}
-
-static void basic_parser_set_comment_end(basic_parser_type *parser,
-                                         const char *comment_end) {
-    __verify_string_length(comment_end);
-    parser->comment_end =
-        util_realloc_string_copy(parser->comment_end, comment_end);
+static std::optional<std::string> checked_string(const char *s) {
+    __verify_string_length(s);
+    if (s == NULL)
+        return std::nullopt;
+    return std::string(s);
 }
 
 basic_parser_type *basic_parser_alloc(
@@ -87,12 +56,12 @@ basic_parser_type *basic_parser_alloc(
     parser_ptr parser_owner{new basic_parser_type()};
     basic_parser_type *parser = parser_owner.get();
 
-    basic_parser_set_splitters(parser, splitters);
-    basic_parser_set_quoters(parser, quoters);
-    basic_parser_set_specials(parser, specials);
-    basic_parser_set_delete_set(parser, delete_set);
-    basic_parser_set_comment_start(parser, comment_start);
-    basic_parser_set_comment_end(parser, comment_end);
+    parser->splitters = checked_string(splitters);
+    parser->quoters = checked_string(quoters);
+    parser->specials = checked_string(specials);
+    parser->delete_set = checked_string(delete_set);
+    parser->comment_start = checked_string(comment_start);
+    parser->comment_end = checked_string(comment_end);
 
     if (comment_start == NULL && comment_end != NULL)
         throw std::invalid_argument(
@@ -106,17 +75,7 @@ basic_parser_type *basic_parser_alloc(
     return parser_owner.release();
 }
 
-void basic_parser_free(basic_parser_type *parser) {
-
-    free(parser->splitters);
-    free(parser->quoters);
-    free(parser->specials);
-    free(parser->comment_start);
-    free(parser->comment_end);
-    free(parser->delete_set);
-
-    delete parser;
-}
+void basic_parser_free(basic_parser_type *parser) { delete parser; }
 
 static bool is_escape(const char c) {
     if (c == PARSER_ESCAPE_CHAR)
@@ -130,21 +89,17 @@ static int length_of_initial_splitters(const char *buffer_position,
     assert(buffer_position != NULL);
     assert(parser != NULL);
 
-    if (parser->splitters == NULL)
+    if (!parser->splitters)
         return 0;
     else
-        return strspn(buffer_position, parser->splitters);
+        return strspn(buffer_position, parser->splitters->c_str());
 }
 
-static bool in_set(char c, const char *set) {
-    if (set == NULL)
+static bool in_set(char c, const std::optional<std::string> &set) {
+    if (!set)
         return false;
-    else {
-        if (strchr(set, (int)c) != NULL)
-            return true;
-        else
-            return false;
-    }
+
+    return strchr(set->c_str(), (int)c) != NULL;
 }
 
 static bool is_splitters(const char c, const basic_parser_type *parser) {
@@ -221,10 +176,10 @@ static int length_of_comment(const char *buffer_position,
     bool in_comment = false;
     int length = 0;
 
-    if (parser->comment_start == NULL || parser->comment_end == NULL)
+    if (!parser->comment_start || !parser->comment_end)
         length = 0;
     else {
-        const char *comment_start = parser->comment_start;
+        const char *comment_start = parser->comment_start->c_str();
         int len_comment_start = strlen(comment_start);
         if (strncmp(buffer_position, comment_start, len_comment_start) == 0) {
             in_comment = true;
@@ -234,7 +189,7 @@ static int length_of_comment(const char *buffer_position,
     }
 
     if (in_comment) {
-        const char *comment_end = parser->comment_end;
+        const char *comment_end = parser->comment_end->c_str();
         int len_comment_end = strlen(comment_end);
         while (buffer_position[length] != '\0' && in_comment) {
             if (strncmp(&buffer_position[length], comment_end,
@@ -415,7 +370,7 @@ basic_parser_tokenize_buffer(const basic_parser_type *parser,
                 length_of_normal_non_splitters(&buffer[position], parser);
             auto token = rd::checked_calloc<char>(length + 1);
             int token_length;
-            if (parser->delete_set == NULL) {
+            if (!parser->delete_set) {
                 token_length = length;
                 memcpy(token.get(), &buffer[position], length * sizeof(char));
             } else {
@@ -473,7 +428,8 @@ bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
         util_ftell(stream); /* Store the inital position. */
     bool cont = true;
 
-    if (string.find(parser->comment_start) != std::string_view::npos)
+    if (parser->comment_start &&
+        string.find(*parser->comment_start) != std::string_view::npos)
         throw std::invalid_argument(
             std::string(__func__) +
             ": the string contains a comment start - will never find it");
@@ -514,17 +470,17 @@ bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
         }
 
         /* Special treatment of comments: */
-        if (c != EOF &&
-            c == static_cast<unsigned char>(parser->comment_start[0])) {
+        if (c != EOF && parser->comment_start &&
+            c == static_cast<unsigned char>((*parser->comment_start)[0])) {
             /* this might be the start of a comment - let us check further. */
             bool comment_start = util_fgetc_while_equal(
-                stream, &parser->comment_start[1], false);
+                stream, parser->comment_start->c_str() + 1, false);
             if (comment_start) {
                 offset_type comment_start_pos =
                     util_ftell(stream) -
-                    static_cast<offset_type>(strlen(parser->comment_start));
+                    static_cast<offset_type>(parser->comment_start->size());
                 /* Start seeking for comment_end */
-                if (!util_fseek_string(stream, parser->comment_end, true,
+                if (!util_fseek_string(stream, *parser->comment_end, true,
                                        true)) {
                     /* No end comment end was found - what to do about that??
                        The file is just positioned at the end - and the routine

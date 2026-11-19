@@ -814,8 +814,7 @@ time_t util_make_date_utc(int mday, int month, int year) {
    i.e. not NULL.
 
    If src is NULL the function will return NULL. The incoming source
-   string is not modified, see the function util_realloc_strip_copy()
-   for a similar function implementing realloc() semantics.
+   string is not modified.
 */
 
 char *util_alloc_strip_copy(const char *src) {
@@ -839,29 +838,6 @@ char *util_alloc_strip_copy(const char *src) {
 
     target[strip_length] = '\0';
     return target;
-}
-
-char *util_realloc_string_copy(char *old_string, const char *src) {
-    if (src != NULL) {
-        /* Realloc can either (1) reuse or (2) allocate new memory (and free the
-     * original memory block)
-     * If old_string and src are the same, we have issues in both cases:
-     * - in case (1), strcpy receives overlapping memory areas, which
-     *   breaks one of strcpy preconditions
-     * - in case (2), the area src points to is freed, so strcpy can end up
-     *   copying garbage.
-     */
-        assert(old_string != src);
-
-        char *copy =
-            (char *)util_realloc(old_string, (strlen(src) + 1) * sizeof *copy);
-        strcpy(copy, src);
-        return copy;
-    } else {
-        if (old_string != NULL)
-            free(old_string);
-        return NULL;
-    }
 }
 
 void util_fwrite_int(int value, FILE *stream) {
@@ -902,24 +878,6 @@ void util_fread(void *ptr, size_t element_size, size_t items, FILE *stream,
         throw std::ios_base::failure(fmt::format(
             "{}/{}: only read {}/{} items from disk: {}({})", caller, __func__,
             items_read, items, strerror(errno), errno));
-}
-
-/**
-   If the reallocation fails std::bad_alloc is thrown and @old_ptr is
-   left untouched, i.e. it is still owned by the calling scope.
-*/
-void *util_realloc(void *old_ptr, size_t new_size) {
-    /* The realloc documentation as ambigous regarding realloc() with size 0 - WE return NULL. */
-    if (new_size == 0) {
-        if (old_ptr != NULL)
-            free(old_ptr);
-        return NULL;
-    } else {
-        void *tmp = realloc(old_ptr, new_size);
-        if (tmp == NULL)
-            throw std::bad_alloc{};
-        return tmp;
-    }
 }
 
 /**
