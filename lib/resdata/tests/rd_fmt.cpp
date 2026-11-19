@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <filesystem>
+#include <string>
 #include <unistd.h>
 
 #include <ert/util/util.hpp>
@@ -11,21 +13,17 @@ void test_content(const rd::util::TestArea &ta, const char *src_file,
                   bool fmt_file) {
     ta.copy_file(src_file);
     {
-        char *base_name;
-        char *extension;
+        const std::filesystem::path src_path = src_file;
+        const std::string file_name = src_path.filename().string();
+        const std::string base_name = src_path.stem().string();
         bool fmt;
 
-        util_alloc_file_components(src_file, NULL, &base_name, &extension);
-        char *file_name = util_alloc_filename(NULL, base_name, extension);
+        std::filesystem::copy_file(
+            file_name, base_name,
+            std::filesystem::copy_options::overwrite_existing);
 
-        util_copy_file(file_name, base_name);
-
-        test_assert_true(rd_fmt_file(base_name, &fmt));
+        test_assert_true(rd_fmt_file(base_name.c_str(), &fmt));
         test_assert_bool_equal(fmt, fmt_file);
-
-        free(file_name);
-        free(base_name);
-        free(extension);
     }
 }
 

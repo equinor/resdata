@@ -150,7 +150,9 @@ static std::string create_test_path(const std::string &test_name,
             util_alloc_sprintf(FULL_PATH_FMT, prefix, test_path.get()),
             &std::free};
 
-        if (util_mkdir_p(test_cwd.get()))
+        std::error_code ec;
+        std::filesystem::create_directories(test_cwd.get(), ec);
+        if (!ec && std::filesystem::is_directory(test_cwd.get(), ec))
             return test_cwd.get();
     }
 
@@ -178,22 +180,15 @@ TestArea::TestArea(const std::string &test_name, bool store_area)
     std::string test_cwd =
         rd::util::create_test_path(test_name, prefix.c_str(), user_name.get());
 
-    {
-        std::unique_ptr<char, decltype(&std::free)> cwd_tmp{util_alloc_cwd(),
-                                                            &std::free};
-        this->org_cwd = cwd_tmp.get();
-    }
-    if (util_chdir(test_cwd.c_str()) != 0)
-        throw std::runtime_error(
-            std::string(__func__) +
-            ": Failed to move into temporary directory: " + test_cwd);
+    this->org_cwd = std::filesystem::current_path().string();
+    std::filesystem::current_path(test_cwd);
     this->cwd = test_cwd;
 }
 
 TestArea::~TestArea() {
-    util_chdir(this->org_cwd.c_str());
+    std::error_code ec;
+    std::filesystem::current_path(this->org_cwd, ec);
     if (!this->store) {
-        std::error_code ec;
         std::filesystem::remove_all(this->cwd, ec);
         // silently fail for backwards compatibility
     }
@@ -204,29 +199,32 @@ const std::string &TestArea::test_cwd() const { return this->cwd; }
 const std::string &TestArea::original_cwd() const { return this->org_cwd; }
 
 std::string TestArea::original_path(const std::string &input_path) const {
-    if (util_is_abs_path(input_path.c_str()))
-        return std::string(input_path);
-    else {
-        std::unique_ptr<char, decltype(&std::free)> fname{
-            util_alloc_filename(this->original_cwd().c_str(),
-                                input_path.c_str(), NULL),
-            &std::free};
-        return std::string(fname.get());
-    }
+    if (std::filesystem::path(input_path).is_absolute())
+        return input_path;
+
+    return (std::filesystem::path(this->original_cwd()) / input_path).string();
+}
+
+/* Copies src_file to target_file, replacing an existing target. Copying a
+   file onto itself does nothing. */
+static void copy_file_overwrite(const std::filesystem::path &src_file,
+                                const std::filesystem::path &target_file) {
+    std::error_code ec;
+    if (std::filesystem::equivalent(src_file, target_file, ec))
+        return;
+
+    std::filesystem::copy_file(
+        src_file, target_file,
+        std::filesystem::copy_options::overwrite_existing);
 }
 
 void TestArea::copy_file(const std::string &input_src_file) const {
     std::string src_file = this->original_path(input_src_file);
 
-    if (util_file_exists(src_file.c_str())) {
-        std::unique_ptr<char, decltype(&std::free)> target_name{
-            util_split_alloc_filename(input_src_file.c_str()), &std::free};
-        std::unique_ptr<char, decltype(&std::free)> target_file{
-            util_alloc_filename(this->test_cwd().c_str(), target_name.get(),
-                                NULL),
-            &std::free};
-        util_copy_file(src_file.c_str(), target_file.get());
-    }
+    if (std::filesystem::exists(src_file))
+        copy_file_overwrite(
+            src_file, std::filesystem::path(this->test_cwd()) /
+                          std::filesystem::path(input_src_file).filename());
 }
 
 /* Recursively copies the content of src_path into target_path; hidden entries
@@ -308,22 +306,19 @@ test_work_area_get_original_cwd(const test_work_area_type *work_area) {
 */
 void test_work_area_install_file(const test_work_area_type *work_area,
                                  const char *input_src_file) {
-    if (util_is_abs_path(input_src_file))
+    if (std::filesystem::path(input_src_file).is_absolute())
         return;
     else {
         std::string src_file = work_area->original_path(input_src_file);
         std::string src_path = rd::util::path::dirname(input_src_file);
 
-        if (!util_entry_exists(src_path.c_str()))
-            util_make_path(src_path.c_str());
+        if (!src_path.empty())
+            std::filesystem::create_directories(src_path);
 
-        if (util_file_exists(src_file.c_str())) {
-            std::unique_ptr<char, decltype(&std::free)> target_file{
-                util_alloc_filename(work_area->test_cwd().c_str(),
-                                    input_src_file, NULL),
-                &std::free};
-            util_copy_file(src_file.c_str(), target_file.get());
-        }
+        if (std::filesystem::exists(src_file))
+            rd::util::copy_file_overwrite(
+                src_file,
+                std::filesystem::path(work_area->test_cwd()) / input_src_file);
     }
 }
 

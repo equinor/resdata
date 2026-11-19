@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <filesystem>
 #include <unistd.h>
 
 #include <ert/util/util.hpp>
@@ -11,7 +12,7 @@ void test_relative_access() {
     rd::util::TestArea ta("rd_access");
     test_assert_false(rd_path_access("No/directory/does/not/exist"));
 
-    util_make_path("path");
+    std::filesystem::create_directories("path");
     test_assert_true(rd_path_access("path"));
     test_assert_true(rd_path_access("path/FILE_DOES_NOT_EXIST"));
 

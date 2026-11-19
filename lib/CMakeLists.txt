@@ -254,17 +254,8 @@ target_include_directories(rd_test_suite
 target_link_libraries(rd_test_suite resdata Catch2::Catch2)
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
 
-foreach(
-  name
-  ert_util_alloc_file_components
-  ert_util_split_path
-  ert_util_approx_equal
-  ert_util_binary_split
-  ert_util_filename
-  ert_util_relpath_test
-  ert_util_strcat_test
-  ert_util_sscan_test
-  test_area)
+foreach(name ert_util_split_path ert_util_approx_equal ert_util_sscan_test
+             test_area)
 
   add_executable(${name} util/tests/${name}.cpp util/test_util.cpp)
   target_include_directories(
@@ -286,12 +277,6 @@ add_test(
   COMMAND ert_util_work_area data2/file1
           ${CMAKE_CURRENT_SOURCE_DIR}/util/tests/data2/file2 data2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/util/tests)
-
-add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp
-                                  util/test_util.cpp)
-target_link_libraries(ert_util_copy_file resdata)
-add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
-                                         $<TARGET_FILE:ert_util_copy_file>)
 
 foreach(
   name

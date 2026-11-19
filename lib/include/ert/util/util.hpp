@@ -94,19 +94,11 @@ char *util_alloc_sprintf_va(const char *fmt, va_list ap);
 char *util_alloc_sprintf(const char *, ...);
 bool util_entry_exists(const char *entry);
 bool util_file_exists(const char *);
-bool util_is_abs_path(const char *);
-char *util_alloc_rel_path(const char *__root_path, const char *path);
 bool util_fmt_bit8(const char *);
-bool util_mkdir_p(const char *);
-void util_make_path(const char *);
 double util_file_difftime(const char *, const char *);
 size_t util_file_size(const char *);
 size_t util_fd_size(int fd);
 bool util_string_equal(const char *s1, const char *s2);
-bool util_copy_file(const char *, const char *);
-bool util_copy_file__(const char *src_file, const char *target_file,
-                      size_t buffer_size, void *buffer, bool abort_on_error);
-char *util_alloc_cwd(void);
 bool util_ftruncate(FILE *stream, long size);
 
 int util_roundf(float x);
@@ -119,27 +111,17 @@ int util_stat(const char *filename, stat_type *stat_info);
 int util_fstat(int fileno, stat_type *stat_info);
 
 FILE *util_fopen(const char *, const char *);
-char *util_split_alloc_filename(const char *input_path);
-void util_alloc_file_components(const char *, char **, char **, char **);
 char *util_fscanf_alloc_line(FILE *, bool *);
 bool util_sscanf_int(const char *, int *);
-char *util_alloc_filename(const char *, const char *, const char *);
 char *util_alloc_strip_copy(const char *);
-char *util_strcat_realloc(char *, const char *);
 char *util_alloc_string_copy(const char *);
-void util_path_split(const char *line, int *_tokens, char ***_token_list);
-void util_binary_split_string(const char *, const char *, bool, char **,
-                              char **);
 char *util_realloc_string_copy(char *, const char *);
-void util_free_stringlist(char **, int);
 char *util_alloc_substring_copy(const char *, int offset, int N);
-bool util_is_directory(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
 void util_exit(const char *fmt, ...);
 
 void *util_realloc(void *, size_t);
-char *util_fread_alloc_file_content(const char *, int *);
 void util_endian_flip_vector(void *data, size_t element_size, size_t elements);
 
 bool util_same_file(const char *, const char *);
@@ -147,7 +129,6 @@ void util_fread(void *, size_t, size_t, FILE *, const char *);
 void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
 void util_fwrite_int(int, FILE *);
 int util_get_current_linenr(FILE *stream);
-bool util_files_equal(const char *file1, const char *file2);
 double util_kahan_sum(const double *data, size_t N);
 bool util_double_approx_equal(double d1, double d2);
 bool util_double_approx_equal__(double d1, double d2, double rel_eps,
@@ -156,8 +137,6 @@ bool util_float_approx_equal__(float d1, float d2, float rel_eps,
                                float abs_eps);
 int util_fnmatch(const char *pattern, const char *string);
 void util_time_utc(time_t *t, struct tm *ts);
-
-int util_chdir(const char *path);
 
 #ifdef ERT_HAVE_UNISTD
 #include <unistd.h>
