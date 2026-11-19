@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include <algorithm>
+#include <filesystem>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
@@ -14,8 +15,8 @@
 
 int main(int argc, char **argv) {
     const char *case_path = argv[1];
-    char *grid_file = util_alloc_filename(NULL, case_path, "EGRID");
-    rd_grid_ptr grid = read_grid(grid_file);
+    const std::string grid_file = std::string(case_path) + ".EGRID";
+    rd_grid_ptr grid = read_grid(grid_file.c_str());
     auto file_list =
         rd_select_filelist(NULL, case_path, FileType::RESTART, false);
 
@@ -24,12 +25,11 @@ int main(int argc, char **argv) {
     std::sort(file_list.begin(), file_list.end(), rd::natural_less);
 
     for (size_t i = 0; i < file_list.size(); i++) {
-        char *ext;
-        char *target_ext = util_alloc_sprintf("X%04zu", i);
-        util_alloc_file_components(file_list[i].c_str(), NULL, NULL, &ext);
+        char *target_ext = util_alloc_sprintf(".X%04zu", i);
+        const std::string ext =
+            std::filesystem::path(file_list[i]).extension().string();
 
-        test_assert_string_equal(ext, target_ext);
-        free(ext);
+        test_assert_string_equal(ext.c_str(), target_ext);
         free(target_ext);
     }
     {
@@ -45,8 +45,6 @@ int main(int argc, char **argv) {
         for (const auto &file_name : file_list)
             well_info.load_rstfile(file_name, true);
     }
-
-    free(grid_file);
 
     exit(0);
 }

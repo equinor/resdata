@@ -3,36 +3,14 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <cstdlib>
 #include <ert/util/parser.hpp>
 #include <ert/util/util.hpp>
-#include <filesystem>
-
-#include "tmpdir.hpp"
-
-TEST_CASE_METHOD(Tmpdir, "Test getcwd after unlink cwd", "[unittest]") {
-    GIVEN("Test directory") {
-        auto subdir = dirname / "unlink";
-        auto previous_cwd = fs::current_path();
-        fs::create_directory(subdir);
-        fs::current_path(subdir);
-
-        THEN("Use normally") {
-            auto path = util_alloc_cwd();
-            std::free(path);
-        }
-
-        THEN("Unlink") {
-            fs::remove(subdir);
-            CHECK_THROWS(util_alloc_cwd());
-        }
-
-        fs::current_path(previous_cwd);
-    }
-}
 
 TEST_CASE("util_endian_flip_vector reverses the bytes of each element",
           "[unittest][endian]") {
@@ -114,4 +92,26 @@ TEST_CASE("Tokenizing an unterminated quotation throws invalid_argument",
 
     CHECK_THROWS_AS(basic_parser_tokenize_buffer(parser.get(), "a 'b", true),
                     std::invalid_argument);
+}
+
+TEST_CASE("util_same_file identifies files by identity", "[unittest]") {
+    namespace fs = std::filesystem;
+    const fs::path dir =
+        fs::temp_directory_path() / "resdata_util_same_file_test";
+    fs::remove_all(dir);
+    fs::create_directories(dir);
+    const fs::path a = dir / "a";
+    const fs::path b = dir / "b";
+    std::ofstream(a) << "x";
+    std::ofstream(b) << "x";
+    fs::create_symlink(a, dir / "link");
+
+    CHECK(util_same_file(a.c_str(), a.c_str()));
+    CHECK(util_same_file(a.c_str(), (dir / "link").c_str()));
+    CHECK_FALSE(util_same_file(a.c_str(), b.c_str()));
+    CHECK_FALSE(util_same_file(a.c_str(), (dir / "missing").c_str()));
+    CHECK_FALSE(
+        util_same_file((dir / "missing").c_str(), (dir / "missing").c_str()));
+
+    fs::remove_all(dir);
 }

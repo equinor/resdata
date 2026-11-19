@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include <filesystem>
 #include <string>
 #include <memory>
 
@@ -14,7 +15,8 @@
 
 void test_writable(const char *src_file) {
     rd::util::TestArea ta("file_writable");
-    char *fname = util_split_alloc_filename(src_file);
+    const std::string fname =
+        std::filesystem::path(src_file).filename().string();
 
     ta.copy_file(src_file);
     {

@@ -1,4 +1,8 @@
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <string>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -8,54 +12,53 @@
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
 
+static std::string read_file(const std::string &filename) {
+    std::ifstream stream(filename, std::ios::binary);
+    return {std::istreambuf_iterator<char>(stream),
+            std::istreambuf_iterator<char>()};
+}
+
 void test_get_cwd() {
     test_work_area_type *work_area = test_work_area_alloc("CWD-TEST");
-    char *cwd = util_alloc_cwd();
-    test_assert_string_equal(cwd, test_work_area_get_cwd(work_area));
-    free(cwd);
+    const std::string cwd = std::filesystem::current_path().string();
+    test_assert_string_equal(cwd.c_str(), test_work_area_get_cwd(work_area));
     test_work_area_free(work_area);
 }
 
 void test_get_original_cwd() {
-    char *cwd = util_alloc_cwd();
+    const std::string cwd = std::filesystem::current_path().string();
     test_work_area_type *work_area = test_work_area_alloc("CWD-ORG-TEST");
-    test_assert_string_equal(cwd, test_work_area_get_original_cwd(work_area));
-    free(cwd);
+    test_assert_string_equal(cwd.c_str(),
+                             test_work_area_get_original_cwd(work_area));
     test_work_area_free(work_area);
 }
 
 void create_test_area(const char *test_name, bool store) {
-    char *pre_cwd = util_alloc_cwd();
+    const std::filesystem::path pre_cwd = std::filesystem::current_path();
     test_work_area_type *work_area = test_work_area_alloc__(test_name, store);
-    char *work_path = util_alloc_string_copy(test_work_area_get_cwd(work_area));
+    const std::string work_path = test_work_area_get_cwd(work_area);
 
-    test_assert_true(util_is_directory(work_path));
+    test_assert_true(std::filesystem::is_directory(work_path));
     test_work_area_free(work_area);
-    test_assert_bool_equal(store, util_entry_exists(work_path));
+    test_assert_bool_equal(store, std::filesystem::exists(work_path));
 
-    {
-        char *post_cwd = util_alloc_cwd();
-        test_assert_string_equal(pre_cwd, post_cwd);
-        free(post_cwd);
-    }
-    free(pre_cwd);
-    free(work_path);
+    test_assert_true(pre_cwd == std::filesystem::current_path());
 }
 
 void test_install_file_exists(const char *filename) {
-    char *abs_input_path = util_alloc_abs_path(filename);
+    const std::string abs_input_path =
+        std::filesystem::canonical(filename).string();
     test_work_area_type *work_area = test_work_area_alloc("FILE-TEST");
 
     test_work_area_install_file(work_area, filename);
-    test_assert_true(util_files_equal(abs_input_path, filename));
+    test_assert_true(read_file(abs_input_path) == read_file(filename));
     test_work_area_free(work_area);
-    free(abs_input_path);
 }
 
 void test_copy_directory(const char *rel_path) {
     test_work_area_type *work_area = test_work_area_alloc("FILE-TEST");
     test_work_area_copy_directory(work_area, rel_path);
-    test_assert_true(util_is_directory(rel_path));
+    test_assert_true(std::filesystem::is_directory(rel_path));
     test_work_area_free(work_area);
 }
 
@@ -65,41 +68,34 @@ void test_input() {
 }
 
 void test_copy_file(const char *src_file) {
-    char *filename = util_split_alloc_filename(src_file);
+    const std::filesystem::path filename =
+        std::filesystem::path(src_file).filename();
     test_work_area_type *work_area = test_work_area_alloc("copy-file");
     test_work_area_copy_file(work_area, src_file);
 
-    test_assert_true(util_file_exists(filename));
+    test_assert_true(std::filesystem::exists(filename));
 
     test_work_area_free(work_area);
-    free(filename);
 }
 
 void test_copy_parent_directory(const char *path) {
     test_work_area_type *work_area =
         test_work_area_alloc("copy-parent-directory");
-    char *parent_path;
-
-    {
-        char *full_path = util_alloc_abs_path(path);
-        util_alloc_file_components(path, &parent_path, NULL, NULL);
-        free(full_path);
-    }
+    const std::filesystem::path parent_path =
+        std::filesystem::path(path).parent_path();
 
     test_assert_false(
         test_work_area_copy_parent_directory(work_area, "Does/not/exist"));
     test_assert_true(test_work_area_copy_parent_directory(work_area, path));
 
-    test_assert_true(util_entry_exists(parent_path));
-    test_assert_true(util_is_directory(parent_path));
+    test_assert_true(std::filesystem::is_directory(parent_path));
 
     test_work_area_free(work_area);
-    free(parent_path);
 }
 
 void test_copy_parent_content(const char *path) {
-    char *full_path = util_alloc_abs_path(path);
-    char *parent_path = util_alloc_parent_path(full_path);
+    const std::string parent_path =
+        std::filesystem::canonical(path).parent_path().string();
     test_work_area_type *work_area =
         test_work_area_alloc("copy-parent-content");
 
@@ -111,7 +107,8 @@ void test_copy_parent_content(const char *path) {
 
         struct dirent **src_namelist;
         struct dirent **target_namelist;
-        int src_size = scandir(parent_path, &src_namelist, NULL, alphasort);
+        int src_size =
+            scandir(parent_path.c_str(), &src_namelist, NULL, alphasort);
         int target_size = scandir(test_work_area_get_cwd(work_area),
                                   &target_namelist, NULL, alphasort);
 
@@ -127,8 +124,6 @@ void test_copy_parent_content(const char *path) {
         free(src_namelist);
         free(target_namelist);
     }
-    free(parent_path);
-    free(full_path);
 
     test_work_area_free(work_area);
 }
@@ -137,40 +132,32 @@ void test_update_store() {
     {
         test_work_area_type *work_area =
             test_work_area_alloc__("update-store1", true);
-        char *work_cwd =
-            util_alloc_string_copy(test_work_area_get_cwd(work_area));
+        const std::string work_cwd = test_work_area_get_cwd(work_area);
         test_work_area_free(work_area);
-        test_assert_true(util_entry_exists(work_cwd));
-        free(work_cwd);
+        test_assert_true(std::filesystem::exists(work_cwd));
     }
 
     {
         test_work_area_type *work_area = test_work_area_alloc("update-store2");
-        char *work_cwd =
-            util_alloc_string_copy(test_work_area_get_cwd(work_area));
+        const std::string work_cwd = test_work_area_get_cwd(work_area);
         test_work_area_free(work_area);
-        test_assert_false(util_entry_exists(work_cwd));
-        free(work_cwd);
+        test_assert_false(std::filesystem::exists(work_cwd));
     }
 
     {
         test_work_area_type *work_area =
             test_work_area_alloc__("update-store3", false);
-        char *work_cwd =
-            util_alloc_string_copy(test_work_area_get_cwd(work_area));
+        const std::string work_cwd = test_work_area_get_cwd(work_area);
         test_work_area_free(work_area);
-        test_assert_false(util_entry_exists(work_cwd));
-        free(work_cwd);
+        test_assert_false(std::filesystem::exists(work_cwd));
     }
 
     {
         test_work_area_type *work_area =
             test_work_area_alloc__("update-store4", true);
-        char *work_cwd =
-            util_alloc_string_copy(test_work_area_get_cwd(work_area));
+        const std::string work_cwd = test_work_area_get_cwd(work_area);
         test_work_area_free(work_area);
-        test_assert_true(util_entry_exists(work_cwd));
-        free(work_cwd);
+        test_assert_true(std::filesystem::exists(work_cwd));
     }
 }
 

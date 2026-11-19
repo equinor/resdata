@@ -70,7 +70,7 @@ void test_file_list() {
     s = rd_select_filelist(NULL, "CaseMiXed", FileType::RESTART, true);
     test_assert_size_t_equal(s.size(), 5);
 
-    util_make_path("path");
+    std::filesystem::create_directories("path");
     for (int i = 0; i < 10; i++) {
         std::string summary_file1 =
             rd::filename("path/CASE1", FileType::SUMMARY, false, i).string();

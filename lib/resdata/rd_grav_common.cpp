@@ -7,6 +7,7 @@
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_util.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_region.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -31,12 +32,7 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::grid_cache &grid_cache,
                             AQUIFER_KW, aquifer_kw->size(), grid_cache.size()));
     }
 
-    bool *aquifer_cell =
-        (bool *)util_calloc(grid_cache.size(), sizeof *aquifer_cell);
-
-    for (size_t active_index = 0; active_index < grid_cache.size();
-         active_index++)
-        aquifer_cell[active_index] = false;
+    auto aquifer_cell = rd::checked_calloc<bool>(grid_cache.size());
 
     if (aquifer_kw) {
         const std::vector<int> &aquifer_data = aquifer_kw->get_vector<int>();
@@ -48,7 +44,7 @@ bool *rd_grav_common_alloc_aquifer_cell(const rd::grid_cache &grid_cache,
         }
     }
 
-    return aquifer_cell;
+    return aquifer_cell.release();
 }
 
 double rd_grav_common_eval_biot_savart(const rd::grid_cache &grid_cache,
