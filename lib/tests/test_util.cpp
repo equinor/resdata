@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -90,4 +92,26 @@ TEST_CASE("Tokenizing an unterminated quotation throws invalid_argument",
 
     CHECK_THROWS_AS(basic_parser_tokenize_buffer(parser.get(), "a 'b", true),
                     std::invalid_argument);
+}
+
+TEST_CASE("util_same_file identifies files by identity", "[unittest]") {
+    namespace fs = std::filesystem;
+    const fs::path dir =
+        fs::temp_directory_path() / "resdata_util_same_file_test";
+    fs::remove_all(dir);
+    fs::create_directories(dir);
+    const fs::path a = dir / "a";
+    const fs::path b = dir / "b";
+    std::ofstream(a) << "x";
+    std::ofstream(b) << "x";
+    fs::create_symlink(a, dir / "link");
+
+    CHECK(util_same_file(a.c_str(), a.c_str()));
+    CHECK(util_same_file(a.c_str(), (dir / "link").c_str()));
+    CHECK_FALSE(util_same_file(a.c_str(), b.c_str()));
+    CHECK_FALSE(util_same_file(a.c_str(), (dir / "missing").c_str()));
+    CHECK_FALSE(
+        util_same_file((dir / "missing").c_str(), (dir / "missing").c_str()));
+
+    fs::remove_all(dir);
 }

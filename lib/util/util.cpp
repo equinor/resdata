@@ -558,42 +558,10 @@ bool util_ftruncate(FILE *stream, long size) {
         return false;
 }
 
-/*
-  The windows stat structure has the inode element, but it is not
-  set. Actually - this is a property of the filesystem, and not the
-  operating system - this check is probably broken on two levels:
-
-   1. One should really check the filesystem involved - whether it
-      supports inodes.
-
-   2. The code below will compile on windows, but for a windows
-      filesystem it will yield rubbish.
-*/
-
 bool util_same_file(const char *file1, const char *file2) {
-#ifdef ERT_HAVE_UNISTD
-    stat_type buffer1, buffer2;
-    int stat1, stat2;
-
-    stat1 = util_stat(
-        file1,
-        &buffer1); // In the case of symlinks the stat call will stat the target file and not the link.
-    stat2 = util_stat(file2, &buffer2);
-
-    if ((stat1 == 0) && (stat1 == stat2)) {
-        if (buffer1.st_ino == buffer2.st_ino)
-            return true;
-        else
-            return false;
-    } else
-        return false; // Files which do not exist are no equal!
-#else
-    if (util_file_exists(file1) && util_file_exists(file2)) {
-        return std::filesystem::canonical(file1) ==
-               std::filesystem::canonical(file2);
-    } else
-        return false;
-#endif
+    // Symlinks are followed. Nonexistent files are never equal.
+    std::error_code ec;
+    return std::filesystem::equivalent(file1, file2, ec);
 }
 
 static bool util_fmt_bit8_stream(FILE *stream) {
