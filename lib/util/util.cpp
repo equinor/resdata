@@ -1679,66 +1679,6 @@ void util_binary_split_string(const char *__src, const char *sep_set,
     *__second_part = second_part.release();
 }
 
-/**
-   The function will, in-place, update all occurencese: expr->subs.
-   The return value is the number of substitutions which have been
-   performed. buffer must be \0 terminated.
-*/
-
-int static util_string_replace_inplace__(char **_buffer, const char *expr,
-                                         const char *subs) {
-    char *buffer = *_buffer;
-    int buffer_size =
-        strlen(buffer) +
-        1; /* The variable buffer_size is the TOTAL size - including the terminating \0. */
-    int len_expr = strlen(expr);
-    int len_subs = strlen(subs);
-    int size = strlen(buffer);
-    size_t offset = 0;
-    int match_count = 0;
-
-    char *match = NULL;
-    do {
-        match = strstr(&buffer[offset], expr);
-
-        if (match != NULL) {
-            /*
-         Can not use pointer arithmetic here - because the underlying
-         buffer pointer might be realloced.
-      */
-            {
-                int start_offset = match - buffer;
-                int end_offset = match + len_expr - buffer;
-                int target_offset = match + len_subs - buffer;
-                int new_size = size + len_subs - len_expr;
-                if (new_size >= (buffer_size - 1)) {
-                    buffer_size += buffer_size + 2 * len_subs;
-                    buffer = (char *)util_realloc(buffer, buffer_size);
-                    *_buffer = buffer;
-                }
-                {
-                    char *target = &buffer[target_offset];
-                    char *match_end = &buffer[end_offset];
-                    memmove(target, match_end, 1 + size - end_offset);
-                }
-
-                memcpy(&buffer[start_offset], subs, len_subs);
-                offset = start_offset + len_subs;
-                size = new_size;
-                match_count++;
-            }
-        }
-    } while (match != NULL && offset < strlen(buffer));
-
-    *_buffer = buffer;
-    return match_count;
-}
-
-int util_string_replace_inplace(char **_buffer, const char *expr,
-                                const char *subs) {
-    return util_string_replace_inplace__(_buffer, expr, subs);
-}
-
 void util_fwrite_int(int value, FILE *stream) {
     if (fwrite(&value, sizeof value, 1, stream) != 1)
         throw std::ios_base::failure(

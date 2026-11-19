@@ -135,7 +135,6 @@ void util_path_split(const char *line, int *_tokens, char ***_token_list);
 char *util_alloc_parent_path(const char *path);
 void util_binary_split_string(const char *, const char *, bool, char **,
                               char **);
-int util_string_replace_inplace(char **, const char *, const char *);
 char *util_realloc_string_copy(char *, const char *);
 void util_free_stringlist(char **, int);
 char *util_alloc_substring_copy(const char *, int offset, int N);
