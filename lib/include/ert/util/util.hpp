@@ -96,7 +96,6 @@ char *util_alloc_sprintf(const char *, ...);
 bool util_entry_exists(const char *entry);
 bool util_file_exists(const char *);
 bool util_is_abs_path(const char *);
-char *util_alloc_abs_path(const char *path);
 char *util_alloc_rel_path(const char *__root_path, const char *path);
 bool util_fmt_bit8(const char *);
 bool util_mkdir_p(const char *);
@@ -109,8 +108,6 @@ bool util_copy_file(const char *, const char *);
 bool util_copy_file__(const char *src_file, const char *target_file,
                       size_t buffer_size, void *buffer, bool abort_on_error);
 char *util_alloc_cwd(void);
-char *util_alloc_realpath(const char *);
-char *util_alloc_realpath__(const char *input_path);
 bool util_ftruncate(FILE *stream, long size);
 
 int util_roundf(float x);
@@ -132,7 +129,6 @@ char *util_alloc_strip_copy(const char *);
 char *util_strcat_realloc(char *, const char *);
 char *util_alloc_string_copy(const char *);
 void util_path_split(const char *line, int *_tokens, char ***_token_list);
-char *util_alloc_parent_path(const char *path);
 void util_binary_split_string(const char *, const char *, bool, char **,
                               char **);
 char *util_realloc_string_copy(char *, const char *);

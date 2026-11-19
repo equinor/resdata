@@ -82,12 +82,12 @@
 
 #define TEST_WORK_AREA_TYPE_ID 1107355
 
-static char *test_work_area_alloc_prefix() {
+static std::string test_work_area_prefix() {
 #ifdef HAVE_WINDOWS_GET_TEMP_PATH
 
     char tmp_path[MAX_PATH];
     GetTempPath(MAX_PATH, tmp_path);
-    return util_alloc_string_copy(tmp_path);
+    return tmp_path;
 
 #else
 
@@ -101,7 +101,7 @@ static char *test_work_area_alloc_prefix() {
     if (!prefix_path)
         prefix_path = _PATH_TMP;
 
-    return util_alloc_realpath(prefix_path);
+    return std::filesystem::canonical(prefix_path).string();
 
 #endif
 }
@@ -112,25 +112,25 @@ namespace util {
 static bool test_work_area_copy_parent__(const TestArea *work_area,
                                          const std::string &input_path,
                                          bool copy_content) {
-    std::unique_ptr<char, decltype(&std::free)> full_path{
-        util_is_abs_path(input_path.c_str())
-            ? util_alloc_string_copy(input_path.c_str())
-            : util_alloc_filename(work_area->original_cwd().c_str(),
-                                  input_path.c_str(), NULL),
-        &std::free};
+    std::filesystem::path full_path = input_path;
+    if (full_path.is_relative())
+        full_path = work_area->original_cwd() / full_path;
 
-    if (util_entry_exists(full_path.get())) {
-        std::unique_ptr<char, decltype(&std::free)> parent_path{
-            util_alloc_parent_path(full_path.get()), &std::free};
-
-        if (copy_content)
-            work_area->copy_directory_content(std::string(parent_path.get()));
-        else
-            work_area->copy_directory(std::string(parent_path.get()));
-
-        return true;
-    } else
+    std::error_code ec;
+    if (!std::filesystem::exists(full_path, ec))
         return false;
+
+    full_path = full_path.lexically_normal();
+    if (!full_path.has_filename()) /* Trailing path separator. */
+        full_path = full_path.parent_path();
+    const std::string parent_path = full_path.parent_path().string();
+
+    if (copy_content)
+        work_area->copy_directory_content(parent_path);
+    else
+        work_area->copy_directory(parent_path);
+
+    return true;
 }
 static std::mt19937 generator(std::random_device{}());
 
@@ -161,8 +161,7 @@ static std::string create_test_path(const std::string &test_name,
 
 TestArea::TestArea(const std::string &test_name, bool store_area)
     : store(store_area) {
-    std::unique_ptr<char, decltype(&std::free)> prefix{
-        test_work_area_alloc_prefix(), &std::free};
+    const std::string prefix = test_work_area_prefix();
 
 #ifdef ERT_HAVE_GETUID
     uid_t uid = getuid();
@@ -177,7 +176,7 @@ TestArea::TestArea(const std::string &test_name, bool store_area)
 #endif
 
     std::string test_cwd =
-        rd::util::create_test_path(test_name, prefix.get(), user_name.get());
+        rd::util::create_test_path(test_name, prefix.c_str(), user_name.get());
 
     {
         std::unique_ptr<char, decltype(&std::free)> cwd_tmp{util_alloc_cwd(),

@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <filesystem>
+#include <string>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -43,13 +45,13 @@ void create_test_area(const char *test_name, bool store) {
 }
 
 void test_install_file_exists(const char *filename) {
-    char *abs_input_path = util_alloc_abs_path(filename);
+    const std::string abs_input_path =
+        std::filesystem::canonical(filename).string();
     test_work_area_type *work_area = test_work_area_alloc("FILE-TEST");
 
     test_work_area_install_file(work_area, filename);
-    test_assert_true(util_files_equal(abs_input_path, filename));
+    test_assert_true(util_files_equal(abs_input_path.c_str(), filename));
     test_work_area_free(work_area);
-    free(abs_input_path);
 }
 
 void test_copy_directory(const char *rel_path) {
@@ -80,11 +82,7 @@ void test_copy_parent_directory(const char *path) {
         test_work_area_alloc("copy-parent-directory");
     char *parent_path;
 
-    {
-        char *full_path = util_alloc_abs_path(path);
-        util_alloc_file_components(path, &parent_path, NULL, NULL);
-        free(full_path);
-    }
+    util_alloc_file_components(path, &parent_path, NULL, NULL);
 
     test_assert_false(
         test_work_area_copy_parent_directory(work_area, "Does/not/exist"));
@@ -98,8 +96,8 @@ void test_copy_parent_directory(const char *path) {
 }
 
 void test_copy_parent_content(const char *path) {
-    char *full_path = util_alloc_abs_path(path);
-    char *parent_path = util_alloc_parent_path(full_path);
+    const std::string parent_path =
+        std::filesystem::canonical(path).parent_path().string();
     test_work_area_type *work_area =
         test_work_area_alloc("copy-parent-content");
 
@@ -111,7 +109,8 @@ void test_copy_parent_content(const char *path) {
 
         struct dirent **src_namelist;
         struct dirent **target_namelist;
-        int src_size = scandir(parent_path, &src_namelist, NULL, alphasort);
+        int src_size =
+            scandir(parent_path.c_str(), &src_namelist, NULL, alphasort);
         int target_size = scandir(test_work_area_get_cwd(work_area),
                                   &target_namelist, NULL, alphasort);
 
@@ -127,8 +126,6 @@ void test_copy_parent_content(const char *path) {
         free(src_namelist);
         free(target_namelist);
     }
-    free(parent_path);
-    free(full_path);
 
     test_work_area_free(work_area);
 }

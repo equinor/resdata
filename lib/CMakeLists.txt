@@ -262,8 +262,6 @@ foreach(
   ert_util_approx_equal
   ert_util_binary_split
   ert_util_filename
-  ert_util_parent_path
-  ert_util_realpath
   ert_util_relpath_test
   ert_util_strcat_test
   ert_util_sscan_test

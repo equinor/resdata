@@ -9,6 +9,7 @@
 */
 
 #include <algorithm>
+#include <filesystem>
 #include <ios>
 #include <new>
 #include <stdexcept>
@@ -283,15 +284,6 @@ struct StringList {
 
 } // namespace
 
-/* Reallocates the memory owned by @ptr; if the reallocation throws @ptr
-   still owns the original memory. */
-static void realloc_owned(std::unique_ptr<char, decltype(&std::free)> &ptr,
-                          size_t new_size) {
-    char *new_ptr = (char *)util_realloc(ptr.get(), new_size);
-    ptr.release();
-    ptr.reset(new_ptr);
-}
-
 char *util_alloc_string_copy(const char *src) {
     if (src != NULL) {
         int byte_size = (strlen(src) + 1) * sizeof *src;
@@ -486,164 +478,6 @@ char *util_alloc_cwd(void) {
         return strdup(cwd);
     } else {
         throw std::runtime_error("Could not get cwd.");
-    }
-}
-
-/*
-   Homemade realpath() for not existing path or platforms without
-   realpath().
-*/
-
-static char *util_alloc_cwd_abs_path(const char *path) {
-    if (util_is_abs_path(path))
-        return util_alloc_string_copy(path);
-    else {
-        std::unique_ptr<char, decltype(&std::free)> abs_path{util_alloc_cwd(),
-                                                             &std::free};
-        realloc_owned(abs_path, strlen(abs_path.get()) + 1 + strlen(path) + 1);
-        strcat(abs_path.get(), UTIL_PATH_SEP_STRING);
-        strcat(abs_path.get(), path);
-        return abs_path.release();
-    }
-}
-
-/**
-   Manual realpath() implementation to be used on platforms without
-   realpath() support. Will remove /../, ./ and extra //. Will not
-   handle symlinks.
-*/
-
-#define BACKREF ".."
-#define CURRENT "."
-
-char *util_alloc_realpath__(const char *input_path) {
-    std::unique_ptr<char, decltype(&std::free)> abs_path{
-        util_alloc_cwd_abs_path(input_path), &std::free};
-    auto real_path_owner = rd::checked_calloc<char>(strlen(abs_path.get()) + 2);
-    char *real_path = real_path_owner.get();
-    real_path[0] = '\0';
-
-    {
-        StringList path_parts;
-        util_path_split(abs_path.get(), &path_parts.size, &path_parts.list);
-        char **path_list = path_parts.list;
-        const int path_len = path_parts.size;
-        std::vector<const char *> path_stack_owner(path_len + 1, nullptr);
-        const char **path_stack = path_stack_owner.data();
-
-        {
-            int stack_size = 0;
-
-            for (int path_index = 0; path_index < path_len; path_index++) {
-                const char *path_elm = path_list[path_index];
-
-                if (strcmp(path_elm, CURRENT) == 0)
-                    continue;
-
-                /* Backref - pop from stack. */
-                if (strcmp(path_elm, BACKREF) == 0) {
-                    if (stack_size > 0) {
-                        memmove(path_stack, &path_stack[1],
-                                (stack_size - 1) * sizeof *path_stack);
-                        stack_size--;
-                    }
-                    continue;
-                }
-
-                /* Normal path element - push onto stack. */
-                memmove(&path_stack[1], path_stack,
-                        stack_size * sizeof *path_stack);
-                path_stack[0] = path_elm;
-                stack_size++;
-            }
-
-            /* Build up the new string. */
-            if (stack_size > 0) {
-                for (int pos = stack_size - 1; pos >= 0; pos--) {
-                    const char *path_elm = path_stack[pos];
-                    if (pos == (stack_size - 1)) {
-#ifdef ERT_WINDOWS
-                        // Windows:
-                        //   1) If the path starts with X: - just do nothing
-                        //   2) Else add \\ - for a UNC path.
-                        if (path_elm[1] != ':') {
-                            strcat(real_path, UTIL_PATH_SEP_STRING);
-                            strcat(real_path, UTIL_PATH_SEP_STRING);
-                        }
-#else
-                        // Posix: just start with a leading '/'
-                        strcat(real_path, UTIL_PATH_SEP_STRING);
-#endif
-                        strcat(real_path, path_elm);
-                    } else {
-                        strcat(real_path, UTIL_PATH_SEP_STRING);
-                        strcat(real_path, path_elm);
-                    }
-                }
-            }
-        }
-    }
-
-    return real_path_owner.release();
-}
-
-#undef BACKREF
-#undef CURRENT
-
-/**
-   The util_alloc_realpath() throws std::ios_base::failure if the
-   @input_path does not exist. If the path might-not-exist you should use
-   util_alloc_abs_path() instead.
-*/
-
-char *util_alloc_realpath(const char *input_path) {
-#ifdef HAVE_REALPATH
-    /* With a NULL buffer realpath() allocates the result with malloc(). */
-    char *real_path = realpath(input_path, NULL);
-
-    if (real_path == NULL)
-        throw std::ios_base::failure(
-            fmt::format("{}: input_path:{} - failed: {}({})", __func__,
-                        input_path, strerror(errno), errno));
-
-    return real_path;
-#else
-    /* We do not have the realpath() implementation. Must first check if
-     the entry exists; and if not we throw. If the entry indeed exists
-     we call the util_alloc_cwd_abs_path() function: */
-#ifdef ERT_HAVE_SYMLINK
-    ERROR - Have symlinks and not realpath()
-        ?
-#endif
-        if (!util_entry_exists(input_path)) throw std::ios_base::failure(
-            fmt::format("{}: input_path:{} does not exist", __func__,
-                        input_path));
-
-    return util_alloc_realpath__(input_path);
-#endif
-}
-
-/**
-   If @path points to an existing entry the standard realpath()
-   function is used otherwise an absolute path is created after the
-   following simple algorithm:
-
-    1. If @path starts with '/' the path is assumed to be absolute, and
-       just returned.
-
-    2. Else cwd is prepended to the path.
-
-   In the manual realpath() neither "/../" nor symlinks are resolved. If path == NULL the function will return cwd().
-*/
-
-char *util_alloc_abs_path(const char *path) {
-    if (path == NULL)
-        return util_alloc_cwd();
-    else {
-        if (util_entry_exists(path))
-            return util_alloc_realpath(path);
-        else
-            return util_alloc_cwd_abs_path(path);
     }
 }
 
@@ -1191,12 +1025,8 @@ bool util_same_file(const char *file1, const char *file2) {
         return false; // Files which do not exist are no equal!
 #else
     if (util_file_exists(file1) && util_file_exists(file2)) {
-        char *abs_path1 = util_alloc_abs_path(file1);
-        char *abs_path2 = util_alloc_abs_path(file2);
-        bool same_file = util_string_equal(abs_path1, abs_path2);
-        free(abs_path1);
-        free(abs_path2);
-        return same_file;
+        return std::filesystem::canonical(file1) ==
+               std::filesystem::canonical(file2);
     } else
         return false;
 #endif
@@ -1829,9 +1659,6 @@ int util_fnmatch(const char *pattern, const char *string) {
    functions which are included if certain features like e.g. posix_spawn()
    are present. */
 
-// Observe that there is some really ugly #ifdef HAVE_REALPATH in the
-// main code.
-
 void util_time_utc(time_t *t, struct tm *ts) {
 #ifdef HAVE_GMTIME_R
     gmtime_r(t, ts);
@@ -1981,56 +1808,6 @@ char *util_split_alloc_filename(const char *input_path) {
 
 void util_path_split(const char *line, int *_tokens, char ***_token_list) {
     util_split_string(line, UTIL_PATH_SEP_STRING, _tokens, _token_list);
-}
-
-char *util_alloc_parent_path(const char *path) {
-    std::unique_ptr<char, decltype(&std::free)> parent_path{nullptr,
-                                                            &std::free};
-
-    if (path) {
-        bool is_abs = util_is_abs_path(path);
-        std::unique_ptr<char, decltype(&std::free)> work_path{nullptr,
-                                                              &std::free};
-
-        if (strstr(path, "..")) {
-            if (is_abs)
-                work_path.reset(util_alloc_realpath__(path));
-            else {
-                std::unique_ptr<char, decltype(&std::free)> abs_path{
-                    util_alloc_realpath__(path), &std::free};
-                std::unique_ptr<char, decltype(&std::free)> cwd{
-                    util_alloc_cwd(), &std::free};
-                work_path.reset(util_alloc_rel_path(cwd.get(), abs_path.get()));
-            }
-        } else
-            work_path.reset(util_alloc_string_copy(path));
-
-        StringList path_components;
-        util_path_split(work_path.get(), &path_components.size,
-                        &path_components.list);
-        if (path_components.size > 0) {
-            int current_length = 4;
-            int ip;
-
-            realloc_owned(parent_path, current_length);
-            parent_path.get()[0] = '\0';
-
-            for (ip = 0; ip < path_components.size - 1; ip++) {
-                const char *ipath = path_components.list[ip];
-                int min_length = strlen(parent_path.get()) + strlen(ipath) + 1;
-
-                if (min_length >= current_length) {
-                    current_length = 2 * min_length;
-                    realloc_owned(parent_path, current_length);
-                }
-
-                if (is_abs || (ip > 0))
-                    strcat(parent_path.get(), UTIL_PATH_SEP_STRING);
-                strcat(parent_path.get(), ipath);
-            }
-        }
-    }
-    return parent_path.release();
 }
 
 #ifdef ERT_HAVE_UNISTD
