@@ -88,7 +88,6 @@ time_t util_make_date_utc(int, int, int);
 void util_inplace_forward_seconds_utc(time_t *t, double seconds);
 void util_inplace_forward_days_utc(time_t *t, double days);
 
-double util_difftime(time_t, time_t, int *, int *, int *, int *);
 double util_difftime_seconds(time_t start_time, time_t end_time);
 
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);
@@ -135,7 +134,6 @@ char *util_realloc_string_copy(char *, const char *);
 void util_free_stringlist(char **, int);
 char *util_alloc_substring_copy(const char *, int offset, int N);
 bool util_is_directory(const char *);
-bool util_is_file(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
 void util_exit(const char *fmt, ...);
@@ -144,7 +142,6 @@ void *util_realloc(void *, size_t);
 char *util_fread_alloc_file_content(const char *, int *);
 void util_endian_flip_vector(void *data, size_t element_size, size_t elements);
 
-void util_double_vector_max_min(int, const double *, double *, double *);
 bool util_same_file(const char *, const char *);
 void util_fread(void *, size_t, size_t, FILE *, const char *);
 void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
@@ -160,7 +157,6 @@ bool util_float_approx_equal__(float d1, float d2, float rel_eps,
 int util_fnmatch(const char *pattern, const char *string);
 void util_time_utc(time_t *t, struct tm *ts);
 
-bool util_is_link(const char *); // Will always return false on windows
 int util_chdir(const char *path);
 
 #ifdef ERT_HAVE_UNISTD

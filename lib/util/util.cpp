@@ -808,19 +808,6 @@ bool util_is_directory(const char *path) {
             "{}: stat({}) failed: {}", __func__, path, strerror(errno)));
 }
 
-bool util_is_file(const char *path) {
-    stat_type stat_buffer;
-
-    if (util_stat(path, &stat_buffer) == 0)
-        return S_ISREG(stat_buffer.st_mode);
-    else if (errno == ENOENT)
-        /*Path does not exist at all. */
-        return false;
-    else
-        throw std::ios_base::failure(fmt::format(
-            "{}: stat({}) failed: {}", __func__, path, strerror(errno)));
-}
-
 static size_t util_get_path_length(const char *file) {
     if (util_is_directory(file))
         return strlen(file);

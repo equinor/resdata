@@ -12,7 +12,6 @@ add_library(
   resdata
   util/path.cpp
   util/util.cpp
-  util/util_symlink.cpp
   util/util_lfs.cpp
   util/parser.cpp
   util/cxx_string_util.cpp
