@@ -80,6 +80,8 @@
 
 #include <ert/util/util.hpp>
 
+#include <resdata/rd_util.hpp>
+
 #include <memory>
 
 /* The endian_convert() overloads produce the byte reversed value of a fixed
@@ -293,7 +295,7 @@ static void realloc_owned(std::unique_ptr<char, decltype(&std::free)> &ptr,
 char *util_alloc_string_copy(const char *src) {
     if (src != NULL) {
         int byte_size = (strlen(src) + 1) * sizeof *src;
-        char *copy = (char *)util_calloc(byte_size, sizeof *copy);
+        char *copy = rd::checked_calloc<char>(byte_size).release();
         memcpy(copy, src, byte_size);
         return copy;
     } else
@@ -304,7 +306,7 @@ char *util_alloc_substring_copy(const char *src, int offset, int N_) {
     size_t N = N_;
     char *copy;
     if ((N + offset) < strlen(src)) {
-        copy = (char *)util_calloc(N + 1, sizeof *copy);
+        copy = rd::checked_calloc<char>(N + 1).release();
         strncpy(copy, &src[offset], N);
         copy[N] = '\0';
     } else
@@ -445,8 +447,7 @@ char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
         throw std::ios_base::failure(fmt::format(
             "{}: fseek failed: {}/{}", __func__, errno, strerror(errno)));
 
-    std::unique_ptr<char, decltype(&std::free)> new_line{
-        (char *)util_malloc(len + 1), &std::free};
+    auto new_line = rd::checked_calloc<char>(len + 1);
     util_fread(new_line.get(), sizeof(char), len, stream, __func__);
     new_line.get()[len] = '\0';
 
@@ -518,8 +519,7 @@ static char *util_alloc_cwd_abs_path(const char *path) {
 char *util_alloc_realpath__(const char *input_path) {
     std::unique_ptr<char, decltype(&std::free)> abs_path{
         util_alloc_cwd_abs_path(input_path), &std::free};
-    std::unique_ptr<char, decltype(&std::free)> real_path_owner{
-        (char *)util_malloc(strlen(abs_path.get()) + 2), &std::free};
+    auto real_path_owner = rd::checked_calloc<char>(strlen(abs_path.get()) + 2);
     char *real_path = real_path_owner.get();
     real_path[0] = '\0';
 
@@ -598,16 +598,15 @@ char *util_alloc_realpath__(const char *input_path) {
 
 char *util_alloc_realpath(const char *input_path) {
 #ifdef HAVE_REALPATH
-    std::unique_ptr<char, decltype(&std::free)> buffer{
-        (char *)util_calloc(PATH_MAX + 1, sizeof(char)), &std::free};
+    /* With a NULL buffer realpath() allocates the result with malloc(). */
+    char *real_path = realpath(input_path, NULL);
 
-    if (realpath(input_path, buffer.get()) == NULL)
+    if (real_path == NULL)
         throw std::ios_base::failure(
             fmt::format("{}: input_path:{} - failed: {}({})", __func__,
                         input_path, strerror(errno), errno));
 
-    realloc_owned(buffer, strlen(buffer.get()) + 1);
-    return buffer.release();
+    return real_path;
 #else
     /* We do not have the realpath() implementation. Must first check if
      the entry exists; and if not we throw. If the entry indeed exists
@@ -763,8 +762,7 @@ bool util_string_equal(const char *s1, const char *s2) {
 
 char *util_fread_alloc_file_content(const char *filename, int *buffer_size) {
     size_t file_size = util_file_size(filename);
-    std::unique_ptr<char, decltype(&std::free)> buffer{
-        (char *)util_calloc(file_size + 1, sizeof(char)), &std::free};
+    auto buffer = rd::checked_calloc<char>(file_size + 1);
     {
         std::unique_ptr<FILE, void (*)(FILE *)> stream{
             util_fopen(filename, "r"), [](FILE *f) { fclose(f); }};
@@ -1439,11 +1437,11 @@ char *util_alloc_strip_copy(const char *src) {
         while (src[start_index] == ' ')
             start_index++;
         strip_length = end_index - start_index + 1;
-        target = (char *)util_calloc(strip_length + 1, sizeof *target);
+        target = rd::checked_calloc<char>(strip_length + 1).release();
         memcpy(target, &src[start_index], strip_length);
     } else
         /* A blank string */
-        target = (char *)util_calloc(strip_length + 1, sizeof *target);
+        target = rd::checked_calloc<char>(strip_length + 1).release();
 
     target[strip_length] = '\0';
     return target;
@@ -1499,8 +1497,7 @@ static void util_split_string(const char *line, const char *sep_set,
     } while (line[offset] != '\0');
 
     if (tokens > 0) {
-        token_list.list = (char **)util_calloc(tokens, sizeof(char *));
-        std::fill_n(token_list.list, tokens, nullptr);
+        token_list.list = rd::checked_calloc<char *>(tokens).release();
         token_list.size = tokens;
         offset = strspn(line, sep_set);
         token = 0;
@@ -1738,43 +1735,6 @@ void *util_realloc(void *old_ptr, size_t new_size) {
 }
 
 /**
-   This function is a super-thin wrapper around malloc. It allocates
-   the number of bytes you ask for. If the return value from malloc()
-   is NULL the routine throws std::bad_alloc.
-
-   If you are actually interested in handling malloc() failures in a
-   decent way, you should not use this routine.
-*/
-
-static void *util_malloc__(size_t size) {
-    void *data;
-    if (size == 0)
-        /*
-       Not entirely clear from documentation what you get when you
-       call malloc( 0 ); this code will return NULL in that case.
-    */
-        data = NULL;
-    else {
-        data = malloc(size);
-        if (data == NULL)
-            throw std::bad_alloc{};
-
-        /*
-       Initializing with something different from zero - hopefully
-       errors will pop up more easily this way?
-    */
-        memset(data, 255, size);
-    }
-    return data;
-}
-
-void *util_malloc(size_t size) { return util_malloc__(size); }
-
-void *util_calloc(size_t elements, size_t element_size) {
-    return util_malloc(elements * element_size);
-}
-
-/**
    This function allocates a string acoording to the fmt
    specification, and arguments. The arguments (except the format) are
    entered as a variable length argument list, and the function is
@@ -1799,7 +1759,7 @@ char *util_alloc_sprintf_va(const char *fmt, va_list ap) {
 
     length = vsnprintf(NULL, 0, fmt, tmp_va);
     va_end(tmp_va);
-    s = (char *)util_calloc(length + 1, sizeof *s);
+    s = rd::checked_calloc<char>(length + 1).release();
     vsnprintf(s, length + 1, fmt, ap);
     return s;
 }
@@ -1934,8 +1894,7 @@ bool util_mkdir_p(const char *_path) {
     bool success = true;
 
     int i = 0;
-    std::unique_ptr<char, decltype(&std::free)> active_path_owner{
-        (char *)util_calloc(strlen(path) + 1, sizeof(char)), &std::free};
+    auto active_path_owner = rd::checked_calloc<char>(strlen(path) + 1);
     char *active_path = active_path_owner.get();
     do {
         size_t n = strcspn(path, UTIL_PATH_SEP_STRING);
@@ -1988,7 +1947,7 @@ char *util_alloc_filename(const char *path, const char *basename,
     if (extension && strlen(extension))
         length += strlen(extension) + 1;
 
-    file = (char *)util_calloc(length, sizeof *file);
+    file = rd::checked_calloc<char>(length).release();
     file[0] = '\0';
 
     if (path && strlen(path)) {

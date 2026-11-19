@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include <string>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
@@ -11,13 +12,11 @@
 
 void export_actnum(const rd_grid_type *rd_grid, rd::File *rd_file) {
     rd::KW *actnum_kw = rd_file->get_kw("ACTNUM", 0);
-    int *actnum = (int *)util_malloc(actnum_kw->size() * sizeof *actnum);
+    std::vector<int> actnum(actnum_kw->size());
 
-    rd_grid_init_actnum_data(rd_grid, actnum);
+    rd_grid_init_actnum_data(rd_grid, actnum.data());
     for (size_t i = 0; i < actnum_kw->size(); i++)
         test_assert_int_equal(actnum[i], actnum_kw->at<int>(i));
-
-    free(actnum);
 }
 
 void export_coord(const rd_grid_type *grid, rd::File *rd_file) {
@@ -25,12 +24,9 @@ void export_coord(const rd_grid_type *grid, rd::File *rd_file) {
     test_assert_true(coord_kw->size() == rd_grid_get_coord_size(grid));
     {
         const size_t coord_size = rd_grid_get_coord_size(grid);
-        float *coord_float =
-            (float *)util_malloc(coord_size * sizeof *coord_float);
+        std::vector<float> coord_float(coord_size);
 
-        rd_grid_init_coord_data(grid, coord_float);
-
-        free(coord_float);
+        rd_grid_init_coord_data(grid, coord_float.data());
     }
 }
 
@@ -39,16 +35,13 @@ void export_zcorn(const rd_grid_type *grid, rd::File *rd_file) {
     test_assert_true(zcorn_kw->size() == rd_grid_get_zcorn_size(grid));
     {
         const size_t zcorn_size = rd_grid_get_zcorn_size(grid);
-        float *zcorn_float =
-            (float *)util_malloc(zcorn_size * sizeof *zcorn_float);
+        std::vector<float> zcorn_float(zcorn_size);
 
-        rd_grid_init_zcorn_data(grid, zcorn_float);
+        rd_grid_init_zcorn_data(grid, zcorn_float.data());
 
         for (size_t i = 0; i < zcorn_size; i++) {
             test_assert_float_equal(zcorn_float[i], zcorn_kw->at<float>(i));
         }
-
-        free(zcorn_float);
     }
 }
 

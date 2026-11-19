@@ -18,15 +18,15 @@
 #define PARSER_ESCAPE_CHAR '\\'
 
 struct basic_parser_struct {
-    char *
-        splitters; /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
-    char *
-        specials; /* This exactly like the splitters - but these characters are retained as tokens. */
-    char *
-        delete_set; /* The chracters are just plain removed - but without any splitting on them. */
-    char *quoters;
-    char *comment_start;
-    char *comment_end;
+    char *splitters =
+        nullptr; /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
+    char *specials =
+        nullptr; /* This exactly like the splitters - but these characters are retained as tokens. */
+    char *delete_set =
+        nullptr; /* The chracters are just plain removed - but without any splitting on them. */
+    char *quoters = nullptr;
+    char *comment_start = nullptr;
+    char *comment_end = nullptr;
 };
 
 static void __verify_string_length(const char *s) {
@@ -84,15 +84,8 @@ basic_parser_type *basic_parser_alloc(
         *comment_start,      /** Set to NULL if not interessting.            */
     const char *comment_end) /** Set to NULL  if not interessting.           */
 {
-    parser_ptr parser_owner{
-        (basic_parser_type *)util_malloc(sizeof(basic_parser_type))};
+    parser_ptr parser_owner{new basic_parser_type()};
     basic_parser_type *parser = parser_owner.get();
-    parser->splitters = NULL;
-    parser->delete_set = NULL;
-    parser->quoters = NULL;
-    parser->specials = NULL;
-    parser->comment_start = NULL;
-    parser->comment_end = NULL;
 
     basic_parser_set_splitters(parser, splitters);
     basic_parser_set_quoters(parser, quoters);
@@ -122,7 +115,7 @@ void basic_parser_free(basic_parser_type *parser) {
     free(parser->comment_end);
     free(parser->delete_set);
 
-    free(parser);
+    delete parser;
 }
 
 static bool is_escape(const char c) {

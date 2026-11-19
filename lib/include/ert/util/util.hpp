@@ -145,8 +145,6 @@ void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
 void util_exit(const char *fmt, ...);
 
 void *util_realloc(void *, size_t);
-void *util_malloc(size_t);
-void *util_calloc(size_t elements, size_t element_size);
 char *util_fread_alloc_file_content(const char *, int *);
 void util_endian_flip_vector(void *data, size_t element_size, size_t elements);
 
