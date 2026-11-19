@@ -568,8 +568,7 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
         /**
         The variables below are ONLY accesable through the gen_key
         setup; but the must be mentioned in this switch statement,
-        otherwise they will induce a hard failure in the default: target
-        below.
+        otherwise the default: target below throws std::invalid_argument.
     */
     case (RD_SMSPEC_LOCAL_BLOCK_VAR):
         break;

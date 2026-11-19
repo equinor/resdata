@@ -563,9 +563,9 @@ void smspec_node::set_lgr_name(const char *lgr) {
 
 void smspec_node::set_num(const int *grid_dims, int num_) {
     if (num_ == SMSPEC_NUMS_INVALID)
-        util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - "
-                   "seems like a bug?!\n",
-                   __func__);
+        throw std::invalid_argument(
+            std::string(__func__) +
+            ": explicitly trying to set nums == SMSPEC_NUMS_INVALID");
     this->num = num_;
     if ((var_type == RD_SMSPEC_COMPLETION_VAR) ||
         (var_type == RD_SMSPEC_BLOCK_VAR)) {
@@ -741,7 +741,9 @@ void smspec_node::set_gen_keys(const char *key_join_string_) {
         gen_key1 = smspec_alloc_aquifer_key(key_join_string_, keyword, num);
         break;
     default:
-        util_abort("%s: internal error - should not be here? \n", __func__);
+        throw std::logic_error(std::string(__func__) +
+                               ": internal error - unknown variable type: " +
+                               std::to_string(static_cast<int>(var_type)));
     }
 
     if (k1)

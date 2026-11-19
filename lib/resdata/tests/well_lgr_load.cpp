@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <ctime>
-#include <csignal>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
@@ -10,14 +9,6 @@
 #include <resdata/well/well_info.hpp>
 
 int main(int argc, char **argv) {
-    signal(SIGSEGV, util_abort_signal); /* Segmentation violation,
-                                             i.e. overwriting memory ... */
-    signal(SIGTERM, util_abort_signal); /* If killing the enkf program with
-                                             SIGTERM (the default kill signal)
-                                             you will get a backtrace.  Killing
-                                             with SIGKILL (-9) will not give a
-                                             backtrace.*/
-    signal(SIGABRT, util_abort_signal); /* Signal abort. */
     {
         rd_grid_type *grid = rd_grid_alloc(argv[1]);
         WellInfo well_info(grid);

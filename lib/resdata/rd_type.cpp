@@ -94,9 +94,9 @@ char *rd_type_alloc_name(const rd_data_type rd_type) {
     case (RD_MESS_TYPE):
         return util_alloc_string_copy(RD_TYPE_NAME_MESSAGE);
     default:
-        util_abort("Internal error in %s - internal eclipse_type: %d not "
-                   "recognized - aborting \n",
-                   __func__, rd_type.type);
+        throw std::invalid_argument(
+            fmt::format("{}: invalid rd_type: {}", __func__,
+                        static_cast<int>(rd_type.type)));
     }
 }
 

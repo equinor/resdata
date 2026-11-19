@@ -1,5 +1,6 @@
 #include <cstdlib>
 
+#include <memory>
 #include <string>
 
 #include <ert/util/util.hpp>
@@ -39,15 +40,12 @@ std::string basename(const std::string &fname) {
 
     {
         const char *c_str = fname.c_str();
-        const char *return_raw;
-        if (end_pos == std::string::npos || end_pos < offset)
-            return_raw = util_alloc_string_copy(&c_str[offset]);
-        else
-            return_raw =
-                util_alloc_substring_copy(c_str, offset, end_pos - offset);
-        std::string return_value = return_raw;
-        free((void *)return_raw);
-        return return_value;
+        std::unique_ptr<char, decltype(&std::free)> return_raw{
+            (end_pos == std::string::npos || end_pos < offset)
+                ? util_alloc_string_copy(&c_str[offset])
+                : util_alloc_substring_copy(c_str, offset, end_pos - offset),
+            &std::free};
+        return std::string(return_raw.get());
     }
 }
 
@@ -60,11 +58,11 @@ std::string extension(const std::string &fname) {
     if (last_slash == std::string::npos || end_pos > last_slash) {
         const char *c_str = fname.c_str();
 
-        const char *return_raw = util_alloc_substring_copy(
-            c_str, end_pos + 1, fname.size() - end_pos - 1);
-        std::string return_value = return_raw;
-        free((void *)return_raw);
-        return return_value;
+        std::unique_ptr<char, decltype(&std::free)> return_raw{
+            util_alloc_substring_copy(c_str, end_pos + 1,
+                                      fname.size() - end_pos - 1),
+            &std::free};
+        return std::string(return_raw.get());
     }
 
     return "";

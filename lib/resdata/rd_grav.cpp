@@ -651,7 +651,8 @@ double rd_grav_eval(const rd_grav_type *grav, const std::string &base,
 /* The functions rd_grav_new_std_density() and rd_grav_add_std_density() are
    used to "install" standard conditions densities for the various phases
    involved. These functions must be called prior to calling
-   rd_grav_add_survey_FIP() - failure to do so will lead to hard failure.
+   rd_grav_add_survey_FIP() - otherwise no survey is added and
+   rd_grav_add_survey_FIP() returns nullptr.
 */
 
 /**

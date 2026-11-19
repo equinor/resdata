@@ -121,7 +121,6 @@ rd_grid_ptr create_grid() {
 }
 
 int main(int argc, char **argv) {
-    util_install_signals();
     {
         rd_grid_ptr grid = create_grid();
 

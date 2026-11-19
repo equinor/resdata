@@ -22,6 +22,5 @@ void test_offset(int mday, int month, int year) {
 int main(int argc, char **argv) {
     test_date(10, 10, 2000);
     test_offset(10, 10, 2000);
-    // test_assert_util_abort( make_date( 1 , 1 , 0);
     exit(0);
 }

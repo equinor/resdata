@@ -2075,7 +2075,7 @@ rd_grid_alloc_GRDECL_kw__(rd_grid_type *global_grid, int dualp_flag,
     The code used to have this test:
 
        if (grid_nr != gridhead_kw->at<int>(GRIDHEAD_LGR_INDEX))
-          util_abort("%s: internal error in grid loader - lgr index mismatch\n",__func__);
+          throw std::invalid_argument("internal error in grid loader - lgr index mismatch");
 
     But then suddenly a EGRID file where this did not apply appeared :-(
     */
@@ -3968,9 +3968,9 @@ static void __assert_main_grid(const rd_grid_type *rd_grid) {
 
 /**
    This functon will return a a rd_grid instance corresponding to the
-   lgr with name lgr_name. The function will fail HARD if no lgr with
-   this name is installed under the present main grid; check first
-   with rd_grid_has_lgr() if you are whimp.
+   lgr with name lgr_name. The function throws std::out_of_range if no
+   lgr with this name is installed under the present main grid; check
+   first with rd_grid_has_lgr() if in doubt.
 
    Leading/trailing spaces on lgr_name are stripped prior to the hash lookup.
 */
@@ -4018,7 +4018,7 @@ size_t rd_grid_get_num_lgr(const rd_grid_type *main_grid) {
    The lgr_index has zero offset
    rd_grid_iget_lgr( rd_grid , 0); will return the first lgr
    rd_grid_iget_lgr( rd_grid , 1); will return the second lgr
-   The method will fail HARD if lgr_index is out of bounds.
+   The method throws std::out_of_range if lgr_index is out of bounds.
 */
 rd_grid_type *rd_grid_iget_lgr(const rd_grid_type *main_grid,
                                size_t lgr_index) {
@@ -4143,12 +4143,12 @@ double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
      return -1.
 
    * If the rd_kw instance has neither nx*ny*nz nor nactive elements
-     the function will fail HARD.
+     the function throws std::invalid_argument.
 
    * The return value is double, irrespective of the type of the
-     underlying datatype of the rd_kw instance - the function will
-     fail HARD if the underlying type can not be safely converted to
-     double, i.e. if it is not in the set [rd_float_type ,
+     underlying datatype of the rd_kw instance - the function throws
+     std::invalid_argument if the underlying type can not be safely
+     converted to double, i.e. if it is not in the set [rd_float_type ,
      rd_int_type , rd_double_type].
 
    * i,j,k: C-based zero offset grid coordinates.

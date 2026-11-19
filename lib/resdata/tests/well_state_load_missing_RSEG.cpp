@@ -16,7 +16,6 @@
 #include <resdata/well/well_state.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
     {
         const char *grid_file = argv[1];
         const char *rst_file_name = argv[2];

@@ -23,7 +23,6 @@ int main(int argc, char **argv) {
     const rd::KW *iseg_kw = rst_file->get_kw(ISEG_KW, 0);
     well_rseg_loader_type *rseg_loader = well_rseg_loader_alloc(rst_view.get());
 
-    test_install_SIGNALS();
     test_assert_not_NULL(rst_file.get());
 
     for (int well_nr = 0; well_nr < rst_head.nwells; well_nr++) {

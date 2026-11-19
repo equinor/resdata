@@ -864,7 +864,7 @@ class Grid(_BaseCClass):
         Depending on the length of kw the input arguments are
         converted either to an active index or to a global index. If
         the length of kw does not fit with either the global size of
-        the grid or the active size of the grid things will fail hard.
+        the grid or the active size of the grid a ValueError is raised.
         """
         return _grid._grid_value(self, kw, i, j, k)
 

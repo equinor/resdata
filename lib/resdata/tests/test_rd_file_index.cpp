@@ -75,7 +75,6 @@ void test_create_and_load_index_file() {
 }
 
 int main(int argc, char **argv) {
-    util_install_signals();
     test_load_nonexisting_file();
     test_create_and_load_index_file();
 }

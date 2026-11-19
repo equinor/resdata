@@ -2,10 +2,6 @@ if(ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
   list(APPEND opt_srcs util/test_work_area.cpp)
 endif()
 
-if(ERT_HAVE_OPENDIR)
-  list(APPEND opt_srcs util/util_opendir.cpp)
-endif()
-
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
 
@@ -16,7 +12,6 @@ add_library(
   resdata
   util/path.cpp
   util/util.cpp
-  util/util_abort.cpp
   util/util_symlink.cpp
   util/util_lfs.cpp
   util/parser.cpp
@@ -74,7 +69,7 @@ endif()
 target_link_libraries(
   resdata
   PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib} ${shlwapi}
-  PRIVATE fmt::fmt Backward::Backward)
+  PRIVATE fmt::fmt)
 
 target_include_directories(
   resdata
@@ -301,11 +296,6 @@ target_link_libraries(ert_util_copy_file resdata)
 add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
                                          $<TARGET_FILE:ert_util_copy_file>)
 
-add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp
-                                        util/test_util.cpp)
-target_link_libraries(ert_util_abort_gnu_tests resdata)
-add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
-
 foreach(
   name
   rd_fault_block_layer
@@ -337,12 +327,10 @@ foreach(
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-if(HAVE_UTIL_ABORT_INTERCEPT)
-  add_executable(rd_grid_corner resdata/tests/rd_grid_corner.cpp
-                                util/test_util.cpp)
-  target_link_libraries(rd_grid_corner resdata)
-  add_test(NAME rd_grid_corner COMMAND rd_grid_corner)
-endif()
+add_executable(rd_grid_corner resdata/tests/rd_grid_corner.cpp
+                              util/test_util.cpp)
+target_link_libraries(rd_grid_corner resdata)
+add_test(NAME rd_grid_corner COMMAND rd_grid_corner)
 
 add_executable(rd_get_num_cpu resdata/tests/rd_get_num_cpu_test.cpp
                               util/test_util.cpp)

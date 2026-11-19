@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdlib>
-#include <setjmp.h>
 #include <ert/util/ert_api_config.hpp>
 
 #if defined(__APPLE__)
@@ -134,12 +133,6 @@ void test_assert_mem_not_equal__(const void *p1, const void *p2,
     test_assert_file_content__(input_file, expected, __FILE__, __LINE__)
 void test_assert_file_content__(const char *input_file, const char *expected,
                                 const char *src_file, int line);
-
-void test_install_SIGNALS(void);
-
-extern "C" jmp_buf *util_abort_test_jump_buffer();
-void test_assert_util_abort(const char *function_name, void call_func(void *),
-                            void *arg);
 
 #define test_assert_throw(expr, exception_type)                                \
     {                                                                          \

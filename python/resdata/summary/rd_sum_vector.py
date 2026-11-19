@@ -194,7 +194,7 @@ class SummaryVector:
            vec.get_interp(days = 100)
            vec.get_interp(date = datetime.date(year, month, day))
 
-        This function will crash and burn if the time arguments are
+        This function raises ValueError if the time arguments are
         invalid; if in doubt you should check first.
         """
         return self.parent.get_interp(self.key, days, date)

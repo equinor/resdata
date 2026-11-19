@@ -8,7 +8,6 @@
 #include <resdata/well/well_const.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
 
     test_assert_true(well_state_translate_rd_type_int(IWEL_UNDOCUMENTED_ZERO) ==
                      WellType::ZERO);

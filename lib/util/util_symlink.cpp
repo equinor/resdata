@@ -1,6 +1,8 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <ios>
+#include <string>
 
 #include "ert/util/build_config.hpp"
 #include <ert/util/ert_api_config.hpp>
@@ -30,11 +32,9 @@ bool util_is_link(const char *path) {
     else if (errno == ENOENT)
         /*Path does not exist at all. */
         return false;
-    else {
-        util_abort("%s: stat(%s) failed: %s \n", __func__, path,
-                   strerror(errno));
-        return false;
-    }
+    else
+        throw std::ios_base::failure(std::string(__func__) + ": stat(" + path +
+                                     ") failed: " + strerror(errno));
 }
 
 #ifdef ERT_HAVE_READLINKAT

@@ -3,8 +3,11 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
+#include <string>
 #include <vector>
 #include <cstdlib>
+#include <ert/util/parser.hpp>
 #include <ert/util/util.hpp>
 #include <filesystem>
 
@@ -92,4 +95,23 @@ TEST_CASE("util_endian_flip_vector handles odd element counts",
     util_endian_flip_vector(values.data(), 4, elements);
 
     CHECK(values == std::vector<uint32_t>(elements, 0x78563412));
+}
+
+TEST_CASE("Tokenizing a quoted string keeps or strips the quotation marks",
+          "[unittest][parser]") {
+    parser_ptr parser{basic_parser_alloc(" ", "'", NULL, NULL, NULL, NULL)};
+    const char *buffer = "a 'my \\'doc.txt' b";
+
+    CHECK(basic_parser_tokenize_buffer(parser.get(), buffer, false) ==
+          std::vector<std::string>{"a", "'my \\'doc.txt'", "b"});
+    CHECK(basic_parser_tokenize_buffer(parser.get(), buffer, true) ==
+          std::vector<std::string>{"a", "my 'doc.txt", "b"});
+}
+
+TEST_CASE("Tokenizing an unterminated quotation throws invalid_argument",
+          "[unittest][parser]") {
+    parser_ptr parser{basic_parser_alloc(" ", "'", NULL, NULL, NULL, NULL)};
+
+    CHECK_THROWS_AS(basic_parser_tokenize_buffer(parser.get(), "a 'b", true),
+                    std::invalid_argument);
 }

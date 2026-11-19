@@ -2,8 +2,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <string>
 
+#include <stdexcept>
 #include <system_error>
 #include <filesystem>
 #include <random>
@@ -110,84 +112,83 @@ namespace util {
 static bool test_work_area_copy_parent__(const TestArea *work_area,
                                          const std::string &input_path,
                                          bool copy_content) {
-    char *full_path;
+    std::unique_ptr<char, decltype(&std::free)> full_path{
+        util_is_abs_path(input_path.c_str())
+            ? util_alloc_string_copy(input_path.c_str())
+            : util_alloc_filename(work_area->original_cwd().c_str(),
+                                  input_path.c_str(), NULL),
+        &std::free};
 
-    if (util_is_abs_path(input_path.c_str()))
-        full_path = util_alloc_string_copy(input_path.c_str());
-    else
-        full_path = util_alloc_filename(work_area->original_cwd().c_str(),
-                                        input_path.c_str(), NULL);
-
-    if (util_entry_exists(full_path)) {
-        char *parent_path = util_alloc_parent_path(full_path);
+    if (util_entry_exists(full_path.get())) {
+        std::unique_ptr<char, decltype(&std::free)> parent_path{
+            util_alloc_parent_path(full_path.get()), &std::free};
 
         if (copy_content)
-            work_area->copy_directory_content(std::string(parent_path));
+            work_area->copy_directory_content(std::string(parent_path.get()));
         else
-            work_area->copy_directory(std::string(parent_path));
+            work_area->copy_directory(std::string(parent_path.get()));
 
-        free(full_path);
-        free(parent_path);
         return true;
-    } else {
-        free(full_path);
+    } else
         return false;
-    }
 }
 static std::mt19937 generator(std::random_device{}());
 
-static char *create_test_path(const std::string &test_name, const char *prefix,
-                              const char *user_name) {
+static std::string create_test_path(const std::string &test_name,
+                                    const char *prefix, const char *user_name) {
     const int MAX_TRIES = 10;
     for (int try_count = 0; try_count < MAX_TRIES; try_count++) {
         unsigned int random_int = static_cast<unsigned int>(generator());
         random_int = random_int % 100000000;
 
-        char *test_path = util_alloc_sprintf(TEST_PATH_FMT, user_name,
-                                             test_name.c_str(), random_int);
+        std::unique_ptr<char, decltype(&std::free)> test_path{
+            util_alloc_sprintf(TEST_PATH_FMT, user_name, test_name.c_str(),
+                               random_int),
+            &std::free};
 
-        char *test_cwd = util_alloc_sprintf(FULL_PATH_FMT, prefix, test_path);
-        free(test_path);
+        std::unique_ptr<char, decltype(&std::free)> test_cwd{
+            util_alloc_sprintf(FULL_PATH_FMT, prefix, test_path.get()),
+            &std::free};
 
-        if (util_mkdir_p(test_cwd)) {
-            return test_cwd;
-        }
-        free(test_cwd);
+        if (util_mkdir_p(test_cwd.get()))
+            return test_cwd.get();
     }
 
-    util_abort(
-        "%s: failed to make test directory after %d tries: %s - aborting\n",
-        __func__, MAX_TRIES, test_name.c_str());
-    return NULL;
+    throw std::runtime_error(
+        std::string(__func__) + ": failed to make test directory after " +
+        std::to_string(MAX_TRIES) + " tries: " + test_name);
 }
 
 TestArea::TestArea(const std::string &test_name, bool store_area)
     : store(store_area) {
-    char *prefix = test_work_area_alloc_prefix();
+    std::unique_ptr<char, decltype(&std::free)> prefix{
+        test_work_area_alloc_prefix(), &std::free};
 
 #ifdef ERT_HAVE_GETUID
     uid_t uid = getuid();
     struct passwd *pw = getpwuid(uid);
-    char *user_name = util_alloc_string_copy(pw->pw_name);
+    std::unique_ptr<char, decltype(&std::free)> user_name{
+        util_alloc_string_copy(pw->pw_name), &std::free};
 #else
-    char *user_name = util_alloc_sprintf("ert-test-%08u", random_int);
+    std::unique_ptr<char, decltype(&std::free)> user_name{
+        util_alloc_sprintf("ert-test-%08u",
+                           static_cast<unsigned int>(generator())),
+        &std::free};
 #endif
 
-    char *test_cwd = rd::util::create_test_path(test_name, prefix, user_name);
+    std::string test_cwd =
+        rd::util::create_test_path(test_name, prefix.get(), user_name.get());
 
     {
-        char *cwd_tmp = util_alloc_cwd();
-        this->org_cwd = cwd_tmp;
-        free(cwd_tmp);
+        std::unique_ptr<char, decltype(&std::free)> cwd_tmp{util_alloc_cwd(),
+                                                            &std::free};
+        this->org_cwd = cwd_tmp.get();
     }
+    if (util_chdir(test_cwd.c_str()) != 0)
+        throw std::runtime_error(
+            std::string(__func__) +
+            ": Failed to move into temporary directory: " + test_cwd);
     this->cwd = test_cwd;
-    if (util_chdir(this->cwd.c_str()) != 0)
-        util_abort("%s: Failed to move into temporary directory: %s", __func__,
-                   this->cwd.c_str());
-
-    free(user_name);
-    free(test_cwd);
-    free(prefix);
 }
 
 TestArea::~TestArea() {
@@ -207,13 +208,11 @@ std::string TestArea::original_path(const std::string &input_path) const {
     if (util_is_abs_path(input_path.c_str()))
         return std::string(input_path);
     else {
-        char *fname = util_alloc_filename(this->original_cwd().c_str(),
-                                          input_path.c_str(), NULL);
-
-        std::string return_string = std::string(fname);
-        free(fname);
-
-        return return_string;
+        std::unique_ptr<char, decltype(&std::free)> fname{
+            util_alloc_filename(this->original_cwd().c_str(),
+                                input_path.c_str(), NULL),
+            &std::free};
+        return std::string(fname.get());
     }
 }
 
@@ -221,24 +220,49 @@ void TestArea::copy_file(const std::string &input_src_file) const {
     std::string src_file = this->original_path(input_src_file);
 
     if (util_file_exists(src_file.c_str())) {
-        char *target_name = util_split_alloc_filename(input_src_file.c_str());
-        char *target_file =
-            util_alloc_filename(this->test_cwd().c_str(), target_name, NULL);
-        util_copy_file(src_file.c_str(), target_file);
-        free(target_file);
-        free(target_name);
+        std::unique_ptr<char, decltype(&std::free)> target_name{
+            util_split_alloc_filename(input_src_file.c_str()), &std::free};
+        std::unique_ptr<char, decltype(&std::free)> target_file{
+            util_alloc_filename(this->test_cwd().c_str(), target_name.get(),
+                                NULL),
+            &std::free};
+        util_copy_file(src_file.c_str(), target_file.get());
+    }
+}
+
+/* Recursively copies the content of src_path into target_path; hidden entries
+   and symlinked directories are skipped. */
+static void copy_directory_content__(const std::filesystem::path &src_path,
+                                     const std::filesystem::path &target_path) {
+    if (!std::filesystem::is_directory(src_path))
+        throw std::invalid_argument(src_path.string() + " is not a directory");
+
+    std::filesystem::create_directories(target_path);
+    for (const auto &entry : std::filesystem::directory_iterator(src_path)) {
+        const std::filesystem::path name = entry.path().filename();
+        if (name.string()[0] == '.')
+            continue;
+
+        if (entry.is_regular_file())
+            std::filesystem::copy_file(
+                entry.path(), target_path / name,
+                std::filesystem::copy_options::overwrite_existing);
+        else if (entry.is_directory() && !entry.is_symlink())
+            copy_directory_content__(entry.path(), target_path / name);
     }
 }
 
 void TestArea::copy_directory(const std::string input_directory) const {
-    std::string src_directory = this->original_path(input_directory);
-    util_copy_directory(src_directory.c_str(), this->test_cwd().c_str());
+    std::filesystem::path src_directory = this->original_path(input_directory);
+    std::filesystem::path name = src_directory.filename();
+    if (name.empty())
+        name = src_directory.parent_path().filename();
+    copy_directory_content__(src_directory, this->test_cwd() / name);
 }
 
 void TestArea::copy_directory_content(const std::string input_directory) const {
-    std::string src_directory = this->original_path(input_directory);
-    util_copy_directory_content(src_directory.c_str(),
-                                this->test_cwd().c_str());
+    copy_directory_content__(this->original_path(input_directory),
+                             this->test_cwd());
 }
 
 bool TestArea::copy_parent(const std::string input_path) const {
@@ -295,10 +319,11 @@ void test_work_area_install_file(const test_work_area_type *work_area,
             util_make_path(src_path.c_str());
 
         if (util_file_exists(src_file.c_str())) {
-            char *target_file = util_alloc_filename(
-                work_area->test_cwd().c_str(), input_src_file, NULL);
-            util_copy_file(src_file.c_str(), target_file);
-            free(target_file);
+            std::unique_ptr<char, decltype(&std::free)> target_file{
+                util_alloc_filename(work_area->test_cwd().c_str(),
+                                    input_src_file, NULL),
+                &std::free};
+            util_copy_file(src_file.c_str(), target_file.get());
         }
     }
 }

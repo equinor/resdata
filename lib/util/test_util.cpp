@@ -1,9 +1,7 @@
-#include <csetjmp>
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
 #include <cstring>
-#include <csignal>
 #include <cinttypes>
 #include <cstdint>
 #include <ctime>
@@ -256,40 +254,6 @@ void test_assert_file_content__(const char *input_file, const char *expected,
     } else
         test_error_exit("%s:%d => No such file:%s \n", src_file, line,
                         input_file);
-}
-
-void test_install_SIGNALS(void) {
-    signal(
-        SIGSEGV,
-        util_abort_signal); /* Segmentation violation, i.e. overwriting memory ... */
-    signal(SIGINT, util_abort_signal); /* Control C */
-    signal(
-        SIGTERM,
-        util_abort_signal); /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace.
-                                             Killing with SIGKILL (-9) will not give a backtrace.*/
-}
-
-void test_assert_util_abort(const char *function_name, void call_func(void *),
-                            void *arg) {
-    bool util_abort_intercepted = false;
-
-    {
-        jmp_buf *context = util_abort_test_jump_buffer();
-        util_abort_test_set_intercept_function(function_name);
-
-        if (setjmp(*context) == 0)
-            call_func(arg);
-        else
-            util_abort_intercepted = true;
-
-        util_abort_test_set_intercept_function(NULL);
-    }
-
-    if (!util_abort_intercepted) {
-        fprintf(stderr, "Expected call to util_abort() from:%s missing \n",
-                function_name);
-        test_assert_true(util_abort_intercepted);
-    }
 }
 
 #ifdef HAVE_PTHREAD

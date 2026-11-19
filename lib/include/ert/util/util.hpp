@@ -49,10 +49,6 @@
 #define UTIL_DEFAULT_MKDIR_MODE                                                \
     0777 /* Directories are by default created with mode a+rwx - and then comes the umask ... */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
   These ifdefs are an attempt to support large files (> 2GB)
   transparently on both Windows and Linux. See source file
@@ -126,11 +122,6 @@ void util_rewind(FILE *stream);
 int util_stat(const char *filename, stat_type *stat_info);
 int util_fstat(int fileno, stat_type *stat_info);
 
-#ifdef ERT_HAVE_OPENDIR
-void util_copy_directory_content(const char *src_path, const char *target_path);
-void util_copy_directory(const char *, const char *);
-#endif
-
 FILE *util_fopen(const char *, const char *);
 char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
@@ -152,9 +143,7 @@ bool util_is_directory(const char *);
 bool util_is_file(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
-void util_abort_test_set_intercept_function(const char *);
 void util_exit(const char *fmt, ...);
-void util_install_signals(void);
 
 void *util_realloc(void *, size_t);
 void *util_malloc(size_t);
@@ -192,39 +181,9 @@ bool util_access(const char *entry, int mode);
 #define X_OK 1
 #endif
 
-#define UTIL_FWRITE_SCALAR(s, stream)                                          \
-    {                                                                          \
-        if (fwrite(&s, sizeof s, 1, stream) != 1)                              \
-            util_abort("%s: write failed: %s\n", __func__, strerror(errno));   \
-    }
-
-typedef void util_abort_handler_t(const char *filename, int lineno,
-                                  const char *function, const char *message,
-                                  const char *backtrace);
-void util_set_abort_handler(util_abort_handler_t *);
-
-#ifdef _MSC_VER
-#define util_abort(fmt, ...)                                                   \
-    util_abort__(__FILE__, __func__, __LINE__, fmt, __VA_ARGS__)
-#elif __GNUC__
-/* Also clang defines the __GNUC__ symbol */
-#define util_abort(fmt, ...)                                                   \
-    util_abort__(__FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
-#endif
-
-/* Conditional section below here */
-
-extern "C" [[noreturn]] void util_abort__(const char *file,
-                                          const char *function, int line,
-                                          const char *fmt, ...);
-[[noreturn]] void util_abort_signal(int);
-
-#ifdef __cplusplus
-}
 #include <string_view>
 bool util_fgetc_while_equal(FILE *stream, std::string_view str,
                             bool case_sensitive);
 bool util_fseek_string(FILE *stream, std::string_view string, bool skip_string,
                        bool case_sensitive);
-#endif
 #endif

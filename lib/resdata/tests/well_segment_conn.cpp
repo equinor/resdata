@@ -12,7 +12,6 @@
 #include <resdata/well/well_conn.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
     {
         double CF = 88;
         int segment_id = 78;

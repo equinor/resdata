@@ -10,7 +10,6 @@
 #include <resdata/well/well_const.hpp>
 
 int main(int argc, char **argv) {
-    test_install_SIGNALS();
 
     well_branch_collection_type *branches = well_branch_collection_alloc();
     const double depth = 100;
