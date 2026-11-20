@@ -99,10 +99,7 @@ double util_file_difftime(const char *, const char *);
 size_t util_file_size(const char *);
 size_t util_fd_size(int fd);
 bool util_string_equal(const char *s1, const char *s2);
-bool util_ftruncate(FILE *stream, long size);
-
-int util_roundf(float x);
-int util_round(double x);
+bool util_ftruncate(FILE *stream, offset_type size);
 
 offset_type util_ftell(FILE *stream);
 int util_fseek(FILE *stream, offset_type offset, int whence);

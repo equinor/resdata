@@ -1,3 +1,5 @@
+#include <climits>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -10,7 +12,9 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <limits>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -637,4 +641,35 @@ TEST_CASE_METHOD(Tmpdir, "select_matching_files expands a glob pattern",
         REQUIRE(select_matching_files(path, "CASE.EGRID") ==
                 std::vector<std::string>{(dirname / "CASE.EGRID").string()});
     }
+}
+
+TEST_CASE("iround rounds half away from zero", "[unittest]") {
+    REQUIRE(rd::iround(0.4) == 0);
+    REQUIRE(rd::iround(0.5) == 1);
+    REQUIRE(rd::iround(-0.5) == -1);
+    REQUIRE(rd::iround(-1.4) == -1);
+    REQUIRE(rd::iround(2.5) == 3);
+}
+
+TEST_CASE("iround accepts the extremes of int", "[unittest]") {
+    REQUIRE(rd::iround(static_cast<double>(INT_MAX)) == INT_MAX);
+    REQUIRE(rd::iround(static_cast<double>(INT_MIN)) == INT_MIN);
+    REQUIRE(rd::iround(2147483647.4) == INT_MAX);
+    REQUIRE(rd::iround(-2147483648.4) == INT_MIN);
+}
+
+TEST_CASE("iround throws for values that do not fit in an int", "[unittest]") {
+    // These two round to the values just outside the int range
+    REQUIRE_THROWS_AS(rd::iround(2147483647.5), std::out_of_range);
+    REQUIRE_THROWS_AS(rd::iround(-2147483648.5), std::out_of_range);
+    REQUIRE_THROWS_AS(rd::iround(1e300), std::out_of_range);
+    REQUIRE_THROWS_AS(rd::iround(-1e300), std::out_of_range);
+}
+
+TEST_CASE("iround throws for non-finite values", "[unittest]") {
+    REQUIRE_THROWS_AS(rd::iround(std::nan("")), std::out_of_range);
+    REQUIRE_THROWS_AS(rd::iround(std::numeric_limits<double>::infinity()),
+                      std::out_of_range);
+    REQUIRE_THROWS_AS(rd::iround(-std::numeric_limits<double>::infinity()),
+                      std::out_of_range);
 }

@@ -9,7 +9,6 @@
 #cmakedefine HAVE_POSIX_GETCWD 1
 #cmakedefine HAVE_WINDOWS_GETCWD 1
 #cmakedefine HAVE_TZNAME 1
-#cmakedefine HAVE_ROUND 1
 #cmakedefine HAVE_VA_COPY 1
 #cmakedefine HAVE_PTHREAD 1
 #cmakedefine HAVE_PID_T 1
