@@ -291,8 +291,7 @@ foreach(
   rd_nnc_vector
   test_rd_file_index
   rd_filenames
-  rd_make_date_no_shift
-  rd_make_date_shift
+  rd_make_date
   well_branch_collection
   test_well_conn
   test_well_state

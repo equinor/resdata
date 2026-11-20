@@ -3,6 +3,7 @@ import itertools
 import os.path
 import re
 import shutil
+import sys
 from dataclasses import dataclass, replace
 from textwrap import dedent
 from typing import TypeAlias
@@ -3256,3 +3257,27 @@ def test_that_smspec_with_too_short_startdat_is_rejected(tmp_path, startdat):
 
     with pytest.raises(ValueError, match="Invalid size of STARTDAT"):
         Summary.load(str(tmp_path / "CASE.SMSPEC"), str(tmp_path / "CASE.UNSMRY"))
+
+
+def test_that_smspec_with_startdat_before_1970_is_loaded_or_rejected_by_platform(
+    tmp_path,
+):
+    with openFortIO(str(tmp_path / "CASE.SMSPEC"), mode=FortIO.WRITE_MODE) as f:
+        write_int_kw(f, "DIMENS", [1, 1, 1, 1, 0, -1])
+        write_char_kw(f, "KEYWORDS", ["TIME"])
+        write_char_kw(f, "WGNAMES", [":+:+:+:+"])
+        write_char_kw(f, "UNITS", ["DAYS"])
+        write_int_kw(f, "STARTDAT", [1, 1, 1960, 0, 0, 0])
+    with openFortIO(str(tmp_path / "CASE.UNSMRY"), mode=FortIO.WRITE_MODE) as f:
+        write_int_kw(f, "SEQHDR", [0])
+        write_int_kw(f, "MINISTEP", [0])
+        write_float_kw(f, "PARAMS", [0.0])
+
+    if sys.platform == "win32":
+        with pytest.raises(ValueError, match="Dates before 1970 are not supported"):
+            Summary.load(str(tmp_path / "CASE.SMSPEC"), str(tmp_path / "CASE.UNSMRY"))
+    else:
+        summary = Summary.load(
+            str(tmp_path / "CASE.SMSPEC"), str(tmp_path / "CASE.UNSMRY")
+        )
+        assert summary.start_time == datetime.datetime(1960, 1, 1)
