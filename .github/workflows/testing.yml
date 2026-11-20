@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'ubuntu-24.04-arm', 'macos-latest']
+        os: ['ubuntu-latest', 'ubuntu-24.04-arm', 'macos-latest', 'windows-2022']
 
     runs-on: ${{ matrix.os }}
 
@@ -59,13 +59,22 @@ jobs:
       # picks up packages installed by us.
       run: |
         uv sync --group build --no-install-project
-        echo "$(pwd)/.venv/bin" >> "$GITHUB_PATH"
+        # venv scripts live in Scripts on Windows
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+        echo "$GITHUB_WORKSPACE/.venv/Scripts" >> "$GITHUB_PATH"
         mkdir cmake-build
         conan install . --output-folder=cmake-build --build=missing -o build_tests=True
 
     - name: Build
+      shell: bash
       run: |
-        cmake --preset conan-release -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
+        # The multi-config generator used with MSVC names its configure
+        # preset conan-default and does not support the sanitizer flags.
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          cmake --preset conan-default -DRST_DOC=ON
+        else
+          cmake --preset conan-release -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
+        fi
         cmake --build --preset conan-release
 
     - name: Run tests
