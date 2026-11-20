@@ -27,7 +27,8 @@
 #include <resdata/well/well_rseg_loader.hpp>
 
 WellState::WellState(std::string well_name, size_t global_well_nr, bool open,
-                     WellType type, int report_nr, time_t valid_from)
+                     WellType type, int report_nr,
+                     std::optional<time_t> valid_from)
     : name(well_name), valid_from_time(valid_from),
       valid_from_report(report_nr), global_well_nr(global_well_nr), open(open),
       type(type), is_MSW_well(false), oil_rate(0.0), gas_rate(0.0),

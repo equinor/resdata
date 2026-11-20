@@ -103,7 +103,7 @@ a grid.
 */
 class WellState {
     std::string name;
-    time_t valid_from_time;
+    std::optional<time_t> valid_from_time;
     int valid_from_report;
     size_t global_well_nr;
     bool open;
@@ -141,7 +141,7 @@ class WellState {
 
 public:
     WellState(std::string well_name, size_t global_well_nr, bool open,
-              WellType type, int report_nr, time_t valid_from);
+              WellType type, int report_nr, std::optional<time_t> valid_from);
     [[nodiscard]] double get_oil_rate() const { return oil_rate; }
     [[nodiscard]] double get_gas_rate() const { return gas_rate; }
     [[nodiscard]] double get_water_rate() const { return water_rate; }
@@ -152,7 +152,9 @@ public:
     [[nodiscard]] size_t get_well_nr() const { return global_well_nr; }
     [[nodiscard]] std::string get_name() const { return name; }
     [[nodiscard]] bool is_open() const { return open; }
-    [[nodiscard]] time_t get_sim_time() const { return valid_from_time; }
+    [[nodiscard]] std::optional<time_t> get_sim_time() const {
+        return valid_from_time;
+    }
     [[nodiscard]] double get_oil_rate_si() const {
         return oil_rate * liquid_conversion_factor(unit_system);
     }

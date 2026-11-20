@@ -63,6 +63,14 @@ def test_restart_headers_from_kw():
     assert header.get_report_step() == 1
 
 
+def test_that_sim_date_is_none_when_intehead_is_too_short():
+    intehead = ResdataKW("INTEHEAD", 60, ResDataType.RD_INT)
+    doubhead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_DOUBLE)
+    logihead = ResdataKW("LOGIHEAD", 100, ResDataType.RD_BOOL)
+    header = ResdataRestartHead(kw_arg=(1, intehead, doubhead, logihead))
+    assert header.get_sim_date() is None
+
+
 def restart_interpreted_date(year: int, month: int, day: int) -> datetime.datetime:
     intehead = ResdataKW("INTEHEAD", 100, ResDataType.RD_INT)
     intehead[64] = day
