@@ -184,13 +184,6 @@ void util_endian_flip_vector(void *data, size_t element_size, size_t elements) {
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #endif
 
-static bool EOL_CHAR(char c) {
-    if (c == '\r' || c == '\n')
-        return true;
-    else
-        return false;
-}
-
 /**
    Kahan summation is a technique to retain numerical precision when
    summing a long vector of values. See:
@@ -386,7 +379,7 @@ char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
             if (c == EOF)
                 cont = false;
             else {
-                if (EOL_CHAR(c))
+                if (c == '\r' || c == '\n')
                     cont = false;
                 else
                     len++;

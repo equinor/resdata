@@ -1090,7 +1090,8 @@ void rd_region_kw_iadd(rd_region_type *rd_region, rd::KW *rd_kw,
     std::visit(
         [&](auto &&target_alt) {
             using T = typename std::decay_t<decltype(target_alt)>::value_type;
-            if constexpr (std::is_arithmetic_v<T>) {
+            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> ||
+                          std::is_same_v<T, double>) {
                 auto &target_data = rd_kw->get_vector<T>();
                 const auto &delta_data = delta_kw->get_vector<T>();
                 for (const auto i : index_set)
@@ -1112,7 +1113,8 @@ void rd_region_kw_idiv(rd_region_type *rd_region, rd::KW *rd_kw,
     std::visit(
         [&](auto &&target_alt) {
             using T = typename std::decay_t<decltype(target_alt)>::value_type;
-            if constexpr (std::is_arithmetic_v<T>) {
+            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> ||
+                          std::is_same_v<T, double>) {
                 auto &target_data = rd_kw->get_vector<T>();
                 const auto &div_data = div_kw->get_vector<T>();
                 for (const auto i : index_set)
@@ -1134,7 +1136,8 @@ void rd_region_kw_imul(rd_region_type *rd_region, rd::KW *rd_kw,
     std::visit(
         [&](auto &&target_alt) {
             using T = typename std::decay_t<decltype(target_alt)>::value_type;
-            if constexpr (std::is_arithmetic_v<T>) {
+            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> ||
+                          std::is_same_v<T, double>) {
                 auto &target_data = rd_kw->get_vector<T>();
                 const auto &mul_data = mul_kw->get_vector<T>();
                 for (const auto i : index_set)
@@ -1156,7 +1159,8 @@ void rd_region_kw_isub(rd_region_type *rd_region, rd::KW *rd_kw,
     std::visit(
         [&](auto &&target_alt) {
             using T = typename std::decay_t<decltype(target_alt)>::value_type;
-            if constexpr (std::is_arithmetic_v<T>) {
+            if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> ||
+                          std::is_same_v<T, double>) {
                 auto &target_data = rd_kw->get_vector<T>();
                 const auto &delta_data = delta_kw->get_vector<T>();
                 for (const auto i : index_set)
