@@ -436,10 +436,15 @@ bool util_sscanf_int(const char *buffer, int *value) {
 
     char *error_ptr;
 
-    int tmp_value = strtol(buffer, &error_ptr, 10);
+    errno = 0;
+    long tmp_value = strtol(buffer, &error_ptr, 10);
 
     if (error_ptr == buffer)
         return false;
+
+    if (errno == ERANGE || tmp_value < INT_MIN || tmp_value > INT_MAX)
+        throw std::out_of_range(
+            fmt::format("Value does not fit in an int: {}", buffer));
 
     // Skip trailing white-space
     while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
@@ -449,7 +454,7 @@ bool util_sscanf_int(const char *buffer, int *value) {
         return false;
 
     if (value != NULL)
-        *value = tmp_value;
+        *value = static_cast<int>(tmp_value);
     return true;
 }
 
