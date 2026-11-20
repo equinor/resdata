@@ -36,8 +36,6 @@
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_file_flag.hpp>
 
-#include <detail/util/path.hpp>
-
 namespace fs = std::filesystem;
 
 /**

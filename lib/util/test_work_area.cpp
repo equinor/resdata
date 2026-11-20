@@ -22,8 +22,6 @@
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
 
-#include "detail/util/path.hpp"
-
 /*
   This file implements a small work area implementation to be used for
   tests which write to disk. The implementation works by creating a

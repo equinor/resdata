@@ -270,18 +270,6 @@ char *util_alloc_string_copy(const char *src) {
         return NULL;
 }
 
-char *util_alloc_substring_copy(const char *src, int offset, int N_) {
-    size_t N = N_;
-    char *copy;
-    if ((N + offset) < strlen(src)) {
-        copy = rd::checked_calloc<char>(N + 1).release();
-        strncpy(copy, &src[offset], N);
-        copy[N] = '\0';
-    } else
-        copy = util_alloc_string_copy(&src[offset]);
-    return copy;
-}
-
 bool util_fgetc_while_equal(FILE *stream, std::string_view str,
                             bool case_sensitive) {
     if (str.empty())

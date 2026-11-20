@@ -115,7 +115,6 @@ char *util_fscanf_alloc_line(FILE *, bool *);
 bool util_sscanf_int(const char *, int *);
 char *util_alloc_strip_copy(const char *);
 char *util_alloc_string_copy(const char *);
-char *util_alloc_substring_copy(const char *, int offset, int N);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
 void util_exit(const char *fmt, ...);
