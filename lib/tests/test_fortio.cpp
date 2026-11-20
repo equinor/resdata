@@ -309,9 +309,11 @@ TEST_CASE_METHOD(Tmpdir, "Reading data with FortIO") {
         THEN("After fwrite_error the file is deleted and writes are no-ops") {
             REQUIRE(std::filesystem::exists(filename));
             fortio.fwrite_error();
-            REQUIRE_FALSE(std::filesystem::exists(filename));
             fortio.fwrite_record(buffer.data(), 100);
+#ifndef ERT_WINDOWS
+            // Windows can not remove files that are still open
             REQUIRE_FALSE(std::filesystem::exists(filename));
+#endif
         }
     }
 }

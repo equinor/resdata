@@ -50,9 +50,10 @@ void test_kw_io_charlength() {
             test_assert_false(rd_kw_out1.fwrite(f));
         }
 
-        {
-            test_assert_false(util_file_exists("TEST1"));
-        }
+#ifndef ERT_WINDOWS
+        // Windows can not remove files that are still open
+        test_assert_false(util_file_exists("TEST1"));
+#endif
     }
 }
 

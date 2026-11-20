@@ -487,8 +487,11 @@ bool FortIO::read_at_eof() {
   write to this file will still (superficially) succeed.
 */
 void FortIO::fwrite_error() {
+#ifndef ERT_WINDOWS
+    // Windows can not remove a file that is still open
     if (m_writable)
         std::filesystem::remove(m_filename);
+#endif
 }
 
 void FortIO::fflush() const { ::fflush(m_stream); }
