@@ -994,48 +994,20 @@ int rd_get_num_cpu(const char *data_file) {
     return num_cpu;
 }
 
-static time_t rd_make_datetime__(int sec, int min, int hour, int mday,
-                                 int month, int year, int *__year_offset) {
-    time_t date;
-
-#ifdef ERT_TIME_T_64BIT_ACCEPT_PRE1970
-    *__year_offset = 0;
-    date = util_make_date_utc(mday, month, year);
-#else
-    static bool offset_initialized = false;
-    static int year_offset = 0;
-
-    if (!offset_initialized) {
-        if (year < 1970) {
-            year_offset = 2000 - year;
-            fprintf(
-                stderr,
-                "Warning: all year values will be shifted %d years forward. \n",
-                year_offset);
-        }
-        offset_initialized = true;
-    }
-    *__year_offset = year_offset;
-    date =
-        util_make_datetime_utc(sec, min, hour, mday, month, year + year_offset);
+time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
+                        int year) {
+#ifndef ERT_TIME_T_64BIT_ACCEPT_PRE1970
+    if (year < 1970)
+        throw std::invalid_argument(
+            fmt::format("Dates before 1970 are not supported on this "
+                        "platform, got year {}",
+                        year));
 #endif
-
-    return date;
-}
-
-time_t rd_make_date__(int mday, int month, int year, int *__year_offset) {
-    return rd_make_datetime__(0, 0, 0, mday, month, year, __year_offset);
+    return util_make_datetime_utc(sec, min, hour, mday, month, year);
 }
 
 time_t rd_make_date(int mday, int month, int year) {
-    int year_offset;
-    return rd_make_date__(mday, month, year, &year_offset);
-}
-
-time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
-                        int year) {
-    int year_offset;
-    return rd_make_datetime__(sec, min, hour, mday, month, year, &year_offset);
+    return rd_make_datetime(0, 0, 0, mday, month, year);
 }
 
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
