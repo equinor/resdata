@@ -59,6 +59,10 @@ def test_restart_headers_from_kw():
     intehead = ResdataKW("INTEHEAD", 100, ResDataType.RD_INT)
     doubhead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_DOUBLE)
     logihead = ResdataKW("LOGIHEAD", 100, ResDataType.RD_BOOL)
+    # A zero date is not representable on Windows
+    intehead[64] = 1
+    intehead[65] = 1
+    intehead[66] = 2000
     header = ResdataRestartHead(kw_arg=(1, intehead, doubhead, logihead))
     assert header.get_report_step() == 1
 
@@ -106,6 +110,7 @@ def test_that_restart_interpreted_timestamp_has_no_tzinfo(year, month, day):
     assert restart_interpreted_date(year, month, day).tzinfo is None
 
 
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="time.tzset is not on Windows")
 @given(
     year=st.integers(min_value=1970, max_value=2600),
     month=st.integers(min_value=1, max_value=12),

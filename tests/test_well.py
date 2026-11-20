@@ -374,6 +374,7 @@ def _fwrite_keywords(path, keywords, formatted=False):
     fortio = FortIO(path, mode=FortIO.WRITE_MODE, fmt_file=formatted)
     rd_file.fwrite(fortio)
     fortio.close()
+    rd_file.close()
     os.remove(scratch)
 
 
