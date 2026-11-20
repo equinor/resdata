@@ -177,7 +177,7 @@ TEST_CASE_METHOD(Tmpdir,
 
         WHEN("Writing the dual-porosity grid as a GRID") {
             auto grid_filename = dirname / "DUALP.GRID";
-            rd_grid_fwrite_GRID2(g1.get(), grid_filename.c_str(),
+            rd_grid_fwrite_GRID2(g1.get(), grid_filename.string().c_str(),
                                  UnitSystem::METRIC);
             REQUIRE(fs::exists(grid_filename));
             auto reloaded = read_grid(grid_filename);

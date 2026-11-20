@@ -104,14 +104,25 @@ TEST_CASE("util_same_file identifies files by identity", "[unittest]") {
     const fs::path b = dir / "b";
     std::ofstream(a) << "x";
     std::ofstream(b) << "x";
+#ifdef ERT_WINDOWS
+    // creating symlinks may require privileges on Windows
+    std::error_code symlink_ec;
+    fs::create_symlink(a, dir / "link", symlink_ec);
+    const bool has_symlink = !symlink_ec;
+#else
     fs::create_symlink(a, dir / "link");
+    const bool has_symlink = true;
+#endif
 
-    CHECK(util_same_file(a.c_str(), a.c_str()));
-    CHECK(util_same_file(a.c_str(), (dir / "link").c_str()));
-    CHECK_FALSE(util_same_file(a.c_str(), b.c_str()));
-    CHECK_FALSE(util_same_file(a.c_str(), (dir / "missing").c_str()));
+    CHECK(util_same_file(a.string().c_str(), a.string().c_str()));
+    if (has_symlink)
+        CHECK(util_same_file(a.string().c_str(),
+                             (dir / "link").string().c_str()));
+    CHECK_FALSE(util_same_file(a.string().c_str(), b.string().c_str()));
     CHECK_FALSE(
-        util_same_file((dir / "missing").c_str(), (dir / "missing").c_str()));
+        util_same_file(a.string().c_str(), (dir / "missing").string().c_str()));
+    CHECK_FALSE(util_same_file((dir / "missing").string().c_str(),
+                               (dir / "missing").string().c_str()));
 
     fs::remove_all(dir);
 }

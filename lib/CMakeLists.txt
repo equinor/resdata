@@ -1,6 +1,4 @@
-if(ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
-  list(APPEND opt_srcs util/test_work_area.cpp)
-endif()
+list(APPEND opt_srcs util/test_work_area.cpp)
 
 # Make cmath have defines like M_PI
 add_compile_definitions(_USE_MATH_DEFINES)
@@ -10,7 +8,6 @@ configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
 add_library(
   resdata
-  util/path.cpp
   util/util.cpp
   util/util_lfs.cpp
   util/parser.cpp
@@ -254,8 +251,7 @@ target_include_directories(rd_test_suite
 target_link_libraries(rd_test_suite resdata Catch2::Catch2)
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
 
-foreach(name ert_util_split_path ert_util_approx_equal ert_util_sscan_test
-             test_area)
+foreach(name ert_util_approx_equal ert_util_sscan_test test_area)
 
   add_executable(${name} util/tests/${name}.cpp util/test_util.cpp)
   target_include_directories(
@@ -293,8 +289,7 @@ foreach(
   rd_nnc_vector
   test_rd_file_index
   rd_filenames
-  rd_make_date_no_shift
-  rd_make_date_shift
+  rd_make_date
   well_branch_collection
   test_well_conn
   test_well_state

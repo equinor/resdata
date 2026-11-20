@@ -1,3 +1,4 @@
+#include <optional>
 #include <cstdlib>
 #include <ctime>
 
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
         const char *well_name = "WELL";
         int report_nr = 100;
         int global_well_nr = 67;
-        time_t valid_from = -1;
+        std::optional<time_t> valid_from = std::nullopt;
         bool open = false;
         auto type = WellType::GAS_INJECTOR;
 
@@ -37,7 +38,11 @@ int main(int argc, char **argv) {
         test_assert_bool_equal(open, well_state.is_open());
         test_assert_true(type == well_state.get_type());
         test_assert_int_equal(report_nr, well_state.get_report_nr());
-        test_assert_time_t_equal(valid_from, well_state.get_sim_time());
+        test_assert_false(well_state.get_sim_time().has_value());
+
+        WellState dated_state(well_name, global_well_nr, open, type, report_nr,
+                              (time_t)946684800);
+        test_assert_time_t_equal(946684800, *dated_state.get_sim_time());
 
         test_assert_NULL(well_state.get_global_connections());
         test_assert_false(well_state.has_global_connections());

@@ -13,14 +13,7 @@ void test_date(int mday, int month, int year) {
     test_assert_time_t_equal(t0, t1);
 }
 
-void test_offset(int mday, int month, int year) {
-    int year_offset;
-    rd_make_date__(mday, month, year, &year_offset);
-    test_assert_int_equal(0, year_offset);
-}
-
 int main(int argc, char **argv) {
     test_date(10, 10, 2000);
-    test_offset(10, 10, 2000);
     exit(0);
 }

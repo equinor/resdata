@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <optional>
 #include <ctime>
 #include <stdexcept>
 #include <string>
@@ -15,10 +17,8 @@ struct RSTHead {
     // The report step is from the SEQNUM keyword for unified files,
     // and inferred from the filename for non unified files.
     int report_step;
-    int day;
-    int year;
-    int month;
-    time_t sim_time;
+    // Not set when the INTEHEAD is too short to hold a date
+    std::optional<time_t> sim_time;
     int version;   // 100, 300, 500 (Eclipse300-Thermal)
     int phase_sum; // Oil = 1   Gas = 2    Water = 4
 
@@ -60,20 +60,19 @@ struct RSTHead {
     // Properties from the DOUBHEAD keyword:
     double sim_days;
 
-    inline RSTHead(int report_step, int day, int year, int month,
-                   time_t sim_time, int version, int phase_sum,
-                   UnitSystem unit_system, int nx, int ny, int nz, int nactive,
-                   int nwells, int niwelz, int nzwelz, int nxwelz, int niconz,
-                   int ncwmax, int nsconz, int nxconz, int nisegz, int nsegmx,
-                   int nswlmx, int nlbrmx, int nilbrz, int nrsegz, bool dualp,
-                   double sim_days)
-        : report_step(report_step), day(day), year(year), month(month),
-          sim_time(sim_time), version(version), phase_sum(phase_sum),
-          unit_system(unit_system), nx(nx), ny(ny), nz(nz), nactive(nactive),
-          nwells(nwells), niwelz(niwelz), nzwelz(nzwelz), nxwelz(nxwelz),
-          niconz(niconz), ncwmax(ncwmax), nsconz(nsconz), nxconz(nxconz),
-          nisegz(nisegz), nsegmx(nsegmx), nswlmx(nswlmx), nlbrmx(nlbrmx),
-          nilbrz(nilbrz), nrsegz(nrsegz), dualp(dualp), sim_days(sim_days) {};
+    inline RSTHead(int report_step, std::optional<time_t> sim_time, int version,
+                   int phase_sum, UnitSystem unit_system, int nx, int ny,
+                   int nz, int nactive, int nwells, int niwelz, int nzwelz,
+                   int nxwelz, int niconz, int ncwmax, int nsconz, int nxconz,
+                   int nisegz, int nsegmx, int nswlmx, int nlbrmx, int nilbrz,
+                   int nrsegz, bool dualp, double sim_days)
+        : report_step(report_step), sim_time(sim_time), version(version),
+          phase_sum(phase_sum), unit_system(unit_system), nx(nx), ny(ny),
+          nz(nz), nactive(nactive), nwells(nwells), niwelz(niwelz),
+          nzwelz(nzwelz), nxwelz(nxwelz), niconz(niconz), ncwmax(ncwmax),
+          nsconz(nsconz), nxconz(nxconz), nisegz(nisegz), nsegmx(nsegmx),
+          nswlmx(nswlmx), nlbrmx(nlbrmx), nilbrz(nilbrz), nrsegz(nrsegz),
+          dualp(dualp), sim_days(sim_days) {};
 
     inline RSTHead(int report_step, const rd::KW *intehead_kw,
                    const rd::KW *doubhead_kw, const rd::KW *logihead_kw)
@@ -87,9 +86,6 @@ struct RSTHead {
             return index < nihead ? data[index] : 0;
         };
 
-        this->day = get(INTEHEAD_DAY_INDEX);
-        this->month = get(INTEHEAD_MONTH_INDEX);
-        this->year = get(INTEHEAD_YEAR_INDEX);
         this->version = get(INTEHEAD_IPROG_INDEX);
         this->phase_sum = get(INTEHEAD_PHASE_INDEX);
 
@@ -116,7 +112,12 @@ struct RSTHead {
         this->nilbrz = get(INTEHEAD_NILBRZ_INDEX);
         this->nrsegz = get(INTEHEAD_NRSEGZ_INDEX);
 
-        this->sim_time = rd_make_date(this->day, this->month, this->year);
+        if (static_cast<size_t>(
+                std::max({INTEHEAD_DAY_INDEX, INTEHEAD_MONTH_INDEX,
+                          INTEHEAD_YEAR_INDEX})) < nihead)
+            this->sim_time =
+                rd_make_date(get(INTEHEAD_DAY_INDEX), get(INTEHEAD_MONTH_INDEX),
+                             get(INTEHEAD_YEAR_INDEX));
 
         if (logihead_kw)
             this->dualp = logihead_kw->at<bool>(LOGIHEAD_DUALP_INDEX);
@@ -205,9 +206,6 @@ struct RSTHead {
 
     inline bool operator==(const RSTHead &other) const {
         bool equal = true;
-        equal &= (this->day == other.day);
-        equal &= (this->year == other.year);
-        equal &= (this->month == other.month);
         equal &= (this->sim_time == other.sim_time);
         equal &= (this->version == other.version);
         equal &= (this->phase_sum == other.phase_sum);

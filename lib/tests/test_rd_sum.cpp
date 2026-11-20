@@ -1494,6 +1494,8 @@ SCENARIO_METHOD(Tmpdir, "rd::unsmry_loader reads back values from a UNSMRY") {
     }
 }
 
+// Windows can not remove a file that is still open
+#ifndef ERT_WINDOWS
 SCENARIO_METHOD(
     Tmpdir, "rd::unsmry_loader reports a vanished UNSMRY file as an error") {
     GIVEN("A CLOSE_STREAM loader over a summary case") {
@@ -1520,6 +1522,7 @@ SCENARIO_METHOD(
         }
     }
 }
+#endif
 
 SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
     GIVEN("A summary case sampled at sim_days 1, 3, 5, 7") {

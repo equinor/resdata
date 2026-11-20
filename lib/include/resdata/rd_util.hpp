@@ -78,7 +78,6 @@ int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);
 int rd_fname_report_cmp(const void *f1, const void *f2);
 time_t rd_make_date(int mday, int month, int year);
-time_t rd_make_date__(int mday, int month, int year, int *year_offset);
 time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
                         int year);
 

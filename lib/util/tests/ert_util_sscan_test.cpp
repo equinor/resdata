@@ -2,8 +2,6 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
-#include <sys/types.h>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>

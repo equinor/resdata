@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <filesystem>
-#include <unistd.h>
+#ifndef ERT_WINDOWS
+#include <sys/stat.h>
+#endif
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
@@ -22,8 +24,11 @@ void test_relative_access() {
         fclose(f);
     }
     test_assert_true(rd_path_access("path/file"));
+#ifndef ERT_WINDOWS
+    // Windows has no permission bits that deny reading
     chmod("path/file", 0);
     test_assert_false(rd_path_access("path/file"));
+#endif
 
     test_assert_true(rd_path_access("ECLIPSE_CASE"));
 }

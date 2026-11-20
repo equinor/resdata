@@ -53,6 +53,9 @@ struct Dims {
 
 std::unique_ptr<rd::KW> build_intehead(const Dims &d) {
     std::vector<int> data(412, 0);
+    data[INTEHEAD_DAY_INDEX] = 1;
+    data[INTEHEAD_MONTH_INDEX] = 1;
+    data[INTEHEAD_YEAR_INDEX] = 2000;
     data[INTEHEAD_UNIT_INDEX] = INTEHEAD_METRIC_VALUE;
     data[INTEHEAD_NX_INDEX] = static_cast<int>(d.nx);
     data[INTEHEAD_NY_INDEX] = static_cast<int>(d.ny);

@@ -429,9 +429,13 @@ TEST_CASE_METHOD(Tmpdir, "rd_select_filelist treats the base as a pattern",
         auto files =
             rd_select_filelist(path.c_str(), "*", FileType::EGRID, false);
 
-        REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.EGRID",
-                                                                "CASE1.EGRID",
-                                                                "OTHER.EGRID"});
+        std::vector<std::string> expected{"CASE.EGRID", "CASE1.EGRID",
+                                          "OTHER.EGRID"};
+#ifdef ERT_WINDOWS
+        // On windows files starting with "." are not hidden
+        expected.insert(expected.begin(), ".EGRID");
+#endif
+        REQUIRE(filenames_of(files) == expected);
     }
 
     SECTION("a wildcard matches part of the base") {
@@ -550,7 +554,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_select_filelist prefixes the results with a path",
         auto files = rd_select_filelist(dirname.string().c_str(), "CASE",
                                         FileType::EGRID, false);
 
-        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.EGRID")});
+        REQUIRE(files ==
+                std::vector<std::string>{(dirname / "CASE.EGRID").string()});
     }
 
     SECTION("the path may be carried by the base instead") {
@@ -558,7 +563,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_select_filelist prefixes the results with a path",
 
         auto files = rd_select_filelist(nullptr, base, FileType::EGRID, false);
 
-        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.EGRID")});
+        REQUIRE(files ==
+                std::vector<std::string>{(dirname / "CASE.EGRID").string()});
     }
 
     SECTION("a base carrying the path also works for report files") {
@@ -567,7 +573,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_select_filelist prefixes the results with a path",
         auto files =
             rd_select_filelist(nullptr, base, FileType::SUMMARY, false);
 
-        REQUIRE(files == std::vector<std::string>{(dirname / "CASE.S0000")});
+        REQUIRE(files ==
+                std::vector<std::string>{(dirname / "CASE.S0000").string()});
     }
 }
 
@@ -628,6 +635,6 @@ TEST_CASE_METHOD(Tmpdir, "select_matching_files expands a glob pattern",
 
     SECTION("the results are prefixed with the path") {
         REQUIRE(select_matching_files(path, "CASE.EGRID") ==
-                std::vector<std::string>{(dirname / "CASE.EGRID")});
+                std::vector<std::string>{(dirname / "CASE.EGRID").string()});
     }
 }

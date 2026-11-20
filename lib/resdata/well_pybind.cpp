@@ -252,7 +252,10 @@ PYBIND11_MODULE(well, m) {
         .def("reportNumber", &WellState::get_report_nr)
         .def("simulationTime",
              [](WellState &self) -> py::object {
-                 return CTime()(self.get_sim_time());
+                 const auto sim_time = self.get_sim_time();
+                 if (!sim_time)
+                     return py::none();
+                 return CTime()(*sim_time);
              })
         .def("wellType", &WellState::get_type)
         .def("hasGlobalConnections", &WellState::has_global_connections)

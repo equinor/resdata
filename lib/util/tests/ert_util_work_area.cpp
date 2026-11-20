@@ -1,12 +1,10 @@
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <string>
-#include <dirent.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
+#include <vector>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
@@ -20,8 +18,9 @@ static std::string read_file(const std::string &filename) {
 
 void test_get_cwd() {
     test_work_area_type *work_area = test_work_area_alloc("CWD-TEST");
-    const std::string cwd = std::filesystem::current_path().string();
-    test_assert_string_equal(cwd.c_str(), test_work_area_get_cwd(work_area));
+    const std::filesystem::path cwd = std::filesystem::current_path();
+    test_assert_true(cwd ==
+                     std::filesystem::path(test_work_area_get_cwd(work_area)));
     test_work_area_free(work_area);
 }
 
@@ -105,24 +104,16 @@ void test_copy_parent_content(const char *path) {
 
     {
 
-        struct dirent **src_namelist;
-        struct dirent **target_namelist;
-        int src_size =
-            scandir(parent_path.c_str(), &src_namelist, NULL, alphasort);
-        int target_size = scandir(test_work_area_get_cwd(work_area),
-                                  &target_namelist, NULL, alphasort);
+        auto list_names = [](const std::filesystem::path &dir) {
+            std::vector<std::string> names;
+            for (const auto &entry : std::filesystem::directory_iterator(dir))
+                names.push_back(entry.path().filename().string());
+            std::sort(names.begin(), names.end());
+            return names;
+        };
 
-        test_assert_int_equal(src_size, target_size);
-        for (int i = 0; i < src_size; i++) {
-            test_assert_string_equal(src_namelist[i]->d_name,
-                                     target_namelist[i]->d_name);
-
-            free(src_namelist[i]);
-            free(target_namelist[i]);
-        }
-
-        free(src_namelist);
-        free(target_namelist);
+        test_assert_true(list_names(parent_path) ==
+                         list_names(test_work_area_get_cwd(work_area)));
     }
 
     test_work_area_free(work_area);

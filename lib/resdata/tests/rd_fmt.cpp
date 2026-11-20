@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
-#include <unistd.h>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>

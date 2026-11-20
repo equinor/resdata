@@ -46,12 +46,14 @@ PYBIND11_MODULE(_rsthead, m) {
             py::arg("rst_view") = std::nullopt)
         .def("get_report_step", [](RSTHead &self) { return self.report_step; })
         .def("get_sim_date",
-             [](RSTHead &self) {
+             [](RSTHead &self) -> py::object {
+                 if (!self.sim_time)
+                     return py::none();
                  py::object gmtime = py::module_::import("time").attr("gmtime");
                  py::object dt =
                      py::module_::import("datetime").attr("datetime");
 
-                 return dt(*gmtime(self.sim_time)[py::slice(0, 6, 1)]);
+                 return dt(*gmtime(*self.sim_time)[py::slice(0, 6, 1)]);
              })
         .def("get_sim_days", [](RSTHead &self) { return self.sim_days; })
         .def("well_details", [](RSTHead &self) {

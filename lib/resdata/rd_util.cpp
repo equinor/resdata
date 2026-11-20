@@ -579,9 +579,12 @@ select_matching_files(const std::string &path,
 #ifdef ERT_HAVE_GLOB
     return select_matching((dir / file_pattern).string().c_str());
 #else
+    // The pattern itself may carry a directory part
+    const fs::path full_pattern = dir / file_pattern;
+    const fs::path match_dir = full_pattern.parent_path();
     WIN32_FIND_DATA file_data;
     HANDLE file_handle =
-        FindFirstFile((dir / file_pattern).string().c_str(), &file_data);
+        FindFirstFile(full_pattern.string().c_str(), &file_data);
 
     if (file_handle == INVALID_HANDLE_VALUE) {
         DWORD error = GetLastError();
@@ -590,21 +593,21 @@ select_matching_files(const std::string &path,
 
         throw std::runtime_error(
             fmt::format("FindFirstFile() failed with error {} for pattern '{}'",
-                        error, (dir / file_pattern).string()));
+                        error, full_pattern.string()));
     }
 
     FindHandleGuard guard(file_handle);
 
     std::vector<std::string> names;
     do {
-        names.push_back((dir / file_data.cFileName).string());
+        names.push_back((match_dir / file_data.cFileName).string());
     } while (FindNextFile(file_handle, &file_data) != 0);
 
     DWORD error = GetLastError();
     if (error != ERROR_NO_MORE_FILES)
         throw std::runtime_error(fmt::format(
             "FindNextFile() failed with error {} while listing '{}'", error,
-            dir.string()));
+            match_dir.string()));
 
     return names;
 #endif
@@ -774,7 +777,7 @@ time_t rd_get_start_date(const char *data_file) {
     parser_ptr parser{
         basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
     time_t start_date = -1;
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "rb"),
                                                    [](FILE *f) { fclose(f); }};
     std::vector<char> buffer;
 
@@ -973,7 +976,7 @@ int rd_get_num_cpu(const char *data_file) {
     int num_cpu = 1;
     parser_ptr parser{
         basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "rb"),
                                                    [](FILE *f) { fclose(f); }};
 
     if (rd_find_keyword__(parser.get(), stream.get(), "PARALLEL")) {
@@ -991,48 +994,20 @@ int rd_get_num_cpu(const char *data_file) {
     return num_cpu;
 }
 
-static time_t rd_make_datetime__(int sec, int min, int hour, int mday,
-                                 int month, int year, int *__year_offset) {
-    time_t date;
-
-#ifdef ERT_TIME_T_64BIT_ACCEPT_PRE1970
-    *__year_offset = 0;
-    date = util_make_date_utc(mday, month, year);
-#else
-    static bool offset_initialized = false;
-    static int year_offset = 0;
-
-    if (!offset_initialized) {
-        if (year < 1970) {
-            year_offset = 2000 - year;
-            fprintf(
-                stderr,
-                "Warning: all year values will be shifted %d years forward. \n",
-                year_offset);
-        }
-        offset_initialized = true;
-    }
-    *__year_offset = year_offset;
-    date =
-        util_make_datetime_utc(sec, min, hour, mday, month, year + year_offset);
+time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
+                        int year) {
+#ifndef ERT_TIME_T_64BIT_ACCEPT_PRE1970
+    if (year < 1970)
+        throw std::invalid_argument(
+            fmt::format("Dates before 1970 are not supported on this "
+                        "platform, got year {}",
+                        year));
 #endif
-
-    return date;
-}
-
-time_t rd_make_date__(int mday, int month, int year, int *__year_offset) {
-    return rd_make_datetime__(0, 0, 0, mday, month, year, __year_offset);
+    return util_make_datetime_utc(sec, min, hour, mday, month, year);
 }
 
 time_t rd_make_date(int mday, int month, int year) {
-    int year_offset;
-    return rd_make_date__(mday, month, year, &year_offset);
-}
-
-time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
-                        int year) {
-    int year_offset;
-    return rd_make_datetime__(sec, min, hour, mday, month, year, &year_offset);
+    return rd_make_datetime(0, 0, 0, mday, month, year);
 }
 
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
@@ -1078,20 +1053,12 @@ bool rd_path_access(const char *rd_case) {
     /* Check if the input argument corresponds to an existing directory and one
      additional element, in that case we do an access check on the directory part. */
 
-    {
-        bool path_access;
-        char *dir_name;
-        const char *path_sep = strrchr(rd_case, UTIL_PATH_SEP_CHAR);
+    const std::filesystem::path dir =
+        std::filesystem::path(rd_case).parent_path();
+    if (dir.empty())
+        /* We are trying to access CWD - we return true without actually
+           checking access. */
+        return true;
 
-        if (!path_sep)
-            /* We are trying to access CWD - we return true without actually checking
-         access. */
-            return true;
-
-        dir_name = util_alloc_substring_copy(rd_case, 0, path_sep - rd_case);
-        path_access = util_access(dir_name, R_OK);
-        free(dir_name);
-        return path_access;
-    }
-    return false;
+    return util_access(dir.string().c_str(), R_OK);
 }
