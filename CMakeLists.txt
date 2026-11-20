@@ -197,7 +197,7 @@ endif()
 if(NOT ERT_WINDOWS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wno-unknown-pragmas ")
   set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -Wfatal-errors -Wall -Wno-unknown-pragmas -Wno-unused-result -Wno-unused-parameter"
+      "${CMAKE_CXX_FLAGS} -Wfatal-errors -Wall -Wconversion -Wno-unknown-pragmas"
   )
   # Treat warnings as errors if gcc
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -206,7 +206,7 @@ if(NOT ERT_WINDOWS)
 endif()
 
 if(MSVC)
-  add_definitions("/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996")
+  add_definitions("/W3 /WX /D_CRT_SECURE_NO_WARNINGS /wd4996")
 endif()
 
 # AddressSanitizer and UndefinedBehaviorSanitizer
