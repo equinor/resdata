@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
     well_segment_collection_type *sc = well_segment_collection_alloc();
     test_assert_not_NULL(sc);
-    test_assert_int_equal(well_segment_collection_get_size(sc), 0);
+    test_assert_size_t_equal(well_segment_collection_get_size(sc), 0);
 
     {
         int outlet_segment_id = WELL_SEGMENT_OUTLET_END_VALUE;
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
             std::make_shared<WellSegment>(89, outlet_segment_id, branch_nr);
 
         well_segment_collection_add(sc, ws);
-        test_assert_int_equal(well_segment_collection_get_size(sc), 1);
+        test_assert_size_t_equal(well_segment_collection_get_size(sc), 1);
         test_assert_ptr_equal(well_segment_collection_iget(sc, 0).get(),
                               ws.get());
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
             std::make_shared<WellSegment>(90, outlet_segment_id, branch_nr);
 
         well_segment_collection_add(sc, ws);
-        test_assert_int_equal(well_segment_collection_get_size(sc), 2);
+        test_assert_size_t_equal(well_segment_collection_get_size(sc), 2);
         test_assert_ptr_equal(well_segment_collection_iget(sc, 1).get(),
                               ws.get());
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
             std::make_shared<WellSegment>(89, outlet_segment_id, branch_nr);
 
         well_segment_collection_add(sc, ws);
-        test_assert_int_equal(well_segment_collection_get_size(sc), 2);
+        test_assert_size_t_equal(well_segment_collection_get_size(sc), 2);
         test_assert_ptr_equal(well_segment_collection_iget(sc, 0).get(),
                               ws.get());
 

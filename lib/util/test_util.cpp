@@ -236,7 +236,7 @@ void test_assert_double_not_equal__(double d1, double d2, const char *file,
 }
 
 bool test_check_float_equal(float d1, float d2) {
-    const float tolerance = 1e-4;
+    const float tolerance = 1e-4f;
     return util_float_approx_equal__(d1, d2, tolerance, 0);
 }
 

@@ -25,7 +25,7 @@ using namespace Catch::Matchers;
 namespace {
 
 /** Writes an INIT file containing PORO and PORV keywords. */
-void write_subsidence_init(const fs::path &filename, int size) {
+void write_subsidence_init(const fs::path &filename, size_t size) {
     auto fortio = make_fortio_writer(filename);
 
     std::vector<float> poro(size, 0.0f);
@@ -73,7 +73,7 @@ void write_subsidence_restart(
 
 TEST_CASE_METHOD(Tmpdir, "Geertsma kernel single cell") {
     auto grid = make_rectangular_grid(1, 1, 1, 50.0, 50.0, 50.0, nullptr);
-    const int size = rd_grid_get_active_size(grid.get());
+    const size_t size = rd_grid_get_active_size(grid.get());
 
     auto init_path = dirname / "TEST.INIT";
     auto unrst_path = dirname / "TEST.UNRST";
