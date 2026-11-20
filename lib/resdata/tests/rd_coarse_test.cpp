@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
     for (size_t ic = 0; ic < rd_grid_get_num_coarse_groups(GRID.get()); ic++) {
         rd_coarse_cell_type *coarse_cell =
-            rd_grid_iget_coarse_group(GRID.get(), ic);
+            rd_grid_iget_coarse_group(GRID.get(), static_cast<int>(ic));
         test_coarse_cell(GRID.get(), coarse_cell);
     }
     exit(0);

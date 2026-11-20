@@ -372,9 +372,11 @@ TEST_CASE("geo_surface initialization", "[geometry]") {
         auto surface = make_geo_surface(nx, ny, 1.0, 2.0, 0.0, 0.0, 0.0);
 
         WHEN("Checking surface size") {
-            int size = geo_surface_get_size(surface.get());
+            size_t size = geo_surface_get_size(surface.get());
 
-            THEN("Size equals nx * ny") { REQUIRE(size == nx * ny); }
+            THEN("Size equals nx * ny") {
+                REQUIRE(size == static_cast<size_t>(nx * ny));
+            }
 
             THEN("Dimensions are correct") {
                 REQUIRE(geo_surface_get_nx(surface.get()) == nx);

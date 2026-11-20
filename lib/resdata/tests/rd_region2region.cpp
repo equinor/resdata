@@ -26,13 +26,13 @@ void get_unit(const rd_sum_type *rd_sum) {
 }
 
 void get_var_params_index(const rd_sum_type *rd_sum) {
-    test_assert_int_equal(
+    test_assert_size_t_equal(
         rd_sum_get_general_var_params_index(rd_sum, "RGF:1-2"), 21917);
-    test_assert_int_equal(
+    test_assert_size_t_equal(
         rd_sum_get_general_var_params_index(rd_sum, "ROF:3-6"), 21918);
-    test_assert_int_equal(
+    test_assert_size_t_equal(
         rd_sum_get_general_var_params_index(rd_sum, "RWF:6-2"), 21919);
-    test_assert_int_equal(
+    test_assert_size_t_equal(
         rd_sum_get_general_var_params_index(rd_sum, "RNLF:1-4"), 21920);
 }
 

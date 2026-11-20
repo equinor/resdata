@@ -2,6 +2,7 @@
 #include <chrono>
 #include <filesystem>
 #include <ios>
+#include <numeric>
 #include <memory>
 #include <string>
 #include <vector>
@@ -31,15 +32,15 @@ void test_create_and_load_index_file() {
 
         //creating the data file
         std::vector<int> kw1_data(10);
-        for (size_t i = 0; i < kw1_data.size(); ++i)
-            kw1_data[i] = 537 + i;
+        std::iota(kw1_data.begin(), kw1_data.end(), 537);
         rd::KW kw1{"TEST1_KW", std::move(kw1_data)};
         ERT::FortIO fortio(file_name, std::ios_base::out);
         kw1.fwrite(fortio);
 
         std::vector<float> kw2_data(5);
-        for (size_t i = 0; i < kw2_data.size(); ++i)
-            kw2_data[i] = 0.15f * i;
+        std::iota(kw2_data.begin(), kw2_data.end(), 0.0f);
+        for (auto &value : kw2_data)
+            value *= 0.15f;
         rd::KW kw2{"TEST2_KW", std::move(kw2_data)};
         kw2.fwrite(fortio);
         fortio.fflush();
