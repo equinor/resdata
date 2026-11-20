@@ -589,7 +589,7 @@ bool util_fmt_bit8(const char *filename) {
         throw std::ios_base::failure(
             fmt::format("{}: could not find file: {}", __func__, filename));
 
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(filename, "r"),
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(filename, "rb"),
                                                    [](FILE *f) { fclose(f); }};
     return util_fmt_bit8_stream(stream.get());
 }

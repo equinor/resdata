@@ -777,7 +777,7 @@ time_t rd_get_start_date(const char *data_file) {
     parser_ptr parser{
         basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
     time_t start_date = -1;
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "rb"),
                                                    [](FILE *f) { fclose(f); }};
     std::vector<char> buffer;
 
@@ -976,7 +976,7 @@ int rd_get_num_cpu(const char *data_file) {
     int num_cpu = 1;
     parser_ptr parser{
         basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n")};
-    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "r"),
+    std::unique_ptr<FILE, void (*)(FILE *)> stream{util_fopen(data_file, "rb"),
                                                    [](FILE *f) { fclose(f); }};
 
     if (rd_find_keyword__(parser.get(), stream.get(), "PARALLEL")) {
