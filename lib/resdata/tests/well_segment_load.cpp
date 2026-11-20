@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
             iwel_kw->at<int>(iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) -
             1; // -1: Ordinary well.
         if (seg_well_nr >= 0) {
-            int segment_count = 0;
+            size_t segment_count = 0;
 
             for (int segment_index = 0; segment_index < rst_head.nsegmx;
                  segment_index++) {
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
                 if (segment->is_active()) {
                     well_segment_collection_add(segments, segment);
-                    test_assert_int_equal(
+                    test_assert_size_t_equal(
                         well_segment_collection_get_size(segments),
                         segment_count + 1);
                     test_assert_ptr_equal(
@@ -61,11 +61,11 @@ int main(int argc, char **argv) {
                 well_segment_collection_alloc();
             bool load_segments = true;
             bool is_MSW_well = false;
-            test_assert_int_equal(well_segment_collection_load_from_kw(
-                                      segments2, well_nr, iwel_kw, iseg_kw,
-                                      rseg_loader, rst_head, load_segments,
-                                      &is_MSW_well),
-                                  well_segment_collection_get_size(segments));
+            test_assert_size_t_equal(
+                well_segment_collection_load_from_kw(
+                    segments2, well_nr, iwel_kw, iseg_kw, rseg_loader, rst_head,
+                    load_segments, &is_MSW_well),
+                well_segment_collection_get_size(segments));
 
             if (well_segment_collection_get_size(segments) > 0)
                 test_assert_true(is_MSW_well);

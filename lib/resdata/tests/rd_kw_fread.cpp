@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include <ios>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -18,8 +19,7 @@ void test_fread_alloc() {
     rd::util::TestArea ta("fread_alloc");
     {
         std::vector<int> data(100);
-        for (size_t i = 0; i < 100; i++)
-            data[i] = i;
+        std::iota(data.begin(), data.end(), 0);
         rd::KW kw1{"INT", std::move(data)};
         {
             ERT::FortIO fortio("INT", std::ios_base::out, false, true);
@@ -39,8 +39,9 @@ void test_kw_io_charlength() {
         const char *KW0 = "QWERTYUI";
         const char *KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
         std::vector<float> data(5);
-        for (size_t i = 0; i < 5; i++)
-            data[i] = i * 1.5f;
+        std::iota(data.begin(), data.end(), 0.0f);
+        for (auto &value : data)
+            value *= 1.5f;
         rd::KW rd_kw_out0{KW0, data};
         rd::KW rd_kw_out1{KW1, std::move(data)};
 

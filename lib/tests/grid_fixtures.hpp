@@ -125,7 +125,8 @@ inline void write_nnc_pair_section(ERT::FortIO &fortio, int lgr_nr,
 inline void write_lgr_egrid_section(ERT::FortIO &fortio,
                                     const std::string &name,
                                     const std::string &parent, int grid_nr,
-                                    const rd_grid_ptr &lgr, int host_global) {
+                                    const rd_grid_ptr &lgr,
+                                    size_t host_global) {
     write_char8_kw(fortio, LGR_KW, {name});
     write_char8_kw(fortio, LGR_PARENT_KW, {parent});
     write_egrid_gridhead(fortio, rd_grid_get_nx(lgr.get()),
@@ -134,7 +135,7 @@ inline void write_lgr_egrid_section(ERT::FortIO &fortio,
     write_egrid_grid_body(lgr.get(), fortio);
 
     const size_t lgr_size = rd_grid_get_global_size(lgr.get());
-    std::vector<int> hostnum(lgr_size, host_global);
+    std::vector<int> hostnum(lgr_size, static_cast<int>(host_global));
     write_int_kw(fortio, HOSTNUM_KW, hostnum);
 
     write_empty_kw(fortio, ENDGRID_KW);

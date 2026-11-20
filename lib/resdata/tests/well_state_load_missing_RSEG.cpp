@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
                     well_state.get_segments();
 
                 if (!rst_view->has_kw(RSEG_KW))
-                    test_assert_int_equal(
+                    test_assert_size_t_equal(
                         0, well_segment_collection_get_size(segments));
             }
         }

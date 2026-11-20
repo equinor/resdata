@@ -7,6 +7,7 @@
 #include <fstream>
 #include <memory>
 #include <new>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -30,8 +31,7 @@ namespace {
 
 std::unique_ptr<rd::KW> make_int_kw(const std::string &name, size_t size) {
     std::vector<int> data(size);
-    for (size_t i = 0; i < size; i++)
-        data[i] = i;
+    std::iota(data.begin(), data.end(), 0);
     return std::make_unique<rd::KW>(name, std::move(data));
 }
 
