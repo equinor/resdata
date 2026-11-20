@@ -3,6 +3,7 @@ import gc
 import os.path
 import shutil
 import struct
+import sys
 import tempfile
 from pathlib import Path
 
@@ -195,6 +196,7 @@ class ResdataFileTest(ResdataTest):
                 self.assertIn("KW1", rd_file_index)
 
                 # Renaming the file so the extensions differ
+                rd_file_index.close()
                 os.rename("TEST.DAT", "TEST.BIN")
                 with self.assertRaisesRegex(
                     OSError, "Index file did not contain a valid index"
@@ -314,6 +316,8 @@ class ResdataFileTest(ResdataTest):
     def test_that_writing_an_index_to_a_read_only_location_raises(self):
         if hasattr(os, "geteuid") and os.geteuid() == 0:
             self.skipTest("cannot test permission errors as root")
+        if sys.platform == "win32":
+            self.skipTest("chmod does not make directories read only on Windows")
 
         tmpdir = self.tmp_path_factory.mktemp("python_rd_file_ro_index", numbered=True)
         with self.monkeypatch.context() as mp:

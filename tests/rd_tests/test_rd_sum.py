@@ -248,6 +248,19 @@ class SummaryTest(ResdataTest):
         self.assertFloatEqual(summary.getSimulationLength(), 19.50)
 
 
+# Windows can not load dates before 1970, as _mkgmtime does not support them
+_summaries = (
+    summaries(
+        start_date=st.datetimes(
+            min_value=datetime.datetime(1970, 1, 1),
+            max_value=datetime.datetime(2100, 1, 1),
+        )
+    )
+    if sys.platform == "win32"
+    else summaries()
+)
+
+
 @pytest.mark.parametrize("lazy_load", [True, False])
 @pytest.mark.parametrize(
     "file_format, smspec_extension, unsmry_extension",
@@ -257,7 +270,7 @@ class SummaryTest(ResdataTest):
     ],
     ids=["unformatted", "formatted"],
 )
-@given(summaries())
+@given(_summaries)
 @pytest.mark.usefixtures("use_tmpdir")
 def test_to_from_pandas(
     lazy_load, file_format, smspec_extension, unsmry_extension, summary
@@ -289,7 +302,7 @@ def test_to_from_pandas(
     )
 
 
-@given(summaries())
+@given(_summaries)
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_non_matching_dataframe_gives_empty_columns(summary):
     smspec, unsmry = summary
@@ -304,7 +317,7 @@ def test_that_non_matching_dataframe_gives_empty_columns(summary):
     )
 
 
-@given(summaries())
+@given(_summaries)
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_equal_smspec_nodes_have_equal_hash(summary):
     """The __hash__/__eq__ contract requires that a == b implies
@@ -321,7 +334,7 @@ def test_that_equal_smspec_nodes_have_equal_hash(summary):
             assert hash(node1) == hash(node2)
 
 
-@given(summaries())
+@given(_summaries)
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_smspec_node_comparison_with_other_types_is_consistent(summary):
     """Comparing a smspec_node to an object of another type should never
