@@ -56,7 +56,7 @@ void geo_pointset_add_xyz(geo_pointset_type *pointset, double x, double y,
 
 void geo_pointset_free(geo_pointset_type *pointset) { delete pointset; }
 
-int geo_pointset_get_size(const geo_pointset_type *pointset) {
+size_t geo_pointset_get_size(const geo_pointset_type *pointset) {
     return pointset->xcoord.size();
 }
 

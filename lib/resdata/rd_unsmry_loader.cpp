@@ -130,8 +130,8 @@ std::vector<time_t> unsmry_loader::sim_time() const {
         std::vector<time_t> st(this->length());
 
         for (size_t i = 0; i < st.size(); i++)
-            st[i] = rd_make_date(util_round(day[i]), util_round(month[i]),
-                                 util_round(year[i]));
+            st[i] = rd_make_date(rd::iround(day[i]), rd::iround(month[i]),
+                                 rd::iround(year[i]));
 
         return st;
     }

@@ -84,8 +84,8 @@ static bool is_escape(const char c) {
         return false;
 }
 
-static int length_of_initial_splitters(const char *buffer_position,
-                                       const basic_parser_type *parser) {
+static size_t length_of_initial_splitters(const char *buffer_position,
+                                          const basic_parser_type *parser) {
     assert(buffer_position != NULL);
     assert(parser != NULL);
 
@@ -146,10 +146,10 @@ static bool is_in_delete_set(const char c, const basic_parser_type *parser) {
   character, this is *NOT* regarded as the end.
 */
 
-static int length_of_quotation(const char *buffer) {
+static size_t length_of_quotation(const char *buffer) {
     assert(buffer != NULL);
     {
-        int length = 1;
+        size_t length = 1;
         char target = buffer[0];
         char current = buffer[1];
 
@@ -171,16 +171,16 @@ static int length_of_quotation(const char *buffer) {
     }
 }
 
-static int length_of_comment(const char *buffer_position,
-                             const basic_parser_type *parser) {
+static size_t length_of_comment(const char *buffer_position,
+                                const basic_parser_type *parser) {
     bool in_comment = false;
-    int length = 0;
+    size_t length = 0;
 
     if (!parser->comment_start || !parser->comment_end)
         length = 0;
     else {
         const char *comment_start = parser->comment_start->c_str();
-        int len_comment_start = strlen(comment_start);
+        size_t len_comment_start = strlen(comment_start);
         if (strncmp(buffer_position, comment_start, len_comment_start) == 0) {
             in_comment = true;
             length = len_comment_start;
@@ -190,7 +190,7 @@ static int length_of_comment(const char *buffer_position,
 
     if (in_comment) {
         const char *comment_end = parser->comment_end->c_str();
-        int len_comment_end = strlen(comment_end);
+        size_t len_comment_end = strlen(comment_end);
         while (buffer_position[length] != '\0' && in_comment) {
             if (strncmp(&buffer_position[length], comment_end,
                         len_comment_end) == 0) {
@@ -215,7 +215,7 @@ void replace_all(std::string &string, std::string_view expr,
     }
 }
 
-std::string quoted_token(const char *buffer, int length,
+std::string quoted_token(const char *buffer, size_t length,
                          bool strip_quote_marks) {
     if (!strip_quote_marks)
         return std::string(buffer, length);
@@ -236,10 +236,10 @@ std::string quoted_token(const char *buffer, int length,
     token list.
 */
 
-static int length_of_normal_non_splitters(const char *buffer,
-                                          const basic_parser_type *parser) {
+static size_t length_of_normal_non_splitters(const char *buffer,
+                                             const basic_parser_type *parser) {
     bool at_end = false;
-    int length = 0;
+    size_t length = 0;
     char current = buffer[0];
 
     while (current != '\0' && !at_end) {
@@ -267,9 +267,9 @@ static int length_of_normal_non_splitters(const char *buffer,
     return length;
 }
 
-static int length_of_delete(const char *buffer,
-                            const basic_parser_type *parser) {
-    int length = 0;
+static size_t length_of_delete(const char *buffer,
+                               const basic_parser_type *parser) {
+    size_t length = 0;
     char current = buffer[0];
 
     while (is_in_delete_set(current, parser) && current != '\0') {
@@ -285,11 +285,11 @@ static int length_of_delete(const char *buffer,
 std::vector<std::string>
 basic_parser_tokenize_buffer(const basic_parser_type *parser,
                              const char *buffer, bool strip_quote_marks) {
-    int position = 0;
-    int buffer_size = strlen(buffer);
-    int splitters_length = 0;
-    int comment_length = 0;
-    int delete_length = 0;
+    size_t position = 0;
+    size_t buffer_size = strlen(buffer);
+    size_t splitters_length = 0;
+    size_t comment_length = 0;
+    size_t delete_length = 0;
 
     std::vector<std::string> tokens;
 
@@ -338,7 +338,7 @@ basic_parser_tokenize_buffer(const basic_parser_type *parser,
         // If the character is a quotation start, we copy the whole quotation.
         if (is_in_quoters(static_cast<unsigned char>(buffer[position]),
                           parser)) {
-            int length = length_of_quotation(&buffer[position]);
+            size_t length = length_of_quotation(&buffer[position]);
             tokens.push_back(
                 quoted_token(&buffer[position], length, strip_quote_marks));
             position += length;
@@ -366,29 +366,22 @@ basic_parser_tokenize_buffer(const basic_parser_type *parser,
     */
 
         {
-            int length =
+            size_t length =
                 length_of_normal_non_splitters(&buffer[position], parser);
-            auto token = rd::checked_calloc<char>(length + 1);
-            int token_length;
+            std::string token;
             if (!parser->delete_set) {
-                token_length = length;
-                memcpy(token.get(), &buffer[position], length * sizeof(char));
+                token.assign(&buffer[position], length);
             } else {
-                int i;
-                token_length = 0;
-                for (i = 0; i < length; i++) {
+                for (size_t i = 0; i < length; i++) {
                     char c = buffer[position + i];
-                    if (!is_in_delete_set(c, parser)) {
-                        token.get()[token_length] = c;
-                        token_length++;
-                    }
+                    if (!is_in_delete_set(c, parser))
+                        token.push_back(c);
                 }
             }
 
-            if (token_length > 0) { /* We do not insert empty tokens. */
-                token.get()[token_length] = '\0';
-                tokens.emplace_back(token.get());
-            }
+            /* We do not insert empty tokens. */
+            if (!token.empty())
+                tokens.push_back(std::move(token));
 
             position += length;
             continue;
