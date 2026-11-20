@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <optional>
 #include <ctime>
 #include <stdexcept>
 #include <string>
@@ -18,7 +20,8 @@ struct RSTHead {
     int day;
     int year;
     int month;
-    time_t sim_time;
+    // Not set when the INTEHEAD is too short to hold a date
+    std::optional<time_t> sim_time;
     int version;   // 100, 300, 500 (Eclipse300-Thermal)
     int phase_sum; // Oil = 1   Gas = 2    Water = 4
 
@@ -61,7 +64,7 @@ struct RSTHead {
     double sim_days;
 
     inline RSTHead(int report_step, int day, int year, int month,
-                   time_t sim_time, int version, int phase_sum,
+                   std::optional<time_t> sim_time, int version, int phase_sum,
                    UnitSystem unit_system, int nx, int ny, int nz, int nactive,
                    int nwells, int niwelz, int nzwelz, int nxwelz, int niconz,
                    int ncwmax, int nsconz, int nxconz, int nisegz, int nsegmx,
@@ -116,7 +119,10 @@ struct RSTHead {
         this->nilbrz = get(INTEHEAD_NILBRZ_INDEX);
         this->nrsegz = get(INTEHEAD_NRSEGZ_INDEX);
 
-        this->sim_time = rd_make_date(this->day, this->month, this->year);
+        if (static_cast<size_t>(
+                std::max({INTEHEAD_DAY_INDEX, INTEHEAD_MONTH_INDEX,
+                          INTEHEAD_YEAR_INDEX})) < nihead)
+            this->sim_time = rd_make_date(this->day, this->month, this->year);
 
         if (logihead_kw)
             this->dualp = logihead_kw->at<bool>(LOGIHEAD_DUALP_INDEX);

@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include <memory>
+#include <vector>
 
 #include <ert/util/test_util.hpp>
 
@@ -40,7 +41,18 @@ void test_file(const char *filename, int occurence, bool exists,
         test_assert_NULL(rst_view.get());
 }
 
+void test_that_short_intehead_has_no_sim_time() {
+    rd::KW intehead{INTEHEAD_KW, std::vector<int>(INTEHEAD_YEAR_INDEX, 0)};
+    rd::KW doubhead{DOUBHEAD_KW, std::vector<double>(10, 0.0)};
+
+    RSTHead header{1, &intehead, &doubhead, nullptr};
+
+    test_assert_false(header.sim_time.has_value());
+}
+
 int main(int argc, char **argv) {
+    test_that_short_intehead_has_no_sim_time();
+
     RSTHead true1{
         /*report_step=*/1,
         /*day=*/1,
