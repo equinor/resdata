@@ -390,8 +390,7 @@ fs::path filename(fs::path casepath, FileType file_type, bool fmt_file,
     }
 
     if (base_is_lower_case(base))
-        for (char &c : ext)
-            c = tolower(static_cast<unsigned char>(c));
+        rd::ascii_lower(ext);
 
     return casepath.parent_path() / (base + "." + ext);
 }
@@ -691,8 +690,7 @@ std::vector<std::string> rd_select_filelist(const char *path,
 
     std::string ext_pattern{rd_get_file_pattern(file_type, fmt_file)};
     if (lower_case)
-        for (char &c : ext_pattern)
-            c = tolower(static_cast<unsigned char>(c));
+        rd::ascii_lower(ext_pattern);
 
     std::string pattern = std::string(base) + "." + ext_pattern;
 

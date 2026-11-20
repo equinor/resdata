@@ -2,6 +2,8 @@
 #include <ctime>
 #include <cstdint>
 #include <cstdlib>
+#include <algorithm>
+#include <cctype>
 #include <climits>
 #include <cmath>
 #include <stdexcept>
@@ -194,6 +196,13 @@ int natural_compare(std::string_view a, std::string_view b);
 inline bool natural_less(std::string_view a, std::string_view b) {
     return natural_compare(a, b) < 0;
 }
+/// Lower-cases ASCII characters in place.
+inline void ascii_lower(std::string &str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
+}
+
 /// Rounds to the nearest int, throwing if the value is not finite or does not
 /// fit in an int.
 inline int iround(double value) {
