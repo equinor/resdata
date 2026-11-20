@@ -18,7 +18,7 @@ geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
                                         double yinc, double xstart,
                                         double ystart, double angle);
 double geo_surface_iget_zvalue(const geo_surface_type *surface, int index);
-int geo_surface_get_size(const geo_surface_type *surface);
+size_t geo_surface_get_size(const geo_surface_type *surface);
 void geo_surface_fprintf_irap(const geo_surface_type *surface,
                               const std::string &filename);
 int geo_surface_get_nx(const geo_surface_type *surface);

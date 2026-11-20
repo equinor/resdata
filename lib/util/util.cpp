@@ -184,13 +184,6 @@ void util_endian_flip_vector(void *data, size_t element_size, size_t elements) {
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #endif
 
-static bool EOL_CHAR(char c) {
-    if (c == '\r' || c == '\n')
-        return true;
-    else
-        return false;
-}
-
 /**
    Kahan summation is a technique to retain numerical precision when
    summing a long vector of values. See:
@@ -262,7 +255,7 @@ bool util_double_approx_equal(double d1, double d2) {
 
 char *util_alloc_string_copy(const char *src) {
     if (src != NULL) {
-        int byte_size = (strlen(src) + 1) * sizeof *src;
+        size_t byte_size = (strlen(src) + 1) * sizeof *src;
         char *copy = rd::checked_calloc<char>(byte_size).release();
         memcpy(copy, src, byte_size);
         return copy;
@@ -371,7 +364,7 @@ bool util_fseek_string(FILE *stream, std::string_view string, bool skip_string,
 }
 
 char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
-    int init_pos = util_ftell(stream);
+    offset_type init_pos = util_ftell(stream);
     int len;
     int end_char;
     bool cont;
@@ -386,7 +379,7 @@ char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
             if (c == EOF)
                 cont = false;
             else {
-                if (EOL_CHAR(c))
+                if (c == '\r' || c == '\n')
                     cont = false;
                 else
                     len++;
@@ -436,10 +429,15 @@ bool util_sscanf_int(const char *buffer, int *value) {
 
     char *error_ptr;
 
-    int tmp_value = strtol(buffer, &error_ptr, 10);
+    errno = 0;
+    long tmp_value = strtol(buffer, &error_ptr, 10);
 
     if (error_ptr == buffer)
         return false;
+
+    if (errno == ERANGE || tmp_value < INT_MIN || tmp_value > INT_MAX)
+        throw std::out_of_range(
+            fmt::format("Value does not fit in an int: {}", buffer));
 
     // Skip trailing white-space
     while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
@@ -449,7 +447,7 @@ bool util_sscanf_int(const char *buffer, int *value) {
         return false;
 
     if (value != NULL)
-        *value = tmp_value;
+        *value = static_cast<int>(tmp_value);
     return true;
 }
 
@@ -530,14 +528,14 @@ size_t util_fd_size(int fd) {
     return buffer.st_size;
 }
 
-bool util_ftruncate(FILE *stream, long size) {
+bool util_ftruncate(FILE *stream, offset_type size) {
     int fd = fileno(stream);
     int int_return;
 
 #ifdef HAVE_FTRUNCATE
     int_return = ftruncate(fd, size);
 #else
-    int_return = _chsize(fd, size);
+    int_return = _chsize_s(fd, size);
 #endif
 
     if (int_return == 0)
@@ -553,15 +551,15 @@ bool util_same_file(const char *file1, const char *file2) {
 }
 
 static bool util_fmt_bit8_stream(FILE *stream) {
-    const int min_read = 256; /* Critically small */
+    const size_t min_read = 256; /* Critically small */
     const double bit8set_limit = 0.00001;
-    const int buffer_size = 131072;
-    long int start_pos = util_ftell(stream);
+    const size_t buffer_size = 131072;
+    offset_type start_pos = util_ftell(stream);
     bool fmt_file;
     {
         double bit8set_fraction;
         int N_bit8set = 0;
-        int elm_read, i;
+        size_t elm_read;
         std::vector<char> buffer(buffer_size);
 
         elm_read = fread(buffer.data(), 1, buffer_size, stream);
@@ -571,10 +569,11 @@ static bool util_fmt_bit8_stream(FILE *stream) {
                             "formatted/unformatted status",
                             __func__));
 
-        for (i = 0; i < elm_read; i++)
+        for (size_t i = 0; i < elm_read; i++)
             N_bit8set += (buffer[i] & (1 << 7)) >> 7;
 
-        bit8set_fraction = 1.0 * N_bit8set / elm_read;
+        bit8set_fraction =
+            static_cast<double>(N_bit8set) / static_cast<double>(elm_read);
         if (bit8set_fraction < bit8set_limit)
             fmt_file = true;
         else
@@ -678,7 +677,7 @@ void util_set_datetime_values_utc(time_t t, int *sec, int *min, int *hour,
 */
 
 void util_inplace_forward_seconds_utc(time_t *t, double seconds) {
-    (*t) += seconds;
+    *t = static_cast<time_t>(static_cast<double>(*t) + seconds);
 }
 
 void util_inplace_forward_days_utc(time_t *t, double days) {
@@ -774,24 +773,18 @@ time_t util_make_date_utc(int mday, int month, int year) {
 */
 
 char *util_alloc_strip_copy(const char *src) {
-    char *target;
-    int strip_length = 0;
-    int end_index = strlen(src) - 1;
-    while (end_index >= 0 && src[end_index] == ' ')
+    size_t end_index = strlen(src);
+    while (end_index > 0 && src[end_index - 1] == ' ')
         end_index--;
 
-    if (end_index >= 0) {
+    // end_index is now one past the last non-space character
+    size_t start_index = 0;
+    while (start_index < end_index && src[start_index] == ' ')
+        start_index++;
 
-        int start_index = 0;
-        while (src[start_index] == ' ')
-            start_index++;
-        strip_length = end_index - start_index + 1;
-        target = rd::checked_calloc<char>(strip_length + 1).release();
-        memcpy(target, &src[start_index], strip_length);
-    } else
-        /* A blank string */
-        target = rd::checked_calloc<char>(strip_length + 1).release();
-
+    size_t strip_length = end_index - start_index;
+    char *target = rd::checked_calloc<char>(strip_length + 1).release();
+    memcpy(target, &src[start_index], strip_length);
     target[strip_length] = '\0';
     return target;
 }
@@ -898,11 +891,11 @@ void util_exit(const char *fmt, ...) {
 */
 
 int util_get_current_linenr(FILE *stream) {
-    long init_pos = util_ftell(stream);
+    offset_type init_pos = util_ftell(stream);
     int line_nr = 0;
     util_fseek(stream, 0L, SEEK_SET);
     {
-        int char_nr;
+        offset_type char_nr;
         int c;
         for (char_nr = 0; char_nr < init_pos; char_nr++) {
             c = fgetc(stream);
@@ -939,11 +932,3 @@ void util_time_utc(time_t *t, struct tm *ts) {
     memcpy(ts, ts_shared, sizeof *ts);
 #endif
 }
-
-#ifdef HAVE_ROUND
-int util_roundf(float x) { return roundf(x); }
-int util_round(double x) { return round(x); }
-#else
-int util_roundf(float x) { return (int)(x + 0.5); }
-int util_round(double x) { return (int)(x + 0.5); }
-#endif

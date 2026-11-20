@@ -3430,7 +3430,7 @@ rd_grid_get_global_index_from_xyz(rd_grid_type *grid, double x, double y,
         /* Try boxes 2, 4, 8, ..., 64  */
         for (size_t bx = 1; bx <= 6; bx++) {
             auto global_index = rd_grid_get_global_index_from_xyz_around_box(
-                grid, x, y, z, start, 1 << bx, &p);
+                grid, x, y, z, start, size_t{1} << bx, &p);
             if (global_index)
                 return global_index;
         }

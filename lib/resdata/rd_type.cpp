@@ -144,7 +144,7 @@ rd_data_type rd_type_create_from_name(const char *type_name) {
     }
 }
 
-int rd_type_get_sizeof_ctype(const rd_data_type rd_type) {
+size_t rd_type_get_sizeof_ctype(const rd_data_type rd_type) {
     return rd_type.element_size;
 }
 

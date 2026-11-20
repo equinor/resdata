@@ -26,7 +26,7 @@ void test_writable(size_t data_size) {
 
     std::vector<int> data(data_size);
     for (size_t i = 0; i < data_size; ++i)
-        data[i] = ((i * 37) + 11) % data_size;
+        data[i] = static_cast<int>(((i * 37) + 11) % data_size);
     rd::KW kw{"TEST_KW", std::move(data)};
 
     {

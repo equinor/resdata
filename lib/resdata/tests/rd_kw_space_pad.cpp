@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
     {
         FILE *stream = util_fopen("file", "r");
         char buffer[8];
-        size_t offset = 4 + 16 + 4 + 4;
-        fseek(stream, offset, SEEK_SET);
-        fread(buffer, 1, 8, stream);
+        offset_type offset = 4 + 16 + 4 + 4;
+        util_fseek(stream, offset, SEEK_SET);
+        test_assert_size_t_equal(fread(buffer, 1, 8, stream), 8);
         for (int i = 0; i < 8; i++)
             test_assert_int_equal(buffer[i], ' ');
 

@@ -5,28 +5,29 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
 
-void test_list(int volume, int nactive, rd_region_type *region) {
+void test_list(size_t volume, size_t nactive, rd_region_type *region) {
     {
         auto &active_list = rd_region_get_active_list(region);
         auto &global_list = rd_region_get_global_list(region);
-        test_assert_int_equal(nactive, active_list.size());
-        test_assert_int_equal(volume, global_list.size());
+        test_assert_size_t_equal(nactive, active_list.size());
+        test_assert_size_t_equal(volume, global_list.size());
     }
 
     {
         rd_region_deselect_all(region);
         auto &active_list = rd_region_get_active_list(region);
         auto &global_list = rd_region_get_global_list(region);
-        test_assert_int_equal(0, active_list.size());
-        test_assert_int_equal(0, global_list.size());
+        test_assert_size_t_equal(0, active_list.size());
+        test_assert_size_t_equal(0, global_list.size());
     }
 }
 
 void test_slice(rd_grid_type *grid) {
-    int nx = rd_grid_get_nx(grid);
-    int ny = rd_grid_get_ny(grid);
-    int nz = rd_grid_get_nz(grid);
-    int nactive = rd_grid_get_nactive(grid);
+    // The region selection API takes int index ranges
+    int nx = static_cast<int>(rd_grid_get_nx(grid));
+    int ny = static_cast<int>(rd_grid_get_ny(grid));
+    int nz = static_cast<int>(rd_grid_get_nz(grid));
+    size_t nactive = rd_grid_get_nactive(grid);
     rd_region_type *region = rd_region_alloc(grid, false);
 
     rd_region_select_i1i2(region, 0, nx - 1);

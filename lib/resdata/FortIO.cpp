@@ -293,7 +293,7 @@ bool FortIO::assert_stream_open() {
   it will return -1.
 */
 int FortIO::init_read() {
-    int elm_read;
+    size_t elm_read;
     int record_size;
 
     elm_read = fread(&record_size, sizeof(record_size), 1, m_stream);

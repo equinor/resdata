@@ -63,6 +63,14 @@ struct WriteSpec {
     size_t num_ministep = 10;
     double start_seconds = 0.0;
     double ministep_length = 86400.0; // one day in seconds
+
+    double last_ministep_seconds() const {
+        return static_cast<double>(num_report_steps * num_ministep - 1) *
+               ministep_length;
+    }
+    double first_report_step_seconds() const {
+        return static_cast<double>(num_ministep - 1) * ministep_length;
+    }
 };
 
 /**
@@ -88,18 +96,20 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
         for (size_t step = 0; step < spec.num_ministep; ++step) {
             rd_sum_tstep_type *tstep =
                 rd_sum_add_tstep(rd_sum.get(), report_step + 1, sim_seconds);
-            rd_sum_tstep_set_from_node(tstep, *fopt, sim_seconds);
-            rd_sum_tstep_set_from_node(tstep, *bpr, 10.0 * sim_seconds);
-            rd_sum_tstep_set_from_node(tstep, *wwct, 100.0 * sim_seconds);
+            rd_sum_tstep_set_from_node(tstep, *fopt,
+                                       static_cast<float>(sim_seconds));
+            rd_sum_tstep_set_from_node(tstep, *bpr,
+                                       static_cast<float>(10.0 * sim_seconds));
+            rd_sum_tstep_set_from_node(tstep, *wwct,
+                                       static_cast<float>(100.0 * sim_seconds));
             sim_seconds += spec.ministep_length;
         }
     }
     rd_sum_fwrite(rd_sum.get());
 
-    time_t end_time = spec.start_seconds + spec.start_time;
+    time_t end_time = spec.start_time;
     util_inplace_forward_seconds_utc(
-        &end_time,
-        (spec.num_report_steps * spec.num_ministep - 1) * spec.ministep_length);
+        &end_time, spec.start_seconds + spec.last_ministep_seconds());
     return end_time;
 }
 
@@ -176,9 +186,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_get_end_time(rd_sum.get()) == end_time);
             REQUIRE_THAT(rd_sum_get_first_day(rd_sum.get()),
                          WithinAbs(spec.start_seconds / 86400.0, 1e-9));
-            const double last_sim_days =
-                (spec.num_report_steps * spec.num_ministep - 1) *
-                spec.ministep_length / 86400.0;
+            const double last_sim_days = spec.last_ministep_seconds() / 86400.0;
             REQUIRE_THAT(rd_sum_get_sim_length(rd_sum.get()),
                          WithinAbs(last_sim_days, 1e-6));
         }
@@ -193,7 +201,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_iget_report_end(rd_sum.get(), 1) ==
                     spec.num_ministep - 1);
             const double end_of_first_report_days =
-                (spec.num_ministep - 1) * spec.ministep_length / 86400.0;
+                spec.first_report_step_seconds() / 86400.0;
             REQUIRE(rd_sum_get_report_step_from_days(
                         rd_sum.get(), end_of_first_report_days) == 1);
             REQUIRE_THROWS_AS(
@@ -239,9 +247,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         }
 
         THEN("first and last values agree with the linear model") {
-            const double last_sim_seconds =
-                (spec.num_report_steps * spec.num_ministep - 1) *
-                spec.ministep_length;
+            const double last_sim_seconds = spec.last_ministep_seconds();
 
             REQUIRE_THAT(rd_sum_get_first_value_gen_key(rd_sum.get(), "FOPT"),
                          WithinAbs(0.0, 1e-6));
@@ -257,7 +263,8 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         THEN("iget returns the expected time at every step") {
             const size_t n = rd_sum_get_data_length(rd_sum.get());
             for (size_t i = 0; i < n; ++i) {
-                const double expected = i * spec.ministep_length;
+                const double expected =
+                    static_cast<double>(i) * spec.ministep_length;
                 time_t expected_time = spec.start_time;
                 util_inplace_forward_seconds_utc(&expected_time, expected);
 
@@ -309,9 +316,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
                                         2.5 * spec.ministep_length) == 3);
 
-            const double last_sim_seconds =
-                (spec.num_report_steps * spec.num_ministep - 1) *
-                spec.ministep_length;
+            const double last_sim_seconds = spec.last_ministep_seconds();
             REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
                                         last_sim_seconds) == std::nullopt);
 
@@ -358,8 +363,8 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
 
         THEN("sim_time at the end of the first report step maps to step 1") {
             time_t mid = spec.start_time;
-            util_inplace_forward_seconds_utc(&mid, (spec.num_ministep - 1) *
-                                                       spec.ministep_length);
+            util_inplace_forward_seconds_utc(&mid,
+                                             spec.first_report_step_seconds());
             REQUIRE(rd_sum_check_sim_time(rd_sum.get(), mid));
             REQUIRE(rd_sum_get_report_step_from_time(rd_sum.get(), mid) == 1);
         }
@@ -373,9 +378,10 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
         THEN("sim_days within range is accepted") {
             REQUIRE(rd_sum_check_sim_days(rd_sum.get(), 0.0));
             REQUIRE_FALSE(rd_sum_check_sim_days(rd_sum.get(), -1.0));
-            REQUIRE_FALSE(rd_sum_check_sim_days(rd_sum.get(),
-                                                spec.num_report_steps *
-                                                    spec.num_ministep * 10.0));
+            REQUIRE_FALSE(rd_sum_check_sim_days(
+                rd_sum.get(),
+                static_cast<double>(spec.num_report_steps * spec.num_ministep) *
+                    10.0));
         }
         THEN("get_general_var_from_sim_time with out-of-range time throws") {
             time_t before = spec.start_time;
@@ -443,8 +449,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             }
 
             THEN("value above the series range yields empty") {
-                const double last =
-                    (spec.num_report_steps * spec.num_ministep - 1) * day;
+                const double last = spec.last_ministep_seconds();
                 REQUIRE(solve("FOPT", 10.0 * last) == std::vector<time_t>{});
             }
 
@@ -515,7 +520,8 @@ TEST_CASE_METHOD(Tmpdir,
         for (std::size_t i = 0; i < samples.size(); ++i) {
             rd_sum_tstep_type *tstep = rd_sum_add_tstep(
                 rd_sum.get(), static_cast<int>(i) + 1, sim_seconds);
-            rd_sum_tstep_set_from_node(tstep, *bpr, samples[i]);
+            rd_sum_tstep_set_from_node(tstep, *bpr,
+                                       static_cast<float>(samples[i]));
             sim_seconds += dt;
         }
         rd_sum_fwrite(rd_sum.get());
@@ -618,10 +624,11 @@ TEST_CASE_METHOD(
     // Report step 2 is intentionally absent.
     const size_t report_steps[] = {1, 3};
     for (size_t i = 0; i < 2; ++i) {
-        const double sim_seconds = 86400.0 * (i + 1);
+        const double sim_seconds = 86400.0 * static_cast<double>(i + 1);
         rd_sum_tstep_type *tstep =
             rd_sum_add_tstep(rd_sum.get(), report_steps[i], sim_seconds);
-        rd_sum_tstep_set_from_node(tstep, *fopt, 10.0 * (i + 1));
+        rd_sum_tstep_set_from_node(tstep, *fopt,
+                                   10.0f * static_cast<float>(i + 1));
     }
 
     const size_t params_index =
@@ -744,10 +751,10 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
     REQUIRE_THAT(rd_sum_get_general_var(rd_sum.get(), 0, "FOPT"),
                  WithinAbs(child_fopt_value, 1e-3));
     for (size_t i = 1; i < length; ++i) {
-        REQUIRE_THAT(
-            rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
-            WithinAbs(spec.start_seconds + (i - 1) * spec.ministep_length,
-                      1e-3));
+        REQUIRE_THAT(rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
+                     WithinAbs(spec.start_seconds + static_cast<double>(i - 1) *
+                                                        spec.ministep_length,
+                               1e-3));
     }
 }
 
@@ -842,8 +849,7 @@ TEST_CASE_METHOD(Tmpdir, "Restart names >64 characters are ignored") {
 namespace {
 
 double expected_last_fopt(const WriteSpec &spec) {
-    return (spec.num_report_steps * spec.num_ministep - 1) *
-           spec.ministep_length;
+    return spec.last_ministep_seconds();
 }
 
 // Make `path` look older than `reference`
@@ -1295,8 +1301,8 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                 rd_sum_tstep_type *tstep = rd_sum_add_tstep(
                     sum.get(), report_step_offset + j + 1, sim_seconds);
                 for (size_t k = 0; k < nodes.size(); ++k)
-                    rd_sum_tstep_set_from_node(tstep, *nodes[k],
-                                               bpr_data[k][j]);
+                    rd_sum_tstep_set_from_node(
+                        tstep, *nodes[k], static_cast<float>(bpr_data[k][j]));
                 sim_seconds += step_spacing;
             }
             rd_sum_fwrite(sum.get());
@@ -1741,8 +1747,9 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                 for (size_t step = 0; step < spec.num_ministep; ++step) {
                     rd_sum_tstep_type *tstep = rd_sum_add_tstep(
                         rd_sum.get(), report_step + 1, sim_seconds);
-                    rd_sum_tstep_set_from_node(tstep, *wopr,
-                                               unique_scale * sim_seconds);
+                    rd_sum_tstep_set_from_node(
+                        tstep, *wopr,
+                        static_cast<float>(unique_scale * sim_seconds));
                     sim_seconds += spec.ministep_length;
                 }
             }
@@ -1795,8 +1802,9 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
                                         ->get_unit()) == "SM3/DAY");
 
                     for (size_t i = 0; i < n; ++i) {
-                        const double expected =
-                            unique_scale * i * spec.ministep_length;
+                        const double expected = unique_scale *
+                                                static_cast<double>(i) *
+                                                spec.ministep_length;
                         REQUIRE_THAT(rd_sum_get_general_var(guessed.get(), i,
                                                             unique_key.c_str()),
                                      WithinAbs(expected, 1e-3));

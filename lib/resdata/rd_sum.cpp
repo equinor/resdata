@@ -229,7 +229,7 @@ static std::optional<fs::path> base_guess(std::string path) {
             return fs::path(path_name).stem();
         } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
         return std::nullopt;
-    } catch (const std::exception &e) {
+    } catch (const std::exception &) {
         return std::nullopt;
     }
 }

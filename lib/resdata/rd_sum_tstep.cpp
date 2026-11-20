@@ -126,9 +126,9 @@ static void rd_sum_tstep_set_time_info(rd_sum_tstep_type *tstep,
         rd_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
     } else {
         const auto &date = std::get<rd::DateParamsIndex>(time_info);
-        int day = util_roundf(tstep->data[date.day]);
-        int month = util_roundf(tstep->data[date.month]);
-        int year = util_roundf(tstep->data[date.year]);
+        int day = rd::iround(tstep->data[date.day]);
+        int month = rd::iround(tstep->data[date.month]);
+        int year = rd::iround(tstep->data[date.year]);
 
         time_t sim_time = rd_make_date(day, month, year);
         rd_sum_tstep_set_time_info_from_date(tstep, sim_start, sim_time);

@@ -2,6 +2,11 @@
 #include <ctime>
 #include <cstdint>
 #include <cstdlib>
+#include <algorithm>
+#include <cctype>
+#include <climits>
+#include <cmath>
+#include <stdexcept>
 
 #include <new>
 #include <cstddef>
@@ -191,6 +196,23 @@ int natural_compare(std::string_view a, std::string_view b);
 inline bool natural_less(std::string_view a, std::string_view b) {
     return natural_compare(a, b) < 0;
 }
+/// Lower-cases ASCII characters in place.
+inline void ascii_lower(std::string &str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
+}
+
+/// Rounds to the nearest int, throwing if the value is not finite or does not
+/// fit in an int.
+inline int iround(double value) {
+    if (!std::isfinite(value) || value < static_cast<double>(INT_MIN) - 0.5 ||
+        value >= static_cast<double>(INT_MAX) + 0.5)
+        throw std::out_of_range("Value cannot be rounded to an int: " +
+                                std::to_string(value));
+    return static_cast<int>(std::lround(value));
+}
+
 } // namespace rd
 std::vector<std::string> select_matching_files(const std::string &path,
                                                const std::string &file_pattern);

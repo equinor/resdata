@@ -2,6 +2,7 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <stdexcept>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
@@ -41,6 +42,15 @@ void test_sscanf_int() {
 
     snprintf(buffer, 30, "%d", INT_MIN);
     test_assert_true(util_sscanf_int(buffer, &value));
+    test_assert_int_equal(value, INT_MIN);
+
+    // out of range
+    snprintf(buffer, 30, "%lld", static_cast<long long>(INT_MAX) + 1);
+    test_assert_throw(util_sscanf_int(buffer, &value), std::out_of_range);
+    snprintf(buffer, 30, "%lld", static_cast<long long>(INT_MIN) - 1);
+    test_assert_throw(util_sscanf_int(buffer, &value), std::out_of_range);
+    test_assert_throw(util_sscanf_int("99999999999999999999999", &value),
+                      std::out_of_range);
     test_assert_int_equal(value, INT_MIN);
 
     // NULL buffer
