@@ -55,9 +55,6 @@ int main(int argc, char **argv) {
 
     RSTHead true1{
         /*report_step=*/1,
-        /*day=*/1,
-        /*year=*/2000,
-        /*month=*/1,
         /*sim_time=*/(time_t)946684800,
         /*version=*/100,
         /*phase_sum=*/7,
@@ -86,9 +83,6 @@ int main(int argc, char **argv) {
 
     RSTHead true2{
         /*report_step=*/5,
-        /*day=*/22,
-        /*year=*/1990,
-        /*month=*/1,
         /*sim_time=*/(time_t)632966400,
         /*version=*/100,
         /*phase_sum=*/7,
