@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         char buffer[8];
         offset_type offset = 4 + 16 + 4 + 4;
         util_fseek(stream, offset, SEEK_SET);
-        fread(buffer, 1, 8, stream);
+        test_assert_size_t_equal(fread(buffer, 1, 8, stream), 8);
         for (int i = 0; i < 8; i++)
             test_assert_int_equal(buffer[i], ' ');
 
