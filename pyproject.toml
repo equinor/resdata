@@ -131,18 +131,16 @@ testpaths = ["tests"]
 build-frontend = "build[uv]"
 build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_* *-win32"
+test-groups = ["test"]
+test-command = "pytest {package}/tests"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y zlib-devel"
 before-build = "rm -rf {package}/build"
-test-groups = ["test"]
-test-command = "pytest {package}/tests"
 
 [tool.cibuildwheel.macos]
 before-all = "brew install zlib"
 before-build = "rm -rf {package}/build"
-test-groups = ["test"]
-test-command = "pytest {package}/tests"
 
 [tool.cibuildwheel.windows]
 before-build = "if exist {package}\\build rmdir /s /q {package}\\build"
@@ -151,7 +149,6 @@ delvewheel repair \
   --add-path "{package}/build/bin/Release" \
   -w {dest_dir} -v {wheel}
 """
-test-command = "python -c \"import resdata.grid\""
 
 [tool.ruff.lint]
 select = [
