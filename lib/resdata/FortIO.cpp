@@ -189,6 +189,12 @@ void FortIO::open(const std::string &filename, std::ios_base::openmode mode,
     FILE *stream = fopen(filename.c_str(), cmode);
     if (!stream)
         throw std::ios_base::failure("Failed to open FortIO file " + filename);
+#ifdef ERT_WINDOWS
+    // Windows reports position 0 after opening in append mode until the first
+    // write
+    if (mode == std::ios_base::app)
+        util_fseek(stream, 0, SEEK_END);
+#endif
     m_filename = filename;
     m_endian_flip_header = endian_flip_header;
     m_fmt_file = fmt_file;
