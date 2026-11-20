@@ -1078,20 +1078,12 @@ bool rd_path_access(const char *rd_case) {
     /* Check if the input argument corresponds to an existing directory and one
      additional element, in that case we do an access check on the directory part. */
 
-    {
-        bool path_access;
-        char *dir_name;
-        const char *path_sep = strrchr(rd_case, UTIL_PATH_SEP_CHAR);
+    const std::filesystem::path dir =
+        std::filesystem::path(rd_case).parent_path();
+    if (dir.empty())
+        /* We are trying to access CWD - we return true without actually
+           checking access. */
+        return true;
 
-        if (!path_sep)
-            /* We are trying to access CWD - we return true without actually checking
-         access. */
-            return true;
-
-        dir_name = util_alloc_substring_copy(rd_case, 0, path_sep - rd_case);
-        path_access = util_access(dir_name, R_OK);
-        free(dir_name);
-        return path_access;
-    }
-    return false;
+    return util_access(dir.string().c_str(), R_OK);
 }
