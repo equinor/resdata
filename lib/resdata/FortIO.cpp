@@ -419,6 +419,9 @@ void FortIO::fwrite_record(const char *buffer, int record_size) {
 offset_type FortIO::ftell() const { return util_ftell(m_stream); }
 
 bool FortIO::fseek_(offset_type offset, int whence) {
+    // The MSVC runtime aborts on an invalid whence instead of failing.
+    if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END)
+        return false;
     int fseek_return = util_fseek(m_stream, offset, whence);
     if (fseek_return == 0)
         return true;
