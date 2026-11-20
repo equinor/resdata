@@ -151,7 +151,8 @@ delvewheel repair \
   --add-path "{package}/build/bin/Release" \
   -w {dest_dir} -v {wheel}
 """
-test-command = "python -c \"import resdata.grid\""
+test-groups = ["test"]
+test-command = "pytest {package}/tests"
 
 [tool.ruff.lint]
 select = [

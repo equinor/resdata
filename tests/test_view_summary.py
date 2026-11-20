@@ -732,7 +732,7 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FGIT,FOPR
             0,1.0,02/01/2014,4.0,4.0
             1,2.0,03/01/2014,4.0,4.0
@@ -750,7 +750,7 @@ def test_that_unformatted_unified_is_chosen_over_unformatted_split(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
             """)
@@ -765,7 +765,7 @@ def test_that_split_unformatted_is_chosen_over_unified_formatted(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FGIT,FOPR
             0,1.0,02/01/2014,4.0,4.0
             1,2.0,03/01/2014,4.0,4.0
@@ -783,7 +783,7 @@ def test_that_formatted_unified_is_chosen_over_unformatted_split(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
             """)
@@ -800,7 +800,7 @@ def test_that_files_can_be_in_a_different_directory(monkeypatch, capsys):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", str(subdir / "TEST"), "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
             """)
@@ -813,7 +813,7 @@ def test_that_empty_extension_is_ignored(capsys):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST.", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv(lineterminator="\n") == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
             """)
@@ -844,7 +844,7 @@ def test_that_restart_and_base_times_are_concated(capsys):
 
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
-    assert output_as_df(capsys.readouterr().out).to_csv() == dedent("""\
+    assert output_as_df(capsys.readouterr().out).to_csv(lineterminator="\n") == dedent("""\
         ,Days,dd/mm/yyyy,FGIP,FOPR,FOPT
         0,1.0,02/01/2014,-99.0,-99.0,4.0
         1,2.0,03/01/2014,5.6299e+16,5.6299e+16,-99.0
