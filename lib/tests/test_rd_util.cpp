@@ -45,6 +45,11 @@ TEST_CASE("Test file type format check", "[unittest]") {
         REQUIRE(!is_fmt);
     }
 
+    SECTION("A report number that does not fit in an int is not a type") {
+        REQUIRE(rd_get_file_type("CASE.X99999999999", &is_fmt, NULL) ==
+                FileType::OTHER);
+    }
+
     SECTION("A .UNSMRY file is an unformatted file") {
         rd_get_file_type("CASE.UNSMRY", &is_fmt, NULL);
         REQUIRE(!is_fmt);

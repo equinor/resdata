@@ -436,9 +436,15 @@ bool util_sscanf_int(const char *buffer, int *value) {
 
     char *error_ptr;
 
-    int tmp_value = strtol(buffer, &error_ptr, 10);
+    errno = 0;
+    long tmp_value = strtol(buffer, &error_ptr, 10);
 
     if (error_ptr == buffer)
+        return false;
+
+    // ERANGE signals overflow; on Windows long is 32 bit so that is the only
+    // way to detect it. Any other errno is also treated as a failed parse.
+    if (errno != 0 || tmp_value < INT_MIN || tmp_value > INT_MAX)
         return false;
 
     // Skip trailing white-space
@@ -449,7 +455,7 @@ bool util_sscanf_int(const char *buffer, int *value) {
         return false;
 
     if (value != NULL)
-        *value = tmp_value;
+        *value = static_cast<int>(tmp_value);
     return true;
 }
 
