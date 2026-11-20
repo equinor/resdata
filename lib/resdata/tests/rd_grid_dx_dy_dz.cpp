@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    test_dxdydz(grid_file, init_file);
+    test_dxdydz(grid_file.string(), init_file.string());
 
     exit(0);
 }

@@ -69,7 +69,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
 
             AND_THEN("Read/write preserves the lgr") {
                 auto grid_filename = dirname / "LGR.GRID";
-                rd_grid_fwrite_GRID2(grid.get(), grid_filename.c_str(),
+                rd_grid_fwrite_GRID2(grid.get(), grid_filename.string().c_str(),
                                      UnitSystem::METRIC);
                 REQUIRE(fs::exists(grid_filename));
 
@@ -310,11 +310,11 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
         THEN("Writing the grid transforms the coords back") {
             auto grid_filename = dirname / "MAPAXES.GRID";
-            rd_grid_fwrite_GRID2(grid.get(), grid_filename.c_str(),
+            rd_grid_fwrite_GRID2(grid.get(), grid_filename.string().c_str(),
                                  UnitSystem::METRIC);
             REQUIRE(fs::exists(grid_filename));
 
-            ERT::FortIO fortio(grid_filename.c_str(), std::ios_base::in);
+            ERT::FortIO fortio(grid_filename.string(), std::ios_base::in);
 
             std::unique_ptr<rd::KW> first_corners{nullptr};
             while (true) {

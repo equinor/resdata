@@ -88,10 +88,10 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
 
         WHEN("Writing that file as FEGRID") {
             auto filename = (dirname / "CASE.FEGRID");
-            rd_grid_fwrite_EGRID2(rd_grid.get(), filename.c_str(),
+            rd_grid_fwrite_EGRID2(rd_grid.get(), filename.string().c_str(),
                                   UnitSystem::METRIC);
             THEN("It is a formatted file") {
-                REQUIRE(util_fmt_bit8(filename.c_str()));
+                REQUIRE(util_fmt_bit8(filename.string().c_str()));
             }
             THEN("Reading that grid gives equal grid") {
                 auto read = read_grid(filename);
@@ -103,10 +103,11 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
 
         THEN("Writing that file as a EGRID") {
             auto filename = (dirname / "CASE.EGRID");
-            rd_grid_fwrite_EGRID2(rd_grid.get(), filename.c_str(),
+            rd_grid_fwrite_EGRID2(rd_grid.get(), filename.string().c_str(),
                                   UnitSystem::METRIC);
             THEN("It is an unformatted file") {
-                REQUIRE(!util_fmt_bit8((dirname / "CASE.EGRID").c_str()));
+                REQUIRE(
+                    !util_fmt_bit8((dirname / "CASE.EGRID").string().c_str()));
             }
             THEN("Reading that grid gives equal grid") {
                 auto read = read_grid(filename);
@@ -117,9 +118,10 @@ TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
         THEN(
             "Writing that file with unknown extension is an unformatted file") {
             rd_grid_fwrite_EGRID2(rd_grid.get(),
-                                  (dirname / "CASE.UNKNOWN").c_str(),
+                                  (dirname / "CASE.UNKNOWN").string().c_str(),
                                   UnitSystem::METRIC);
-            REQUIRE(!util_fmt_bit8((dirname / "CASE.UNKNOWN").c_str()));
+            REQUIRE(
+                !util_fmt_bit8((dirname / "CASE.UNKNOWN").string().c_str()));
         }
     }
 }
@@ -551,19 +553,19 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     auto fegrid_base = dirname / "ONLYFEGRID";
     auto fegrid_path = dirname / "ONLYFEGRID.FEGRID";
 
-    rd_grid_fwrite_EGRID2(grid_5x5x5.get(), egrid_path.c_str(),
+    rd_grid_fwrite_EGRID2(grid_5x5x5.get(), egrid_path.string().c_str(),
                           UnitSystem::METRIC);
-    rd_grid_fwrite_GRID2(grid_2x2x2.get(), grid_path.c_str(),
+    rd_grid_fwrite_GRID2(grid_2x2x2.get(), grid_path.string().c_str(),
                          UnitSystem::METRIC);
-    rd_grid_fwrite_GRID2(grid_3x3x3.get(), only_grid_path.c_str(),
+    rd_grid_fwrite_GRID2(grid_3x3x3.get(), only_grid_path.string().c_str(),
                          UnitSystem::METRIC);
     write_fegrid_minimal(fegrid_path);
     auto read_fegrid = read_grid(fegrid_path);
 
     auto load_and_compare = [](const fs::path &case_path,
                                rd_grid_type *expected) {
-        auto loaded =
-            rd_grid_ptr(rd_grid_load_case(case_path.c_str()), &rd_grid_free);
+        auto loaded = rd_grid_ptr(rd_grid_load_case(case_path.string().c_str()),
+                                  &rd_grid_free);
         REQUIRE(loaded != nullptr);
         REQUIRE(rd_grid_compare(loaded.get(), expected, true, true, true));
     };
@@ -612,13 +614,15 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     GIVEN("A path that does not correspond to any grid on disc") {
         auto missing_path = dirname / "NOPE";
         THEN("no grid is returned") {
-            REQUIRE(rd_grid_load_case(missing_path.c_str()) == nullptr);
+            REQUIRE(rd_grid_load_case(missing_path.string().c_str()) ==
+                    nullptr);
         }
 
         AND_GIVEN("a path with a grid-like extension that does not exist") {
             auto missing_egrid = dirname / "DOES_NOT_EXIST.EGRID";
             THEN("no grid is returned") {
-                REQUIRE(rd_grid_load_case(missing_egrid.c_str()) == nullptr);
+                REQUIRE(rd_grid_load_case(missing_egrid.string().c_str()) ==
+                        nullptr);
             }
         }
     }
@@ -655,7 +659,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     GIVEN("A path with a lowercase grid extension") {
         // Extensions are accepted case-insensitively by rd_get_file_type.
         auto lower_egrid_path = dirname / "LOWER.egrid";
-        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), lower_egrid_path.c_str(),
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(),
+                              lower_egrid_path.string().c_str(),
                               UnitSystem::METRIC);
         THEN("the file is recognized and loaded") {
             load_and_compare(lower_egrid_path, grid_2x2x2.get());
@@ -665,14 +670,16 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     GIVEN("A direct path to a non-existing .EGRID file") {
         auto missing_egrid = dirname / "MISSING.EGRID";
         THEN("no grid is returned") {
-            REQUIRE(rd_grid_load_case(missing_egrid.c_str()) == nullptr);
+            REQUIRE(rd_grid_load_case(missing_egrid.string().c_str()) ==
+                    nullptr);
         }
     }
 
     GIVEN("A direct path to a non-existing .FEGRID file") {
         auto missing_fegrid = dirname / "MISSING.FEGRID";
         THEN("no grid is returned") {
-            REQUIRE(rd_grid_load_case(missing_fegrid.c_str()) == nullptr);
+            REQUIRE(rd_grid_load_case(missing_fegrid.string().c_str()) ==
+                    nullptr);
         }
     }
 
@@ -688,7 +695,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
             ofs << "formatted restart stub";
         }
         THEN("no grid is returned even though an unformatted .EGRID exists") {
-            REQUIRE(rd_grid_load_case(funrst_path.c_str()) == nullptr);
+            REQUIRE(rd_grid_load_case(funrst_path.string().c_str()) == nullptr);
         }
     }
 
@@ -723,7 +730,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         auto basename = dirname / "MIX";
         auto mix_grid = dirname / "MIX.GRID";
         auto mix_fegrid = dirname / "MIX.FEGRID";
-        rd_grid_fwrite_GRID2(grid_2x2x2.get(), mix_grid.c_str(),
+        rd_grid_fwrite_GRID2(grid_2x2x2.get(), mix_grid.string().c_str(),
                              UnitSystem::METRIC);
         write_fegrid_minimal(mix_fegrid);
         THEN("the .GRID is preferred over the .FEGRID") {
@@ -733,7 +740,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
 
     GIVEN("A direct path to a file with a double extension") {
         auto double_ext_path = dirname / "CASE.HIST.EGRID";
-        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), double_ext_path.c_str(),
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(),
+                              double_ext_path.string().c_str(),
                               UnitSystem::METRIC);
         THEN("the file is recognized by its final extension and loaded") {
             load_and_compare(double_ext_path, grid_2x2x2.get());
@@ -741,7 +749,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         THEN("When the basename is given, the first extension is removed") {
             auto basename_with_dot = dirname / "CASE.HIST";
             auto no_ext_egrid = dirname / "CASE.EGRID";
-            rd_grid_fwrite_EGRID2(grid_5x5x5.get(), no_ext_egrid.c_str(),
+            rd_grid_fwrite_EGRID2(grid_5x5x5.get(),
+                                  no_ext_egrid.string().c_str(),
                                   UnitSystem::METRIC);
             // Load and compare with "CASE.HIST" considers "CASE" the casename
             // and finds the file "CASE.EGRID".
@@ -753,7 +762,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         auto subdir = dirname / "subdir";
         fs::create_directory(subdir);
         auto sub_egrid = subdir / "SUB.EGRID";
-        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), sub_egrid.c_str(),
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), sub_egrid.string().c_str(),
                               UnitSystem::METRIC);
 
         THEN("a direct path to the file loads the grid") {
@@ -768,7 +777,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
         auto subdir = dirname / "sub.with.dot";
         fs::create_directory(subdir);
         auto sub_egrid = subdir / "INSIDE.EGRID";
-        rd_grid_fwrite_EGRID2(grid_3x3x3.get(), sub_egrid.c_str(),
+        rd_grid_fwrite_EGRID2(grid_3x3x3.get(), sub_egrid.string().c_str(),
                               UnitSystem::METRIC);
 
         THEN("a direct path to the file loads the grid") {

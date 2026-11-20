@@ -40,7 +40,8 @@ void test_file_list() {
     rd::util::TestArea ta("file_list");
 
     for (int i = 0; i < 10; i += 2) {
-        std::string fname = rd::filename("case", FileType::RESTART, true, i);
+        std::string fname =
+            rd::filename("case", FileType::RESTART, true, i).string();
         FILE *stream = util_fopen(fname.c_str(), "w");
         fclose(stream);
     }
@@ -63,7 +64,7 @@ void test_file_list() {
     test_assert_size_t_equal(s.size(), 5);
     for (int i = 0; i < 5; i++) {
         std::string fname =
-            rd::filename("case", FileType::RESTART, true, 2 * i);
+            rd::filename("case", FileType::RESTART, true, 2 * i).string();
         test_assert_string_equal(fname.c_str(), s[i].c_str());
     }
 

@@ -30,7 +30,7 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
 
         SECTION("write as GRID") {
             auto filename = (dirname / "TEST.GRID");
-            rd_grid_fwrite_GRID2(grid.get(), filename.c_str(),
+            rd_grid_fwrite_GRID2(grid.get(), filename.string().c_str(),
                                  UnitSystem::METRIC);
 
             auto loaded = read_grid(filename);
@@ -41,11 +41,11 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
 
         SECTION("load_case") {
             auto filename = (dirname / "TEST3.EGRID");
-            rd_grid_fwrite_EGRID2(grid.get(), filename.c_str(),
+            rd_grid_fwrite_EGRID2(grid.get(), filename.string().c_str(),
                                   UnitSystem::METRIC);
 
-            auto loaded =
-                rd_grid_ptr(rd_grid_load_case(filename.c_str()), &rd_grid_free);
+            auto loaded = rd_grid_ptr(
+                rd_grid_load_case(filename.string().c_str()), &rd_grid_free);
             REQUIRE(loaded != nullptr);
             REQUIRE(
                 rd_grid_compare(grid.get(), loaded.get(), false, false, false));
@@ -62,7 +62,8 @@ TEST_CASE_METHOD(Tmpdir, "Writing every grid to disk", "[unittest]") {
         SECTION(
             ("fwrite_EGRID then rd_grid_alloc (" + entry.label + ")").c_str()) {
             auto filename = dirname / ("WRITE_" + entry.label + ".EGRID");
-            rd_grid_fwrite_EGRID(entry.grid.get(), filename.c_str(), true);
+            rd_grid_fwrite_EGRID(entry.grid.get(), filename.string().c_str(),
+                                 true);
             REQUIRE(fs::exists(filename));
             auto reloaded = read_grid(filename);
             REQUIRE(reloaded != nullptr);
@@ -71,7 +72,7 @@ TEST_CASE_METHOD(Tmpdir, "Writing every grid to disk", "[unittest]") {
         SECTION(("fwrite_EGRID2 then rd_grid_alloc (" + entry.label + ")")
                     .c_str()) {
             auto filename = dirname / ("WRITE2_" + entry.label + ".EGRID");
-            rd_grid_fwrite_EGRID2(entry.grid.get(), filename.c_str(),
+            rd_grid_fwrite_EGRID2(entry.grid.get(), filename.string().c_str(),
                                   UnitSystem::METRIC);
             REQUIRE(fs::exists(filename));
             auto reloaded = read_grid(filename);
