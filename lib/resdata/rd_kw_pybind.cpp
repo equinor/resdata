@@ -430,7 +430,7 @@ PYBIND11_MODULE(_kw, m) {
         rd::KW *rd_kw = from_cwrap<rd::KW>(self);
         rd_type_enum rd_type = rd_kw->get_type();
         if (rd_type == RD_FLOAT_TYPE)
-            rd_kw->scale<float>(factor);
+            rd_kw->scale<float>(static_cast<float>(factor));
         else if (rd_type == RD_DOUBLE_TYPE)
             rd_kw->scale<double>(factor);
         else

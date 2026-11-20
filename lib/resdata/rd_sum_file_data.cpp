@@ -614,7 +614,7 @@ bool rd_sum_file_data::fread(const std::vector<std::string> &filelist,
             try {
                 this->loader.reset(new unsmry_loader(
                     this->rd_smspec, filelist[0], file_options));
-            } catch (const std::bad_alloc &e) {
+            } catch (const std::bad_alloc &) {
                 return false;
             }
         } else {

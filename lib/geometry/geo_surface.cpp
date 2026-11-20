@@ -271,7 +271,7 @@ void geo_surface_iget_xy(const geo_surface_type *surface, int index, double *x,
     geo_pointset_iget_xy(pointset, static_cast<size_t>(index), x, y);
 }
 
-int geo_surface_get_size(const geo_surface_type *surface) {
+size_t geo_surface_get_size(const geo_surface_type *surface) {
     return geo_pointset_get_size(surface->pointset.get());
 }
 
