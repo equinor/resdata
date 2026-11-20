@@ -81,27 +81,8 @@
 #define TEST_WORK_AREA_TYPE_ID 1107355
 
 static std::string test_work_area_prefix() {
-#ifdef HAVE_WINDOWS_GET_TEMP_PATH
-
-    char tmp_path[MAX_PATH];
-    GetTempPath(MAX_PATH, tmp_path);
-    return tmp_path;
-
-#else
-
-    const char *prefix_path = getenv("TMPDIR");
-
-#ifdef P_tmpdir
-    if (!prefix_path)
-        prefix_path = P_tmpdir;
-#endif
-
-    if (!prefix_path)
-        prefix_path = _PATH_TMP;
-
-    return std::filesystem::canonical(prefix_path).string();
-
-#endif
+    return std::filesystem::canonical(std::filesystem::temp_directory_path())
+        .string();
 }
 
 namespace rd {
@@ -308,7 +289,8 @@ void test_work_area_install_file(const test_work_area_type *work_area,
         return;
     else {
         std::string src_file = work_area->original_path(input_src_file);
-        std::string src_path = rd::util::path::dirname(input_src_file);
+        const std::filesystem::path src_path =
+            std::filesystem::path(input_src_file).parent_path();
 
         if (!src_path.empty())
             std::filesystem::create_directories(src_path);

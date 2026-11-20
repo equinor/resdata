@@ -28,7 +28,6 @@
 
 #cmakedefine HAVE_POSIX_ACCESS 1
 #cmakedefine HAVE_WINDOWS__ACCESS 1
-#cmakedefine HAVE_WINDOWS_GET_TEMP_PATH 1
 #cmakedefine HAVE_WINDOWS_TZNAME 1
 
 #ifdef HAVE_VA_COPY

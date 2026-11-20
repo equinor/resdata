@@ -1,6 +1,6 @@
 #include <cstdio>
-#include <utime.h>
-
+#include <chrono>
+#include <filesystem>
 #include <ios>
 #include <memory>
 #include <string>
@@ -57,12 +57,10 @@ void test_create_and_load_index_file() {
         test_assert_throw(rd::File::fast_open("nofile", index_file_name),
                           std::ios_base::failure);
 
-        struct utimbuf tm1 = {1, 1};
-        struct utimbuf tm2 = {2, 2};
-        utime(file_name, &tm2);
-        utime(index_file_name.c_str(), &tm1);
-        utime(file_name, &tm1);
-        utime(index_file_name.c_str(), &tm2);
+        const std::filesystem::file_time_type tm1{std::chrono::seconds(1)};
+        const std::filesystem::file_time_type tm2{std::chrono::seconds(2)};
+        std::filesystem::last_write_time(file_name, tm1);
+        std::filesystem::last_write_time(index_file_name, tm2);
 
         std::unique_ptr<rd::File> rd_file_index =
             rd::File::fast_open(file_name, index_file_name);
