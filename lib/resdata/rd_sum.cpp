@@ -210,7 +210,12 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
 
 static std::optional<fs::path> base_guess(std::string path) {
     try {
+        // Matching is case-insensitive on Windows, so "*.DATA" finds both
+#ifdef ERT_WINDOWS
+        std::vector<std::string> data_files;
+#else
         auto data_files = select_matching_files(path, "*.data");
+#endif
         auto DATA_files = select_matching_files(path, "*.DATA");
 
         if (data_files.size() + DATA_files.size() == 1) {

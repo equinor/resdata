@@ -429,9 +429,13 @@ TEST_CASE_METHOD(Tmpdir, "rd_select_filelist treats the base as a pattern",
         auto files =
             rd_select_filelist(path.c_str(), "*", FileType::EGRID, false);
 
-        REQUIRE(filenames_of(files) == std::vector<std::string>{"CASE.EGRID",
-                                                                "CASE1.EGRID",
-                                                                "OTHER.EGRID"});
+        std::vector<std::string> expected{"CASE.EGRID", "CASE1.EGRID",
+                                          "OTHER.EGRID"};
+#ifdef ERT_WINDOWS
+        // On windows files starting with "." are not hidden
+        expected.insert(expected.begin(), ".EGRID");
+#endif
+        REQUIRE(filenames_of(files) == expected);
     }
 
     SECTION("a wildcard matches part of the base") {

@@ -579,9 +579,12 @@ select_matching_files(const std::string &path,
 #ifdef ERT_HAVE_GLOB
     return select_matching((dir / file_pattern).string().c_str());
 #else
+    // The pattern itself may carry a directory part
+    const fs::path full_pattern = dir / file_pattern;
+    const fs::path match_dir = full_pattern.parent_path();
     WIN32_FIND_DATA file_data;
     HANDLE file_handle =
-        FindFirstFile((dir / file_pattern).string().c_str(), &file_data);
+        FindFirstFile(full_pattern.string().c_str(), &file_data);
 
     if (file_handle == INVALID_HANDLE_VALUE) {
         DWORD error = GetLastError();
@@ -590,21 +593,21 @@ select_matching_files(const std::string &path,
 
         throw std::runtime_error(
             fmt::format("FindFirstFile() failed with error {} for pattern '{}'",
-                        error, (dir / file_pattern).string()));
+                        error, full_pattern.string()));
     }
 
     FindHandleGuard guard(file_handle);
 
     std::vector<std::string> names;
     do {
-        names.push_back((dir / file_data.cFileName).string());
+        names.push_back((match_dir / file_data.cFileName).string());
     } while (FindNextFile(file_handle, &file_data) != 0);
 
     DWORD error = GetLastError();
     if (error != ERROR_NO_MORE_FILES)
         throw std::runtime_error(fmt::format(
             "FindNextFile() failed with error {} while listing '{}'", error,
-            dir.string()));
+            match_dir.string()));
 
     return names;
 #endif
