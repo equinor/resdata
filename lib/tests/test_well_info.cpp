@@ -59,6 +59,9 @@ void write_restart_file(const std::string &path, const RestartLayout &layout) {
         write_int_kw(fortio, SEQNUM_KW, {layout.report_nr});
 
     std::vector<int> intehead(412, 0);
+    intehead[INTEHEAD_DAY_INDEX] = 1;
+    intehead[INTEHEAD_MONTH_INDEX] = 1;
+    intehead[INTEHEAD_YEAR_INDEX] = 2000;
     intehead[INTEHEAD_NX_INDEX] = layout.nx;
     intehead[INTEHEAD_NY_INDEX] = layout.ny;
     intehead[INTEHEAD_NZ_INDEX] = layout.nz;
