@@ -18,13 +18,12 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 
 #include <ios>
 #include <memory>
 #include <filesystem>
 #include <string>
-
-#include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_util.hpp>
@@ -46,8 +45,10 @@ static void unpack_file(const fs::path &filepath) {
         target_type = FileType::SUMMARY;
     else if (file_type == FileType::UNIFIED_RESTART)
         target_type = FileType::RESTART;
-    else
-        util_exit("Can only unpack unified summary and restart files\n");
+    else {
+        fprintf(stderr, "Can only unpack unified summary and restart files\n");
+        exit(1);
+    }
 
     if (target_type == FileType::SUMMARY) {
         printf("** Warning: when unpacking unified summary files it as "
@@ -93,8 +94,10 @@ static void unpack_file(const fs::path &filepath) {
 }
 
 int main(int argc, char **argv) {
-    if (argc == 1)
-        util_exit("rd_unpack UNIFIED_FILE1   UNIFIED_FILE2   ...\n");
+    if (argc == 1) {
+        fprintf(stderr, "rd_unpack UNIFIED_FILE1   UNIFIED_FILE2   ...\n");
+        return 1;
+    }
     for (int i = 1; i < argc; i++)
         unpack_file(fs::path(argv[i]));
 }

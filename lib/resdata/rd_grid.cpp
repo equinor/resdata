@@ -4561,9 +4561,10 @@ static bool rd_grid_init_coord_section__(const rd_grid_type *grid, size_t i,
     const auto bottom_index = rd_grid_get_bottom_valid_index(grid, i, j);
 
     if (!top_index || !bottom_index)
-        util_exit("% : no cell with a valid geometry description found in "
-                  "(i,j) = %zu,%zu - then what? \n",
-                  __func__, i, j);
+        throw std::invalid_argument(
+            fmt::format("no cell with a valid geometry description found in "
+                        "(i,j) = {},{}",
+                        i, j));
 
     {
         point_type top_point;

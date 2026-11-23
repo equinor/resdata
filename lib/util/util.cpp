@@ -874,14 +874,6 @@ char *util_alloc_sprintf(const char *fmt, ...) {
     return s;
 }
 
-void util_exit(const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    exit(1);
-}
-
 /**
    This function finds the current linenumber (by counting '\n'
    characters) in a currently open stream. It is an extremely

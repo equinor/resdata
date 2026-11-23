@@ -16,6 +16,7 @@
    for more details.
 */
 
+#include <cstdio>
 #include <cstdlib>
 
 #include <ios>
@@ -24,8 +25,6 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-
-#include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_util.hpp>
@@ -55,9 +54,9 @@ int main(int argc, char **argv) {
         else if (file_type == FileType::RESTART)
             target_type = FileType::UNIFIED_RESTART;
         else {
-            util_exit("The rd_pack program can only be used with "
-                      "restart files or summary files.\n");
-            target_type = FileType::OTHER;
+            fprintf(stderr, "The rd_pack program can only be used with "
+                            "restart files or summary files.\n");
+            exit(1);
         }
         /*
          * Will pack to cwd, even though the source files might be
@@ -86,10 +85,12 @@ int main(int argc, char **argv) {
             this_file_type =
                 rd_get_file_type(filelist.at(i).c_str(), NULL, &report_step);
             if (this_file_type == file_type) {
-                if (report_step == prev_report_step)
-                    util_exit(
-                        "Tried to write same report step twice: %s / %s \n",
-                        filelist.at(i - 1).c_str(), filelist.at(i).c_str());
+                if (report_step == prev_report_step) {
+                    fprintf(stderr,
+                            "Tried to write same report step twice: %s / %s \n",
+                            filelist.at(i - 1).c_str(), filelist.at(i).c_str());
+                    exit(1);
+                }
 
                 prev_report_step = report_step;
                 std::unique_ptr<rd::File> src_file =
