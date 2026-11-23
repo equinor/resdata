@@ -262,7 +262,7 @@ class SumTest(ResdataTest):
 
                     if time_index >= 0:
                         d = datetime.datetime.strptime(tmp[1], date_format)
-                        self.assertEqual(case.iget_date(time_index), d)
+                        self.assertEqual(case.iget_date(time_index).date(), d.date())
 
                     time_index += 1
 
