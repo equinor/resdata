@@ -1,5 +1,5 @@
 Welcome to Resdata documentation!
-===============================
+=================================
 
 Contents:
 
@@ -8,6 +8,16 @@ Contents:
    :numbered:
 
    code/index
+
+.. _python_documentation:
+
+API documentation
+=================
+
+.. toctree::
+   :maxdepth: 2
+
+   api/modules
 
 Indices and tables
 ==================
