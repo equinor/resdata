@@ -223,14 +223,14 @@ class SumTest(ResdataTest):
             mp.chdir(tmpdir)
             case.export_csv("file.csv", sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
-            for row in input_file:
-                self.assertIn("DAYS", row)
-                self.assertIn("DATE", row)
-                self.assertIn("FOPT", row)
-                self.assertIn("FOPR", row)
-                self.assertEqual(len(row), 4)
-                break
+            with open("file.csv") as f:
+                for row in csv.DictReader(f, delimiter=sep):
+                    self.assertIn("DAYS", row)
+                    self.assertIn("DATE", row)
+                    self.assertIn("FOPT", row)
+                    self.assertIn("FOPR", row)
+                    self.assertEqual(len(row), 4)
+                    break
 
             self.assertEqual(case.unit("FOPT"), "SM3")
 
@@ -239,13 +239,13 @@ class SumTest(ResdataTest):
             mp.chdir(tmpdir)
             case.export_csv("file.csv", keys=["FOPT"], sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
-            for row in input_file:
-                self.assertIn("DAYS", row)
-                self.assertIn("DATE", row)
-                self.assertIn("FOPT", row)
-                self.assertEqual(len(row), 3)
-                break
+            with open("file.csv") as f:
+                for row in csv.DictReader(f, delimiter=sep):
+                    self.assertIn("DAYS", row)
+                    self.assertIn("DATE", row)
+                    self.assertIn("FOPT", row)
+                    self.assertEqual(len(row), 3)
+                    break
 
         tmpdir = self.tmp_path_factory.mktemp("resdata_csv", numbered=True)
         with self.monkeypatch.context() as mp:
@@ -1832,9 +1832,9 @@ def test_that_lgr_variables_are_named_by_lgr_and_cell_index(lazy_load):
         [":+:+:+:+", "LGR1    "],
         [0, 1],
         lgrs=[":+:+:+:+", "LGR1    "],
-        numlx=[0, 1],
-        numly=[0, 2],
-        numlz=[0, 3],
+        numlx=np.array([0, 1], dtype=np.int32),
+        numly=np.array([0, 2], dtype=np.int32),
+        numlz=np.array([0, 3], dtype=np.int32),
     )
     _write_header_case("LGR", smspec)
 

@@ -147,7 +147,7 @@ def cell_start(date=(1, 1, 2000), ijks=((1, 1, 1), (2, 1, 2)), *args, **kwargs):
     ]
 
 
-def plt_fields():
+def plt_fields(conpres=(10.0, 20.0)):
     return [
         ("CONWRAT ", float_arr([2.0, 3.0])),
         ("CONGRAT ", float_arr([2.0, 3.0])),
@@ -157,7 +157,7 @@ def plt_fields():
         ("CONOTUB ", float_arr([2.0, 3.0])),
         ("CONGTUB ", float_arr([2.0, 3.0])),
         ("CONWTUB ", float_arr([2.0, 3.0])),
-        ("CONPRES ", float_arr([0.0, 0.0])),
+        ("CONPRES ", float_arr(list(conpres))),
     ]
 
 
@@ -322,14 +322,15 @@ def test_that_reading_a_plt_cell_results_in_the_expected_values_and_types(tmp_pa
 
 
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
-    rft_file = make_rft_file(
-        tmp_path,
-        [
-            *cell_start(data_category=b"RP      "),
-            ("PRESSURE", float_arr([100.0, 200.0])),
-            *plt_fields(),
-        ],
-    )
+    with pytest.warns(UserWarning, match="Got all-zero CONPRES"):
+        rft_file = make_rft_file(
+            tmp_path,
+            [
+                *cell_start(data_category=b"RP      "),
+                ("PRESSURE", float_arr([100.0, 200.0])),
+                *plt_fields(conpres=(0.0, 0.0)),
+            ],
+        )
     node = rft_file[0]
     assert node[0].pressure == 100.0
     assert node[1].pressure == 200.0
@@ -338,13 +339,17 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_and_no_pressure_uses_zero(
     tmp_path,
 ):
-    rft_file = make_rft_file(
-        tmp_path,
-        [
-            *cell_start(data_category=b"P      "),
-            *plt_fields(),
-        ],
-    )
+    with (
+        pytest.warns(UserWarning, match="Got all-zero CONPRES"),
+        pytest.warns(UserWarning, match="No PRESSURE values"),
+    ):
+        rft_file = make_rft_file(
+            tmp_path,
+            [
+                *cell_start(data_category=b"P      "),
+                *plt_fields(conpres=(0.0, 0.0)),
+            ],
+        )
     node = rft_file[0]
     assert node[0].pressure == 0.0
     assert node[1].pressure == 0.0

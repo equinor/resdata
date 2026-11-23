@@ -127,6 +127,11 @@ resfo-utilities = false # Developed by Equinor
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
 testpaths = ["tests"]
+filterwarnings = [
+  # The property tests of KW arithmetic deliberately overflow float32 values
+  "ignore:overflow encountered:RuntimeWarning",
+  "ignore:One of rtol or atol is not valid:RuntimeWarning",
+]
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
 build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
