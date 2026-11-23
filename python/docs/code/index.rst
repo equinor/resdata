@@ -909,11 +909,11 @@ summary or not:
    from resdata.summary import Summary
    sum = Summary("CASE")
 
-   for key in sys.argv[1:]
+   for key in sys.argv[1:]:
        if key in sum:
-          print "Key:%s exists" % key
+          print("Key:%s exists" % key)
        else:
-          print "Key:%s does NOT exist" % key
+          print("Key:%s does NOT exist" % key)
 
 
 keys( pattern = None )
@@ -992,8 +992,11 @@ supplied. The date parameter is a normal python
   from resdata.summary import Summary
   sum = Summary( case )
 
-  print "FWCT after 1000 days: %g" % sum.get_interp( "FWCT" , days = 1000 )
-  print "Total oil production at 10.10.2010: %g" % sum.get_interp( "FOPT" , date = datetime.date( 2010 , 10 , 10) )
+  print("FWCT after 1000 days: %g" % sum.get_interp("FWCT", days=1000))
+  print(
+      "Total oil production at 10.10.2010: %g"
+      % sum.get_interp("FOPT", date=datetime.date(2010, 10, 10))
+  )
 
 
 If the supplied time argument falls outside the time range where you
@@ -1035,7 +1038,7 @@ every 6 months:
 
     # Print the results
     for (date , FOPT) in zip(date_list , FOPT_vector):
-        print "%s   %g" % (date , FOPT)
+        print("%s   %g" % (date, FOPT))
 
 
 Methods to get a vector of the complete time series
@@ -1078,9 +1081,9 @@ end_date = sum.end_date
 
 .. code:: python
 
-   print "Simulation started.............: %s" % start_date
-   print "Simulation ended...............: %s" % end_date
-   print "The simulation spans %s days...: %s" % (end_date - start_date).days
+   print("Simulation started.............: %s" % start_date)
+   print("Simulation ended...............: %s" % end_date)
+   print("The simulation spans %s days" % (end_date - start_date).days)
 
 start_time / end_time
 ,,,,,,,,,,,,,,,,,,,,,
@@ -1106,15 +1109,15 @@ call to an Summary method, it will raise TypeError.
 
    gt_index = sum.first_gt( "WWCT:OP_3" , 0.30)
    if gt_index < 0:
-      print "The water cut in well OP_3 never exceeds 0.30"
+      print("The water cut in well OP_3 never exceeds 0.30")
    else:
-      print "WWCT:OP_3 exceeds 0.30 after %g days." % sum.iget_days( gt_index )
+      print("WWCT:OP_3 exceeds 0.30 after %g days." % sum.iget_days(gt_index))
 
    lt_index = sum.first_lt("RPR:2" , 210)
    if lt_index < 0:
-      print "The pressure in region 2 never falls below 210 BARS"
+      print("The pressure in region 2 never falls below 210 BARS")
    else:
-      print "RPR:2 below 210 bars at : %s" % sum.iget_time(lt_index).date()
+      print("RPR:2 below 210 bars at : %s" % sum.iget_time(lt_index).date())
 
 numpy_value( key )
 ,,,,,,,,,,,,,,,,,,
@@ -1200,9 +1203,9 @@ __getitem__ method are SummaryNode instances.
    sum = Summary( "CASE" )
    wwct = sum["WWCT:OP-5"]
 
-   print "First value element: " wwct[0].value
-   print "Last value         : " wwct[-1].value
-   print "List of every third: " wwct[0::3]
+   print("First value element: ", wwct[0].value)
+   print("Last value         : ", wwct[-1].value)
+   print("List of every third: ", wwct[0::3])
 
 
 SummaryNode
@@ -1231,7 +1234,7 @@ SummaryVector:
 
   wwct = rd_sum["WWCT:C-1A"]
   for node in wwct:
-      print "Days:%g  value:%g" % (node.days , node.value)
+      print("Days:%g  value:%g" % (node.days, node.value))
 
 
 .. [1] Observe that the word *keyword* here means one block of
