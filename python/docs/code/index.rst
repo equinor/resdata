@@ -1132,6 +1132,7 @@ days. In the example below we fetch two vectors, and the simulation days from a
 summary, and then print it all to the screen:
 
 .. code:: python
+
    from resdata.summary import Summary
 
    sum = Summary("/path/CASE.DATA")
@@ -1140,7 +1141,7 @@ summary, and then print it all to the screen:
    wopr = sum.numpy_value("WOPR:OP_1")
 
    for (d, w, o) in zip(days, wwct, wopr):
-       print "%5.0f   %5.3f  %8.1f" % (d,w,o)
+       print("%5.0f   %5.3f  %8.1f" % (d, w, o))
 
 
 Special functions/operators
