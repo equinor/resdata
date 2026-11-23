@@ -1,5 +1,3 @@
-import warnings
-
 from ._date2num import date2num
 from .rd_sum_node import SummaryNode
 
@@ -25,12 +23,6 @@ class SummaryVector:
         self.parent = parent
         self.key = key
         self.report_only = report_only
-
-        if report_only:
-            warnings.warn(
-                "The report_only flag to the SummaryVector will be removed in version 7.",
-                DeprecationWarning,
-            )
 
         self.__dates = parent.get_dates(report_only)
         self.__days = parent.get_days(report_only)
