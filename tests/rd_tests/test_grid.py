@@ -20,6 +20,8 @@ from tests import ResdataTest
 
 from ._grid_fixtures import (
     UNIT_CELL_CORNERS,
+    _extruded_unit_corners,
+    _write_grid_cell,
     _write_grid_dimens,
     _write_grid_gridunit,
     _write_grid_mapunits,
@@ -1414,3 +1416,18 @@ def test_that_get_layer_xyz_with_negative_argument_raises_type_error(layer_index
     grid = GridGen.create_rectangular((NX, NY, NZ), (1, 1, 1))
     with pytest.raises(TypeError):
         grid.get_layer_xyz(layer_index, k)
+
+
+def test_that_export_coord_of_grid_file_missing_a_column_raises(tmp_path):
+    filename = tmp_path / "missing_column.GRID"
+    with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
+        _write_grid_dimens(f, 2, 1, 1)
+        _write_grid_mapunits(f)
+        _write_grid_gridunit(f)
+        _write_grid_radial_false(f)
+        _write_grid_cell(f, 0, 0, 0, 0, 0, _extruded_unit_corners(0, 0, 0.0, 1.0))
+
+    grid = Grid.load_from_file(str(filename))
+
+    with pytest.raises(ValueError, match="no cell with a valid geometry"):
+        grid.export_coord()

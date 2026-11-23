@@ -114,7 +114,6 @@ char *util_alloc_strip_copy(const char *);
 char *util_alloc_string_copy(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
-void util_exit(const char *fmt, ...);
 
 void util_endian_flip_vector(void *data, size_t element_size, size_t elements);
 
