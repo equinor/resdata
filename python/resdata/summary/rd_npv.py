@@ -118,7 +118,7 @@ class ResdataNPV:
         if summary:
             self.baseCase = summary
         else:
-            raise Error("Failed to open summary case:%s" % baseCase)
+            raise IOError("Failed to open summary case:%s" % baseCase)
         self.expression = None
         self.keyList = {}
         self.start = None
