@@ -28,14 +28,15 @@ void test_slice(rd_grid_type *grid) {
     int ny = static_cast<int>(rd_grid_get_ny(grid));
     int nz = static_cast<int>(rd_grid_get_nz(grid));
     size_t nactive = rd_grid_get_nactive(grid);
+    size_t global_size = rd_grid_get_global_size(grid);
     rd_region_type *region = rd_region_alloc(grid, false);
 
     rd_region_select_i1i2(region, 0, nx - 1);
-    test_list(nx * ny * nz, nactive, region);
+    test_list(global_size, nactive, region);
     rd_region_select_j1j2(region, 0, ny - 1);
-    test_list(nx * ny * nz, nactive, region);
+    test_list(global_size, nactive, region);
     rd_region_select_k1k2(region, 0, nz - 1);
-    test_list(nx * ny * nz, nactive, region);
+    test_list(global_size, nactive, region);
 
     rd_region_free(region);
 }
