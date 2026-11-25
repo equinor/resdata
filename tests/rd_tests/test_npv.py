@@ -4,6 +4,7 @@ import math
 import os
 import warnings
 
+import pytest
 from resdata.summary import NPVPriceVector, ResdataNPV, Summary
 from resdata.util.util import CTime
 
@@ -209,3 +210,8 @@ class NPVTest(ResdataTest):
         self.assertEqual(0, vec.eval(datetime.date(2000, 2, 1)))
         self.assertEqual(20, vec.eval(datetime.date(2000, 2, 11)))
         self.assertEqual(40, vec.eval(datetime.date(2000, 2, 21)))
+
+
+def test_that_npv_raises_oserror_when_summary_case_does_not_exist(tmp_path):
+    with pytest.raises(OSError):
+        ResdataNPV(str(tmp_path / "NO_SUCH_CASE"))
