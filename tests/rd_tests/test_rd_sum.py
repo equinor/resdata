@@ -586,6 +586,22 @@ def test_summary_start_and_end_time():
 
 
 @pytest.mark.usefixtures("use_tmpdir")
+def test_that_the_time_of_day_in_startdat_is_ignored():
+    create_summary(
+        summary_keys=("FOPR",),
+        times=(0.0, 5.0, 10.0),
+        start_date=Date(
+            day=15, month=3, year=2010, hour=6, minutes=30, micro_seconds=5_000_000
+        ),
+    )
+
+    summary = Summary("TEST")
+    assert summary.start_time == datetime.datetime(2010, 3, 15, 0, 0, 0)
+    assert summary.end_time == datetime.datetime(2010, 3, 25, 0, 0, 0)
+    assert summary.dates[0] == datetime.datetime(2010, 3, 15, 0, 0, 0)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
 def test_summary_sim_length():
     create_summary(summary_keys=("FOPR",), times=(0.0, 10.0, 20.0, 30.0))
 

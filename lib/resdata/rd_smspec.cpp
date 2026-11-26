@@ -831,17 +831,10 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             int year = date[STARTDAT_YEAR_INDEX];
             int month = date[STARTDAT_MONTH_INDEX];
             int day = date[STARTDAT_DAY_INDEX];
-            int hour = 0;
-            int min = 0;
-            int sec = 0;
-            if (startdat->size() == 6) {
-                hour = date[STARTDAT_HOUR_INDEX];
-                min = date[STARTDAT_MINUTE_INDEX];
-                sec = date[STARTDAT_MICRO_SECOND_INDEX] / 1000000;
-            }
 
-            rd_smspec->sim_start_time =
-                rd_make_datetime(sec, min, hour, day, month, year);
+            // The time of day in STARTDAT is deliberately ignored; the start
+            // time is always midnight of the given date.
+            rd_smspec->sim_start_time = rd_make_date(day, month, year);
         }
 
         rd_smspec->grid_dims[0] = dimens->at<int>(DIMENS_SMSPEC_NX_INDEX);
